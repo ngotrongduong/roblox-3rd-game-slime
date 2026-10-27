@@ -15,7 +15,7 @@ Built directly in Studio in the classic stud look, like the fishing pond and the
 | Signpost | pan icon, at the front corner | the area's interaction point (tap: level and upgrade) |
 | Dressing | Nature stylized Pack: berry and flowering bushes, fern, tufts, flowers, a sunflower, a mossy boulder | Sway tags and blob shadows as on the other areas |
 
-## Upgrades, levels 1-50 (`src/server/KitchenStages.luau`, pictures `upgrades/kitchen-l21.jpg`, `kitchen-l50.jpg`)
+## Upgrades, levels 1-50 (`src/server/KitchenStages.luau`, pictures `upgrades/kitchen-l21.jpg`, `kitchen-L50.jpg`)
 
 The pantry's pattern: five eras of ten levels, nothing taken away.
 

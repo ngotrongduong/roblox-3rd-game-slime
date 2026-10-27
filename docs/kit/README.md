@@ -51,6 +51,22 @@ and fitted again, so the `.rbxm` files are the copy to use.
 | SignBreeding | 132443521605200 | area sign |
 | SignTraining | 123495039378329 | area sign |
 
+The upgrade props (`src/server/*Stages.luau`) are in PropKit.rbxm too; each stages file names them
+by slot and era. Kitchen and training ground models (asset ids of the published packages):
+
+| Model | Asset id | Where it is used |
+|---|---|---|
+| BrickOven | 118203938657530 | kitchen, era 3 |
+| VeggieCrates, PickleBarrels, SpiceCabinet, IceBox, GooFridge | 140478146221749, 117135357440078, 111650889820112, 134066039561377, 87557326756033 | kitchen ingredients |
+| CampGrill, StoneGrill, BrickBBQ, SteelGrill, PlasmaGrill | 126222793130223, 76228495432781, 76219880836241, 110514836287914, 119476949479673 | kitchen grill |
+| StoneSink, SteelSink, GooTap | 132777941364597, 136567789348320, 91161691928474 | kitchen water (with WoodBarrel, HandPump) |
+| DishRack, PlateShelf, ServingCart, BuffetWarmer, FoodDispenser | 103388093607977, 83109074195733, 133533832558955, 84869899859876, 84638350019559 | kitchen dishes |
+| StoneWeights, WoodBarbell, DumbbellRack, WeightBench, GravityPress | 98728420061090, 136127332275224, 106023791465165, 82786216395396, 101432759063471 | training strength |
+| TyreRun, JumpHurdles, BalanceBeam, ClimbingWall, HoloHoops | 75145332661860, 79890434166097, 123303078276792, 82515207548293, 134153062822365 | training agility |
+| RestBench, WaterCooler, MassageTable, IceBath, HealPod | 134839277279194, 78754672854621, 111882833173817, 80918511455769, 108140629726030 | training recovery |
+| SwordBarrel, ShieldRack, ArmorStand, SparringBot, HoloTrainer | 119723960867461, 126486671607445, 117449409718587, 125146860165818, 91864478146987 | training gear |
+| PunchingBag, ChampionTrophy | 106739653183504, 121466755406359 | training, eras 3 and 5 |
+
 ## CropKit.rbxm (four growth stages: 1 seedling, 2 young, 3 growing, 4 ripe)
 
 | Model | Asset id |
