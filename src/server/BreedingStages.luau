@@ -112,6 +112,57 @@ local function fenceRun(m: Model, frame: CFrame, x0: number, z0: number, x1: num
 	end
 end
 
+-- An incubator standing on `base` (its foot, front to -Z): a cream drum with a pink band, a straw
+-- bed at the height an egg is set (IncBedN, y 2.8 above the foot), a clear glass dome over it, a
+-- warm lamp cap on top and a gauge on the front. The cap takes the pad's tier colour.
+local function incubator(m: Model, base: CFrame, t: any)
+	local cream, pink = Color3.fromRGB(255, 244, 228), Color3.fromRGB(240, 132, 168)
+	local function drum(name: string, y: number, h: number, d: number, colour: Color3, material: Enum.Material?): Part
+		local p = part(
+			m,
+			name,
+			Vector3.new(h, d, d),
+			base * CFrame.new(0, y, 0) * CFrame.Angles(0, 0, math.rad(90)),
+			colour,
+			material
+		) :: Part
+		p.Shape = Enum.PartType.Cylinder
+		return p
+	end
+	drum("IncBody", 1.2, 2.4, 3.6, cream)
+	drum("IncBand", 2.5, 0.4, 3.9, pink)
+	drum("IncStraw", 2.65, 0.3, 3, Color3.fromRGB(232, 196, 120), Enum.Material.Fabric)
+	local dome = part(
+		m,
+		"IncDome",
+		Vector3.one * 3.4,
+		base * CFrame.new(0, 2.7, 0),
+		Color3.fromRGB(215, 240, 255),
+		Enum.Material.Glass
+	) :: Part
+	dome.Shape = Enum.PartType.Ball
+	dome.Transparency = 0.75
+	dome.CastShadow = false
+	dome.CanCollide = false
+	local cap = drum("IncCap", 4.5, 0.4, 1.1, t.trim, t.trimMat)
+	local glow = drum("IncLamp", 4.25, 0.2, 0.8, Color3.fromRGB(255, 200, 120), Enum.Material.Neon)
+	glow.CastShadow = false
+	local light = Instance.new("PointLight")
+	light.Color = Color3.fromRGB(255, 190, 120)
+	light.Range = 7
+	light.Brightness = 0.8
+	light.Parent = cap
+	local gauge = part(
+		m,
+		"IncGauge",
+		Vector3.new(0.15, 0.9, 0.9),
+		base * CFrame.new(-0.6, 1.3, -1.82) * CFrame.Angles(0, math.rad(90), 0) * CFrame.Angles(0, 0, math.rad(90)),
+		cream
+	) :: Part
+	gauge.Shape = Enum.PartType.Cylinder
+	part(m, "IncButton", Vector3.new(0.4, 0.4, 0.2), base * CFrame.new(0.7, 1.3, -1.82), Color3.fromRGB(230, 70, 70))
+end
+
 -- The pen's layer for a level. `area` is the pen model: its kit fence, gate and cottage go (the
 -- layer stands in for them); its floor and incubator pad take their tiers.
 function BreedingStages.build(area: Instance, frame: CFrame, level: number): Model
@@ -122,7 +173,13 @@ function BreedingStages.build(area: Instance, frame: CFrame, level: number): Mod
 	m:SetAttribute("Level", level)
 
 	for _, d in area:GetChildren() do
-		if d.Name == "Fence" or d.Name == "PenGate" or d.Name == "Cottage" or d.Name == "FlowerPot" then
+		if
+			d.Name == "Fence"
+			or d.Name == "PenGate"
+			or d.Name == "Cottage"
+			or d.Name == "FlowerPot"
+			or (d.Name == "Incubator" and d:IsA("Model"))
+		then
 			d.Parent = nil
 		elseif d.Name == "PenFloor" and d:IsA("BasePart") then
 			skin(d, tiers[2], TIERS[tiers[2]].yard, TIERS[tiers[2]].yardMat)
@@ -205,19 +262,22 @@ function BreedingStages.build(area: Instance, frame: CFrame, level: number): Mod
 		end
 	end
 
-	-- incubators beyond the first two, on the pad made longer for them
-	for i = 3, incubators do
+	-- incubators, built here with a clear glass dome so the egg inside shows (the owner, 2026-10-28:
+	-- the kit model's dome was solid); those beyond the first two stand on the pad made longer
+	for i = 1, incubators do
 		local n = INCUBATORS[i]
-		part(
-			m,
-			"IncubatorPadExt",
-			Vector3.new(7, 0.4, 4.6),
-			frame * CFrame.new(n[1], 0.2, n[2]),
-			if tiers[4] <= 1 then Color3.fromRGB(255, 244, 228) else tp.base,
-			tp.baseMat
-		)
-		local inc = place(m, frame, "Incubator", n[1], n[2], 4.7, 3.4, 0.4)
-		if inc then
+		if i > 2 then
+			part(
+				m,
+				"IncubatorPadExt",
+				Vector3.new(7, 0.4, 4.6),
+				frame * CFrame.new(n[1], 0.2, n[2]),
+				if tiers[4] <= 1 then Color3.fromRGB(255, 244, 228) else tp.base,
+				tp.baseMat
+			)
+		end
+		incubator(m, frame * CFrame.new(n[1], 0.4, n[2]), tp)
+		if i > 2 then
 			local bed = part(
 				m,
 				"IncBed" .. i,
