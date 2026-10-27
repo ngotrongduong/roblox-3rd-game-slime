@@ -12,6 +12,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Config = require(ReplicatedStorage.Shared.Config)
 local Layout = require(ReplicatedStorage.Shared.Layout)
 local AreaStages = require(script.Parent.AreaStages)
+local PantryStages = require(script.Parent.PantryStages)
 local PondStages = require(script.Parent.PondStages)
 
 local PLOT = 5
@@ -111,8 +112,9 @@ local function setUp(name: string, col: number, row: number)
 
 	local function show(newLevel: number)
 		local old = layer
-		local stage = if isPond
-			then PondStages.build(newLevel, frame * CFrame.new(DOCK_X, 0, 0))
+		local stage = if name == "PantryL1"
+			then PantryStages.build(area, frame, newLevel)
+			elseif isPond then PondStages.build(newLevel, frame * CFrame.new(DOCK_X, 0, 0))
 			else AreaStages.build(name, area, frame, newLevel)
 		stage.Parent = area
 		layer = stage
@@ -139,7 +141,8 @@ local function setUp(name: string, col: number, row: number)
 	prompt.Parent = anchor
 
 	local function refreshPrompt()
-		prompt.ObjectText = string.format("%s · Level %d · %s", label, level, PondStages.tierName(level))
+		local tier = if name == "PantryL1" then PantryStages.tierName(level) else PondStages.tierName(level)
+		prompt.ObjectText = string.format("%s · Level %d · %s", label, level, tier)
 		prompt.ActionText = if level >= PondStages.MaxLevel then "Max level" else "Upgrade"
 		prompt.Enabled = level < PondStages.MaxLevel
 	end

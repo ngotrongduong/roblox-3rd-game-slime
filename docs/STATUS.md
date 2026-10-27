@@ -164,6 +164,17 @@ warm window, and a real slime model; the roof is a little lilac.
   (rustic wood ... marble and gold). Free and not saved yet (Phase 2: coins, saved levels, owner
   only). `tools/map/sync_server.luau` copies the server code into the work place; play tests start
   on the plaza (`tools/map/dev_spawn.luau`). Pictures `docs/areas/upgrades/`, `fishing-ingame/`.
+- Pantry upgrades redone (owner: the store house itself must grow, and what is added must belong
+  to a store): `src/server/PantryStages.luau`. The kit shed is replaced by a part-built house so its
+  materials and storeys can change. Five eras of ten levels: the era's first level grows the house
+  (2nd storey at 11, loading canopy at 21, 3rd storey at 31, rooftop lantern tower at 41); levels
+  2-5 of the era add or upgrade four store props (transport, containers, lifting, stock: wheelbarrow
+  > hand cart > pallet jack > forklift > hover cart; barrel rack > crate wall > grain silo >
+  shipping container > goo tank; ladder > pulley hoist > crane > conveyor > robot arm; sack pallet
+  > shelf > metal rack > plastic crates > vault, 20 new PropKit models); levels 6-10 move walls,
+  roof, doors and windows, frame and foundation, yard up one material tier (rustic wood, painted
+  timber, brick, steel and glass, slime tech, marble and gold). The other four areas wait for the
+  owner's review one by one (AreaStages is the stopgap). Pictures `docs/areas/upgrades/pantry-v2-*`.
 - `tools/map/sync_client.luau` copies the client scripts into the work place for play tests.
 - `tools/map/sync_shared.luau` copies the repo's Config and Layout into the work place (it swaps in
   fresh ModuleScripts, since Studio caches what require returned).
