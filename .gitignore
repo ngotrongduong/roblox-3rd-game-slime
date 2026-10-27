@@ -1,6 +1,8 @@
 *.rbxl
 # Copies of the owner's art picked for ChatGPT prompts (the originals are in reference/).
 art/chatgpt-refs/
+# Pictures waiting for the owner to upload them through Studio.
+art/upload_now/
 # Pictures as ChatGPT made them (the chosen ones are copied to art/concept/).
 art/inbox/
 # Work places opened in Studio (the map is built in them by tools/map scripts).
