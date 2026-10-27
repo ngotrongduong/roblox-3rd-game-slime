@@ -60,6 +60,18 @@ was left there (this game has none); read it there if a cave is ever wanted.
   scripts; library in ServerStorage.NatureKit of the work place) fits the owner's soft clay-like style: Bush,
   FloweringBush, BerryBush, Fern, GrassTuft, FlowerPatch, Sunflower, WaterLily, rocks, Stump, Log, OakTree,
   SteppingStones. Very small pieces (FlowerPatch, GrassTuft) break up when the camera is within a few studs.
+- 2026-10-27. The storybook lighting preset (tools/map/lighting_storybook.luau) was the biggest single lift: real
+  side shadows, lilac shade, no plastic shine.
+- 2026-10-27. Cartoon pond = flat opaque water parts in 3 tones (shallow rim, mid, deep) over the terrain water
+  (tools/map/pond_water_l1.luau). Terrain water waves rise ~0.8 studs above its raycast level: the paint must sit
+  0.9 above it or the glints poke through.
+- 2026-10-27. Grass MaterialVariant from generate_material ("cartoon hand-drawn grass ... grayscale") rendered as
+  busy, dark brush strokes; the same variant with its maps cleared rendered neon green whatever the terrain colour.
+  Dropped: no override, Grass colour 112,182,66.
+- 2026-10-27. Blob shadow discs must be DARKER than the lit grass around them (70,128,46 under 112,182,66) and only
+  under bushes, rocks, trees; under small flowers and tufts they read as pads.
+- 2026-10-27. A Highlight outline on a group of plain parts (the dock) barely shows from the plot camera; it pays off
+  only on meshes with clear silhouettes.
 - 2026-10-21. `maxTriangles` 64 still gives good faceted trees (a tiny pine, a tiny round tree); the round one shrunk to
   a third and sunk is a good round bush. Cheap trees are what make dense woods fit a budget; a 5-pine cluster in one
   mesh (600) is no cheaper per tree.
