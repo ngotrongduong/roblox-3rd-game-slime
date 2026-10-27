@@ -1,4 +1,6 @@
 *.rbxl
+# Work places opened in Studio (the map is built in them by tools/map scripts).
+assets/raw/
 *.rbxlx
 *.rbxl.lock
 *.rbxlx.lock

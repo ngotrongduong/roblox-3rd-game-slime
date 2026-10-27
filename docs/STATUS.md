@@ -42,6 +42,21 @@ fights (also between players' slimes), and six upgradable areas a plot (fishing,
 pantry, training, breeding), each level changing the look a little. Proposal: `docs/MAP.md`;
 waiting on the owner's choices in its §4. The UI redesign follows the map.
 
+## 2026-10-27 — map approved, greybox built
+
+- The owner approved all four points of `docs/MAP.md`, and set the UI direction (`docs/UI.md`):
+  the simplest possible screen; every upgrade and interaction is done on the objects in the world.
+  The detailed UI design waits; the owner asked to build the map first.
+- `src/shared/Layout.luau` (+ `Config.Map`, `tests/spec/layout.luau`): every position of the valley.
+- `tools/map/build_terrain.luau` and `tools/map/build_greybox.luau`: run through Studio's MCP in a
+  work place (`assets/raw/MapWork.rbxlx`, a copy of the built place, gitignored), they build the
+  terrain (floor, hills, the four quarters, streams, lava rills, ring road, paths, ponds) and a
+  greybox (hedged plots with every area blocked out, the Market stalls, the Heart, goo springs,
+  trees, lighting). Pictures: `docs/map-greybox/`.
+- Open: the map is built in a work place only. The plan is to move both builders into the game
+  (a server `World` module that builds the valley from `Layout` at start), so the real place needs
+  no hand-saved terrain. Lava in the Ember rills is hidden under the basalt (fix in the art pass).
+
 Next (after the map and UI are agreed)
 - Phase 2, The farm: the 3D plot and the slimes on it, the nest house, eggs and the reveal, the
   breeding house, the collection book, selling. Needs the first 3D models (slime body, nest house)

@@ -1,4 +1,4 @@
-# The world map and the home plots — proposal (2026-10-27)
+# The world map and the home plots — approved (2026-10-27)
 
 The owner's direction (2026-10-27, before Phase 2): one wide map shared by a server. Around its
 edge, 8 home plots (one a player) and a trading area. In the middle, a large flat forest-garden
@@ -154,7 +154,9 @@ the owner's art style and is checked against their paintings.
 - One art style everywhere: chunky, rounded, saturated cartoon models matching the owner's
   paintings; bright soft daylight; the Wild Garden slightly more magical (fireflies, glow).
 
-## 4. What the owner is asked to choose
+## 4. Approved by the owner (2026-10-27)
+
+All four points below were approved as proposed.
 
 1. The Market at 12 o'clock as the spawn and hub, plots around the rest of the rim.
 2. The Wild Garden in four mood quarters (meadow, mushroom, ember, frost) with the World Boss at

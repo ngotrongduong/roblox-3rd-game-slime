@@ -127,6 +127,33 @@ Config.Farm = {
 	RepairSlimeHardCap = 500,
 }
 
+-- ===== The Goo Valley map (docs/MAP.md) =====
+-- (owned by Layout and the map builder). Studs; the valley centre is the origin.
+
+Config.Map = {
+	-- Home plots on the rim; the Market takes one more rim slot (north).
+	PlotCount = 8,
+	-- Distance from the centre to the middle of each rim slot.
+	RimRadius = 360,
+	-- A home plot is a square this wide (a 3x3 grid of areas).
+	PlotSize = 160,
+	-- The Market's footprint (across the rim, along the radius).
+	MarketWidth = 200,
+	MarketDepth = 160,
+	-- The flat valley floor; hills rise beyond it.
+	FloorRadius = 490,
+	HillOuterRadius = 600,
+	HillHeight = 70,
+	-- The ring road joining every plot and the Market.
+	RingRoadRadius = 258,
+	RingRoadWidth = 18,
+	-- The Wild Garden and its Heart (World Boss clearing) with two Duel Rings at its edge.
+	WildRadius = 240,
+	HeartRadius = 46,
+	DuelRingRadius = 14,
+	DuelRingDistance = 78,
+}
+
 -- ===== Player profiles and saving =====
 -- (owned by ProfileLogic, server ProfileStore and PlayerData)
 -- The owner's sharpest complaint about the web game was lost progress, and they also disliked
