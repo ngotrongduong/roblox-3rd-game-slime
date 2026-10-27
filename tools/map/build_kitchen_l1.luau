@@ -254,23 +254,6 @@ if lib then
 		local target = (area * CFrame.new(x, GROUND + size.Y / 2, z)).Position
 		m:PivotTo(m:GetPivot() + (target - box.Position))
 		m.Parent = nature
-		if key == "Bush" or key == "BerryBush" or key == "FloweringBush" or key == "MossyBoulder" or key == "OakTree" then
-			local bb, bs = m:GetBoundingBox()
-			local d = math.max(bs.X, bs.Z) * 0.95
-			local s = Instance.new("Part")
-			s.Name = "BlobShadow"
-			s.Shape = Enum.PartType.Cylinder
-			s.Size = Vector3.new(0.06, d, d * 0.85)
-			s.CFrame = CFrame.new(bb.Position.X, GROUND + 0.1, bb.Position.Z) * CFrame.Angles(0, 0, math.rad(90))
-			s.Color = Color3.fromRGB(70, 128, 46)
-			s.Material = Enum.Material.SmoothPlastic
-			s.Anchored = true
-			s.CanCollide = false
-			s.CanQuery = false
-			s.CanTouch = false
-			s.CastShadow = false
-			s.Parent = nature
-		end
 	end
 	put("BerryBush", 15, 8, 0.9, 30)
 	put("FloweringBush", -15, 9, 0.85, 0)

@@ -114,17 +114,6 @@ floor.Parent = plot
 
 -- (the pool's water is real terrain water, filled by pond_water_l1 after this script)
 
--- Blob shadows sit just on the floor.
-for _, areaName in { "FishingPondL1", "GardenL1" } do
-	local nature = plot:FindFirstChild(areaName) and plot[areaName]:FindFirstChild("Nature")
-	if nature then
-		for _, b in nature:GetChildren() do
-			if b.Name == "BlobShadow" then
-				b.Position = Vector3.new(b.Position.X, GROUND + 0.1, b.Position.Z)
-			end
-		end
-	end
-end
 
 local test = workspace:FindFirstChild("StudTest")
 if test then

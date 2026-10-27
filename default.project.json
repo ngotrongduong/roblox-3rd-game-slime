@@ -20,6 +20,12 @@
 				}
 			}
 		},
+		"ServerStorage": {
+			"$className": "ServerStorage",
+			"Kit": {
+				"$path": "assets/Kit"
+			}
+		},
 		"ServerScriptService": {
 			"$className": "ServerScriptService",
 			"Server": {

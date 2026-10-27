@@ -151,6 +151,11 @@ warm window, and a real slime model; the roof is a little lilac.
   2.6 against the floor's 2), so the plot sits level with the ground round it.
 - Build order now: ... build_village, replace_props, replace_fences, stud_floor, pond_water_l1,
   tidy_plot. Pictures `docs/areas/fence-*.jpg`, `village-top.jpg`.
+- The kit is saved in the repo (owner: never make it again): `assets/Kit/*.rbxm` (PropKit, CropKit,
+  FishKit, OwnerKit, NatureKit, HomePlot), exported from the saved work place by
+  `lune run tools/kit/export_kit.luau`, built by Rojo into `ServerStorage.Kit`; index with every
+  asset id in `docs/kit/README.md`. After each Ctrl+S in Studio, export again.
+- The green blob-shadow discs under bushes and rocks are gone (owner); no builder makes them now.
 - `tools/map/sync_client.luau` copies the client scripts into the work place for play tests.
 - `tools/map/sync_shared.luau` copies the repo's Config and Layout into the work place (it swaps in
   fresh ModuleScripts, since Studio caches what require returned).
