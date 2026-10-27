@@ -72,6 +72,13 @@ was left there (this game has none); read it there if a cave is ever wanted.
   under bushes, rocks, trees; under small flowers and tufts they read as pads.
 - 2026-10-27. A Highlight outline on a group of plain parts (the dock) barely shows from the plot camera; it pays off
   only on meshes with clear silhouettes.
+- 2026-10-27. THE OWNER CHOSE THE CLASSIC STUD LOOK ("players seem to prefer Roblox's stud texture"). Recipe that
+  works (tools/map/stud_floor.luau): floors of Plastic tiles with TopSurface = Studs (the legacy surface still
+  renders); an image Texture with a stud DECAL id renders nothing (decal id is not an image id). Terrain cannot carry
+  studs: flatten it under the plot by whole voxels (air from -2 up, ground below) or its grass blades and bumpy
+  surface come through. A pond becomes a sunken pool: 2x2 tiles stepping round the water, sand-coloured near it.
+- 2026-10-27. GetBoundingBox of a model follows its pivot's rotation: for cylinders lying on their side its "height"
+  is their width. Use absolute heights for flat water parts.
 - 2026-10-21. `maxTriangles` 64 still gives good faceted trees (a tiny pine, a tiny round tree); the round one shrunk to
   a third and sunk is a good round bush. Cheap trees are what make dense woods fit a budget; a 5-pine cluster in one
   mesh (600) is no cheaper per tree.
