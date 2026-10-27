@@ -56,6 +56,10 @@ a script file, run with one command.
 - `.claude/agents` — the team (gameplay-dev, ui-dev, world-builder, scene-artist, model-artist, feel-dev,
   balance-tester, reviewer); `.claude/skills` — how recurring jobs are done (studio-build, art-pipeline, playtest,
   publish, robux-products, store-page); both carried over from Egg Heist, see `docs/inherited-from-game-2.md`.
+  Also `ponytail`, `ponytail-review`, `ponytail-audit`, `ponytail-debt`, `ponytail-gain`, `ponytail-help`
+  (from github.com/DietrichGebert/ponytail, MIT, commit 09c434a, installed 2026-10-27 at the owner's
+  request): the smallest change that fully solves a task, and plain-English reviews and audits. This
+  guide wins where they differ (replies to the owner stay in Vietnamese).
 
 ## Rules of the code
 
