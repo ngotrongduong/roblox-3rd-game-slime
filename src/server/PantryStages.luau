@@ -309,8 +309,8 @@ function PantryStages.build(area: Instance, frame: CFrame, level: number): Model
 				part(m, "CornerPost", Vector3.new(0.9, h, 0.9), at(s * (W / 2 - 0.3), y, cz), tf.frame, tf.frameMat)
 			end
 		end
-		-- the band between storeys
-		part(m, "Band", Vector3.new(W + 0.4, 0.4, D + 0.4), at(0, top + h, zc), tf.frame, tf.frameMat)
+		-- the band between storeys: from the top of this storey to the foot of the next, no gap
+		part(m, "Band", Vector3.new(W + 0.4, 0.4, D + 0.4), at(0, top + h + 0.2, zc), tf.frame, tf.frameMat)
 		-- windows: either side of the door on the ground storey, three on the upper ones, one each side
 		local wy = top + h * 0.55
 		local xs: { number } = if k == 1 then { -4, 4 } else { -3.2, 0, 3.2 }
