@@ -32,6 +32,6 @@ is needed.
 
 ## Open points
 
-- The slime here is a stand-in (a navy ball with a tip); the real slime model is its own task.
+- No slime is placed in the builds (the owner: slimes come later).
 - The rod should lean further out over the water; the lily pads sit at the measured water level but
   hardly show from the gate's angle.

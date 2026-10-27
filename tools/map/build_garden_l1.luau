@@ -109,10 +109,6 @@ mark.Parent = spot
 post("CanBody", at(1.8, 0.75, -0.4), 1.3, 1.3, Color3.fromRGB(90, 140, 200)).Material = Enum.Material.Metal
 part("CanSpout", Vector3.new(0.25, 0.25, 1.6), at(1.8, 1.1, -1.4) * CFrame.Angles(math.rad(-30), 0, 0), Color3.fromRGB(90, 140, 200), nil, Enum.Material.Metal)
 
--- A navy slime stand-in on the spot (the real slime model comes later).
-local slime = part("SlimeStandIn", Vector3.new(4, 3.4, 4), spotCf * CFrame.new(0, 1.8, 0), Color3.fromRGB(28, 70, 214), Enum.PartType.Ball)
-slime.Reflectance = 0.15
-part("SlimeTip", Vector3.new(1.2, 1.4, 1.2), spotCf * CFrame.new(0, 3.6, 0), Color3.fromRGB(28, 70, 214), Enum.PartType.Ball).Reflectance = 0.15
 
 -- ===== low picket fence, open at the front =====
 local FX, FZ0, FZ1 = 13, -9, 15

@@ -130,9 +130,6 @@ local spot = post("CookingSpot1", spotCf, 0.12, 3.6, Color3.fromRGB(232, 200, 12
 local mark = Instance.new("Attachment")
 mark.Name = "WorkSpot1"
 mark.Parent = spot
-local slime = part("SlimeStandIn", Vector3.new(4, 3.4, 4), spotCf * CFrame.new(0, 1.8, 0), Color3.fromRGB(28, 70, 214), Enum.PartType.Ball)
-slime.Reflectance = 0.15
-part("SlimeTip", Vector3.new(1.2, 1.4, 1.2), spotCf * CFrame.new(0, 3.6, 0), Color3.fromRGB(28, 70, 214), Enum.PartType.Ball).Reflectance = 0.15
 
 -- ===== the counter (left of the stove) with today's ingredients =====
 local counterCf = at(-7, 0, 3.5)

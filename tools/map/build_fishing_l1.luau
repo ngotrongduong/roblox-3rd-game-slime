@@ -123,10 +123,6 @@ line.CastShadow = false
 part("BobberTop", Vector3.new(0.9, 0.9, 0.9), CFrame.new(bobberPos + Vector3.new(0, 0.35, 0)), Color3.fromRGB(230, 60, 50), Enum.PartType.Ball)
 part("BobberBottom", Vector3.new(0.9, 0.9, 0.9), CFrame.new(bobberPos), Color3.fromRGB(250, 250, 245), Enum.PartType.Ball)
 
--- A navy slime stand-in on the spot (the real slime model comes later): a glossy drop.
-local slime = part("SlimeStandIn", Vector3.new(4, 3.4, 4), spotCf * CFrame.new(0, 1.8, 0), Color3.fromRGB(28, 70, 214), Enum.PartType.Ball)
-slime.Reflectance = 0.15
-part("SlimeTip", Vector3.new(1.2, 1.4, 1.2), spotCf * CFrame.new(0, 3.6, 0), Color3.fromRGB(28, 70, 214), Enum.PartType.Ball).Reflectance = 0.15
 
 -- ===== props (few, big, readable) =====
 -- A bucket for the catch beside the spot.
