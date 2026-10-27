@@ -156,7 +156,7 @@ local function incubator(m: Model, base: CFrame, t: any)
 		m,
 		"IncGauge",
 		Vector3.new(0.15, 0.9, 0.9),
-		base * CFrame.new(-0.6, 1.3, -1.82) * CFrame.Angles(0, math.rad(90), 0) * CFrame.Angles(0, 0, math.rad(90)),
+		base * CFrame.new(-0.6, 1.3, -1.82) * CFrame.Angles(0, math.rad(90), 0),
 		cream
 	) :: Part
 	gauge.Shape = Enum.PartType.Cylinder

@@ -17,7 +17,13 @@ local GardenStages = require(script.Parent.GardenStages)
 -- areas redone one by one with their own stages (the owner reviews each): build(area, frame, level),
 -- tierName(level)
 local BreedingStages = require(script.Parent.BreedingStages)
-local OWN_STAGES: { [string]: any } = { PantryL1 = PantryStages, GardenL1 = GardenStages, BreedingL1 = BreedingStages }
+local KitchenStages = require(script.Parent.KitchenStages)
+local OWN_STAGES: { [string]: any } = {
+	PantryL1 = PantryStages,
+	GardenL1 = GardenStages,
+	BreedingL1 = BreedingStages,
+	KitchenL1 = KitchenStages,
+}
 local PondStages = require(script.Parent.PondStages)
 
 local PLOT = 5

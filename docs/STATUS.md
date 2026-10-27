@@ -181,7 +181,11 @@ warm window, and a real slime model; the roof is a little lilac.
   cupcake cottage grows into CakeCottage2..5, a nest or incubator more every era up to four each with
   their markers; feed, egg care, comfort and warmth props; fence, floor, nest platforms, pad and gate
   arch climb the tiers). 44 new PropKit models; `tools/kit/intake.luau` takes generated models into
-  the kit square and fitted. Kitchen and training ground still wait (AreaStages stopgap).
+  the kit square and fitted. The incubators are part-built with a clear glass dome so the egg shows
+  (owner, 2026-10-28); the owner approved the pen.
+- Kitchen redone the same way (`src/server/KitchenStages.luau`, `docs/areas/kitchen.md`): roof,
+  walls and bread oven, chimney and pot rack, vent lantern; ingredients, grill, water and dishes
+  props (19 new PropKit models). Only the training ground still waits (AreaStages stopgap).
 - `tools/map/sync_client.luau` copies the client scripts into the work place for play tests.
 - `tools/map/sync_shared.luau` copies the repo's Config and Layout into the work place (it swaps in
   fresh ModuleScripts, since Studio caches what require returned).
