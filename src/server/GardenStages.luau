@@ -209,14 +209,17 @@ function GardenStages.build(area: Instance, frame: CFrame, level: number): Model
 		end
 		for _, x in { x0, -5, 0, 5, x1 } do
 			for _, z in { z0, z1 } do
-				part(
-					m,
-					"GHPost",
-					Vector3.new(0.4, eave, 0.4),
-					frame * CFrame.new(x, eave / 2, z),
-					tg.frame,
-					tg.frameMat
-				)
+				-- no post in the middle of the front: that is the door (the owner, 2026-10-28)
+				if not (x == 0 and z == z0) then
+					part(
+						m,
+						"GHPost",
+						Vector3.new(0.4, eave, 0.4),
+						frame * CFrame.new(x, eave / 2, z),
+						tg.frame,
+						tg.frameMat
+					)
+				end
 			end
 		end
 		for _, z in { z0, z1 } do
