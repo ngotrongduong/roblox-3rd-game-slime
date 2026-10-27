@@ -71,7 +71,7 @@ local function dress(areaName: string, area: CFrame, items: { { any } }): number
 end
 
 -- The pond's water surface, measured.
-local fishingArea = Layout.plotAreaFrame(PLOT, -1, 1)
+local fishingArea = Layout.plotAreaFacing(PLOT, -1, 1)
 local params = RaycastParams.new()
 params.FilterType = Enum.RaycastFilterType.Exclude
 params.FilterDescendantsInstances = { workspace.Map }
@@ -98,10 +98,9 @@ local n = dress("FishingPondL1", fishingArea, {
 	{ "FlowerPatch", 12, -13, 1.2, 90 },
 	{ "Stump", 21, -19, 0.9, 0 },
 	{ "OakTree", -21, 22, 1.0, 30 },
-	{ "SteppingStones", -3, -21.5, 0.8, 90 },
 })
 
-local gardenArea = Layout.plotAreaFrame(PLOT, 1, 1)
+local gardenArea = Layout.plotAreaFacing(PLOT, 1, 1)
 n += dress("GardenL1", gardenArea, {
 	{ "Sunflower", 7.5, 13.6, 1.4, 180 },
 	{ "Sunflower", 10.5, 13.4, 1.3, 170 },
@@ -113,7 +112,6 @@ n += dress("GardenL1", gardenArea, {
 	{ "SmallRocks", -17, 1, 1.0, 0 },
 	{ "Fern", 19, 20, 1.3, 0 },
 	{ "OakTree", 21, 22, 0.8, 120 },
-	{ "SteppingStones", 0, -6, 0.6, 90 },
 })
 
 return "dressed with " .. n .. " pack models"

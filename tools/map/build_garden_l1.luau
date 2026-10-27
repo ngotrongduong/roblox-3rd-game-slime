@@ -9,7 +9,7 @@ local Layout = require(ReplicatedStorage.Shared.Layout)
 
 local PLOT = 5
 local GROUND = Config.Map.GroundY
-local area = Layout.plotAreaFrame(PLOT, 1, 1)
+local area = Layout.plotAreaFacing(PLOT, 1, 1)
 local plotModel = workspace.Map:FindFirstChild("Plot" .. PLOT)
 
 -- Clear the greybox garden (rows, sprouts, scarecrow) and any previous build.
@@ -38,9 +38,7 @@ local function at(x: number, y: number, z: number): CFrame
 	return area * CFrame.new(x, y + GROUND, z)
 end
 
--- Bare garden earth inside the fence: terrain grass decoration (about 1.5 studs tall) would hide the
--- beds and the rails, and earth reads as a tended garden.
-workspace.Terrain:FillBlock(area * CFrame.new(0, -2, 3), Vector3.new(25, 4, 23), Enum.Material.Sandstone)
+-- (the garden's own earth floor is laid below, turned with the area)
 
 local function part(name: string, size: Vector3, cf: CFrame, colour: Color3, shape: Enum.PartType?, material: Enum.Material?): Part
 	local p = Instance.new("Part")
@@ -64,6 +62,11 @@ end
 local function post(name: string, cf: CFrame, height: number, diameter: number, colour: Color3): Part
 	return part(name, Vector3.new(height, diameter, diameter), cf * CFrame.Angles(0, 0, math.rad(90)), colour, Enum.PartType.Cylinder)
 end
+
+-- ===== the garden's earth floor (stud), inside the fence =====
+local earth = part("Floor", Vector3.new(26, 0.2, 24), at(0, 0.1, 3), Color3.fromRGB(150, 104, 66), nil, Enum.Material.Plastic)
+earth.TopSurface = Enum.SurfaceType.Studs
+earth.CastShadow = false
 
 -- ===== two raised beds =====
 local BED_W, BED_L, BED_H = 6, 12, 1.4
@@ -98,7 +101,7 @@ bed(6, 4, "cabbage")
 
 -- ===== the work spot (one) =====
 -- A round straw mat on the path between the beds: where a working slime tends the garden.
-local spotCf = at(0, 0.1, 2)
+local spotCf = at(0, 0.3, 2) -- (on top of the earth floor)
 local spot = post("GardenSpot1", spotCf, 0.15, 3.6, Color3.fromRGB(232, 200, 120))
 spot.Material = Enum.Material.Fabric
 local mark = Instance.new("Attachment")
@@ -133,9 +136,9 @@ fenceRun(FX, FZ0, FX, FZ1) -- right side
 fenceRun(-FX, FZ0, -4, FZ0) -- front, left of the opening
 fenceRun(4, FZ0, FX, FZ0) -- front, right of the opening
 
--- A path of three stepping stones from the opening to the mat.
-for k, z in { -8, -5, -2 } do
-	post("SteppingStone", at(math.sin(k) * 0.6, 0.08, z), 0.16, 2.2, Color3.fromRGB(196, 190, 176)).Material = Enum.Material.Slate
+-- A straight line of three flat stepping stones on the earth, from the opening to the mat.
+for _, z in { -7.6, -4.8, -2 } do
+	post("SteppingStone", at(0, 0.3, z), 0.2, 2.2, Color3.fromRGB(196, 190, 176)).Material = Enum.Material.Slate
 end
 
 -- ===== the area's signpost (carrot icon) and props =====

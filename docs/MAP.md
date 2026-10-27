@@ -114,6 +114,16 @@ The areas are placed so food flows from the outside in, and the breeding area si
   a trip and come back there to recover.
 - The slime meadow in the middle is where idle slimes wander, hop, nap and chatter.
 
+**The plot as a small village (the owner, 2026-10-27).** Every area turns to face the middle
+(`Layout.plotAreaFacing`; the corner areas sit at 45°). The middle is a round stone stud plaza with
+a well, lamp posts and flower planters; stud stone paths run from it to each area's entrance and to
+the gate. A tall wooden fence (10 studs, posts every 8) runs round the whole plot, with a gate of two
+roofed towers and a name board at the front middle. Trees from the nature kit stand in a ring
+inside the fence between the areas; the empty front-right cell is a small grove for now (kept for
+the nursery). The slime meadow is skipped for now. The fishing pond holds real terrain water.
+Built by `tools/map/build_village.luau`; pictures `docs/areas/village-gate.jpg`,
+`docs/areas/village-top.jpg`.
+
 ### 2.1 Areas, workers and levels
 
 Each area has **10 levels** (a starting point). Every level adds one small visible piece and a

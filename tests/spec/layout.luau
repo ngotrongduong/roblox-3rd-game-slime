@@ -1,4 +1,5 @@
 local Config = require("../../src/shared/Config")
+local Vector3 = require("@lune/roblox").Vector3
 
 return function(T)
 	local ok, Layout = pcall(require, "../../src/shared/Layout")
@@ -45,6 +46,23 @@ return function(T)
 		local back = Layout.plotAreaFrame(3, 0, 1).Position.Magnitude
 		local front = Layout.plotAreaFrame(3, 0, -1).Position.Magnitude
 		T.ok(back > front)
+	end)
+
+	T.test("every area faces the plot's middle, corners diagonally", function()
+		local centre = Layout.plotFrame(4).Position
+		for col = -1, 1 do
+			for row = -1, 1 do
+				local f = Layout.plotAreaFacing(4, col, row)
+				T.near((f.Position - Layout.plotAreaFrame(4, col, row).Position).Magnitude, 0, 1e-4)
+				if col ~= 0 or row ~= 0 then
+					local d = (centre - f.Position) * Vector3.new(1, 0, 1)
+					T.near(f.LookVector:Dot(d.Unit), 1, 1e-4, col .. "," .. row)
+				end
+			end
+		end
+		local corner = Layout.plotAreaFacing(4, 1, 1).LookVector
+		local side = Layout.plotAreaFacing(4, 1, 0).LookVector
+		T.near(math.deg(math.acos(math.clamp(corner:Dot(side), -1, 1))), 45, 1e-3)
 	end)
 
 	T.test("quarters: north-east is the meadow, nothing outside the Wild Garden", function()

@@ -87,6 +87,23 @@ warm window, and a real slime model; the roof is a little lilac.
 - Research "Do this first" items not yet applied: stylized grass MaterialVariant, darker rims, cartoon water,
   shadow discs, reed sway, outlines on hero props, CC0 packs (KayKit, Quaternius crops, Kenney).
 
+## 2026-10-27 — the plot as a small village (owner)
+
+- All six areas of Plot 5 (pond, pantry, garden, kitchen, breeding pen, training ground) now face
+  the plot's middle (`Layout.plotAreaFacing`, tested). `tools/map/build_village.luau` adds the stone
+  plaza with a well, lamps and planters, paved paths to each area and the gate, a tall wooden fence
+  round the plot with a towered gate and name board, and kit trees, bushes and flowers; it clears the
+  greybox hedge, meadow house and hatchery nest. Pictures `docs/areas/village-*.jpg`.
+- The pond now holds real terrain water (owner's request; `pond_water_l1.luau`), the painted flat
+  water is gone. The boulder "SteppingStones" models were removed from the pond and garden entrances
+  (owner: badly placed); the garden has a straight line of flat stepping stones instead.
+- `tools/map/sync_shared.luau` copies the repo's Config and Layout into the work place (it swaps in
+  fresh ModuleScripts, since Studio caches what require returned).
+- Build order in Studio: build_fishing_l1, build_garden_l1, dress_plot_nature, polish_plot,
+  build_kitchen_l1, build_pantry_l1, build_breeding_l1, build_training_l1, build_village, stud_floor,
+  pond_water_l1.
+- The work place must be saved in Studio (Ctrl+S) to keep the build.
+
 Next (after the map and UI are agreed)
 - Phase 2, The farm: the 3D plot and the slimes on it, the nest house, eggs and the reveal, the
   breeding house, the collection book, selling. Needs the first 3D models (slime body, nest house)

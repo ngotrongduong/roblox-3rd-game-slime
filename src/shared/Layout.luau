@@ -85,6 +85,20 @@ function Layout.plotAreaFrame(plot: number, col: number, row: number): CFrame
 	return Layout.plotFrame(plot) * CFrame.new(-col * step, 0, row * step)
 end
 
+-- An area of a plot turned to face the plot's middle (the owner, 2026-10-27: "all of them turned in
+-- toward the player's middle area, like a small village"). Same centre as plotAreaFrame; its -Z
+-- (LookVector, the area's front) points at the plot's centre, so corner areas face it diagonally.
+-- The middle cell itself keeps the plot's own frame.
+function Layout.plotAreaFacing(plot: number, col: number, row: number): CFrame
+	local frame = Layout.plotAreaFrame(plot, col, row)
+	if col == 0 and row == 0 then
+		return frame
+	end
+	local d = Layout.plotFrame(plot).Position - frame.Position
+	-- A yaw's LookVector is (-sin, 0, -cos): yaw = atan2(-dx, -dz) looks along d.
+	return CFrame.new(frame.Position) * CFrame.Angles(0, math.atan2(-d.X, -d.Z), 0)
+end
+
 -- The gate of a plot: on its front edge, facing the valley centre.
 function Layout.plotGate(plot: number): CFrame
 	return Layout.plotFrame(plot) * CFrame.new(0, 0, -M.PlotSize / 2)

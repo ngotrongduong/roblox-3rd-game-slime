@@ -10,7 +10,7 @@ local Layout = require(ReplicatedStorage.Shared.Layout)
 local PLOT = 5
 local GROUND = Config.Map.GroundY
 local terrain = workspace.Terrain
-local area = Layout.plotAreaFrame(PLOT, -1, 1)
+local area = Layout.plotAreaFacing(PLOT, -1, 1)
 local plotModel = workspace.Map:FindFirstChild("Plot" .. PLOT)
 
 -- Clear the greybox pieces and any previous build of this pond.

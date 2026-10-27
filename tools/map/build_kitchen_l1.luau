@@ -12,7 +12,7 @@ local Layout = require(ReplicatedStorage.Shared.Layout)
 
 local PLOT = 5
 local GROUND = Config.Map.GroundY or 2
-local area = Layout.plotAreaFrame(PLOT, -1, 0)
+local area = Layout.plotAreaFacing(PLOT, -1, 0)
 local plotModel = workspace.Map:FindFirstChild("Plot" .. PLOT)
 
 -- Clear the greybox kitchen and any previous build.
