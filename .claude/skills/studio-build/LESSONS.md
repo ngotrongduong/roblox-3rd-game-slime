@@ -47,6 +47,19 @@ was left there (this game has none); read it there if a cave is ever wanted.
   check get_studio_state before starting jobs.
 - 2026-10-27. A bare model on flat grass reads far weaker than the painting, which is a little diorama (bushes, pots,
   stepping stones, flowers around it): budget the dressing kit with every building, not after.
+- 2026-10-27. Flat terrain filled up to y = 0 shows its surface at y = 2 (4-stud voxels, centres on multiples of 4):
+  everything placed from y = 0 was buried 2 studs and looked "missing". Place from `Config.Map.GroundY` (2), and
+  measure with a raycast against the terrain when in doubt.
+- 2026-10-27. Terrain Grass grows decoration blades about 1.5 studs tall that hide low props (bed planks, fence
+  rails, stepping stones): put bare earth (Sandstone here) under low built things, or raise them.
+- 2026-10-27. Creator Store models: `InsertService:LoadAsset` from execute_luau fails ("not authorized") for other
+  creators' assets; the MCP `insert_asset` tool works (it sandboxes their scripts; delete every LuaSourceContainer
+  anyway). The Egg Heist kit (our own asset ids) loads with LoadAsset.
+- 2026-10-27. The Egg Heist kit (very low poly, made to be scattered far away) reads badly up close (cattails as red
+  shards, daisies as white slivers). For plots seen close, the free "Nature stylized Pack" (109637424937405, no
+  scripts; library in ServerStorage.NatureKit of the work place) fits the owner's soft clay-like style: Bush,
+  FloweringBush, BerryBush, Fern, GrassTuft, FlowerPatch, Sunflower, WaterLily, rocks, Stump, Log, OakTree,
+  SteppingStones. Very small pieces (FlowerPatch, GrassTuft) break up when the camera is within a few studs.
 - 2026-10-21. `maxTriangles` 64 still gives good faceted trees (a tiny pine, a tiny round tree); the round one shrunk to
   a third and sunk is a good round bush. Cheap trees are what make dense woods fit a budget; a 5-pine cluster in one
   mesh (600) is no cheaper per tree.

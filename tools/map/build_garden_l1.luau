@@ -4,9 +4,11 @@
 -- front, the area's signpost (carrot icon), and a few props. Rebuilds itself each run.
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
+local Config = require(ReplicatedStorage.Shared.Config)
 local Layout = require(ReplicatedStorage.Shared.Layout)
 
 local PLOT = 5
+local GROUND = Config.Map.GroundY
 local area = Layout.plotAreaFrame(PLOT, 1, 1)
 local plotModel = workspace.Map:FindFirstChild("Plot" .. PLOT)
 
@@ -30,10 +32,15 @@ local CARROT = Color3.fromRGB(240, 130, 40)
 local model = Instance.new("Model")
 model.Name = "GardenL1"
 
--- Local placement in the area: x across (+x = left seen from the gate), z depth (+z = back).
+-- Local placement in the area: x across (+x = left seen from the gate), z depth (+z = back), y up
+-- from the ground's surface.
 local function at(x: number, y: number, z: number): CFrame
-	return area * CFrame.new(x, y, z)
+	return area * CFrame.new(x, y + GROUND, z)
 end
+
+-- Bare garden earth inside the fence: terrain grass decoration (about 1.5 studs tall) would hide the
+-- beds and the rails, and earth reads as a tended garden.
+workspace.Terrain:FillBlock(area * CFrame.new(0, -2, 3), Vector3.new(25, 4, 23), Enum.Material.Sandstone)
 
 local function part(name: string, size: Vector3, cf: CFrame, colour: Color3, shape: Enum.PartType?, material: Enum.Material?): Part
 	local p = Instance.new("Part")
@@ -152,7 +159,7 @@ icon.Parent = gui
 gui.Parent = sign
 
 -- A seed sack and a water barrel inside the fence corners.
-part("SeedSack", Vector3.new(2, 2.4, 1.8), at(10, 1.1, -6), Color3.fromRGB(226, 206, 160), Enum.PartType.Ball, Enum.Material.Fabric)
+part("SeedSack", Vector3.new(2, 2.4, 1.8), at(10, 1.1, -6), Color3.fromRGB(226, 206, 160), Enum.PartType.Ball)
 part("SackTie", Vector3.new(0.8, 0.4, 0.8), at(10, 2.35, -6), WOOD_DARK, Enum.PartType.Ball)
 post("Barrel", at(-10.5, 1.4, 12.5), 2.8, 2.6, HONEY_DARK).Material = Enum.Material.Wood
 post("BarrelWater", at(-10.5, 2.82, 12.5), 0.05, 2.2, Color3.fromRGB(90, 170, 220))

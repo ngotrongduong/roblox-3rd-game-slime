@@ -131,6 +131,10 @@ Config.Farm = {
 -- (owned by Layout and the map builder). Studs; the valley centre is the origin.
 
 Config.Map = {
+	-- The height of the terrain's surface on flat ground. Terrain voxels are 4 studs with centres on
+	-- multiples of 4, so a floor filled up to y = 0 shows its surface at y = 2 (measured by raycast,
+	-- 2026-10-27). Everything that stands on the ground is placed from this height.
+	GroundY = 2,
 	-- Home plots on the rim; the Market takes one more rim slot (north).
 	PlotCount = 8,
 	-- Distance from the centre to the middle of each rim slot.

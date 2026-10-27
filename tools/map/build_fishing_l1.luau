@@ -4,9 +4,11 @@
 -- props. Rebuilds itself each run. Change PLOT to build it on another plot.
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
+local Config = require(ReplicatedStorage.Shared.Config)
 local Layout = require(ReplicatedStorage.Shared.Layout)
 
 local PLOT = 5
+local GROUND = Config.Map.GroundY
 local terrain = workspace.Terrain
 local area = Layout.plotAreaFrame(PLOT, -1, 1)
 local plotModel = workspace.Map:FindFirstChild("Plot" .. PLOT)
@@ -30,9 +32,10 @@ local REED = Color3.fromRGB(120, 168, 70)
 local model = Instance.new("Model")
 model.Name = "FishingPondL1"
 
--- Local placement in the area: x across (+x = left seen from the gate), z depth (+z = back).
+-- Local placement in the area: x across (+x = left seen from the gate), z depth (+z = back), y up
+-- from the ground's surface.
 local function at(x: number, y: number, z: number): CFrame
-	return area * CFrame.new(x, y, z)
+	return area * CFrame.new(x, y + GROUND, z)
 end
 
 local function part(name: string, size: Vector3, cf: CFrame, colour: Color3, shape: Enum.PartType?, material: Enum.Material?): Part
