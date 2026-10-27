@@ -16,9 +16,19 @@ comes back to recover. Built directly in Studio in the classic stud look. No sli
 | Signpost | crossed swords | tap: train, pick the squad, upgrade |
 | Dressing | bushes, rocks, a tuft, flowers, a stump outside the fence | |
 
-## Later levels (training spots 1 to 4; remodel at 4 / 7 / 10)
+## Upgrades, levels 1-50 (`src/server/TrainingStages.luau`, pictures `upgrades/training-l35.jpg`, `training-l50.jpg`)
 
-- Level 2-3: a second dummy and spot, a hurdle.
-- Level 4: a fenced yard with a target board row; 2 spots.
-- Level 7: a dojo-style roof over one side; 3 spots.
-- Level 10: a small round arena with low stone walls and banners; 4 spots.
+The pantry's pattern: five eras of ten levels, nothing taken away. The kit fence is replaced by a
+part-built ranch fence with an entrance arch (crossed swords on a shield); the weapon rack stands
+against the left fence facing in.
+
+- Era start (1 / 11 / 21 / 31 / 41): 1 the yard, lamps by the entrance; 11 two-step stands at the
+  back; 21 a punching bag with training spot 2, floodlight masts at the corners; 31 a canopy over the
+  stands with a scoreboard, training spot 3 facing the archery target; 41 a podium with a golden
+  trophy by the entrance.
+- Levels 2-5 of an era: one prop a level, against the fence facing in. Strength: StoneWeights >
+  WoodBarbell > DumbbellRack > WeightBench > GravityPress. Agility: TyreRun > JumpHurdles >
+  BalanceBeam > ClimbingWall > HoloHoops. Recovery: RestBench > WaterCooler > MassageTable > IceBath >
+  HealPod. Gear: SwordBarrel > ShieldRack > ArmorStand > SparringBot > HoloTrainer.
+- Levels 6-10 of an era: floor, border, fence and stands, lamps and masts, arch and podium each move
+  up one material tier.

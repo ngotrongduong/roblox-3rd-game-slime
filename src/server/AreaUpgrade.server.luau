@@ -18,11 +18,13 @@ local GardenStages = require(script.Parent.GardenStages)
 -- tierName(level)
 local BreedingStages = require(script.Parent.BreedingStages)
 local KitchenStages = require(script.Parent.KitchenStages)
+local TrainingStages = require(script.Parent.TrainingStages)
 local OWN_STAGES: { [string]: any } = {
 	PantryL1 = PantryStages,
 	GardenL1 = GardenStages,
 	BreedingL1 = BreedingStages,
 	KitchenL1 = KitchenStages,
+	TrainingL1 = TrainingStages,
 }
 local PondStages = require(script.Parent.PondStages)
 
