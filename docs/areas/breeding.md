@@ -20,7 +20,7 @@ waits in its nest. Slimes are not part of the build (the owner: slimes come late
 |---|---|---|
 | Pen | 30 x 26 hay-coloured stud floor, a wooden fence of chunky posts with caps and two rails, a gate with tall posts and a board with a pink heart | the area's boundary |
 | Cottage | the round cream cottage with the stepped pink roof, hearts, warm windows, flower pots, at the back of the pen | the slimes' house |
-| Nests | 2 straw hen's nests (a woven rim of straw lumps), Attachments `Nest1` / `Nest2`; nest 1 shows a speckled egg | where eggs are laid |
+| Nests | 2 birds' nests: cups woven of twig rings that widen upward, loose twigs at the rim, a soft lining, Attachments `Nest1` / `Nest2`; nest 1 shows a speckled egg | where eggs are laid |
 | Incubators | 2 machines outside the pen's side: cream stud body, pink trim, a straw bed under a glass dome with a warm lamp, a gauge and a red button; Attachments `Incubator1` / `Incubator2`; one shows an egg | where eggs hatch |
 | Trough, hay bale | inside the pen | |
 | Signpost | egg icon, by the gate | tap: what is in the pen, hatch times, upgrade |

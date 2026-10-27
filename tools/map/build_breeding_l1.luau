@@ -173,22 +173,48 @@ for _, side in { -1, 1 } do
 	end
 end
 
--- ===== nests (hen's nests of straw), level 1: two =====
+-- ===== nests (birds' nests), level 1: two =====
+-- A bird's nest (the owner, 2026-10-27: "like a bird's nest"): a cup woven of twigs. Rings of twigs
+-- laid along the ring, wider going up so the walls make a bowl, each twig tilted a little; a few
+-- loose twigs poke out of the rim; a soft lining fills the hollow.
+local TWIGS = { HONEY_DARK, Color3.fromRGB(124, 80, 44), Color3.fromRGB(176, 120, 66) }
+local nestRng = Random.new(11)
+local RINGS = {
+	{ r = 1.5, y = 0.25, n = 10 },
+	{ r = 2.0, y = 0.6, n = 13 },
+	{ r = 2.35, y = 0.95, n = 15 },
+	{ r = 2.5, y = 1.3, n = 16 },
+	{ r = 2.4, y = 1.62, n = 15 },
+}
 local function nest(i: number, x: number, z: number, withEgg: boolean)
-	local cf = at(x, 0.4, z)
-	disc("NestBase", cf * CFrame.new(0, 0.35, 0), 0.7, 4.6, STRAW, Enum.Material.Plastic)
-	-- a woven rim of straw lumps
-	for k = 0, 9 do
-		local a = k * math.pi / 5
-		part("NestRim", Vector3.new(1.3, 0.9, 1.1), cf * CFrame.Angles(0, a, 0) * CFrame.new(0, 0.85, 2) * CFrame.Angles(0, 0, math.rad(if k % 2 == 0 then 12 else -12)), if k % 2 == 0 then STRAW else STRAW_DARK, Enum.PartType.Ball)
+	local base = at(x, 0.4, z)
+	for ri, ring in RINGS do
+		for k = 1, ring.n do
+			local a = (k + ri * 0.5) / ring.n * math.pi * 2
+			local len = 2 * math.pi * ring.r / ring.n * 1.6
+			local cf = base
+				* CFrame.Angles(0, a, 0)
+				* CFrame.new(0, ring.y, ring.r)
+				* CFrame.Angles(math.rad(nestRng:NextNumber(-14, 14)), 0, math.rad(nestRng:NextNumber(-10, 10)))
+			-- a cylinder lies along its X, which is the ring's tangent here
+			part("NestTwig", Vector3.new(len, 0.42, 0.42), cf, TWIGS[nestRng:NextInteger(1, 3)], Enum.PartType.Cylinder).CastShadow = false
+		end
 	end
+	for _ = 1, 6 do
+		local cf = base
+			* CFrame.Angles(0, nestRng:NextNumber(0, math.pi * 2), 0)
+			* CFrame.new(0, 1.4, 2.6)
+			* CFrame.Angles(0, math.rad(nestRng:NextNumber(-40, 40)), math.rad(nestRng:NextNumber(10, 30)))
+		part("NestTwig", Vector3.new(1.8, 0.2, 0.2), cf, TWIGS[nestRng:NextInteger(1, 3)], Enum.PartType.Cylinder).CastShadow = false
+	end
+	part("NestLining", Vector3.new(4, 1.1, 4), base * CFrame.new(0, 0.55, 0), Color3.fromRGB(236, 206, 140), Enum.PartType.Ball)
 	-- the hollow carries the nest's Attachment (where a laid egg sits)
-	local hollow = disc("NestHollow" .. i, cf * CFrame.new(0, 0.72, 0), 0.06, 3, STRAW_DARK)
+	local hollow = disc("NestHollow" .. i, base * CFrame.new(0, 1.05, 0), 0.06, 2.6, Color3.fromRGB(214, 180, 110))
 	local mark = Instance.new("Attachment")
 	mark.Name = "Nest" .. i
 	mark.Parent = hollow
 	if withEgg then
-		egg("Egg", cf * CFrame.new(0.2, 0.7, 0), 1.3)
+		egg("Egg", base * CFrame.new(0.1, 0.95, 0), 1.25)
 	end
 end
 nest(1, PX - 9.5, -2, true)
