@@ -128,6 +128,16 @@ warm window, and a real slime model; the roof is a little lilac.
 - For later (Phase 2), as the owner asked: the growing system sets a plant's Stage over time and
   swaps in the next stage's model, scaling it up smoothly from the last; the training ground's dummy,
   target and rack get motion when a slime trains there.
+- Props remade low poly (owner: "as beautiful and detailed as the crops, everything"): 21 models from
+  `generate_mesh` in the work place's `ServerStorage.PropKit` — Stove, KitchenCounter, FirewoodPile,
+  StorageShed, CrateStack, WoodBarrel, Cottage, Incubator, BirdNest, WaterTrough, HayBale,
+  FlowerPot, TrainingDummy, ArcheryTarget, WeaponRack, BannerFlag, FishBucket, WateringCan,
+  StoneWell, Planter, VillageLamp. `tools/map/replace_props.luau` (after build_village) swaps each
+  part-built prop group for its kit model, fitted to the group's place and height and facing the
+  area's front; the work-spot, nest and incubator markers stay as invisible parts, lamps keep their
+  light. generate_mesh hands meshes back turned by a random angle: each kit mesh is set square when
+  it goes into the kit. Floors, paths, fences and the area signs stay in the stud look. Pictures
+  `docs/areas/props-*.jpg`, `prop-kit.jpg`.
 - `tools/map/sync_client.luau` copies the client scripts into the work place for play tests.
 - `tools/map/sync_shared.luau` copies the repo's Config and Layout into the work place (it swaps in
   fresh ModuleScripts, since Studio caches what require returned).

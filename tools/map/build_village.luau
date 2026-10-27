@@ -397,7 +397,7 @@ end
 for _, s in { -1, 1 } do
 	local a = math.rad(225) + s * math.rad(50)
 	local p = camp + Vector3.new(math.sin(a), 0, math.cos(a)) * (CAMP_R + 1.5)
-	place(ownerKit and ownerKit:FindFirstChild("LanternPost"), p.X, p.Z, 7, 0)
+	lamp(p.X, p.Z) -- (replace_props swaps it for the kit lamp post, as on the plaza)
 end
 local BIG = { { "TallPineLarge", 225, 21, 26 }, { "BroadleafTree", 175, 21, 22 }, { "TallPineDense", 275, 21, 24 }, { "TallPineLarge", 135, 22, 21 } }
 for i, t in BIG do
