@@ -57,6 +57,13 @@ waiting on the owner's choices in its §4. The UI redesign follows the map.
   (a server `World` module that builds the valley from `Layout` at start), so the real place needs
   no hand-saved terrain. Lava in the Ember rills is hidden under the basalt (fix in the art pass).
 
+## 2026-10-27 — concept art before 3D (owner)
+
+The owner asked not to build 3D yet: first ChatGPT concept art of the home plot, "the best
+possible visuals, but a simple and clean design". Prompts: `docs/art/chatgpt-home-plot.md`
+(style lock + the whole plot + each area at levels 1/4/7/10), with the owner's reference art
+copied to `art/chatgpt-refs/`. Waiting for the pictures in `art/inbox/`.
+
 Next (after the map and UI are agreed)
 - Phase 2, The farm: the 3D plot and the slimes on it, the nest house, eggs and the reveal, the
   breeding house, the collection book, selling. Needs the first 3D models (slime body, nest house)
