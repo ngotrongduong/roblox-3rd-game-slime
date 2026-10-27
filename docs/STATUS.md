@@ -138,6 +138,19 @@ warm window, and a real slime model; the roof is a little lilac.
   light. generate_mesh hands meshes back turned by a random angle: each kit mesh is set square when
   it goes into the kit. Floors, paths, fences and the area signs stay in the stud look. Pictures
   `docs/areas/props-*.jpg`, `prop-kit.jpg`.
+- Fences, gates and signs low poly too (owner): PalisadeFence (the plot's tall fence),
+  PicketFence (garden), RanchFence (breeding pen, training ground), VillageGate (keeps the plot's name
+  board as a SurfaceGui on the model's board), PenGate (heart arch), and six signposts with their
+  icon painted on (SignFishing, SignGarden, SignKitchen, SignPantry, SignBreeding, SignTraining).
+  `tools/map/replace_fences.luau` cuts each fence run into bays and stretches one section mesh per
+  bay (a MeshPart sizes freely); gates and signs go through `replace_props.luau`.
+- Owner fixes: `tools/map/tidy_plot.luau` (last step) moves every tree, bush and prop that reached
+  past the plot fence back inside, smaller if needed, and lays a skirt of small bushes, rocks, ferns
+  and tufts along the outside foot of the fence (gate kept clear). `stud_floor.luau` now cuts only
+  the plot itself and raises a 16-stud ring of grass round it to the floor's height (measured 1.4 to
+  2.6 against the floor's 2), so the plot sits level with the ground round it.
+- Build order now: ... build_village, replace_props, replace_fences, stud_floor, pond_water_l1,
+  tidy_plot. Pictures `docs/areas/fence-*.jpg`, `village-top.jpg`.
 - `tools/map/sync_client.luau` copies the client scripts into the work place for play tests.
 - `tools/map/sync_shared.luau` copies the repo's Config and Layout into the work place (it swaps in
   fresh ModuleScripts, since Studio caches what require returned).

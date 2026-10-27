@@ -31,8 +31,20 @@ local fishing = Layout.plotAreaFacing(PLOT, -1, 1)
 -- terrain's surface is at -2, hidden under the tiles (a half-voxel fill came up through them).
 local terrain = workspace.Terrain
 local flat = plotFrame - Vector3.new(0, plotFrame.Position.Y, 0)
-terrain:FillBlock(flat + Vector3.new(0, 4, 0), Vector3.new(half * 2 + 8, 12, half * 2 + 8), Enum.Material.Air)
-terrain:FillBlock(flat + Vector3.new(0, -6, 0), Vector3.new(half * 2 + 8, 8, half * 2 + 8), Enum.Material.Grass)
+-- Only the plot itself is cut down; a ring of grass round it is then raised to the floor's height,
+-- so the ground outside the fence meets the stud floor with no step (a fill up to y = 0.6 leaves the
+-- top voxel a little filled, its surface at about y = 2, the floor's top; measured) (the owner, 2026-10-27: the
+-- plot's edge and the foot of the fence showed).
+local RING = 16
+for _, side in { -1, 1 } do
+	-- (cleared first: a higher fill of an earlier run would stay)
+	terrain:FillBlock(flat * CFrame.new(side * (half + RING / 2), 6, 0), Vector3.new(RING, 12, half * 2 + RING * 2), Enum.Material.Air)
+	terrain:FillBlock(flat * CFrame.new(0, 6, side * (half + RING / 2)), Vector3.new(half * 2, 12, RING), Enum.Material.Air)
+	terrain:FillBlock(flat * CFrame.new(side * (half + RING / 2), -3.7, 0), Vector3.new(RING, 8.6, half * 2 + RING * 2), Enum.Material.Grass)
+	terrain:FillBlock(flat * CFrame.new(0, -3.7, side * (half + RING / 2)), Vector3.new(half * 2, 8.6, RING), Enum.Material.Grass)
+end
+terrain:FillBlock(flat + Vector3.new(0, 4, 0), Vector3.new(half * 2, 12, half * 2), Enum.Material.Air)
+terrain:FillBlock(flat + Vector3.new(0, -6, 0), Vector3.new(half * 2, 8, half * 2), Enum.Material.Grass)
 task.wait()
 
 local old = plot:FindFirstChild("StudLawn")

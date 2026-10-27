@@ -11,9 +11,11 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerStorage = game:GetService("ServerStorage")
 
+local Config = require(ReplicatedStorage.Shared.Config)
 local Layout = require(ReplicatedStorage.Shared.Layout)
 
 local PLOT = 5
+local GROUND = Config.Map.GroundY or 2
 local plot = workspace.Map["Plot" .. PLOT]
 local kit = ServerStorage:FindFirstChild("PropKit")
 local AREAS = {
@@ -41,8 +43,31 @@ type Swap = {
 	light: boolean?,
 	grow: number?,
 	tall: boolean?, -- fitted by height alone (tall, thin things such as lamp posts)
+	ground: boolean?, -- stands on the ground even when the group hung higher (a sign on a post)
+	shift: Vector3?, -- moved by this much in the area's frame
+	label: { x: number, y: number, w: number, h: number, front: number }?,
 }
 local SWAPS: { Swap } = {
+	-- the plot's gate; its name board keeps the plot's name (a SurfaceGui) on the model's board
+	{
+		area = "Village",
+		kit = "VillageGate",
+		seed = "GateBeam",
+		parts = { "GateTower", "GateTowerCap", "GateTowerRoof", "GateLamp", "GateBeam", "GateSign" },
+		radius = 16,
+		keep = { "GateSign" },
+		light = true,
+		label = { x = 0.5, y = 0.62, w = 0.3, h = 0.15, front = 0.6 },
+	},
+	-- the areas' signposts, each with its icon painted on (the owner: low poly, 2026-10-27)
+	{ area = "FishingPondL1", kit = "SignFishing", seed = "Sign", parts = { "Sign" }, radius = 2, ground = true, shift = Vector3.new(3.5, 0, -1) },
+	{ area = "GardenL1", kit = "SignGarden", seed = "Sign", parts = { "Sign", "SignPost" }, radius = 3, ground = true },
+	{ area = "KitchenL1", kit = "SignKitchen", seed = "Sign", parts = { "Sign", "SignPost" }, radius = 3, ground = true },
+	{ area = "PantryL1", kit = "SignPantry", seed = "Sign", parts = { "Sign", "SignPost" }, radius = 3, ground = true },
+	{ area = "BreedingL1", kit = "SignBreeding", seed = "Sign", parts = { "Sign", "SignPost" }, radius = 3, ground = true, turn = 90 }, -- (made side-on)
+	{ area = "TrainingL1", kit = "SignTraining", seed = "Sign", parts = { "Sign", "SignPost" }, radius = 3, ground = true },
+	-- the breeding pen's gate arch (its tall posts go with the fence, replace_fences)
+	{ area = "BreedingL1", kit = "PenGate", seed = "GateBoard", parts = { "GateBoard", "GateHeart" }, radius = 3, ground = true },
 	{
 		area = "Village",
 		kit = "StoneWell",
@@ -206,6 +231,12 @@ local function swapOne(s: Swap): boolean
 		local a, b = boxIn(frame, c)
 		lo, hi = lo:Min(a), hi:Max(b)
 	end
+	if s.ground then
+		lo = Vector3.new(lo.X, GROUND, lo.Z)
+	end
+	if s.shift then
+		lo, hi = lo + s.shift, hi + s.shift
+	end
 	local size = hi - lo
 	local m = src:Clone()
 	for _, d in m:GetDescendants() do
@@ -247,6 +278,14 @@ local function swapOne(s: Swap): boolean
 			c.Transparency = 1
 			c.CanCollide = false
 			c:SetAttribute("Swapped", true)
+			-- a kept label (its SurfaceGui text) moves onto the model's board, given as shares of the
+			-- model's box: centre across and up, width and height, and how far in front of the middle
+			if s.label then
+				local box, bs = m:GetBoundingBox()
+				local l = s.label
+				c.Size = Vector3.new(bs.X * l.w, bs.Y * l.h, 0.1)
+				c.CFrame = box * CFrame.new(bs.X * (l.x - 0.5), bs.Y * (l.y - 0.5), -l.front)
+			end
 		else
 			c:Destroy()
 		end
