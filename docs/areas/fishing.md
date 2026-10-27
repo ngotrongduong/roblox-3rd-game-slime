@@ -23,7 +23,19 @@ Interaction (to build with gameplay): tap the mat (or a ProximityPrompt there) t
 tap the sign to open the small upgrade card. No text in the world: icons only, in English when text
 is needed.
 
-## 50 levels, ten eras (the owner, 2026-10-27; replaces the 10-level plan below)
+## 50 levels, second pass (the owner, 2026-10-27; replaces the eras table below)
+
+The dock keeps its size; nothing is ever taken away. Five parts: 1 deck (planks, beams, posts),
+2 rails, 3 lamps at both ends, 4 a bait box, 5 bollards with rope (and light strips from tier 7).
+Levels 1-5 add them one by one in rustic wood; from level 6 every five levels are a material tier
+(painted wood, stone and timber, brick, workshop iron, glass house, modern metal, tech, slime tech,
+marble and gold) and each level moves one part up to it, in the same order. No rods (slimes carry
+their own) and no side platforms: work spots 1-4 are on the dock's open far end (2 from level 11,
+3 from 21, 4 from 31). In game: walk to the dock and press E (`src/server/AreaUpgrade.server.luau`,
+stages in `src/server/PondStages.luau`). Play tests start beside the pond (`tools/map/dev_spawn.luau`).
+Pictures `docs/areas/fishing-ingame/v2-*.jpg`.
+
+## 50 levels, ten eras (first pass, replaced above)
 
 Approved plan: 50 levels, a remodel every 5 (the first level of each era: 1, 6, 11 ... 46) and one
 small change at each level between, always in this order: a decoration, rails along the dock (the

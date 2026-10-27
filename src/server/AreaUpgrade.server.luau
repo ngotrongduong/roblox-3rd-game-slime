@@ -1,8 +1,8 @@
 --!strict
 -- Upgrading a home plot's fishing pond with the E key (the owner, 2026-10-27: walk up to the dock,
 -- press E, see the pond change). The server keeps the level and swaps the pond's stage layer
--- (PondStages) for the next level, with a burst of sparkles, bigger at an era's remodel. The original
--- level-1 dock and its tools are hidden while the stage layer stands in for them.
+-- (PondStages) for the next level, with a burst of sparkles, bigger when a material tier starts. The
+-- original level-1 dock and its tools are hidden while the stage layer stands in for them.
 -- shortcut: free upgrades and the level kept only while the server runs (no cost, not saved, any
 -- player may press); upgrade when the farm's coins and saved area levels exist (Phase 2).
 local Players = game:GetService("Players")
@@ -89,50 +89,14 @@ end
 local level = 1
 local layer: Model? = nil
 
--- the big landmarks stand in the area's two front corners, either side of the path to the dock
-local SHORE = { Vector2.new(-19, -12), Vector2.new(23, -11) }
-
--- The level-1 dressing (bushes, rocks) a landmark would stand in is hidden while it stands there.
-local hidden: { [BasePart]: number } = {}
-local function clearSpots(stage: Model)
-	for p, t in hidden do
-		p.Transparency = t
-	end
-	table.clear(hidden)
-	local nature = pond:FindFirstChild("Nature")
-	if not nature then
-		return
-	end
-	for _, lm in stage:GetChildren() do
-		if lm:IsA("Model") and lm:GetAttribute("Landmark") then
-			local box, size = lm:GetBoundingBox()
-			local reach = math.max(size.X, size.Z) / 2 + 2
-			for _, n in nature:GetChildren() do
-				if n:IsA("Model") and n.Name ~= "WaterLily" then
-					local d = n:GetPivot().Position - box.Position
-					if Vector2.new(d.X, d.Z).Magnitude < reach then
-						for _, p in n:GetDescendants() do
-							if p:IsA("BasePart") and hidden[p] == nil then
-								hidden[p] = p.Transparency
-								p.Transparency = 1
-							end
-						end
-					end
-				end
-			end
-		end
-	end
-end
-
 local function show(newLevel: number)
 	local old = layer
-	local stage = PondStages.build(newLevel, cell, false, SHORE)
+	local stage = PondStages.build(newLevel, cell)
 	stage.Parent = pond
 	layer = stage
 	if old then
 		old:Destroy()
 	end
-	clearSpots(stage)
 end
 
 -- the prompt: an invisible post at the shore end of the dock
@@ -153,8 +117,7 @@ prompt.RequiresLineOfSight = false
 prompt.Parent = anchor
 
 local function refreshPrompt()
-	local era = PondStages.stage(level)
-	prompt.ObjectText = string.format("Fishing Pond · Level %d · %s", level, PondStages.Eras[era].name)
+	prompt.ObjectText = string.format("Fishing Pond · Level %d · %s", level, PondStages.tierName(level))
 	prompt.ActionText = if level >= PondStages.MaxLevel then "Max level" else "Upgrade"
 	prompt.Enabled = level < PondStages.MaxLevel
 end
@@ -167,9 +130,8 @@ prompt.Triggered:Connect(function(player: Player)
 	end
 	lastPress[player] = now
 	level += 1
-	local _, step = PondStages.stage(level)
 	show(level)
-	burst(step == 1)
+	burst(level % 5 == 1) -- a new material tier starts
 	refreshPrompt()
 	print(Config.LogPrefix, player.Name, "upgraded the fishing pond to level", level)
 end)
