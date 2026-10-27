@@ -103,6 +103,9 @@ ChatGPT prompt, in the same turn.**
   of the foot that way, or everything stands half sunk into the ground.
 - Scattering: Poisson-disk (Bridson) with a radius from a noise field gives an even, natural spread with a density
   gradient; a seeded `Random` so a re-run gives the same map.
+- **The stylized cozy look** (light preset, less-plastic parts, tufts and wind, cartoon water, CC0 asset packs,
+  diorama composition, and a "Do this first" list): `RESEARCH.md` section "Stylized cozy look (research 2026-10-27)".
+  Read it before dressing any area.
 
 ## 4. Compare and fix (the loop, several rounds)
 

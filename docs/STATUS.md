@@ -77,6 +77,16 @@ spot. Side by side: `docs/map-greybox/compare-breeding-L1.png`. Close in shape a
 the dressing around it (bushes, flower pots, stepping stones), the heart emblem over the door, the
 warm window, and a real slime model; the roof is a little lilac.
 
+## 2026-10-27 — plot areas, built directly in Studio (owner's restart)
+
+- Level-1 fishing pond (`docs/areas/fishing.md`, approved) and level-1 vegetable garden built in Plot 5 of the
+  work place by `tools/map/build_fishing_l1.luau`, `build_garden_l1.luau`; dressed with the free Creator Store
+  "Nature stylized Pack" by `dress_plot_nature.luau`; lit by `lighting_storybook.luau` (research in
+  `.claude/skills/studio-build/RESEARCH.md`, "Stylized cozy look"). Pictures `docs/areas/*-v3.jpg`.
+- Builders place from `Config.Map.GroundY` (terrain surface at y = 2).
+- Research "Do this first" items not yet applied: stylized grass MaterialVariant, darker rims, cartoon water,
+  shadow discs, reed sway, outlines on hero props, CC0 packs (KayKit, Quaternius crops, Kenney).
+
 Next (after the map and UI are agreed)
 - Phase 2, The farm: the 3D plot and the slimes on it, the nest house, eggs and the reveal, the
   breeding house, the collection book, selling. Needs the first 3D models (slime body, nest house)
