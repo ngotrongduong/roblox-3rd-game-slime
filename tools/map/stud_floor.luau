@@ -43,11 +43,11 @@ local floor = Instance.new("Model")
 floor.Name = "StudLawn"
 
 local count = 0
-local function tile(cf: CFrame, size: number, colour: Color3)
+local function tile(cf: CFrame, size: number, colour: Color3, drop: number?)
 	local t = Instance.new("Part")
 	t.Name = "Tile"
 	t.Size = Vector3.new(size, THICK, size)
-	t.CFrame = cf * CFrame.new(0, GROUND - THICK / 2, 0)
+	t.CFrame = cf * CFrame.new(0, GROUND - (drop or 0) - THICK / 2, 0)
 	t.Color = colour
 	t.Material = Enum.Material.Plastic
 	t.TopSurface = Enum.SurfaceType.Studs
@@ -85,8 +85,16 @@ for x = FISH_MIN + FINE / 2, half - FINE / 2, FINE do
 	for z = FISH_MIN + FINE / 2, half - FINE / 2, FINE do
 		local p = fishing:PointToObjectSpace((plotFrame * CFrame.new(x, 0, z)).Position)
 		local d = pondDistance(p.X, p.Z)
+		-- the bank steps down to the water in two sand steps: terrain water fills whole 4-stud voxels,
+		-- so its surface sits near y = 0, two studs under the floor (the owner: hide the grass walls)
 		if d > 0 then
-			tile(plotFrame * CFrame.new(x, 0, z), FINE, if d < 2.2 then SAND else GRASS)
+			if d < 1.2 then
+				tile(plotFrame * CFrame.new(x, 0, z), FINE, SAND, 1.6)
+			elseif d < 2.4 then
+				tile(plotFrame * CFrame.new(x, 0, z), FINE, SAND, 0.8)
+			else
+				tile(plotFrame * CFrame.new(x, 0, z), FINE, GRASS)
+			end
 		end
 	end
 end

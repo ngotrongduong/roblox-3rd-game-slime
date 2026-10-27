@@ -97,6 +97,14 @@ warm window, and a real slime model; the roof is a little lilac.
 - The pond now holds real terrain water (owner's request; `pond_water_l1.luau`), the painted flat
   water is gone. The boulder "SteppingStones" models were removed from the pond and garden entrances
   (owner: badly placed); the garden has a straight line of flat stepping stones instead.
+- Pond, second pass (owner): terrain water fills whole 4-stud voxels, so its surface sits near y = 0,
+  two studs under the floor; the bank now steps down to it in two sand steps (`stud_floor.luau`), so no
+  grass shows. Water as clear as it goes (`WaterTransparency` 1). Lilies sit on the surface. Five fish
+  (koi and little blue fish, `generate_mesh`, kept in the work place's `ServerStorage.FishKit`) swim
+  loose loops just under the surface, moved on the client by `src/client/PondFish.client.luau` (tag
+  "PondFish"); seen working in a Studio play test. Deeper than about 1 stud the water's tint hides them.
+  Pictures `docs/areas/fishing-real-water.jpg`, `fishing-fish.jpg`.
+- `tools/map/sync_client.luau` copies the client scripts into the work place for play tests.
 - `tools/map/sync_shared.luau` copies the repo's Config and Layout into the work place (it swaps in
   fresh ModuleScripts, since Studio caches what require returned).
 - Build order in Studio: build_fishing_l1, build_garden_l1, dress_plot_nature, polish_plot,
