@@ -144,21 +144,29 @@ local TIERS: { Tier } = {
 }
 PantryStages.Tiers = TIERS
 
--- the store props: slot -> era -> kit model; where each slot stands, how tall, turned how
+-- The store props: slot -> era -> kit model. Every model is scaled to its REAL height in studs, the
+-- same scale as the player (5 studs = 1.75 m) and the store's door (4.3), so a wheelbarrow is waist
+-- high and a forklift taller than a player (the owner: the props must be in proportion). Big props
+-- (containers, transport) stand in the open front corners of the yard; slim ones (lifting, stock)
+-- beside the house. A slot's width cap only keeps a model inside the yard.
 local PROPS = {
-	{ "Wheelbarrow", "HandCart", "PalletJack", "Forklift", "HoverCart" },
-	{ "BarrelRack", "CrateWall", "GrainSilo", "ShippingContainer", "GooTank" },
-	{ "Ladder", "PulleyHoist", "StoreCrane", "Conveyor", "RobotArm" },
-	{ "SackPallet", "StoreShelf", "MetalRack", "PlasticCrates", "Vault" },
+	{ "Wheelbarrow", "HandCart", "PalletJack", "Forklift", "HoverCart" }, -- transport
+	{ "BarrelRack", "CrateWall", "GrainSilo", "ShippingContainer", "GooTank" }, -- containers
+	{ "Ladder", "PulleyHoist", "StoreCrane", "Conveyor", "RobotArm" }, -- lifting
+	{ "SackPallet", "StoreShelf", "MetalRack", "PlasticCrates", "Vault" }, -- stock
 }
-local SLOT_AT = { { 8.6, -6.4 }, { 9.4, 4.4 }, { -9.4, 4.4 }, { -8.6, -6.4 } }
+local SLOT_AT = { { 8, -5.6 }, { -7.6, -5.6 }, { 9.2, 4.2 }, { -9.2, 4.2 } }
+-- real heights (studs): 0.75 m wheelbarrow, 1 m cart, 1.1 m pallet jack (handle), 1.9 m forklift,
+-- 0.85 m hover cart; 1.25 m barrel rack, 1.5 m crate wall, 2.1 m silo, 1.4 m mini container, 2.1 m
+-- goo tank; 2.1 m ladder, 1.8 m hoist, 2.1 m yard crane, 1.05 m conveyor, 1.9 m robot arm; 1.05 m
+-- sack pallet, 1.75 m shelf, 2.1 m rack, 1.2 m crate stack, 1.25 m vault
 local HEIGHT = {
-	{ 2.8, 3.4, 3, 4.6, 3.2 },
-	{ 3.8, 4.6, 9, 4.6, 6 },
-	{ 6, 7, 8, 3.6, 6 },
-	{ 3.2, 4.6, 5, 3.8, 3.6 },
+	{ 2.2, 3, 3.2, 5.5, 2.4 },
+	{ 3.6, 4.4, 6, 4, 6 },
+	{ 6, 5.2, 6, 3, 5.5 },
+	{ 3, 5, 6, 3.4, 3.6 },
 }
-local FOOT = { 4.2, 4.4, 4.4, 4.2 } -- the widest a slot's model may be
+local FOOT = { 9, 9, 5.6, 5.6 } -- the widest a slot's model may be (the room it has)
 
 -- the house: 12 wide (x), 9 deep (z from 0 to 9), its door to the front (-z)
 local W, D, Z0 = 12, 9, 0
@@ -228,6 +236,7 @@ local function place(parent: Instance, frame: CFrame, key: string, x: number, z:
 		end
 	end
 	local _, s0 = m:GetBoundingBox()
+	-- its real height; narrower only if it would not fit its corner
 	m:ScaleTo(m:GetScale() * math.min(height / s0.Y, foot / math.max(s0.X, s0.Z)))
 	local box, size = m:GetBoundingBox()
 	local target = (frame * CFrame.new(x, size.Y / 2, z)).Position
