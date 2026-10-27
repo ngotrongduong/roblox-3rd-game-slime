@@ -25,6 +25,7 @@ type Fence = {
 	bay: number?,
 	extend: number?,
 	height: number,
+	sink: number?, -- how far the section reaches below the floor's top (to hide the floor's edge)
 	depth: number,
 	old: { string },
 }
@@ -35,7 +36,8 @@ local FENCES: { Fence } = {
 		kit = "PalisadeFence",
 		extend = 3.4, -- (the panel plus its post, and a little more so the posts of neighbouring bays overlap)
 		height = 11.5,
-		depth = 2.2,
+		depth = 2.6,
+		sink = 1,
 		old = { "FencePanel", "FenceRail", "FencePost", "FencePostCap" },
 	},
 	{ area = "GardenL1", runs = "Rail", kit = "PicketFence", bay = 4, height = 2.3, depth = 0.5, old = { "Rail", "Picket" } },
@@ -108,7 +110,7 @@ for _, f in FENCES do
 		local n = if f.bay then math.max(1, math.round(r.len / f.bay)) else 1
 		local bay = r.len / n
 		for k = 1, n do
-			local centre = r.mid + r.dir * ((k - 0.5) * bay - r.len / 2) + Vector3.new(0, f.height / 2, 0)
+			local centre = r.mid + r.dir * ((k - 0.5) * bay - r.len / 2) + Vector3.new(0, f.height / 2 - (f.sink or 0), 0)
 			local s = mesh:Clone()
 			s.Name = f.kit
 			s.Anchored = true

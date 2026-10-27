@@ -417,7 +417,7 @@ for k = 0, 3 do
 end
 
 -- ===== the tall fence round the plot =====
-local EDGE = HALF - 1
+local EDGE = HALF -- (on the floor's very edge, so the fence hides it: the owner saw the floor showing outside)
 local GATE = 18
 local H = 10
 local function fenceRun(x0: number, z0: number, x1: number, z1: number)
