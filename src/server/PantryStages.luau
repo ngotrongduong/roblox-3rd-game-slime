@@ -214,7 +214,17 @@ local function wedge(parent: Instance, name: string, size: Vector3, cf: CFrame, 
 	w.Parent = parent
 end
 
-local function place(parent: Instance, frame: CFrame, key: string, x: number, z: number, height: number, foot: number)
+local function place(
+	parent: Instance,
+	frame: CFrame,
+	key: string,
+	x: number,
+	z: number,
+	height: number,
+	foot: number,
+	lift: number?,
+	sideways: boolean? -- in a narrow slot: its longer side runs front to back, `foot` caps the other
+): Model?
 	local src: Instance? = nil
 	for _, name in { "PropKit", "OwnerKit" } do
 		local k = kit(name)
@@ -223,7 +233,7 @@ local function place(parent: Instance, frame: CFrame, key: string, x: number, z:
 		end
 	end
 	if not src or not src:IsA("Model") then
-		return
+		return nil
 	end
 	local m = src:Clone() :: Model
 	for _, d in m:GetDescendants() do
@@ -235,13 +245,19 @@ local function place(parent: Instance, frame: CFrame, key: string, x: number, z:
 		end
 	end
 	local _, s0 = m:GetBoundingBox()
-	-- its real height; narrower only if it would not fit its corner
-	m:ScaleTo(m:GetScale() * math.min(height / s0.Y, foot / math.max(s0.X, s0.Z)))
+	-- its real height; narrower only if it would not fit its slot
+	local across = if sideways then math.min(s0.X, s0.Z) else math.max(s0.X, s0.Z)
+	m:ScaleTo(m:GetScale() * math.min(height / s0.Y, foot / across))
+	-- square to the area (the kit model's front, -Z, to the area's front); sideways: its long side
+	-- along the area's depth
+	local turn = if sideways and s0.X > s0.Z then CFrame.Angles(0, math.pi / 2, 0) else CFrame.identity
+	m:PivotTo(CFrame.new(m:GetPivot().Position) * frame.Rotation * turn)
 	local box, size = m:GetBoundingBox()
-	local target = (frame * CFrame.new(x, size.Y / 2, z)).Position
+	local target = (frame * CFrame.new(x, (lift or 0) + size.Y / 2, z)).Position -- (lift: something that hovers)
 	m:PivotTo(m:GetPivot() + (target - box.Position))
 	m.Name = key
 	m.Parent = parent
+	return m
 end
 
 -- What a level holds: storeys, canopy, rooftop, each prop slot's era (0: none), each building part's
@@ -423,5 +439,10 @@ function PantryStages.build(area: Instance, frame: CFrame, level: number): Model
 	end
 	return m
 end
+
+-- the builders' helpers, shared with the garden's stages
+PantryStages.part = part
+PantryStages.wedge = wedge
+PantryStages.place = place
 
 return PantryStages
