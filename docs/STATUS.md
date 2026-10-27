@@ -62,7 +62,10 @@ waiting on the owner's choices in its §4. The UI redesign follows the map.
 The owner asked not to build 3D yet: first ChatGPT concept art of the home plot, "the best
 possible visuals, but a simple and clean design". Prompts: `docs/art/chatgpt-home-plot.md`
 (style lock + the whole plot + each area at levels 1/4/7/10), with the owner's reference art
-copied to `art/chatgpt-refs/`. Waiting for the pictures in `art/inbox/`.
+copied to `art/chatgpt-refs/`. All 9 pictures were generated (2026-10-27) in the owner's ChatGPT chat
+"Image placement suggestion" (prompts sent from the browser pane; the reference pictures were pasted
+through the ChatGPT desktop app, as the pane cannot attach files). Picture 1 approved and saved as
+`art/inbox/1-plot.png`; 2-9 wait for the owner to download them (the pane cannot download).
 
 Next (after the map and UI are agreed)
 - Phase 2, The farm: the 3D plot and the slimes on it, the nest house, eggs and the reveal, the
