@@ -23,7 +23,31 @@ Interaction (to build with gameplay): tap the mat (or a ProximityPrompt there) t
 tap the sign to open the small upgrade card. No text in the world: icons only, in English when text
 is needed.
 
-## Later levels (to design next, one change each level, remodel at 4 / 7 / 10)
+## 50 levels, ten eras (the owner, 2026-10-27; replaces the 10-level plan below)
+
+Approved plan: 50 levels, a remodel every 5 (the first level of each era: 1, 6, 11 ... 46) and one
+small change at each level between, always in this order: a decoration, rails along the dock (the
+material step), a fishing tool, lights or glow. Work spots: 1 (eras 1-2), 2 (3-4), 3 (5-6), 4 (7-10).
+The owner asked to see it built straight away, no picture first.
+
+| Era | Levels | Look | Landmarks (PropKit, generate_mesh) |
+|---|---|---|---|
+| 1 | 1-5 | rustic wood | (none) |
+| 2 | 6-10 | painted wood, blue posts | NetRack |
+| 3 | 11-15 | stone pier head, timber | NetRack, FishingHut |
+| 4 | 16-20 | brick pier head | Boathouse, RowBoat |
+| 5 | 21-25 | workshop, iron posts | WaterWheel, NetCrane, RowBoat |
+| 6 | 26-30 | white glass-house | GlassPavilion, FishTank |
+| 7 | 31-35 | metal deck, warm trim | ModernKiosk (solar roof), FishCooler |
+| 8 | 36-40 | dark tech deck, blue neon | AutoReel, Drone, ModernKiosk |
+| 9 | 41-45 | slime tech, green neon | GooPump, CrystalBuoy, Drone |
+| 10 | 46-50 | marble and gold | Lighthouse, GoldFountain, CrystalBuoy |
+
+Showcase (to look at, not the game): `tools/map/build_pond_showcase.luau` builds floating ponds west
+of the valley in the work place: row 1 each era at its last level, row 2 the five levels of era 4.
+Pictures `docs/areas/fishing-eras/*.jpg`.
+
+## Later levels (old plan, replaced above: one change each level, remodel at 4 / 7 / 10)
 
 - Level 2-3: a second spot (mat) at the dock's side, a net rack, more lily pads.
 - Level 4: the dock widens and gets a small roof over the end; spots 2-3.
