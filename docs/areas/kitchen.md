@@ -26,6 +26,9 @@ The pantry's pattern: five eras of ten levels, nothing taken away.
 - Levels 2-5 of an era: one prop a level. Ingredients: VeggieCrates > PickleBarrels > SpiceCabinet >
   IceBox > GooFridge. Grill: CampGrill > StoneGrill > BrickBBQ > SteelGrill > PlasmaGrill. Water:
   WoodBarrel > HandPump > StoneSink > SteelSink > GooTap. Dishes: DishRack > PlateShelf > ServingCart >
-  BuffetWarmer > FoodDispenser.
+  BuffetWarmer > FoodDispenser. Ingredients and water stand against the left wall, dishes against
+  the right one, all facing in; the grill is out in the front yard, turned to the path (owner,
+  2026-10-28: the props must face sensibly). HandPump and GooTap came from generate_mesh with their
+  front sideways and get a fixed turn (`FRONT_TURN`). Picture `upgrades/kitchen-l45.jpg`.
 - Levels 6-10 of an era: floor, floor border, rails and walls, lamps and roof, arch each move up one
   material tier.

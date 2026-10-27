@@ -47,8 +47,13 @@ local HEIGHT = {
 	{ 3, 4.4, 3.2, 3.4, 4.2 },
 	{ 3, 4.8, 3.4, 3.4, 5 },
 }
-local SLOT_AT = { { -8.4, -6.3 }, { 8.4, -6.3 }, { -9.4, -1.4 }, { 9.4, -2.6 } }
-local FOOT = { 3.6, 3.6, 2.6, 2.6 }
+-- where each slot stands and which way it faces (degrees; 0 to the front, 90 to -x, -90 to +x): the
+-- ingredients and the water against the left wall in front of the counter, the dishes against the
+-- right wall, all facing in; the grill out in the front yard, turned to the path
+local SLOT_AT = { { -9.5, 0.7, -90 }, { 7.6, -6.2, 90 }, { -9.5, -2.4, -90 }, { 9.5, -1.4, 90 } }
+local FOOT = { 2.8, 3.6, 2.6, 2.6 }
+-- kit models whose front came out of generate_mesh sideways: the turn (degrees) that brings it to -Z
+local FRONT_TURN: { [string]: number } = { HandPump = 90, GooTap = -90 }
 
 -- What a level holds: the era, how many cooking spots, each prop slot's era (0: none), each build's
 -- tier (floor, border, rails and walls, lamps and roof, arch).
@@ -149,7 +154,7 @@ function KitchenStages.build(area: Instance, frame: CFrame, level: number): Mode
 	else
 		local h = EAVE
 		part(m, "WallBack", Vector3.new(XW * 2, h, 0.6), at(0, h / 2, ZB), tw.walls, tw.wallMat)
-		for _, wx in { -6.5, 6.5 } do
+		for _, wx in { -4.7, 4.4 } do -- either side of the stove, clear of the bread oven
 			part(m, "WindowFrame", Vector3.new(2.6, 2.2, 0.3), at(wx, 6, ZB - 0.35), tw.trim, tw.trimMat)
 			part(m, "Window", Vector3.new(2, 1.6, 0.32), at(wx, 6, ZB - 0.36), tw.glass, Enum.Material.Neon).CastShadow =
 				false
@@ -304,7 +309,15 @@ function KitchenStages.build(area: Instance, frame: CFrame, level: number): Mode
 	for j = 1, 4 do
 		local e = props[j]
 		if e > 0 then
-			place(m, frame, PROPS[j][e], SLOT_AT[j][1], SLOT_AT[j][2], HEIGHT[j][e], FOOT[j])
+			local slot = SLOT_AT[j]
+			local prop = place(m, frame, PROPS[j][e], slot[1], slot[2], HEIGHT[j][e], FOOT[j])
+			local yaw = slot[3] + (FRONT_TURN[PROPS[j][e]] or 0)
+			if prop and yaw ~= 0 then
+				-- turned on the spot, about its own middle
+				local box = prop:GetBoundingBox()
+				local centre = CFrame.new(box.Position)
+				prop:PivotTo(centre * CFrame.Angles(0, math.rad(yaw), 0) * centre:ToObjectSpace(prop:GetPivot()))
+			end
 		end
 	end
 	return m
