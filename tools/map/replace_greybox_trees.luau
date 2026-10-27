@@ -26,6 +26,9 @@ local function place(parent: Instance, key: string, foot: Vector3, height: numbe
 			d:Destroy()
 		elseif d:IsA("BasePart") then
 			d.Anchored = true
+			if d:IsA("MeshPart") then
+				d.DoubleSided = true -- (one-sided leaves showed holes from behind)
+			end
 		end
 	end
 	local _, size0 = m:GetBoundingBox()

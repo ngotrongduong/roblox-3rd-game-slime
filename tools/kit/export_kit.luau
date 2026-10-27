@@ -6,6 +6,7 @@
 --   lune run tools/kit/export_kit.luau
 local fs = require("@lune/fs")
 local roblox = require("@lune/roblox")
+local Enum = roblox.Enum
 
 local SOURCE = "assets/raw/MapWork.rbxlx"
 local OUT = "assets/Kit"
@@ -45,6 +46,16 @@ for _, item in ITEMS do
 			if DROPPED[d.Name] then
 				d:Destroy()
 				dropped += 1
+			end
+		end
+		-- every mesh drawn from both sides (one-sided leaves showed holes from behind); the home plot's
+		-- at full detail too (tidy_plot does the same in Studio)
+		for _, d in inst:GetDescendants() do
+			if d:IsA("MeshPart") then
+				d.DoubleSided = true
+				if item[2] == "HomePlot.rbxm" then
+					d.RenderFidelity = Enum.RenderFidelity.Precise
+				end
 			end
 		end
 		if dropped > 0 then

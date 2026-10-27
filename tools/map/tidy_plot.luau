@@ -150,4 +150,14 @@ for _, side in SIDES do
 	end
 end
 skirt.Parent = plot
+
+-- ===== every mesh drawn from both sides, at full detail =====
+-- (the owner, 2026-10-27: trees looked broken, with holes: their leaves are one-sided faces that
+-- vanish when seen from behind, and the automatic level of detail thinned the big ones at a distance)
+for _, d in plot:GetDescendants() do
+	if d:IsA("MeshPart") then
+		d.DoubleSided = true
+		d.RenderFidelity = Enum.RenderFidelity.Precise
+	end
+end
 return string.format("inside: %d moved, %d made smaller; groups outside: %d models", moved, shrunk, placed)

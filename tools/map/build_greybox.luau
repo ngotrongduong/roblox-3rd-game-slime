@@ -100,6 +100,11 @@ local function tree(parent: Instance, pos: Vector3, scale: number, leaves: Color
 	local src = ownerKit and ownerKit:FindFirstChild(kinds[rng:NextInteger(1, #kinds)])
 	if src and src:IsA("Model") then
 		local m = src:Clone()
+		for _, d in m:GetDescendants() do
+			if d:IsA("MeshPart") then
+				d.DoubleSided = true -- (one-sided leaves showed holes from behind)
+			end
+		end
 		local _, size0 = m:GetBoundingBox()
 		m:ScaleTo(m:GetScale() * 16 * scale / size0.Y)
 		local pivot = m:GetPivot()
