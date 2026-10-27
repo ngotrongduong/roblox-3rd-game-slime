@@ -1,7 +1,7 @@
 -- Copies server code from the repo into the work place open in Studio (ServerScriptService.Server),
 -- so a play test there runs it (the map lives only in the work place). Run with the files passed as
 -- strings, NAME=path for each:
---   node tools/studio_mcp.js run tools/map/sync_server.luau <studio_id> Edit PondStages=src/server/PondStages.luau AreaStages=src/server/AreaStages.luau PantryStages=src/server/PantryStages.luau GardenStages=src/server/GardenStages.luau BreedingStages=src/server/BreedingStages.luau KitchenStages=src/server/KitchenStages.luau TrainingStages=src/server/TrainingStages.luau AreaUpgrade=src/server/AreaUpgrade.server.luau
+--   node tools/studio_mcp.js run tools/map/sync_server.luau <studio_id> Edit PondStages=src/server/PondStages.luau AreaStages=src/server/AreaStages.luau PantryStages=src/server/PantryStages.luau GardenStages=src/server/GardenStages.luau BreedingStages=src/server/BreedingStages.luau KitchenStages=src/server/KitchenStages.luau TrainingStages=src/server/TrainingStages.luau VillageStages=src/server/VillageStages.luau AreaUpgrade=src/server/AreaUpgrade.server.luau
 local ServerScriptService = game:GetService("ServerScriptService")
 
 local folder = ServerScriptService:FindFirstChild("Server")
@@ -18,6 +18,7 @@ local sources = {
 	{ "BreedingStages", BreedingStages, "ModuleScript" },
 	{ "KitchenStages", KitchenStages, "ModuleScript" },
 	{ "TrainingStages", TrainingStages, "ModuleScript" },
+	{ "VillageStages", VillageStages, "ModuleScript" },
 	{ "PondStages", PondStages, "ModuleScript" },
 	{ "AreaUpgrade", AreaUpgrade, "Script" },
 }

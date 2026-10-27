@@ -27,6 +27,8 @@ local OWN_STAGES: { [string]: any } = {
 	TrainingL1 = TrainingStages,
 }
 local PondStages = require(script.Parent.PondStages)
+-- the fence, gate and plaza: their level follows the areas' (VillageStages.levelOf)
+local VillageStages = require(script.Parent.VillageStages)
 
 local PLOT = 5
 local COOLDOWN = 0.4 -- seconds between two presses of one player
@@ -107,6 +109,34 @@ local function hidePondLevelOne(pond: Instance)
 	end
 end
 
+-- The village layer, rebuilt when the average of the areas' levels moves on.
+local areaLevels: { [string]: number } = {}
+local village = plot:FindFirstChild("Village")
+local villageFrame = Layout.plotFrame(PLOT) * CFrame.new(0, GROUND, 0)
+local villageLayer: Model? = nil
+local villageLevel = 0
+local function refreshVillage()
+	if not village then
+		return
+	end
+	local all = {}
+	for _, l in areaLevels do
+		table.insert(all, l)
+	end
+	local v = VillageStages.levelOf(all)
+	if v == villageLevel then
+		return
+	end
+	villageLevel = v
+	local stage = VillageStages.build(village, villageFrame, v)
+	stage.Parent = village
+	if villageLayer then
+		villageLayer:Destroy()
+	end
+	villageLayer = stage
+	print(Config.LogPrefix, "village is now level", v)
+end
+
 local lastPress: { [Player]: number } = {}
 Players.PlayerRemoving:Connect(function(player: Player)
 	lastPress[player] = nil
@@ -173,6 +203,8 @@ local function setUp(name: string, col: number, row: number)
 		burst(anchor.CFrame * CFrame.new(0, 0, 6), level % 5 == 1) -- dust when a material tier starts
 		refreshPrompt()
 		print(Config.LogPrefix, player.Name, "upgraded", label, "to level", level)
+		areaLevels[name] = level
+		refreshVillage()
 	end)
 
 	if isPond then
@@ -180,8 +212,10 @@ local function setUp(name: string, col: number, row: number)
 	end
 	show(level)
 	refreshPrompt()
+	areaLevels[name] = level
 end
 
 for _, a in AREAS do
 	setUp(a[1], a[2], a[3])
 end
+refreshVillage()

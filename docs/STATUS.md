@@ -189,8 +189,12 @@ warm window, and a real slime model; the roof is a little lilac.
 - Training ground redone the same way (`src/server/TrainingStages.luau`, `docs/areas/training.md`):
   stands, punching bag and floodlights, canopy and scoreboard, trophy podium; strength, agility,
   recovery and gear props (22 new PropKit models); the owner approved the kitchen and the training
-  ground (2026-10-28). All six areas now have their own stages;
-  `AreaStages` only gives the labels and prompt spots.
+  ground (2026-10-28). All six areas now have their own stages; `AreaStages` only gives the labels
+  and prompt spots.
+- The village (tall fence, gate, plaza) upgrades too (`src/server/VillageStages.luau`,
+  `docs/areas/village.md`): its level is the average of the areas' levels; the well grows into
+  fountains, pillars, lanterns, banners, wing walls, guardians and a crest join the fence and gate,
+  four plaza prop slots (24 new PropKit models). Waiting for the owner's review.
 - `tools/map/sync_client.luau` copies the client scripts into the work place for play tests.
 - `tools/map/sync_shared.luau` copies the repo's Config and Layout into the work place (it swaps in
   fresh ModuleScripts, since Studio caches what require returned).
