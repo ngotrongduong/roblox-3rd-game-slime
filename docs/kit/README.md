@@ -84,6 +84,12 @@ KoiFish 89590294358011, BlueFish 110184517960885 (moved by `src/client/PondFish.
 | VineTree | 136114848396213 |
 | FrozenDeadTree | 137472019227542 |
 | PineBerryBush | 114031299444464 |
+| FlatBoulder | 128315234153746 |
+| WideBoulder | 85866561244773 |
+| StackedRocks | 104600664594613 |
+| JaggedRocks | 87247551693627 |
+| FernCluster | 92105464772499 |
+| WildflowersGrass | 140653033074199 |
 | FlowerShrub | 76342140455262 |
 | CampFlame | from "Realistic Fire VFX" 12136850996 in the owner's inventory (another creator's free pack, scripts removed) |
 
