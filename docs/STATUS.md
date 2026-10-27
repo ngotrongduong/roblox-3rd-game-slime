@@ -188,7 +188,8 @@ warm window, and a real slime model; the roof is a little lilac.
   props (19 new PropKit models); the props stand against the walls facing in (owner, 2026-10-28).
 - Training ground redone the same way (`src/server/TrainingStages.luau`, `docs/areas/training.md`):
   stands, punching bag and floodlights, canopy and scoreboard, trophy podium; strength, agility,
-  recovery and gear props (22 new PropKit models). All six areas now have their own stages;
+  recovery and gear props (22 new PropKit models); the owner approved the kitchen and the training
+  ground (2026-10-28). All six areas now have their own stages;
   `AreaStages` only gives the labels and prompt spots.
 - `tools/map/sync_client.luau` copies the client scripts into the work place for play tests.
 - `tools/map/sync_shared.luau` copies the repo's Config and Layout into the work place (it swaps in
