@@ -1,0 +1,9 @@
+*.rbxl
+*.rbxlx
+*.rbxl.lock
+*.rbxlx.lock
+sourcemap.json
+roblox.yml
+# The original web game, downloaded for reference only (its code and art stay out of the repo until
+# a piece is deliberately taken into assets/).
+reference/goo-lineage-web/

@@ -1,0 +1,48 @@
+{
+	"name": "GooLineage",
+	"tree": {
+		"$className": "DataModel",
+		"ReplicatedStorage": {
+			"$className": "ReplicatedStorage",
+			"Shared": {
+				"$path": "src/shared"
+			},
+			"Remotes": {
+				"$className": "Folder",
+				"Action": {
+					"$className": "RemoteEvent"
+				},
+				"Fx": {
+					"$className": "RemoteEvent"
+				},
+				"Query": {
+					"$className": "RemoteFunction"
+				}
+			}
+		},
+		"ServerScriptService": {
+			"$className": "ServerScriptService",
+			"Server": {
+				"$path": "src/server"
+			}
+		},
+		"StarterPlayer": {
+			"$className": "StarterPlayer",
+			"StarterPlayerScripts": {
+				"$className": "StarterPlayerScripts",
+				"Client": {
+					"$path": "src/client"
+				}
+			}
+		},
+		"Workspace": {
+			"$className": "Workspace"
+		},
+		"Lighting": {
+			"$className": "Lighting",
+			"$properties": {
+				"Technology": "ShadowMap"
+			}
+		}
+	}
+}
