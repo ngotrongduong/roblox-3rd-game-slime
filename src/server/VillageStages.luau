@@ -119,10 +119,117 @@ function VillageStages.build(village: Instance, frame: CFrame, level: number): M
 	local at = function(x: number, y: number, z: number): CFrame
 		return frame * CFrame.new(x, y, z)
 	end
-	-- a kit model standing at `pos`, its front turned toward `look`
-	local function put(key: string, pos: Vector3, look: Vector3, height: number, foot: number, lift: number?): Model?
+	-- ===== free ground: nothing is set on the paving, in an area, on the fence line or on top of
+	-- something already standing (the owner, 2026-10-28: a lamp in front of a bench, flowers in the
+	-- middle of a path) =====
+	local paved: { [string]: boolean } = {}
+	for _, d in village:GetChildren() do
+		if d.Name == "Paving" and d:IsA("BasePart") then
+			local q = frame:PointToObjectSpace(d.Position)
+			paved[math.floor(q.X / 2) .. "," .. math.floor(q.Z / 2)] = true
+		end
+	end
+	local function onPaving(p: Vector3, r: number): boolean
+		for _, o in
+			{ Vector3.zero, Vector3.new(r, 0, 0), Vector3.new(-r, 0, 0), Vector3.new(0, 0, r), Vector3.new(0, 0, -r) }
+		do
+			local q = p + o
+			if paved[math.floor(q.X / 2) .. "," .. math.floor(q.Z / 2)] then
+				return true
+			end
+		end
+		return false
+	end
+	-- the areas' boxes, in their own frames
+	local areaBoxes: { { cf: CFrame, size: Vector3 } } = {}
+	local plot = village.Parent
+	if plot then
+		for _, a in plot:GetChildren() do
+			if a:IsA("Model") and string.match(a.Name, "L1$") then
+				local cf, size = a:GetBoundingBox()
+				table.insert(areaBoxes, { cf = cf, size = size })
+			end
+		end
+	end
+	local taken: { { at: Vector3, r: number } } = {} -- flat positions in the plot's frame
+	-- what already stands in the village: trees, logs, stumps, the old planters, the campfire
+	local nature = village:FindFirstChild("Nature")
+	for _, d in (if nature then nature:GetChildren() else {}) :: { Instance } do
+		local cf: CFrame, size: Vector3
+		if d:IsA("Model") then
+			cf, size = d:GetBoundingBox()
+		elseif d:IsA("BasePart") then
+			cf, size = d.CFrame, d.Size
+		else
+			continue
+		end
+		local q = frame:PointToObjectSpace(cf.Position)
+		local flat = Vector3.new(q.X, 0, q.Z)
+		if onPaving(flat, 0) and (d.Name == "FlowerPatch" or d.Name == "GrassTuft" or d.Name == "Fern") then
+			d.Parent = nil -- small plants that ended up on a path go
+		else
+			table.insert(taken, { at = flat, r = math.min(math.min(size.X, size.Z) / 2, 3) })
+		end
+	end
+	for _, d in village:GetChildren() do
+		if d.Name == "Planter" and d:IsA("Model") then
+			local q = frame:PointToObjectSpace(d:GetPivot().Position)
+			table.insert(taken, { at = Vector3.new(q.X, 0, q.Z), r = 1.2 })
+		end
+	end
+	table.insert(taken, { at = CAMP, r = 12 })
+	local function free(p: Vector3, r: number): boolean
+		if math.abs(p.X) > HALF - 4 - r or math.abs(p.Z) > HALF - 4 - r or onPaving(p, r * 0.8) then
+			return false
+		end
+		local world = frame:PointToWorldSpace(p)
+		for _, b in areaBoxes do
+			local q = b.cf:PointToObjectSpace(world)
+			if math.abs(q.X) < b.size.X / 2 + r and math.abs(q.Z) < b.size.Z / 2 + r then
+				return false
+			end
+		end
+		for _, t in taken do
+			if (t.at - p).Magnitude < t.r + r + 1.2 then -- (room to walk between)
+				return false
+			end
+		end
+		return true
+	end
+	-- a kit model standing at `pos`, its front turned toward `look`, on free ground: if the spot is
+	-- taken it slides along `slide` (2 studs a step, either way) until it is free, or is left out
+	local function put(
+		key: string,
+		pos: Vector3,
+		look: Vector3,
+		height: number,
+		foot: number,
+		lift: number?,
+		slide: Vector3?
+	): Model?
 		local spot = frame * CFrame.new(pos) * CFrame.lookAt(Vector3.zero, look)
-		return place(m, spot, key, 0, 0, height, foot, lift)
+		local model = place(m, spot, key, 0, 0, height, foot, lift)
+		if not model then
+			return nil
+		end
+		local _, size = model:GetBoundingBox()
+		local r = math.max(size.X, size.Z) / 2
+		local step = (slide or Vector3.new(look.Z, 0, -look.X)).Unit * 2
+		local back = -look.Unit -- (a little further back from what it faces, when it must)
+		for _, out in { 0, 1.5, 3 } do
+			for k = 0, 8 do
+				for _, sign in (if k == 0 then { 1 } else { 1, -1 }) :: { number } do
+					local p = pos + step * k * sign + back * out
+					if free(p, r) then
+						model:PivotTo(model:GetPivot() + frame:VectorToWorldSpace(p - pos))
+						table.insert(taken, { at = p, r = r })
+						return model
+					end
+				end
+			end
+		end
+		model:Destroy()
+		return nil
 	end
 	local function glow(name: string, size: Vector3, cf: CFrame, colour: Color3, range: number?): BasePart
 		local p = part(m, name, size, cf, colour, Enum.Material.Neon)
@@ -198,6 +305,7 @@ function VillageStages.build(village: Instance, frame: CFrame, level: number): M
 	-- ===== the plaza's centrepiece =====
 	if era >= 2 then
 		place(m, frame, CENTRES[era], 0, 0, CENTRE_HEIGHT[era], CENTRE_FOOT[era])
+		table.insert(taken, { at = Vector3.zero, r = CENTRE_FOOT[era] / 2 })
 	end
 
 	-- ===== 3, 4 the fence: footing and pillars always, walls in the era's style =====
@@ -548,7 +656,7 @@ function VillageStages.build(village: Instance, frame: CFrame, level: number): M
 		end
 		for _, t in { 0.3, 0.45, 0.6, 0.75 } do
 			for _, side in { -1, 1 } do
-				local p, look = besidePath(5, t, side, 4.4)
+				local p, look = besidePath(5, t, side, 5.4)
 				put("Planter", p, look, 1.8, 2)
 			end
 		end

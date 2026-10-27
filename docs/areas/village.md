@@ -32,5 +32,11 @@ the eras, lamps and paths too, many decorations a level, each placed, turned and
   turns) and eight flower planters lining the gate path.
 - Levels 6-10: plaza paving, path paving, fence walls, fence pillars, gate each move up one tier.
 
+Nothing is set on free ground by chance: every prop checks its spot (not on the paving, not in an
+area, not near the fence, at least 1.2 studs of room from what already stands, trees and the old
+planters included) and slides along its path or back a little until it is free, or is left out;
+small plants that ended up on a path are taken away (the owner, 2026-10-28: a lamp in front of a
+bench, flowers in the middle of a path). Picture `upgrades/village-plaza-l45.jpg`.
+
 Every model stands at its real height (the player is 5 studs): lamps 8.4-9.6, benches 1.5-2.8,
 stalls 3.6-5.6, fountains 5-11.
