@@ -94,15 +94,15 @@ end
 
 -- ===== a home plot =====
 local AREA_NAMES = {
-	fishing = "Hồ câu cá",
-	pantry = "Kho lương thực",
-	garden = "Vườn rau",
-	kitchen = "Bếp nấu",
-	meadow = "Đồng cỏ slime",
-	breeding = "Nhà sinh sản",
-	training = "Sân tập luyện",
-	gate = "Cổng",
-	hatchery = "Ổ ấp + nhà trẻ",
+	fishing = "Fishing Pond",
+	pantry = "Pantry",
+	garden = "Garden",
+	kitchen = "Kitchen",
+	meadow = "Slime Meadow",
+	breeding = "Breeding House",
+	training = "Training Ground",
+	gate = "Gate",
+	hatchery = "Hatchery",
 }
 
 local function buildPlot(plot: number)
@@ -167,7 +167,7 @@ local function buildPlot(plot: number)
 			end
 			anchor = folder:FindFirstChild("Nest") :: BasePart
 		end
-		local text = if area.id == "gate" then "Nhà " .. plot else AREA_NAMES[area.id]
+		local text = if area.id == "gate" then "Plot " .. plot else AREA_NAMES[area.id]
 		label(anchor, text, if area.id == "gate" then 5 else 16)
 	end
 	folder.Parent = root
@@ -189,22 +189,22 @@ local function buildMarket()
 		local anchor = m:FindFirstChild(name .. "Counter") :: BasePart
 		label(anchor, text, 14)
 	end
-	stall("Shop", "Cửa hàng", -50, 40, ROYAL)
-	stall("Merchant", "Thương nhân", 50, 40, Color3.fromRGB(150, 70, 160))
+	stall("Shop", "Shop", -50, 40, ROYAL)
+	stall("Merchant", "Merchant", 50, 40, Color3.fromRGB(150, 70, 160))
 	for i = 1, 4 do
-		stall("Trade" .. i, "Quầy trao đổi", -54 + (i - 1) * 36, 66, CREAM)
+		stall("Trade" .. i, "Trading Stall", -54 + (i - 1) * 36, 66, CREAM)
 	end
 	-- The Smithy: a stone forge with a chimney.
 	hut(m, "Smithy", frame * CFrame.new(0, 0, 58), 24, 14, 18, Color3.fromRGB(150, 140, 130), DARKWOOD)
 	part(m, "Forge", Vector3.new(4, 16, 4), frame * CFrame.new(8, 20, 60), Color3.fromRGB(110, 100, 96))
-	label(m:FindFirstChild("SmithyWalls") :: BasePart, "Lò rèn", 18)
+	label(m:FindFirstChild("SmithyWalls") :: BasePart, "Smithy", 18)
 	-- Notice board.
 	local board = part(m, "Board", Vector3.new(14, 9, 1), frame * CFrame.new(-80, 6, 10), WOOD)
-	label(board, "Bảng xếp hạng", 8)
+	label(board, "Leaderboard", 8)
 	-- The fountain and the spawn.
 	part(m, "FountainBase", Vector3.new(3, 22, 22), frame * CFrame.new(0, 1.5, 0) * CFrame.Angles(0, 0, math.rad(90)), Color3.fromRGB(220, 214, 200), Enum.PartType.Cylinder)
 	local top = part(m, "FountainTop", Vector3.new(8, 4, 4), frame * CFrame.new(0, 5, 0) * CFrame.Angles(0, 0, math.rad(90)), GOLD, Enum.PartType.Cylinder)
-	label(top, "Chợ", 10)
+	label(top, "Market", 10)
 	local spawn = Instance.new("SpawnLocation")
 	spawn.Name = "Spawn"
 	spawn.Anchored = true
@@ -233,7 +233,7 @@ local function buildWild()
 		local a = Layout.polar(k * 45, M.HeartRadius - 4)
 		part(w, "Stone", Vector3.new(4, 7, 4), CFrame.new(a + Vector3.new(0, 3.5, 0)), Color3.fromRGB(200, 190, 170), nil, Enum.Material.Slate)
 	end
-	label(w:FindFirstChild("Stone") :: BasePart, "Trái tim (World Boss)", 8)
+	label(w:FindFirstChild("Stone") :: BasePart, "The Heart (World Boss)", 8)
 	-- Trees (or giant mushrooms) per quarter; goo springs where monsters bubble up.
 	for _, quarter in Layout.Quarters do
 		for _ = 1, 22 do
@@ -251,7 +251,7 @@ local function buildWild()
 		end
 		local marker = part(w, "QuarterMarker", Vector3.new(1, 1, 1), CFrame.new(Layout.polar(quarter.angle, M.WildRadius * 0.55) + Vector3.new(0, 1, 0)), Color3.new(1, 1, 1))
 		marker.Transparency = 1
-		local names = { meadow = "Đồng cỏ nắng", mushroom = "Rừng nấm", ember = "Vườn than hồng", frost = "Rừng băng" }
+		local names = { meadow = "Sunny Meadow", mushroom = "Mushroom Grove", ember = "Ember Garden", frost = "Frost Glade" }
 		label(marker, names[quarter.id], 22)
 	end
 	w.Parent = root
