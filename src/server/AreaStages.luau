@@ -105,10 +105,8 @@ local function part(
 	p.Size = size
 	p.CFrame = cf
 	p.Color = colour
-	p.Material = material or Enum.Material.SmoothPlastic
 	p.Anchored = true
-	p.TopSurface = Enum.SurfaceType.Smooth
-	p.BottomSurface = Enum.SurfaceType.Smooth
+	PondStages.studLook(p, material)
 	p.CastShadow = size.Magnitude > 4
 	p.Parent = parent
 	return p
@@ -262,10 +260,10 @@ local function skin(area: Instance, spec: Spec, tier: number)
 				d.Material = (Enum.Material :: any)[d:GetAttribute("BuiltMaterial")]
 			elseif floorNames[d.Name] then
 				d.Color = t.planks[1]
-				d.Material = t.deck
+				PondStages.studLook(d, t.deck)
 			else
 				d.Color = t.frame
-				d.Material = t.frameMat
+				PondStages.studLook(d, t.frameMat)
 			end
 		end
 	end

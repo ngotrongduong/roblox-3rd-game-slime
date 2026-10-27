@@ -161,6 +161,27 @@ local TIERS: { Tier } = {
 }
 PondStages.Tiers = TIERS
 
+-- The classic stud look (the owner chose it for the whole plot): every built part is Plastic with
+-- studs on top, and a tier shows in its colours. Glass, light (Neon), rope (Fabric) and soil
+-- (Ground) keep their own material. Shared by AreaStages and PantryStages.
+local KEEP = {
+	[Enum.Material.Neon] = true,
+	[Enum.Material.Glass] = true,
+	[Enum.Material.Fabric] = true,
+	[Enum.Material.Ground] = true,
+}
+function PondStages.studLook(p: BasePart, material: Enum.Material?)
+	if material and KEEP[material] then
+		p.Material = material
+		p.TopSurface = Enum.SurfaceType.Smooth
+		p.BottomSurface = Enum.SurfaceType.Smooth
+	else
+		p.Material = Enum.Material.Plastic
+		p.TopSurface = Enum.SurfaceType.Studs
+		p.BottomSurface = Enum.SurfaceType.Inlet
+	end
+end
+
 local function part(
 	parent: Instance,
 	name: string,
@@ -175,10 +196,8 @@ local function part(
 	p.Size = size
 	p.CFrame = cf
 	p.Color = colour
-	p.Material = material or Enum.Material.SmoothPlastic
 	p.Anchored = true
-	p.TopSurface = Enum.SurfaceType.Smooth
-	p.BottomSurface = Enum.SurfaceType.Smooth
+	PondStages.studLook(p, material)
 	if shape then
 		p.Shape = shape
 	end

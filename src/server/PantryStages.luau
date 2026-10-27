@@ -15,6 +15,7 @@
 -- The house is built from parts so its materials and floors can change; props are kit models
 -- (ServerStorage PropKit / Kit.PropKit). Positions are in the pantry's own frame, y up from the ground.
 local ServerStorage = game:GetService("ServerStorage")
+local PondStages = require(script.Parent.PondStages)
 
 local PantryStages = {}
 
@@ -195,10 +196,8 @@ local function part(
 	p.Size = size
 	p.CFrame = cf
 	p.Color = colour
-	p.Material = material or Enum.Material.SmoothPlastic
 	p.Anchored = true
-	p.TopSurface = Enum.SurfaceType.Smooth
-	p.BottomSurface = Enum.SurfaceType.Smooth
+	PondStages.studLook(p, material)
 	p.CastShadow = size.Magnitude > 4
 	p.Parent = parent
 	return p
@@ -210,8 +209,8 @@ local function wedge(parent: Instance, name: string, size: Vector3, cf: CFrame, 
 	w.Size = size
 	w.CFrame = cf
 	w.Color = colour
-	w.Material = material
 	w.Anchored = true
+	PondStages.studLook(w, material)
 	w.Parent = parent
 end
 
@@ -283,10 +282,10 @@ function PantryStages.build(area: Instance, frame: CFrame, level: number): Model
 			d.Parent = nil
 		elseif d.Name == "Floor" and d:IsA("BasePart") then
 			d.Color = ty.yard
-			d.Material = ty.yardMat
+			PondStages.studLook(d, ty.yardMat)
 		elseif d.Name == "FloorEdge" and d:IsA("BasePart") then
 			d.Color = ty.edge
-			d.Material = if tiers[5] >= 4 then Enum.Material.SmoothPlastic else ty.yardMat
+			PondStages.studLook(d, ty.yardMat)
 		end
 	end
 
@@ -392,7 +391,7 @@ function PantryStages.build(area: Instance, frame: CFrame, level: number): Model
 		cw.Size = Vector3.new(7.6, 0.9, 3.8)
 		cw.CFrame = at(0, BASE + 5.25, Z0 - 1.8)
 		cw.Color = tr.roof
-		cw.Material = tr.roofMat
+		PondStages.studLook(cw, tr.roofMat)
 		cw.Anchored = true
 		cw.Parent = m
 	end
