@@ -19,7 +19,7 @@ local LOBES = { { 0, 5, 16 }, { 9, 11, 11 }, { -9, 2, 11 } }
 local terrain = workspace.Terrain
 terrain.WaterColor = Color3.fromRGB(70, 175, 205)
 terrain.WaterReflectance = 0.25
-terrain.WaterTransparency = 1 -- as clear as it goes, or the tint hides the fish
+terrain.WaterTransparency = 0.6 -- clear enough to see the fish near the top, yet reads as water (at 1 the pond looked dry)
 terrain.WaterWaveSize = 0.08
 terrain.WaterWaveSpeed = 8
 
