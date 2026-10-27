@@ -33,10 +33,23 @@ local function find(path: { string }): any
 	return node
 end
 
+-- Things the owner had taken out that an older save may still hold: they never go into the kit.
+local DROPPED = { BlobShadow = true }
+
 local lines = {}
 for _, item in ITEMS do
 	local inst = find(item[1])
 	if inst then
+		local dropped = 0
+		for _, d in inst:GetDescendants() do
+			if DROPPED[d.Name] then
+				d:Destroy()
+				dropped += 1
+			end
+		end
+		if dropped > 0 then
+			table.insert(lines, string.format("  (%d left-overs dropped from %s)", dropped, item[2]))
+		end
 		local data = roblox.serializeModel({ inst })
 		fs.writeFile(OUT .. "/" .. item[2], data)
 		table.insert(lines, string.format("%-15s %4d children  %7.1f KB", item[2], #inst:GetChildren(), #data / 1024))
