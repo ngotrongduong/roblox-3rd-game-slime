@@ -48,21 +48,20 @@ grind** (drops rare, epic ≈ 10 runs, mythic ≈ 20); **never lose progress**; 
 
 ## 3. Look: how the owner's 2D art lives in a 3D engine
 
-**Open question for the owner** (the one direction decision before world building). The original
-is painted 2D art viewed from above, and the owner forbade redrawing it. Options:
+**Decided by the owner (2026-10-27): full 3D cartoon in the style of their art.** Slimes,
+buildings, trees, props, NPCs, gear, wings and enemies become 3D models that match the owner's
+paintings: saturated colours, chunky rounded silhouettes, glossy cel-like slimes, honey wood and
+royal-blue/cream awnings, gold trims. The owner's PNGs are the reference for every model (shape,
+proportions, colours, details — nothing added that the painting does not have, slimes have no
+legs), and each model is checked side by side against its painting before it is used. Low poly for
+cheap phones. 2D art keeps its place where it is 2D by nature: UI (the owner's button icons, frames,
+avatar backgrounds, item icons) and the slime faces (the owner's emotion art as decals on the 3D
+bodies). Dual and Secret designs keep their painted look as textures on the body where possible.
 
-- **A. Painted 2.5D (recommended).** A fixed-angle camera looking down on the farm (like the
-  original). Ground, paths and the pond are the owner's painted art laid on flat terrain; slimes,
-  buildings, trees, NPCs and props are the owner's own PNGs standing upright as camera-facing
-  cut-outs, sorted by depth. Keeps 100% of the owner's art exactly as drawn, is the lightest choice
-  for cheap phones, and looks like the original. Effects are real Roblox particles around them.
-- **B. Full 3D cartoon.** Slimes, buildings and props rebuilt as low-poly 3D models in the art's
-  style. The most "Roblox" look and free camera, but every model is new art (against the
-  owner's rule), much more work, and heavier on phones.
-- **C. Mixed.** 3D terrain, buildings and trees (new models); slimes, NPCs and gear stay the
-  owner's 2D art as cut-outs.
+The camera follows the player at a comfortable top-down angle that recalls the original view, with
+limited rotation and zoom.
 
-Until the owner chooses, only art-independent work proceeds (rules, saves, UI logic).
+The old options (painted 2.5D cut-outs; mixed) were not chosen.
 
 Whatever the choice, the art goes to Roblox by the owner's own upload (Studio's Asset Manager or
 an Open Cloud key the owner creates); Claude never signs in or uploads with the owner's account.

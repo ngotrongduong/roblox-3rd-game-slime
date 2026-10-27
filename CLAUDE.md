@@ -39,10 +39,19 @@ a script file, run with one command.
 
 - `default.project.json` — Rojo tree. The place file is built, never edited.
 - `src/shared` — plain logic and data, loadable outside Roblox by Lune
-  (`if script then require(script.Parent.X) else require("./X")`): `Config` holds every tunable
-  number.
-- `src/server` — services; `Main.server.luau` starts them. `src/client` — drawing and input.
-- `tests/run.luau` — checks of the shared logic, run by Lune.
+  (`if script then require(script.Parent.X) else require("./X")`; exported types cannot be read
+  through that require, so modules use `typeof(...)`, e.g. `typeof(FarmState.newFarm(0))`):
+  `Config` (every tunable number, one block an area), `Rng`, `Colours`, `DualDesigns`,
+  `SecretRecipes`, `Stats`, `Genetics`, `Luck`, `Growth`, `Mutations`, `Breeding`, `Hatching`,
+  `FarmState` (the save shape, `newFarm`, `repair`), `ProfileLogic` (envelope, lock, migrations),
+  `FarmSave` (the profile hooks for the farm).
+- `src/server` — `Main.server.luau` starts the services; `ProfileStore` (DataStore, session lock),
+  `PlayerData` (get / update / markKeyMoment: the only way to change a player's data).
+  `src/client` — drawing and input.
+- `tests/run.luau` runs every `tests/spec/*.luau` (`lune run tests/run.luau genetics` runs one);
+  the kit is `tests/lib/T.luau`, with `FarmKit` and `FakeDataStore`.
+- `& "C:\Roblox 3rd game\tools\types.ps1" [path]` — the Luau type checker Studio uses; must end
+  with `TYPES OK`.
 
 ## Rules of the code
 

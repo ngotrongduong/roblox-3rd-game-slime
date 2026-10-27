@@ -4,6 +4,8 @@
 *.rbxlx.lock
 sourcemap.json
 roblox.yml
+# Roblox type definitions for tools\types.ps1 (from JohnnyMorganz/luau-lsp).
+tools/types/
 # The original web game, downloaded for reference only (its code and art stay out of the repo until
 # a piece is deliberately taken into assets/).
 reference/goo-lineage-web/
