@@ -23,7 +23,8 @@ World Boss raids for gear. The title is exactly "Goo Lineage V2" everywhere it s
 The owner is not a programmer and only sets the direction. Claude (the orchestrator) has full
 decision authority; never ask the user anything; work until the task is done. An agent that is
 unsure picks the simplest thing that fits the code around it and says so in its report.
-Replies to the owner are in Vietnamese. Code, comments and commits in English.
+Replies to the owner are in Vietnamese. Code, comments and commits in English. **Every word inside the
+game is English** (UI, signs, labels, names, even greybox labels) — the owner's rule, 2026-10-27.
 
 ## Commands
 
