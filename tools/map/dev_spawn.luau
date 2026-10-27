@@ -9,8 +9,9 @@ local Layout = require(ReplicatedStorage.Shared.Layout)
 
 local DEV_SPAWN = true
 local PLOT = 5
-local AREA = { -1, 1 } -- the fishing pond (col, row)
-local OFFSET = CFrame.new(-3, 0, -24) -- in the area's frame: on the path in front of the dock
+-- the area worked on (col, row), or nil for the plaza in the middle (all areas round it)
+local AREA: { number }? = nil
+local OFFSET = if AREA then CFrame.new(-3, 0, -24) else CFrame.new(0, 0, -16) -- in front of the dock, or the plaza's south edge
 
 local market = workspace.Map:FindFirstChild("Market")
 local marketSpawn = market and market:FindFirstChild("Spawn")
@@ -25,13 +26,13 @@ if not DEV_SPAWN then
 	return "dev spawn off, the Market's spawn is back"
 end
 
-local area = Layout.plotAreaFacing(PLOT, AREA[1], AREA[2])
+local area = if AREA then Layout.plotAreaFacing(PLOT, AREA[1], AREA[2]) else Layout.plotFrame(PLOT)
 local at = area * OFFSET
 local spawn = Instance.new("SpawnLocation")
 spawn.Name = "DevSpawn"
 spawn.Size = Vector3.new(4, 0.2, 4)
 -- facing the dock (+Z of the area)
-spawn.CFrame = CFrame.lookAt(at.Position, (area * CFrame.new(-3, 0, 0)).Position) + Vector3.new(0, (Config.Map.GroundY or 2) + 0.1, 0)
+spawn.CFrame = CFrame.lookAt(at.Position, (area * CFrame.new(if AREA then -3 else 0, 0, 0)).Position) + Vector3.new(0, (Config.Map.GroundY or 2) + 0.1, 0)
 spawn.Anchored = true
 spawn.CanCollide = false
 spawn.Transparency = 1
