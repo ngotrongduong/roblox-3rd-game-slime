@@ -175,6 +175,13 @@ warm window, and a real slime model; the roof is a little lilac.
   roof, doors and windows, frame and foundation, yard up one material tier (rustic wood, painted
   timber, brick, steel and glass, slime tech, marble and gold). The other four areas wait for the
   owner's review one by one (AreaStages is the stopgap). Pictures `docs/areas/upgrades/pantry-v2-*`.
+- Garden and breeding pen redone the pantry's way (owner approved the garden, 2026-10-28):
+  `src/server/GardenStages.luau` (tool shed, vine pergola, greenhouse with an open door, irrigation
+  windmill; water, tools, compost and scarecrow props) and `src/server/BreedingStages.luau` (the
+  cupcake cottage grows into CakeCottage2..5, a nest or incubator more every era up to four each with
+  their markers; feed, egg care, comfort and warmth props; fence, floor, nest platforms, pad and gate
+  arch climb the tiers). 44 new PropKit models; `tools/kit/intake.luau` takes generated models into
+  the kit square and fitted. Kitchen and training ground still wait (AreaStages stopgap).
 - `tools/map/sync_client.luau` copies the client scripts into the work place for play tests.
 - `tools/map/sync_shared.luau` copies the repo's Config and Layout into the work place (it swaps in
   fresh ModuleScripts, since Studio caches what require returned).
