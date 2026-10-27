@@ -109,7 +109,7 @@ local function put(kind: Kind, x: number, z: number)
 	m.Parent = skirt
 	placed += 1
 end
-local GATE = 15 -- the gate's half width (and its path), kept clear
+local GATE = 12 -- the gate's half width (and its path), kept clear
 -- each side of the plot: its direction along the fence and its outward direction
 local SIDES = {
 	{ along = Vector3.xAxis, out = Vector3.zAxis },
@@ -120,15 +120,15 @@ local SIDES = {
 for _, side in SIDES do
 	local t = -HALF + rng:NextNumber(0, 6)
 	while t < HALF do
-		local gap = rng:NextNumber(9, 20)
-		local skip = rng:NextNumber() < 0.2 or (side.gate and math.abs(t) < GATE)
+		local gap = rng:NextNumber(7, 14)
+		local skip = rng:NextNumber() < 0.12 or (side.gate and math.abs(t) < GATE)
 		if not skip then
 			-- the group's anchor, 2.5 to 6 studs out from the fence
 			local d = HALF + rng:NextNumber(2.5, 6)
 			local c = side.along * t + side.out * d
 			put(ANCHORS[rng:NextInteger(1, #ANCHORS)], c.X, c.Z)
 			-- smaller things round it, most nearer the fence, a few further out
-			for _ = 1, rng:NextInteger(2, 5) do
+			for _ = 1, rng:NextInteger(3, 6) do
 				local a = rng:NextNumber(0, math.pi * 2)
 				local r = rng:NextNumber(2, 4.5)
 				local p = c + side.along * (math.cos(a) * r) + side.out * (math.sin(a) * r * 0.7)

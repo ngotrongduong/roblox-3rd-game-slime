@@ -110,6 +110,21 @@ for x = FISH_MIN + FINE / 2, half - FINE / 2, FINE do
 		end
 	end
 end
+-- The floor stops a stud short of the plot's edge, so its side is hidden inside the fence that stands
+-- on the edge (the owner, 2026-10-27: a strip of green floor showed under the fence).
+local LIMIT = half - 1
+for _, t in floor:GetChildren() do
+	local p = plotFrame:PointToObjectSpace(t.Position)
+	local lo = Vector3.new(p.X - t.Size.X / 2, 0, p.Z - t.Size.Z / 2)
+	local hi = Vector3.new(p.X + t.Size.X / 2, 0, p.Z + t.Size.Z / 2)
+	local lo2 = Vector3.new(math.max(lo.X, -LIMIT), 0, math.max(lo.Z, -LIMIT))
+	local hi2 = Vector3.new(math.min(hi.X, LIMIT), 0, math.min(hi.Z, LIMIT))
+	if lo2 ~= lo or hi2 ~= hi then
+		local mid = (lo2 + hi2) / 2
+		t.Size = Vector3.new(hi2.X - lo2.X, t.Size.Y, hi2.Z - lo2.Z)
+		t.CFrame = plotFrame * CFrame.new(mid.X, p.Y, mid.Z)
+	end
+end
 floor.Parent = plot
 
 -- (the pool's water is real terrain water, filled by pond_water_l1 after this script)
