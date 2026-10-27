@@ -35,7 +35,7 @@ grind** (drops rare, epic ≈ 10 runs, mythic ≈ 20); **never lose progress**; 
 
 | Area | Web original | Roblox |
 |---|---|---|
-| Players | single player in a browser | a server of up to 6 players; each owns a **farm plot**; a shared **plaza** in the middle holds the shop stall, the Smithy and the Travelling Merchant's stop (his clock is already global: everyone sees him arrive together) |
+| Players | single player in a browser | a server of 8 players in one round valley: 8 home plots and the Market around the rim, the Wild Garden in the middle with monster slimes, duels and the World Boss — see `docs/MAP.md` (the owner's direction of 2026-10-27, which also adds a pantry and a training ground to each plot, 4-worker stations that start with 1 slot, and "unfed slimes do not breed and work at 50%") |
 | Rules | client JS | the **server decides everything** (breeding, eggs, RNG, coins, drops); clients draw and ask. Times are server epoch seconds |
 | Save | localStorage, schema v15 | one DataStore profile per player with session locking; saved on key moments (hatch, breed, sell, buy, run end), every few minutes, on leave and on shutdown — never constantly, never lost (the owner's sharpest complaint about the original) |
 | The player | a slime avatar shown in a HUD box, steered with WASD in battle | the player **is** the avatar slime in the world (custom character: slime body + face + gear, wings and aura attachments), with a snappy hop-walk; the HUD box keeps the portrait |

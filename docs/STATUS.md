@@ -34,7 +34,15 @@ Decisions taken while porting
   (`Mutations.rollCategory`) so a single categorical roll can replace it later.
 - Starting slots 20 (+5 a level, max 220), as in the original.
 
-Next
+## 2026-10-27 — the map and the UI come first (owner)
+
+The owner asked to redesign the map and the UI before Phase 2: one valley for 8 players, home
+plots and a trading area on the rim, a flat Wild Garden in the middle with monster slimes and
+fights (also between players' slimes), and six upgradable areas a plot (fishing, garden, kitchen,
+pantry, training, breeding), each level changing the look a little. Proposal: `docs/MAP.md`;
+waiting on the owner's choices in its §4. The UI redesign follows the map.
+
+Next (after the map and UI are agreed)
 - Phase 2, The farm: the 3D plot and the slimes on it, the nest house, eggs and the reveal, the
   breeding house, the collection book, selling. Needs the first 3D models (slime body, nest house)
   made from the owner's paintings, and remotes for Breed / Hatch / Sell.
