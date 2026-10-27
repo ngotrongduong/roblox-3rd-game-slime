@@ -1,9 +1,8 @@
 -- Polish pass on a plot's built areas (research: RESEARCH.md "Stylized cozy look"): the storybook
 -- grass (a generated hand-drawn MaterialVariant over terrain Grass), soft dark blob shadows under every
 -- prop (so the scene still reads when phones turn shadows off), dark outlines on the one hero piece of
--- each area, and the "Sway" tag on reeds, ferns and tall flowers for the client's FoliageSway.
+-- each area. Nothing in a home plot sways (the owner, 2026-10-27: the plants at home stay still).
 -- Run in Edit mode through MCP after the builders and dress_plot_nature. Rerunnable.
-local CollectionService = game:GetService("CollectionService")
 local MaterialService = game:GetService("MaterialService")
 
 local PLOT = 5
@@ -39,7 +38,6 @@ local function blob(parent: Instance, model: Model)
 	p.Parent = parent
 end
 
-local SWAY = { Fern = true, GrassTuft = true, Sunflower = true, FlowerPatch = true, FloweringBush = true }
 for _, areaName in { "FishingPondL1", "GardenL1" } do
 	local area = plot:FindFirstChild(areaName)
 	local nature = area and area:FindFirstChild("Nature")
@@ -53,9 +51,6 @@ for _, areaName in { "FishingPondL1", "GardenL1" } do
 			if m:IsA("Model") then
 				if m.Name ~= "WaterLily" and m.Name ~= "SteppingStones" and not SMALL[m.Name] then
 					blob(nature, m)
-				end
-				if SWAY[m.Name] then
-					CollectionService:AddTag(m, "Sway")
 				end
 			end
 		end

@@ -5,7 +5,6 @@
 -- slimes into the pen; there they pair up by themselves and after a while lay an egg in a nest; the
 -- egg goes to an incubator; after a while it hatches into a new slime. Level 1: 2 nests,
 -- 2 incubators. Rebuilds itself each run.
-local CollectionService = game:GetService("CollectionService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerStorage = game:GetService("ServerStorage")
 
@@ -217,7 +216,7 @@ local function nest(i: number, x: number, z: number, withEgg: boolean)
 		egg("Egg", base * CFrame.new(0.1, 0.95, 0), 1.25)
 	end
 end
-nest(1, PX - 9.5, -2, true)
+nest(1, PX - 9.5, -2, false) -- (no eggs or slimes placed: the game lays them)
 nest(2, PX + 9.5, -2, false)
 
 -- a water trough and a little hay bale inside the pen
@@ -260,7 +259,7 @@ local function incubator(i: number, z: number, withEgg: boolean)
 	mark.Name = "Incubator" .. i
 	mark.Parent = bed
 end
-incubator(1, -3.5, true)
+incubator(1, -3.5, false)
 incubator(2, 5.5, false)
 
 -- ===== the area's signpost (heart icon) at the gate =====
@@ -295,9 +294,6 @@ if lib then
 		local target = (area * CFrame.new(x, GROUND + size.Y / 2, z)).Position
 		m:PivotTo(m:GetPivot() + (target - box.Position))
 		m.Parent = nature
-		if key == "Fern" or key == "GrassTuft" or key == "FlowerPatch" or key == "FloweringBush" then
-			CollectionService:AddTag(m, "Sway")
-		end
 	end
 	-- flowering bushes along the fence outside, as the cottage's old yard had round it
 	put("FloweringBush", x1 + 2.5, zb - 2, 0.8, 0)

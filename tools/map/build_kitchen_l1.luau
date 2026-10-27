@@ -3,7 +3,6 @@
 -- spot: a stone stove with a glowing fire and a steaming pot, a wooden counter with today's
 -- ingredients (fish from the pond, vegetables from the garden), a firewood pile, the area's signpost
 -- (pot icon), dressed with the Nature stylized Pack. Rebuilds itself each run.
-local CollectionService = game:GetService("CollectionService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerStorage = game:GetService("ServerStorage")
 
@@ -82,26 +81,92 @@ part("StoveTop", Vector3.new(6.6, 0.5, 4.6), stoveCf * CFrame.new(0, 3.6, 0), ST
 part("Mouth", Vector3.new(2.6, 1.6, 0.3), stoveCf * CFrame.new(0, 1.4, -2), Color3.fromRGB(40, 30, 28))
 local glow = part("Fire", Vector3.new(2, 1, 0.2), stoveCf * CFrame.new(0, 1.2, -2.05), Color3.fromRGB(255, 140, 40), nil, Enum.Material.Neon)
 glow.CastShadow = false
-local light = Instance.new("PointLight")
-light.Color = Color3.fromRGB(255, 160, 80)
-light.Brightness = 1.4
-light.Range = 10
-light.Parent = glow
-local embers = Instance.new("ParticleEmitter")
-embers.Name = "Embers"
-embers.Texture = "rbxasset://textures/particles/sparkles_main.dds"
-embers.Color = ColorSequence.new(Color3.fromRGB(255, 190, 90), Color3.fromRGB(255, 110, 40))
-embers.LightEmission = 1
-embers.Size = NumberSequence.new(0.15, 0)
-embers.Lifetime = NumberRange.new(0.6, 1.1)
-embers.Rate = 4
-embers.Speed = NumberRange.new(1, 2)
-embers.SpreadAngle = Vector2.new(25, 25)
-embers.EmissionDirection = Enum.NormalId.Front
-embers.Parent = glow
+-- Real-looking flames licking up the fire mouth (the owner: "fire like real"), the campfire's recipe
+-- at a smaller scale (see build_village.luau): the owner's "Realistic Fire VFX" pack
+-- (ServerStorage.OwnerKit.CampFlame) for glow and embers, Roblox's flame texture for the tongues,
+-- one light tagged "Flicker" for the client's FireFlicker.
+local ownerKit = game:GetService("ServerStorage"):FindFirstChild("OwnerKit")
+local function addFire(parent: Instance, base: CFrame, scale: number)
+	local core = Instance.new("Part")
+	core.Name = "FireCore"
+	core.Size = Vector3.one * scale
+	core.CFrame = base
+	core.Transparency = 1
+	core.Anchored = true
+	core.CanCollide = false
+	core.CanQuery = false
+	core.CanTouch = false
+	core.Parent = parent
+	local pack = ownerKit and ownerKit:FindFirstChild("CampFlame")
+	if pack then
+		local m = pack:Clone()
+		m:ScaleTo(0.45 * scale)
+		m:PivotTo(base - Vector3.new(0, 0.5 * scale, 0))
+		for _, d in m:GetDescendants() do
+			if d:IsA("ParticleEmitter") and d.Name == "bloom" then
+				d.Rate = 12
+				d.Transparency = NumberSequence.new({ NumberSequenceKeypoint.new(0, 1), NumberSequenceKeypoint.new(0.5, 0.92), NumberSequenceKeypoint.new(1, 1) })
+			elseif d:IsA("ParticleEmitter") and d.Name == "smoke" then
+				d.Speed = NumberRange.new(4.5 * scale, 6 * scale)
+			elseif d:IsA("Light") then
+				d:Destroy()
+			end
+		end
+		m.Parent = parent
+	end
+	local at0 = Instance.new("Attachment")
+	at0.Name = "Flames"
+	at0.Parent = core
+	local function flames(c0: Color3, c1: Color3, size: number, life: number, rate: number, speed: number)
+		local e = Instance.new("ParticleEmitter")
+		e.Name = "Flame"
+		e.Texture = "rbxasset://textures/particles/fire_main.dds"
+		e.Color = ColorSequence.new(c0, c1)
+		e.LightEmission = 1
+		e.LightInfluence = 0
+		e.Size = NumberSequence.new({ NumberSequenceKeypoint.new(0, size), NumberSequenceKeypoint.new(0.4, size * 1.1), NumberSequenceKeypoint.new(1, size * 0.15) })
+		e.Transparency = NumberSequence.new({ NumberSequenceKeypoint.new(0, 1), NumberSequenceKeypoint.new(0.15, 0.1), NumberSequenceKeypoint.new(0.75, 0.35), NumberSequenceKeypoint.new(1, 1) })
+		e.Lifetime = NumberRange.new(life * 0.7, life)
+		e.Rate = rate
+		e.Speed = NumberRange.new(speed * 0.7, speed)
+		e.SpreadAngle = Vector2.new(10, 10)
+		e.Rotation = NumberRange.new(-15, 15)
+		e.RotSpeed = NumberRange.new(-30, 30)
+		e.EmissionDirection = Enum.NormalId.Top
+		e.Parent = at0
+	end
+	flames(Color3.fromRGB(255, 200, 90), Color3.fromRGB(255, 80, 20), 2.8 * scale, 0.9, 22, 3.6 * scale)
+	flames(Color3.fromRGB(255, 250, 200), Color3.fromRGB(255, 170, 60), 1.4 * scale, 0.6, 18, 2.8 * scale)
+	local light = Instance.new("PointLight")
+	light.Color = Color3.fromRGB(255, 150, 70)
+	light.Brightness = 2
+	light.Range = 18 * scale
+	light.Parent = core
+	light:AddTag("Flicker")
+end
+glow.Color = Color3.fromRGB(200, 80, 30) -- (now the bed of embers under the flames)
+addFire(model, stoveCf * CFrame.new(0, 0.9, -2.25), 0.45)
 -- a stone chimney stub at the back corner
 part("Chimney", Vector3.new(1.6, 4, 1.6), stoveCf * CFrame.new(2.3, 5.6, 1.4), STONE, nil, Enum.Material.Slate)
-part("ChimneyCap", Vector3.new(2, 0.4, 2), stoveCf * CFrame.new(2.3, 7.7, 1.4), STONE_DARK, nil, Enum.Material.Slate)
+local cap = part("ChimneyCap", Vector3.new(2, 0.4, 2), stoveCf * CFrame.new(2.3, 7.7, 1.4), STONE_DARK, nil, Enum.Material.Slate)
+-- a thin wisp of smoke from the chimney, few and slow (cheap on phones)
+local smokeAt = Instance.new("Attachment")
+smokeAt.Position = Vector3.new(0, 0.3, 0)
+smokeAt.Parent = cap
+local smoke = Instance.new("ParticleEmitter")
+smoke.Name = "Smoke"
+smoke.Texture = "rbxasset://textures/particles/smoke_main.dds"
+smoke.Color = ColorSequence.new(Color3.fromRGB(235, 235, 235), Color3.fromRGB(190, 190, 195))
+smoke.Size = NumberSequence.new({ NumberSequenceKeypoint.new(0, 0.8), NumberSequenceKeypoint.new(1, 3) })
+smoke.Transparency = NumberSequence.new({ NumberSequenceKeypoint.new(0, 1), NumberSequenceKeypoint.new(0.15, 0.6), NumberSequenceKeypoint.new(1, 1) })
+smoke.Lifetime = NumberRange.new(2.5, 3.5)
+smoke.Rate = 3
+smoke.Speed = NumberRange.new(1.2, 1.8)
+smoke.SpreadAngle = Vector2.new(8, 8)
+smoke.RotSpeed = NumberRange.new(-20, 20)
+smoke.Acceleration = Vector3.new(0.4, 0.2, 0)
+smoke.EmissionDirection = Enum.NormalId.Top
+smoke.Parent = smokeAt
 
 -- the pot on the stove, with a lid and gentle steam
 local potCf = stoveCf * CFrame.new(-0.8, 3.85, 0)
@@ -189,9 +254,6 @@ if lib then
 		local target = (area * CFrame.new(x, GROUND + size.Y / 2, z)).Position
 		m:PivotTo(m:GetPivot() + (target - box.Position))
 		m.Parent = nature
-		if key == "Fern" or key == "GrassTuft" or key == "FlowerPatch" or key == "FloweringBush" or key == "Sunflower" then
-			CollectionService:AddTag(m, "Sway")
-		end
 		if key == "Bush" or key == "BerryBush" or key == "FloweringBush" or key == "MossyBoulder" or key == "OakTree" then
 			local bb, bs = m:GetBoundingBox()
 			local d = math.max(bs.X, bs.Z) * 0.95

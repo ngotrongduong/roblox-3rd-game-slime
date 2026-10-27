@@ -104,6 +104,30 @@ warm window, and a real slime model; the roof is a little lilac.
   loose loops just under the surface, moved on the client by `src/client/PondFish.client.luau` (tag
   "PondFish"); seen working in a Studio play test. Deeper than about 1 stud the water's tint hides them.
   Pictures `docs/areas/fishing-real-water.jpg`, `fishing-fish.jpg`.
+- Campfire, third pass (owner): in the empty front-right cell, a round earth stud floor with a stone
+  ring, a log teepee and real-looking fire, six small seats (the owner's log benches and kit stumps,
+  turned to the fire), lantern posts and tall trees behind; a path from the plaza. Picture
+  `docs/areas/campfire.jpg`. The owner's models are in the work place's `ServerStorage.OwnerKit`
+  (inserted from the Mue_you inventory with MCP `insert_asset`, scripts removed).
+- Fire "like real" for the campfire and the kitchen stove (one recipe, `addFire` in both builders):
+  the glow, embers and heat of the "Realistic Fire VFX" pack in the owner's inventory
+  (`OwnerKit.CampFlame`, scaled, bloom calmed, tongues kept low), two layers of licking flames with
+  Roblox's flame texture, and a light that flickers (`src/client/FireFlicker.client.luau`, tag
+  "Flicker"). The stove's chimney smokes a little. Pictures `campfire.jpg`, `kitchen-fire.jpg`.
+- Trees: every code-built tree (the greybox's trunk-and-ball trees on the valley rim and in the Wild
+  Garden, 140) swapped for the owner's own tree models by `replace_greybox_trees.luau`;
+  `build_greybox.luau` places the same on a rebuild. The ring of big trees inside the plot fence is
+  the owner's trees too, 22-28 studs tall. Nothing in a home plot sways (owner).
+- Taken out (owner): the eggs in the nest and the incubator, the two round grain sacks at the
+  pantry, the round seed sack in the garden.
+- Crops in growth stages (owner: they grow like a real process, seedling to harvest): Carrot1..4 and
+  Cabbage1..4 (seedling, young, growing, ripe; `generate_mesh`, in the work place's
+  `ServerStorage.CropKit`; the carrot root is buried, only its shoulder shows). Each plant in a bed is
+  a model tagged "Crop" with attributes Crop and Stage; the beds now show the stages side by side.
+  Picture `garden-crop-stages.jpg`.
+- For later (Phase 2), as the owner asked: the growing system sets a plant's Stage over time and
+  swaps in the next stage's model, scaling it up smoothly from the last; the training ground's dummy,
+  target and rack get motion when a slime trains there.
 - `tools/map/sync_client.luau` copies the client scripts into the work place for play tests.
 - `tools/map/sync_shared.luau` copies the repo's Config and Layout into the work place (it swaps in
   fresh ModuleScripts, since Studio caches what require returned).

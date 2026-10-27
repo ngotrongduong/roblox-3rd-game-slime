@@ -3,7 +3,6 @@
 -- stores the food. A grey stone stud yard, a small honey-plank shed with a terracotta roof, a door
 -- with a lantern, and the stock in front of it (crates of fish and vegetables, barrels, sacks) so a
 -- full pantry looks full. The area's signpost (box icon) at the front. Rebuilds itself each run.
-local CollectionService = game:GetService("CollectionService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerStorage = game:GetService("ServerStorage")
 
@@ -155,10 +154,7 @@ local function barrel(cf: CFrame)
 end
 barrel(at(7.5, 0.4, -1.5))
 barrel(at(8.2, 0.4, -4.4))
--- two sacks of grain, one tied
-part("Sack", Vector3.new(2, 2.6, 1.8), at(5, 1.6, -4.8), SACK, Enum.PartType.Ball) -- (Fabric renders sacks dark)
-part("SackTie", Vector3.new(0.8, 0.5, 0.8), at(5, 2.95, -4.8), WOOD_DARK, Enum.PartType.Ball)
-part("Sack", Vector3.new(2, 2.2, 1.8), at(5.6, 1.4, -2.4), SACK, Enum.PartType.Ball) -- (Fabric renders sacks dark)
+-- (the two round grain sacks here were taken out: the owner, 2026-10-27)
 
 -- ===== the area's signpost (box icon) =====
 local signCf = at(-3.5, 0, -11.5)
@@ -192,9 +188,6 @@ if lib then
 		local target = (area * CFrame.new(x, GROUND + size.Y / 2, z)).Position
 		m:PivotTo(m:GetPivot() + (target - box.Position))
 		m.Parent = nature
-		if key == "Fern" or key == "GrassTuft" or key == "FlowerPatch" or key == "FloweringBush" then
-			CollectionService:AddTag(m, "Sway")
-		end
 		if key == "Bush" or key == "BerryBush" or key == "FloweringBush" or key == "MossyBoulder" then
 			local bb, bs = m:GetBoundingBox()
 			local d = math.max(bs.X, bs.Z) * 0.95

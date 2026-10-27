@@ -68,6 +68,25 @@ local earth = part("Floor", Vector3.new(26, 0.2, 24), at(0, 0.1, 3), Color3.from
 earth.TopSurface = Enum.SurfaceType.Studs
 earth.CastShadow = false
 
+-- ===== the crop kit: each vegetable at four growth stages =====
+-- Low-poly models from generate_mesh, kept in the work place's ServerStorage.CropKit as Carrot1..4 and
+-- Cabbage1..4 (pivot at the foot, standing upright). A plant here is a model with attributes Crop and
+-- Stage, tagged "Crop", the hook the growing system will use.
+local cropKit = game:GetService("ServerStorage"):FindFirstChild("CropKit")
+local function plant(crop: string, stage: number, spot: CFrame, turn: number)
+	local src = cropKit and cropKit:FindFirstChild(crop .. stage)
+	if not src then
+		return
+	end
+	local m = src:Clone()
+	m.Name = "Crop"
+	m:PivotTo(spot * CFrame.Angles(0, math.rad(turn), 0))
+	m:SetAttribute("Crop", crop)
+	m:SetAttribute("Stage", stage)
+	m:AddTag("Crop")
+	m.Parent = model
+end
+
 -- ===== two raised beds =====
 local BED_W, BED_L, BED_H = 6, 12, 1.4
 local function bed(x: number, z: number, crop: string)
@@ -77,27 +96,20 @@ local function bed(x: number, z: number, crop: string)
 		part("BedPlank", Vector3.new(BED_W, BED_H, 0.6), at(x, BED_H / 2, z + s * BED_L / 2), HONEY, nil, Enum.Material.Wood)
 	end
 	part("Soil", Vector3.new(BED_W - 0.6, BED_H - 0.3, BED_L - 0.6), at(x, (BED_H - 0.3) / 2, z), SOIL, nil, Enum.Material.Ground)
-	-- two rows of young vegetables
+	-- two rows of five plants, each a model of the crop kit at one growth stage (1 seedling, 2 young,
+	-- 3 growing, 4 ripe). The game will grow them: it sets a plant's Stage and swaps in the next stage's
+	-- model, scaling it up from the last one, so a bed goes from sprouts to a harvest. For now the
+	-- rows show the stages side by side.
 	for row = -1, 1, 2 do
 		for k = -2, 2 do
-			local cf = at(x + row * 1.4, BED_H, z + k * 2.2)
-			if crop == "carrot" then
-				-- a carrot's orange shoulder showing under a green tuft
-				post("CarrotTop", cf * CFrame.new(0, 0.1, 0), 0.5, 0.8, CARROT)
-				for t = 1, 3 do
-					local a = t * 2.1
-					part("Tuft", Vector3.new(0.35, 1.3, 0.35), cf * CFrame.new(math.cos(a) * 0.2, 0.9, math.sin(a) * 0.2) * CFrame.Angles(math.sin(a) * 0.35, 0, math.cos(a) * 0.35), LEAF)
-				end
-			else
-				-- a small round cabbage
-				part("Cabbage", Vector3.new(1.4, 1.1, 1.4), cf * CFrame.new(0, 0.45, 0), LEAF_LIGHT, Enum.PartType.Ball)
-				part("CabbageLeaf", Vector3.new(1.8, 0.4, 1.8), cf * CFrame.new(0, 0.15, 0), LEAF, Enum.PartType.Ball)
-			end
+			local stage = math.clamp(k + 3 + (if row == 1 then 0 else -1), 1, 4)
+			local spot = at(x + row * 1.4, BED_H - 0.3, z + k * 2.2)
+			plant(crop, stage, spot, (row * 7 + k) * 53)
 		end
 	end
 end
-bed(-6, 4, "carrot")
-bed(6, 4, "cabbage")
+bed(-6, 4, "Carrot")
+bed(6, 4, "Cabbage")
 
 -- ===== the work spot (one) =====
 -- A round straw mat on the path between the beds: where a working slime tends the garden.
@@ -157,9 +169,7 @@ icon.TextScaled = true
 icon.Parent = gui
 gui.Parent = sign
 
--- A seed sack and a water barrel inside the fence corners.
-part("SeedSack", Vector3.new(2, 2.4, 1.8), at(10, 1.1, -6), Color3.fromRGB(226, 206, 160), Enum.PartType.Ball)
-part("SackTie", Vector3.new(0.8, 0.4, 0.8), at(10, 2.35, -6), WOOD_DARK, Enum.PartType.Ball)
+-- A water barrel inside the fence corner (the round seed sack was taken out: the owner, no balls).
 post("Barrel", at(-10.5, 1.4, 12.5), 2.8, 2.6, HONEY_DARK).Material = Enum.Material.Wood
 post("BarrelWater", at(-10.5, 2.82, 12.5), 0.05, 2.2, Color3.fromRGB(90, 170, 220))
 for _, y in { 0.5, 2.3 } do

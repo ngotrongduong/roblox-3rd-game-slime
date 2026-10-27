@@ -3,7 +3,6 @@
 -- with a low fence open to the front, ONE training spot facing a straw dummy, an archery target, a
 -- weapon rack, and a banner pole where the squad gathers before going out to the Wild Garden.
 -- No slimes (the owner adds them later). Rebuilds itself each run.
-local CollectionService = game:GetService("CollectionService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerStorage = game:GetService("ServerStorage")
 
@@ -210,9 +209,6 @@ if lib then
 		local t = (area * CFrame.new(x, GROUND + size.Y / 2, z)).Position
 		m:PivotTo(m:GetPivot() + (t - box.Position))
 		m.Parent = nature
-		if key == "Fern" or key == "GrassTuft" or key == "FlowerPatch" then
-			CollectionService:AddTag(m, "Sway")
-		end
 	end
 	put("Bush", 17, 10, 0.8, 0)
 	put("BerryBush", 17, -6, 0.75, 60)

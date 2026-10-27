@@ -84,7 +84,32 @@ local function label(adornee: BasePart, text: string, height: number)
 	gui.Parent = adornee
 end
 
-local function tree(parent: Instance, pos: Vector3, scale: number, leaves: Color3)
+-- Trees are the owner's own models (ServerStorage.OwnerKit; the owner, 2026-10-27: no code-built
+-- trees), by kind: the rim's mixed wood or a Wild Garden quarter. A trunk and ball crown only stand in
+-- when the kit is missing. (replace_greybox_trees.luau did the same swap on the built map.)
+local TREE_KINDS = {
+	rim = { "TallPineLarge", "TallPineDense", "BroadleafTree", "TallPineSparse", "TallPineSlender", "TallPineWindswept" },
+	meadow = { "BroadleafTree", "BanyanTree", "BroadleafTree" },
+	mushroom = { "VineTree", "BanyanTree" },
+	ember = { "TallPineWindswept", "TallPineSparse" },
+	frost = { "FrozenDeadTree", "TallPineSlender" },
+}
+local ownerKit = game:GetService("ServerStorage"):FindFirstChild("OwnerKit")
+local function tree(parent: Instance, pos: Vector3, scale: number, leaves: Color3, kind: string)
+	local kinds = TREE_KINDS[kind] or TREE_KINDS.rim
+	local src = ownerKit and ownerKit:FindFirstChild(kinds[rng:NextInteger(1, #kinds)])
+	if src and src:IsA("Model") then
+		local m = src:Clone()
+		local _, size0 = m:GetBoundingBox()
+		m:ScaleTo(m:GetScale() * 16 * scale / size0.Y)
+		local pivot = m:GetPivot()
+		m:PivotTo(CFrame.new(pivot.Position) * CFrame.Angles(0, rng:NextNumber(0, math.pi * 2), 0) * pivot.Rotation)
+		local box, size = m:GetBoundingBox()
+		m:PivotTo(m:GetPivot() + (pos + Vector3.new(0, size.Y / 2, 0) - box.Position))
+		m.Name = "Tree"
+		m.Parent = parent
+		return
+	end
 	-- (a cylinder's length is its X size, so it is laid on its side and turned upright)
 	part(parent, "Trunk", Vector3.new(9, 2.2, 2.2) * scale, CFrame.new(pos + Vector3.new(0, 4.5 * scale, 0)), DARKWOOD, Enum.PartType.Cylinder):PivotTo(
 		CFrame.new(pos + Vector3.new(0, 4.5 * scale, 0)) * CFrame.Angles(0, 0, math.rad(90))
@@ -241,7 +266,7 @@ local function buildWild()
 			local r = rng:NextNumber(M.HeartRadius + 30, M.WildRadius - 12)
 			local pos = Layout.polar(angle, r)
 			if math.abs((angle % 90) - 45) < 40 then
-				tree(w, pos, rng:NextNumber(0.8, 1.4), LEAVES[quarter.id])
+				tree(w, pos, rng:NextNumber(0.8, 1.4), LEAVES[quarter.id], quarter.id)
 			end
 		end
 		for s = 1, 3 do
@@ -262,7 +287,7 @@ local function buildRimTrees()
 	f.Name = "RimTrees"
 	for angle = 0, 359, 7 do
 		local r = M.FloorRadius + rng:NextNumber(-6, 26)
-		tree(f, Layout.polar(angle + rng:NextNumber(-3, 3), r), rng:NextNumber(1.2, 2), Color3.fromRGB(70, 150, 70))
+		tree(f, Layout.polar(angle + rng:NextNumber(-3, 3), r), rng:NextNumber(1.2, 2), Color3.fromRGB(70, 150, 70), "rim")
 	end
 	f.Parent = root
 end

@@ -210,14 +210,10 @@ local function put(key: string, x: number, z: number, scale: number, turn: numbe
 	local box, size = m:GetBoundingBox()
 	local target = at(x, size.Y / 2, z).Position
 	m:PivotTo(m:GetPivot() + (target - box.Position))
-	if key:find("Tree") or key:find("Pine") then
-		m:AddTag("Sway")
-	end
 	m.Parent = nature
 end
 -- a ring of trees inside the fence, between the areas, with a bush at each foot
 local CELL = Config.Map.PlotSize / 3
-local TREES = { "OakTree", "BirchTree", "AutumnTree", "TallPine" }
 local ring = {}
 for _, s in { -1, 1 } do
 	-- (the corner areas are turned 45 degrees, so their corners reach in toward the middles)
@@ -226,20 +222,12 @@ for _, s in { -1, 1 } do
 	table.insert(ring, { HALF - 8, s * 24 })
 	table.insert(ring, { -HALF + 8, s * 24 })
 end
+-- (the trees themselves are the owner's, placed below with `place`)
 for i, p in ring do
-	put(TREES[(i - 1) % #TREES + 1], p[1], p[2], 0.9 + (i % 3) * 0.1, i * 47)
 	put(if i % 2 == 0 then "FloweringBush" else "BerryBush", p[1] + 4, p[2] - 2, 0.8, i * 30)
 	put("GrassTuft", p[1] - 3.5, p[2] + 1, 1.4, i * 60)
 end
--- the empty front-right cell (kept for a later area): a little grove with a log and flowers
-local grove = { -CELL, -CELL }
-put("AutumnTree", grove[1] + 6, grove[2] + 4, 1, 20)
-put("BirchTree", grove[1] - 8, grove[2] - 5, 0.9, 80)
-put("Log", grove[1] - 1, grove[2] + 6, 1.2, 35)
-put("Stump", grove[1] + 2, grove[2] - 8, 1, 0)
-put("FlowerPatch", grove[1] - 4, grove[2] + 1, 1.6, 0)
-put("FlowerPatch", grove[1] + 7, grove[2] - 6, 1.4, 90)
-put("SmallRocks", grove[1] - 10, grove[2] + 8, 1.2, 0)
+-- the campfire in the empty front-right cell (the owner, 2026-10-27): built below
 -- flower patches along both sides of each path, and either side of the gate
 for i, t in pathEnds do
 	local side = Vector3.new(t.Z, 0, -t.X).Unit * 5.5
@@ -253,6 +241,180 @@ for _, s in { -1, 1 } do
 	put("FlowerPatch", s * 8, -HALF + 20, 1.2, 0)
 end
 nature.Parent = village
+
+-- ===== the campfire (the owner, 2026-10-27) in the empty front-right cell =====
+-- A round earth floor with a stone ring, a log teepee with fire from the owner's VFX, small seats
+-- round it (the owner's log benches and kit stumps, all turned to the fire), lantern posts, and tall
+-- trees from the owner's library behind. The owner's models live in ServerStorage.OwnerKit (inserted
+-- from his inventory with the MCP insert_asset tool, scripts removed).
+local ownerKit = game:GetService("ServerStorage"):FindFirstChild("OwnerKit")
+local camp = Vector3.new(-CELL, 0, -CELL)
+local CAMP_R = 11
+local EARTH = Color3.fromRGB(176, 128, 84)
+local EARTH_DARK = Color3.fromRGB(150, 104, 66)
+for gx = -6, 5 do
+	for gz = -6, 5 do
+		local x, z = gx * 2 + 1, gz * 2 + 1
+		local r = Vector2.new(x, z).Magnitude
+		if r <= CAMP_R then
+			tile(math.floor((camp.X + x) / 2), math.floor((camp.Z + z) / 2), if r > CAMP_R - 2.2 then EARTH_DARK else EARTH)
+		end
+	end
+end
+-- a path from the plaza to the campfire's edge (its direction is the plaza's one free gap)
+local toCamp = camp.Unit
+path(toCamp * (PLAZA - 1), camp - toCamp * (CAMP_R - 1))
+
+-- Places a model of a kit standing on the ground at plot (x, z), `height` studs tall, turned so that
+-- its longer side runs along `along` (a flat direction) when given, else by `turn` degrees.
+local function place(src: Instance?, x: number, z: number, height: number, turn: number?, along: Vector3?): Model?
+	if not src or not src:IsA("Model") then
+		return nil
+	end
+	local m = src:Clone()
+	for _, d in m:GetDescendants() do
+		if d:IsA("BaseScript") then
+			d:Destroy()
+		elseif d:IsA("BasePart") then
+			d.Anchored = true
+		end
+	end
+	local _, size0 = m:GetBoundingBox()
+	m:ScaleTo(m:GetScale() * height / size0.Y)
+	local box, size = m:GetBoundingBox()
+	local yaw = math.rad(turn or 0)
+	if along then
+		local long = if size.X >= size.Z then box.RightVector else box.LookVector
+		local function heading(v: Vector3): number
+			return math.atan2(-v.Z, v.X)
+		end
+		yaw = heading(along) - heading(long)
+	end
+	local pivot = m:GetPivot()
+	m:PivotTo(CFrame.new(pivot.Position) * CFrame.Angles(0, yaw, 0) * pivot.Rotation)
+	box, size = m:GetBoundingBox()
+	local target = at(x, size.Y / 2, z).Position
+	m:PivotTo(m:GetPivot() + (target - box.Position))
+	m.Parent = nature
+	return m
+end
+
+local fire = at(camp.X, 0.3, camp.Z)
+-- the stone ring
+for k = 0, 9 do
+	local a = k * math.pi / 5
+	local s = part("FireStone", Vector3.new(1.5, 0.9, 1.3), fire * CFrame.Angles(0, a, 0) * CFrame.new(0, 0.45, 2.3), if k % 2 == 0 then STONE else STONE_DARK, nil, Enum.Material.Plastic)
+	s.TopSurface = Enum.SurfaceType.Studs
+end
+part("Embers", Vector3.new(0.2, 3.4, 3.4), fire * CFrame.new(0, 0.1, 0) * CFrame.Angles(0, 0, math.rad(90)), Color3.fromRGB(255, 120, 40), Enum.PartType.Cylinder, Enum.Material.Neon)
+-- a teepee of five logs leaning in, and two lying across under it
+for k = 0, 4 do
+	local a = k * math.pi * 2 / 5
+	pole("FireLog", fire * CFrame.Angles(0, a, 0) * CFrame.new(0, 1.2, 0.75) * CFrame.Angles(math.rad(-32), 0, 0), 2.8, 0.45, WOOD_DARK, Enum.Material.Wood)
+end
+for _, a in { 0.4, 2.0 } do
+	part("FireLogFlat", Vector3.new(3.2, 0.5, 0.5), fire * CFrame.Angles(0, a, 0) * CFrame.new(0, 0.35, 0) * CFrame.Angles(math.rad(90), 0, 0), HONEY_DARK, Enum.PartType.Cylinder, Enum.Material.Wood)
+end
+
+-- A real-looking fire (the owner: "fire like real"), the same recipe as the kitchen stove's: the glow,
+-- embers and heat of the "Realistic Fire VFX" pack in the owner's inventory (OwnerKit.CampFlame,
+-- scaled, its bloom calmed and its flame tongues kept low), and two layers of licking flames with
+-- Roblox's own flame texture. The light is tagged "Flicker" for the client's FireFlicker.
+local function addFire(parent: Instance, base: CFrame, scale: number): BasePart
+	local core = Instance.new("Part")
+	core.Name = "FireCore"
+	core.Size = Vector3.one * scale
+	core.CFrame = base
+	core.Transparency = 1
+	core.Anchored = true
+	core.CanCollide = false
+	core.CanQuery = false
+	core.CanTouch = false
+	core.Parent = parent
+	local pack = ownerKit and ownerKit:FindFirstChild("CampFlame")
+	if pack then
+		local m = pack:Clone()
+		m:ScaleTo(0.45 * scale)
+		m:PivotTo(base - Vector3.new(0, 0.5 * scale, 0))
+		for _, d in m:GetDescendants() do
+			if d:IsA("ParticleEmitter") and d.Name == "bloom" then
+				d.Rate = 12
+				d.Transparency = NumberSequence.new({ NumberSequenceKeypoint.new(0, 1), NumberSequenceKeypoint.new(0.5, 0.92), NumberSequenceKeypoint.new(1, 1) })
+			elseif d:IsA("ParticleEmitter") and d.Name == "smoke" then
+				d.Speed = NumberRange.new(4.5 * scale, 6 * scale)
+			elseif d:IsA("Light") then
+				d:Destroy() -- (one light, below)
+			end
+		end
+		m.Parent = parent
+	end
+	local at0 = Instance.new("Attachment")
+	at0.Name = "Flames"
+	at0.Parent = core
+	local function flames(c0: Color3, c1: Color3, size: number, life: number, rate: number, speed: number)
+		local e = Instance.new("ParticleEmitter")
+		e.Name = "Flame"
+		e.Texture = "rbxasset://textures/particles/fire_main.dds"
+		e.Color = ColorSequence.new(c0, c1)
+		e.LightEmission = 1
+		e.LightInfluence = 0
+		e.Size = NumberSequence.new({ NumberSequenceKeypoint.new(0, size), NumberSequenceKeypoint.new(0.4, size * 1.1), NumberSequenceKeypoint.new(1, size * 0.15) })
+		e.Transparency = NumberSequence.new({ NumberSequenceKeypoint.new(0, 1), NumberSequenceKeypoint.new(0.15, 0.1), NumberSequenceKeypoint.new(0.75, 0.35), NumberSequenceKeypoint.new(1, 1) })
+		e.Lifetime = NumberRange.new(life * 0.7, life)
+		e.Rate = rate
+		e.Speed = NumberRange.new(speed * 0.7, speed)
+		e.SpreadAngle = Vector2.new(10, 10)
+		e.Rotation = NumberRange.new(-15, 15)
+		e.RotSpeed = NumberRange.new(-30, 30)
+		e.EmissionDirection = Enum.NormalId.Top
+		e.Parent = at0
+	end
+	flames(Color3.fromRGB(255, 200, 90), Color3.fromRGB(255, 80, 20), 2.8 * scale, 0.9, 22, 3.6 * scale)
+	flames(Color3.fromRGB(255, 250, 200), Color3.fromRGB(255, 170, 60), 1.4 * scale, 0.6, 18, 2.8 * scale)
+	local light = Instance.new("PointLight")
+	light.Color = Color3.fromRGB(255, 150, 70)
+	light.Brightness = 2
+	light.Range = 18 * scale
+	light.Parent = core
+	light:AddTag("Flicker")
+	return core
+end
+addFire(village, fire * CFrame.new(0, 0.6, 0), 1)
+
+-- small seats round the fire, turned to it: log benches and stumps by turns
+for k = 0, 5 do
+	local a = math.rad(15) + k * math.pi / 3
+	local dir = Vector3.new(math.sin(a), 0, math.cos(a))
+	local p = camp + dir * 6.8
+	local tangent = Vector3.new(dir.Z, 0, -dir.X)
+	if k % 2 == 0 then
+		place(ownerKit and ownerKit:FindFirstChild("LogBench"), p.X, p.Z, 2.2, nil, tangent)
+	else
+		put("Stump", p.X, p.Z, 0.65, k * 50)
+	end
+end
+-- lantern posts and tall trees on the far side, toward the fence corner
+for _, s in { -1, 1 } do
+	local a = math.rad(225) + s * math.rad(50)
+	local p = camp + Vector3.new(math.sin(a), 0, math.cos(a)) * (CAMP_R + 1.5)
+	place(ownerKit and ownerKit:FindFirstChild("LanternPost"), p.X, p.Z, 7, 0)
+end
+local BIG = { { "TallPineLarge", 225, 21, 26 }, { "BroadleafTree", 175, 21, 22 }, { "TallPineDense", 275, 21, 24 }, { "TallPineLarge", 135, 22, 21 } }
+for i, t in BIG do
+	local a = math.rad(t[2])
+	local p = camp + Vector3.new(math.sin(a), 0, math.cos(a)) * t[3]
+	place(ownerKit and ownerKit:FindFirstChild(t[1]), p.X, p.Z, t[4], i * 70)
+end
+-- the ring of big trees inside the fence: the owner's trees (the owner: trees from his library, tall)
+local RING_TREES = { "BroadleafTree", "TallPineLarge", "BanyanTree", "TallPineDense", "TallPineSlender", "TallPineSparse" }
+for i, p in ring do
+	place(ownerKit and ownerKit:FindFirstChild(RING_TREES[(i - 1) % #RING_TREES + 1]), p[1], p[2], 22 + (i % 3) * 3, i * 47)
+end
+for k = 0, 3 do
+	local a = math.rad(200) + k * math.rad(25)
+	local p = camp + Vector3.new(math.sin(a), 0, math.cos(a)) * (CAMP_R + 3)
+	put(if k % 2 == 0 then "FlowerPatch" else "Fern", p.X, p.Z, 1.3, k * 80)
+end
 
 -- ===== the tall fence round the plot =====
 local EDGE = HALF - 1
