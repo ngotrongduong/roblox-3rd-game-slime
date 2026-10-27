@@ -194,7 +194,9 @@ warm window, and a real slime model; the roof is a little lilac.
 - The village (tall fence, gate, plaza) upgrades too (`src/server/VillageStages.luau`,
   `docs/areas/village.md`): its level is the average of the areas' levels; the well grows into
   fountains, pillars, lanterns, banners, wing walls, guardians and a crest join the fence and gate,
-  four plaza prop slots (24 new PropKit models). Waiting for the owner's review.
+  (24 new PropKit models). Redone at the owner's word the same day: fence, gate, lamps and paving
+  change style every era, decorations come in groups (benches, lamps, stalls, gardens, planters);
+  7 more PropKit models (era lamps and benches). Waiting for the owner's review.
 - `tools/map/sync_client.luau` copies the client scripts into the work place for play tests.
 - `tools/map/sync_shared.luau` copies the repo's Config and Layout into the work place (it swaps in
   fresh ModuleScripts, since Studio caches what require returned).

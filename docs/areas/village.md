@@ -1,26 +1,36 @@
-# The village: tall fence, gate and plaza (home plot)
+# The village: tall fence, gate, paths and plaza (home plot)
 
 Built by `tools/map/build_village.luau` (paving, well, lamps, planters) and `replace_fences.luau`
 (the kit palisade and VillageGate). Its upgrades are `src/server/VillageStages.luau`, run by
-`AreaUpgrade.server.luau`. Pictures `upgrades/village-l50.jpg`, `upgrades/village-plaza-l50.jpg`.
+`AreaUpgrade.server.luau`. Pictures in `upgrades/`: `village-plaza-l25.jpg`, `village-plaza-l50.jpg`,
+`village-gate-l25.jpg`, `village-gate-l35.jpg`, `village-l50.jpg`.
 
 ## Village level
 
 The village has no prompt of its own: its level is the average of the six areas' levels, rounded
-down (`VillageStages.levelOf`), so it grows as the player upgrades the farm and reaches 50 only when
-every area is 50. The layer is rebuilt when that number moves.
+down (`VillageStages.levelOf`), so it grows as the player upgrades the farm. The layer is rebuilt
+when that number moves.
 
-## Upgrades, levels 1-50 (the pantry's pattern)
+## Upgrades, levels 1-50 (redone 2026-10-28 at the owner's word: the fence and gate must change with
+the eras, lamps and paths too, many decorations a level, each placed, turned and sized sensibly)
 
-- Era start (1 / 11 / 21 / 31 / 41): 1 the well, stone footing and pillars along the fence, a paved
-  landing at the gate; 11 a small fountain in place of the well, lanterns on the pillars, banner
-  poles by the gate; 21 a two-tier fountain, stone wing walls either side of the gate; 31 a fountain
-  with a slime statue, slime guardian statues outside the gate, pennants on every other pillar; 41
-  the grand fountain with a golden slime, a golden crest over the gate.
-- Levels 2-5 of an era: one plaza prop a level, on the lawn in the four path gaps without a lamp,
-  facing the well. Seating: LogBench > ParkBench > GardenSwing > CafeTable > GoldenBench. Notices:
-  Signpost > NoticeBoard > ClockPost > InfoKiosk > HoloBoard. Stalls: FlowerCart > FruitStall >
-  IceCreamCart > BakeryKiosk > GooVending. Garden: Birdbath > Topiary > Sundial > LightTree >
-  SlimeCrystal.
-- Levels 6-10 of an era: plaza paving, path paving, fence pillars and footing, lanterns and banners,
-  gate stonework each move up one material tier.
+- Era start (1 / 11 / 21 / 31 / 41): the whole look changes.
+  - Fence: kit palisade > painted timber boards > stone wall with battlements and towers > steel
+    and glass with light strips > marble wall with a balustrade and round columns.
+  - Gate: kit gate > timber gatehouse > stone gatehouse with a battlemented bridge > steel and glass
+    portal with a lit canopy > marble arch with a pediment and a golden crest.
+  - Paths: plain > a darker border > a checked middle; the plaza gets rings (era 3) and spokes (era 4).
+  - Lamps: 12, in the era's style (VillageLamp, LanternPost, IronStreetLamp, ModernLampPost,
+    GoldenLampPost), on the lawn beside the paths and at the plaza's edge, facing the paths.
+  - Centrepiece: the well > SmallFountain > TieredFountain > StatueFountain > GrandFountain.
+- Level 2 of an era: 10 benches in the era's style (LogBench, ParkBench, IronBench, ModernBench,
+  MarbleBench), one beside each path facing it and two facing the fountain from the gate side.
+- Level 3: 8 more lamps on the paths' far halves.
+- Level 4: market stalls round the plaza, one more each era (FlowerCart, FruitStall, IceCreamCart,
+  BakeryKiosk, GooVending), the older ones stay; a notice board inside the gate and one at the plaza.
+- Level 5: garden pieces in the path gaps (two, four from era 3, the newest and the one before by
+  turns) and eight flower planters lining the gate path.
+- Levels 6-10: plaza paving, path paving, fence walls, fence pillars, gate each move up one tier.
+
+Every model stands at its real height (the player is 5 studs): lamps 8.4-9.6, benches 1.5-2.8,
+stalls 3.6-5.6, fountains 5-11.
