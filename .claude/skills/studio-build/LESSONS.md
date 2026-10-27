@@ -37,6 +37,16 @@ was left there (this game has none); read it there if a cave is ever wanted.
   picture (a row of small flowers from 50 studs, trees in two halves): from far away every model looks fine.
 - 2026-10-21. Count the REAL triangles (EditableMesh): most models sit at their ceiling, but some broke it (a hedge box
   4,728, a fallen log with vines 2,485). Never place those in a budgeted scene.
+- 2026-10-27. Goo Lineage's first building (the level-1 breeding house): a generate_mesh prompt that lists what the
+  ChatGPT picture shows, part by part (roof shape and shingles, ornament on top, wall frame, door, window, stone base,
+  steps), gave a model close to the picture at the first try; two prompts in parallel, keep the better. The model's
+  door faced its own -Z, so a plot area's frame (whose -Z faces the gate) places it right with PivotTo(areaFrame).
+- 2026-10-27. generate_procedural_model with the reference image attached gave only a red error box in Edit mode:
+  do not count on it for buildings.
+- 2026-10-27. Every generation failed with "should only be called from the server" while the owner had pressed Play:
+  check get_studio_state before starting jobs.
+- 2026-10-27. A bare model on flat grass reads far weaker than the painting, which is a little diorama (bushes, pots,
+  stepping stones, flowers around it): budget the dressing kit with every building, not after.
 - 2026-10-21. `maxTriangles` 64 still gives good faceted trees (a tiny pine, a tiny round tree); the round one shrunk to
   a third and sunk is a good round bush. Cheap trees are what make dense woods fit a budget; a 5-pine cluster in one
   mesh (600) is no cheaper per tree.

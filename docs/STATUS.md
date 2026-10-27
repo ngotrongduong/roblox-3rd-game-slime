@@ -66,6 +66,16 @@ copied to `art/chatgpt-refs/`. All 9 pictures were generated (2026-10-27) in the
 "Image placement suggestion" (prompts sent from the browser pane; the reference pictures were pasted
 through the ChatGPT desktop app, as the pane cannot attach files). Picture 1 approved and saved as
 `art/inbox/1-plot.png`; 2-9 wait for the owner to download them (the pane cannot download).
+The owner saved 2-9 in the project root; they are now `art/concept/2-fishing.png` .. `9-home.png`
+(picture 1 was not among them).
+
+First 3D trial (owner's request): the level-1 breeding house from `art/concept/7-breeding-L1.png`.
+Three tries in the MapWork place: `generate_procedural_model` from the picture failed (red error box);
+two `generate_mesh` text prompts written from the picture both came out cute; the second (scalloped
+pink roof, heart on top, beams, stone base, arched door, round window) is placed in Plot 5's breeding
+spot. Side by side: `docs/map-greybox/compare-breeding-L1.png`. Close in shape and colours; missing
+the dressing around it (bushes, flower pots, stepping stones), the heart emblem over the door, the
+warm window, and a real slime model; the roof is a little lilac.
 
 Next (after the map and UI are agreed)
 - Phase 2, The farm: the 3D plot and the slimes on it, the nest house, eggs and the reveal, the
