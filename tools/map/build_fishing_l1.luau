@@ -95,10 +95,15 @@ for _, z in { dockStart + 0.4, dockEnd + 0.6 } do
 end
 
 -- ===== the fishing spot (one) =====
--- A round straw mat at the end of the dock: the place a working slime stands.
+-- The place a working slime stands, at the end of the dock: an invisible marker (the owner took the
+-- round straw mat out, 2026-10-27), kept for its WorkSpot1 attachment.
 local spotCf = at(dockX, dockY + 0.3, dockEnd - 0.6)
 local spot = post("FishingSpot1", spotCf, 0.15, 4, Color3.fromRGB(232, 200, 120))
-spot.Material = Enum.Material.Fabric
+spot.Transparency = 1
+spot.CanCollide = false
+spot.CanQuery = false
+spot.CanTouch = false
+spot.CastShadow = false
 local mark = Instance.new("Attachment")
 mark.Name = "WorkSpot1"
 mark.Parent = spot
