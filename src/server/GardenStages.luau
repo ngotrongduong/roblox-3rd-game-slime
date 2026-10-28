@@ -134,21 +134,137 @@ function GardenStages.build(area: Instance, frame: CFrame, level: number): Model
 		part(m, "PathStone", Vector3.new(2.4, 0.3, 2.2), frame * CFrame.new(0, 0.35, z), tp.base, tp.baseMat)
 	end
 
-	-- era 2: a tool shed in the back-left corner, its door to the front
+	-- era 2: a potting and tool shed in the back-left corner, its door to the front (detail pass,
+	-- 2026-10-28: a gable roof with overhang and fascia, a braced door in a frame, a window with a
+	-- flower box, tools hung on the wall, battens on timber)
 	if builds[1] then
-		local sx, sz, w, d, h = -10.4, 12.6, 4.4, 3.4, 4.2
+		local sx, sz, w, d, h = -10.2, 12.4, 4.8, 3.6, 3.8
 		local at = function(x: number, y: number, z: number): CFrame
 			return frame * CFrame.new(sx + x, y, sz + z)
 		end
+		local dark = Color3.fromRGB(42, 34, 30)
+		local wood = Color3.fromRGB(150, 98, 60)
 		part(m, "ShedBase", Vector3.new(w + 0.4, 0.4, d + 0.4), at(0, 0.2, 0), ts.base, ts.baseMat)
 		part(m, "ShedWalls", Vector3.new(w, h, d), at(0, 0.4 + h / 2, 0), ts.walls, ts.wallMat)
 		for _, s in { -1, 1 } do
-			part(m, "ShedCorner", Vector3.new(0.4, h, 0.4), at(s * (w / 2), 0.4 + h / 2, -d / 2), ts.frame, ts.frameMat)
+			for _, z in { -d / 2, d / 2 } do
+				part(
+					m,
+					"ShedCorner",
+					Vector3.new(0.45, h, 0.45),
+					at(s * (w / 2), 0.4 + h / 2, z),
+					ts.frame,
+					ts.frameMat
+				)
+			end
 		end
-		part(m, "ShedDoor", Vector3.new(1.6, 3, 0.2), at(0.6, 1.9, -d / 2 - 0.05), ts.frame, ts.frameMat)
-		part(m, "ShedWindow", Vector3.new(1, 0.9, 0.2), at(-1.3, 2.9, -d / 2 - 0.05), ts.glass, Enum.Material.Neon).CastShadow =
-			false
-		wedge(m, "ShedRoof", Vector3.new(w + 0.8, 1.4, d + 0.8), at(0, 0.4 + h + 0.7, 0), ts.roof, ts.roofMat)
+		if tiers[4] <= 2 then
+			for k = 1, 5 do
+				part(
+					m,
+					"ShedBatten",
+					Vector3.new(0.14, h - 0.2, 0.1),
+					at(-w / 2 + k * w / 6, 0.4 + h / 2, -d / 2 - 0.05),
+					ts.frame,
+					ts.frameMat
+				)
+			end
+		end
+		-- the door: dark opening, frame, braced leaf, handle
+		part(m, "ShedDoorway", Vector3.new(1.8, 3.1, 0.1), at(0.9, 1.95, -d / 2 - 0.02), dark)
+		for _, s in { -1, 1 } do
+			part(m, "ShedJamb", Vector3.new(0.3, 3.3, 0.3), at(0.9 + s * 1.05, 2.05, -d / 2 - 0.1), ts.trim, ts.trimMat)
+		end
+		part(m, "ShedHeader", Vector3.new(2.4, 0.3, 0.32), at(0.9, 3.65, -d / 2 - 0.1), ts.trim, ts.trimMat)
+		part(m, "ShedDoor", Vector3.new(1.6, 3, 0.14), at(0.9, 1.9, -d / 2 - 0.08), wood, Enum.Material.WoodPlanks)
+		part(
+			m,
+			"ShedBrace",
+			Vector3.new(0.2, 3.1, 0.08),
+			at(0.9, 1.9, -d / 2 - 0.17) * CFrame.Angles(0, 0, 0.45),
+			ts.trim,
+			ts.trimMat
+		)
+		part(
+			m,
+			"ShedHandle",
+			Vector3.new(0.12, 0.45, 0.14),
+			at(0.3, 1.9, -d / 2 - 0.2),
+			Color3.fromRGB(60, 60, 66),
+			Enum.Material.Metal
+		)
+		-- the window with a flower box under it
+		part(m, "ShedWindowFrame", Vector3.new(1.4, 1.2, 0.2), at(-1.3, 2.7, -d / 2 - 0.08), ts.trim, ts.trimMat)
+		part(m, "ShedWindow", Vector3.new(1, 0.8, 0.22), at(-1.3, 2.7, -d / 2 - 0.09), ts.glass, Enum.Material.Glass)
+		part(m, "FlowerBox", Vector3.new(1.6, 0.4, 0.5), at(-1.3, 1.85, -d / 2 - 0.3), wood, Enum.Material.WoodPlanks)
+		for k, c in { Color3.fromRGB(240, 132, 168), Color3.fromRGB(255, 220, 90), Color3.fromRGB(240, 132, 168) } do
+			local bloom = part(
+				m,
+				"Bloom",
+				Vector3.one * 0.38,
+				at(-1.3 + (k - 2) * 0.45, 2.2, -d / 2 - 0.3),
+				c,
+				Enum.Material.SmoothPlastic
+			) :: Part
+			bloom.Shape = Enum.PartType.Ball
+		end
+		-- a rake and a spade hung on the side wall facing the beds
+		local metal = Color3.fromRGB(150, 156, 166)
+		for k, z in { -0.6, 0.6 } do
+			part(m, "ToolHandle", Vector3.new(0.12, 2.6, 0.12), at(w / 2 + 0.12, 2.1, z), wood, Enum.Material.Wood)
+			part(
+				m,
+				if k == 1 then "RakeHead" else "SpadeBlade",
+				if k == 1 then Vector3.new(0.12, 0.15, 0.8) else Vector3.new(0.1, 0.7, 0.5),
+				at(w / 2 + 0.14, if k == 1 then 3.35 else 0.95, z),
+				metal,
+				Enum.Material.Metal
+			)
+		end
+		-- a gable roof (ridge front to back) with overhang, fascia and a ridge cap
+		local rise, ov = 1.6, 0.5
+		for _, s in { -1, 1 } do
+			wedge(
+				m,
+				"ShedRoof",
+				Vector3.new(d + ov * 2, rise, w / 2 + ov),
+				at(s * (w / 4 + ov / 2), 0.4 + h + rise / 2, 0)
+					* CFrame.Angles(0, if s < 0 then math.pi / 2 else -math.pi / 2, 0),
+				ts.roof,
+				ts.roofMat
+			)
+			-- the gable ends, in the wall's material, sunk under the roof's face
+			wedge(
+				m,
+				"ShedGable",
+				Vector3.new(0.3, rise - 0.15, w / 2),
+				at(s * w / 4, 0.4 + h + (rise - 0.15) / 2, -d / 2 + 0.15)
+					* CFrame.Angles(0, if s < 0 then math.pi / 2 else -math.pi / 2, 0),
+				ts.walls,
+				ts.wallMat
+			)
+		end
+		part(
+			m,
+			"ShedRidge",
+			Vector3.new(0.4, 0.35, d + ov * 2 + 0.1),
+			at(0, 0.4 + h + rise + 0.1, 0),
+			ts.frame,
+			ts.frameMat
+		)
+		-- barge boards along the front gable's two slopes
+		local len = math.sqrt((w / 2 + ov) ^ 2 + rise ^ 2)
+		for _, s in { -1, 1 } do
+			part(
+				m,
+				"ShedBarge",
+				Vector3.new(len, 0.35, 0.2),
+				at(s * (w / 4 + ov / 2), 0.4 + h + rise / 2 + 0.1, -d / 2 - ov - 0.05)
+					* CFrame.Angles(0, 0, -s * math.atan2(rise, w / 2 + ov)),
+				ts.frame,
+				ts.frameMat
+			)
+		end
 	end
 
 	-- era 3: a pergola over the gate, with vines
@@ -183,17 +299,79 @@ function GardenStages.build(area: Instance, frame: CFrame, level: number): Model
 				tg.frameMat
 			)
 		end
-		local leaf = Color3.fromRGB(96, 176, 70)
+		-- climbing vines (detail pass, 2026-10-28: the ball "vines" read as beads): leafy clumps along
+		-- the top, strands hanging between the slats, leaves climbing each post, a few blooms, and a
+		-- planter of flowers at each post's foot
+		local leaf, leafDark = Color3.fromRGB(104, 184, 74), Color3.fromRGB(70, 146, 56)
+		local pink, yellow = Color3.fromRGB(240, 132, 168), Color3.fromRGB(255, 214, 90)
+		-- leaves are soft round clumps of grass, not stud blocks
+		local function leaves(name: string, size: Vector3, cf: CFrame, colour: Color3)
+			local p = part(m, name, size, cf, colour) :: Part
+			p.Shape = Enum.PartType.Ball
+			p.Material = Enum.Material.Grass
+			p.TopSurface, p.BottomSurface = Enum.SurfaceType.Smooth, Enum.SurfaceType.Smooth
+			p.CastShadow = false
+		end
 		for k = -3, 3 do
-			local v = part(
+			leaves(
+				"VineClump",
+				Vector3.new(1.5, 0.7, 1.2 + (k % 2) * 0.4),
+				frame * CFrame.new(k * 1.15, 6.8, FZ0 + 0.1 + ((k % 3) - 1) * 0.35) * CFrame.Angles(0, k * 0.7, 0),
+				if k % 2 == 0 then leaf else leafDark
+			)
+		end
+		for k, x in { -2.6, -1.2, 0.9, 2.3 } do
+			leaves(
+				"VineStrand",
+				Vector3.new(0.45, 1.3 + (k % 2) * 0.6, 0.45),
+				frame * CFrame.new(x, 6.1 - (k % 2) * 0.3, FZ0 + 0.4),
+				leafDark
+			)
+		end
+		for _, s in { -1, 1 } do
+			for zi, z in { FZ0 - 0.6, FZ0 + 0.8 } do
+				for j = 0, 2 do
+					-- a few clumps winding up the post, on alternate sides
+					local side = if (j + zi) % 2 == 0 then 0.3 else -0.3
+					leaves(
+						"PostLeaves",
+						Vector3.new(0.8, 0.9, 0.8),
+						frame * CFrame.new(s * (GATE - 0.6) + side, 1.4 + j * 1.6 + zi * 0.4, z),
+						if j % 2 == 0 then leaf else leafDark
+					)
+				end
+			end
+			-- (inside the fence, beside the gate)
+			part(
 				m,
-				"Vine",
-				Vector3.new(1.2, 0.5, 1.2),
-				frame * CFrame.new(k * 1.2, 6.8, FZ0 + 0.1 + (k % 2) * 0.5),
-				if k % 3 == 0 then Color3.fromRGB(240, 132, 168) else leaf,
-				Enum.Material.Ground
+				"Planter",
+				Vector3.new(2.2, 0.7, 0.9),
+				frame * CFrame.new(s * (GATE + 1.4), 0.35, FZ0 + 1.1),
+				Color3.fromRGB(150, 98, 60),
+				Enum.Material.WoodPlanks
+			)
+			for j = -1, 1 do
+				local b = part(
+					m,
+					"Bloom",
+					Vector3.one * 0.45,
+					frame * CFrame.new(s * (GATE + 1.4) + j * 0.6, 0.95, FZ0 + 1.1),
+					if j == 0 then yellow else pink,
+					Enum.Material.SmoothPlastic
+				) :: Part
+				b.Shape = Enum.PartType.Ball
+			end
+		end
+		for k, x in { -2.9, -0.4, 2.1 } do
+			local b = part(
+				m,
+				"Bloom",
+				Vector3.one * 0.4,
+				frame * CFrame.new(x, 7.05, FZ0 + 0.1 + (k % 2) * 0.3),
+				if k == 2 then yellow else pink,
+				Enum.Material.SmoothPlastic
 			) :: Part
-			v.Shape = Enum.PartType.Ball
+			b.Shape = Enum.PartType.Ball
 		end
 	end
 
@@ -201,6 +379,92 @@ function GardenStages.build(area: Instance, frame: CFrame, level: number): Model
 	if builds[3] then
 		local x0, x1, z0, z1, eave, ridge = -9.8, 9.8, -2.8, 10.8, 5, 7.4
 		local glass = Color3.fromRGB(200, 236, 255)
+		-- (detail pass, 2026-10-28) a low knee wall round the foot, glass gable ends, a door frame
+		-- with two glass doors standing open, a ridge vent, finials; on marble a white Victorian frame
+		-- with gold only on the finials
+		local gFrame, gFrameMat = tg.frame, tg.frameMat
+		if tiers[5] >= 6 then
+			gFrame, gFrameMat = Color3.fromRGB(246, 243, 236), Enum.Material.SmoothPlastic
+		end
+		tg = table.clone(tg)
+		tg.frame, tg.frameMat = gFrame, gFrameMat
+		for _, run in
+			{ { x0, z1, x1, z1 }, { x0, z0, x0, z1 }, { x1, z0, x1, z1 }, { x0, z0, -1.6, z0 }, { 1.6, z0, x1, z0 } }
+		do
+			local a, b = Vector3.new(run[1], 0, run[2]), Vector3.new(run[3], 0, run[4])
+			local len = (b - a).Magnitude
+			local size = if run[2] == run[4] then Vector3.new(len + 0.5, 1, 0.5) else Vector3.new(0.5, 1, len + 0.5)
+			part(m, "KneeWall", size, frame * CFrame.new((a + b) / 2 + Vector3.new(0, 0.5, 0)), tb.base, tb.baseMat)
+		end
+		-- the door: a frame, a header, two glass leaves swung open
+		for _, s in { -1, 1 } do
+			part(
+				m,
+				"GHDoorPost",
+				Vector3.new(0.45, eave, 0.45),
+				frame * CFrame.new(s * 1.6, eave / 2, z0),
+				tg.frame,
+				tg.frameMat
+			)
+			local leafCf = frame
+				* CFrame.new(s * 1.6, 2.1, z0)
+				* CFrame.Angles(0, s * math.rad(60), 0)
+				* CFrame.new(-s * 0.75, 0, 0)
+			local leafPane = part(m, "GHDoor", Vector3.new(1.4, 3.6, 0.12), leafCf, glass, Enum.Material.Glass)
+			leafPane.Transparency = 0.6
+			leafPane.CanCollide = false
+			part(m, "GHDoorRail", Vector3.new(1.5, 0.2, 0.18), leafCf * CFrame.new(0, 1.8, 0), tg.frame, tg.frameMat)
+			part(m, "GHDoorRail", Vector3.new(1.5, 0.2, 0.18), leafCf * CFrame.new(0, -0.6, 0), tg.frame, tg.frameMat)
+		end
+		part(m, "GHDoorHeader", Vector3.new(3.7, 0.4, 0.5), frame * CFrame.new(0, 4, z0), tg.frame, tg.frameMat)
+		-- glass gable ends with a frame on their slopes
+		local halfD = (z1 - z0) / 2
+		for _, x in { x0, x1 } do
+			for _, sz in { -1, 1 } do
+				local g = Instance.new("WedgePart")
+				g.Name = "GHGable"
+				g.Size = Vector3.new(0.15, ridge - eave, halfD)
+				g.CFrame = frame
+					* CFrame.new(x, (eave + ridge) / 2, (z0 + z1) / 2 + sz * halfD / 2)
+					* CFrame.Angles(0, if sz < 0 then 0 else math.pi, 0)
+				g.Color = glass
+				g.Material = Enum.Material.Glass
+				g.Transparency = 0.7
+				g.CastShadow = false
+				g.CanCollide = false
+				g.Anchored = true
+				g.Parent = m
+			end
+		end
+		-- a ridge vent: a raised glass strip on posts, and finials at the gable peaks
+		part(
+			m,
+			"GHVent",
+			Vector3.new((x1 - x0) * 0.6, 0.6, 1.4),
+			frame * CFrame.new(0, ridge + 0.5, (z0 + z1) / 2),
+			glass,
+			Enum.Material.Glass
+		).Transparency =
+			0.5
+		part(
+			m,
+			"GHVentCap",
+			Vector3.new((x1 - x0) * 0.6 + 0.3, 0.2, 1.8),
+			frame * CFrame.new(0, ridge + 0.9, (z0 + z1) / 2),
+			tg.frame,
+			tg.frameMat
+		)
+		for _, x in { x0, x1 } do
+			local fin = part(
+				m,
+				"GHFinial",
+				Vector3.one * 0.55,
+				frame * CFrame.new(x, ridge + 0.45, (z0 + z1) / 2),
+				tg.trim,
+				tg.trimMat
+			) :: Part
+			fin.Shape = Enum.PartType.Ball
+		end
 		local function pane(name: string, size: Vector3, cf: CFrame)
 			local p = part(m, name, size, cf, glass, Enum.Material.Glass)
 			p.Transparency = 0.7
@@ -270,7 +534,7 @@ function GardenStages.build(area: Instance, frame: CFrame, level: number): Model
 
 	-- era 5: an irrigation windmill at the back, between the beds' ends and the fence
 	if builds[4] then
-		place(m, frame, "IrrigationWindmill", 0, 12.4, 11, 5.4)
+		place(m, frame, "IrrigationWindmill", 0, 12.6, 14, 6) -- (taller: it stood small behind the glass)
 	end
 
 	-- the garden props

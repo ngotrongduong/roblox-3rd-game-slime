@@ -33,7 +33,9 @@ Every job runs at ChatGPT's highest thinking effort.
 2. The ChatGPT tab must be the FRONTED tab (`tabs_select`): in a background tab images never
    decode and the carry page hangs. Navigate it to
    `http://127.0.0.1:18923/tools/chatgpt/carry.html?f=<path1>,<path2>,...&to=/c/<chat id>` (paths
-   from the repo root; `to` = a follow-up in that chat, leave it out for a new chat). The page shrinks
+   from the repo root; `to` = a follow-up in that chat, leave it out for a new chat; for a NEW chat
+   add `&w=1000`: the landing on chatgpt.com's root fails with a ~1 MB address - if the tab says
+   "the last page load failed", select the tab and `location.reload()` once, it then lands). The page shrinks
    each picture to 1400 wide, puts them all in the address hash and goes back to chatgpt.com by
    itself (a javascript call that waits for it is cut off by the navigation: that is fine).
 3. On chatgpt.com, javascript call A: wait 2 s;

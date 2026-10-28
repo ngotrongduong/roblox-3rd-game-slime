@@ -13,12 +13,13 @@
     const img = new Image();
     img.src = '/' + n + '?t=' + Date.now();
     await img.decode();
-    const w = Math.min(1400, img.naturalWidth);
+    // (a new chat's address takes less than a chat's: &w=1000 makes them smaller)
+    const w = Math.min(Number(new URLSearchParams(location.search).get('w')) || 1400, img.naturalWidth);
     const c = document.createElement('canvas');
     c.width = w;
     c.height = Math.round(img.naturalHeight * w / img.naturalWidth);
     c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
-    parts.push(encodeURIComponent(n.split('/').pop()) + '|' + c.toDataURL('image/jpeg', 0.85).split(',')[1]);
+    parts.push(encodeURIComponent(n.split('/').pop()) + '|' + c.toDataURL('image/jpeg', 0.8).split(',')[1]);
   }
   // &to=/c/<id> lands in that chat (a follow-up), else a new chat
   const to = new URLSearchParams(location.search).get('to') || '/';
