@@ -36,23 +36,24 @@ Every job runs at ChatGPT's highest thinking effort.
    from the repo root; `to` = a follow-up in that chat, leave it out for a new chat). The page shrinks
    each picture to 1400 wide, puts them all in the address hash and goes back to chatgpt.com by
    itself (a javascript call that waits for it is cut off by the navigation: that is fine).
-3. On chatgpt.com, one javascript call: wait 3 s; split `location.hash` (`#review=` then
-   `<name>|<base64>` parts joined by `~`) into `File`s; then
-   `history.replaceState(history.state, '', location.pathname + location.search)` - keep
-   `history.state`, passing null breaks ChatGPT's router and the send reloads the page and loses
-   everything; then put the Files on the `input[type=file]` that is `multiple` with accept exactly
-   `image/*` (in a new chat the first `image/*` one also works) through a `DataTransfer` and
-   dispatch `change`. Wait 5 s; a screenshot shows a thumbnail per picture above the message box.
-4. `find` "textbox" (the composer, "Ask ChatGPT"), click it by ref, `type` the brief as ONE
+3. On chatgpt.com, javascript call A: wait 2 s;
+   `sessionStorage.setItem('reviewFiles', location.hash.slice('#review='.length))`;
+   `location.replace(location.pathname)`. The page must load again CLEAN: with the ~1 MB hash still
+   in its address (even after `history.replaceState`) the send POST is reset almost every time.
+4. Javascript call B on the clean page: wait 4 s; read and remove `reviewFiles` from
+   sessionStorage; split it (`<name>|<base64>` parts joined by `~`) into `File`s; put them on the
+   `input[type=file]` that is `multiple` with accept exactly `image/*` (in a new chat the first
+   `image/*` one also works) through a `DataTransfer` and dispatch `change`. Wait 6 s; a screenshot
+   shows a thumbnail per picture above the message box.
+5. `find` "textbox" (the composer, "Ask ChatGPT"), click it by ref, `type` the brief as ONE
    paragraph (a newline sends), then screenshot to check the picture thumbnail and text are there.
-5. Thinking effort: the composer's "Thinking effort" button opens a slider; click its right end so
+6. Thinking effort: the composer's "Thinking effort" button opens a slider; click its right end so
    it reads "High". Check with a zoom before sending.
-6. Send with the arrow button (or Return). Then CHECK it was received: `read_network_requests`
-   with urlPattern `backend-api/f/conversation` must show `POST .../f/conversation -> 200`. On this
-   PC that POST is often reset (`ERR_CONNECTION_RESET`; the chat says "Failed to fetch" or
-   "Connection interrupted. Waiting for the complete answer" and nothing ever comes). Then the
-   message is lost: carry the pictures again and send again (it usually goes on the 2nd try). In a
-   new chat a failed send leaves the draft in the composer: set effort again and send again.
+7. Send with the arrow button (or Return). Then CHECK it was received: `read_network_requests`
+   with urlPattern `backend-api/f/conversation` must show `POST .../f/conversation -> 200`. If it
+   shows `ERR_CONNECTION_RESET` (the chat says "Failed to fetch" or "Connection interrupted.
+   Waiting for the complete answer" and nothing ever comes), the message is lost: carry the
+   pictures again (steps 2-4, the clean reload is what fixes it) and send again.
 
 Ctrl+V of a clipboard picture does NOT work in the pane (synthetic keys do not paste), and the
 desktop app cannot be driven by computer-use. Do not retry those.
