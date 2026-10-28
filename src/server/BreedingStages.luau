@@ -35,11 +35,12 @@ local X0, X1, Z0, Z1, GATE0, GATE1 = -11, 19, -13, 13, 0, 8
 -- lantern, a cupola, an iron stove, a skylight over the nests, a glowing heart lantern.
 -- era -> width, depth, height to the beams, roof rise, width of the straw spill at the front
 local BARN = {
-	{ 9, 7, 5.2, 3.6, 3.2 },
-	{ 10.5, 7.5, 5.6, 4.2, 3.6 },
-	{ 11.5, 8, 6, 3.6, 3.8 },
-	{ 12.5, 8.5, 6.4, 1.8, 4.2 },
-	{ 13, 8.5, 6.6, 3, 4.2 },
+	-- (the beams 6+ studs clear of the floor: a player walks in under them)
+	{ 9, 7, 6.6, 3.6, 3.2 },
+	{ 10.5, 7.5, 6.8, 4.2, 3.6 },
+	{ 11.5, 8, 7, 3.6, 3.8 },
+	{ 12.5, 8.5, 7.2, 1.8, 4.2 },
+	{ 13, 8.5, 7.4, 3, 4.2 },
 }
 local BX, BZ = 4, 2.6 -- the middle of its front face (the gate's middle is x 4)
 
@@ -70,7 +71,7 @@ local HEIGHT = {
 --   comfort  in the front-left, inward from the gate post so it shows from the gate
 --   warmth   against the right fence between the two right-hand nests, warming them (ChatGPT's 1st
 --            review: at the gate it read as a gate light)
-local SLOT_AT = { { 15.5, 4.8 }, { -9.2, 4.6 }, { 12, -7.2 }, { -9.8, -5 } }
+local SLOT_AT = { { 15.5, 4.8 }, { -8.6, 5 }, { 12, -7.2 }, { -9.8, -5 } }
 local FOOT = { 3.4, 3, 4, 2.2 }
 local LIFT = { [3] = { [5] = 1 } } -- the cloud bed floats
 local FLOOR = 0.4 -- the pen's floor stands this far above the lawn; what is on it stands on its top
@@ -196,11 +197,12 @@ local function incubator(m: Model, base: CFrame, t: any)
 end
 
 -- The nesting shelter of an era (see BARN): open on every side so what the slimes do inside shows
--- (the owner, 2026-10-28: "a covered frame, not a closed house"): a base with a straw bed, posts at
--- the corners and the side middles (timber, painted, brick piers, steel, slime-tech), beams round
--- the top with knee braces, a gable roof whose ridge runs to the back, an open truss to the gate with
--- the pen's heart hung in it, a closed back gable, a low back wall with nest cubbies, and the era's
--- own piece.
+-- (the owner, 2026-10-28: "a covered frame, not a closed house"): a base with a soft bed that
+-- changes with the era, posts at the corners and the side middles, beams round the top with knee
+-- braces, a gable roof whose ridge runs to the back, an open truss to the gate with the pen's big
+-- pink heart in it, a closed back gable, resting cubbies with straw in a low back wall, and the era's
+-- own structural piece (ChatGPT's 2nd breeding review): a lantern, a real cupola, brick piers with an
+-- iron stove on its hearth, glass panes in a steel roof, a slime-tech ridge conduit and lantern.
 local function nestingBarn(m: Model, frame: CFrame, era: number)
 	local t = TIERS[era]
 	local b = BARN[era]
@@ -211,21 +213,138 @@ local function nestingBarn(m: Model, frame: CFrame, era: number)
 	end
 	local dark = Color3.fromRGB(46, 40, 38)
 	local pink = Color3.fromRGB(240, 132, 168)
-	local straw = Color3.fromRGB(232, 196, 120)
-	local postCol, postMat = t.frame, t.frameMat
-	if era == 3 then
-		postCol, postMat = t.walls, t.wallMat -- brick piers
+	local deepPink = Color3.fromRGB(176, 72, 112)
+	local straw = Color3.fromRGB(240, 206, 120)
+	local strawLight = Color3.fromRGB(252, 226, 150)
+	local iron = Color3.fromRGB(60, 60, 66)
+	local mint = Color3.fromRGB(120, 230, 200)
+	-- (on slime tech the trim glows; the shelter keeps its glow for the heart and a few accents)
+	local soft, softMat = t.trim, t.trimMat
+	if softMat == Enum.Material.Neon then
+		soft, softMat = t.frame, t.frameMat
 	end
-	local pw = if era == 3 then 0.9 else 0.55
 
-	-- the base and its straw bed
+	-- the base
 	part(m, "ShelterBase", Vector3.new(w + 0.6, 0.5, d + 0.6), at(0, 0.25, zc), t.base, t.baseMat)
-	part(m, "ShelterStraw", Vector3.new(w - 1, 0.12, d - 1.2), at(0, 0.56, zc - 0.3), straw, Enum.Material.Fabric)
 
-	-- posts, the beams round the top, knee braces at the open front
+	-- the bed under the roof, raised and soft, its own kind each era; the stove's corner kept clear
+	local bx = if era == 3 then 1.3 else 0 -- (the brick era's stove stands in the right-hand bay)
+	local bw, bd = w - 1.4 - (if era == 3 then 2.6 else 0), d - 3
+	local bz = BZ + 0.6 + bd / 2
+	if era == 3 then
+		part(m, "BedPlinth", Vector3.new(bw + 0.5, 0.35, bd + 0.5), at(bx, 0.67, bz), t.walls, t.wallMat)
+	end
+	local bedTop = if era == 3 then 0.85 else 0.5
+	local bedCol, bedMat = straw, Enum.Material.SmoothPlastic
+	if era == 4 then
+		bedCol, bedMat = Color3.fromRGB(236, 226, 210), Enum.Material.SmoothPlastic
+	elseif era == 5 then
+		bedCol, bedMat = Color3.fromRGB(196, 240, 222), Enum.Material.SmoothPlastic
+	end
+	part(m, "ShelterBed", Vector3.new(bw, 0.3, bd), at(bx, bedTop + 0.15, bz), bedCol, bedMat)
+	if era <= 3 then
+		-- a lighter hollow in the middle, straw heaped at the edges
+		part(
+			m,
+			"BedHollow",
+			Vector3.new(bw * 0.5, 0.06, bd * 0.5),
+			at(bx, bedTop + 0.32, bz),
+			strawLight,
+			Enum.Material.SmoothPlastic
+		)
+		for _, o in { { -1, 0.6, 0 }, { 1, -0.6, math.pi }, { 0.2, 1, math.pi / 2 } } do
+			wedge(
+				m,
+				"StrawHeap",
+				Vector3.new(1.6, 0.6, 1.2),
+				at(bx + o[1] * (bw / 2 - 0.9), bedTop + 0.6, bz + o[2] * (bd / 2 - 0.7)) * CFrame.Angles(0, o[3], 0),
+				straw,
+				Enum.Material.SmoothPlastic
+			)
+		end
+	elseif era == 4 then
+		-- padded sections
+		for k = -1, 1 do
+			part(
+				m,
+				"BedPad",
+				Vector3.new(bw / 3 - 0.3, 0.2, bd - 0.4),
+				at(bx + k * bw / 3, bedTop + 0.4, bz),
+				Color3.fromRGB(150, 200, 230),
+				Enum.Material.SmoothPlastic
+			)
+		end
+	else
+		-- a mint and pink slime mattress with a soft glowing edge
+		part(
+			m,
+			"BedPad",
+			Vector3.new(bw - 0.8, 0.2, bd - 0.8),
+			at(bx, bedTop + 0.4, bz),
+			Color3.fromRGB(255, 200, 220),
+			Enum.Material.SmoothPlastic
+		)
+		local rim = part(
+			m,
+			"BedGlow",
+			Vector3.new(bw + 0.1, 0.08, bd + 0.1),
+			at(bx, bedTop + 0.02, bz),
+			mint,
+			Enum.Material.Neon
+		)
+		rim.CastShadow = false
+	end
+	if era == 2 then
+		-- two pastel cushions on the straw
+		part(
+			m,
+			"BedCushion",
+			Vector3.new(1.6, 0.5, 1.2),
+			at(bx - 0.25 * bw, bedTop + 0.55, bz + 0.3),
+			Color3.fromRGB(255, 196, 214),
+			Enum.Material.SmoothPlastic
+		)
+		part(
+			m,
+			"BedCushion",
+			Vector3.new(1.6, 0.5, 1.2),
+			at(bx + 0.25 * bw, bedTop + 0.55, bz + 0.3),
+			Color3.fromRGB(196, 220, 255),
+			Enum.Material.SmoothPlastic
+		)
+	end
+
+	-- posts (brick piers with caps and feet on the brick era, flanged steel from the steel era), the
+	-- beams round the top, knee braces at the open front
+	local postCol, postMat, pw = t.frame, t.frameMat, 0.55
+	if era == 3 then
+		postCol, postMat, pw = t.walls, t.wallMat, 1.1
+	end
 	for _, sx in { -1, 1 } do
 		for _, z in { BZ, zc, zb } do
 			part(m, "ShelterPost", Vector3.new(pw, h, pw), at(sx * w / 2, 0.5 + h / 2, z), postCol, postMat)
+			if era == 3 then
+				part(m, "PierFoot", Vector3.new(pw + 0.3, 0.5, pw + 0.3), at(sx * w / 2, 0.75, z), t.base, t.baseMat)
+				part(
+					m,
+					"PierCap",
+					Vector3.new(pw + 0.25, 0.3, pw + 0.25),
+					at(sx * w / 2, 0.5 + h - 0.6, z),
+					t.base,
+					t.baseMat
+				)
+			elseif era >= 4 then
+				for _, fz in { -1, 1 } do
+					part(
+						m,
+						"PostFlange",
+						Vector3.new(pw + 0.35, h, 0.12),
+						at(sx * w / 2, 0.5 + h / 2, z + fz * pw / 2),
+						postCol,
+						postMat
+					)
+				end
+			end
 		end
 		part(m, "ShelterBeam", Vector3.new(0.45, 0.45, d + 0.6), at(sx * w / 2, 0.5 + h - 0.2, zc), t.frame, t.frameMat)
 		part(
@@ -246,15 +365,33 @@ local function nestingBarn(m: Model, frame: CFrame, era: number)
 	-- open truss (a king post) so the inside shows
 	local reach = w / 2 + 0.7
 	local pitch = math.atan2(rise, w / 2)
+	local slope = reach / math.cos(pitch)
 	for _, sx in { -1, 1 } do
-		part(
-			m,
-			"ShelterRoof",
-			Vector3.new(reach / math.cos(pitch), 0.45, d + 1.4),
-			at(sx * reach / 2, top + rise - reach * math.tan(pitch) / 2 + 0.2, zc) * CFrame.Angles(0, 0, -sx * pitch),
-			t.roof,
-			t.roofMat
-		)
+		local slab = at(sx * reach / 2, top + rise - reach * math.tan(pitch) / 2 + 0.2, zc)
+			* CFrame.Angles(0, 0, -sx * pitch)
+		part(m, "ShelterRoof", Vector3.new(slope, 0.45, d + 1.4), slab, t.roof, t.roofMat)
+		if era == 4 then
+			-- glass panes set in the steel roof, steel rails round them: light over the bed
+			local pane = part(
+				m,
+				"Skylight",
+				Vector3.new(slope * 0.45, 0.1, d * 0.6),
+				slab * CFrame.new(-sx * slope * 0.12, 0.25, 0),
+				Color3.fromRGB(170, 225, 245),
+				Enum.Material.Glass
+			)
+			pane.Transparency = 0.25
+			for _, rz in { -1, 1 } do
+				part(
+					m,
+					"SkylightRail",
+					Vector3.new(slope * 0.47, 0.14, 0.14),
+					slab * CFrame.new(-sx * slope * 0.12, 0.3, rz * d * 0.3),
+					t.trim,
+					t.trimMat
+				)
+			end
+		end
 		-- (a wedge's tall face is its +Z; turned so it rises toward the ridge)
 		wedge(
 			m,
@@ -265,42 +402,61 @@ local function nestingBarn(m: Model, frame: CFrame, era: number)
 			t.wallMat
 		)
 	end
-	part(m, "ShelterRidge", Vector3.new(0.5, 0.5, d + 1.6), at(0, top + rise + 0.25, zc), t.trim, t.trimMat)
+	part(m, "ShelterRidge", Vector3.new(0.5, 0.5, d + 1.6), at(0, top + rise + 0.25, zc), soft, softMat)
 	part(m, "ShelterKingPost", Vector3.new(0.35, rise, 0.35), at(0, top + rise / 2, BZ), t.frame, t.frameMat)
 
-	-- the pen's heart hung in the front truss (under the beam on the low steel roof)
-	local hy = if rise >= 3 then top + rise * 0.4 else top - 1.4
-	local heartCol, heartMat =
-		if era == 5 then pink else Color3.fromRGB(255, 214, 226),
-		if era == 5 then Enum.Material.Neon else Enum.Material.SmoothPlastic
-	for _, dx in { -0.54, 0.54 } do
-		local lobe = part(
+	-- the pen's heart, big and solid pink on a darker backing, hung in the front truss (under the
+	-- beam on the low steel roof); a bit bigger each era, glowing on slime tech
+	local s = 1 + 0.12 * (era - 1)
+	local hy = if rise >= 3 then top + rise * 0.42 else top - 1.6
+	local function heart(dz: number, k: number, col: Color3, mat: Enum.Material)
+		local z = BZ - 0.3 + dz
+		for _, dx in { -0.5, 0.5 } do
+			local lobe = part(
+				m,
+				"ShelterHeart",
+				Vector3.new(1.45 * k, 1.45 * k, 0.3),
+				at(dx * k, hy + 0.32 * k, z),
+				col,
+				mat
+			) :: Part
+			lobe.Shape = Enum.PartType.Ball
+		end
+		part(
 			m,
 			"ShelterHeart",
-			Vector3.new(1.5, 1.5, 0.25),
-			at(dx, hy + 0.35, BZ - 0.3),
-			heartCol,
-			heartMat
-		) :: Part
-		lobe.Shape = Enum.PartType.Ball
+			Vector3.new(1.2 * k, 1.2 * k, 0.3),
+			at(0, hy - 0.12 * k, z) * CFrame.Angles(0, 0, math.rad(45)),
+			col,
+			mat
+		)
 	end
-	part(
-		m,
-		"ShelterHeart",
-		Vector3.new(1.25, 1.25, 0.24),
-		at(0, hy - 0.1, BZ - 0.3) * CFrame.Angles(0, 0, math.rad(45)),
-		heartCol,
-		heartMat
-	)
+	heart(0.18, 1.18 * s, deepPink, Enum.Material.SmoothPlastic)
+	heart(0, s, pink, if era == 5 then Enum.Material.Neon else Enum.Material.SmoothPlastic)
 
-	-- a low back wall with nest cubbies in it, straw on their sills
+	-- a low back wall with resting cubbies in it: open boxes with a warm wood inside and straw in them
 	part(m, "BackWall", Vector3.new(w, 1.8, 0.5), at(0, 1.4, zb - 0.25), t.walls, t.wallMat)
 	local n = if era >= 3 then 4 else 3
 	for k = 1, n do
 		local x = (k - (n + 1) / 2) * (w - 1.6) / n
-		part(m, "Cubby", Vector3.new(1.9, 1.6, 1.4), at(x, 1.3, zb - 1.2), t.trim, t.trimMat)
-		part(m, "CubbyHole", Vector3.new(1.3, 1, 0.1), at(x, 1.35, zb - 1.92), dark)
-		part(m, "CubbyStraw", Vector3.new(1.3, 0.18, 0.4), at(x, 0.95, zb - 1.95), straw, Enum.Material.Fabric)
+		local cz = zb - 1.2
+		part(
+			m,
+			"CubbyBack",
+			Vector3.new(1.9, 1.7, 0.2),
+			at(x, 1.35, cz + 0.6),
+			Color3.fromRGB(176, 128, 84),
+			Enum.Material.Wood
+		)
+		for _, ex in { -1, 1 } do
+			part(m, "CubbySide", Vector3.new(0.2, 1.7, 1.4), at(x + ex * 0.85, 1.35, cz), soft, softMat)
+		end
+		part(m, "CubbyTop", Vector3.new(1.9, 0.2, 1.4), at(x, 2.2, cz), soft, softMat)
+		part(m, "CubbyStraw", Vector3.new(1.5, 0.35, 1.2), at(x, 0.7, cz), straw, Enum.Material.SmoothPlastic)
+		if era == 5 then
+			part(m, "CubbyEdge", Vector3.new(1.9, 0.08, 0.08), at(x, 2.3, cz - 0.7), mint, Enum.Material.Neon).CastShadow =
+				false
+		end
 	end
 
 	-- the era's own piece
@@ -313,63 +469,65 @@ local function nestingBarn(m: Model, frame: CFrame, era: number)
 			Vector3.new(dw + 1.2, 0.14, 1.6),
 			at(0, 0.07, BZ - 0.9),
 			straw,
-			Enum.Material.Fabric
+			Enum.Material.SmoothPlastic
 		)
 		part(m, "LampChain", Vector3.new(0.1, 0.6, 0.1), at(w / 2 - 1.2, top - 0.75, BZ), dark)
 		part(m, "ShelterLamp", Vector3.new(0.5, 0.7, 0.5), at(w / 2 - 1.2, top - 1.4, BZ), t.glass, Enum.Material.Neon).CastShadow =
 			false
 	elseif era == 2 then
-		-- a little cupola on the ridge, airing the nests
-		part(m, "Cupola", Vector3.new(1.6, 1.3, 1.6), at(0, ridge + 0.85, zc), t.walls, t.wallMat)
-		part(m, "CupolaVent", Vector3.new(1.65, 0.6, 1.0), at(0, ridge + 0.9, zc), dark)
-		part(m, "CupolaCap", Vector3.new(2.1, 0.3, 2.1), at(0, ridge + 1.65, zc), t.roof, t.roofMat)
-		local fin = part(m, "CupolaFinial", Vector3.one * 0.5, at(0, ridge + 2, zc), t.trim, t.trimMat) :: Part
+		-- a real cupola on the ridge, airing the nests: a square body with dark vent slots, a little
+		-- gable roof and a finial
+		local cy = ridge + 0.3
+		part(m, "Cupola", Vector3.new(2, 1.8, 2), at(0, cy + 0.9, zc), t.walls, t.wallMat)
+		for _, fz in { -1, 1 } do
+			for _, vx in { -0.45, 0, 0.45 } do
+				part(m, "CupolaSlot", Vector3.new(0.22, 1.1, 0.1), at(vx, cy + 0.95, zc + fz * 1.01), dark)
+			end
+		end
+		for _, sx in { -1, 1 } do
+			part(
+				m,
+				"CupolaRoof",
+				Vector3.new(1.6, 0.25, 2.5),
+				at(sx * 0.62, cy + 2.15, zc) * CFrame.Angles(0, 0, -sx * math.rad(35)),
+				t.roof,
+				t.roofMat
+			)
+		end
+		local fin = part(m, "CupolaFinial", Vector3.one * 0.5, at(0, cy + 2.75, zc), t.trim, t.trimMat) :: Part
 		fin.Shape = Enum.PartType.Ball
 	elseif era == 3 then
-		-- an iron stove in a side bay keeps the nests warm, its flue up through the roof
-		local sx, sz = -w / 2 + 1.3, zc
-		part(m, "Stove", Vector3.new(1.4, 1.5, 1.3), at(sx, 1.25, sz), Color3.fromRGB(60, 60, 66), Enum.Material.Metal)
+		-- an iron stove on a stone hearth in the right-hand bay, a low brick guard toward the bed,
+		-- its flue up through the roof
+		local sx, sz = -w / 2 + 1.5, zc - 0.2
+		part(m, "Hearth", Vector3.new(2.2, 0.25, 2.2), at(sx, 0.62, sz), t.base, t.baseMat)
+		part(m, "Stove", Vector3.new(1.4, 1.5, 1.3), at(sx, 1.5, sz), iron, Enum.Material.Metal)
 		part(
 			m,
 			"StoveFire",
 			Vector3.new(0.8, 0.5, 0.1),
-			at(sx, 1.1, sz - 0.66),
+			at(sx, 1.35, sz - 0.66),
 			Color3.fromRGB(255, 140, 60),
 			Enum.Material.Neon
 		).CastShadow =
 			false
+		part(m, "StoveGuard", Vector3.new(0.35, 0.9, 2.2), at(sx + 1.3, 0.95, sz), t.walls, t.wallMat)
 		local head = top + rise * 0.3 + 1.6
 		part(
 			m,
 			"StoveFlue",
-			Vector3.new(0.45, head - 2, 0.45),
-			at(sx, 2 + (head - 2) / 2, sz),
-			Color3.fromRGB(60, 60, 66),
+			Vector3.new(0.45, head - 2.25, 0.45),
+			at(sx, 2.25 + (head - 2.25) / 2, sz),
+			iron,
 			Enum.Material.Metal
 		)
-		part(
-			m,
-			"FlueCap",
-			Vector3.new(0.8, 0.25, 0.8),
-			at(sx, head + 0.12, sz),
-			Color3.fromRGB(60, 60, 66),
-			Enum.Material.Metal
-		)
+		part(m, "FlueCap", Vector3.new(0.8, 0.25, 0.8), at(sx, head + 0.12, sz), iron, Enum.Material.Metal)
 	elseif era == 4 then
-		-- a glass skylight along the ridge, light over the nests, and a vent box
-		local sky = part(
-			m,
-			"Skylight",
-			Vector3.new(2.2, 0.7, d * 0.7),
-			at(0, ridge + 0.55, zc),
-			Color3.fromRGB(196, 232, 246),
-			Enum.Material.Glass
-		)
-		sky.Transparency = 0.35
-		part(m, "SkylightFrame", Vector3.new(2.4, 0.2, d * 0.72), at(0, ridge + 0.95, zc), t.trim, t.trimMat)
 		part(m, "RoofVent", Vector3.new(1.2, 0.9, 1.2), at(w / 4, ridge - 0.2, BZ + d * 0.8), t.trim, t.trimMat)
 	else
-		-- a lantern on the ridge with a glowing heart inside
+		-- a mint conduit along the ridge, and a lantern on it with a glowing heart inside
+		part(m, "RidgeConduit", Vector3.new(0.2, 0.2, d + 1.2), at(0, ridge + 0.55, zc), mint, Enum.Material.Neon).CastShadow =
+			false
 		part(m, "LanternBase", Vector3.new(2.2, 1, 2.2), at(0, ridge + 0.6, zc), t.walls, t.wallMat)
 		part(m, "LanternInside", Vector3.new(1.4, 1.5, 1.4), at(0, ridge + 1.85, zc), dark)
 		local glow =
@@ -382,12 +540,12 @@ local function nestingBarn(m: Model, frame: CFrame, era: number)
 				"LanternPost",
 				Vector3.new(0.3, 1.6, 0.3),
 				at(o.X * 0.85, ridge + 1.85, zc + o.Z * 0.85),
-				t.trim,
-				t.trimMat
+				soft,
+				softMat
 			)
 		end
 		part(m, "LanternCap", Vector3.new(2.4, 0.35, 2.4), at(0, ridge + 2.8, zc), t.roof, t.roofMat)
-		local fin = part(m, "LanternFinial", Vector3.one * 0.5, at(0, ridge + 3.2, zc), t.trim, t.trimMat) :: Part
+		local fin = part(m, "LanternFinial", Vector3.one * 0.5, at(0, ridge + 3.2, zc), soft, softMat) :: Part
 		fin.Shape = Enum.PartType.Ball
 	end
 end
@@ -453,8 +611,8 @@ function BreedingStages.build(area: Instance, frame: CFrame, level: number): Mod
 	part(
 		m,
 		"SidePath",
-		Vector3.new(2.6, 0.4, SIDE1 - SIDE0),
-		frame * CFrame.new(X0 - 1.25, 0.2, (SIDE0 + SIDE1) / 2),
+		Vector3.new(3.2, 0.4, SIDE1 - SIDE0), -- (right across to the pad's edge, no grass between)
+		frame * CFrame.new(X0 - 1.6, 0.2, (SIDE0 + SIDE1) / 2),
 		tp.base,
 		tp.baseMat
 	)
@@ -562,7 +720,42 @@ function BreedingStages.build(area: Instance, frame: CFrame, level: number): Mod
 		local e = props[j]
 		if e > 0 then
 			local lift = FLOOR + (LIFT[j] and LIFT[j][e] or 0)
-			place(m, frame, PROPS[j][e], SLOT_AT[j][1], SLOT_AT[j][2], HEIGHT[j][e], FOOT[j], lift)
+			if j == 3 and e == 5 then
+				-- the floating cloud bed, built: a plump pad ringed with cloud puffs, a pink cushion in
+				-- it (ChatGPT's 2nd breeding review: the kit model read as a ring on the floor)
+				local cx, cz = SLOT_AT[3][1], SLOT_AT[3][2]
+				local white = Color3.fromRGB(250, 250, 255)
+				part(
+					m,
+					"CloudPad",
+					Vector3.new(3.2, 0.6, 2.6),
+					frame * CFrame.new(cx, lift + 0.5, cz),
+					white,
+					Enum.Material.SmoothPlastic
+				)
+				for a = 0, 5 do
+					local r = math.rad(a * 60)
+					local puff = part(
+						m,
+						"CloudPuff",
+						Vector3.one * 1.3,
+						frame * CFrame.new(cx + math.cos(r) * 1.55, lift + 0.75, cz + math.sin(r) * 1.25),
+						white,
+						Enum.Material.SmoothPlastic
+					) :: Part
+					puff.Shape = Enum.PartType.Ball
+				end
+				part(
+					m,
+					"CloudCushion",
+					Vector3.new(1.8, 0.4, 1.4),
+					frame * CFrame.new(cx, lift + 0.95, cz),
+					Color3.fromRGB(255, 196, 214),
+					Enum.Material.SmoothPlastic
+				)
+			else
+				place(m, frame, PROPS[j][e], SLOT_AT[j][1], SLOT_AT[j][2], HEIGHT[j][e], FOOT[j], lift)
+			end
 			if j == 4 and e == 5 then
 				-- the holo beacon's warm field: a soft glowing disc on the floor round it
 				local disc = part(
