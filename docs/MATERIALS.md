@@ -1,6 +1,6 @@
 # Material slimes: a rare mutation on hatching (2026-10-29)
 
-The owner's direction (2026-10-29): the 19 materials he kept on the material stage
+The owner's direction (2026-10-29): the 18 materials he kept on the material stage
 (`tools/slime/materials.luau`) are a rare mutation when an egg hatches, like the Dual slimes. Numbers below
 are first values in `Config`; the owner tunes them by playing.
 
@@ -13,13 +13,14 @@ are first values in `Config`; the owner tunes them by playing.
   same colour included.
 - **Which material**: a weighted pick by tier. Common (weight 6 each): Wood, Marble, Brick, Granite, Mud,
   Fabric, Sand, Grass, Clay Roof, Leather. Rare (weight 3): Glass, Ice, Jelly, Neon, Force Field, Lava.
-  Precious (weight 1): Gold, Silver, Chrome. (Gold is about 1 egg in 4,000 at luck 1.)
+  Precious (weight 1): Gold, Silver. (Gold is 1 egg in 4,000 at luck 1.) Chrome was cut by the owner
+  (2026-10-29): it looked the same as Silver.
 - **Never inherited**: a material parent breeds as its base colour (as Duals and Secrets do).
 - **Pity, Royal Jelly, Prism Serum**: unchanged (they give Duals and Secrets only). A material egg is not a
   plain egg, so it resets the pity counter like a Dual or a Secret.
 - **Selling**: base value by tier, Common 150, Rare 300, Precious 800 (Dual 100, Secret 1000), times the
   usual level factor. Selling a material slime asks to confirm, as Duals and Secrets do.
-- **Collection book**: a Material bucket with the 19 entries; a material hatch registers it and counts
+- **Collection book**: a Material bucket with the 18 entries; a material hatch registers it and counts
   toward the rank like the other buckets. The egg details show "Material: 2%" next to Dual and Secret.
 
 ## Looks (for the client)
@@ -31,7 +32,6 @@ ones take it. The outline hull is the drawn colour x 0.6, off for Neon, Force Fi
 |---|---|---|---|---|
 | gold | Gold | Precious | mirror metal: SurfaceAppearance, mirror map, metalness 1, roughness 0.03 | own #ffcf5a |
 | silver | Silver | Precious | mirror metal | own #e9ecf0 |
-| chrome | Chrome | Precious | mirror metal | own #ffffff |
 | ice | Ice | Rare | SurfaceAppearance, roughness 0.03, transparency 0.35 | own #cfefff |
 | jelly | Jelly | Rare | SurfaceAppearance, roughness 0.10, transparency 0.35 | tinted |
 | glass | Glass | Rare | Roblox Glass, transparency 0.4 | tinted |

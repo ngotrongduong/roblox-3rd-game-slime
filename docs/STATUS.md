@@ -241,7 +241,7 @@ Done (all checked in Studio at every era, committed, the kit exported into `asse
   (`tools/slime/showcase.luau`, run with `node tools/studio_mcp.js run`). Waiting for the owner's look in play.
   Next: `DualDesigns.luau` to 55 pairs, then the face decal and the hop in the farm code.
 - Slime materials (2026-10-29, the owner's pick; stage `tools/slime/materials.luau` beside the slime stage): Gold,
-  Silver, Chrome as "Mirror" metals (metalness 1, roughness 0.03, the chrome reflection map
+  Silver as "Mirror" metals (Chrome cut: it looked like Silver) (metalness 1, roughness 0.03, the chrome reflection map
   `art/models/slime_body/skins/mirror_metal.png` id 138184721337623 tinted per metal; standard PBR read milky because
   Roblox reflects only a blurred sky), Ice and Jelly see-through, and 14 Roblox materials: Neon, Wood, Marble,
   CrackedLava, Brick, Granite, Mud, Fabric, Sand, Grass, Glass, ForceField, ClayRoofTiles, Leather. They are a rare

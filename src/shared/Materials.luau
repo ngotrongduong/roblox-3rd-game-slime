@@ -1,5 +1,5 @@
 --!strict
--- The 19 material slimes (docs/MATERIALS.md): a rare appearance on hatching, next to Dual and Secret.
+-- The 18 material slimes (docs/MATERIALS.md): a rare appearance on hatching, next to Dual and Secret.
 -- Each is the slime body drawn in a material (the owner's material stage, tools/slime/materials.luau).
 -- The look data is for the client; the server only needs id, tier, weight and the sell base.
 
@@ -36,7 +36,6 @@ export type Material = {
 local PLAN: { { any } } = {
 	{ "gold", "Gold", "precious", "mirror", nil, "#ffcf5a", 1, 0.03, 0, true },
 	{ "silver", "Silver", "precious", "mirror", nil, "#e9ecf0", 1, 0.03, 0, true },
-	{ "chrome", "Chrome", "precious", "mirror", nil, "#ffffff", 1, 0.03, 0, true },
 	{ "ice", "Ice", "rare", "surface", nil, "#cfefff", 0, 0.03, 0.35, true },
 	{ "jelly", "Jelly", "rare", "surface", nil, nil, 0, 0.10, 0.35, true },
 	{ "glass", "Glass", "rare", "roblox", "Glass", nil, 0, nil, 0.4, false },

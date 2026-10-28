@@ -48,7 +48,7 @@ return function(T)
 			T.eq(c.dual, 0.05)
 			T.eq(c.base, 0.10)
 			T.eq(#c.secrets, 1)
-			T.eq(#c.materials, 19)
+			T.eq(#c.materials, 18)
 			T.eq(#c.duals, 1, "a pair has exactly one Dual design")
 			local same = Mutations.chances("navy", "navy", 1)
 			T.eq(same.dual, 0)
@@ -85,9 +85,9 @@ return function(T)
 		T.same(first.appearance, { type = "material", definitionId = "gold" })
 		T.same(first.colourGenotype, g("white", "black"), "a material keeps the inherited genes")
 		T.same(first.patternGenotype, Genetics.solid(), "and does not make the baby duochrome")
-		-- 1.5 / 81 lands in silver (gold 1, silver 1, ...); the last roll lands in the last entry
+		-- 1.5 / 80 lands in silver (gold 1, silver 1, ...); the last roll lands in the last entry
 		local silver =
-			Mutations.resolveOffspring(parents("white", "black"), Rng.sequence({ 0, 0, 0, 0, 0.5, 0.0, 1.5 / 81 }), 1)
+			Mutations.resolveOffspring(parents("white", "black"), Rng.sequence({ 0, 0, 0, 0, 0.5, 0.0, 1.5 / 80 }), 1)
 		T.eq(silver.appearance.definitionId, "silver")
 		local last =
 			Mutations.resolveOffspring(parents("white", "black"), Rng.sequence({ 0, 0, 0, 0, 0.5, 0.0, 0.9999 }), 1)
@@ -227,11 +227,11 @@ return function(T)
 			local m = rng:weighted(Materials.List, Materials.weight)
 			counts[m.id] = (counts[m.id] or 0) + 1
 		end
-		T.near(counts.wood / n, 6 / 81, 0.006)
-		T.near(counts.glass / n, 3 / 81, 0.005)
-		T.near(counts.gold / n, 1 / 81, 0.003)
-		-- gold is about 1 egg in 4,000 at luck 1: 2% x 1/81
-		T.near(Config.Mutation.MaterialChance / 81, 1 / 4050, 1e-6)
+		T.near(counts.wood / n, 6 / 80, 0.006)
+		T.near(counts.glass / n, 3 / 80, 0.005)
+		T.near(counts.gold / n, 1 / 80, 0.003)
+		-- gold is 1 egg in 4,000 at luck 1: 2% x 1/80
+		T.near(Config.Mutation.MaterialChance / 80, 1 / 4000, 1e-6)
 	end)
 
 	T.test("the same seed gives the same outcome", function()
@@ -315,7 +315,7 @@ return function(T)
 		T.eq(Mutations.sellValue({ type = "material", definitionId = "gold" }, 4), 960, "precious 800")
 		T.eq(Mutations.sellValue({ type = "material", definitionId = "gold" }, 100), 4800)
 		T.eq(Mutations.sellValue({ type = "material", definitionId = "unobtainium" }, 4), 180, "unknown = common")
-		T.eq(Mutations.sellBase({ type = "material", definitionId = "chrome" }), 800)
+		T.eq(Mutations.sellBase({ type = "material", definitionId = "silver" }), 800)
 		T.ok(Mutations.needsSellConfirm(dual))
 		T.ok(Mutations.needsSellConfirm(secret))
 		T.ok(Mutations.needsSellConfirm({ type = "material", definitionId = "mud" }))

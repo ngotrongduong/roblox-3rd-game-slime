@@ -2,8 +2,8 @@ local Config = require("../../src/shared/Config")
 local Materials = require("../../src/shared/Materials")
 
 return function(T)
-	T.test("19 materials in the doc's tiers, weights and sell bases", function()
-		T.eq(#Materials.List, 19)
+	T.test("18 materials in the doc's tiers, weights and sell bases", function()
+		T.eq(#Materials.List, 18)
 		local tiers = { common = 0, rare = 0, precious = 0 }
 		local total = 0
 		for _, m in Materials.List do
@@ -24,8 +24,8 @@ return function(T)
 		end
 		T.eq(tiers.common, 10)
 		T.eq(tiers.rare, 6)
-		T.eq(tiers.precious, 3)
-		T.eq(total, 10 * 6 + 6 * 3 + 3)
+		T.eq(tiers.precious, 2)
+		T.eq(total, 10 * 6 + 6 * 3 + 2)
 		T.eq(Config.Material.SellBase.common, 150)
 	end)
 

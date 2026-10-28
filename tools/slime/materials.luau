@@ -26,7 +26,6 @@ local NAVY = "#1b4fd8"
 local LOOKS = {
 	{ "Gold", "#ffcf5a", MIRROR, true, R003, 0 },
 	{ "Silver", "#e9ecf0", MIRROR, true, R003, 0 },
-	{ "Chrome", "#ffffff", MIRROR, true, R003, 0 },
 	{ "Ice", "#cfefff", WHITE, false, R003, 0.35 },
 	{ "Jelly", NAVY, WHITE, false, R010, 0.35 },
 }
