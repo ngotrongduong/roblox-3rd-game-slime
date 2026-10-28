@@ -303,9 +303,13 @@ function VillageStages.build(village: Instance, frame: CFrame, level: number): M
 			local spoke = era >= 4 and r > 6 and (a < 4 or a > 41)
 			colour = if ring or spoke then t.edge elseif band then t.yard else t.base
 		else
-			-- the paths: from era 2 a border, from era 3 a checked middle
-			local check = era >= 3 and (x + z) % 2 == 0
-			colour = if edge and era >= 2 then t.edge elseif check then t.base else t.yard
+			-- the paths: from era 2 a border, from era 3 a checked middle; the avenue from the gate is
+			-- the grand one, the other paths stay calm (ChatGPT's 1st village review: every spoke as
+			-- loud as the next looked like roads)
+			local avenue = math.abs(q.X) < 4.5 and q.Z < 0
+			local check = era >= 3 and avenue and (x + z) % 2 == 0
+			local border = edge and era >= 2 and (avenue or era < 3)
+			colour = if border then t.edge elseif check then t.base else t.yard
 		end
 		d.Color = colour
 		PondStages.studLook(d, Enum.Material.Plastic)
@@ -392,6 +396,49 @@ function VillageStages.build(village: Instance, frame: CFrame, level: number): M
 					-- a stone wall with battlements
 					part(m, "FenceWall", Vector3.new(2, 9.6, w), seg * CFrame.new(0, 5.6, 0), tw.walls, tw.wallMat)
 					part(m, "FenceCoping", Vector3.new(2.6, 0.6, w), seg * CFrame.new(0, 10.7, 0), tw.trim, tw.trimMat)
+					if k % 2 == 0 then
+						-- ivy climbing the inner face, a flower bed at its foot (less of a fortress)
+						local inward = frame:VectorToObjectSpace(seg.RightVector)
+						local sgn = if (mid + inward).Magnitude < mid.Magnitude then 1 else -1
+						-- (two vines from the ground, each a wandering chain of leaf clumps that thins as it
+						-- climbs; ChatGPT's 2nd village review: separate green slabs read as holes)
+						local ivyGreens = { Color3.fromRGB(62, 122, 52), Color3.fromRGB(84, 146, 62) }
+						for v = -1, 1, 2 do
+							local vz = v * w / 5
+							for j = 0, 5 do
+								local sway = math.sin(j * 1.7 + v) * 0.7
+								local wide = 2 - j * 0.22
+								local ivy = part(
+									m,
+									"Ivy",
+									Vector3.new(0.35, 1.7, wide),
+									seg * CFrame.new(sgn * 1.1, 0.9 + j * 1.5, vz + sway),
+									ivyGreens[(j + v) % 2 + 1],
+									Enum.Material.SmoothPlastic
+								)
+								ivy.CastShadow = false
+								if j % 2 == 1 then
+									local side = part(
+										m,
+										"Ivy",
+										Vector3.new(0.3, 1, 1.1),
+										seg * CFrame.new(sgn * 1.12, 0.9 + j * 1.5 + 0.4, vz + sway + v * wide * 0.7),
+										ivyGreens[j % 2 + 1],
+										Enum.Material.SmoothPlastic
+									)
+									side.CastShadow = false
+								end
+							end
+						end
+						part(
+							m,
+							"WallBed",
+							Vector3.new(1.6, 0.7, w * 0.6),
+							seg * CFrame.new(sgn * 2, 0.35, 0),
+							tw.base,
+							tw.baseMat
+						)
+					end
 					local merlons = math.max(1, math.floor(w / 4))
 					for j = 1, merlons do
 						local zj = -w / 2 + (j - 0.5) * w / merlons
@@ -415,7 +462,12 @@ function VillageStages.build(village: Instance, frame: CFrame, level: number): M
 				else
 					-- a marble wall with a balustrade on top
 					part(m, "FenceWall", Vector3.new(1.8, 7, w), seg * CFrame.new(0, 4.3, 0), tw.walls, tw.wallMat)
-					part(m, "FenceCornice", Vector3.new(2.4, 0.6, w), seg * CFrame.new(0, 8.1, 0), tw.trim, tw.trimMat)
+					-- (the glow stays on the pillar caps; the long runs in the wall's own trim)
+					local soft, softMat = tw.trim, tw.trimMat
+					if softMat == Enum.Material.Neon then
+						soft, softMat = tw.frame, tw.frameMat
+					end
+					part(m, "FenceCornice", Vector3.new(2.4, 0.6, w), seg * CFrame.new(0, 8.1, 0), soft, softMat)
 					local posts = math.max(2, math.floor(w / 1.6))
 					for j = 1, posts do
 						local zj = -w / 2 + (j - 0.5) * w / posts
@@ -428,7 +480,7 @@ function VillageStages.build(village: Instance, frame: CFrame, level: number): M
 							tw.wallMat
 						)
 					end
-					part(m, "Handrail", Vector3.new(0.9, 0.5, w), seg * CFrame.new(0, 10.45, 0), tw.trim, tw.trimMat)
+					part(m, "Handrail", Vector3.new(0.9, 0.5, w), seg * CFrame.new(0, 10.45, 0), soft, softMat)
 				end
 			end
 		end
@@ -644,7 +696,85 @@ function VillageStages.build(village: Instance, frame: CFrame, level: number): M
 	local steel, steelDark = Color3.fromRGB(176, 182, 192), Color3.fromRGB(70, 74, 84)
 	for k, spot in lampSpots do
 		local lamp: Instance? = nil
-		if era == 4 then
+		if era == 2 then
+			-- the painted era's lamp is built too: the kit LanternPost is a 4-stud wall lantern, a
+			-- toy beside a 5-stud player. A white post, a blue arm and a lantern hung from it
+			local p = findSpot(spot[1], spot[2], 1.2)
+			if p then
+				table.insert(taken, { at = p, r = 1.2 })
+				local base = frame * CFrame.new(p) * CFrame.lookAt(Vector3.zero, spot[2])
+				local white, blue = Color3.fromRGB(244, 244, 238), Color3.fromRGB(52, 98, 178)
+				local lm = Instance.new("Model")
+				lm.Name = "PaintedLamp"
+				part(
+					lm,
+					"LampFoot",
+					Vector3.new(1.3, 0.7, 1.3),
+					base * CFrame.new(0, 0.35, 0),
+					blue,
+					Enum.Material.Wood
+				)
+				part(
+					lm,
+					"LampPost",
+					Vector3.new(0.55, 8, 0.55),
+					base * CFrame.new(0, 4.6, 0),
+					white,
+					Enum.Material.Wood
+				)
+				part(
+					lm,
+					"LampCollar",
+					Vector3.new(0.8, 0.3, 0.8),
+					base * CFrame.new(0, 7.2, 0),
+					blue,
+					Enum.Material.Wood
+				)
+				part(
+					lm,
+					"LampArm",
+					Vector3.new(0.3, 0.3, 1.9),
+					base * CFrame.new(0, 8.4, -0.8),
+					blue,
+					Enum.Material.Wood
+				)
+				part(
+					lm,
+					"LampHook",
+					Vector3.new(0.15, 0.5, 0.15),
+					base * CFrame.new(0, 8.05, -1.6),
+					blue,
+					Enum.Material.Metal
+				)
+				part(
+					lm,
+					"LanternCap",
+					Vector3.new(1.1, 0.3, 1.1),
+					base * CFrame.new(0, 7.65, -1.6),
+					blue,
+					Enum.Material.Wood
+				)
+				local glass = part(
+					lm,
+					"LanternGlass",
+					Vector3.new(0.8, 1, 0.8),
+					base * CFrame.new(0, 7, -1.6),
+					Color3.fromRGB(255, 226, 160),
+					Enum.Material.Neon
+				)
+				glass.CastShadow = false
+				part(
+					lm,
+					"LanternBase",
+					Vector3.new(1, 0.25, 1),
+					base * CFrame.new(0, 6.4, -1.6),
+					blue,
+					Enum.Material.Wood
+				)
+				lm.Parent = m
+				lamp = lm
+			end
+		elseif era == 4 then
 			local p = findSpot(spot[1], spot[2], 1.2)
 			if p then
 				table.insert(taken, { at = p, r = 1.2 })
@@ -659,35 +789,30 @@ function VillageStages.build(village: Instance, frame: CFrame, level: number): M
 					steelDark,
 					Enum.Material.Metal
 				)
-				part(
-					lm,
-					"LampPost",
-					Vector3.new(0.45, 8.6, 0.45),
-					base * CFrame.new(0, 4.5, 0),
-					steel,
-					Enum.Material.Metal
-				)
+				part(lm, "LampPost", Vector3.new(0.5, 9, 0.5), base * CFrame.new(0, 4.7, 0), steel, Enum.Material.Metal)
 				part(
 					lm,
 					"LampArm",
-					Vector3.new(0.35, 0.35, 2.2),
-					base * CFrame.new(0, 8.6, -0.9),
+					Vector3.new(0.35, 0.35, 1.6),
+					base * CFrame.new(0, 9.1, -0.6),
 					steel,
 					Enum.Material.Metal
 				)
 				part(
 					lm,
 					"LampHood",
-					Vector3.new(1.2, 0.35, 2.4),
-					base * CFrame.new(0, 8.95, -1.6),
+					Vector3.new(1.5, 0.7, 2.8),
+					base * CFrame.new(0, 9, -1.7),
 					steelDark,
 					Enum.Material.Metal
 				)
+				-- (a thick housing, its lit panel facing down: ChatGPT's 2nd village review read the
+				-- flat head as a sign or a camera)
 				local head = part(
 					lm,
 					"LampHead",
-					Vector3.new(0.9, 0.25, 2),
-					base * CFrame.new(0, 8.65, -1.6),
+					Vector3.new(1.2, 0.2, 2.4),
+					base * CFrame.new(0, 8.6, -1.7),
 					Color3.fromRGB(255, 236, 190),
 					Enum.Material.Neon
 				)
@@ -804,43 +929,61 @@ function VillageStages.build(village: Instance, frame: CFrame, level: number): M
 		local tt = TIERS[tiers[2]]
 		local face = CFrame.lookAt(Vector3.zero, g)
 		local tbl = frame * CFrame.new(tc) * face
-		part(m, "PicnicTop", Vector3.new(5.2, 0.3, 2.2), tbl * CFrame.new(0, 2.5, 0), tt.walls, tt.wallMat)
-		for _, bz in { -1.5, 1.5 } do
-			part(m, "PicnicSeat", Vector3.new(5.2, 0.3, 0.9), tbl * CFrame.new(0, 1.45, bz), tt.walls, tt.wallMat)
+		-- (sized for 5-stud players; ChatGPT's 2nd village review: the first one read as a toy)
+		part(m, "PicnicTop", Vector3.new(6.2, 0.3, 2.6), tbl * CFrame.new(0, 2.7, 0), tt.walls, tt.wallMat)
+		for _, bz in { -1.8, 1.8 } do
+			part(m, "PicnicSeat", Vector3.new(6.2, 0.3, 1), tbl * CFrame.new(0, 1.5, bz), tt.walls, tt.wallMat)
 		end
-		for _, ex in { -2, 2 } do
-			part(m, "PicnicEnd", Vector3.new(0.3, 2.4, 3.8), tbl * CFrame.new(ex, 1.2, 0), tt.frame, tt.frameMat)
+		for _, ex in { -2.4, 2.4 } do
+			part(m, "PicnicEnd", Vector3.new(0.3, 2.55, 4.6), tbl * CFrame.new(ex, 1.28, 0), tt.frame, tt.frameMat)
+		end
+		for _, ex in { -4.1, 4.1 } do
+			part(m, "PicnicStool", Vector3.new(1.1, 1.5, 1.1), tbl * CFrame.new(ex, 0.75, 0), tt.frame, tt.frameMat)
 		end
 		local basket = bit(
 			"Basket",
 			Vector3.new(1, 0.6, 0.7),
-			tbl * CFrame.new(0.8, 2.95, 0),
+			tbl * CFrame.new(1, 3.15, 0),
 			Color3.fromRGB(196, 140, 84),
 			Enum.Material.Wood
 		)
 		basket.Name = "PicnicBasket"
-		bit("Cloth", Vector3.new(2.6, 0.04, 1.6), tbl * CFrame.new(-0.6, 2.67, 0), Color3.fromRGB(230, 90, 90))
-		table.insert(taken, { at = tc, r = 4 })
-		if era >= 3 then
-			for _, ex in { -2.9, 2.9 } do
-				for _, ez in { -2.2, 2.2 } do
-					part(
-						m,
-						"ShadePost",
-						Vector3.new(0.45, 6.4, 0.45),
-						tbl * CFrame.new(ex, 3.2, ez),
-						tt.frame,
-						tt.frameMat
-					)
+		bit("Cloth", Vector3.new(3, 0.04, 1.9), tbl * CFrame.new(-0.8, 2.87, 0), Color3.fromRGB(230, 90, 90))
+		bit("Jug", Vector3.new(0.5, 0.8, 0.5), tbl * CFrame.new(-2, 3.25, 0.5), Color3.fromRGB(120, 168, 214))
+		table.insert(taken, { at = tc, r = 5 })
+		if era >= 2 then
+			-- a shelter over the table from the painted era, open on all four sides, 6.9 studs clear,
+			-- its underside light; on plinths from the brick era, a lantern under it
+			local roofT = TIERS[tiers[4]]
+			local trim, trimMat = tt.trim, tt.trimMat
+			if trimMat == Enum.Material.Neon then
+				trim, trimMat = tt.frame, tt.frameMat
+			end
+			for _, ex in { -3.6, 3.6 } do
+				for _, ez in { -2.9, 2.9 } do
+					if era >= 3 then
+						part(
+							m,
+							"ShadePlinth",
+							Vector3.new(1.1, 1.2, 1.1),
+							tbl * CFrame.new(ex, 0.6, ez),
+							tt.base,
+							tt.baseMat
+						)
+					end
+					part(m, "ShadePost", Vector3.new(0.5, 7, 0.5), tbl * CFrame.new(ex, 3.5, ez), tt.frame, tt.frameMat)
 				end
 			end
-			part(
-				m,
-				"ShadeRoof",
-				Vector3.new(7, 0.4, 5.6),
-				tbl * CFrame.new(0, 6.6, 0),
-				TIERS[tiers[4]].roof,
-				TIERS[tiers[4]].roofMat
+			part(m, "ShadeCeiling", Vector3.new(8, 0.2, 6.6), tbl * CFrame.new(0, 7.05, 0), tt.walls, tt.wallMat)
+			part(m, "ShadeTrim", Vector3.new(8.8, 0.3, 7.4), tbl * CFrame.new(0, 7.25, 0), trim, trimMat)
+			part(m, "ShadeRoof", Vector3.new(8.6, 0.45, 7.2), tbl * CFrame.new(0, 7.55, 0), roofT.roof, roofT.roofMat)
+			bit("LanternCord", Vector3.new(0.1, 0.5, 0.1), tbl * CFrame.new(0, 6.7, 0), tt.frame)
+			bit(
+				"Lantern",
+				Vector3.new(0.6, 0.6, 0.6),
+				tbl * CFrame.new(0, 6.2, 0),
+				Color3.fromRGB(255, 226, 160),
+				Enum.Material.Neon
 			)
 		end
 		-- the flower bed in front of the green, with the era's garden piece in it
@@ -875,22 +1018,134 @@ function VillageStages.build(village: Instance, frame: CFrame, level: number): M
 			local d = (CFrame.Angles(0, math.rad(a), 0) * CFrame.lookAt(Vector3.zero, -h)).LookVector
 			pad(put(BENCHES[era], hc - d * 6, d, BENCH_HEIGHT[era], 4.4), 1.2)
 		end
-		-- (a round worn patch in the middle of the half ring, where the gathering happens)
-		local patch = part(
-			m,
-			"GreenPatch",
-			Vector3.new(0.1, 8, 8),
-			frame * CFrame.new(hc + Vector3.new(0, 0.05, 0)) * CFrame.Angles(0, 0, math.pi / 2),
-			Color3.fromRGB(196, 176, 130)
-		) :: Part
-		patch.Shape = Enum.PartType.Cylinder
-		patch.CastShadow = false
+		-- (a worn clearing in the middle of the half ring, where the gathering happens: an uneven
+		-- edge of smaller worn blobs and a few stones; ChatGPT's 2nd village review: one flat cream
+		-- disc looked unfinished)
+		local worn = Color3.fromRGB(170, 150, 108)
+		local function disc(name: string, centre: Vector3, d: number, y: number, colour: Color3, mat: Enum.Material?)
+			local p = part(
+				m,
+				name,
+				Vector3.new(0.1, d, d),
+				frame * CFrame.new(centre + Vector3.new(0, y, 0)) * CFrame.Angles(0, 0, math.pi / 2),
+				colour,
+				mat or Enum.Material.SmoothPlastic
+			) :: Part
+			p.Shape = Enum.PartType.Cylinder
+			p.CastShadow = false
+			p.CanCollide = false
+		end
+		disc("GreenPatch", hc, 7, 0.05, worn)
+		for k = 0, 6 do
+			local a = math.rad(k * 51 + 20)
+			disc("GreenPatch", hc + Vector3.new(math.cos(a), 0, math.sin(a)) * 3.1, 1.8 + (k % 3) * 0.5, 0.04, worn)
+		end
+		for k = 0, 4 do
+			local a = math.rad(k * 73 + 40)
+			bit(
+				"Pebble",
+				Vector3.new(0.7, 0.35, 0.5),
+				frame * CFrame.new(hc + Vector3.new(math.cos(a), 0, math.sin(a)) * 4.6 + Vector3.new(0, 0.18, 0)),
+				Color3.fromRGB(150, 150, 146),
+				Enum.Material.Slate
+			)
+		end
+		-- each era its own edge round the clearing: brick sections, an inset paved ring, four small
+		-- glowing markers
+		if era == 3 then
+			for k = 0, 5 do
+				local a = k * 60 + 15
+				local cf = frame * CFrame.new(hc) * CFrame.Angles(0, math.rad(a), 0) * CFrame.new(0, 0.2, -4.4)
+				part(m, "ClearingBrick", Vector3.new(2.2, 0.4, 0.6), cf, tPath.edge, tPath.baseMat)
+			end
+		elseif era == 4 then
+			disc("ClearingRing", hc, 9.4, 0.03, tPath.base, tPath.baseMat)
+			disc("GreenPatch", hc, 8, 0.06, worn)
+		elseif era == 5 then
+			for k = 0, 3 do
+				local cf = frame * CFrame.new(hc) * CFrame.Angles(0, math.rad(k * 90 + 45), 0) * CFrame.new(0, 0, -5)
+				part(m, "MarkerPost", Vector3.new(0.5, 1.2, 0.5), cf * CFrame.new(0, 0.6, 0), tPath.edge, tPath.baseMat)
+				bit(
+					"MarkerGlow",
+					Vector3.new(0.6, 0.25, 0.6),
+					cf * CFrame.new(0, 1.3, 0),
+					tPath.trim,
+					Enum.Material.Neon
+				)
+			end
+		end
+		-- the clearing's open side faces the plaza: an announcement post there, a low stage from the
+		-- brick era, an arch over it in the last
 		local hAcross = Vector3.new(h.Z, 0, -h.X)
+		local stage = frame * CFrame.new(hc - h * 5.6) * CFrame.lookAt(Vector3.zero, h)
+		if era >= 3 then
+			part(m, "Stage", Vector3.new(5, 0.6, 2.6), stage * CFrame.new(0, 0.3, 0), tPath.base, tPath.baseMat)
+			part(m, "StageEdge", Vector3.new(5.2, 0.2, 2.8), stage * CFrame.new(0, 0.7, 0), tPath.edge, tPath.baseMat)
+		end
+		local lift = if era >= 3 then 0.8 else 0
+		for _, ex in { -0.9, 0.9 } do
+			part(
+				m,
+				"NoticePost",
+				Vector3.new(0.3, 3.4, 0.3),
+				stage * CFrame.new(ex, lift + 1.7, 0.9),
+				tPath.frame,
+				tPath.frameMat
+			)
+		end
+		part(
+			m,
+			"NoticeBoard",
+			Vector3.new(2.4, 1.6, 0.2),
+			stage * CFrame.new(0, lift + 2.8, 0.95),
+			TIERS[tiers[2]].walls,
+			TIERS[tiers[2]].wallMat
+		)
+		for k = 0, 2 do
+			bit(
+				"Notice",
+				Vector3.new(0.6, 0.7, 0.05),
+				stage * CFrame.new(-0.7 + k * 0.7, lift + 2.8, 0.83),
+				bunt[k + 1]
+			)
+		end
+		if era == 5 then
+			for _, ex in { -2.8, 2.8 } do
+				part(
+					m,
+					"ArchPost",
+					Vector3.new(0.6, 6.4, 0.6),
+					stage * CFrame.new(ex, 3.2, 0),
+					tPath.edge,
+					tPath.baseMat
+				)
+			end
+			part(m, "ArchBeam", Vector3.new(6.4, 0.6, 0.8), stage * CFrame.new(0, 6.6, 0), tPath.edge, tPath.baseMat)
+			part(m, "ArchCrown", Vector3.new(2.4, 0.9, 0.6), stage * CFrame.new(0, 7.3, 0), tPath.trim, tPath.trimMat)
+		end
+		table.insert(taken, { at = hc - h * 5.6, r = 3 })
 		local poleA, poleB = hc - h * 7 + hAcross * 7, hc - h * 7 - hAcross * 7
 		if era >= 2 then
 			pole(poleA.X, poleA.Z, 6)
 			pole(poleB.X, poleB.Z, 6)
 			bunting(poleA, poleB, 5.8)
+		end
+		-- stepping stones from each front green toward the plaza: the greens join the village
+		-- instead of floating in the lawn (ChatGPT's 2nd village review)
+		for _, dir in { g, h } do
+			for k = 0, 3 do
+				local side = Vector3.new(dir.Z, 0, -dir.X) * (if k % 2 == 0 then 0.7 else -0.7)
+				local spot = dir * (33 - k * 2.4) + side
+				if findSpot(spot, dir, 0.9, side) == spot then
+					bit(
+						"SteppingStone",
+						Vector3.new(1.6 - (k % 2) * 0.3, 0.2, 1.3),
+						frame * CFrame.new(spot + Vector3.new(0, 0.1, 0)) * CFrame.Angles(0, k * 0.6, 0),
+						Color3.fromRGB(158, 156, 148),
+						Enum.Material.Slate
+					)
+				end
+			end
 		end
 	end
 
@@ -903,37 +1158,60 @@ function VillageStages.build(village: Instance, frame: CFrame, level: number): M
 		local mAcross = Vector3.new(md.Z, 0, -md.X)
 		local spots =
 			{ md * 30, md * 30 + mAcross * 6, md * 30 - mAcross * 6, md * 37 + mAcross * 4, md * 37 - mAcross * 4 }
+		-- one paved square under the whole market, wider at the back, so it reads as one place
+		-- (ChatGPT's 2nd village review); the stalls face the plaza over a clear strip
+		local mFace = CFrame.lookAt(Vector3.zero, -md)
+		for _, slab in { { 28.5, 5, 15 }, { 36.5, 11, 19 } } do
+			local cf = frame * CFrame.new(md * slab[1]) * mFace
+			part(
+				m,
+				"MarketSquare",
+				Vector3.new(slab[3], 0.16, slab[2]),
+				cf * CFrame.new(0, 0.08, 0),
+				tPath.yard,
+				tPath.baseMat
+			)
+		end
 		for e = 1, era do
 			pad(put(STALLS[e], spots[e], -md, STALL_HEIGHT[e], 5), 1.6)
 		end
-		put("CrateStack", md * 26 + mAcross * 9, -md, 2.6, 2.4)
-		put("WoodBarrel", md * 26 - mAcross * 9, -md, 2.4, 1.8)
-		put("HandCart", md * 34 + mAcross * 10, -md, 3, 3)
-		-- the market sign at its front, on two posts
-		local sc = md * 23.5
-		local sign = frame * CFrame.new(sc) * CFrame.lookAt(Vector3.zero, -md)
-		for _, ex in { -1.8, 1.8 } do
-			part(m, "SignPost", Vector3.new(0.35, 4, 0.35), sign * CFrame.new(ex, 2, 0), tPath.frame, tPath.frameMat)
+		put("CrateStack", md * 38 + mAcross * 8.5, -md, 2.6, 2.4)
+		put("WoodBarrel", md * 41.5 + mAcross * 1.5, -md, 2.4, 1.8)
+		put("HandCart", md * 41.5 - mAcross * 3, -md, 3, 3)
+		-- the market's entrance sign over the way in, on two posts, about 8 studs high
+		local sc = md * 22.5
+		local sign = frame * CFrame.new(sc) * mFace
+		for _, ex in { -2.7, 2.7 } do
+			part(
+				m,
+				"SignPost",
+				Vector3.new(0.45, 7.6, 0.45),
+				sign * CFrame.new(ex, 3.8, 0),
+				tPath.frame,
+				tPath.frameMat
+			)
 		end
 		part(
 			m,
 			"SignBoard",
-			Vector3.new(4.4, 1.4, 0.3),
-			sign * CFrame.new(0, 3.7, 0),
+			Vector3.new(6.2, 1.5, 0.3),
+			sign * CFrame.new(0, 6.9, 0),
 			TIERS[tiers[2]].walls,
 			TIERS[tiers[2]].wallMat
 		)
-		for k = -1, 1 do -- (three little fruit shapes on it: a market without words)
-			local fr = bit("SignFruit", Vector3.one * 0.7, sign * CFrame.new(k * 1.2, 3.7, -0.25), bunt[k + 2]) :: Part
+		for k = -1, 1 do -- (three fruit shapes on it: a market without words)
+			local fr = bit("SignFruit", Vector3.one * 0.9, sign * CFrame.new(k * 1.6, 6.9, -0.3), bunt[k + 2]) :: Part
 			fr.Shape = Enum.PartType.Ball
 		end
-		table.insert(taken, { at = sc, r = 2.6 })
+		for _, ex in { -2.7, 2.7 } do
+			table.insert(taken, { at = sc + mAcross * ex, r = 0.8 })
+		end
 		local ba, bb = md * 33 + mAcross * 10, md * 33 - mAcross * 10
 		pole(ba.X, ba.Z, 7)
 		pole(bb.X, bb.Z, 7)
 		bunting(ba, bb, 6.8)
 		put(NOTICES[era], Vector3.new(6.5, 0, -HALF + 10), Vector3.new(-1, 0, 0), NOTICE_HEIGHT[era], 3.6)
-		pad(put(NOTICES[era], md * 24 + mAcross * 6, -md, NOTICE_HEIGHT[era], 3.6), 1)
+		pad(put(NOTICES[era], md * 23 + mAcross * 5.8, -md, NOTICE_HEIGHT[era], 3.6), 1)
 	end
 
 	-- ===== level 5: the gardens in the back gaps and two flower beds lining the gate path =====
@@ -949,38 +1227,39 @@ function VillageStages.build(village: Instance, frame: CFrame, level: number): M
 		-- the benches and lamps stand; ChatGPT's 1st village review: the pots read as loose dots)
 		for _, seg in { { 0.28, 0.46 }, { 0.56, 0.78 } } do
 			for _, side in { -1, 1 } do
-				local a = besidePath(5, seg[1], side, 5.6)
-				local b = besidePath(5, seg[2], side, 5.6)
+				local a = besidePath(5, seg[1], side, 5.8)
+				local b = besidePath(5, seg[2], side, 5.8)
 				local len = (b - a).Magnitude
 				local mid = (a + b) / 2
 				local bed = frame * CFrame.new(mid) * CFrame.lookAt(Vector3.zero, (b - a).Unit)
-				part(m, "BedEdge", Vector3.new(2.4, 0.7, len), bed * CFrame.new(0, 0.35, 0), tPath.edge, tPath.baseMat)
+				part(m, "BedEdge", Vector3.new(2.8, 0.7, len), bed * CFrame.new(0, 0.35, 0), tPath.edge, tPath.baseMat)
 				part(
 					m,
 					"BedSoil",
-					Vector3.new(1.9, 0.2, len - 0.5),
+					Vector3.new(2.3, 0.2, len - 0.5),
 					bed * CFrame.new(0, 0.75, 0),
 					Color3.fromRGB(110, 80, 56),
 					Enum.Material.Ground
 				)
+				-- (every flower in its own leafy clump, heights and colours in uneven runs;
+				-- ChatGPT's 2nd village review: bare balls on soil read as candy trays)
+				local greens = { Color3.fromRGB(78, 140, 60), Color3.fromRGB(100, 164, 72) }
 				local n = math.floor(len / 1.3)
 				for k = 0, n - 1 do
 					local z = -len / 2 + 0.65 + k * 1.3
+					local x = math.sin(k * 2.3 + side) * 0.45
+					local tall = (k * 7 + side) % 3
+					local d = 1 + tall * 0.25
+					local leaf =
+						bit("Leaf", Vector3.one * d, bed * CFrame.new(x, 0.85 + d * 0.25, z), greens[k % 2 + 1]) :: Part
+					leaf.Shape = Enum.PartType.Ball
 					local fl = bit(
 						"Flower",
-						Vector3.one * (0.6 + (k % 3) * 0.15),
-						bed * CFrame.new((k % 2) * 0.5 - 0.25, 1.1 + (k % 3) * 0.1, z),
-						bunt[(k + (if side > 0 then 1 else 3)) % 4 + 1]
+						Vector3.one * (0.5 + tall * 0.1),
+						bed * CFrame.new(x, 0.95 + d * 0.75, z),
+						bunt[(math.floor(k / 2) + (if side > 0 then 1 else 3)) % 4 + 1]
 					) :: Part
 					fl.Shape = Enum.PartType.Ball
-					if k % 3 == 1 then
-						bit(
-							"Leaf",
-							Vector3.new(0.9, 0.5, 0.9),
-							bed * CFrame.new(0, 0.95, z + 0.4),
-							Color3.fromRGB(96, 160, 70)
-						)
-					end
 				end
 				table.insert(taken, { at = mid, r = 1.5 })
 			end
