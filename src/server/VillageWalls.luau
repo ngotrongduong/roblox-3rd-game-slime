@@ -67,44 +67,128 @@ function VillageWalls.build(m: Model, frame: CFrame, era: number, tiers: { numbe
 		end
 		return t.trim, t.trimMat
 	end
-	-- a hanging flower basket under `hook` (built: the generator made a lump of it twice): three
-	-- chains to a wicker bowl with a rim, leaves trailing over its edge, petunias on top
+	-- a hanging flower basket under `hook` (built: the generator made a lump of it twice; the owner,
+	-- 2026-10-28: the first built one was crude): three chains from a ring to a woven bowl of stacked
+	-- bands that narrow toward its bottom, a rolled rim, a dome of leaves, petunias with pale hearts
+	-- round it, and vines of small leaves trailing over the rim
 	local function basket(hook: CFrame)
-		local wicker, rim = Color3.fromRGB(176, 124, 70), Color3.fromRGB(140, 94, 52)
-		local leaf, leafDark = Color3.fromRGB(96, 166, 70), Color3.fromRGB(70, 136, 56)
-		local petals = { Color3.fromRGB(244, 120, 170), Color3.fromRGB(255, 236, 244), Color3.fromRGB(214, 90, 150) }
-		bit("BasketHook", Vector3.new(0.35, 0.35, 0.12), hook, Color3.fromRGB(50, 50, 56), Enum.Material.Metal)
-		local bowl = hook * CFrame.new(0, -2.2, 0)
+		local iron = Color3.fromRGB(56, 56, 62)
+		local wicker = { Color3.fromRGB(190, 138, 80), Color3.fromRGB(168, 118, 66) }
+		local leaves = { Color3.fromRGB(96, 168, 72), Color3.fromRGB(74, 142, 58), Color3.fromRGB(120, 188, 86) }
+		local petals = { Color3.fromRGB(240, 112, 168), Color3.fromRGB(255, 238, 246), Color3.fromRGB(206, 84, 150) }
+		column("BasketHook", 0.12, 0.45, hook * CFrame.new(0, -0.1, 0), iron, Enum.Material.Metal)
+		ball("BasketRing", 0.3, hook * CFrame.new(0, -0.35, 0), iron, Enum.Material.Metal)
+		local top = hook * CFrame.new(0, -2.3, 0) -- the rim's middle
 		for k = 0, 2 do
-			local a = k * math.pi * 2 / 3
-			local foot = Vector3.new(math.cos(a) * 0.85, -1.85, math.sin(a) * 0.85)
+			local a = k * math.pi * 2 / 3 + 0.3
+			local from = Vector3.new(0, -0.45, 0)
+			local to = Vector3.new(math.cos(a) * 0.95, -2.25, math.sin(a) * 0.95)
 			bit(
 				"BasketChain",
-				Vector3.new(0.07, 0.07, foot.Magnitude),
-				hook * CFrame.lookAt(foot / 2, foot),
-				Color3.fromRGB(60, 60, 66),
+				Vector3.new(0.06, 0.06, (to - from).Magnitude),
+				hook * CFrame.lookAt((from + to) / 2, to),
+				iron,
 				Enum.Material.Metal
 			)
 		end
-		ball("BasketBowl", 1, bowl * CFrame.new(0, -0.15, 0), wicker, Enum.Material.Wood).Size = Vector3.new(2, 1.1, 2)
-		column("BasketRim", 0.2, 2.1, bowl * CFrame.new(0, 0.3, 0), rim, Enum.Material.Wood)
+		-- the bowl: woven bands, wide at the rim, narrow at the foot
+		for j, band in { { 2.1, -0.2 }, { 1.85, -0.5 }, { 1.5, -0.78 }, { 1.05, -1.02 } } do
+			column(
+				"BasketWeave",
+				0.32,
+				band[1],
+				top * CFrame.new(0, band[2], 0),
+				wicker[j % 2 + 1],
+				Enum.Material.Fabric
+			)
+		end
+		column("BasketRim", 0.18, 2.3, top * CFrame.new(0, 0.02, 0), Color3.fromRGB(140, 96, 54), Enum.Material.Wood)
+		-- the leaves: a low dome and clumps round it
+		ball("BasketLeaves", 1, top * CFrame.new(0, 0.3, 0), leaves[1]).Size = Vector3.new(2, 0.9, 2)
 		for k = 0, 5 do
 			local a = k * math.pi / 3
-			local trail = bit(
-				"BasketTrail",
-				Vector3.new(0.32, 0.6 + (k % 2) * 0.35, 0.14),
-				bowl
-					* CFrame.new(math.cos(a) * 1.05, -0.2 - (k % 2) * 0.25, math.sin(a) * 1.05)
-					* CFrame.Angles(0, -a, 0),
-				if k % 2 == 0 then leaf else leafDark
-			)
-			trail.CastShadow = false
+			ball("BasketClump", 0.7, top * CFrame.new(math.cos(a) * 0.85, 0.25, math.sin(a) * 0.85), leaves[k % 3 + 1])
 		end
-		ball("BasketLeaves", 1, bowl * CFrame.new(0, 0.45, 0), leaf).Size = Vector3.new(2, 0.8, 2)
+		-- petunias: a ring of six and one on top, each a disc of petals with a pale heart
 		for k = 0, 6 do
-			local a = k * 0.9
-			local r = if k == 0 then 0 else 0.6
-			ball("Petunia", 0.45, bowl * CFrame.new(math.cos(a) * r, 0.8 - r * 0.2, math.sin(a) * r), petals[k % 3 + 1])
+			local a = k * math.pi / 3 + 0.5
+			local r = if k == 6 then 0 else 0.62
+			local at0 = top * CFrame.new(math.cos(a) * r, if k == 6 then 0.85 else 0.62, math.sin(a) * r)
+			ball("Petunia", 0.5, at0, petals[k % 3 + 1]).Size = Vector3.new(0.55, 0.28, 0.55)
+			ball("PetuniaHeart", 0.16, at0 * CFrame.new(0, 0.12, 0), Color3.fromRGB(255, 236, 160))
+		end
+		-- vines trailing over the rim, each a chain of small leaves getting smaller
+		for k = 0, 4 do
+			local a = k * math.pi * 2 / 5 + 0.2
+			local out = Vector3.new(math.cos(a), 0, math.sin(a))
+			for j = 0, 3 do
+				local at0 = out * (1.12 + j * 0.06) + Vector3.new(0, -0.1 - j * 0.42, 0)
+				local leafBall = ball("BasketVine", 0.42 - j * 0.06, top * CFrame.new(at0), leaves[(k + j) % 3 + 1])
+				leafBall.Size = Vector3.new(0.42 - j * 0.06, 0.32, 0.42 - j * 0.06)
+			end
+		end
+	end
+	-- a wall lantern fixed to a wall face: `face` stands on the face, its front out from the wall. A
+	-- back plate, a scrolled arm, a lantern hanging from it (cap, finial, four corner posts round warm
+	-- glass, a base and a drop) (the owner, 2026-10-28: centred on the post, the same on every one)
+	local function wallLantern(face: CFrame, lit: boolean)
+		local iron = Color3.fromRGB(40, 40, 46)
+		bit("LanternPlate", Vector3.new(0.7, 1.3, 0.12), face * CFrame.new(0, 0, -0.06), iron, Enum.Material.Metal)
+		bit("LanternArm", Vector3.new(0.12, 0.12, 0.95), face * CFrame.new(0, 0.45, -0.55), iron, Enum.Material.Metal)
+		ball("LanternScroll", 0.26, face * CFrame.new(0, 0.25, -0.2), iron, Enum.Material.Metal)
+		local box = face * CFrame.new(0, -0.35, -1)
+		bit("LanternHook", Vector3.new(0.08, 0.3, 0.08), box * CFrame.new(0, 0.75, 0), iron, Enum.Material.Metal)
+		bit("LanternCap", Vector3.new(0.75, 0.15, 0.75), box * CFrame.new(0, 0.48, 0), iron, Enum.Material.Metal)
+		bit("LanternRoof", Vector3.new(0.5, 0.18, 0.5), box * CFrame.new(0, 0.62, 0), iron, Enum.Material.Metal)
+		for _, o in { Vector3.new(1, 0, 1), Vector3.new(-1, 0, 1), Vector3.new(1, 0, -1), Vector3.new(-1, 0, -1) } do
+			bit(
+				"LanternPost",
+				Vector3.new(0.08, 0.75, 0.08),
+				box * CFrame.new(o.X * 0.27, 0, o.Z * 0.27),
+				iron,
+				Enum.Material.Metal
+			)
+		end
+		local glass =
+			bit("LanternGlass", Vector3.new(0.48, 0.68, 0.48), box, Color3.fromRGB(255, 214, 140), Enum.Material.Neon)
+		bit("LanternBase", Vector3.new(0.7, 0.12, 0.7), box * CFrame.new(0, -0.42, 0), iron, Enum.Material.Metal)
+		ball("LanternDrop", 0.2, box * CFrame.new(0, -0.56, 0), iron, Enum.Material.Metal)
+		if lit then
+			local light = Instance.new("PointLight")
+			light.Color = Color3.fromRGB(255, 206, 140)
+			light.Range = 10
+			light.Brightness = 0.8
+			light.Parent = glass
+		end
+	end
+	-- a torch fixed to a wall face (`face` as above): a plate, a ring bracket, a wrapped handle leaning
+	-- out a little, a flame of an orange body and a yellow heart
+	local function wallTorch(face: CFrame, lit: boolean)
+		local iron = Color3.fromRGB(46, 42, 42)
+		bit("TorchPlate", Vector3.new(0.6, 1.1, 0.12), face * CFrame.new(0, 0, -0.06), iron, Enum.Material.Metal)
+		bit("TorchStrut", Vector3.new(0.12, 0.12, 0.5), face * CFrame.new(0, -0.2, -0.3), iron, Enum.Material.Metal)
+		column("TorchRing", 0.12, 0.42, face * CFrame.new(0, 0, -0.55), iron, Enum.Material.Metal)
+		local lean = face * CFrame.new(0, 0, -0.55) * CFrame.Angles(math.rad(-15), 0, 0)
+		column("TorchHandle", 1.9, 0.28, lean * CFrame.new(0, 0.25, 0), Color3.fromRGB(120, 78, 44), Enum.Material.Wood)
+		column(
+			"TorchWrap",
+			0.45,
+			0.42,
+			lean * CFrame.new(0, 1.05, 0),
+			Color3.fromRGB(196, 168, 120),
+			Enum.Material.Fabric
+		)
+		local flame =
+			ball("TorchFlame", 0.6, lean * CFrame.new(0, 1.6, 0), Color3.fromRGB(255, 130, 40), Enum.Material.Neon)
+		flame.Size = Vector3.new(0.8, 1.2, 0.8)
+		ball("TorchHeart", 0.3, lean * CFrame.new(0, 1.55, 0), Color3.fromRGB(255, 226, 110), Enum.Material.Neon).Size =
+			Vector3.new(0.45, 0.75, 0.45)
+		if lit then
+			local light = Instance.new("PointLight")
+			light.Color = Color3.fromRGB(255, 160, 80)
+			light.Range = 10
+			light.Brightness = 0.9
+			light.Parent = flame
 		end
 	end
 	-- a generated decoration from the kit, its foot on `cf` (front to cf's -Z), `h` tall
@@ -121,7 +205,7 @@ function VillageWalls.build(m: Model, frame: CFrame, era: number, tiers: { numbe
 			{ Vector3.new(-HALF, 0, -HALF), Vector3.new(-FENCE_END, 0, -HALF) },
 			{ Vector3.new(HALF, 0, -HALF), Vector3.new(FENCE_END, 0, -HALF) },
 		}
-		local pillarAt: { { at: Vector3, inward: Vector3 } } = {}
+		local pillarAt: { { at: Vector3, inward: Vector3, runs: number } } = {}
 		local soft, softMat = calm(tw)
 		for _, run in runs do
 			local a, b = run[1], run[2]
@@ -141,11 +225,17 @@ function VillageWalls.build(m: Model, frame: CFrame, era: number, tiers: { numbe
 				local p = a:Lerp(b, k / n)
 				local seen = false
 				for _, q in pillarAt do
-					seen = seen or (p - q.at).Magnitude < 1
+					if (p - q.at).Magnitude < 1 then
+						seen = true
+						q.runs += 1 -- (a corner: two runs meet at it)
+					end
 				end
 				if not seen then
-					local inward = -Vector3.new(p.X, 0, p.Z).Unit
-					table.insert(pillarAt, { at = p, inward = inward })
+					-- (square to its run, facing into the plot)
+					local across = Vector3.new(dir.Z, 0, -dir.X)
+					local mid0 = (a + b) / 2
+					local inward = if (mid0 + across).Magnitude < mid0.Magnitude then across else -across
+					table.insert(pillarAt, { at = p, inward = inward, runs = 1 })
 				end
 				if k < n then
 					local mid = a:Lerp(b, (k + 0.5) / n)
@@ -385,6 +475,8 @@ function VillageWalls.build(m: Model, frame: CFrame, era: number, tiers: { numbe
 			local p = pa.at
 			-- (each pillar faces into the plot)
 			local c = frame * CFrame.new(p) * CFrame.lookAt(Vector3.zero, pa.inward)
+			-- (the fence's end posts stand against the gate towers, which carry their own lamps)
+			local atGate = math.abs(p.X) < FENCE_END + 1 and p.Z < -HALF + 1
 			if era == 2 then
 				part(m, "PillarFoot", Vector3.new(3.2, 1.6, 3.2), c * CFrame.new(0, 0.8, 0), tp.base, tp.baseMat)
 				part(m, "FencePillar", Vector3.new(2.4, 9.8, 2.4), c * CFrame.new(0, 6.5, 0), tp.walls, tp.wallMat)
@@ -403,15 +495,14 @@ function VillageWalls.build(m: Model, frame: CFrame, era: number, tiers: { numbe
 				part(m, "PillarCap", Vector3.new(3.3, 0.45, 3.3), c * CFrame.new(0, 12, 0), psoft, psoftMat)
 				part(m, "CapStep", Vector3.new(2.3, 0.45, 2.3), c * CFrame.new(0, 12.45, 0), tp.frame, tp.frameMat)
 				ball("Finial", 1.1, c * CFrame.new(0, 13.2, 0), psoft, psoftMat)
-				-- a lantern on every other pillar, outside and inside by turns
-				if k % 2 == 0 then
-					local out = if k % 4 == 0 then 1 else -1
-					deco(
-						"WallLantern",
-						c * CFrame.new(0, 7.4, out * 1.2) * CFrame.Angles(0, if out > 0 then math.pi else 0, 0),
-						2.6,
-						2
-					)
+				-- a lantern centred on both faces of every post but the corners; every other one lit
+				if pa.runs == 1 and not atGate then
+					for _, side in { -1, 1 } do
+						wallLantern(
+							c * CFrame.new(0, 8.2, side * 1.22) * CFrame.Angles(0, if side > 0 then math.pi else 0, 0),
+							side < 0 and k % 2 == 0
+						)
+					end
 				end
 			elseif era == 3 then
 				part(m, "TowerFoot", Vector3.new(4.8, 1.8, 4.8), c * CFrame.new(0, 0.9, 0), tp.base, tp.baseMat)
@@ -426,7 +517,12 @@ function VillageWalls.build(m: Model, frame: CFrame, era: number, tiers: { numbe
 						bit(
 							"Quoin",
 							if long then Vector3.new(1.3, 0.9, 0.7) else Vector3.new(0.7, 0.9, 1.3),
-							c * CFrame.new(o.X * 1.75, y, o.Z * 1.75),
+							c
+								* CFrame.new(
+									o.X * (2.08 - (if long then 0.65 else 0.35)),
+									y,
+									o.Z * (2.08 - (if long then 0.35 else 0.65))
+								),
 							tp.base,
 							tp.baseMat
 						)
@@ -457,14 +553,14 @@ function VillageWalls.build(m: Model, frame: CFrame, era: number, tiers: { numbe
 						psoftMat
 					)
 				end
-				if k % 2 == 0 then
-					local out = if k % 4 == 0 then 1 else -1
-					deco(
-						"TorchSconce",
-						c * CFrame.new(0, 7.6, out * 2.05) * CFrame.Angles(0, if out > 0 then math.pi else 0, 0),
-						2.6,
-						1.6
-					)
+				-- a torch centred on both faces of every tower but the corners; every other one lit
+				if pa.runs == 1 and not atGate then
+					for _, side in { -1, 1 } do
+						wallTorch(
+							c * CFrame.new(0, 7.2, side * 2) * CFrame.Angles(0, if side > 0 then math.pi else 0, 0),
+							side < 0 and k % 2 == 0
+						)
+					end
 				end
 			elseif era == 4 then
 				part(m, "PillarPlate", Vector3.new(2.6, 0.5, 2.6), c * CFrame.new(0, 1.45, 0), tp.base, tp.baseMat)
@@ -550,8 +646,10 @@ function VillageWalls.build(m: Model, frame: CFrame, era: number, tiers: { numbe
 			end
 			part(m, "RoofRidge", Vector3.new(6, 0.35, 0.5), tower * CFrame.new(0, 17.6, 0), tg.frame, tg.frameMat)
 			ball("RoofFinial", 0.8, tower * CFrame.new(0, 18.1, 0), gsoft, gsoftMat)
-			-- a lantern on the tower's face toward the way, a planter at its outer foot
-			deco("WallLantern", tower * CFrame.new(-sx * 2.2, 6.4, -1) * CFrame.Angles(0, math.rad(sx * 90), 0), 2.6, 2)
+			-- a lantern centred under the window on the front face, and one on the back; a planter at its
+			-- outer foot
+			wallLantern(tower * CFrame.new(0, 6.6, -2.2), true)
+			wallLantern(tower * CFrame.new(0, 6.6, 2.2) * CFrame.Angles(0, math.pi, 0), false)
 			place(m, tower * CFrame.new(sx * 4.6, 0, -2.6), "FlowerBedWood", 0, 0, 1.8, 3.2)
 		end
 		-- the beam across, its knee braces, the little shingled roof over it
@@ -594,15 +692,19 @@ function VillageWalls.build(m: Model, frame: CFrame, era: number, tiers: { numbe
 					bit(
 						"Quoin",
 						if long then Vector3.new(1.6, 1, 0.8) else Vector3.new(0.8, 1, 1.6),
-						tower * CFrame.new(o.X * 2.75, y, o.Z * 2.75),
+						tower
+							* CFrame.new(
+								o.X * (3.08 - (if long then 0.8 else 0.4)),
+								y,
+								o.Z * (3.08 - (if long then 0.4 else 0.8))
+							),
 						tg.base,
 						tg.baseMat
 					)
 				end
 			end
-			-- arrow slits on the front and the outer side
+			-- arrow slits on the outer side (the front carries the banner and the torch)
 			for _, y in { 8, 12.5 } do
-				bit("ArrowSlit", Vector3.new(0.4, 2, 0.12), tower * CFrame.new(0, y, -3.02), Color3.fromRGB(34, 30, 30))
 				bit(
 					"ArrowSlit",
 					Vector3.new(0.12, 2, 0.4),
@@ -664,13 +766,10 @@ function VillageWalls.build(m: Model, frame: CFrame, era: number, tiers: { numbe
 				Color3.fromRGB(230, 190, 80)
 			)
 			disc.Shape = Enum.PartType.Cylinder
-			-- a torch on the face toward the way, a planter at the outer foot
-			deco(
-				"TorchSconce",
-				tower * CFrame.new(-sx * 3, 8.5, -1.6) * CFrame.Angles(0, math.rad(sx * 90), 0),
-				2.8,
-				1.6
-			)
+			-- a torch centred under the banner on the front face, and one on the back; a planter at
+			-- the outer foot
+			wallTorch(tower * CFrame.new(0, 7.2, -3), true)
+			wallTorch(tower * CFrame.new(0, 7.2, 3) * CFrame.Angles(0, math.pi, 0), false)
 			place(m, tower * CFrame.new(sx * 5.4, 0, -2.4), "FlowerBedBrick", 0, 0, 2, 3.4)
 		end
 		-- the arch under the bridge: voussoirs in the trim, the spandrels filled

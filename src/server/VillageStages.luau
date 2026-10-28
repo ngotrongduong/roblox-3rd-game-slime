@@ -425,12 +425,10 @@ function VillageStages.build(village: Instance, frame: CFrame, level: number): M
 			local spoke = era >= 4 and r > 6 and (a < 4 or a > 41)
 			colour = if ring or spoke then t.edge elseif band then t.yard else t.base
 		else
-			-- the paths: from era 2 a border, from era 3 a checked middle; the avenue from the gate is
-			-- the grand one, the other paths stay calm (ChatGPT's 1st village review: every spoke as
-			-- loud as the next looked like roads)
-			local avenue = math.abs(q.X) < 4.5 and q.Z < 0
-			local check = era >= 3 and avenue and (x + z) % 2 == 0
-			local border = edge and era >= 2 and (avenue or era < 3)
+			-- the paths: from era 2 a border, from era 3 a checked middle, every path paved as finely as
+			-- the avenue from the gate (the owner, 2026-10-28: the other paths looked unfinished)
+			local check = era >= 3 and (x + z) % 2 == 0
+			local border = edge and era >= 2
 			colour = if border then t.edge elseif check then t.base else t.yard
 		end
 		d.Color = colour
