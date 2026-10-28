@@ -3,12 +3,11 @@
 -- slime body in the materials the owner kept (2026-10-29), labelled. Re-runnable: it replaces
 -- Workspace.SlimeMaterials.
 --
--- Front row: metals and see-through looks on a SurfaceAppearance. Each metal twice, for the owner to
--- compare: "engine" = standard PBR (metalness 1, the measured base colour, roughness 0.10) - Roblox
--- reflects only a blurred sky, so it reads milky; "Mirror" = metalness 1, roughness 0.03 and the
--- chrome reflection map (tools/skins/make_mirror.ps1: bright sky above, dark horizon line at the widest
--- ring, ground below) tinted per metal. Ice and Jelly see-through. Back row: Roblox's own materials,
--- with their built-in maps and gloss, in a natural colour.
+-- Front row: metals and see-through looks on a SurfaceAppearance. Metals are "Mirror" (the owner's
+-- choice, 2026-10-29, over standard PBR, which reads milky because Roblox reflects only a blurred sky):
+-- metalness 1, roughness 0.03 and the chrome reflection map (tools/skins/make_mirror.ps1: bright sky
+-- above, dark horizon line at the widest ring, ground below) tinted per metal. Ice and Jelly
+-- see-through. Back row: Roblox's own materials, with their built-in maps and gloss, in a natural colour.
 -- Maps (owner's account): white 71688274727636 (also metalness 1), normal 79029102102054, mirror
 -- 138184721337623; roughness 0.03 135625603344269, 0.10 105770337560670.
 
@@ -25,12 +24,9 @@ local NAVY = "#1b4fd8"
 
 -- { name, colour, colour map, metal, roughness map, transparency }
 local LOOKS = {
-	{ "Gold", "#ffe29b", WHITE, true, R010, 0 },
-	{ "Gold Mirror", "#ffcf5a", MIRROR, true, R003, 0 },
-	{ "Silver", "#fcfaf5", WHITE, true, R010, 0 },
-	{ "Silver Mirror", "#e9ecf0", MIRROR, true, R003, 0 },
-	{ "Chrome", "#c4c5c5", WHITE, true, R003, 0 },
-	{ "Chrome Mirror", "#ffffff", MIRROR, true, R003, 0 },
+	{ "Gold", "#ffcf5a", MIRROR, true, R003, 0 },
+	{ "Silver", "#e9ecf0", MIRROR, true, R003, 0 },
+	{ "Chrome", "#ffffff", MIRROR, true, R003, 0 },
 	{ "Ice", "#cfefff", WHITE, false, R003, 0.35 },
 	{ "Jelly", NAVY, WHITE, false, R010, 0.35 },
 }

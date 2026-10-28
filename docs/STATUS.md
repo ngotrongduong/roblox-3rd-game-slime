@@ -240,6 +240,12 @@ Done (all checked in Studio at every era, committed, the kit exported into `asse
   skin image ids in `art/models/slime_body/skins/asset_ids.json`. All 66 stand on the MapWork stage
   (`tools/slime/showcase.luau`, run with `node tools/studio_mcp.js run`). Waiting for the owner's look in play.
   Next: `DualDesigns.luau` to 55 pairs, then the face decal and the hop in the farm code.
+- Slime materials (2026-10-29, the owner's pick; stage `tools/slime/materials.luau` beside the slime stage): Gold,
+  Silver, Chrome as "Mirror" metals (metalness 1, roughness 0.03, the chrome reflection map
+  `art/models/slime_body/skins/mirror_metal.png` id 138184721337623 tinted per metal; standard PBR read milky because
+  Roblox reflects only a blurred sky), Ice and Jelly see-through, and 14 Roblox materials: Neon, Wood, Marble,
+  CrackedLava, Brick, Granite, Mud, Fabric, Sand, Grass, Glass, ForceField, ClayRoofTiles, Leather. How they enter the
+  game (a mutation, a cosmetic) is not decided yet.
 - How it was done is packaged: skills `area-review`, `prop-craft` (new: the owner's quality bar and placing rules,
   the generate/check/export tools `tools/kit/intake|viewer|upright|export_kit|check_kit.luau`), `chatgpt-review`;
   lessons in `.claude/skills/studio-build/LESSONS.md`; shots in `docs/areas/upgrades/review/`.
