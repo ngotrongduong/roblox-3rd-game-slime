@@ -177,7 +177,7 @@ local SPOT: { { { any } } } = {
 		{ 8.5, -6.5, 90, 3, 3 }, -- 1 m hand cart
 		-- 2.4 m small forklift ("pallet jack"), twice the first try (the owner, 2026-10-28), forks
 		-- toward the dock
-		{ 7.8, -6.2, 90, 6.8, 7.2 },
+		{ 7.8, -5.4, 90, 6.8, 7.2 }, -- (a stud clear of the hoist's post)
 		{ 8.6, -6.6, 90, 6, 6.5 }, -- 2.1 m forklift, forks toward the dock
 		{ 8.5, -7, 90, 2.6, 4 }, -- hover cart, floating (the owner: it has no weight)
 	},
