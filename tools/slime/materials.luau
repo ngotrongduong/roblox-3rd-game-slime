@@ -65,6 +65,12 @@ plate.CFrame = CFrame.new(BASE + Vector3.new(0, -0.5, -5))
 plate.Color = Color3.fromRGB(122, 178, 92)
 plate.Material = Enum.Material.Grass
 plate.Parent = root
+-- a walkway over the gap to the slime stage (tools/slime/showcase.luau, 66 wide at x 0)
+local bridge = plate:Clone()
+bridge.Name = "Bridge"
+bridge.Size = Vector3.new(12, 1, 34)
+bridge.CFrame = CFrame.new(Vector3.new(37.5, BASE.Y - 0.5, BASE.Z - 5))
+bridge.Parent = root
 
 local bodySrc = IS:LoadAsset(71117254607762):FindFirstChildWhichIsA("MeshPart", true)
 local hullSrc = IS:LoadAsset(99817746239640):FindFirstChildWhichIsA("MeshPart", true)
