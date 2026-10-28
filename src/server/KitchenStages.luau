@@ -29,7 +29,9 @@ local part, wedge, place = PantryStages.part, PantryStages.wedge, PantryStages.p
 
 -- the pad: x -11 .. 11, z -9 .. 9, the entrance at the front middle; the shelter over z -2.5 .. 9.2
 local XW, ZF, ZB = 10.8, -2.5, 9.2
-local EAVE, RISE = 9.6, 3.4 -- eave height, ridge above the eaves
+-- (eaves low enough that the camera sees the cooking line under them, still well over a player)
+local EAVE, RISE = 7.6, 3.4 -- eave height, ridge above the eaves
+local FLOOR = 0.4 -- the pad's floor stands this far above the lawn; props stand on its top
 
 -- cooking spots: where, and from which level (the first is the area's own)
 local SPOTS = { { 0, -1.2, 1 }, { 5.6, 1.4, 21 }, { -6, 0.9, 31 } }
@@ -214,20 +216,20 @@ function KitchenStages.build(area: Instance, frame: CFrame, level: number): Mode
 
 	-- era 3: the bread oven at the back right
 	if era >= 3 then
-		place(m, frame, "BrickOven", 7.2, 6.2, 6, 4.6)
+		place(m, frame, "BrickOven", 7.2, 6.2, 6, 4.6, FLOOR)
 	end
 	-- era 4: a chimney stack from the stove's own chimney up through the roof, and a pot rack
 	if era >= 4 then
-		part(m, "Chimney", Vector3.new(1.8, 7, 1.8), at(2.3, 11.4, 5.9), tw.walls, tw.wallMat)
-		part(m, "ChimneyTop", Vector3.new(2.3, 0.5, 2.3), at(2.3, 15.1, 5.9), tw.trim, tw.trimMat)
-		part(m, "PotRack", Vector3.new(4.6, 0.3, 0.3), at(-7, 7.2, 3.6), tl.frame, tl.frameMat)
+		part(m, "Chimney", Vector3.new(1.8, 6, 1.8), at(2.3, 10.9, 5.9), tw.walls, tw.wallMat)
+		part(m, "ChimneyTop", Vector3.new(2.3, 0.5, 2.3), at(2.3, 14.1, 5.9), tw.trim, tw.trimMat)
+		part(m, "PotRack", Vector3.new(4.6, 0.3, 0.3), at(-7, EAVE - 1.4, 3.6), tl.frame, tl.frameMat)
 		for k, dx in { -1.6, 0, 1.6 } do
-			part(m, "RackChain", Vector3.new(0.1, 1.9, 0.1), at(-7 + dx * 1.3, 8.3, 3.6), tl.frame, tl.frameMat)
+			part(m, "RackChain", Vector3.new(0.1, 1.9, 0.1), at(-7 + dx * 1.3, EAVE - 0.4, 3.6), tl.frame, tl.frameMat)
 			local pot = part(
 				m,
 				"HangingPot",
 				Vector3.new(0.9, 0.5 + k * 0.15, 0.9),
-				at(-7 + dx, 6.6, 3.6) * CFrame.Angles(0, 0, math.rad(90)),
+				at(-7 + dx, EAVE - 2, 3.6) * CFrame.Angles(0, 0, math.rad(90)),
 				Color3.fromRGB(196, 112, 64),
 				Enum.Material.Metal
 			) :: Part
@@ -305,12 +307,104 @@ function KitchenStages.build(area: Instance, frame: CFrame, level: number): Mode
 		mark.Parent = mat
 	end
 
+	-- signs of a kitchen in use (the owner's word on the pen, 2026-10-28: more life, in order): a table
+	-- where the food is eaten in the front-left yard, the grill across the path from it; herbs drying
+	-- under the front beam; a flour sack by the ingredients, a bucket by the water; a picture board by
+	-- the entrance. Small bits do not collide or cast shadows.
+	local tt = TIERS[tiers[3]]
+	local function bit(name: string, size: Vector3, cf: CFrame, col: Color3, mat: Enum.Material?): BasePart
+		local p = part(m, name, size, cf, col, mat or Enum.Material.SmoothPlastic)
+		p.CanCollide = false
+		p.CastShadow = false
+		return p
+	end
+	local tx, tz = -6.5, -6
+	part(m, "TableTop", Vector3.new(4.6, 0.3, 2), at(tx, FLOOR + 2.4, tz), tt.walls, tt.wallMat)
+	for _, lx in { -2, 2 } do
+		for _, lz in { -0.75, 0.75 } do
+			part(m, "TableLeg", Vector3.new(0.3, 2.25, 0.3), at(tx + lx, FLOOR + 1.13, tz + lz), tt.frame, tt.frameMat)
+		end
+	end
+	for _, bz in { -1.35, 1.35 } do
+		part(m, "Bench", Vector3.new(4.2, 0.3, 0.9), at(tx, FLOOR + 1.4, tz + bz), tt.walls, tt.wallMat)
+		for _, lx in { -1.7, 1.7 } do
+			part(m, "BenchLeg", Vector3.new(0.3, 1.25, 0.7), at(tx + lx, FLOOR + 0.63, tz + bz), tt.frame, tt.frameMat)
+		end
+	end
+	for _, o in { { -1.3, -0.45 }, { 1.3, -0.45 }, { -1.3, 0.45 }, { 1.3, 0.45 } } do
+		local plate = bit(
+			"Plate",
+			Vector3.new(0.08, 0.8, 0.8),
+			at(tx + o[1], FLOOR + 2.6, tz + o[2]) * CFrame.Angles(0, 0, math.pi / 2),
+			Color3.fromRGB(250, 248, 240)
+		) :: Part
+		plate.Shape = Enum.PartType.Cylinder
+	end
+	local bowl = bit(
+		"FruitBowl",
+		Vector3.new(0.3, 1, 1),
+		at(tx, FLOOR + 2.7, tz) * CFrame.Angles(0, 0, math.pi / 2),
+		Color3.fromRGB(196, 140, 84)
+	) :: Part
+	bowl.Shape = Enum.PartType.Cylinder
+	for k, c in { Color3.fromRGB(240, 150, 60), Color3.fromRGB(150, 210, 80), Color3.fromRGB(230, 70, 70) } do
+		local fruit = bit(
+			"Fruit",
+			Vector3.one * 0.45,
+			at(tx - 0.25 + (k - 1) * 0.25, FLOOR + 3, tz + (k % 2) * 0.2 - 0.1),
+			c
+		) :: Part
+		fruit.Shape = Enum.PartType.Ball
+	end
+	if era >= 2 then
+		for k, hx in { -8.2, -7.3, -6.4 } do
+			bit("HerbString", Vector3.new(0.08, 0.8, 0.08), at(hx, EAVE - 1, ZF + 0.2), Color3.fromRGB(226, 196, 140))
+			bit(
+				"HerbBundle",
+				Vector3.new(0.45, 0.85, 0.45),
+				at(hx, EAVE - 1.8, ZF + 0.2),
+				if k == 2 then Color3.fromRGB(240, 236, 220) else Color3.fromRGB(110, 170, 80)
+			)
+		end
+	end
+	bit("FlourSack", Vector3.new(0.9, 1.2, 0.8), at(-10, FLOOR + 0.6, 2.7), Color3.fromRGB(240, 232, 210))
+	bit("SackTie", Vector3.new(0.5, 0.2, 0.45), at(-10, FLOOR + 1.25, 2.7), Color3.fromRGB(196, 150, 90))
+	local bucket = bit(
+		"Bucket",
+		Vector3.new(0.9, 0.9, 0.9),
+		at(-9.8, FLOOR + 0.45, -4.4) * CFrame.Angles(0, 0, math.pi / 2),
+		if era >= 3 then Color3.fromRGB(150, 156, 166) else Color3.fromRGB(150, 104, 62),
+		if era >= 3 then Enum.Material.Metal else Enum.Material.Wood
+	) :: Part
+	bucket.Shape = Enum.PartType.Cylinder
+	-- the picture board: a dish and a fork drawn on it, its face to the path
+	local board = at(4.3, FLOOR + 2.2, -8.3) * CFrame.Angles(0, math.rad(-20), 0)
+	for _, s in { -1, 1 } do
+		part(
+			m,
+			"EaselLeg",
+			Vector3.new(0.2, 2.6, 0.2),
+			board * CFrame.new(s * 0.6, -0.95, 0.2) * CFrame.Angles(-0.2, 0, 0),
+			tt.frame,
+			tt.frameMat
+		)
+	end
+	part(m, "Board", Vector3.new(1.6, 1.3, 0.15), board, Color3.fromRGB(56, 76, 64))
+	local dish = bit(
+		"BoardDish",
+		Vector3.new(0.05, 0.7, 0.7),
+		board * CFrame.new(-0.2, 0, -0.1) * CFrame.Angles(0, math.pi / 2, 0),
+		Color3.fromRGB(250, 248, 240)
+	) :: Part
+	dish.Shape = Enum.PartType.Cylinder
+	bit("BoardFork", Vector3.new(0.1, 0.8, 0.05), board * CFrame.new(0.45, 0, -0.1), Color3.fromRGB(250, 248, 240))
+
 	-- the kitchen props
 	for j = 1, 4 do
 		local e = props[j]
 		if e > 0 then
 			local slot = SLOT_AT[j]
-			local prop = place(m, frame, PROPS[j][e], slot[1], slot[2], HEIGHT[j][e], FOOT[j])
+			local prop = place(m, frame, PROPS[j][e], slot[1], slot[2], HEIGHT[j][e], FOOT[j], FLOOR)
 			local yaw = slot[3] + (FRONT_TURN[PROPS[j][e]] or 0)
 			if prop and yaw ~= 0 then
 				-- turned on the spot, about its own middle
