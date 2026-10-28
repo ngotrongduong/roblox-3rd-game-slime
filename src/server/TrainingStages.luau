@@ -4,8 +4,9 @@
 --   level 1 of the era   the ground grows into a small arena, nothing taken away: era 2 wooden stands
 --                        at the back; era 3 a punching bag with a second training spot, and flood-
 --                        light masts at the corners; era 4 a canopy over the stands with a scoreboard,
---                        a third training spot facing the archery target; era 5 a champion's podium
---                        with a golden trophy by the entrance
+--                        a third training spot facing the archery target; era 5 the slime-tech
+--                        equipment and dummy (no trophy: the owner, 2026-10-28). The dummy is built
+--                        here and toughens every era.
 --   levels 2-5           four training props, one a level, each slot taking its next, better version:
 --                        1 strength (stone weights > log barbell > dumbbell rack > weight bench >
 --                        gravity press)   2 agility (tyre run > hurdles > balance beam > climbing wall
@@ -310,7 +311,9 @@ function TrainingStages.build(area: Instance, frame: CFrame, level: number): Mod
 	local back = if level >= GROW_FROM then ZF + GROW else ZF
 	local dz = back - ZF
 	for _, d in area:GetChildren() do
-		if d.Name == "Fence" and d:IsA("Folder") then
+		-- (the kit fence and dummy go: the layer builds them in the era's materials)
+		local kitGone = (d.Name == "Fence" and d:IsA("Folder")) or (d.Name == "TrainingDummy" and d:IsA("Model"))
+		if kitGone then
 			d.Parent = nil
 		elseif d.Name == "Floor" and d:IsA("BasePart") then
 			skin(d, tiers[1], TIERS[tiers[1]].yard, TIERS[tiers[1]].yardMat)
@@ -455,30 +458,6 @@ function TrainingStages.build(area: Instance, frame: CFrame, level: number): Mod
 			score.CastShadow = false
 		end
 	end
-	-- era 5: the champion's podium by the entrance, a golden trophy on it
-	if era >= 5 then
-		-- two steps up to the podium, the trophy on top
-		part(m, "PodiumStep", Vector3.new(4.6, 0.5, 4.6), at(8, FLOOR + 0.25, -8), ta.base, ta.baseMat)
-		local podium = part(
-			m,
-			"Podium",
-			Vector3.new(1.2, 3.4, 3.4),
-			at(8, FLOOR + 0.9, -8) * CFrame.Angles(0, 0, math.rad(90)),
-			ta.base,
-			ta.baseMat
-		) :: Part
-		podium.Shape = Enum.PartType.Cylinder
-		local rim = part(
-			m,
-			"PodiumRim",
-			Vector3.new(0.3, 3.7, 3.7),
-			at(8, FLOOR + 1.55, -8) * CFrame.Angles(0, 0, math.rad(90)),
-			ta.trim,
-			ta.trimMat
-		) :: Part
-		rim.Shape = Enum.PartType.Cylinder
-		place(m, frame, "ChampionTrophy", 8, -8, 3.6, 3, FLOOR + 1.7)
-	end
 
 	-- the training spots beyond the area's own: a straw mat each, with its marker
 	for i = 2, spots do
@@ -545,33 +524,161 @@ function TrainingStages.build(area: Instance, frame: CFrame, level: number): Mod
 			Enum.Material.SmoothPlastic
 		)
 	end
-	-- the dummy gets tougher with the eras: iron shoulder plates from brick on, a glowing slime core on
-	-- slime tech
-	if era >= 3 then
-		for _, sx in { -1, 1 } do
-			part(
+	-- the training dummy, built here so it grows tougher with the eras in the ground's own materials
+	-- (the owner, 2026-10-28): a cross-shaped dummy on a post, its target on the chest to the gate.
+	--   rustic        a timber post on a plank foot, a straw body and arms tied with rope, a sack head
+	--   painted       painted post, coloured arm bands, a padded head guard
+	--   brick         a brick plinth, iron shoulder plates and a bolted chest board
+	--   steel         a flanged steel post, segmented chest plates, ball joints at the shoulders
+	--   slime tech    a dark tech base with a glowing ring, an armoured housing round a slime core,
+	--                 glowing arm rings and target centre
+	do
+		local dx, dzz = 0, 6
+		local S = 2 / 3 -- (two thirds of the kit dummy's size: the owner, 2026-10-28)
+		local td = TIERS[era]
+		local straw, rope = Color3.fromRGB(232, 196, 120), Color3.fromRGB(150, 110, 70)
+		local sack = Color3.fromRGB(214, 180, 130)
+		local iron, steel = Color3.fromRGB(70, 72, 80), Color3.fromRGB(160, 166, 176)
+		local mint = Color3.fromRGB(120, 240, 220)
+		local red, white = Color3.fromRGB(220, 70, 60), Color3.fromRGB(250, 246, 236)
+		local function d(
+			name: string,
+			size: Vector3,
+			x: number,
+			y: number,
+			z: number,
+			col: Color3,
+			mat: Enum.Material?
+		): BasePart
+			return part(
 				m,
-				"ShoulderPlate",
-				-- (on top of the straw arms, where the camera sees them)
-				Vector3.new(1.9, 0.5, 1.7),
-				at(sx * 1.4, FLOOR + 7.6, 5.7) * CFrame.Angles(0, 0, sx * -0.3),
-				Color3.fromRGB(150, 156, 166),
-				Enum.Material.Metal
+				name,
+				size * S,
+				at(dx + x * S, FLOOR + y * S, dzz + z * S),
+				col,
+				mat or Enum.Material.SmoothPlastic
 			)
 		end
-		part(m, "DummyBase", Vector3.new(3, 0.6, 3), at(0, FLOOR + 0.3, 6), TIERS[3].walls, TIERS[3].wallMat)
-	end
-	if era >= 5 then
-		local core = part(
-			m,
-			"DummyCore",
-			Vector3.one * 1.1,
-			at(0, FLOOR + 5.2, 4.5),
-			Color3.fromRGB(120, 240, 220),
-			Enum.Material.Neon
-		) :: Part
-		core.Shape = Enum.PartType.Ball
-		core.CastShadow = false
+		local function disc(name: string, r: number, y: number, z: number, col: Color3, mat: Enum.Material?): Part
+			local p = part(
+				m,
+				name,
+				Vector3.new(0.15, r * S, r * S),
+				at(dx, FLOOR + y * S, dzz + z * S) * CFrame.Angles(0, math.pi / 2, 0),
+				col,
+				mat or Enum.Material.SmoothPlastic
+			) :: Part
+			p.Shape = Enum.PartType.Cylinder
+			return p
+		end
+		-- the foot
+		if era <= 2 then
+			d("DummyFoot", Vector3.new(3.4, 0.4, 0.8), 0, 0.2, 0, td.frame, td.frameMat)
+			d("DummyFoot", Vector3.new(0.8, 0.4, 3.4), 0, 0.2, 0, td.frame, td.frameMat)
+		elseif era <= 4 then
+			d("DummyPlinth", Vector3.new(3, 0.9, 3), 0, 0.45, 0, TIERS[3].walls, TIERS[3].wallMat)
+			d("PlinthCap", Vector3.new(3.3, 0.25, 3.3), 0, 1, 0, TIERS[3].base, TIERS[3].baseMat)
+		else
+			d("DummyBase", Vector3.new(3.2, 0.8, 3.2), 0, 0.4, 0, td.frame, td.frameMat)
+			d("BaseGlow", Vector3.new(3.4, 0.15, 3.4), 0, 0.85, 0, mint, Enum.Material.Neon).CastShadow = false
+		end
+		local foot = if era <= 2 then 0.4 else 1.1
+		-- the post
+		local postCol, postMat = Color3.fromRGB(150, 104, 62), Enum.Material.Wood
+		if era == 2 then
+			postCol, postMat = td.frame, td.frameMat
+		elseif era >= 4 then
+			postCol, postMat = steel, Enum.Material.Metal
+		end
+		d("DummyPost", Vector3.new(0.7, 4.2, 0.7), 0, foot + 2.1, 0, postCol, postMat)
+		if era >= 4 then
+			for _, s in { -1, 1 } do
+				d("PostFlange", Vector3.new(1.1, 4.2, 0.15), 0, foot + 2.1, s * 0.4, postCol, postMat)
+			end
+		end
+		-- the body: straw, tied; plated from steel on
+		local by = foot + 5
+		d("DummyBody", Vector3.new(2.4, 3, 1.6), 0, by, 0, straw)
+		for _, ry in { -1, 0.9 } do
+			d("BodyRope", Vector3.new(2.5, 0.22, 1.7), 0, by + ry, 0, rope)
+		end
+		if era >= 4 then
+			for k = 0, 2 do
+				d(
+					"ChestPlate",
+					Vector3.new(2.6, 0.8, 0.25),
+					0,
+					by - 0.9 + k * 0.9,
+					-0.85,
+					if era == 5 then td.frame else steel,
+					Enum.Material.Metal
+				)
+			end
+		elseif era == 3 then
+			d("ChestBoard", Vector3.new(2, 2, 0.2), 0, by, -0.85, Color3.fromRGB(150, 104, 62), Enum.Material.Wood)
+			for _, b in { { -0.8, 0.8 }, { 0.8, 0.8 }, { -0.8, -0.8 }, { 0.8, -0.8 } } do
+				local bolt = d("Bolt", Vector3.one * 0.25, b[1], by + b[2], -0.97, iron, Enum.Material.Metal) :: Part
+				bolt.Shape = Enum.PartType.Ball
+			end
+		end
+		-- the target on the chest, in front of the plates
+		local tz = if era >= 3 then -1.05 else -0.85
+		disc("Target", 1.7, by, tz, white)
+		disc("Target", 1.15, by, tz - 0.04, red)
+		disc(
+			"Target",
+			0.55,
+			by,
+			tz - 0.08,
+			if era == 5 then mint else white,
+			if era == 5 then Enum.Material.Neon else nil
+		)
+		-- the arms: straw bundles on a crossbar, tied
+		d("ArmBar", Vector3.new(6.4, 0.45, 0.45), 0, by + 0.9, 0, postCol, postMat)
+		for _, s in { -1, 1 } do
+			d("Arm", Vector3.new(2, 0.9, 0.9), s * 2.4, by + 0.9, 0, straw)
+			d("ArmTie", Vector3.new(0.25, 1, 1), s * 3.2, by + 0.9, 0, rope)
+			if era == 2 then
+				d("ArmBand", Vector3.new(0.4, 1, 1), s * 2, by + 0.9, 0, td.frame, td.frameMat)
+			elseif era == 3 then
+				d("ShoulderPlate", Vector3.new(1.6, 0.4, 1.3), s * 1.5, by + 1.55, 0, iron, Enum.Material.Metal)
+			elseif era >= 4 then
+				local joint =
+					d("ShoulderJoint", Vector3.one * 1.1, s * 1.4, by + 0.9, 0, iron, Enum.Material.Metal) :: Part
+				joint.Shape = Enum.PartType.Ball
+				if era == 5 then
+					d("ArmRing", Vector3.new(0.3, 1.05, 1.05), s * 2.6, by + 0.9, 0, mint, Enum.Material.Neon).CastShadow =
+						false
+				end
+			end
+		end
+		-- the head: a sack tied at the neck, a padded guard on painted timber, a helmet from steel on
+		local hy = by + 2.5
+		d("Neck", Vector3.new(0.7, 0.5, 0.7), 0, hy - 0.75, 0, rope)
+		local head = d("Head", Vector3.one * 1.7, 0, hy, 0, sack) :: Part
+		head.Shape = Enum.PartType.Ball
+		if era == 2 then
+			d("HeadGuard", Vector3.new(1.9, 0.5, 1.9), 0, hy + 0.65, 0, td.frame, td.frameMat)
+		elseif era >= 3 then
+			d(
+				"Helmet",
+				Vector3.new(1.9, 0.9, 1.9),
+				0,
+				hy + 0.5,
+				0,
+				if era == 3 then iron else steel,
+				Enum.Material.Metal
+			)
+			d(
+				"Visor",
+				Vector3.new(1.5, 0.25, 0.2),
+				0,
+				hy,
+				-0.85,
+				if era == 5 then mint else iron,
+				if era == 5 then Enum.Material.Neon else Enum.Material.Metal
+			)
+		end
 	end
 
 	-- spectators' benches on the lawn either side of the path, facing the ground, from the stands' era
