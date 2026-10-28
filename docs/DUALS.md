@@ -14,7 +14,6 @@ every pair of the 11 base colours needs its own pattern. 11 colours make **55 pa
 - **All the way round**: the pattern covers front, sides, back and the tip; no seam, no stretching.
 - **Nothing painted for light**: the pattern is colour only; highlights and shading come from the game's light on
   the same glossy body as the single colours.
-- **The face**: scattered motifs keep a calm oval where the face decal sits (no motif cut in half by the eyes).
 - **Size**: a motif is at least about 1/8 of the body's height, so it reads on the farm.
 - **The owner's 20 paintings** keep their motif and are moved to the pair whose two colours their painting
   actually shows (the original names often did not match the painted colours). Their colours become the
@@ -22,17 +21,28 @@ every pair of the 11 base colours needs its own pattern. 11 colours make **55 pa
 
 ## Families (how each is made)
 
+All 55 skins are made by `tools/skins/make_skins.py` (runner `tools/skins/make_skins.ps1`, headless Blender), the
+owner's decision of 2026-10-28: generated, flat, exact swatch colours; no ChatGPT step, nothing painted. Output
+`art/models/slime_body/skins/<NN>_<slug>.png`, 2048 x 1024; contact sheets `art/models/slime_body/duals_front.png`
+and `duals_back.png`.
+
 | Family | Designs | Made by |
 |---|---|---|
-| Scattered motifs | dots, hearts, diamonds, rings, stars, sprinkles, moons, triangles, spirals, flowers, paws, bolts, leaves, bats, ladybug spots, raindrops, crystals, gears, clouds, fireflies, blossoms, snowflakes, berries, pumpkins, crowns, goldfish, daisies, clovers, rosettes | motif shapes from the owner's paintings (20) or from a ChatGPT painting of the new design (35), scattered over the body by script |
-| All-over repeats | stripes, chevron, checks, waves, honeycomb, scales, brick, tartan, pinstripe, lace, tiger | script (exact, tileable) |
-| Organic fields | cow spots, camo, marble, lava cracks, nebula, cotton candy | script noise, checked against the painting |
-| Zones | drip, fade (2), flames, watermelon, racing stripes, leafy cap, lollipop swirl | script by height / angle on the body |
+| Scattered motifs | dots, hearts, diamonds, rings, stars, sprinkles, moons, triangles, spirals, flowers, paws, bolts, leaves, bats, ladybug spots, rosettes, raindrops, crystals, gears, clouds, fireflies, blossoms, snowflakes, berries, pumpkins, crowns, goldfish, daisies, clovers | motif shapes drawn as signed distances (the 20 owner motifs after his paintings `slime.dual.NN`), Poisson-disc scattered by surface area in two or three sizes, each a decal on the body's tangent plane |
+| All-over repeats | pinstripe, horizontal, diagonal stripes, chevron, checks, waves, tartan, honeycomb, scales, brick, lace | functions of arc length and angle on the body (brick and scale rows adapt their count to the circumference; honeycomb is a Voronoi of a row lattice) |
+| Organic fields | cow spots, camo, marble, lava cracks, nebula, cotton candy, tiger | 3D noise on the body's surface (seamless by construction), threshold set for the coverage; tiger is tapered strokes from the tip and the base |
+| Zones | drip, fade (2), flames, watermelon, racing stripes, leafy cap, lollipop swirl, ladybug tip | by height, arc from the tip, or angle on the body |
+
+**The UV** (from 2026-10-28, `tools/blender/slime_body.py`): cylindrical. u = angle about the vertical axis, seam at
+the back centre, front centre u 0.5, u grows toward the slime's own left (screen right seen from the front); v = arc
+length along the profile from the centre of the base (0) to the tip (1); image top = tip. The profile r(v), z(v) and
+the arc length L are in `art/models/slime_body/uv_profile.json`; the skin generator uses them so motifs are round at
+every height and wrap across the seam.
 
 ## The 55 pairs
 
-Source: `owner NN` = the owner's painting `slime.dual.NN`; `new` = needs a ChatGPT painting in the owner's style
-first (also the collection-book picture).
+Source: `owner NN` = the owner's painting `slime.dual.NN` (its motif shape is followed); `new` = a new design,
+drawn by the script only.
 
 | # | Pair | Name | Pattern | Body | Pattern colour | Source |
 |---|---|---|---|---|---|---|
@@ -98,13 +108,12 @@ first (also the collection-book picture).
   that pair's design). The collection book shows 55 Duals. Odds and pity unchanged.
 - The body gets an all-round UV (today's is a front projection, mirrored on the back): the slime body is exported
   once more and the owner imports it again.
-- Each design is one 1024 colour map with both colours, on the same glossy body; MeshPart colour white.
+- Each design is one 2048 x 1024 colour map with both colours, on the same glossy body (roughness 0.10); MeshPart
+  colour white.
 
 ## Build order
 
 1. Owner approves this table (names, patterns, which colour is the body).
-2. ChatGPT paints the 35 new designs as front views in the owner's style (they are also the book pictures);
-   the owner looks at them.
-3. New UV, re-import; then the maps in batches of about ten (scripted families first), each batch shown in
-   Studio beside its painting.
-4. `DualDesigns.luau` and its tests to 55 pairs.
+2. New UV (done), re-import of `SlimeBody.fbx` / `SlimeBodyOutline.fbx`; the 55 maps (done, by script), shown in
+   Studio in batches.
+3. `DualDesigns.luau` and its tests to 55 pairs.

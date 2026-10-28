@@ -12,9 +12,10 @@
 # Blender axes: Z up, the slime faces -Y, its own left is +X. Origin = centre of the base on the ground.
 # Height 1.0 (the game scales it). Exported FBX uses Roblox's documented Blender settings (-Z forward, Y up).
 #
-# Outputs (art/models/slime_body/): SlimeBody.fbx, SlimeBodyOutline.fbx, SlimeBody_overlay.png (Overlay
-# ColorMap: white + alpha from the painting's highlights), SlimeBody_roughness.png, SlimeBody_normal.png,
-# SlimeBody.blend, review/rN/ (renders, comparison sheets, metrics.json).
+# Outputs (art/models/slime_body/): SlimeBody.fbx, SlimeBodyOutline.fbx, SlimeBody_roughness.png,
+# SlimeBody_normal.png, uv_profile.json (r(v), z(v) of the all-round UV for tools/skins/make_skins.py),
+# SlimeBody.blend, review/rN/ (renders, comparison sheets, metrics.json). From round 5 the UV is cylindrical
+# (seam at the back centre) and the painted-highlight overlay is retired.
 
 import bpy
 import sys
@@ -58,8 +59,9 @@ HL_FLOOR = 0.02  # painting red channel below this is body (navy has R ~ 0); abo
 LIP = (0.2, 0.048, 0.012)  # lip ring: white alpha, centre height, sigma (x height); rows 359-371 of the painting
 EDGE_FADE =(0.92, 0.985)  # overlay fades out between these fractions of the radius (painted streaks end by 0.88)
 OV_RES = 1024  # overlay ColorMap size (brief: 1024 max)
-UV_S = 1.16  # UV frame: a square of side UV_S (x height) centred on the body, front projection
+UV_S = 1.16  # old front-projection frame, used only for the retired overlay map (see make_textures)
 UV_ZC = 0.5
+UV_ROWS = 256  # rows of uv_profile.json (the skin generator's r(v), z(v) table)
 LIGHT = {"sky": [0.60, 0.74, 1.0], "ground": [0.50, 0.50, 0.55], "ambient": 0.9, "sun": 2.1, "sun_angle": 6}
 FACE_Z = 0.51 # face centre height (x body height) in the original (docs/reference/04 and the brief)
 
@@ -257,6 +259,41 @@ def radius_at(prof, zq):
 	return float(np.interp(zq, z[::-1], r[::-1]))
 
 
+def uv_rings(prof):
+	# arc length along the mesh's own ring polyline (what the GPU interpolates the texture over): ring 0 = tip,
+	# ring RINGS = the base contact ring, then the flat underside to the centre of the base
+	pr, pz = np.asarray(prof["pr"]), np.asarray(prof["pz"])
+	s = np.concatenate([[0.0], np.cumsum(np.hypot(np.diff(pr), np.diff(pz)))])  # from the tip
+	L = float(s[-1] + math.hypot(pr[-1], pz[-1]))
+	return {"s": s, "L": L, "v": 1.0 - s / L}
+
+
+def write_uv_profile(prof, path, rows=UV_ROWS):
+	# r(v), z(v) for the skin generator: row i is v = (i + 0.5) / rows from the base centre (v 0) to the tip (v 1);
+	# image row = rows - 1 - i (image top = tip). Linear between rings, like the mesh.
+	ru = uv_rings(prof)
+	pr, pz, rv = np.asarray(prof["pr"]), np.asarray(prof["pz"]), ru["v"]
+	vv = np.concatenate([[0.0], rv[::-1]])  # base centre, then the rings from the contact ring up to the tip
+	rr = np.concatenate([[0.0], pr[::-1]])
+	zz = np.concatenate([[0.0], pz[::-1]])
+	v = (np.arange(rows) + 0.5) / rows
+	data = {
+		"about": "Goo Lineage V2 slime body UV (tools/blender/slime_body.py). u = angle about the vertical axis, "
+		"seam at the back centre (u 0 = 1), front centre u 0.5, u grows toward the slime's own left (screen right "
+		"in the front view). v = arc length from the centre of the base (0) up the underside and side to the tip "
+		"(1); image top = tip. Body height 1. Surface distance: dv * L along the profile, du * 2 pi r(v) round it.",
+		"L": ru["L"], "height": float(pz[0]), "v_contact": float(rv[-1]), "rows": rows,
+		"v": [round(float(x), 6) for x in v],
+		"r": [round(float(x), 6) for x in np.interp(v, vv, rr)],
+		"z": [round(float(x), 6) for x in np.interp(v, vv, zz)],
+		"rings": {"v": [round(float(x), 6) for x in rv], "r": [round(float(x), 6) for x in pr],
+			"z": [round(float(x), 6) for x in pz]},
+	}
+	with open(path, "w") as f:
+		json.dump(data, f, indent=1)
+	return data
+
+
 # ---------------------------------------------------------------- 3. the mesh
 def reset_scene():
 	for ob in list(bpy.data.objects):
@@ -306,12 +343,33 @@ def build_mesh(prof, name, inflate=0.0, flip=False):
 	for p in me.polygons:
 		p.use_smooth = True
 	me.normals_split_custom_set_from_vertices(norms)
-	# UV: front projection into a square frame (both halves share it; no seam)
+	# UV: cylindrical, all the way round. u = angle about the vertical axis, seam at the back centre (u 0 = 1),
+	# front centre u 0.5, increasing toward the slime's own left (+X; screen right in the front view, so the
+	# image is not mirrored from any side). v = arc length of the un-inflated ring polyline from the centre of
+	# the base (v 0) up the underside and the side to the tip (v 1 = image top). The hull uses the same rows.
+	ring_v = uv_rings(prof)["v"]
+	vert_u, vert_v = [None], [1.0]  # tip pole: u from its face
+	for k in range(1, RINGS + 1):
+		for j in range(N):
+			vert_u.append((j / N + 0.5) % 1.0)
+			vert_v.append(float(ring_v[k]))
+	vert_u.append(None)  # base centre pole
+	vert_v.append(0.0)
 	uv = me.uv_layers.new(name="UVMap")
-	z0 = UV_ZC - UV_S / 2
-	for loop in me.loops:
-		v = me.vertices[loop.vertex_index].co
-		uv.data[loop.index].uv = ((v.x + UV_S / 2) / UV_S, (v.z - z0) / UV_S)
+	for p in me.polygons:
+		cx = sum(verts[i][0] for i in p.vertices) / len(p.vertices)
+		cy = sum(verts[i][1] for i in p.vertices) / len(p.vertices)
+		uc = (math.atan2(cx, -cy) / (2 * math.pi) + 0.5) % 1.0
+		for li in p.loop_indices:
+			vi = me.loops[li].vertex_index
+			u = vert_u[vi]
+			if u is None:
+				u = uc
+			elif u - uc > 0.5:
+				u -= 1.0
+			elif u - uc < -0.5:
+				u += 1.0
+			uv.data[li].uv = (u, vert_v[vi])
 	ob = bpy.data.objects.new(name, me)
 	bpy.context.scene.collection.objects.link(ob)
 	return ob
@@ -397,7 +455,22 @@ def eval_bbox(ob):
 
 
 # ---------------------------------------------------------------- 5. textures
-def make_textures(m, prof):
+def make_textures(m, prof, overlay=False):
+	# The overlay (painted highlights) is retired: the owner wants all light from the game's light, and it was
+	# drawn for the old front-projection UV. Kept behind a flag only to reproduce the round 1-4 renders.
+	if overlay:
+		make_overlay(m, prof)
+	rough = np.full((256, 256, 4), ROUGHNESS, dtype=np.float32)
+	rough[..., 3] = 1
+	save_rgba(OUT + "SlimeBody_roughness.png", rough)
+	nm = np.zeros((256, 256, 4), dtype=np.float32)
+	nm[..., 0] = nm[..., 1] = 128 / 255
+	nm[..., 2] = 1
+	nm[..., 3] = 1
+	save_rgba(OUT + "SlimeBody_normal.png", nm)
+
+
+def make_overlay(m, prof):
 	P, cs = m["P"], m["cs"]
 	Hpx, ybot = prof["Hpx"], prof["ybot"]
 	n = OV_RES
@@ -424,14 +497,6 @@ def make_textures(m, prof):
 	ov = np.ones((n, n, 4), dtype=np.float32)
 	ov[..., 3] = a
 	save_rgba(OUT + "SlimeBody_overlay.png", ov)
-	rough = np.full((256, 256, 4), ROUGHNESS, dtype=np.float32)
-	rough[..., 3] = 1
-	save_rgba(OUT + "SlimeBody_roughness.png", rough)
-	nm = np.zeros((256, 256, 4), dtype=np.float32)
-	nm[..., 0] = nm[..., 1] = 128 / 255
-	nm[..., 2] = 1
-	nm[..., 3] = 1
-	save_rgba(OUT + "SlimeBody_normal.png", nm)
 
 
 # ---------------------------------------------------------------- 6. materials (preview of the Roblox look)
@@ -452,20 +517,10 @@ def mat_preview():
 		if n.type != "OUTPUT_MATERIAL":
 			nt.nodes.remove(n)
 	bsdf = node(nt, "ShaderNodeBsdfPrincipled", (200, 0))
-	ov = node(nt, "ShaderNodeTexImage", (-500, 200))
-	ov.image = bpy.data.images.load(OUT + "SlimeBody_overlay.png", check_existing=True)
-	ov.image.alpha_mode = "STRAIGHT"
 	ro = node(nt, "ShaderNodeTexImage", (-500, -200))
 	ro.image = bpy.data.images.load(OUT + "SlimeBody_roughness.png", check_existing=True)
 	ro.image.colorspace_settings.name = "Non-Color"
-	mix = node(nt, "ShaderNodeMix", (-150, 150))
-	mix.data_type = "RGBA"
-	col_in = [s for s in mix.inputs if s.type == "RGBA"]
-	col_out = [s for s in mix.outputs if s.type == "RGBA"][0]
-	col_in[0].default_value = srgb_lin(hex_srgb(BODY_HEX)) + [1.0]
-	nt.links.new(ov.outputs["Color"], col_in[1])
-	nt.links.new(ov.outputs["Alpha"], mix.inputs[0])
-	nt.links.new(col_out, bsdf.inputs["Base Color"])
+	bsdf.inputs["Base Color"].default_value = srgb_lin(hex_srgb(BODY_HEX)) + [1.0]
 	nt.links.new(ro.outputs["Color"], bsdf.inputs["Roughness"])
 	nt.links.new(bsdf.outputs[0], out_node(nt).inputs["Surface"])
 	return mat
@@ -636,6 +691,18 @@ def main():
 	arm, heads = build_rig(prof)
 	maxinf_b, minbase_b = skin(body, arm)
 	maxinf_h, minbase_h = skin(hull, arm)
+	uvp = write_uv_profile(prof, OUT + "uv_profile.json")
+	uv_check = {}
+	for ob in (body, hull):
+		uvd = ob.data.uv_layers[0].data
+		areas = []
+		for p in ob.data.polygons:
+			q = [uvd[li].uv for li in p.loop_indices]
+			areas.append(sum(q[i].x * q[(i + 1) % len(q)].y - q[(i + 1) % len(q)].x * q[i].y for i in range(len(q))))
+		areas = np.array(areas)
+		uv_check[ob.name] = {"faces_ccw": int((areas > 0).sum()), "faces_cw": int((areas < 0).sum()),
+			"faces_zero": int((areas == 0).sum()), "uv_area": float(np.abs(areas).sum() / 2)}
+	print("[slime_body] UV L %.4f, v_contact %.4f, check %s" % (uvp["L"], uvp["v_contact"], uv_check))
 
 	m_prev = mat_preview()
 	m_hull = mat_flat("OutlinePreview", [c * OUTLINE_DARK for c in hex_srgb(BODY_HEX)], alpha_backface=True)
@@ -821,7 +888,7 @@ def main():
 		"tris_body": tris_b, "tris_outline": tris_h, "verts_body": len(body.data.vertices),
 		"max_influences": max(maxinf_b, maxinf_h), "min_base_weight": min(minbase_b, minbase_h),
 		"bones_blender": {k: list(v) for k, v in heads.items()}, "bone_k": BONE_K,
-		"deform": deform,
+		"deform": deform, "uv": {"L": uvp["L"], "v_contact": uvp["v_contact"], "check": uv_check},
 		"face_centre": {"z": FACE_Z * prof["height"], "front_surface_y": -face_r},
 	}
 	with open(REV + "metrics.json", "w") as f:
@@ -832,4 +899,5 @@ def main():
 	bpy.ops.wm.save_as_mainfile(filepath=OUT + "SlimeBody.blend")
 
 
-main()
+if __name__ == "__main__":
+	main()
