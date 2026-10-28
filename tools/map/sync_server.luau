@@ -20,6 +20,7 @@ local sources = {
 	{ "TrainingStages", TrainingStages, "ModuleScript" },
 	{ "VillageStages", VillageStages, "ModuleScript" },
 	{ "PondStages", PondStages, "ModuleScript" },
+	{ "GateArch", GateArch, "ModuleScript" },
 	{ "AreaUpgrade", AreaUpgrade, "Script" },
 	-- (client scripts the stages lean on, e.g. HoverBob=src/client/HoverBob.client.luau)
 	{ "HoverBob", HoverBob, "LocalScript" },

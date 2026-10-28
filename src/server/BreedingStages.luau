@@ -17,6 +17,7 @@
 -- own frame (x across, z from the gate in).
 local PantryStages = require(script.Parent.PantryStages)
 local PondStages = require(script.Parent.PondStages)
+local GateArch = require(script.Parent.GateArch)
 
 local BreedingStages = {}
 
@@ -148,11 +149,72 @@ local function fenceRun(m: Model, frame: CFrame, x0: number, z0: number, x1: num
 	end
 end
 
--- An incubator standing on `base` (its foot, front to -Z): a cream drum with a pink band, a straw
--- bed at the height an egg is set (IncBedN, y 2.8 above the foot), a clear glass dome over it, a
--- warm lamp cap on top and a gauge on the front. The cap takes the pad's tier colour.
-local function incubator(m: Model, base: CFrame, t: any)
-	local cream, pink = Color3.fromRGB(255, 244, 228), Color3.fromRGB(240, 132, 168)
+-- An incubator standing on `base` (its foot, front to -Z), in the style of the pad's tier (the owner,
+-- 2026-10-28: "design the incubator carefully and in detail"): a foot ring on four little feet, a
+-- round body with ribs and bands, a front panel (a lit porthole, a dial with its needle, two buttons, a
+-- vent grille), a straw bed at the height an egg is set (IncBedN, y 2.8 above the foot), a clear glass
+-- dome held by four curved ribs so the egg shows, a lamp cap with a handle on top, and a cable to the
+-- pad behind. Wood with brass bands, cream enamel and pink, riveted copper, brushed steel with a
+-- screen and blue lights, slime tech with glowing rings, marble with gold.
+local INC_STYLE = {
+	-- body, ribs and bands, the accent band, fittings, the glow
+	{
+		Color3.fromRGB(150, 98, 56),
+		Color3.fromRGB(196, 156, 72),
+		Color3.fromRGB(196, 156, 72),
+		Color3.fromRGB(196, 156, 72),
+		Color3.fromRGB(255, 196, 120),
+	},
+	{
+		Color3.fromRGB(255, 244, 228),
+		Color3.fromRGB(250, 226, 212),
+		Color3.fromRGB(240, 132, 168),
+		Color3.fromRGB(214, 214, 220),
+		Color3.fromRGB(255, 200, 130),
+	},
+	{
+		Color3.fromRGB(196, 110, 70),
+		Color3.fromRGB(150, 76, 46),
+		Color3.fromRGB(226, 182, 90),
+		Color3.fromRGB(226, 182, 90),
+		Color3.fromRGB(255, 176, 100),
+	},
+	{
+		Color3.fromRGB(204, 210, 218),
+		Color3.fromRGB(120, 128, 140),
+		Color3.fromRGB(90, 170, 240),
+		Color3.fromRGB(150, 156, 166),
+		Color3.fromRGB(150, 210, 255),
+	},
+	{
+		Color3.fromRGB(236, 246, 242),
+		Color3.fromRGB(60, 120, 120),
+		Color3.fromRGB(120, 255, 180),
+		Color3.fromRGB(70, 150, 150),
+		Color3.fromRGB(120, 255, 180),
+	},
+	{
+		Color3.fromRGB(246, 243, 236),
+		Color3.fromRGB(232, 190, 80),
+		Color3.fromRGB(232, 190, 80),
+		Color3.fromRGB(232, 190, 80),
+		Color3.fromRGB(255, 226, 160),
+	},
+}
+local INC_MAT = {
+	Enum.Material.Wood,
+	Enum.Material.SmoothPlastic,
+	Enum.Material.Metal,
+	Enum.Material.Metal,
+	Enum.Material.SmoothPlastic,
+	Enum.Material.Marble,
+}
+local function incubator(m: Model, base: CFrame, tier: number)
+	local i = math.clamp(tier, 1, #INC_STYLE)
+	local st = INC_STYLE[i]
+	local body, rib, band, metal, glowC = st[1], st[2], st[3], st[4], st[5]
+	local bodyMat = INC_MAT[i]
+	local metalMat = if tier == 2 or tier == 5 then Enum.Material.SmoothPlastic else Enum.Material.Metal
 	local function drum(name: string, y: number, h: number, d: number, colour: Color3, material: Enum.Material?): Part
 		local p = part(
 			m,
@@ -165,9 +227,108 @@ local function incubator(m: Model, base: CFrame, t: any)
 		p.Shape = Enum.PartType.Cylinder
 		return p
 	end
-	drum("IncBody", 1.2, 2.4, 3.6, cream)
-	drum("IncBand", 2.5, 0.4, 3.9, pink)
-	drum("IncStraw", 2.65, 0.3, 3, Color3.fromRGB(232, 196, 120), Enum.Material.Fabric)
+	local function bit(name: string, size: Vector3, cf: CFrame, colour: Color3, material: Enum.Material?): Part
+		local p = part(m, name, size, cf, colour, material or Enum.Material.SmoothPlastic) :: Part
+		p.CanCollide = false
+		p.CastShadow = false
+		return p
+	end
+	local face = CFrame.Angles(0, math.rad(90), 0) -- (a disc facing the front)
+	-- the foot: a ring on four little feet
+	for k = 0, 3 do
+		local a = math.rad(45 + k * 90)
+		bit(
+			"IncFoot",
+			Vector3.one * 0.55,
+			base * CFrame.new(math.cos(a) * 1.55, 0.22, math.sin(a) * 1.55),
+			metal,
+			metalMat
+		).Shape =
+			Enum.PartType.Ball
+	end
+	drum("IncFootRing", 0.42, 0.36, 3.9, rib, metalMat)
+	-- the body with its bands and ribs
+	drum("IncBody", 1.5, 1.8, 3.6, body, bodyMat)
+	drum("IncBandLow", 0.75, 0.22, 3.72, rib, metalMat)
+	drum("IncBand", 2.45, 0.4, 3.9, band, if tier == 5 then Enum.Material.Neon else metalMat)
+	for k = 0, 7 do
+		local a = k * math.pi / 4 + math.pi / 8
+		bit(
+			"IncRib",
+			Vector3.new(0.18, 1.5, 0.22),
+			base * CFrame.new(math.sin(a) * 1.8, 1.5, math.cos(a) * 1.8) * CFrame.Angles(0, a, 0),
+			rib,
+			metalMat
+		)
+		if tier == 3 then -- (rivets on the copper body)
+			bit(
+				"IncRivet",
+				Vector3.one * 0.14,
+				base * CFrame.new(math.sin(a) * 1.86, 2.1, math.cos(a) * 1.86),
+				metal,
+				metalMat
+			).Shape =
+				Enum.PartType.Ball
+		end
+	end
+	-- the front panel: a lit porthole, a dial (a screen on steel), two buttons, a vent grille
+	local front = base * CFrame.new(0, 0, -1.8)
+	bit("IncPortRing", Vector3.new(0.12, 1.2, 1.2), front * CFrame.new(-0.55, 1.55, -0.02) * face, metal, metalMat).Shape =
+		Enum.PartType.Cylinder
+	bit(
+		"IncPorthole",
+		Vector3.new(0.1, 0.9, 0.9),
+		front * CFrame.new(-0.55, 1.55, -0.06) * face,
+		glowC,
+		Enum.Material.Neon
+	).Shape =
+		Enum.PartType.Cylinder
+	if tier == 4 then
+		bit("IncScreen", Vector3.new(0.9, 0.6, 0.08), front * CFrame.new(0.6, 1.7, -0.04), Color3.fromRGB(30, 40, 56))
+		bit(
+			"IncScreenBar",
+			Vector3.new(0.6, 0.12, 0.04),
+			front * CFrame.new(0.55, 1.7, -0.09),
+			glowC,
+			Enum.Material.Neon
+		)
+	else
+		bit(
+			"IncDial",
+			Vector3.new(0.1, 0.8, 0.8),
+			front * CFrame.new(0.6, 1.75, -0.04) * face,
+			Color3.fromRGB(250, 246, 236)
+		).Shape =
+			Enum.PartType.Cylinder
+		bit("IncDialRing", Vector3.new(0.08, 0.92, 0.92), front * CFrame.new(0.6, 1.75, -0.01) * face, metal, metalMat).Shape =
+			Enum.PartType.Cylinder
+		bit(
+			"IncNeedle",
+			Vector3.new(0.05, 0.32, 0.03),
+			front * CFrame.new(0.66, 1.8, -0.1) * CFrame.Angles(0, 0, math.rad(-35)),
+			Color3.fromRGB(200, 50, 50)
+		)
+	end
+	for k, c in { Color3.fromRGB(230, 70, 70), Color3.fromRGB(90, 200, 110) } do
+		bit("IncButton", Vector3.new(0.1, 0.26, 0.26), front * CFrame.new(0.4 + (k - 1) * 0.42, 1.08, -0.05) * face, c).Shape =
+			Enum.PartType.Cylinder
+	end
+	for k = 0, 2 do
+		bit("IncVent", Vector3.new(0.9, 0.08, 0.06), front * CFrame.new(-0.55, 0.95 - k * 0.15, -0.03), rib, metalMat)
+	end
+	-- the straw bed and a few tufts on its rim
+	drum("IncStraw", 2.65, 0.3, 3, Color3.fromRGB(240, 206, 128), Enum.Material.SmoothPlastic)
+	for k = 0, 5 do
+		local a = k * math.pi / 3
+		bit(
+			"IncTuft",
+			Vector3.new(0.5, 0.18, 0.2),
+			base * CFrame.new(math.cos(a) * 1.45, 2.85, math.sin(a) * 1.45) * CFrame.Angles(0, a, math.rad(20)),
+			Color3.fromRGB(252, 226, 150),
+			Enum.Material.SmoothPlastic
+		)
+	end
+	-- the glass dome and the four ribs that hold it
 	local dome = part(
 		m,
 		"IncDome",
@@ -180,23 +341,46 @@ local function incubator(m: Model, base: CFrame, t: any)
 	dome.Transparency = 0.75
 	dome.CastShadow = false
 	dome.CanCollide = false
-	local cap = drum("IncCap", 4.5, 0.4, 1.1, t.trim, t.trimMat)
-	local glow = drum("IncLamp", 4.25, 0.2, 0.8, Color3.fromRGB(255, 200, 120), Enum.Material.Neon)
+	for k = 0, 3 do
+		local turn = CFrame.Angles(0, k * math.pi / 2 + math.pi / 4, 0)
+		local prev: Vector3? = nil
+		for j = 0, 6 do
+			local a = math.rad(j * 15)
+			local p = Vector3.new(0, 2.7 + math.sin(a) * 1.72, -math.cos(a) * 1.72)
+			if prev then
+				local c = (prev + p) / 2
+				bit(
+					"IncDomeRib",
+					Vector3.new(0.12, 0.12, (p - prev).Magnitude + 0.05),
+					base * turn * CFrame.lookAt(c, p),
+					metal,
+					metalMat
+				)
+			end
+			prev = p
+		end
+	end
+	-- the lamp cap on top with its handle, and the warm light
+	local cap = drum("IncCap", 4.5, 0.4, 1.1, metal, metalMat)
+	drum("IncCapRim", 4.3, 0.12, 1.3, rib, metalMat)
+	local glow = drum("IncLamp", 4.22, 0.16, 0.85, glowC, Enum.Material.Neon)
 	glow.CastShadow = false
+	for _, s in { -1, 1 } do
+		bit("IncHandlePost", Vector3.new(0.12, 0.35, 0.12), base * CFrame.new(s * 0.32, 4.85, 0), metal, metalMat)
+	end
+	bit("IncHandle", Vector3.new(0.76, 0.12, 0.14), base * CFrame.new(0, 5.03, 0), metal, metalMat)
 	local light = Instance.new("PointLight")
-	light.Color = Color3.fromRGB(255, 190, 120)
+	light.Color = glowC
 	light.Range = 7
 	light.Brightness = 0.8
 	light.Parent = cap
-	local gauge = part(
-		m,
-		"IncGauge",
-		Vector3.new(0.15, 0.9, 0.9),
-		base * CFrame.new(-0.6, 1.3, -1.82) * CFrame.Angles(0, math.rad(90), 0),
-		cream
-	) :: Part
-	gauge.Shape = Enum.PartType.Cylinder
-	part(m, "IncButton", Vector3.new(0.4, 0.4, 0.2), base * CFrame.new(0.7, 1.3, -1.82), Color3.fromRGB(230, 70, 70))
+	-- a cable from the back down to the pad
+	bit(
+		"IncCable",
+		Vector3.new(0.16, 0.16, 1.2),
+		base * CFrame.new(0, 1.0, 2.25) * CFrame.Angles(math.rad(-50), 0, 0),
+		Color3.fromRGB(50, 50, 56)
+	)
 end
 
 -- The nesting shelter of an era (see BARN): open on every side so what the slimes do inside shows
@@ -657,37 +841,16 @@ function BreedingStages.build(area: Instance, frame: CFrame, level: number): Mod
 	fenceRun(m, frame, X0, Z0, GATE0, Z0, tf)
 	fenceRun(m, frame, GATE1, Z0, x1, Z0, tf)
 
-	-- 5 the gate arch: two posts, a board and a pink heart
-	for _, x in { GATE0, GATE1 } do
-		part(m, "GatePost", Vector3.new(0.9, 6.4, 0.9), frame * CFrame.new(x, 3.2, Z0), tg.frame, tg.frameMat)
-	end
-	part(
+	-- 5 the gate arch (GateArch): pink, the heart-and-egg emblem on top
+	GateArch.build(
 		m,
-		"GateBoard",
-		Vector3.new(GATE1 - GATE0 + 1.6, 1.2, 0.5),
-		frame * CFrame.new((GATE0 + GATE1) / 2, 6.3, Z0),
-		tg.walls,
-		tg.wallMat
-	)
-	local pink = Color3.fromRGB(240, 132, 168)
-	local heart = frame * CFrame.new((GATE0 + GATE1) / 2, 7.6, Z0 - 0.1)
-	for _, dx in { -0.32, 0.32 } do
-		local lobe = part(
-			m,
-			"GateHeart",
-			Vector3.new(1, 1, 0.4),
-			heart * CFrame.new(dx, 0.2, 0),
-			pink,
-			Enum.Material.SmoothPlastic
-		) :: Part
-		lobe.Shape = Enum.PartType.Ball
-	end
-	part(
-		m,
-		"GateHeart",
-		Vector3.new(0.8, 0.8, 0.38),
-		heart * CFrame.new(0, -0.12, 0) * CFrame.Angles(0, 0, math.rad(45)),
-		pink
+		frame,
+		(GATE0 + GATE1) / 2,
+		GATE1 - GATE0,
+		Z0,
+		tiers[5],
+		Color3.fromRGB(240, 132, 168),
+		"EmblemBreeding"
 	)
 
 	-- nests (the first two are the area's own), each on a round platform
@@ -735,7 +898,7 @@ function BreedingStages.build(area: Instance, frame: CFrame, level: number): Mod
 				tp.baseMat
 			)
 		end
-		incubator(m, frame * CFrame.new(n[1], 0.4, n[2]), tp)
+		incubator(m, frame * CFrame.new(n[1], 0.4, n[2]) * CFrame.Angles(0, math.rad(-90), 0), tiers[4])
 		if i > 2 then
 			local bed = part(
 				m,

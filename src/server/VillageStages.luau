@@ -248,6 +248,20 @@ function VillageStages.build(village: Instance, frame: CFrame, level: number): M
 	end
 	local taken: { { at: Vector3, r: number } } = {} -- flat positions in the plot's frame
 	local smallPlants: { { plant: Instance, at: Vector3 } } = {}
+	-- (an area's own flowers that stand on the village's paving in front of its gate move too)
+	for _, a in (if plot then plot:GetChildren() else {}) :: { Instance } do
+		local areaNature = if a:IsA("Model") and string.match(a.Name, "L1$") then a:FindFirstChild("Nature") else nil
+		for _, d in (if areaNature then areaNature:GetChildren() else {}) :: { Instance } do
+			if d:IsA("Model") and (d.Name == "FlowerPatch" or d.Name == "GrassTuft" or d.Name == "Fern") then
+				local q = frame:PointToObjectSpace(d:GetPivot().Position)
+				local flat = Vector3.new(q.X, 0, q.Z)
+				if onPaving(flat, 1.1) then
+					local plant: Instance = d
+					table.insert(smallPlants, { plant = plant, at = flat })
+				end
+			end
+		end
+	end
 	-- what already stands in the village: trees, logs, stumps, the old planters, the campfire
 	local nature = village:FindFirstChild("Nature")
 	for _, d in (if nature then nature:GetChildren() else {}) :: { Instance } do

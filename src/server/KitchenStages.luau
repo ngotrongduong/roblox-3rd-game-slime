@@ -19,6 +19,7 @@
 -- Positions are in the kitchen's own frame (x across, z from the front in).
 local PantryStages = require(script.Parent.PantryStages)
 local PondStages = require(script.Parent.PondStages)
+local GateArch = require(script.Parent.GateArch)
 
 local KitchenStages = {}
 
@@ -289,29 +290,8 @@ function KitchenStages.build(area: Instance, frame: CFrame, level: number): Mode
 		part(m, "VaneHandle", Vector3.new(1.2, 0.2, 0.2), at(0.6, ry + 4.6, zc), ta.trim, ta.trimMat)
 	end
 
-	-- 5 the entrance arch: two posts, a board and a frying pan
-	for _, x in { -3, 3 } do
-		part(m, "ArchPost", Vector3.new(0.8, 6.4, 0.8), at(x, 3.2, -9.2), ta.frame, ta.frameMat)
-	end
-	part(m, "ArchBoard", Vector3.new(7.6, 0.8, 0.5), at(0, 6, -9.2), ta.walls, ta.wallMat)
-	-- the pan stands on the board, its face to the front
-	local pan = part(
-		m,
-		"ArchPan",
-		Vector3.new(0.3, 1.5, 1.5),
-		at(-0.35, 7.2, -9.2) * CFrame.Angles(0, math.rad(90), 0),
-		Color3.fromRGB(60, 60, 66),
-		Enum.Material.Metal
-	) :: Part
-	pan.Shape = Enum.PartType.Cylinder
-	part(
-		m,
-		"ArchPanHandle",
-		Vector3.new(1.3, 0.3, 0.25),
-		at(1.05, 7.2, -9.2),
-		Color3.fromRGB(150, 96, 56),
-		Enum.Material.Wood
-	)
+	-- 5 the entrance arch (GateArch): warm orange, the chef's hat emblem on top
+	GateArch.build(m, frame, 0, 6, -9.2, tiers[5], Color3.fromRGB(240, 150, 60), "EmblemKitchen")
 
 	-- the cooking spots beyond the area's own: a straw mat each, with its marker
 	for i = 2, spots do

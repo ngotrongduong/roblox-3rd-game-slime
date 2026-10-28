@@ -301,3 +301,7 @@ was left there (this game has none); read it there if a cave is ever wanted.
 - Spread props through the whole village, not in rows at the entrance; small plants on paving move to free lawn.
 - Before placing a street of stalls, measure how far the green runs before the next area's box: the pantry yard cut
   the market short at the last era.
+- generate_mesh failed every incubator base (a cone, a tilted barrel, a plain bowl): a round machine that must hold a
+  glass dome over an egg is better built from parts with care (feet, ribbed body, a front panel with porthole, dial
+  and buttons, a dome held by curved ribs, a lamp cap and handle), styled per tier; small icons (emblems) are what
+  the generator does well.

@@ -21,6 +21,7 @@
 -- front in); every prop stands against the fence facing in.
 local PantryStages = require(script.Parent.PantryStages)
 local PondStages = require(script.Parent.PondStages)
+local GateArch = require(script.Parent.GateArch)
 
 local TrainingStages = {}
 
@@ -300,7 +301,7 @@ end
 -- left fence facing in.
 function TrainingStages.build(area: Instance, frame: CFrame, level: number): Model
 	local era, spots, props, tiers = TrainingStages.state(level)
-	local tf, tl, ta = TIERS[tiers[3]], TIERS[tiers[4]], TIERS[tiers[5]]
+	local tf, tl = TIERS[tiers[3]], TIERS[tiers[4]]
 	local m = Instance.new("Model")
 	m.Name = "AreaStage"
 	m:SetAttribute("Level", level)
@@ -374,30 +375,8 @@ function TrainingStages.build(area: Instance, frame: CFrame, level: number): Mod
 		glow(m, "Lamp", Vector3.new(0.9, 0.9, 0.9), at(s * 6.4, 5, -11.6), tl.glass, 10)
 	end
 
-	-- 5 the entrance arch: two posts, a board, two crossed swords on a round shield
-	for _, s in { -1, 1 } do
-		part(m, "ArchPost", Vector3.new(0.9, 7, 0.9), at(s * GATE, 3.5, -ZF), ta.frame, ta.frameMat)
-	end
-	part(m, "ArchBoard", Vector3.new(GATE * 2 + 1.6, 0.9, 0.5), at(0, 6.6, -ZF), ta.walls, ta.wallMat)
-	local shield = part(
-		m,
-		"ArchShield",
-		Vector3.new(0.3, 1.8, 1.8),
-		at(0, 8, -ZF) * CFrame.Angles(0, math.rad(90), 0),
-		ta.trim,
-		ta.trimMat
-	) :: Part
-	shield.Shape = Enum.PartType.Cylinder
-	for _, s in { -1, 1 } do
-		part(
-			m,
-			"ArchSword",
-			Vector3.new(0.25, 2.8, 0.2),
-			at(0, 8, -ZF - 0.25) * CFrame.Angles(0, 0, math.rad(s * 40)),
-			Color3.fromRGB(210, 214, 222),
-			Enum.Material.Metal
-		)
-	end
+	-- 5 the entrance arch (GateArch): red, the shield-and-swords emblem on top
+	GateArch.build(m, frame, 0, GATE * 2, -ZF, tiers[5], Color3.fromRGB(220, 70, 70), "EmblemTraining")
 
 	-- era 2: wooden stands along the back, two steps behind the dummy
 	if era >= 2 then
