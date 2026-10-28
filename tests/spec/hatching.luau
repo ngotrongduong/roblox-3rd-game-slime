@@ -87,14 +87,15 @@ return function(T)
 	T.test("visible colour, asset and appearance", function()
 		local farm = FarmKit.farm(NOW)
 		farm.eggs = {
-			egg("e1", { type = "dual", definitionId = "dual-pink-red-03" }),
+			egg("e1", { type = "dual", definitionId = "dual-red-pink-38" }),
 			egg("e2", { type = "secret", definitionId = "secret-red-white" }),
 			egg("e3", nil, { "white", "black" }),
+			egg("e4", { type = "material", definitionId = "gold" }),
 		}
 		local r1 = Hatching.hatch(farm, "e1", NOW)
 		assert(r1.slime)
 		T.eq(r1.slime.visibleColour, "red", "the base colour stays the phenotype")
-		T.eq(r1.slime.assetId, "slime.dual.03")
+		T.eq(r1.slime.assetId, "slime.dual.38")
 		local r2 = Hatching.hatch(r1.farm, "e2", NOW)
 		assert(r2.slime)
 		T.eq(r2.slime.assetId, "slime.secret.red-white")
@@ -102,25 +103,50 @@ return function(T)
 		assert(r3.slime)
 		T.eq(r3.slime.visibleColour, "black")
 		T.eq(r3.slime.assetId, "slime.base.black")
+		local r4 = Hatching.hatch(r3.farm, "e4", NOW)
+		assert(r4.slime)
+		T.eq(r4.slime.visibleColour, "red", "a material slime keeps its base colour")
+		T.eq(r4.slime.assetId, "slime.material.gold")
+		T.same(r4.slime.appearanceMutation, { type = "material", definitionId = "gold" })
 	end)
 
 	T.test("discoveries: base always counts, dual/secret register once then count", function()
 		local farm = FarmKit.farm(NOW)
-		local dual = { type = "dual", definitionId = "dual-pink-red-03" }
+		local dual = { type = "dual", definitionId = "dual-red-pink-38" }
 		farm.eggs = { egg("e1", dual), egg("e2", dual), egg("e3", nil, { "navy", "navy" }) }
 		local r1 = Hatching.hatch(farm, "e1", NOW)
 		T.same(r1.firstDiscovery, dual)
 		T.ok(r1.newColour, "red is new")
-		T.same(r1.farm.discoveries.dual["dual-pink-red-03"], { firstDiscoveredAt = NOW, hatchCount = 1 })
+		T.same(r1.farm.discoveries.dual["dual-red-pink-38"], { firstDiscoveredAt = NOW, hatchCount = 1 })
 		T.same(r1.farm.discoveries.base.red, { firstDiscoveredAt = NOW, hatchCount = 1 })
 		local r2 = Hatching.hatch(r1.farm, "e2", NOW + 9)
 		T.eq(r2.firstDiscovery, nil)
 		T.ok(not r2.newColour)
-		T.same(r2.farm.discoveries.dual["dual-pink-red-03"], { firstDiscoveredAt = NOW, hatchCount = 2 })
+		T.same(r2.farm.discoveries.dual["dual-red-pink-38"], { firstDiscoveredAt = NOW, hatchCount = 2 })
 		T.eq(r2.farm.discoveries.base.red.hatchCount, 2)
 		local r3 = Hatching.hatch(r2.farm, "e3", NOW)
 		T.eq(r3.farm.discoveries.base.navy.hatchCount, 5, "4 starters + 1")
 		T.eq(farm.discoveries.base.navy.hatchCount, 4, "the input discoveries are not changed")
+	end)
+
+	T.test("discoveries: a material hatch registers in its own bucket and counts toward the rank", function()
+		local farm = FarmKit.farm(NOW)
+		local gold = { type = "material", definitionId = "gold" }
+		farm.eggs = { egg("e1", gold), egg("e2", gold), egg("e3", { type = "material", definitionId = "mud" }) }
+		local r1 = Hatching.hatch(farm, "e1", NOW)
+		T.same(r1.firstDiscovery, gold)
+		T.same(r1.farm.discoveries.material.gold, { firstDiscoveredAt = NOW, hatchCount = 1 })
+		T.same(r1.farm.discoveries.dual, {})
+		T.same(r1.farm.discoveries.secret, {})
+		local r2 = Hatching.hatch(r1.farm, "e2", NOW + 5)
+		T.eq(r2.firstDiscovery, nil)
+		T.same(r2.farm.discoveries.material.gold, { firstDiscoveredAt = NOW, hatchCount = 2 })
+		local r3 = Hatching.hatch(r2.farm, "e3", NOW + 6)
+		T.same(r3.firstDiscovery, { type = "material", definitionId = "mud" })
+		T.eq(r3.farm.discoveries.material.mud.hatchCount, 1)
+		-- 4 starters + 3 base hatches + 3 material hatches
+		T.eq(Hatching.totalHatched(r3.farm.discoveries), 10)
+		T.eq(farm.discoveries.material.gold, nil, "the input discoveries are not changed")
 	end)
 
 	T.test("best level and improved stats", function()

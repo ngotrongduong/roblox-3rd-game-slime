@@ -73,7 +73,12 @@ export type Egg = {
 
 export type DiscoveryRecord = { firstDiscoveredAt: number, hatchCount: number }
 export type DiscoveryBucket = { [string]: DiscoveryRecord }
-export type Discoveries = { base: DiscoveryBucket, dual: DiscoveryBucket, secret: DiscoveryBucket }
+export type Discoveries = {
+	base: DiscoveryBucket,
+	dual: DiscoveryBucket,
+	secret: DiscoveryBucket,
+	material: DiscoveryBucket,
+}
 
 export type Food = { basicFood: number, capacity: number }
 
@@ -222,7 +227,7 @@ function FarmState.emptyUpgrades(): Upgrades
 end
 
 function FarmState.emptyDiscoveries(): Discoveries
-	return { base = {}, dual = {}, secret = {} }
+	return { base = {}, dual = {}, secret = {}, material = {} }
 end
 
 -- Pantry size after the Food Storage upgrade.
@@ -561,7 +566,7 @@ local function validateDiscoveries(raw: any, warnings: { string }): Discoveries
 		table.insert(warnings, "discoveries invalid, emptied")
 		return out
 	end
-	for _, kind in { "base", "dual", "secret" } do
+	for _, kind in { "base", "dual", "secret", "material" } do
 		local bucket = raw[kind]
 		if type(bucket) == "table" then
 			local target = (out :: any)[kind]

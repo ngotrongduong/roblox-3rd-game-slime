@@ -309,6 +309,10 @@ function Breeding.previewText(a: Slime, b: Slime, breedsSinceMutation: number?):
 	if #c.secrets > 0 or #c.duals > 0 then
 		table.insert(lines, "A rare discovery may be possible.")
 	end
+	-- every pair can give a material, so it is its own line rather than the hint above
+	if c.material > 0 then
+		table.insert(lines, "Material: " .. math.round(c.material * 100) .. "%")
+	end
 	if breedsSinceMutation ~= nil then
 		local threshold = Config.Mutation.PityThreshold
 		local n = math.min(breedsSinceMutation, threshold - 1)

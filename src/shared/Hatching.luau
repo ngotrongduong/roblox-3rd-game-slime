@@ -52,7 +52,12 @@ function Hatching.nextName(farm: Farm): string
 end
 
 local function copyDiscoveries(d: Discoveries): Discoveries
-	return { base = table.clone(d.base), dual = table.clone(d.dual), secret = table.clone(d.secret) }
+	return {
+		base = table.clone(d.base),
+		dual = table.clone(d.dual),
+		secret = table.clone(d.secret),
+		material = table.clone(d.material),
+	}
 end
 
 local function bump(bucket: DiscoveryBucket, id: string, now: number): boolean
@@ -65,7 +70,7 @@ local function bump(bucket: DiscoveryBucket, id: string, now: number): boolean
 	return true
 end
 
--- Registers a dual/secret appearance (nothing for "none"). Returns the new discoveries and
+-- Registers a dual/secret/material appearance (nothing for "none"). Returns the new discoveries and
 -- whether this was the first one of its kind.
 function Hatching.registerDiscovery(
 	discoveries: Discoveries,
@@ -77,7 +82,10 @@ function Hatching.registerDiscovery(
 		return discoveries, false
 	end
 	local out = copyDiscoveries(discoveries)
-	local bucket = if appearance.type == "dual" then out.dual else out.secret
+	local bucket = if appearance.type == "dual"
+		then out.dual
+		elseif appearance.type == "material" then out.material
+		else out.secret
 	return out, bump(bucket, id, now)
 end
 
@@ -87,11 +95,11 @@ function Hatching.registerBase(discoveries: Discoveries, colour: string, now: nu
 	return out, bump(out.base, colour, now)
 end
 
--- Every hatch ever, over all three books (a dual/secret hatch counts twice, the starters count:
--- the original's avatar rule).
+-- Every hatch ever, over all four books (a dual/secret/material hatch counts twice, the starters
+-- count: the original's avatar rule).
 function Hatching.totalHatched(discoveries: Discoveries): number
 	local n = 0
-	for _, bucket in { discoveries.base, discoveries.dual, discoveries.secret } do
+	for _, bucket in { discoveries.base, discoveries.dual, discoveries.secret, discoveries.material } do
 		for _, rec in bucket do
 			n += rec.hatchCount
 		end

@@ -39,6 +39,7 @@ return function(T)
 			base = { navy = { firstDiscoveredAt = NOW, hatchCount = 4 } },
 			dual = {},
 			secret = {},
+			material = {},
 		})
 		T.same(farm.food, { basicFood = 20, capacity = 100 })
 		T.eq(#farm.workstations, 4)
@@ -193,6 +194,55 @@ return function(T)
 		T.eq(#r.slimes, 4)
 	end)
 
+	T.test(
+		"repair keeps material appearances (known or not) on slimes and eggs, and old saves get a material bucket",
+		function()
+			local farm = FarmState.newFarm(NOW)
+			farm.slimes[1].appearanceMutation = { type = "material", definitionId = "gold" }
+			farm.slimes[2].appearanceMutation = { type = "material", definitionId = "unobtainium" }
+			farm.slimes[3].appearanceMutation = { type = "dual", definitionId = "dual-green-white-01" }
+			farm.slimes[4].appearanceMutation = { type = "material" }
+			farm.eggs = {
+				{
+					id = "e1",
+					parentIds = { "slime-1", "slime-2" },
+					createdAt = NOW - 10,
+					hatchAt = NOW + 50,
+					offspringId = "b1",
+					embryo = {
+						stats = { attack = 1, defence = 1, speed = 1, hp = 10 },
+						colourGenotype = { alleles = { "red", "red" } },
+						patternGenotype = { alleles = { "solid", "solid" } },
+						appearanceMutation = { type = "material", definitionId = "jelly" },
+					},
+					status = "incubating",
+				},
+			}
+			farm.discoveries.material = {
+				gold = { firstDiscoveredAt = NOW, hatchCount = 2 },
+				junk = { hatchCount = 0 },
+			}
+			local r, warnings = FarmState.repair(farm, NOW)
+			T.same(r.slimes[1].appearanceMutation, { type = "material", definitionId = "gold" })
+			T.same(r.slimes[2].appearanceMutation, { type = "material", definitionId = "unobtainium" }, "unknown kept")
+			T.same(
+				r.slimes[3].appearanceMutation,
+				{ type = "dual", definitionId = "dual-green-white-01" },
+				"old dual ids kept"
+			)
+			T.same(r.slimes[4].appearanceMutation, { type = "none" }, "a material with no id is malformed")
+			T.same(r.eggs[1].embryo.appearanceMutation, { type = "material", definitionId = "jelly" })
+			T.same(r.discoveries.material, { gold = { firstDiscoveredAt = NOW, hatchCount = 2 } })
+			T.ok(#warnings > 0)
+			-- an old save without the bucket
+			local old = FarmState.newFarm(NOW)
+			old.discoveries.material = nil
+			local fixed = FarmState.repair(old, NOW)
+			T.same(fixed.discoveries.material, {})
+			T.same(fixed.discoveries.base, { navy = { firstDiscoveredAt = NOW, hatchCount = 4 } })
+		end
+	)
+
 	T.test("repair never wipes the farm for one bad block", function()
 		local farm = FarmState.newFarm(NOW)
 		farm.coins = 1234.7
@@ -218,6 +268,7 @@ return function(T)
 			base = { navy = { firstDiscoveredAt = NOW, hatchCount = 4 } },
 			dual = {},
 			secret = {},
+			material = {},
 		})
 		T.same(r.eggs, {})
 		T.eq(#r.workstations, 4)

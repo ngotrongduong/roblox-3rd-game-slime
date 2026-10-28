@@ -16,7 +16,27 @@ function FarmSave.hooks(log: ((string) -> ())?)
 	return {
 		schemaVersion = Config.Save.SchemaVersion,
 		-- One entry per shape change: { from = n, to = n + 1, migrate = function(data, now) ... }.
-		migrations = {},
+		migrations = {
+			-- 1 -> 2: the collection book gained a material bucket. Repair would also add it; this
+			-- keeps the stored version honest. Nothing else is touched.
+			{
+				from = 1,
+				to = 2,
+				migrate = function(data: any, _now: number): any
+					if
+						type(data) == "table"
+						and type(data.discoveries) == "table"
+						and data.discoveries.material == nil
+					then
+						local out = table.clone(data)
+						out.discoveries = table.clone(data.discoveries)
+						out.discoveries.material = {}
+						return out
+					end
+					return data
+				end,
+			},
+		},
 		newData = function(now: number): any
 			return FarmState.newFarm(now)
 		end,

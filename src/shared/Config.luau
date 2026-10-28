@@ -56,15 +56,35 @@ Config.Breeding = {
 }
 
 Config.Mutation = {
-	-- Sequential rolls: secret, then dual, then base-colour mutation (see Mutations.rollCategory).
+	-- Sequential rolls: secret, then material, then dual, then base-colour mutation (see
+	-- Mutations.rollCategory).
 	SecretChance = 0.01,
+	-- docs/MATERIALS.md: any pair can give a material, same colour included.
+	MaterialChance = 0.02,
 	DualChance = 0.05,
 	BaseChance = 0.10,
-	-- Luck-multiplied chances (secret, dual, stat improvement) never go above this.
+	-- Luck-multiplied chances (secret, material, dual, stat improvement) never go above this.
 	ChanceCap = 0.95,
 	-- The PityThreshold-th plain egg in a row is forced rare: PitySecretShare secret, else dual.
+	-- Pity never gives a material.
 	PityThreshold = 25,
 	PitySecretShare = 0.10,
+}
+
+-- Material slimes (docs/MATERIALS.md): a rare appearance next to Dual and Secret. Which material is a
+-- weighted pick; TierWeight is each material's weight by tier, SellBase its sell value by tier.
+Config.Material = {
+	TierWeight = { common = 6, rare = 3, precious = 1 },
+	SellBase = { common = 150, rare = 300, precious = 800 },
+	-- The outline hull of a material slime is its drawn colour times this.
+	HullShade = 0.6,
+}
+
+-- Selling a slime (docs/reference/01-core-farm.md §8.1): floor(base × (1 + level × SellLevelStep)).
+-- Base by appearance; a material slime uses Config.Material.SellBase by its tier.
+Config.Economy = {
+	SellBase = { none = 10, dual = 100, secret = 1000 },
+	SellLevelStep = 0.05,
 }
 
 Config.Growth = {
@@ -169,7 +189,8 @@ Config.Save = {
 	StoreName = "GooLineage_Profiles_v1",
 	KeyPrefix = "Player_",
 	-- The data shape's version. Bump it with each change of shape and add a migration for it.
-	SchemaVersion = 1,
+	-- 2: discoveries gained the material bucket (docs/MATERIALS.md).
+	SchemaVersion = 2,
 	-- A stored envelope without a version is this one.
 	FirstSchemaVersion = 1,
 

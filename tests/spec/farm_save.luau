@@ -24,6 +24,25 @@ return function(T)
 		T.eq(result.isNew, false)
 	end)
 
+	T.test("a version 1 save (no material bucket) migrates to version 2 and keeps everything", function()
+		T.eq(Config.Save.SchemaVersion, 2)
+		local farm = FarmState.newFarm(1000)
+		farm.coins = 4321
+		farm.discoveries.dual["dual-green-white-01"] = { firstDiscoveredAt = 5, hatchCount = 3 }
+		farm.slimes[1].appearanceMutation = { type = "dual", definitionId = "dual-green-white-01" }
+		local stored = FarmState.repair(farm, 1000)
+		stored.discoveries.material = nil
+		local env = { schemaVersion = 1, savedAt = 0, data = stored }
+		local result = ProfileLogic.prepareLoad(env, FarmSave.hooks(), 2000)
+		T.ok(result.ok)
+		T.ok(result.migrated)
+		T.eq(result.data.coins, 4321)
+		T.same(result.data.discoveries.material, {})
+		T.eq(result.data.discoveries.dual["dual-green-white-01"].hatchCount, 3, "old dual ids kept")
+		T.eq(result.data.slimes[1].appearanceMutation.definitionId, "dual-green-white-01", "never converted")
+		T.eq(stored.discoveries.material, nil, "the stored copy is not changed in place")
+	end)
+
 	T.test("an unreadable farm is never replaced by a fresh one", function()
 		local result = ProfileLogic.prepareLoad(envelope({ coins = 5 }), FarmSave.hooks(), 2000)
 		T.eq(result.ok, false)

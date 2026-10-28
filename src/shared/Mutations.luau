@@ -1,14 +1,15 @@
 --!strict
--- Offspring resolution (docs/reference/01-core-farm.md §5.4, §5.7): the baby's colour and
--- pattern genes and its rare appearance (Secret / Dual / none), decided once when the egg is laid.
--- Appearances are a cosmetic layer over the base colour and are never inherited: parents always
--- breed with their base (visible) colour.
+-- Offspring resolution (docs/reference/01-core-farm.md §5.4, §5.7, docs/MATERIALS.md): the baby's
+-- colour and pattern genes and its rare appearance (Secret / Material / Dual / none), decided once
+-- when the egg is laid. Appearances are a cosmetic layer over the base colour and are never inherited:
+-- parents always breed with their base (visible) colour.
 
 local Config = if script then require(script.Parent.Config) else require("./Config")
 local Colours = if script then require(script.Parent.Colours) else require("./Colours")
 local DualDesigns = if script then require(script.Parent.DualDesigns) else require("./DualDesigns")
 local Genetics = if script then require(script.Parent.Genetics) else require("./Genetics")
 local Luck = if script then require(script.Parent.Luck) else require("./Luck")
+local Materials = if script then require(script.Parent.Materials) else require("./Materials")
 local Rng = if script then require(script.Parent.Rng) else require("./Rng")
 local SecretRecipes = if script then require(script.Parent.SecretRecipes) else require("./SecretRecipes")
 
@@ -18,10 +19,11 @@ type ColourGenotype = typeof(Genetics.homozygous(""))
 type PatternGenotype = typeof(Genetics.solid())
 type Recipe = typeof(SecretRecipes.List[1])
 type Design = typeof(DualDesigns.List[1])
+type Material = typeof(Materials.List[1])
 
 local Mutations = {}
 
--- type is "none", "dual" or "secret"; definitionId is set for dual and secret.
+-- type is "none", "dual", "secret" or "material"; definitionId is set for all but none.
 export type Appearance = { type: string, definitionId: string? }
 
 export type Parents = {
@@ -37,17 +39,21 @@ export type Outcome = {
 	colourGenotype: ColourGenotype,
 	patternGenotype: PatternGenotype,
 	appearance: Appearance,
-	-- "secret", "dual", "base" (colour mutation), "normal" (may still show a carrier Dual) or "pity".
+	-- "secret", "material", "dual", "base" (colour mutation), "normal" (may still show a carrier Dual)
+	-- or "pity".
 	rolled: string,
 	hadSecret: boolean,
 	hadDual: boolean,
 }
 
+-- The natural odds of one pairing (what the egg details show: "Material: 2%"), luck included.
 export type Chances = {
 	secret: number,
+	material: number,
 	dual: number,
 	base: number,
 	secrets: { Recipe },
+	materials: { Material },
 	duals: { Design },
 }
 
@@ -59,35 +65,47 @@ function Mutations.copy(appearance: Appearance): Appearance
 	return { type = appearance.type, definitionId = appearance.definitionId }
 end
 
--- "secret" > "dual" > "base", for sorting, prices and the reveal.
+-- "secret", "material", "dual" or "base", for sorting, prices and the reveal.
 function Mutations.rarity(appearance: Appearance): string
-	if appearance.type == "secret" or appearance.type == "dual" then
+	if appearance.type == "secret" or appearance.type == "material" or appearance.type == "dual" then
 		return appearance.type
 	end
 	return "base"
 end
 
--- The pools and chances of one pairing. Same-colour pairs have no dual pool.
+-- The pools and chances of one pairing. Same-colour pairs have no dual pool; every pair has materials.
 function Mutations.chances(colourA: string, colourB: string, luck: number): Chances
 	local m = Config.Mutation
 	local secrets = SecretRecipes.forPair(colourA, colourB)
 	local duals = if colourA ~= colourB then DualDesigns.pool(colourA, colourB) else {}
+	local materials = Materials.List
 	return {
 		secret = if #secrets > 0 then Luck.chance(m.SecretChance, luck) else 0,
+		material = if #materials > 0 then Luck.chance(m.MaterialChance, luck) else 0,
 		dual = if #duals > 0 then Luck.chance(m.DualChance, luck) else 0,
 		base = m.BaseChance,
 		secrets = secrets,
+		materials = materials,
 		duals = duals,
 	}
 end
 
--- Which kind of egg this is. KEPT AS IN THE ORIGINAL: three sequential rolls (secret; else dual;
--- else base), so dual and base odds are "of the rest" (e.g. dual 4.95%, not 5%, at luck 1).
+-- Which kind of egg this is. KEPT AS IN THE ORIGINAL: sequential rolls (secret; else material; else
+-- dual; else base), so each later odds is "of the rest" (e.g. dual 4.95%, not 5%, at luck 1).
 -- The original's comment says a single categorical roll was intended; this is the one place to
 -- change if that is ever decided. A zero chance (no pool) spends no roll, like the original.
-function Mutations.rollCategory(rng: Rng, secretChance: number, dualChance: number, baseChance: number): string
+function Mutations.rollCategory(
+	rng: Rng,
+	secretChance: number,
+	materialChance: number,
+	dualChance: number,
+	baseChance: number
+): string
 	if secretChance > 0 and rng:next() < secretChance then
 		return "secret"
+	end
+	if materialChance > 0 and rng:next() < materialChance then
+		return "material"
 	end
 	if dualChance > 0 and rng:next() < dualChance then
 		return "dual"
@@ -108,7 +126,7 @@ function Mutations.resolveOffspring(parents: Parents, rng: Rng, luck: number): O
 	local phenotype = Genetics.phenotype(colourGenotype)
 	local patternGenotype = Genetics.inheritPattern(parents.patternA, parents.patternB, rng)
 
-	local category = Mutations.rollCategory(rng, c.secret, c.dual, c.base)
+	local category = Mutations.rollCategory(rng, c.secret, c.material, c.dual, c.base)
 	if category == "secret" then
 		local recipe = rng:weighted(c.secrets, SecretRecipes.weight)
 		return {
@@ -116,6 +134,17 @@ function Mutations.resolveOffspring(parents: Parents, rng: Rng, luck: number): O
 			patternGenotype = patternGenotype,
 			appearance = { type = "secret", definitionId = recipe.id },
 			rolled = "secret",
+			hadSecret = hadSecret,
+			hadDual = hadDual,
+		}
+	elseif category == "material" then
+		-- A material is only a look: the genes (colour and pattern) stay as inherited.
+		local material = rng:weighted(c.materials, Materials.weight)
+		return {
+			colourGenotype = colourGenotype,
+			patternGenotype = patternGenotype,
+			appearance = { type = "material", definitionId = material.id },
+			rolled = "material",
 			hadSecret = hadSecret,
 			hadDual = hadDual,
 		}
@@ -199,13 +228,19 @@ function Mutations.applyPity(outcome: Outcome, colourA: string, colourB: string,
 	return outcome
 end
 
--- The asset a slime shows: secret > dual > base colour. Unknown ids fall through to the base.
+-- The asset a slime shows: secret > material > dual > base colour. Unknown ids fall through to the base.
 function Mutations.assetId(appearance: Appearance, baseColour: string): string
 	local id = appearance.definitionId
 	if appearance.type == "secret" and id then
 		local recipe = SecretRecipes.get(id)
 		if recipe then
 			return recipe.assetId
+		end
+	end
+	if appearance.type == "material" and id then
+		local material = Materials.get(id)
+		if material then
+			return material.assetId
 		end
 	end
 	if appearance.type == "dual" and id then
@@ -225,19 +260,49 @@ function Mutations.isKnown(appearance: Appearance): boolean
 		return id ~= nil and DualDesigns.get(id) ~= nil
 	elseif appearance.type == "secret" then
 		return id ~= nil and SecretRecipes.get(id) ~= nil
+	elseif appearance.type == "material" then
+		return id ~= nil and Materials.get(id) ~= nil
 	end
 	return false
 end
 
--- Field-level repair of a loaded appearance. Dual/secret ids with no definition are KEPT
+-- Field-level repair of a loaded appearance. Dual/secret/material ids with no definition are KEPT
 -- (placeholder art), never converted; only a malformed shape becomes "none".
 function Mutations.validate(raw: any): Appearance
-	if type(raw) == "table" and (raw.type == "dual" or raw.type == "secret") then
+	if type(raw) == "table" and (raw.type == "dual" or raw.type == "secret" or raw.type == "material") then
 		if type(raw.definitionId) == "string" and raw.definitionId ~= "" then
 			return { type = raw.type, definitionId = raw.definitionId }
 		end
 	end
 	return Mutations.none()
+end
+
+-- ===== selling =====
+
+-- What a slime of this appearance is worth at level 0: Config.Economy.SellBase by kind, a material by
+-- its tier (an unknown material id sells as the lowest tier).
+function Mutations.sellBase(appearance: Appearance): number
+	local base = Config.Economy.SellBase
+	if appearance.type == "secret" then
+		return base.secret
+	elseif appearance.type == "dual" then
+		return base.dual
+	elseif appearance.type == "material" then
+		local material = if appearance.definitionId then Materials.get(appearance.definitionId) else nil
+		return if material then material.sellBase else Config.Material.SellBase.common
+	end
+	return base.none
+end
+
+-- floor(base × (1 + level × SellLevelStep)), never negative.
+function Mutations.sellValue(appearance: Appearance, level: number): number
+	local factor = 1 + math.max(0, level) * Config.Economy.SellLevelStep
+	return math.max(0, math.floor(Mutations.sellBase(appearance) * factor))
+end
+
+-- Dual, Secret and Material slimes ask before they are sold.
+function Mutations.needsSellConfirm(appearance: Appearance): boolean
+	return appearance.type == "secret" or appearance.type == "material" or appearance.type == "dual"
 end
 
 return Mutations

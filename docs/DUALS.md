@@ -105,7 +105,10 @@ drawn by the script only.
 ## What changes in the game
 
 - `DualDesigns.luau`: 55 designs, one exact design per pair; the fallback pool goes (a Dual of A + B is always
-  that pair's design). The collection book shows 55 Duals. Odds and pity unchanged.
+  that pair's design). The collection book shows 55 Duals. Odds and pity unchanged. One effect to know: the
+  pattern gene (duochrome) now shows a Dual on every pair, not only the 18 pairs the original had designs
+  for, so two Duals of different colours bred together give a Dual on most eggs (the recessive gene doing
+  its job; tune `Config` if Dual income gets too high).
 - The body gets an all-round UV (today's is a front projection, mirrored on the back): the slime body is exported
   once more and the owner imports it again.
 - Each design is one 2048 x 1024 colour map with both colours, on the same glossy body (roughness 0.10); MeshPart

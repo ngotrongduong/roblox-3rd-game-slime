@@ -227,7 +227,8 @@ return function(T)
 			local res = Breeding.createEgg(farm, "a", "b", NOW, Rng.new(seed), FarmKit.ids())
 			assert(res.egg)
 			local kind = res.egg.embryo.appearanceMutation.type
-			T.ok(kind == "dual" or kind == "secret", "seed " .. seed .. " gave " .. kind)
+			-- a material is only ever the egg's own 2% roll (pity never gives one) and also resets the counter
+			T.ok(kind == "dual" or kind == "secret" or kind == "material", "seed " .. seed .. " gave " .. kind)
 			if kind == "dual" then
 				T.ok(Genetics.isDuochrome(res.egg.embryo.patternGenotype))
 			end
@@ -239,6 +240,52 @@ return function(T)
 		local res = Breeding.createEgg(same, "slime-1", "slime-2", NOW, Rng.new(4), FarmKit.ids())
 		assert(res.egg)
 		T.same(res.egg.embryo.appearanceMutation, { type = "secret", definitionId = "secret-navy-navy" })
+	end)
+
+	T.test("pity eggs: material only when the egg rolled it itself, never from the pity", function()
+		local natural, forced = 0, 0
+		for seed = 1, 400 do
+			local farm = FarmKit.farm(NOW, {
+				FarmKit.slime("a", { colours = { "red", "red" } }),
+				FarmKit.slime("b", { colours = { "pink", "pink" } }),
+			})
+			farm.breedsSinceMutation = 24
+			local res = Breeding.createEgg(farm, "a", "b", NOW, Rng.new(seed), FarmKit.ids())
+			assert(res.egg)
+			local kind = res.egg.embryo.appearanceMutation.type
+			if kind == "material" then
+				natural += 1
+			else
+				-- the pity itself only ever forces a Dual or a Secret
+				T.ok(kind == "dual" or kind == "secret", "pity egg came out " .. kind)
+				forced += 1
+			end
+		end
+		-- 2% of 400 is about 8: far from a pity share
+		T.ok(natural < 30, "materials on pity eggs: " .. natural)
+		T.ok(forced > 370, "forced rare pity eggs: " .. forced)
+	end)
+
+	T.test("a material slime breeds as its base colour and passes nothing on", function()
+		for seed = 1, 60 do
+			local plainFarm = FarmKit.farm(NOW, {
+				FarmKit.slime("a", { colours = { "red", "red" } }),
+				FarmKit.slime("b", { colours = { "pink", "pink" } }),
+			})
+			local materialFarm = FarmKit.farm(NOW, {
+				FarmKit.slime(
+					"a",
+					{ colours = { "red", "red" }, appearance = { type = "material", definitionId = "gold" } }
+				),
+				FarmKit.slime(
+					"b",
+					{ colours = { "pink", "pink" }, appearance = { type = "material", definitionId = "mud" } }
+				),
+			})
+			local one = Breeding.createEgg(plainFarm, "a", "b", NOW, Rng.new(seed), FarmKit.ids())
+			local two = Breeding.createEgg(materialFarm, "a", "b", NOW, Rng.new(seed), FarmKit.ids())
+			T.same(one.egg, two.egg, "seed " .. seed)
+		end
 	end)
 
 	T.test("pity does not fire before the 25th egg", function()
@@ -307,9 +354,9 @@ return function(T)
 			end
 			return rare / 3000
 		end
-		-- luck 1: 1% + 4.95%; luck 5: 5% + 23.75%
-		T.near(rareRate(nil), 0.0595, 0.015)
-		T.near(rareRate(NOW - 60), 0.2875, 0.03)
+		-- secret, material, dual in turn: luck 1: 1 - .99 x .98 x .95; luck 5: 1 - .95 x .90 x .75
+		T.near(rareRate(nil), 0.07831, 0.015)
+		T.near(rareRate(NOW - 60), 0.35875, 0.03)
 	end)
 
 	T.test("preview text", function()
