@@ -57,7 +57,7 @@ local SURROUND: { { any } } = {
 	{ "WildflowersGrass", 7.5, -11.5, 1.6, 4, 0, 1 },
 	{ "FlowerShrub", -10.5, -11, 2.4, 3, 0, 1 },
 	{ "HayBale", 17, 13, 2.4, 3.6, 90, 1 },
-	{ "FernCluster", -11, 17.5, 2.2, 3, 0, 1 },
+	{ "FernCluster", -11, 21.5, 2.2, 3, 0, 1 },
 	{ "Wheelbarrow", -15.5, 1, 2.2, 3.6, -60, 2 },
 	{ "CrateStack", 16.5, 1, 3, 3.2, 90, 2 },
 	{ "FlowerPot", 4.6, -10.4, 1.6, 1.4, 0, 2 },
@@ -70,11 +70,11 @@ local SURROUND: { { any } } = {
 	{ "Planter", 13, -11.5, 1.6, 3, 0, 4 },
 	{ "Planter", -13.5, -11.5, 1.6, 3, 0, 4 },
 	-- (ChatGPT's 2nd review: the back was empty next to the front) planting behind from the start
-	{ "PineBerryBush", 11, 17.5, 2.4, 3, 0, 1 },
-	{ "FlowerShrub", 16.5, 15.5, 2.2, 3, 0, 2 },
-	{ "WildflowersGrass", 3, 17.5, 1.4, 3.5, 0, 2 },
-	{ "FlowerShrub", 6, 17.5, 2.4, 3, 0, 5 },
-	{ "FlowerShrub", -6, 17.5, 2.4, 3, 0, 5 },
+	{ "PineBerryBush", 11, 21.5, 2.4, 3, 0, 1 },
+	{ "FlowerShrub", 16.5, 18.5, 2.2, 3, 0, 2 },
+	{ "WildflowersGrass", 3, 21.5, 1.4, 3.5, 0, 2 },
+	{ "FlowerShrub", 6, 21.5, 2.4, 3, 0, 5 },
+	{ "FlowerShrub", -6, 21.5, 2.4, 3, 0, 5 },
 	{ "LogBench", -9.5, -13.5, 1.8, 4.6, 0, 5 },
 }
 local LIFT = { [5] = 2.4 } -- the watering drone hovers
@@ -204,10 +204,27 @@ function GardenStages.build(area: Instance, frame: CFrame, level: number): Model
 		end
 	end
 
+	-- From the shed's era the garden grows 4 studs at the back, so the shed stands clear of the beds
+	-- with a proper walk between (the owner, 2026-10-28): a strip of floor and the fence moved back.
+	local back = if builds[1] then FZ1 + 4 else FZ1
+	if builds[1] then
+		local floor = area:FindFirstChild("Floor")
+		local ext = part(
+			m,
+			"FloorExt",
+			Vector3.new(FX * 2, 0.2, back - FZ1),
+			frame * CFrame.new(0, 0.1, (FZ1 + back) / 2),
+			if floor and floor:IsA("BasePart") then floor.Color else Color3.fromRGB(196, 134, 82)
+		)
+		if floor and floor:IsA("BasePart") then
+			ext.Material, ext.TopSurface = floor.Material, floor.TopSurface
+		end
+	end
+
 	-- 2 the fence
-	fenceRun(m, frame, -FX, FZ1, FX, FZ1, tf, tiers[2])
-	fenceRun(m, frame, -FX, FZ0, -FX, FZ1, tf, tiers[2])
-	fenceRun(m, frame, FX, FZ0, FX, FZ1, tf, tiers[2])
+	fenceRun(m, frame, -FX, back, FX, back, tf, tiers[2])
+	fenceRun(m, frame, -FX, FZ0, -FX, back, tf, tiers[2])
+	fenceRun(m, frame, FX, FZ0, FX, back, tf, tiers[2])
 	fenceRun(m, frame, -FX, FZ0, -GATE, FZ0, tf, tiers[2])
 	fenceRun(m, frame, GATE, FZ0, FX, FZ0, tf, tiers[2])
 
@@ -272,7 +289,8 @@ function GardenStages.build(area: Instance, frame: CFrame, level: number): Model
 	-- 2026-10-28: a gable roof with overhang and fascia, a braced door in a frame, a window with a
 	-- flower box, tools hung on the wall, battens on timber)
 	if builds[1] then
-		local sx, sz, w, d, h = -9.8, 12.85, 6, 4.2, 4.8 -- (bigger, ChatGPT's reviews)
+		-- (bigger, ChatGPT's reviews; in the back strip, a 4-stud walk from the beds)
+		local sx, sz, w, d, h = -9.8, 16.6, 6, 4.2, 4.8
 		local at = function(x: number, y: number, z: number): CFrame
 			return frame * CFrame.new(sx + x, y, sz + z)
 		end
@@ -820,16 +838,16 @@ function GardenStages.build(area: Instance, frame: CFrame, level: number): Model
 		part(
 			m,
 			"IrrigationPipe",
-			Vector3.new(19, 0.22, 0.22),
-			frame * CFrame.new(-9.5, 0.35, 16),
+			Vector3.new(19, 0.22, 0.22), -- (in front of the shed, behind the greenhouse)
+			frame * CFrame.new(-9.5, 0.35, 12.8),
 			pipe,
 			Enum.Material.Metal
 		)
 		part(
 			m,
 			"IrrigationPipe",
-			Vector3.new(0.22, 0.22, 4.6),
-			frame * CFrame.new(0, 0.35, 13.7),
+			Vector3.new(0.22, 0.22, 1.6),
+			frame * CFrame.new(0, 0.35, 12.1),
 			pipe,
 			Enum.Material.Metal
 		)

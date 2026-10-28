@@ -156,7 +156,27 @@ local PROPS = {
 	{ "Ladder", "PulleyHoist", "StoreCrane", "Conveyor", "RobotArm" }, -- lifting
 	{ "SackPallet", "StoreShelf", "MetalRack", "PlasticCrates", "Vault" }, -- stock
 }
-local SLOT_AT = { { 8, -5.6 }, { -7.6, -5.6 }, { 9.2, 4.2 }, { -9.2, 4.2 } }
+-- The props stand on the lawn OUTSIDE the yard, where they have room for their real size (the
+-- owner, 2026-10-28), turned toward the house (degrees: 90 faces -x, -90 faces +x): transport and
+-- lifting on one side, containers and stock on the other.
+local SLOT_AT = { { 17.5, -4, 90 }, { -18, -3.5, -90 }, { 17.5, 6.5, 90 }, { -17.5, 7, -90 } }
+-- A ring of store life round the yard that grows with the eras and is never taken away: kit
+-- model, x, z, real height, foot, turn, from which era.
+local SURROUND: { { any } } = {
+	{ "WoodBarrel", 14.5, -9, 2.6, 2, 0, 1 },
+	{ "CrateStack", -14.8, -9.5, 3, 3, 0, 1 },
+	{ "HayBale", 6, 13, 2.4, 3.4, 0, 1 },
+	{ "FlowerShrub", -8, 13.5, 2.2, 3, 0, 1 },
+	{ "SackPallet", -6, 13.5, 2.6, 3.6, 180, 2 },
+	{ "WoodBarrel", 16, -11, 2.6, 2, 0, 2 },
+	{ "Wheelbarrow", 9.5, 13.5, 2.2, 3.4, 30, 2 },
+	{ "BarrelRack", 15, 13.5, 3.4, 4.6, 180, 3 },
+	{ "CrateStack", -15, 13.5, 3, 3, 0, 3 },
+	{ "PlasticCrates", -15.5, -12.5, 2.8, 3, 0, 4 },
+	{ "HandCart", 2, 14, 2.8, 3.4, 0, 4 },
+	{ "Planter", 4.5, -12, 1.6, 2.8, 0, 5 },
+	{ "Planter", -4.5, -12, 1.6, 2.8, 0, 5 },
+}
 -- real heights (studs): 0.75 m wheelbarrow, 1 m cart, 1.1 m pallet jack (handle), 1.9 m forklift,
 -- 0.85 m hover cart; 1.25 m barrel rack, 1.5 m crate wall, 2.1 m silo, 1.4 m mini container, 2.1 m
 -- goo tank; 2.1 m ladder, 1.8 m hoist, 2.1 m yard crane, 1.05 m conveyor, 1.9 m robot arm; 1.05 m
@@ -167,7 +187,7 @@ local HEIGHT = {
 	{ 6, 5.2, 6, 3, 5.5 },
 	{ 3, 5, 6, 3.4, 3.6 },
 }
-local FOOT = { 9, 9, 5.6, 5.6 } -- the widest a slot's model may be (the room it has)
+local FOOT = { 8, 8, 7, 6 } -- the widest a slot's model may be (the room it has)
 
 -- the house: 12 wide (x), 9 deep (z from 0 to 9), its door to the front (-z)
 local W, D, Z0 = 12, 9, 0
@@ -633,8 +653,8 @@ function PantryStages.build(area: Instance, frame: CFrame, level: number): Model
 			part(
 				m,
 				"HoistRope",
-				Vector3.new(0.1, 1.6, 0.1),
-				at(0, top + h - 1.85, Z0 - 2.2),
+				Vector3.new(0.1, 0.8, 0.1), -- (short: the crate hangs clear above the canopy)
+				at(0, top + h - 1.45, Z0 - 2.2),
 				Color3.fromRGB(226, 196, 140),
 				Enum.Material.Fabric
 			)
@@ -642,7 +662,7 @@ function PantryStages.build(area: Instance, frame: CFrame, level: number): Model
 				m,
 				"HoistCrate",
 				Vector3.new(1.1, 0.9, 1.1),
-				at(0, top + h - 3.1, Z0 - 2.2),
+				at(0, top + h - 2.3, Z0 - 2.2),
 				Color3.fromRGB(196, 140, 80),
 				Enum.Material.WoodPlanks
 			)
@@ -1003,11 +1023,27 @@ function PantryStages.build(area: Instance, frame: CFrame, level: number): Model
 		finial.Shape = Enum.PartType.Ball
 	end
 
+	-- a model turned on the spot about its own middle
+	local function turn(model: Model?, degrees: number)
+		if model and degrees ~= 0 then
+			local box = model:GetBoundingBox()
+			local centre = CFrame.new(box.Position)
+			model:PivotTo(centre * CFrame.Angles(0, math.rad(degrees), 0) * centre:ToObjectSpace(model:GetPivot()))
+		end
+	end
+	-- the store life round the yard
+	local nowEra = math.clamp(math.ceil(level / 10), 1, 5)
+	for _, s in SURROUND do
+		if nowEra >= s[7] then
+			turn(place(m, frame, s[1], s[2], s[3], s[4], s[5]), s[6])
+		end
+	end
 	-- the store props
 	for j = 1, 4 do
 		local era = props[j]
 		if era > 0 then
-			place(m, frame, PROPS[j][era], SLOT_AT[j][1], SLOT_AT[j][2], HEIGHT[j][era], FOOT[j])
+			local slot = SLOT_AT[j]
+			turn(place(m, frame, PROPS[j][era], slot[1], slot[2], HEIGHT[j][era], FOOT[j]), slot[3])
 		end
 	end
 	return m
