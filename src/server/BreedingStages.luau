@@ -1,9 +1,9 @@
 --!strict
 -- The breeding pen's 50 levels (the owner, 2026-10-28: "the same as the pantry and the garden"). Five
 -- eras of ten levels; in each era:
---   level 1 of the era   the pen grows: the cupcake cottage becomes a bigger cake house (CakeCottage2
---                        .. 5, more tiers each era), and a nest or an incubator is added (a 3rd nest
---                        at 11, a 3rd incubator at 21, a 4th nest at 31, a 4th incubator at 41)
+--   level 1 of the era   the pen grows: the nesting shelter is rebuilt bigger in the era's material with
+--                        its own roof, and a nest or an incubator is added (a 3rd nest at 11, a 3rd
+--                        incubator at 21, a 4th nest at 31, a 4th incubator at 41)
 --   levels 2-5           four care props, one a level, each slot taking its next, better version:
 --                        1 feed (bucket > hay feeder > grain feeder > auto feeder > goo feeder)
 --                        2 egg care (basket > crate > egg cart > egg scanner > egg pod)
@@ -23,15 +23,25 @@ local BreedingStages = {}
 BreedingStages.MaxLevel = 50
 
 local TIERS = PantryStages.Tiers
-local part, place = PantryStages.part, PantryStages.place
+local part, wedge, place = PantryStages.part, PantryStages.wedge, PantryStages.place
 
 -- the pen: x -11 .. 19, z -13 .. 13, the gate x 0 .. 8 at the front
 local X0, X1, Z0, Z1, GATE0, GATE1 = -11, 19, -13, 13, 0, 8
 
-local COTTAGES = { "Cottage", "CakeCottage2", "CakeCottage3", "CakeCottage4", "CakeCottage5" }
--- sized by their width, so each era's house is clearly bigger (the later models are wider than tall)
-local COTTAGE_HEIGHT = { 12.5, 30, 30, 30, 30 }
-local COTTAGE_FOOT = { 10.5, 11.8, 12.8, 13.8, 14.4 }
+-- The nesting shelter at the back of the pen (the owner, 2026-10-28: the cake house did not fit the
+-- farm's buildings; ChatGPT's layout stays; open, not a closed house): in the era's material tier, a
+-- bigger shelter each era with its own roof, open to the gate, a heart in the front truss (the
+-- pen's mark), nest cubbies along its back, and one piece that says what it is for: straw and a
+-- lantern, a cupola, an iron stove, a skylight over the nests, a glowing heart lantern.
+-- era -> width, depth, height to the beams, roof rise, width of the straw spill at the front
+local BARN = {
+	{ 9, 7, 5.2, 3.6, 3.2 },
+	{ 10.5, 7.5, 5.6, 4.2, 3.6 },
+	{ 11.5, 8, 6, 3.6, 3.8 },
+	{ 12.5, 8.5, 6.4, 1.8, 4.2 },
+	{ 13, 8.5, 6.6, 3, 4.2 },
+}
+local BX, BZ = 4, 2.6 -- the middle of its front face (the gate's middle is x 4)
 
 -- nests and incubators: where, and from which level
 local NESTS = { { -5.5, -2, 1 }, { 13.5, -2, 1 }, { -7.5, -9, 11 }, { 19, -9, 31 } }
@@ -185,6 +195,203 @@ local function incubator(m: Model, base: CFrame, t: any)
 	part(m, "IncButton", Vector3.new(0.4, 0.4, 0.2), base * CFrame.new(0.7, 1.3, -1.82), Color3.fromRGB(230, 70, 70))
 end
 
+-- The nesting shelter of an era (see BARN): open on every side so what the slimes do inside shows
+-- (the owner, 2026-10-28: "a covered frame, not a closed house"): a base with a straw bed, posts at
+-- the corners and the side middles (timber, painted, brick piers, steel, slime-tech), beams round
+-- the top with knee braces, a gable roof whose ridge runs to the back, an open truss to the gate with
+-- the pen's heart hung in it, a closed back gable, a low back wall with nest cubbies, and the era's
+-- own piece.
+local function nestingBarn(m: Model, frame: CFrame, era: number)
+	local t = TIERS[era]
+	local b = BARN[era]
+	local w, d, h, rise, dw = b[1], b[2], b[3], b[4], b[5]
+	local zc, zb = BZ + d / 2, BZ + d
+	local function at(x: number, y: number, z: number): CFrame
+		return frame * CFrame.new(BX + x, FLOOR + y, z)
+	end
+	local dark = Color3.fromRGB(46, 40, 38)
+	local pink = Color3.fromRGB(240, 132, 168)
+	local straw = Color3.fromRGB(232, 196, 120)
+	local postCol, postMat = t.frame, t.frameMat
+	if era == 3 then
+		postCol, postMat = t.walls, t.wallMat -- brick piers
+	end
+	local pw = if era == 3 then 0.9 else 0.55
+
+	-- the base and its straw bed
+	part(m, "ShelterBase", Vector3.new(w + 0.6, 0.5, d + 0.6), at(0, 0.25, zc), t.base, t.baseMat)
+	part(m, "ShelterStraw", Vector3.new(w - 1, 0.12, d - 1.2), at(0, 0.56, zc - 0.3), straw, Enum.Material.Fabric)
+
+	-- posts, the beams round the top, knee braces at the open front
+	for _, sx in { -1, 1 } do
+		for _, z in { BZ, zc, zb } do
+			part(m, "ShelterPost", Vector3.new(pw, h, pw), at(sx * w / 2, 0.5 + h / 2, z), postCol, postMat)
+		end
+		part(m, "ShelterBeam", Vector3.new(0.45, 0.45, d + 0.6), at(sx * w / 2, 0.5 + h - 0.2, zc), t.frame, t.frameMat)
+		part(
+			m,
+			"ShelterBrace",
+			Vector3.new(0.25, 1.8, 0.25),
+			at(sx * (w / 2 - 0.6), 0.5 + h - 0.85, BZ) * CFrame.Angles(0, 0, sx * math.rad(45)),
+			t.frame,
+			t.frameMat
+		)
+	end
+	for _, z in { BZ, zb } do
+		part(m, "ShelterBeam", Vector3.new(w + 0.6, 0.45, 0.45), at(0, 0.5 + h - 0.2, z), t.frame, t.frameMat)
+	end
+	local top = 0.5 + h
+
+	-- the roof: two slopes from a ridge running front to back; the back gable closed, the front an
+	-- open truss (a king post) so the inside shows
+	local reach = w / 2 + 0.7
+	local pitch = math.atan2(rise, w / 2)
+	for _, sx in { -1, 1 } do
+		part(
+			m,
+			"ShelterRoof",
+			Vector3.new(reach / math.cos(pitch), 0.45, d + 1.4),
+			at(sx * reach / 2, top + rise - reach * math.tan(pitch) / 2 + 0.2, zc) * CFrame.Angles(0, 0, -sx * pitch),
+			t.roof,
+			t.roofMat
+		)
+		-- (a wedge's tall face is its +Z; turned so it rises toward the ridge)
+		wedge(
+			m,
+			"ShelterGable",
+			Vector3.new(0.3, rise, w / 2),
+			at(sx * w / 4, top + rise / 2, zb) * CFrame.Angles(0, -sx * math.pi / 2, 0),
+			t.walls,
+			t.wallMat
+		)
+	end
+	part(m, "ShelterRidge", Vector3.new(0.5, 0.5, d + 1.6), at(0, top + rise + 0.25, zc), t.trim, t.trimMat)
+	part(m, "ShelterKingPost", Vector3.new(0.35, rise, 0.35), at(0, top + rise / 2, BZ), t.frame, t.frameMat)
+
+	-- the pen's heart hung in the front truss (under the beam on the low steel roof)
+	local hy = if rise >= 3 then top + rise * 0.4 else top - 1.4
+	local heartCol, heartMat =
+		if era == 5 then pink else Color3.fromRGB(255, 214, 226),
+		if era == 5 then Enum.Material.Neon else Enum.Material.SmoothPlastic
+	for _, dx in { -0.54, 0.54 } do
+		local lobe = part(
+			m,
+			"ShelterHeart",
+			Vector3.new(1.5, 1.5, 0.25),
+			at(dx, hy + 0.35, BZ - 0.3),
+			heartCol,
+			heartMat
+		) :: Part
+		lobe.Shape = Enum.PartType.Ball
+	end
+	part(
+		m,
+		"ShelterHeart",
+		Vector3.new(1.25, 1.25, 0.24),
+		at(0, hy - 0.1, BZ - 0.3) * CFrame.Angles(0, 0, math.rad(45)),
+		heartCol,
+		heartMat
+	)
+
+	-- a low back wall with nest cubbies in it, straw on their sills
+	part(m, "BackWall", Vector3.new(w, 1.8, 0.5), at(0, 1.4, zb - 0.25), t.walls, t.wallMat)
+	local n = if era >= 3 then 4 else 3
+	for k = 1, n do
+		local x = (k - (n + 1) / 2) * (w - 1.6) / n
+		part(m, "Cubby", Vector3.new(1.9, 1.6, 1.4), at(x, 1.3, zb - 1.2), t.trim, t.trimMat)
+		part(m, "CubbyHole", Vector3.new(1.3, 1, 0.1), at(x, 1.35, zb - 1.92), dark)
+		part(m, "CubbyStraw", Vector3.new(1.3, 0.18, 0.4), at(x, 0.95, zb - 1.95), straw, Enum.Material.Fabric)
+	end
+
+	-- the era's own piece
+	local ridge = top + rise
+	if era == 1 then
+		-- straw spilling out over the front, a lantern hung from the front beam
+		part(
+			m,
+			"ShelterStrawSpill",
+			Vector3.new(dw + 1.2, 0.14, 1.6),
+			at(0, 0.07, BZ - 0.9),
+			straw,
+			Enum.Material.Fabric
+		)
+		part(m, "LampChain", Vector3.new(0.1, 0.6, 0.1), at(w / 2 - 1.2, top - 0.75, BZ), dark)
+		part(m, "ShelterLamp", Vector3.new(0.5, 0.7, 0.5), at(w / 2 - 1.2, top - 1.4, BZ), t.glass, Enum.Material.Neon).CastShadow =
+			false
+	elseif era == 2 then
+		-- a little cupola on the ridge, airing the nests
+		part(m, "Cupola", Vector3.new(1.6, 1.3, 1.6), at(0, ridge + 0.85, zc), t.walls, t.wallMat)
+		part(m, "CupolaVent", Vector3.new(1.65, 0.6, 1.0), at(0, ridge + 0.9, zc), dark)
+		part(m, "CupolaCap", Vector3.new(2.1, 0.3, 2.1), at(0, ridge + 1.65, zc), t.roof, t.roofMat)
+		local fin = part(m, "CupolaFinial", Vector3.one * 0.5, at(0, ridge + 2, zc), t.trim, t.trimMat) :: Part
+		fin.Shape = Enum.PartType.Ball
+	elseif era == 3 then
+		-- an iron stove in a side bay keeps the nests warm, its flue up through the roof
+		local sx, sz = -w / 2 + 1.3, zc
+		part(m, "Stove", Vector3.new(1.4, 1.5, 1.3), at(sx, 1.25, sz), Color3.fromRGB(60, 60, 66), Enum.Material.Metal)
+		part(
+			m,
+			"StoveFire",
+			Vector3.new(0.8, 0.5, 0.1),
+			at(sx, 1.1, sz - 0.66),
+			Color3.fromRGB(255, 140, 60),
+			Enum.Material.Neon
+		).CastShadow =
+			false
+		local head = top + rise * 0.3 + 1.6
+		part(
+			m,
+			"StoveFlue",
+			Vector3.new(0.45, head - 2, 0.45),
+			at(sx, 2 + (head - 2) / 2, sz),
+			Color3.fromRGB(60, 60, 66),
+			Enum.Material.Metal
+		)
+		part(
+			m,
+			"FlueCap",
+			Vector3.new(0.8, 0.25, 0.8),
+			at(sx, head + 0.12, sz),
+			Color3.fromRGB(60, 60, 66),
+			Enum.Material.Metal
+		)
+	elseif era == 4 then
+		-- a glass skylight along the ridge, light over the nests, and a vent box
+		local sky = part(
+			m,
+			"Skylight",
+			Vector3.new(2.2, 0.7, d * 0.7),
+			at(0, ridge + 0.55, zc),
+			Color3.fromRGB(196, 232, 246),
+			Enum.Material.Glass
+		)
+		sky.Transparency = 0.35
+		part(m, "SkylightFrame", Vector3.new(2.4, 0.2, d * 0.72), at(0, ridge + 0.95, zc), t.trim, t.trimMat)
+		part(m, "RoofVent", Vector3.new(1.2, 0.9, 1.2), at(w / 4, ridge - 0.2, BZ + d * 0.8), t.trim, t.trimMat)
+	else
+		-- a lantern on the ridge with a glowing heart inside
+		part(m, "LanternBase", Vector3.new(2.2, 1, 2.2), at(0, ridge + 0.6, zc), t.walls, t.wallMat)
+		part(m, "LanternInside", Vector3.new(1.4, 1.5, 1.4), at(0, ridge + 1.85, zc), dark)
+		local glow =
+			part(m, "LanternHeart", Vector3.one * 0.9, at(0, ridge + 1.85, zc), pink, Enum.Material.Neon) :: Part
+		glow.Shape = Enum.PartType.Ball
+		glow.CastShadow = false
+		for _, o in { Vector3.new(1, 0, 1), Vector3.new(-1, 0, 1), Vector3.new(1, 0, -1), Vector3.new(-1, 0, -1) } do
+			part(
+				m,
+				"LanternPost",
+				Vector3.new(0.3, 1.6, 0.3),
+				at(o.X * 0.85, ridge + 1.85, zc + o.Z * 0.85),
+				t.trim,
+				t.trimMat
+			)
+		end
+		part(m, "LanternCap", Vector3.new(2.4, 0.35, 2.4), at(0, ridge + 2.8, zc), t.roof, t.roofMat)
+		local fin = part(m, "LanternFinial", Vector3.one * 0.5, at(0, ridge + 3.2, zc), t.trim, t.trimMat) :: Part
+		fin.Shape = Enum.PartType.Ball
+	end
+end
+
 -- The pen's layer for a level. `area` is the pen model: its kit fence, gate and cottage go (the
 -- layer stands in for them); its floor and incubator pad take their tiers.
 function BreedingStages.build(area: Instance, frame: CFrame, level: number): Model
@@ -235,35 +442,8 @@ function BreedingStages.build(area: Instance, frame: CFrame, level: number): Mod
 		end
 	end
 
-	-- the cottage of this era, at the back of the pen, its door to the gate
-	local cottage = place(m, frame, COTTAGES[era], 4, 5.8, COTTAGE_HEIGHT[era], COTTAGE_FOOT[era])
-	if cottage and era == 5 then
-		-- the tall cake has no door of its own: a pink door with a heart at its foot, facing the gate
-		-- (ChatGPT's 1st breeding review: the house must stay a house)
-		local box, size = cottage:GetBoundingBox()
-		local front = frame:PointToObjectSpace(box.Position).Z - size.Z / 2
-		local pink, deep = Color3.fromRGB(240, 132, 168), Color3.fromRGB(176, 72, 112)
-		part(m, "CakeDoorFrame", Vector3.new(3.2, 4.8, 0.3), frame * CFrame.new(4, FLOOR + 2.4, front + 0.2), deep)
-		part(m, "CakeDoor", Vector3.new(2.6, 4.3, 0.3), frame * CFrame.new(4, FLOOR + 2.15, front + 0.05), pink)
-		part(m, "CakeDoorKnob", Vector3.new(0.3, 0.3, 0.2), frame * CFrame.new(3, FLOOR + 2, front - 0.15), deep)
-		for _, dx in { -0.28, 0.28 } do
-			local lobe = part(
-				m,
-				"CakeDoorHeart",
-				Vector3.new(0.7, 0.7, 0.2),
-				frame * CFrame.new(4 + dx, FLOOR + 3.45, front - 0.15),
-				Color3.fromRGB(255, 240, 246)
-			) :: Part
-			lobe.Shape = Enum.PartType.Ball
-		end
-		part(
-			m,
-			"CakeDoorHeart",
-			Vector3.new(0.55, 0.55, 0.2),
-			frame * CFrame.new(4, FLOOR + 3.2, front - 0.15) * CFrame.Angles(0, 0, math.rad(45)),
-			Color3.fromRGB(255, 240, 246)
-		)
-	end
+	-- the nesting shelter of this era, at the back of the pen, open to the gate
+	nestingBarn(m, frame, era)
 
 	-- 1 the fence, open at the gate
 	fenceRun(m, frame, X0, Z1, x1, Z1, tf)
