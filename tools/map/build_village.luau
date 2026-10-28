@@ -461,20 +461,7 @@ for _, s in { -1, 1 } do
 	light.Parent = lamp
 end
 part("GateBeam", Vector3.new(GATE + 6, 1.6, 1.6), at(0, H + 3.2, -EDGE), HONEY_DARK, nil, Enum.Material.Wood)
-local board = part("GateSign", Vector3.new(10, 3, 0.5), at(0, H + 0.8, -EDGE - 0.4), HONEY, nil, Enum.Material.Wood)
-local gui = Instance.new("SurfaceGui")
-gui.Face = Enum.NormalId.Front
-gui.CanvasSize = Vector2.new(400, 120)
-gui.LightInfluence = 0.6
-local label = Instance.new("TextLabel")
-label.Size = UDim2.fromScale(1, 1)
-label.BackgroundTransparency = 1
-label.Text = "Plot " .. PLOT -- the owner's name goes here in the game
-label.TextScaled = true
-label.Font = Enum.Font.FredokaOne
-label.TextColor3 = Color3.fromRGB(110, 70, 40)
-label.Parent = gui
-gui.Parent = board
+-- (no name sign over the gate: the owner, 2026-10-28)
 
 village.Parent = plot
 return "village built: " .. #village:GetChildren() .. " parts"

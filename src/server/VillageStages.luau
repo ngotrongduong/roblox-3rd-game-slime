@@ -378,6 +378,7 @@ function VillageStages.build(village: Instance, frame: CFrame, level: number): M
 	for _, d in village:GetChildren() do
 		if
 			d.Name == "VillageLamp"
+			or d.Name == "GateSign" -- (no name sign over the gate: the owner, 2026-10-28)
 			or (d.Name == "StoneWell" and era >= 2)
 			or (d.Name == "VillageGate" and era >= 2)
 			or (d.Name == "Fence" and d:IsA("Folder") and era >= 2)

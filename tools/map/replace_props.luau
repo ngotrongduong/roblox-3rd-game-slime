@@ -53,11 +53,9 @@ local SWAPS: { Swap } = {
 		area = "Village",
 		kit = "VillageGate",
 		seed = "GateBeam",
-		parts = { "GateTower", "GateTowerCap", "GateTowerRoof", "GateLamp", "GateBeam", "GateSign" },
+		parts = { "GateTower", "GateTowerCap", "GateTowerRoof", "GateLamp", "GateBeam" },
 		radius = 16,
-		keep = { "GateSign" },
 		light = true,
-		label = { x = 0.5, y = 0.62, w = 0.3, h = 0.15, front = 0.6 },
 	},
 	-- the areas' signposts, each with its icon painted on (the owner: low poly, 2026-10-27)
 	{ area = "FishingPondL1", kit = "SignFishing", seed = "Sign", parts = { "Sign" }, radius = 2, ground = true, shift = Vector3.new(3.5, 0, -1) },

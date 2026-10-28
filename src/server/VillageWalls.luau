@@ -6,20 +6,20 @@
 --          band and a capped top rail; posts with sunk panels, a capped top, a finial and lanterns;
 --          flower boxes along the inside. The gatehouse: stone-footed timber towers with corner posts,
 --          a lit shuttered window with a flower box, a gable roof with its ridge and finial, a beam
---          with knee braces under a little shingled roof, the sign in a frame, hanging baskets
+--          with knee braces under a little shingled roof, hanging baskets
 --   era 3  brick wall on a stone plinth: string courses, a corbelled coping and capped merlons, ivy;
 --          stone towers with quoins, a corbel band, capped merlons and torches. The gatehouse: big
 --          towers with quoins, arrow slits, banners and torches, an arch of voussoirs under a
 --          battlemented bridge with machicolations
 --   era 4  steel and glass: a concrete base, glass panes between steel mullions, a lit top rail,
 --          I-beam posts with light boxes. The portal: framed glass towers with ribbons of light, a
---          finned glass canopy, a lit sign box, bollards on the landing
+--          finned glass canopy, bollards on the landing
 --   era 5  marble: a stepped plinth, a wall with framed sunk panels, a two-layer cornice, a
 --          balustrade of vase balusters; columns with bases, capitals and urns. The arch: paired
 --          columns on plinths with tori and capitals, an architrave, a gold frieze, a cornice, a
 --          pediment edged in gold, the golden slime crest, urns, golden lamps and marble steps
--- The way through stays clear (18 studs wide, 12+ high); the sign board stays where the plot's name
--- sign (Village.GateSign) is fixed. Small pieces do not collide or cast shadows.
+-- The way through stays clear (18 studs wide, 12+ high); no name sign over it (the owner,
+-- 2026-10-28). Small pieces do not collide or cast shadows.
 local PantryStages = require(script.Parent.PantryStages)
 
 local VillageWalls = {}
@@ -503,14 +503,6 @@ function VillageWalls.build(m: Model, frame: CFrame, era: number, tiers: { numbe
 		return
 	end
 	local gsoft, gsoftMat = calm(tg)
-	-- the sign board behind the plot's name sign, in a frame
-	local function signBoard(face: Color3, faceMat: Enum.Material, rim: Color3, rimMat: Enum.Material)
-		part(m, "SignBoard", Vector3.new(10, 3.6, 0.6), at(0, 11, -HALF - 0.3), face, faceMat)
-		for _, s in { -1, 1 } do
-			bit("SignRim", Vector3.new(10.4, 0.3, 0.7), at(0, 11 + s * 1.9, -HALF - 0.3), rim, rimMat)
-			bit("SignRim", Vector3.new(0.3, 4.1, 0.7), at(s * 5.15, 11, -HALF - 0.3), rim, rimMat)
-		end
-	end
 	if era == 2 then
 		-- the timber gatehouse
 		for _, sx in { -1, 1 } do
@@ -573,7 +565,7 @@ function VillageWalls.build(m: Model, frame: CFrame, era: number, tiers: { numbe
 				tg.frame,
 				tg.frameMat
 			)
-			-- a hanging flower basket either side of the sign
+			-- a hanging flower basket either side of the way through
 			basket(at(sx * 7.2, 13, -HALF - 0.9))
 		end
 		for _, sz in { -1, 1 } do
@@ -586,7 +578,6 @@ function VillageWalls.build(m: Model, frame: CFrame, era: number, tiers: { numbe
 				tg.roofMat
 			)
 		end
-		signBoard(tg.walls, tg.wallMat, tg.frame, tg.frameMat)
 	elseif era == 3 then
 		-- the stone gatehouse
 		local banner = Color3.fromRGB(176, 52, 52)
@@ -725,7 +716,6 @@ function VillageWalls.build(m: Model, frame: CFrame, era: number, tiers: { numbe
 			part(m, "BridgeMerlon", Vector3.new(1.8, 1.6, 4.4), at(j * 3.6, 19.3, -HALF), tg.walls, tg.wallMat)
 			bit("MerlonCap", Vector3.new(2, 0.25, 4.6), at(j * 3.6, 20.2, -HALF), gsoft, gsoftMat)
 		end
-		signBoard(tg.base, tg.baseMat, gsoft, gsoftMat)
 	elseif era == 4 then
 		-- the steel and glass portal
 		for _, sx in { -1, 1 } do
@@ -783,9 +773,6 @@ function VillageWalls.build(m: Model, frame: CFrame, era: number, tiers: { numbe
 			bit("CanopyFin", Vector3.new(0.25, 0.7, 7), at(j * 2.4, 16.75, -HALF - 1), tg.frame, tg.frameMat)
 		end
 		glow("CanopyLight", Vector3.new(GATE_X * 2 + 5, 0.15, 0.3), at(0, 16.8, -HALF - 4.5), tg.trim)
-		-- the sign in a lit box
-		signBoard(tg.frame, tg.frameMat, tg.frame, tg.frameMat)
-		glow("SignGlow", Vector3.new(10.2, 0.15, 0.4), at(0, 8.95, -HALF - 0.5), tg.trim)
 		-- bollards on the landing
 		for _, sx in { -1, 1 } do
 			for _, dz in { -2.5, -6.5 } do
@@ -872,7 +859,6 @@ function VillageWalls.build(m: Model, frame: CFrame, era: number, tiers: { numbe
 				tg.wallMat
 			)
 		end
-		signBoard(tg.walls, tg.wallMat, gsoft, gsoftMat)
 	end
 end
 
