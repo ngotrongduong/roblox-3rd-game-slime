@@ -156,6 +156,144 @@ local function fenceRun(m: Model, frame: CFrame, x0: number, z0: number, x1: num
 	end
 end
 
+-- Training equipment built from parts at a player's real size where the kit models came out as toys
+-- (ChatGPT's 2nd training review): along the left fence the agility course (hurdles across a running
+-- lane, a raised balance beam, a tall climbing wall with a landing mat, three upright glowing hoop
+-- gates); on the right the log barbell on its rests and the slime-tech gravity press.
+local function equipment(m: Model, frame: CFrame, j: number, e: number, tiers: { number })
+	local t = TIERS[tiers[1]]
+	local wood, woodMat = Color3.fromRGB(150, 104, 62), Enum.Material.Wood
+	local function at(px: number, y: number, pz: number): CFrame
+		return frame * CFrame.new(px, FLOOR + y, pz)
+	end
+	local lane = 9.6 -- the running lane along the left fence
+	if j == 2 and e == 2 then
+		for _, hz in { -8, -4, 0 } do
+			for _, sx in { -1.2, 1.2 } do
+				part(m, "HurdlePost", Vector3.new(0.25, 1.9, 0.25), at(lane + sx, 0.95, hz), t.frame, t.frameMat)
+				part(m, "HurdleFoot", Vector3.new(0.3, 0.2, 1.1), at(lane + sx, 0.1, hz), t.frame, t.frameMat)
+			end
+			part(m, "HurdleBar", Vector3.new(2.6, 0.3, 0.25), at(lane, 1.75, hz), Color3.fromRGB(240, 80, 70))
+			part(m, "HurdleStripe", Vector3.new(0.6, 0.32, 0.27), at(lane, 1.75, hz), Color3.fromRGB(250, 248, 240))
+		end
+	elseif j == 2 and e == 3 then
+		part(m, "Beam", Vector3.new(0.7, 0.4, 6.4), at(lane, 1.4, -4), wood, woodMat)
+		for _, bz in { -6.6, -1.4 } do
+			part(m, "BeamLeg", Vector3.new(0.5, 1.2, 0.5), at(lane, 0.6, bz), t.frame, t.frameMat)
+			part(m, "BeamFoot", Vector3.new(1.8, 0.25, 0.6), at(lane, 0.12, bz), t.frame, t.frameMat)
+		end
+		part(m, "Mat", Vector3.new(3.2, 0.15, 7.6), at(lane, 0.08, -4), Color3.fromRGB(90, 140, 220))
+	elseif j == 2 and e == 4 then
+		local wx = 12.4
+		part(
+			m,
+			"ClimbWall",
+			Vector3.new(0.5, 5.8, 4.6),
+			at(wx, 2.9, -4),
+			Color3.fromRGB(214, 176, 124),
+			Enum.Material.WoodPlanks
+		)
+		for _, sz in { -1, 1 } do
+			part(m, "ClimbFrame", Vector3.new(0.6, 6.1, 0.35), at(wx, 3.05, -4 + sz * 2.4), t.frame, t.frameMat)
+		end
+		local holds = {
+			Color3.fromRGB(240, 80, 70),
+			Color3.fromRGB(250, 200, 60),
+			Color3.fromRGB(90, 160, 240),
+			Color3.fromRGB(110, 200, 110),
+		}
+		for k = 0, 9 do
+			local hold = part(
+				m,
+				"Hold",
+				Vector3.new(0.4, 0.45, 0.45),
+				at(wx - 0.35, 0.9 + (k % 5) * 1.05, -5.6 + (k * 1.37) % 3.4),
+				holds[k % 4 + 1]
+			) :: Part
+			hold.Shape = Enum.PartType.Ball
+		end
+		part(m, "LandingMat", Vector3.new(3, 0.5, 4.6), at(wx - 1.9, 0.25, -4), Color3.fromRGB(150, 90, 200))
+	elseif j == 2 and e == 5 then
+		local mint = Color3.fromRGB(120, 240, 220)
+		for k, hz in { -8, -4.5, -1 } do
+			local h = 4 + k * 0.3
+			for _, sx in { -1.4, 1.4 } do
+				part(m, "HoopPost", Vector3.new(0.35, h, 0.35), at(lane + sx, h / 2, hz), mint, Enum.Material.Neon).CastShadow =
+					false
+			end
+			part(m, "HoopTop", Vector3.new(3.15, 0.35, 0.35), at(lane, h, hz), mint, Enum.Material.Neon).CastShadow =
+				false
+			part(m, "HoopBase", Vector3.new(3.6, 0.3, 0.9), at(lane, 0.15, hz), t.frame, t.frameMat)
+		end
+	elseif j == 1 and e == 2 then
+		-- a 4.5-stud log barbell resting on two forked posts, a second lying on the pad
+		for _, bz in { -5.6, -2.4 } do
+			part(m, "Rest", Vector3.new(0.4, 1.6, 0.4), at(-10.4, 0.8, bz), wood, woodMat)
+		end
+		local log = part(
+			m,
+			"BarLog",
+			Vector3.new(4.6, 0.4, 0.4),
+			at(-10.4, 1.75, -4) * CFrame.Angles(0, math.pi / 2, 0),
+			Color3.fromRGB(176, 128, 84),
+			woodMat
+		) :: Part
+		log.Shape = Enum.PartType.Cylinder
+		for _, wz in { -6.1, -1.9 } do
+			local w = part(
+				m,
+				"BarWeight",
+				Vector3.new(0.6, 1.5, 1.5),
+				at(-10.4, 1.75, wz) * CFrame.Angles(0, math.pi / 2, 0),
+				wood,
+				woodMat
+			) :: Part
+			w.Shape = Enum.PartType.Cylinder
+		end
+	elseif j == 1 and e == 5 then
+		-- the gravity press: a base, two tall rails, a press bar with weights between them, a glowing
+		-- slime core in the base and a cable up the rail
+		local mint = Color3.fromRGB(120, 240, 220)
+		local px = -10.6
+		part(m, "PressBase", Vector3.new(2.6, 0.6, 4.4), at(px, 0.3, -4), t.frame, t.frameMat)
+		for _, rz in { -1.8, 1.8 } do
+			part(
+				m,
+				"PressRail",
+				Vector3.new(0.45, 6, 0.45),
+				at(px, 3.3, -4 + rz),
+				Color3.fromRGB(150, 156, 166),
+				Enum.Material.Metal
+			)
+		end
+		part(m, "PressTop", Vector3.new(0.6, 0.5, 4.2), at(px, 6.3, -4), t.frame, t.frameMat)
+		part(
+			m,
+			"PressBar",
+			Vector3.new(0.35, 0.35, 3.6),
+			at(px, 3.6, -4),
+			Color3.fromRGB(60, 60, 66),
+			Enum.Material.Metal
+		)
+		for _, wz in { -1.4, 1.4 } do
+			local w = part(
+				m,
+				"PressWeight",
+				Vector3.new(0.5, 1.4, 1.4),
+				at(px, 3.6, -4 + wz) * CFrame.Angles(0, math.pi / 2, 0),
+				Color3.fromRGB(70, 150, 140),
+				Enum.Material.Metal
+			) :: Part
+			w.Shape = Enum.PartType.Cylinder
+		end
+		local core = part(m, "PressCore", Vector3.one * 0.9, at(px - 1.1, 0.75, -4), mint, Enum.Material.Neon) :: Part
+		core.Shape = Enum.PartType.Ball
+		core.CastShadow = false
+		part(m, "PressCable", Vector3.new(0.15, 5.4, 0.15), at(px - 0.35, 3.3, -5.9), mint, Enum.Material.Neon).CastShadow =
+			false
+	end
+end
+
 -- The ground's layer for a level. `area` is the training ground: its kit fence goes (the layer
 -- stands in for it), its floor and border take their tiers, its weapon rack stands against the
 -- left fence facing in.
@@ -196,7 +334,7 @@ function TrainingStages.build(area: Instance, frame: CFrame, level: number): Mod
 			-- the dummy (ChatGPT's 1st training review)
 			if d:GetAttribute("Moved") == nil then
 				d:SetAttribute("Moved", true)
-				d:PivotTo(d:GetPivot() + frame:VectorToWorldSpace(Vector3.new(-2.6, 0, -5.4)))
+				d:PivotTo(d:GetPivot() + frame:VectorToWorldSpace(Vector3.new(-5, 0, -5.4)))
 			end
 		elseif d.Name == "WeaponRack" and d:IsA("Model") and not d:GetAttribute("Turned") then
 			d:SetAttribute("Turned", true)
@@ -304,7 +442,7 @@ function TrainingStages.build(area: Instance, frame: CFrame, level: number): Mod
 			tl.roof,
 			tl.roofMat
 		)
-		part(m, "Scoreboard", Vector3.new(6.4, 2.8, 0.5), at(0, 9.2, 11.4 + dz), tl.frame, tl.frameMat)
+		part(m, "Scoreboard", Vector3.new(8, 3.6, 0.5), at(0, 9.6, 11.4 + dz), tl.frame, tl.frameMat)
 		for _, s in { -1, 1 } do
 			local score = part(
 				m,
@@ -355,6 +493,16 @@ function TrainingStages.build(area: Instance, frame: CFrame, level: number): Mod
 		) :: Part
 		mat.Shape = Enum.PartType.Cylinder
 		mat.CanCollide = false
+		-- a light ring round the pad so it reads on the dark floors too
+		local ring = part(
+			m,
+			"SpotRing",
+			Vector3.new(0.06, 4.2, 4.2),
+			at(p[1], 0.43, p[2]) * CFrame.Angles(0, 0, math.rad(90)),
+			TIERS[tiers[1]].edge
+		) :: Part
+		ring.Shape = Enum.PartType.Cylinder
+		ring.CanCollide = false
 		local mark = Instance.new("Attachment")
 		mark.Name = "WorkSpot" .. i
 		mark.Parent = mat
@@ -404,8 +552,9 @@ function TrainingStages.build(area: Instance, frame: CFrame, level: number): Mod
 			part(
 				m,
 				"ShoulderPlate",
-				Vector3.new(1.4, 0.4, 1.2),
-				at(sx * 1.25, FLOOR + 6.4, 6) * CFrame.Angles(0, 0, sx * -0.35),
+				-- (on top of the straw arms, where the camera sees them)
+				Vector3.new(1.9, 0.5, 1.7),
+				at(sx * 1.4, FLOOR + 7.6, 5.7) * CFrame.Angles(0, 0, sx * -0.3),
 				Color3.fromRGB(150, 156, 166),
 				Enum.Material.Metal
 			)
@@ -428,7 +577,15 @@ function TrainingStages.build(area: Instance, frame: CFrame, level: number): Mod
 	-- spectators' benches on the lawn either side of the path, facing the ground, from the stands' era
 	if era >= 2 then
 		for _, x in { -9.5, 11.5 } do
-			local bench = place(m, frame, "LogBench", x, -16, 2, 5.6)
+			local bench = place(m, frame, "LogBench", x, -16, 2, 5.6, 0.1)
+			part(
+				m,
+				"BenchPad",
+				Vector3.new(6.4, 0.1, 2.4),
+				at(x, 0.05, -16),
+				Color3.fromRGB(176, 170, 160),
+				Enum.Material.Slate
+			)
 			if bench then
 				turn(bench, 180)
 			end
@@ -450,10 +607,15 @@ function TrainingStages.build(area: Instance, frame: CFrame, level: number): Mod
 				TIERS[tiers[1]].base,
 				TIERS[tiers[1]].baseMat
 			)
-			local prop = place(m, frame, PROPS[j][e], slot[1], z, HEIGHT[j][e], FOOT[j], FLOOR + 0.08)
-			local yaw = slot[3] + (FRONT_TURN[PROPS[j][e]] or 0)
-			if prop and yaw ~= 0 then
-				turn(prop, yaw)
+			local built = (j == 2 and e >= 2) or (j == 1 and (e == 2 or e == 5))
+			if built then
+				equipment(m, frame, j, e, tiers)
+			else
+				local prop = place(m, frame, PROPS[j][e], slot[1], z, HEIGHT[j][e], FOOT[j], FLOOR + 0.08)
+				local yaw = slot[3] + (FRONT_TURN[PROPS[j][e]] or 0)
+				if prop and yaw ~= 0 then
+					turn(prop, yaw)
+				end
 			end
 		end
 	end
