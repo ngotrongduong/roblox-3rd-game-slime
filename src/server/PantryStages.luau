@@ -177,7 +177,7 @@ local SPOT: { { { any } } } = {
 		{ 8.5, -6.5, 90, 3, 3 }, -- 1 m hand cart
 		-- 2.4 m small forklift ("pallet jack"), twice the first try (the owner, 2026-10-28), forks
 		-- toward the dock
-		{ 7.8, -5.4, 90, 6.8, 7.2 }, -- (a stud clear of the hoist's post)
+		{ 7.2, -5.4, 90, 6.8, 7.2 }, -- (well clear of the hoist's post)
 		{ 8.6, -6.6, 90, 6, 6.5 }, -- 2.1 m forklift, forks toward the dock
 		{ 8.5, -7, 90, 2.6, 4 }, -- hover cart, floating (the owner: it has no weight)
 	},
@@ -185,7 +185,8 @@ local SPOT: { { { any } } } = {
 		{ -9, 6.8, 90, 3.6, 4.5 }, -- 1.25 m barrel rack against the left wall
 		{ -8.4, 7.2, 0, 3.4, 3.4 }, -- 1.2 m crates in a low stack against the wall, a walk beside them
 		{ -20, 4.5, 0, 14, 8.5 }, -- 4.9 m grain silo at the back of the service yard
-		{ -19, 3.4, 0, 7, 6, "side" }, -- 2.5 m short container, doors to the front, 7 clear before them
+		-- 2.5 m short container, doors to the front, 7 clear before them and 3 clear of the hut
+		{ -18, 3.4, 0, 7, 6, "side" },
 		{ -19, 3, 0, 8.5, 6.5 }, -- 3 m goo tank in the service yard, piped to the house
 	},
 	{
@@ -193,7 +194,9 @@ local SPOT: { { { any } } } = {
 		-- (the jib hoist, twice as tall, at the yard's front-left corner, its arm over the cart, built
 		-- from parts below so its crate truly hangs from the hook; the owner, 2026-10-28)
 		{ 11.3, -9.3, 0, 10, 0, "built" },
-		{ -20.2, -6.2, 90, 12, 13 }, -- 4.2 m (boom up) crane truck across the front of the silo, 4 clear
+		-- 4.2 m (boom up) crane truck across the front of the silo, 4 clear of it, its boom swung in
+		-- over the paving so its load hangs well inside the yard
+		{ -20.2, -6.2, -90, 12, 13 },
 		{ 8.6, 6.4, 0, 3, 6 }, -- 1.05 m conveyor along the left wall, behind the forklift
 		{ 9.6, -1.4, 0, 8, 6.1 }, -- 2.8 m robot arm (twice the first try) between the dock and the cart
 	},
@@ -1144,7 +1147,7 @@ function PantryStages.build(area: Instance, frame: CFrame, level: number): Model
 	if nowEra >= 5 then
 		-- (along the service yard's outer edge, its door turned to the yard, so the container's doors
 		-- and the room before them stay clear; the owner, 2026-10-28)
-		local hx, hz, hw, hd, hh = 0, 0, 7, 4, 5.2
+		local hx, hz, hw, hd, hh = 0, 0, 7, 4, 6.6 -- (a door a player walks through, 5.5 high)
 		local hut = frame * CFrame.new(-24.1, 0, -6.4) * CFrame.Angles(0, -math.pi / 2, 0) -- its -z: +x
 		local function h(x: number, y: number, z: number): CFrame
 			return hut * CFrame.new(x, y, z)
@@ -1154,8 +1157,8 @@ function PantryStages.build(area: Instance, frame: CFrame, level: number): Model
 		part(m, "HutWalls", Vector3.new(hw, hh, hd), h(hx, FLOOR + hh / 2, hz), tw.walls, tw.wallMat)
 		part(m, "HutFascia", Vector3.new(hw + 0.9, 0.3, hd + 0.9), h(hx, FLOOR + hh + 0.15, hz), to.trim, to.trimMat)
 		part(m, "HutRoof", Vector3.new(hw + 0.8, 0.4, hd + 0.8), h(hx, FLOOR + hh + 0.5, hz), tr.roof, tr.roofMat)
-		part(m, "HutDoorDark", Vector3.new(3.2, 3.9, 0.1), h(hx, FLOOR + 1.95, hf - 0.03), Color3.fromRGB(42, 34, 30))
-		for k = 0, 6 do
+		part(m, "HutDoorDark", Vector3.new(3.2, 5.5, 0.1), h(hx, FLOOR + 2.75, hf - 0.03), Color3.fromRGB(42, 34, 30))
+		for k = 0, 9 do
 			part(
 				m,
 				"HutShutter",
@@ -1169,14 +1172,14 @@ function PantryStages.build(area: Instance, frame: CFrame, level: number): Model
 			part(
 				m,
 				"HutJamb",
-				Vector3.new(0.35, 4.2, 0.35),
-				h(hx + s * 1.78, FLOOR + 2.1, hf - 0.12),
+				Vector3.new(0.35, 5.8, 0.35),
+				h(hx + s * 1.78, FLOOR + 2.9, hf - 0.12),
 				tf.frame,
 				tf.frameMat
 			)
 		end
-		part(m, "HutHeader", Vector3.new(3.9, 0.4, 0.4), h(hx, FLOOR + 4.2, hf - 0.14), tf.frame, tf.frameMat)
-		part(m, "HutLamp", Vector3.new(0.8, 0.3, 0.3), h(hx, FLOOR + 4.65, hf - 0.2), to.glass, Enum.Material.Neon).CastShadow =
+		part(m, "HutHeader", Vector3.new(3.9, 0.4, 0.4), h(hx, FLOOR + 5.8, hf - 0.14), tf.frame, tf.frameMat)
+		part(m, "HutLamp", Vector3.new(0.8, 0.3, 0.3), h(hx, FLOOR + 6.25, hf - 0.2), to.glass, Enum.Material.Neon).CastShadow =
 			false
 	end
 	-- the jib hoist of the painted-timber era, built from parts so its crate truly hangs from the hook:
@@ -1209,7 +1212,8 @@ function PantryStages.build(area: Instance, frame: CFrame, level: number): Model
 		) :: Part
 		pulley.Shape = Enum.PartType.Cylinder
 		local withCrate = props[1] == 2
-		local ropeEnd = if withCrate then FLOOR + 6 else jibTop - 2
+		-- (the crate clears the cart's load; the empty hook clears the forklift's roof by a stud)
+		local ropeEnd = if withCrate then FLOOR + 6.8 else jibTop - 1.3
 		part(
 			m,
 			"HoistRope",

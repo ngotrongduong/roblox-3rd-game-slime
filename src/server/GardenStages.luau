@@ -244,11 +244,17 @@ function GardenStages.build(area: Instance, frame: CFrame, level: number): Model
 	for _, s in nature:GetChildren() do
 		if s.Name == "Sunflower" and s:IsA("Model") then
 			local p = frame:PointToObjectSpace(s:GetPivot().Position)
+			if s:GetAttribute("HomeX") == nil then
+				s:SetAttribute("HomeX", p.X)
+			end
 			if s:GetAttribute("HomeZ") == nil then
 				s:SetAttribute("HomeZ", p.Z)
 			end
-			local z = if builds[1] then back - 1.6 else s:GetAttribute("HomeZ") :: number
-			s:PivotTo(s:GetPivot() + frame:VectorToWorldSpace(Vector3.new(0, 0, z - p.Z)))
+			local homeX, homeZ = s:GetAttribute("HomeX") :: number, s:GetAttribute("HomeZ") :: number
+			-- (and toward the back-left corner, where the greenhouse roof does not hide their heads)
+			local x = if builds[1] then math.min(homeX + 2.3, FX - 1.4) else homeX
+			local z = if builds[1] then back - 1.6 else homeZ
+			s:PivotTo(s:GetPivot() + frame:VectorToWorldSpace(Vector3.new(x - p.X, 0, z - p.Z)))
 		end
 	end
 	if builds[1] then
