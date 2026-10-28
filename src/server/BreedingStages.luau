@@ -34,7 +34,10 @@ local COTTAGE_HEIGHT = { 12.5, 30, 30, 30, 30 }
 local COTTAGE_FOOT = { 10.5, 11.8, 12.8, 13.8, 14.4 }
 
 -- nests and incubators: where, and from which level
-local NESTS = { { -5.5, -2, 1 }, { 13.5, -2, 1 }, { -7.5, -9, 11 }, { 16, -9, 31 } }
+local NESTS = { { -5.5, -2, 1 }, { 13.5, -2, 1 }, { -7.5, -9, 11 }, { 19, -9, 31 } }
+-- From the 4th nest's era the pen grows 4 studs on its left, so that nest and the comfort corner both
+-- have room (ChatGPT's 1st breeding review); it never shrinks again.
+local X1_WIDE, WIDE_FROM = 23, 31
 local INCUBATORS = { { -17, -3.5, 1 }, { -17, 5.5, 1 }, { -17, -10.5, 21 }, { -17, 12.5, 41 } }
 
 local PROPS = {
@@ -47,12 +50,22 @@ local PROPS = {
 local HEIGHT = {
 	{ 1.6, 3.4, 3.6, 4, 3.8 },
 	{ 1.4, 1.8, 2.6, 3.4, 3.4 },
-	{ 1.6, 1.8, 1.4, 1.4, 2 },
+	{ 1.6, 1.8, 1.4, 2.6, 2 }, -- (the slime bed big enough to read as a bed)
 	{ 4.6, 5.2, 4.4, 4.4, 4.6 },
 }
-local SLOT_AT = { { -9, 3.5 }, { 17, 3.5 }, { 11, -8.5 }, { -2, -9 } }
-local FOOT = { 3.4, 3.4, 4, 3 }
+-- Each slot where it does its job (the owner, 2026-10-28: ask of every piece "does it belong here");
+-- +x is the pen's left as one walks in, the incubators stand outside its right fence:
+--   feed     on the left right beside the hay bale, the pen's feed store
+--   egg care on the right just inside the side gate to the incubators (eggs go from nests to them)
+--   comfort  in the front-left, inward from the gate post so it shows from the gate
+--   warmth   against the right fence between the two right-hand nests, warming them (ChatGPT's 1st
+--            review: at the gate it read as a gate light)
+local SLOT_AT = { { 15.5, 4.8 }, { -9.2, 4.6 }, { 12, -7.2 }, { -9.8, -5 } }
+local FOOT = { 3.4, 3, 4, 2.2 }
 local LIFT = { [3] = { [5] = 1 } } -- the cloud bed floats
+local FLOOR = 0.4 -- the pen's floor stands this far above the lawn; what is on it stands on its top
+-- the side gate in the right fence, toward the incubators
+local SIDE0, SIDE1 = -1.2, 2.8
 
 -- What a level holds: the cottage's era, how many nests and incubators, each prop slot's era (0:
 -- none), each build's tier (fence, floor, nest platforms, incubator pad, gate arch).
@@ -104,7 +117,16 @@ local function fenceRun(m: Model, frame: CFrame, x0: number, z0: number, x1: num
 	for k = 0, n do
 		local p = a + dir * (len * k / n)
 		part(m, "PenPost", Vector3.new(0.7, 3.4, 0.7), frame * CFrame.new(p.X, 1.7, p.Z), t.frame, t.frameMat)
-		part(m, "PenPostCap", Vector3.new(0.95, 0.3, 0.95), frame * CFrame.new(p.X, 3.5, p.Z), t.trim, t.trimMat)
+		-- (a glowing trim lights every other cap only, so the fence does not outshine the pen)
+		local dim = t.trimMat == Enum.Material.Neon and k % 2 == 1
+		part(
+			m,
+			"PenPostCap",
+			Vector3.new(0.95, 0.3, 0.95),
+			frame * CFrame.new(p.X, 3.5, p.Z),
+			if dim then t.frame else t.trim,
+			if dim then t.frameMat else t.trimMat
+		)
 	end
 	local mid = (a + b) / 2
 	for _, y in { 1.2, 2.6 } do
@@ -188,15 +210,77 @@ function BreedingStages.build(area: Instance, frame: CFrame, level: number): Mod
 		end
 	end
 
+	-- the pen grown on its left from the 4th nest's era: its floor carried on, the scenery standing
+	-- there taken away
+	local x1 = if level >= WIDE_FROM then X1_WIDE else X1
+	if x1 > X1 then
+		local floor = area:FindFirstChild("PenFloor")
+		local ext = part(
+			m,
+			"PenFloorExt",
+			Vector3.new(x1 - X1, 0.4, Z1 - Z0),
+			frame * CFrame.new((X1 + x1) / 2, 0.2, (Z0 + Z1) / 2),
+			if floor and floor:IsA("BasePart") then floor.Color else TIERS[tiers[2]].yard
+		)
+		if floor and floor:IsA("BasePart") then
+			ext.Material, ext.MaterialVariant, ext.TopSurface = floor.Material, floor.MaterialVariant, floor.TopSurface
+		end
+		for _, d in (area.Parent or area):GetDescendants() do
+			if d:IsA("Model") and d.Parent and d.Parent.Name == "Nature" then
+				local p = frame:PointToObjectSpace(d:GetPivot().Position)
+				if p.X > X1 - 0.5 and p.X < x1 + 1.5 and p.Z > Z0 - 1 and p.Z < Z1 + 1 then
+					d.Parent = nil
+				end
+			end
+		end
+	end
+
 	-- the cottage of this era, at the back of the pen, its door to the gate
-	place(m, frame, COTTAGES[era], 4, 5.8, COTTAGE_HEIGHT[era], COTTAGE_FOOT[era])
+	local cottage = place(m, frame, COTTAGES[era], 4, 5.8, COTTAGE_HEIGHT[era], COTTAGE_FOOT[era])
+	if cottage and era == 5 then
+		-- the tall cake has no door of its own: a pink door with a heart at its foot, facing the gate
+		-- (ChatGPT's 1st breeding review: the house must stay a house)
+		local box, size = cottage:GetBoundingBox()
+		local front = frame:PointToObjectSpace(box.Position).Z - size.Z / 2
+		local pink, deep = Color3.fromRGB(240, 132, 168), Color3.fromRGB(176, 72, 112)
+		part(m, "CakeDoorFrame", Vector3.new(3.2, 4.8, 0.3), frame * CFrame.new(4, FLOOR + 2.4, front + 0.2), deep)
+		part(m, "CakeDoor", Vector3.new(2.6, 4.3, 0.3), frame * CFrame.new(4, FLOOR + 2.15, front + 0.05), pink)
+		part(m, "CakeDoorKnob", Vector3.new(0.3, 0.3, 0.2), frame * CFrame.new(3, FLOOR + 2, front - 0.15), deep)
+		for _, dx in { -0.28, 0.28 } do
+			local lobe = part(
+				m,
+				"CakeDoorHeart",
+				Vector3.new(0.7, 0.7, 0.2),
+				frame * CFrame.new(4 + dx, FLOOR + 3.45, front - 0.15),
+				Color3.fromRGB(255, 240, 246)
+			) :: Part
+			lobe.Shape = Enum.PartType.Ball
+		end
+		part(
+			m,
+			"CakeDoorHeart",
+			Vector3.new(0.55, 0.55, 0.2),
+			frame * CFrame.new(4, FLOOR + 3.2, front - 0.15) * CFrame.Angles(0, 0, math.rad(45)),
+			Color3.fromRGB(255, 240, 246)
+		)
+	end
 
 	-- 1 the fence, open at the gate
-	fenceRun(m, frame, X0, Z1, X1, Z1, tf)
-	fenceRun(m, frame, X0, Z0, X0, Z1, tf)
-	fenceRun(m, frame, X1, Z0, X1, Z1, tf)
+	fenceRun(m, frame, X0, Z1, x1, Z1, tf)
+	-- (the right fence opens at a side gate toward the incubators, a paved step across the grass)
+	fenceRun(m, frame, X0, Z0, X0, SIDE0, tf)
+	fenceRun(m, frame, X0, SIDE1, X0, Z1, tf)
+	part(
+		m,
+		"SidePath",
+		Vector3.new(2.6, 0.4, SIDE1 - SIDE0),
+		frame * CFrame.new(X0 - 1.25, 0.2, (SIDE0 + SIDE1) / 2),
+		tp.base,
+		tp.baseMat
+	)
+	fenceRun(m, frame, x1, Z0, x1, Z1, tf)
 	fenceRun(m, frame, X0, Z0, GATE0, Z0, tf)
-	fenceRun(m, frame, GATE1, Z0, X1, Z0, tf)
+	fenceRun(m, frame, GATE1, Z0, x1, Z0, tf)
 
 	-- 5 the gate arch: two posts, a board and a pink heart
 	for _, x in { GATE0, GATE1 } do
@@ -297,8 +381,22 @@ function BreedingStages.build(area: Instance, frame: CFrame, level: number): Mod
 	for j = 1, 4 do
 		local e = props[j]
 		if e > 0 then
-			local lift = LIFT[j] and LIFT[j][e]
+			local lift = FLOOR + (LIFT[j] and LIFT[j][e] or 0)
 			place(m, frame, PROPS[j][e], SLOT_AT[j][1], SLOT_AT[j][2], HEIGHT[j][e], FOOT[j], lift)
+			if j == 4 and e == 5 then
+				-- the holo beacon's warm field: a soft glowing disc on the floor round it
+				local disc = part(
+					m,
+					"WarmField",
+					Vector3.new(0.06, 2.4, 2.4),
+					frame * CFrame.new(SLOT_AT[4][1], FLOOR + 0.04, SLOT_AT[4][2]) * CFrame.Angles(0, 0, math.pi / 2),
+					Color3.fromRGB(255, 170, 200),
+					Enum.Material.Neon
+				) :: Part
+				disc.Shape = Enum.PartType.Cylinder
+				disc.Transparency = 0.5
+				disc.CastShadow = false
+			end
 		end
 	end
 	return m

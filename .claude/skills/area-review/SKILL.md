@@ -45,11 +45,14 @@ upgrade" and the notes under it). Sending to ChatGPT: skill `chatgpt-review`.
    - Shoot each era (L05/15/25/35/45, or the levels the owner named) from the same camera; then the close-ups
      that matter. Stop Play.
    - Cameras used so far: pantry (0, 1) wide eye (-14, 28, -40) target (-9, 4, 0), close (-3, 17, -27) to
-     (5, 3, -4); garden (1, 1) eye (-6, 26, -34) target (0, 2, 5).
+     (5, 3, -4); garden (1, 1) eye (-6, 26, -34) target (0, 2, 5); breeding (1, 0) eye (-2, 30, -42) target
+     (-1, 2, 0), dummy at (2, 2.9, -9).
 5. **Self-review the pictures first** against the rules above; fix what you see before asking anyone.
 6. **Copy the shots** to `docs/areas/upgrades/review/<area>-r<round>-l<level>.jpg` (a scratchpad .ps1 with
    Copy-Item from the tool-results folder).
-7. **ChatGPT** (skill `chatgpt-review`), one chat per area, up to 5 pictures a message. Brief in one paragraph:
+7. **ChatGPT** (skill `chatgpt-review`), one chat per area (pantry `/c/6ae139d2-409c-83ec-833c-ff8b31ccc2e5`,
+   garden `/c/6ae146a7-ddf8-83ec-8abc-24d3874fcf8f`, breeding `/c/6ae16cd6-5028-83ec-ae28-cea433d73b62`), up to 5
+   pictures a message. Brief in one paragraph:
    what the picture shows and the 5-stud block, the owner's rules above, what this round changed, what you did
    not take and why, your own doubts, and the ask: "judge every prop per level: right place for its function,
    right size against the red block, what could stand beside it, what overlaps or floats; give the 3-8 most
