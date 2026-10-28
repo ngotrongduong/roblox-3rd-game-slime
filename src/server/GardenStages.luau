@@ -33,7 +33,7 @@ local FX, FZ0, FZ1, GATE = 13, -9, 15, 4
 -- fence runs x -13..13, z -9..15 (19 from the shed's era); the beds x -9.3..9.3, z -2.3..10.3 with
 -- the work path between them; the front corners inside (x 2..12, z -8..-3 each side) are open
 -- ground, the sides (x 9.5..12.5) narrow strips along the beds, the back (z 10.5..) the working
--- corner; the shed stands back-left (+x is the garden's left as one walks in).
+-- corner; the shed stands back-right (+x is the garden's left as one walks in).
 --   water      a watering can at a bed's front edge; then a rain barrel under the shed's eaves; a
 --              hand pump in the front-right corner; a sprinkler on a stand between the beds' far
 --              ends; a watering drone hovering over the beds
@@ -55,14 +55,16 @@ local SPOT = {
 		{ -5.6, 15.6, 0, 2.9, 2.4 }, -- 1 m rain barrel at the shed's side, under its eaves
 		{ -9.5, -6.2, 0, 3.4, 2.4 }, -- 1.2 m hand pump in the front-right corner
 		{ 0, 11.6, 0, 2.8, 2 }, -- 1 m sprinkler on its stand between the beds' far ends
-		{ 0, 4, 0, 1.4, 2.4, 4.2 }, -- watering drone over the work path
+		{ 0, 4, 0, 1.4, 2.4, 6.6 }, -- watering drone over the work path, well above a player's head
 	},
 	{
 		{ 11.6, 4, -90, 4.6, 3.6 }, -- 1.6 m tool rack against the left fence, facing the beds
-		{ 8.5, -6, -60, 2.6, 2.6 }, -- 0.9 m soil cart parked in the front-left corner
-		{ 8.5, -6, -90, 3, 3.6 }, -- 1 m seed spreader
-		{ 8.5, -6, -90, 3.2, 4.4 }, -- 1.1 m tiller, handles toward the path
-		{ 8.5, -6, -90, 3.6, 3.4 }, -- 1.25 m garden robot
+		-- (the machines' bay: the front-left corner, handles toward the gate path, 3 studs clear to
+		-- pull them out; ChatGPT's 5th garden review)
+		{ 8.8, -5.6, -120, 2.6, 2.6 }, -- 0.9 m soil cart
+		{ 8.8, -5.6, -120, 3, 3.6 }, -- 1 m seed spreader
+		{ 8.8, -5.6, -120, 3.2, 4.4 }, -- 1.1 m tiller
+		{ 8.8, -5.6, -120, 3.6, 3.4 }, -- 1.25 m garden robot, on its charging pad
 	},
 	{
 		{ 10.4, 12.6, 0, 2.9, 2.6 }, -- 1 m compost bin in the back-left corner (clear of the shed door)
@@ -72,11 +74,12 @@ local SPOT = {
 		{ 10.4, 12.8, 0, 5, 3.6 }, -- 1.75 m goo composter
 	},
 	{
-		{ -11.3, 3.8, 90, 5.4, 3.8 }, -- 1.9 m scarecrow beside the right bed, arms along it
-		{ -11.3, 3.8, 90, 5.7, 3.8 },
-		{ -11.3, 3.8, 0, 5.4, 2.8 }, -- pinwheel post
-		{ -11.3, 3.8, 0, 5.7, 3.2 }, -- bird repeller
-		{ -11.3, 3.8, 90, 5.6, 4 }, -- robot scarecrow
+		-- (in the right strip beside the beds, clear of the pickets, facing the vegetables)
+		{ -11, 3.8, -90, 5.4, 3.6 }, -- 1.9 m scarecrow, arms along the bed
+		{ -11, 3.8, -90, 5.7, 3.6 },
+		{ -11, 3.8, 0, 5.4, 2.8 }, -- pinwheel post
+		{ -11, 2.8, 0, 5.7, 3.2 }, -- bird repeller, a stud forward clear of the shed corner
+		{ -11, 3.8, -90, 5.6, 3.6 }, -- robot scarecrow
 	},
 }
 -- Farm life round the garden that grows with the eras and is never taken away (kit model, x, z,
@@ -89,7 +92,7 @@ local SURROUND: { { any } } = {
 	{ "FlowerShrub", 14.5, -10.5, 2.2, 3, 0, 1 },
 	{ "PineBerryBush", 11, 21.5, 2.4, 3, 0, 1 },
 	{ "FernCluster", -11, 21.5, 2.2, 3, 0, 1 },
-	{ "CrateStack", -4.2, -6.5, 2.8, 2.6, 20, 2 }, -- harvest waiting by the path
+	{ "CrateStack", -5.6, -7.4, 2, 2.2, 20, 2 }, -- harvest waiting beside the gate, low, off the path
 	{ "Wheelbarrow", 6.8, -11.6, 2.2, 3, -30, 2 },
 	{ "FlowerShrub", 16.5, 18.5, 2.2, 3, 0, 2 },
 	{ "WildflowersGrass", 3, 21.5, 1.4, 3.5, 0, 2 },
@@ -139,6 +142,10 @@ local function fenceRun(m: Model, frame: CFrame, x0: number, z0: number, x1: num
 		picketCol, picketMat = Color3.fromRGB(196, 140, 84), Enum.Material.Wood
 	elseif tier == 3 then
 		postCol, postMat, postW, postH = Color3.fromRGB(176, 88, 66), Enum.Material.Brick, 0.9, 2.9
+	elseif tier == 5 then
+		-- mint-white pickets; the glow only on one thin top rail, so the props in front still read
+		-- (ChatGPT's 5th garden review)
+		picketCol, picketMat = Color3.fromRGB(214, 240, 232), Enum.Material.SmoothPlastic
 	elseif tier >= 6 then
 		picketCol, picketMat = Color3.fromRGB(246, 243, 236), Enum.Material.SmoothPlastic
 		postCol, postMat, postW, postH = Color3.fromRGB(232, 226, 214), Enum.Material.Marble, 0.8, 3.1
@@ -181,7 +188,7 @@ local function fenceRun(m: Model, frame: CFrame, x0: number, z0: number, x1: num
 			)
 		end
 	end
-	if tier >= 6 then
+	if tier >= 5 then
 		local mid = (a + b) / 2
 		part(
 			m,
@@ -932,8 +939,64 @@ function GardenStages.build(area: Instance, frame: CFrame, level: number): Model
 		local era = props[j]
 		if era > 0 then
 			local slot = SPOT[j][era]
-			local lift = (slot[6] or 0) + floorAt(slot[1], slot[2])
-			local prop = place(m, frame, PROPS[j][era], slot[1], slot[2], slot[4], slot[5], lift)
+			local name = PROPS[j][era]
+			local x, z = slot[1], slot[2]
+			local lift = (slot[6] or 0) + floorAt(x, z)
+			-- small parts that say what a prop is for (ChatGPT's 5th garden review)
+			local function bit(
+				n: string,
+				size: Vector3,
+				dx: number,
+				y: number,
+				dz: number,
+				col: Color3,
+				mat: Enum.Material?
+			)
+				return part(m, n, size, frame * CFrame.new(x + dx, y, z + dz), col, mat)
+			end
+			local metal, teal = Color3.fromRGB(110, 116, 126), Color3.fromRGB(70, 190, 170)
+			if name == "WateringCan" then
+				-- the can rests on a pale stone so it reads against the soil
+				bit(
+					"CanSlab",
+					Vector3.new(1.6, 0.1, 1.3),
+					0,
+					lift + 0.05,
+					0,
+					Color3.fromRGB(214, 206, 190),
+					Enum.Material.Slate
+				)
+				lift += 0.1
+			elseif name == "RainBarrel" then
+				-- a downpipe from the shed's eave into the barrel, a tap low on its front
+				bit("Downpipe", Vector3.new(0.22, 1.6, 0.22), -1, lift + 4, 0, metal, Enum.Material.Metal)
+				bit("DownpipeElbow", Vector3.new(1.1, 0.22, 0.22), -0.5, lift + 3.3, 0, metal, Enum.Material.Metal)
+				bit("Tap", Vector3.new(0.25, 0.25, 0.5), 0, lift + 0.7, -1.2, metal, Enum.Material.Metal)
+			elseif name == "HandPump" then
+				local bucket =
+					bit("Bucket", Vector3.new(0.8, 0.9, 0.9), 0, lift + 0.4, -1.4, metal, Enum.Material.Metal) :: Part
+				bucket.Shape = Enum.PartType.Cylinder
+				bucket.CFrame *= CFrame.Angles(0, 0, math.pi / 2)
+			elseif name == "WaterDrone" then
+				-- its dock by the shed, where it rests when it is not flying
+				bit("DroneDock", Vector3.new(1.8, 0.15, 1.8), -5, 0.28, 8.8, teal, Enum.Material.SmoothPlastic)
+			elseif name == "GardenBot" then
+				-- a charging pad under it and a charging post beside it
+				bit(
+					"ChargePad",
+					Vector3.new(3.2, 0.1, 3.2),
+					0,
+					lift + 0.05,
+					0,
+					Color3.fromRGB(60, 70, 80),
+					Enum.Material.Metal
+				)
+				bit("ChargePost", Vector3.new(0.35, 1.8, 0.35), 2.4, lift + 0.9, 0, metal, Enum.Material.Metal)
+				bit("ChargeLight", Vector3.new(0.45, 0.3, 0.45), 2.4, lift + 1.9, 0, teal, Enum.Material.Neon).CastShadow =
+					false
+				lift += 0.1
+			end
+			local prop = place(m, frame, name, x, z, slot[4], slot[5], lift)
 			if prop and slot[3] ~= 0 then
 				-- turned on the spot, about its own middle
 				local box = prop:GetBoundingBox()
