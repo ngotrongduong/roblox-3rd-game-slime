@@ -227,6 +227,11 @@ Done (all checked in Studio at every era, committed, the kit exported into `asse
   tier (`BreedingStages`).
 - The fountain (`VillageFountain`): one per era, moving water (beam curtains, jets, splashes, ripples, shimmer), the
   golden slime statue on the marble one.
+- The base slime body (2026-10-28): Blender build `tools/blender/slime_body.py`, files in `art/models/slime_body/`
+  (rigged `SlimeBody.fbx` + `SlimeBodyOutline.fbx` hull, overlay/roughness/normal maps, `rounds.md`). Front silhouette
+  IoU 0.984 against `slime.base.navy.png` (the ceiling for a round body); 2,400 triangles; bones Root/Base/Top and
+  Left/Right/Front/Back (Bone.Transform squash about the feet). Look: MeshPart.Color = the slime colour, SurfaceAppearance
+  AlphaMode Overlay with the painting's highlights. Not yet in Studio: the owner imports the FBX (File > Import 3D).
 - How it was done is packaged: skills `area-review`, `prop-craft` (new: the owner's quality bar and placing rules,
   the generate/check/export tools `tools/kit/intake|viewer|upright|export_kit|check_kit.luau`), `chatgpt-review`;
   lessons in `.claude/skills/studio-build/LESSONS.md`; shots in `docs/areas/upgrades/review/`.

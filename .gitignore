@@ -7,6 +7,9 @@ art/upload_now/
 art/inbox/
 # Work places opened in Studio (the map is built in them by tools/map scripts).
 assets/raw/
+# Blender comparison renders of every round (tools/blender scripts make them again; the final sheets
+# are copied next to the model).
+art/models/*/review/
 *.rbxlx
 *.rbxl.lock
 *.rbxlx.lock
