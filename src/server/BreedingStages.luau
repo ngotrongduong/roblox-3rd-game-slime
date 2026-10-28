@@ -45,10 +45,9 @@ local BARN = {
 local BX, BZ = 4, 2.6 -- the middle of its front face (the gate's middle is x 4)
 
 -- nests and incubators: where, and from which level
-local NESTS = { { -5.5, -2, 1 }, { 13.5, -2, 1 }, { -7.5, -9, 11 }, { 19, -9, 31 } }
--- From the 4th nest's era the pen grows 4 studs on its left, so that nest and the comfort corner both
--- have room (ChatGPT's 1st breeding review); it never shrinks again.
-local X1_WIDE, WIDE_FROM = 23, 31
+-- (in two neat rows either side of the lane from the gate: the area's own two in front of the
+-- shelter, the 3rd and 4th straight in front of them; the owner, 2026-10-28: "put it in order")
+local NESTS = { { -5.5, -2, 1 }, { 13.5, -2, 1 }, { -5.5, -8.5, 11 }, { 13.5, -8.5, 31 } }
 local INCUBATORS = { { -17, -3.5, 1 }, { -17, 5.5, 1 }, { -17, -10.5, 21 }, { -17, 12.5, 41 } }
 
 local PROPS = {
@@ -64,15 +63,17 @@ local HEIGHT = {
 	{ 1.6, 1.8, 1.4, 2.6, 2 }, -- (the slime bed big enough to read as a bed)
 	{ 4.6, 5.2, 4.4, 4.4, 4.6 },
 }
--- Each slot where it does its job (the owner, 2026-10-28: ask of every piece "does it belong here");
--- +x is the pen's left as one walks in, the incubators stand outside its right fence:
---   feed     on the left right beside the hay bale, the pen's feed store
---   egg care on the right just inside the side gate to the incubators (eggs go from nests to them)
---   comfort  in the front-left, inward from the gate post so it shows from the gate
---   warmth   against the right fence between the two right-hand nests, warming them (ChatGPT's 1st
---            review: at the gate it read as a gate light)
-local SLOT_AT = { { 15.5, 4.8 }, { -8.6, 5 }, { 12, -7.2 }, { -9.8, -5 } }
-local FOOT = { 3.4, 3, 4, 2.2 }
+-- The pen in order (the owner, 2026-10-28: the props stood about with no order): a paved lane from
+-- the gate to the shelter; the nests in two rows either side of it; the two back corners beside the
+-- shelter are its working corners, each on its own mat. +x is the pen's left as one walks in, the
+-- incubators stand outside its right fence.
+--   feed     back-left, the feed and rest corner, beside the hay store
+--   egg care back-right, the water and egg corner, just inside the side gate to the incubators
+--   comfort  back-left behind the feeder, a quiet bed beside the shelter
+--   warmth   against the right fence between the two right-hand nests, warming them (a flower box
+--            stands in the same place between the left-hand nests)
+local SLOT_AT = { { 17.3, 7.2 }, { -8.6, 4.8 }, { 16.4, 10.8 }, { -9.6, -5.2 } }
+local FOOT = { 2.6, 3, 3.6, 2.2 }
 local LIFT = { [3] = { [5] = 1 } } -- the cloud bed floats
 local FLOOR = 0.4 -- the pen's floor stands this far above the lawn; what is on it stands on its top
 -- the side gate in the right fence, toward the incubators
@@ -575,30 +576,7 @@ function BreedingStages.build(area: Instance, frame: CFrame, level: number): Mod
 		end
 	end
 
-	-- the pen grown on its left from the 4th nest's era: its floor carried on, the scenery standing
-	-- there taken away
-	local x1 = if level >= WIDE_FROM then X1_WIDE else X1
-	if x1 > X1 then
-		local floor = area:FindFirstChild("PenFloor")
-		local ext = part(
-			m,
-			"PenFloorExt",
-			Vector3.new(x1 - X1, 0.4, Z1 - Z0),
-			frame * CFrame.new((X1 + x1) / 2, 0.2, (Z0 + Z1) / 2),
-			if floor and floor:IsA("BasePart") then floor.Color else TIERS[tiers[2]].yard
-		)
-		if floor and floor:IsA("BasePart") then
-			ext.Material, ext.MaterialVariant, ext.TopSurface = floor.Material, floor.MaterialVariant, floor.TopSurface
-		end
-		for _, d in (area.Parent or area):GetDescendants() do
-			if d:IsA("Model") and d.Parent and d.Parent.Name == "Nature" then
-				local p = frame:PointToObjectSpace(d:GetPivot().Position)
-				if p.X > X1 - 0.5 and p.X < x1 + 1.5 and p.Z > Z0 - 1 and p.Z < Z1 + 1 then
-					d.Parent = nil
-				end
-			end
-		end
-	end
+	local x1 = X1
 
 	-- the nesting shelter of this era, at the back of the pen, open to the gate
 	nestingBarn(m, frame, era)
@@ -713,6 +691,39 @@ function BreedingStages.build(area: Instance, frame: CFrame, level: number): Mod
 			mark.Name = "Incubator" .. i
 			mark.Parent = bed
 		end
+	end
+
+	-- the order of the pen: the lane, the two corner mats, and the life round them
+	local tfl = TIERS[tiers[2]]
+	local function flat(name: string, x0: number, x1z: number, z0: number, z1: number, col: Color3, mat: Enum.Material)
+		part(
+			m,
+			name,
+			Vector3.new(x1z - x0, 0.06, z1 - z0),
+			frame * CFrame.new((x0 + x1z) / 2, FLOOR + 0.03, (z0 + z1) / 2),
+			col,
+			mat
+		)
+	end
+	-- the lane from the gate to the shelter, paved and edged
+	flat("Lane", 1.8, 6.2, Z0 + 0.4, BZ - 0.4, tfl.base, tfl.baseMat)
+	for _, x in { 1.65, 6.35 } do
+		flat("LaneEdge", x - 0.15, x + 0.15, Z0 + 0.4, BZ - 0.4, tfl.edge, tfl.baseMat)
+	end
+	-- the feed and rest corner on straw, the water and egg corner on stone
+	flat("FeedMat", 11.4, 18.6, 3.4, 12.6, Color3.fromRGB(226, 192, 120), Enum.Material.SmoothPlastic)
+	flat("WaterMat", X0 + 0.4, -3.4, 3.4, 12.6, tfl.base, tfl.baseMat)
+	-- a second bale on the hay store, a water barrel by the trough
+	place(m, frame, "HayBale", 14.5, 8, 1.7, 2.4, 2.45)
+	place(m, frame, "WoodBarrel", -9.6, 10.6, 2.4, 1.8, FLOOR)
+	-- a flower box between the left-hand nests, planters inside the gate, pots at the shelter's front
+	place(m, frame, "Planter", 17.7, -5.2, 1.5, 2.2, FLOOR)
+	for _, x in { -1.3, 9.3 } do
+		place(m, frame, "Planter", x, -11.8, 1.5, 2.2, FLOOR)
+	end
+	local half = BARN[era][1] / 2
+	for _, sx in { -1, 1 } do
+		place(m, frame, "FlowerPot", BX + sx * (half + 0.9), BZ - 0.8, 1.8, 1.4, FLOOR)
 	end
 
 	-- the care props
