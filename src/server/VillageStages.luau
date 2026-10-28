@@ -25,6 +25,7 @@
 -- the plaza at the middle.
 local PantryStages = require(script.Parent.PantryStages)
 local PondStages = require(script.Parent.PondStages)
+local ServerStorage = game:GetService("ServerStorage")
 
 local VillageStages = {}
 
@@ -71,12 +72,11 @@ local GARDENS = { "Birdbath", "ClippedTopiary", "Sundial", "LightTree", "SlimeCr
 local GARDEN_HEIGHT = { 3, 4.4, 3, 6.5, 4.6 }
 -- the planters lining the gate avenue, each era's own (generated models, the owner, 2026-10-28:
 -- props as fine as the greenhouse vegetables); their length along the path
-local BEDS = { "FlowerBedWood", "FlowerBedWood", "FlowerBedBrick", "FlowerBedSteel", "FlowerBedMarble" }
+local BEDS = { "FlowerBedWood", "FlowerBedWood", "FlowerBedBrick", "FlowerBedSteel2", "FlowerBedMarble" }
 local BED_LENGTH = 5.4
 -- the shelter over the picnic table: a timber gazebo, then a marble one
 local PAVILIONS = { "", "PavilionWood", "PavilionWood", "PavilionMarble", "PavilionMarble" }
 local PAVILION_HEIGHT = { 0, 12.5, 12.5, 15.5, 15.5 }
-local PAVILION_FLOOR = { 0, 0.4, 0.4, 1.25, 1.25 } -- (its deck's top: the table stands on it)
 -- the plaza's seating nooks, in the path gaps either side of the gate avenue and of the sides
 local NOOKS = { 2, 4, 5, 7 }
 -- the market street's way, in the gap between the pantry and the garden paths
@@ -111,6 +111,77 @@ end
 function VillageStages.tierName(level: number): string
 	local _, _, tiers = VillageStages.state(level)
 	return TIERS[tiers[1]].name
+end
+
+-- An ivy vine climbing a wall from the ground: `face` stands at the wall's face at its foot, its
+-- front away from the wall. A wandering stem with two side branches, the kit's ivy leaf along them
+-- by turns either side, smaller as it climbs (the owner, 2026-10-28: the vine made of green slabs
+-- was not pretty). The leaf is one generated mesh shared by every copy.
+local function ivyVine(parent: Instance, face: CFrame, height: number, seed: number)
+	local kit = ServerStorage:FindFirstChild("PropKit")
+	if not kit then
+		local bundle = ServerStorage:FindFirstChild("Kit")
+		kit = bundle and bundle:FindFirstChild("PropKit")
+	end
+	local src = kit and kit:FindFirstChild("IvyLeaf")
+	local leaf = src and src:FindFirstChildWhichIsA("BasePart", true)
+	if not leaf then
+		return
+	end
+	local stemColour = Color3.fromRGB(92, 104, 58)
+	local rng = Random.new(seed)
+	local function stem(a: Vector3, b: Vector3, thick: number)
+		local p = part(
+			parent,
+			"IvyStem",
+			Vector3.new(thick, thick, (b - a).Magnitude + thick),
+			face * CFrame.lookAt((a + b) / 2, b),
+			stemColour,
+			Enum.Material.SmoothPlastic
+		)
+		p.CanCollide = false
+		p.CastShadow = false
+	end
+	local function leafAt(at: Vector3, size: number, turn: number)
+		local l = leaf:Clone() :: BasePart
+		l.Name = "IvyLeaf"
+		l.Size = leaf.Size * (size / math.max(leaf.Size.X, leaf.Size.Y))
+		l.CFrame = face * CFrame.new(at) * CFrame.Angles(rng:NextNumber(-0.25, 0.25), 0, turn)
+		l.Anchored = true
+		l.CanCollide = false
+		l.CanTouch = false
+		l.CanQuery = false
+		l.CastShadow = false
+		l.Parent = parent
+	end
+	-- the stems: points up the wall (x across, y up, z out from the face)
+	local function climb(from: Vector3, dir: Vector3, len: number, thick: number, leafSize: number)
+		local steps = math.max(2, math.floor(len / 1.15))
+		local p = from
+		for j = 1, steps do
+			local t = j / steps
+			local q = from + dir * len * t + Vector3.new(math.sin(t * 5 + seed) * 0.35, 0, 0)
+			q = Vector3.new(q.X, q.Y, -0.12)
+			stem(p, q, thick * (1 - t * 0.5))
+			-- (a pair of leaves at every step, one either side, the upper one smaller)
+			for _, side in { -1, 1 } do
+				local up = if (j + side) % 4 == 0 then 0.35 else 0
+				leafAt(
+					q + Vector3.new(side * rng:NextNumber(0.5, 0.8), 0.1 + up, -0.1),
+					leafSize * (1.05 - t * 0.4) * rng:NextNumber(0.85, 1.15) * (1 - up),
+					side * rng:NextNumber(0.3, 0.9)
+				)
+			end
+			p = q
+		end
+	end
+	climb(Vector3.new(0, 0, -0.12), Vector3.new(0.08, 1, 0).Unit, height, 0.3, 2.1)
+	climb(Vector3.new(0.1, height * 0.25, -0.12), Vector3.new(-0.8, 1, 0).Unit, height * 0.5, 0.22, 1.8)
+	climb(Vector3.new(0, height * 0.45, -0.12), Vector3.new(0.85, 1, 0).Unit, height * 0.45, 0.2, 1.7)
+	-- a few leaves at its root
+	for k = -1, 1 do
+		leafAt(Vector3.new(k * 0.8, 0.6, -0.2), 2, k * 0.9)
+	end
 end
 
 local function dirOf(degrees: number): Vector3
@@ -191,10 +262,9 @@ function VillageStages.build(village: Instance, frame: CFrame, level: number): M
 		local q = frame:PointToObjectSpace(cf.Position)
 		local flat = Vector3.new(q.X, 0, q.Z)
 		local small = d.Name == "FlowerPatch" or d.Name == "GrassTuft" or d.Name == "Fern"
-		if small and (onPaving(flat, 0) or (has(4) and inMarket(flat))) then
-			d.Parent = nil -- small plants that ended up on a path or in the market street go
-		elseif small then
-			table.insert(smallPlants, { plant = d, at = flat }) -- (they never block: see put)
+		if small then
+			-- (they never block: see put; once the plaza has grown, those on paving move: see below)
+			table.insert(smallPlants, { plant = d, at = flat })
 		else
 			table.insert(taken, { at = flat, r = math.min(math.min(size.X, size.Z) / 2, 3) })
 		end
@@ -382,6 +452,35 @@ function VillageStages.build(village: Instance, frame: CFrame, level: number): M
 		end
 	end
 
+	-- ===== small plants on the paving (the plaza's ring, a path's edge) or in the market street move
+	-- to the nearest free lawn (the owner, 2026-10-28: flowers growing on the path) =====
+	for _, sp in smallPlants do
+		if onPaving(sp.at, 1.1) or (has(4) and inMarket(sp.at)) then
+			local to: Vector3? = nil
+			for ring = 1, 6 do
+				for k = 0, 7 do
+					local a = k * math.pi / 4 + ring * 0.4
+					local p = sp.at + Vector3.new(math.cos(a), 0, math.sin(a)) * ring * 1.6
+					if not to and free(p, 1.1) and not (has(4) and inMarket(p)) then
+						to = p
+					end
+				end
+			end
+			local plant = sp.plant
+			if to then
+				local shift = frame:VectorToWorldSpace(to - sp.at)
+				if plant:IsA("Model") then
+					plant:PivotTo(plant:GetPivot() + shift)
+				elseif plant:IsA("BasePart") then
+					plant.CFrame += shift
+				end
+				sp.at = to
+			else
+				plant.Parent = nil
+			end
+		end
+	end
+
 	-- ===== the plaza's centrepiece =====
 	if era >= 2 then
 		place(m, frame, CENTRES[era], 0, 0, CENTRE_HEIGHT[era], CENTRE_FOOT[era])
@@ -435,48 +534,28 @@ function VillageStages.build(village: Instance, frame: CFrame, level: number): M
 					-- a stone wall with battlements
 					part(m, "FenceWall", Vector3.new(2, 9.6, w), seg * CFrame.new(0, 5.6, 0), tw.walls, tw.wallMat)
 					part(m, "FenceCoping", Vector3.new(2.6, 0.6, w), seg * CFrame.new(0, 10.7, 0), tw.trim, tw.trimMat)
-					if k % 2 == 0 then
-						-- ivy climbing the inner face, a flower bed at its foot (less of a fortress)
+					-- ivy climbing the wall (the owner, 2026-10-28: prettier, and outside too): a vine on
+					-- every bay, on the village side and the outer side by turns, a flower bed at the
+					-- foot of those inside (less of a fortress)
+					do
 						local inward = frame:VectorToObjectSpace(seg.RightVector)
 						local sgn = if (mid + inward).Magnitude < mid.Magnitude then 1 else -1
-						-- (two vines from the ground, each a wandering chain of leaf clumps that thins as it
-						-- climbs; ChatGPT's 2nd village review: separate green slabs read as holes)
-						local ivyGreens = { Color3.fromRGB(62, 122, 52), Color3.fromRGB(84, 146, 62) }
-						for v = -1, 1, 2 do
-							local vz = v * w / 5
-							for j = 0, 5 do
-								local sway = math.sin(j * 1.7 + v) * 0.7
-								local wide = 2 - j * 0.22
-								local ivy = part(
-									m,
-									"Ivy",
-									Vector3.new(0.35, 1.7, wide),
-									seg * CFrame.new(sgn * 1.1, 0.9 + j * 1.5, vz + sway),
-									ivyGreens[(j + v) % 2 + 1],
-									Enum.Material.SmoothPlastic
-								)
-								ivy.CastShadow = false
-								if j % 2 == 1 then
-									local side = part(
-										m,
-										"Ivy",
-										Vector3.new(0.3, 1, 1.1),
-										seg * CFrame.new(sgn * 1.12, 0.9 + j * 1.5 + 0.4, vz + sway + v * wide * 0.7),
-										ivyGreens[j % 2 + 1],
-										Enum.Material.SmoothPlastic
-									)
-									side.CastShadow = false
-								end
-							end
+						if k % 2 == 1 then
+							sgn = -sgn
 						end
-						part(
-							m,
-							"WallBed",
-							Vector3.new(1.6, 0.7, w * 0.6),
-							seg * CFrame.new(sgn * 2, 0.35, 0),
-							tw.base,
-							tw.baseMat
-						)
+						local away = seg.RightVector * sgn
+						local base = seg.Position + away * 1.02 + seg.LookVector * ((k % 3 - 1) * w * 0.18)
+						ivyVine(m, CFrame.lookAt(base, base + away), 8 + k % 3, k)
+						if k % 2 == 0 then
+							part(
+								m,
+								"WallBed",
+								Vector3.new(1.6, 0.7, w * 0.6),
+								seg * CFrame.new(sgn * 2.3, 0.35, 0),
+								tw.base,
+								tw.baseMat
+							)
+						end
 					end
 					local merlons = math.max(1, math.floor(w / 4))
 					for j = 1, merlons do
@@ -842,9 +921,10 @@ function VillageStages.build(village: Instance, frame: CFrame, level: number): M
 		if PAVILIONS[era] ~= "" then
 			place(m, here, PAVILIONS[era], 0, 0, PAVILION_HEIGHT[era], 15)
 		end
-		place(m, here, "PicnicTable", 0, 0, 4.6, 6.2, PAVILION_FLOOR[era])
-		table.insert(taken, { at = tc, r = if PAVILIONS[era] ~= "" then 7.5 else 3.5 })
-		put(BEDS[era], gc - g * 9, -g, 4, BED_LENGTH)
+		table.insert(taken, { at = tc, r = if PAVILIONS[era] ~= "" then 7.5 else 0 })
+		-- (the picnic table on the open lawn between the gazebo and the shade tree, not inside the
+		-- gazebo: the owner, 2026-10-28)
+		put("PicnicTable", gc - g * 6 - across * 3, across, 4.6, 6.2)
 
 		-- the community green, front-right: a worn clearing in a half ring of benches that face its
 		-- open side, where the notice board stands, and from the brick era a little stage
@@ -903,11 +983,11 @@ function VillageStages.build(village: Instance, frame: CFrame, level: number): M
 		-- newest closing its end; the green between the two paths is only 12-16 studs wide)
 		local mFace = CFrame.lookAt(Vector3.zero, -MARKET)
 		-- (measured from the arch, which stands just beyond the plaza's ring, however big it grew)
-		local start = plazaR + 5
+		local start = math.min(plazaR + 3, 22.5) -- (the pantry yard begins about 17 studs beyond)
 		local function m2(along: number, side: number): Vector3
 			return MARKET * (start + along) + MARKET_ACROSS * side
 		end
-		for _, slab in { { 5.5, 8, 12 }, { 15.5, 12, 16 } } do
+		for _, slab in { { 6, 8, 12 }, { 13, 7, 16 } } do
 			part(
 				m,
 				"MarketSquare",
@@ -917,7 +997,9 @@ function VillageStages.build(village: Instance, frame: CFrame, level: number): M
 				tPath.baseMat
 			)
 		end
-		local stalls = { { 6.5, -4.6 }, { 6.5, 4.6 }, { 13.5, -4.6 }, { 13.5, 4.6 }, { 20, 0 } }
+		-- (the first stalls well inside the arch: the owner, 2026-10-28, a cart touched its post)
+		local stalls = { { 7.5, -4.8 }, { 7.5, 4.8 }, { 13.5, -4.8 }, { 13.5, 4.8 }, { 17.5, 0 } }
+		table.insert(taken, { at = m2(1, 0), r = 3 }) -- (the way in under the arch stays open)
 		for e = 1, era do
 			local sp = stalls[e]
 			local look = if sp[2] < 0 then MARKET_ACROSS elseif sp[2] > 0 then -MARKET_ACROSS else -MARKET
@@ -925,13 +1007,10 @@ function VillageStages.build(village: Instance, frame: CFrame, level: number): M
 		end
 		-- (the arch spans the way in: placed as planned, only its two posts keep their ground)
 		place(m, frame * CFrame.new(m2(0, 0)) * mFace, "MarketArch", 0, 0, 8.2, 8)
-		for _, side in { -3.6, 3.6 } do
-			table.insert(taken, { at = m2(0, side), r = 0.8 })
-		end
 		put("CrateStack", m2(17.5, -7.5), MARKET_ACROSS, 2.6, 2.4)
 		put("WoodBarrel", m2(17.5, 7.5), -MARKET_ACROSS, 2.4, 1.8)
-		put("HandCart", m2(23.5, 5), -MARKET, 3, 3)
-		local ba, bb = m2(10, 7), m2(10, -7)
+		put("HandCart", m2(10.5, -8.5), MARKET_ACROSS, 3, 3)
+		local ba, bb = m2(10.5, 7), m2(10.5, -7)
 		pole(ba.X, ba.Z, 7)
 		pole(bb.X, bb.Z, 7)
 		bunting(ba, bb, 6.8)
@@ -940,7 +1019,9 @@ function VillageStages.build(village: Instance, frame: CFrame, level: number): M
 
 	-- ===== level 5: the garden pieces behind the nooks and in the back gaps, each kind once (the
 	-- newest first, then the eras before it; the owner, 2026-10-28: two sundials side by side), and
-	-- a row of the era's planters either side of the gate avenue =====
+	-- the era's planters spread through the village (the owner, 2026-10-28: all at the gate and
+	-- nothing inside): a pair either side of the gate avenue, and one beside every other path where
+	-- it leaves the plaza, along it =====
 	if has(5) then
 		for j, gg in ipairs({ 1, 7, 2, 3 }) do
 			local e = era - (j - 1)
@@ -949,13 +1030,19 @@ function VillageStages.build(village: Instance, frame: CFrame, level: number): M
 				put(GARDENS[e], d * (plazaR + 9), -d, GARDEN_HEIGHT[e], 4.5)
 			end
 		end
-		for _, seg in { { 0.28, 0.46 }, { 0.56, 0.78 } } do
+		for _, t in { 0.3, 0.62 } do
 			for _, side in { -1, 1 } do
-				local a = besidePath(5, seg[1], side, 6.4)
-				local b, look = besidePath(5, seg[2], side, 6.4)
-				local n = math.max(1, math.floor((b - a).Magnitude / 6.8))
-				for k = 0, n - 1 do
-					put(BEDS[era], a:Lerp(b, (k + 0.5) / n), look, 4, BED_LENGTH, nil, b - a)
+				local p, look = besidePath(5, t, side, 6.4)
+				put(BEDS[era], p, look, 4, BED_LENGTH, nil, dirOf(PATHS[5][1]))
+			end
+		end
+		for i = 1, #PATHS do
+			if i ~= 5 then
+				local side = if i % 2 == 0 then -1 else 1
+				local p, look = besidePath(i, 0.3, side, 6.4)
+				if not put(BEDS[era], p, look, 4, BED_LENGTH, nil, dirOf(PATHS[i][1])) then
+					p, look = besidePath(i, 0.3, -side, 6.4)
+					put(BEDS[era], p, look, 4, BED_LENGTH, nil, dirOf(PATHS[i][1]))
 				end
 			end
 		end

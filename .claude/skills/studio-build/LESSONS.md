@@ -294,3 +294,10 @@ was left there (this game has none); read it there if a cave is ever wanted.
   A row of benches along every path reads as random. One of each garden piece, never two of a kind side by side.
 - A level step's additions must stay in later eras (has(step) = era > 1 or s >= step), or a new era's first level
   loses the market and the benches the level before had.
+- generate_mesh cannot make flat things (an ivy panel, a vine on a wall, stepping stones): it returns a lump, a bush or
+  a tiny tree. Generate the small piece it does well (one ivy leaf) and compose the flat thing in code from clones of
+  that one mesh (a wandering stem, leaves in pairs, smaller as it climbs).
+- A shelter (gazebo) is a place of its own: the table goes on open lawn beside it, not inside (the owner).
+- Spread props through the whole village, not in rows at the entrance; small plants on paving move to free lawn.
+- Before placing a street of stalls, measure how far the green runs before the next area's box: the pantry yard cut
+  the market short at the last era.

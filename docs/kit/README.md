@@ -66,7 +66,8 @@ by slot and era. Kitchen and training ground models (asset ids of the published 
 | RestBench, WaterCooler, MassageTable, IceBath, HealPod | 134839277279194, 78754672854621, 111882833173817, 80918511455769, 108140629726030 | training recovery |
 | SwordBarrel, ShieldRack, ArmorStand, SparringBot, HoloTrainer | 119723960867461, 126486671607445, 117449409718587, 125146860165818, 91864478146987 | training gear |
 | PunchingBag, ChampionTrophy | 106739653183504, 121466755406359 | training, eras 3 and 5 |
-| FlowerBedWood, FlowerBedBrick, FlowerBedSteel, FlowerBedMarble | 92089182893246, 120841523625422, 76502321904483, 84253715977949 | village planters, eras 1-2, 3, 4, 5 |
+| FlowerBedWood, FlowerBedBrick, FlowerBedSteel2, FlowerBedMarble | 92089182893246, 120841523625422, 78643288731064, 84253715977949 | village planters, eras 1-2, 3, 4, 5 (FlowerBedSteel 76502321904483 came out bent: unused) |
+| IvyLeaf | 140233145136608 | one ivy leaf: the brick wall's vines are built from it (VillageStages ivyVine) |
 | PicnicTable | 105886899973840 | village picnic green |
 | PavilionWood, PavilionMarble | 125901976896948, 118518637222522 | village picnic gazebo, eras 2-3 and 4-5 |
 | VillageStagePlatform | 113165254288603 | village community green, from era 3 |
