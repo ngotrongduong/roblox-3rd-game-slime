@@ -5,9 +5,11 @@ description: The owner's review loop for a plot area that upgrades (pantry, gard
 
 # Area review loop
 
-The owner set this process on 2026-10-28 while doing the pantry and the garden. Replies to the owner are in
+The owner set this process on 2026-10-28 and it carried all seven areas through (pantry, garden, breeding pen,
+kitchen, training ground, fishing pond, village with its fence, gates and fountain). Replies to the owner are in
 Vietnamese; every word in the game is English. Read first: `.claude/skills/studio-build/LESSONS.md` ("Buildings that
-upgrade" and the notes under it). Sending to ChatGPT: skill `chatgpt-review`.
+upgrade" and the notes under it) and skill `prop-craft` (how each prop is made to the owner's quality bar and placed
+with a purpose). Sending to ChatGPT: skill `chatgpt-review`.
 
 ## The owner's rules for an area
 
@@ -25,6 +27,13 @@ upgrade" and the notes under it). Sending to ChatGPT: skill `chatgpt-review`.
    own style; a kit model from another style (a red-roofed cabin at the slime-tech era) is replaced by a built one.
 7. **Things move when the area changes**: e.g. sunflowers back against the fence once the garden grows, a scarer
    to a free corner once the greenhouse fills the side strip.
+8. **Crafted, not boxes.** Every prop at the greenhouse vegetables' finish (skill `prop-craft`): generated models for
+   solid objects, careful part builds for machines and wall fixtures, never a plain block as the final look.
+9. **Purpose and spread.** Each bench, lamp and planter has a reason where it stands; decorations spread over the
+   whole area, one of each kind in view; mounted lamps and torches centred and even on every post; shelters keep
+   their own space (the table beside the gazebo, not in it); paths all finished alike; no text signs unasked.
+10. **The owner may ask for one piece in depth** (the incubator, an area gate, the main gate, the fountain): build it
+    as a showpiece with its own module, its per-era look, and motion where it can have it.
 
 ## Steps
 
@@ -46,12 +55,19 @@ upgrade" and the notes under it). Sending to ChatGPT: skill `chatgpt-review`.
      that matter. Stop Play.
    - Cameras used so far: pantry (0, 1) wide eye (-14, 28, -40) target (-9, 4, 0), close (-3, 17, -27) to
      (5, 3, -4); garden (1, 1) eye (-6, 26, -34) target (0, 2, 5); breeding (1, 0) eye (-2, 30, -42) target
-     (-1, 2, 0), dummy at (2, 2.9, -9).
+     (-1, 2, 0), dummy at (2, 2.9, -9); breeding gate (4, 7, -30) to (4, 5, -13), incubators (-10, 6.5, -8) to
+     (-17, 2.5, 1); kitchen gate (-1, 0) (0, 7, -26) to (0, 5, -9); training gate (-1, -1) (0, 7, -30) to
+     (0, 5, -12).
+   - The village is the whole plot, not an area: `tools/chatgpt/village_setup.luau` (Server) defines
+     `_G.VillageShow(level)` (it returns the models that found no room) and `tools/chatgpt/village_cam.luau` (Client)
+     `_G.PlotShot(eye, target)`; its cameras are in that file's header.
 5. **Self-review the pictures first** against the rules above; fix what you see before asking anyone.
 6. **Copy the shots** to `docs/areas/upgrades/review/<area>-r<round>-l<level>.jpg` (a scratchpad .ps1 with
    Copy-Item from the tool-results folder).
 7. **ChatGPT** (skill `chatgpt-review`), one chat per area (pantry `/c/6ae139d2-409c-83ec-833c-ff8b31ccc2e5`,
-   garden `/c/6ae146a7-ddf8-83ec-8abc-24d3874fcf8f`, breeding `/c/6ae16cd6-5028-83ec-ae28-cea433d73b62`), up to 5
+   garden `/c/6ae146a7-ddf8-83ec-8abc-24d3874fcf8f`, breeding `/c/6ae16cd6-5028-83ec-ae28-cea433d73b62`, kitchen
+   `/c/6ae18147-0a34-83ec-a8f3-2bedfb96ccf2`, training `/c/6ae18706-3350-83ec-bc03-72aaf0bcba82`, pond
+   `/c/6ae190e4-f674-83ec-b9ec-613f846765c8`, village `/c/6ae19be6-ceb0-83ec-b71f-870ad6ff013a`), up to 5
    pictures a message. Brief in one paragraph:
    what the picture shows and the 5-stud block, the owner's rules above, what this round changed, what you did
    not take and why, your own doubts, and the ask: "judge every prop per level: right place for its function,
@@ -63,4 +79,7 @@ upgrade" and the notes under it). Sending to ChatGPT: skill `chatgpt-review`.
    new lessons into `studio-build/LESSONS.md`, report to the owner in Vietnamese: what changed, what ChatGPT said,
    what you took or left.
 10. **The owner plays it** and sends pictures with notes; each note is a fix to make exactly (read carefully which
-    level and which prop he means: "the forklift at L22-23" is the pallet-jack slot, not the L32 forklift).
+    level and which prop he means: "the forklift at L22-23" is the pallet-jack slot, not the L32 forklift). He often
+    plays in the same Studio window: check before taking Play, and write code while waiting.
+11. **New generated models**: ask him in the wrap-up box to press Ctrl+S, then export and commit the kit (skill
+    `prop-craft` section 5). An area is done when he says it is fine.

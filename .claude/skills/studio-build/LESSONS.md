@@ -174,6 +174,14 @@ was left there (this game has none); read it there if a cave is ever wanted.
   the LAST rewrite.
 - 2026-10-26. After the owner reshaped lakes by hand in Studio, a flood-fill script refilled them cell by cell from each
   body's seed. The owner's hand edits are lost if the place is closed unsaved: remind him to save.
+- 2026-10-28. The village fountain (`VillageFountain.luau`): water curtains as Beams from a bowl's rim to the pool
+  (Axis out from the rim so `CurveSize0` bows them outward, SecondaryAxis along the rim so the width lies along it);
+  drop jets as ParticleEmitters held in a tiny invisible part (`EmissionDirection` Front, the part's front turned along
+  the jet; an Attachment's emission is awkward to aim); ripples `VelocityPerpendicular` on a Disc emitter in a cylinder
+  part; a pale ForceField film over the pool reads WHITE: use a mid blue. Rims built as rings of short blocks, never
+  full discs (they hid the water). Count emitters, total Rate and beams after building; scale the rates down (60%).
+- 2026-10-28. Free Creator Store decals give the texture through `game:GetObjects("rbxassetid://<decal>")[1].Texture`
+  (the image id differs from the decal id); look at the thumbnails first (thumbnails.roblox.com in the browser pane).
 
 ## References
 
@@ -305,3 +313,9 @@ was left there (this game has none); read it there if a cave is ever wanted.
   glass dome over an egg is better built from parts with care (feet, ribbed body, a front panel with porthole, dial
   and buttons, a dome held by curved ribs, a lamp cap and handle), styled per tier; small icons (emblems) are what
   the generator does well.
+- 2026-10-28. The owner's quality bar for props is the greenhouse vegetables; how to meet it, and where each prop may
+  stand, is the skill `prop-craft`. In short: generated models for solid objects (a third fail: check two sides),
+  flat things composed from one generated piece, machines and wall fixtures built from parts with care; every prop with
+  a reason, spread over the area, one of a kind, mounted things centred and even; export the kit after his Ctrl+S.
+- 2026-10-28. The owner often plays in the same Studio: generate_mesh fails in Play ("only from the server"), so stop
+  Play only after watching his character stand still 20-40 s, and write code while he plays.

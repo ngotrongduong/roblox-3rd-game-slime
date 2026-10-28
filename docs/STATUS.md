@@ -212,6 +212,30 @@ warm window, and a real slime model; the roof is a little lilac.
   pond_water_l1.
 - The work place must be saved in Studio (Ctrl+S) to keep the build.
 
+## 2026-10-28 — the village and every area's upgrades: done (owner: "the village design is finished")
+
+Done (all checked in Studio at every era, committed, the kit exported into `assets/Kit`)
+- Every area went through the review loop (skill `area-review`, ChatGPT rounds in each area's own chat, then the
+  owner's play-test notes): pantry, garden, breeding pen, kitchen, training ground, fishing pond. Each was approved by
+  the owner.
+- The village (`VillageStages`): the plaza grows a ring each era; four seating nooks facing the fountain; the picnic
+  green (gazebo, laid table beside it), the community green (a stage with its audience), the market street under an
+  arch; era planters spread along all the paths; every path paved like the avenue; small plants moved off paving.
+- The fence and the main gate per era (`VillageWalls`): painted timber, brick with ivy and torches, steel and glass,
+  marble; lanterns and torches built and centred on every post; no plot name sign any more.
+- The area gates (`GateArch`, breeding, kitchen, training) with generated emblems; the incubator rebuilt in detail per
+  tier (`BreedingStages`).
+- The fountain (`VillageFountain`): one per era, moving water (beam curtains, jets, splashes, ripples, shimmer), the
+  golden slime statue on the marble one.
+- How it was done is packaged: skills `area-review`, `prop-craft` (new: the owner's quality bar and placing rules,
+  the generate/check/export tools `tools/kit/intake|viewer|upright|export_kit|check_kit.luau`), `chatgpt-review`;
+  lessons in `.claude/skills/studio-build/LESSONS.md`; shots in `docs/areas/upgrades/review/`.
+
+Next
+- The owner chooses the next session's direction (Phase 2, the farm and its slimes, is the next build phase).
+- Not measured yet: the frame time of the full plot at the last era on a phone (the fountain alone is ~200 particles/s;
+  the brick wall's ivy is ~1,100 small parts).
+
 Next (after the map and UI are agreed)
 - Phase 2, The farm: the 3D plot and the slimes on it, the nest house, eggs and the reveal, the
   breeding house, the collection book, selling. Needs the first 3D models (slime body, nest house)
