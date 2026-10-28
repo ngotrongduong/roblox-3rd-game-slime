@@ -245,6 +245,23 @@ was left there (this game has none); read it there if a cave is ever wanted.
   the gate to the door at every level. Waiting goods stand on a pallet.
 - The area's frame is the lawn's top; its own floor is 0.4 above it, so anything on the paving needs
   that 0.4 as lift or it sinks (a pallet disappears).
+- 2026-10-28 (the owner's play test of the pantry). A generated kit model can carry parts glued in the wrong
+  place (the jib hoist's crate floated beside its post, tied to nothing). If a prop has to DO something (a hook
+  holding a load), build it from parts so rope, hook and load line up, and the load can change per level.
+- Kit models come small: the owner asked for twice the size on a hoist, a small forklift and a robot arm. Size a
+  working machine by its job against the 5-stud player (a forklift's guard above head height).
+- When the owner names a level ("the forklift at L22-23"), map it to the slot and era in `SPOT` before editing;
+  I enlarged the wrong forklift once (L32 instead of the L22 pallet-jack slot).
+- Loads and hooks need clearance on every level they share: a crate 0.5+ above the cart's load, an empty hook a
+  stud above the next era's forklift roof; a crane's boom swung in so its load hangs over the paving.
+- A doorway needs room before it: keep 5-6 x 6-7 studs clear before a container's doors; a new hut goes along an
+  edge with its door to the yard, never across another door. A walk-in door is 5.5 high.
+- A thing with no weight should look it: a hover cart lifted 1.3 with a soft glow under it, tagged "Hover" so
+  the client script `HoverBob` bobs it near the camera only.
+- `GetBoundingBox` answers in the model's own axes; after turning a model, measure in the area's axes (the
+  `extents` helper in PantryStages) before placing things against it.
+- A kit model in another style (a red-roofed cabin in the slime-tech yard) breaks the era; build a small hut in
+  the main building's own tiers instead.
 - A landmark must win its silhouette against the building beside it (a windmill below a greenhouse
   ridge reads as an ornament); if the kit model's proportions are wrong (a barrel on scaffolding),
   generate a better one rather than scaling.
