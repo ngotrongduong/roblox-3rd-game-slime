@@ -1,0 +1,230 @@
+<title>Goo Lineage Dual Patterns</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Nunito:wght@400;600;700&display=swap">
+<style>
+/* Layout: a header, the 11x11 pair matrix (upper half filled), then one card per pair grouped by first colour. */
+:root {
+	--bg: #f3f6ee;
+	--surface: #ffffff;
+	--ink: #24301f;
+	--muted: #66705f;
+	--line: #d9e0d1;
+	--accent: #3f8f3a;
+	--owner: #b7791f;
+	--display: "Baloo 2", "Trebuchet MS", system-ui, sans-serif;
+	--body: "Nunito", "Segoe UI", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+	:root:not([data-theme="light"]) {
+		--bg: #161b14; --surface: #20271d; --ink: #e8eee2; --muted: #a3ad9b; --line: #36402f; --accent: #7cc56f; --owner: #e3aa55;
+		color-scheme: dark;
+	}
+}
+:root[data-theme="dark"] {
+	--bg: #161b14; --surface: #20271d; --ink: #e8eee2; --muted: #a3ad9b; --line: #36402f; --accent: #7cc56f; --owner: #e3aa55;
+	color-scheme: dark;
+}
+body {
+	background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 15px; line-height: 1.55;
+	padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+	padding-block: 28px 56px;
+}
+.wrap { max-width: 1100px; margin: 0 auto; display: grid; gap: 28px; }
+h1, h2 { font-family: var(--display); font-weight: 800; line-height: 1.1; text-wrap: balance; margin: 0; }
+h1 { font-size: clamp(28px, 5vw, 40px); }
+h2 { font-size: 22px; }
+p { margin: 0; max-width: 68ch; }
+.lead { display: grid; gap: 10px; }
+.legend { display: flex; flex-wrap: wrap; gap: 8px 18px; color: var(--muted); font-size: 14px; }
+.tag { display: inline-flex; align-items: center; gap: 6px; }
+.tag i { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+.rules { display: grid; gap: 6px; padding-left: 20px; margin: 0; max-width: 72ch; }
+.scroll { overflow-x: auto; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 12px; }
+table.m { border-collapse: separate; border-spacing: 4px; font-size: 11px; }
+.m th { font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; font-size: 10px; padding: 2px; }
+.m th.row { text-align: right; padding-right: 6px; white-space: nowrap; }
+.m td { width: 78px; min-width: 78px; height: 74px; text-align: center; vertical-align: middle; border-radius: 10px; }
+.m td.pair { cursor: pointer; border: 1px solid var(--line); }
+.m td.pair:hover, .m td.pair:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.m td.self { background: repeating-linear-gradient(45deg, transparent 0 6px, var(--line) 6px 7px); }
+.m .nm { display: block; font-weight: 700; line-height: 1.15; margin-top: 3px; }
+.dot { display: inline-block; width: 12px; height: 12px; border-radius: 50%; border: 1px solid rgba(0,0,0,.25); vertical-align: -2px; }
+.blob { position: relative; width: 34px; height: 30px; margin: 0 auto; border-radius: 50% 50% 46% 46% / 62% 62% 38% 38%; border: 1.5px solid rgba(0,0,0,.28); overflow: hidden; }
+.blob::before { content: ""; position: absolute; left: 50%; top: -5px; width: 8px; height: 10px; transform: translateX(-50%); border-radius: 50% 50% 0 0; background: inherit; }
+.blob b { position: absolute; border-radius: 50%; }
+.owner-mark { color: var(--owner); font-weight: 800; }
+.groups { display: grid; gap: 22px; }
+.group { display: grid; gap: 10px; }
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 10px; }
+.card { display: grid; grid-template-columns: 46px 1fr; gap: 10px; align-items: center; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; min-width: 0; }
+.card.flash { outline: 3px solid var(--accent); }
+.card .t { font-family: var(--display); font-weight: 800; font-size: 17px; line-height: 1.1; }
+.card .s { color: var(--muted); font-size: 13px; }
+.card .p { font-size: 13.5px; }
+.card .blob { width: 42px; height: 37px; }
+.num { font-variant-numeric: tabular-nums; color: var(--muted); font-size: 12px; }
+@media (prefers-reduced-motion: no-preference) { .card { transition: outline-color .3s; } }
+</style>
+
+<div class="wrap">
+	<header class="lead">
+		<h1>Slime 2 màu: 55 cặp màu</h1>
+		<p>11 màu đơn ghép với nhau thành 55 cặp. Mỗi cặp có đúng một kiểu hoa văn, nên ghép màu A với màu B ra slime 2 màu thì luôn là kiểu của cặp đó. Tên trong game giữ bằng tiếng Anh.</p>
+		<div class="legend">
+			<span class="tag"><span class="owner-mark">★</span> hoa văn từ 20 tranh của bạn (20 cặp)</span>
+			<span class="tag"><i style="background:var(--accent)"></i> hoa văn mới (35 cặp, nhờ ChatGPT vẽ trước theo phong cách tranh của bạn)</span>
+		</div>
+	</header>
+
+	<section class="lead">
+		<h2>Quy tắc chung</h2>
+		<ul class="rules">
+			<li>Chỉ dùng đúng 2 màu của bố mẹ (màu chuẩn của game); chi tiết nhỏ như nhụy hoa, gân lá dùng sắc đậm hoặc nhạt hơn của 2 màu đó.</li>
+			<li>Nhìn từ phía trước phải thấy rõ cả 2 màu: màu ít hơn chiếm ít nhất một phần tư thân.</li>
+			<li>Hoa văn phủ kín cả thân: trước, hai bên, sau lưng và chóp.</li>
+			<li>Không vẽ vệt bóng: độ bóng và ánh sáng do game tạo ra, như slime màu đơn.</li>
+			<li>Chỗ mặt slime để trống một vùng nhỏ, để hoa văn không cắt ngang mắt.</li>
+			<li>20 hoa văn trong tranh của bạn được giữ nguyên hình, chuyển sang cặp có màu giống tranh nhất, và tô bằng 2 màu chuẩn của cặp đó.</li>
+		</ul>
+	</section>
+
+	<section class="lead">
+		<h2>Bảng cặp màu</h2>
+		<p class="s" style="color:var(--muted)">Bấm vào một ô để xem kiểu hoa văn ở danh sách bên dưới.</p>
+		<div class="scroll"><table class="m" id="matrix"></table></div>
+	</section>
+
+	<section class="groups" id="groups"></section>
+</div>
+
+<script>
+const C = {
+	black: ["Đen", "#2b2b33"], gray: ["Xám", "#9aa0a8"], navy: ["Navy", "#1b4fd8"], purple: ["Tím", "#8a4fd0"],
+	red: ["Đỏ", "#d8402f"], orange: ["Cam", "#f08a24"], yellow: ["Vàng", "#f2d13d"], green: ["Xanh lá", "#54b848"],
+	pink: ["Hồng", "#f27fb6"], blue: ["Xanh dương", "#3f9ff0"], white: ["Trắng", "#f5f2ea"],
+};
+const ORDER = Object.keys(C);
+// [a, b, name, pattern (Vietnamese), body colour, owner painting number or 0]
+const D = [
+	["black","gray","Pinstripe","sọc dọc mảnh","black",0],
+	["black","navy","Midnight Fade","chuyển màu: navy ở dưới, đen ở trên","navy",0],
+	["black","purple","Batwing","dơi nhỏ","purple",0],
+	["black","red","Ladybug","chấm tròn và chóp đen như bọ rùa","red",0],
+	["black","orange","Tiger","vằn hổ","orange",0],
+	["black","yellow","Honeycomb","tổ ong lục giác","yellow",0],
+	["black","green","Dragonscale","vảy rồng","green",0],
+	["black","pink","Wild Rosette","đốm báo","pink",0],
+	["black","blue","Neon Swirl","xoắn ốc","black",15],
+	["black","white","Moo","đốm bò sữa","white",8],
+	["gray","navy","Drizzle","giọt mưa","gray",0],
+	["gray","purple","Geode","tinh thể pha lê","gray",0],
+	["gray","red","Brickwork","gạch xây","red",0],
+	["gray","orange","Lava Crack","vết nứt dung nham phát sáng","gray",0],
+	["gray","yellow","Clockwork","bánh răng","gray",0],
+	["gray","green","Camo","rằn ri","green",0],
+	["gray","pink","Sprinkle","cốm rắc bánh","gray",10],
+	["gray","blue","Overcast","mây","blue",0],
+	["gray","white","Marble","vân đá cẩm thạch","white",0],
+	["navy","purple","Nebula","tinh vân và sao nhỏ","navy",0],
+	["navy","red","Tartan","kẻ caro Scotland","red",0],
+	["navy","orange","Peach Drip","chảy giọt từ trên xuống","navy",14],
+	["navy","yellow","Firefly","đom đóm phát sáng","navy",0],
+	["navy","green","Forestpeak","hình tam giác","green",13],
+	["navy","pink","Sakura","hoa anh đào","navy",0],
+	["navy","blue","Deepsea","sọc ngang","navy",4],
+	["navy","white","Snowflake","bông tuyết","navy",0],
+	["purple","red","Berrypatch","chùm quả mọng","purple",0],
+	["purple","orange","Pumpkin Patch","bí ngô nhỏ","purple",0],
+	["purple","yellow","Crowned","vương miện nhỏ","purple",0],
+	["purple","green","Duskmoon","trăng khuyết và sao lấp lánh","purple",12],
+	["purple","pink","Royal Diamond","hình thoi","pink",6],
+	["purple","blue","Periwinkle","bông hoa","purple",16],
+	["purple","white","Lavender Stripe","sọc chéo","purple",2],
+	["red","orange","Wildfire","ngọn lửa bốc từ dưới lên","red",0],
+	["red","yellow","Starburst","ngôi sao và chấm tròn","red",9],
+	["red","green","Watermelon","vỏ dưa xanh ở đáy, hạt xanh","red",0],
+	["red","pink","Sweetheart","trái tim","pink",3],
+	["red","blue","Racer","hai sọc đua chạy qua chóp","red",0],
+	["red","white","Pawprint","dấu chân mèo","red",18],
+	["orange","yellow","Ember Chevron","sọc răng cưa","yellow",5],
+	["orange","green","Tangerine","chỏm lá xanh trên chóp","orange",0],
+	["orange","pink","Sunrise Fade","chuyển màu: hồng ở dưới, cam ở trên","orange",0],
+	["orange","blue","Goldfish","cá vàng nhỏ","blue",0],
+	["orange","white","Creamsicle Check","ô cờ","orange",17],
+	["yellow","green","Citrusleaf","lá cây","green",20],
+	["yellow","pink","Lollipop","một vòng xoắn kẹo mút từ chóp","yellow",0],
+	["yellow","blue","Sunwave","sóng lượn","blue",11],
+	["yellow","white","Daisy","hoa cúc","yellow",0],
+	["green","pink","Clover","cỏ bốn lá","pink",0],
+	["green","blue","Seafoam","vòng tròn rỗng","blue",7],
+	["green","white","Mint Chip","chấm bi","green",1],
+	["pink","blue","Cotton Candy","mây kẹo bông xoáy","pink",0],
+	["pink","white","Lace","viền ren","pink",0],
+	["blue","white","Frostbolt","tia sét","white",19],
+];
+const key = (a, b) => ORDER.indexOf(a) < ORDER.indexOf(b) ? a + "|" + b : b + "|" + a;
+const byKey = new Map(D.map((d, i) => [key(d[0], d[1]), Object.assign(d, { i })]));
+
+function blob(d) {
+	const body = d[4], other = d[4] === d[0] ? d[1] : d[0];
+	const el = document.createElement("div");
+	el.className = "blob";
+	el.style.background = C[body][1];
+	[[22, 30, 9], [62, 52, 7], [30, 70, 6], [70, 22, 5]].forEach(([x, y, s]) => {
+		const b = document.createElement("b");
+		b.style.cssText = `left:${x}%;top:${y}%;width:${s}px;height:${s}px;background:${C[other][1]}`;
+		el.appendChild(b);
+	});
+	return el;
+}
+
+const m = document.getElementById("matrix");
+const head = m.insertRow();
+head.appendChild(document.createElement("th"));
+ORDER.forEach(c => { const th = document.createElement("th"); th.innerHTML = `<span class="dot" style="background:${C[c][1]}"></span><br>${C[c][0]}`; head.appendChild(th); });
+ORDER.forEach((r, ri) => {
+	const tr = m.insertRow();
+	const th = document.createElement("th"); th.className = "row";
+	th.innerHTML = `${C[r][0]} <span class="dot" style="background:${C[r][1]}"></span>`;
+	tr.appendChild(th);
+	ORDER.forEach((c, ci) => {
+		const td = tr.insertCell();
+		if (ci === ri) { td.className = "self"; return; }
+		if (ci < ri) return;
+		const d = byKey.get(key(r, c));
+		td.className = "pair"; td.tabIndex = 0;
+		td.title = `${d[2]}: ${d[3]}`;
+		td.appendChild(blob(d));
+		const n = document.createElement("span"); n.className = "nm";
+		n.innerHTML = (d[5] ? '<span class="owner-mark">★</span> ' : "") + d[2];
+		td.appendChild(n);
+		const go = () => { const card = document.getElementById("pair-" + d.i); card.scrollIntoView({ behavior: "smooth", block: "center" }); card.classList.add("flash"); setTimeout(() => card.classList.remove("flash"), 1400); };
+		td.addEventListener("click", go);
+		td.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go(); } });
+	});
+});
+
+const groups = document.getElementById("groups");
+ORDER.forEach(first => {
+	const items = D.filter(d => d[0] === first);
+	if (!items.length) return;
+	const g = document.createElement("div"); g.className = "group";
+	g.innerHTML = `<h2><span class="dot" style="background:${C[first][1]};width:16px;height:16px"></span> ${C[first][0]} ghép với…</h2>`;
+	const cards = document.createElement("div"); cards.className = "cards";
+	items.forEach(d => {
+		const card = document.createElement("article"); card.className = "card"; card.id = "pair-" + d.i;
+		const other = d[4] === d[0] ? d[1] : d[0];
+		card.appendChild(blob(d));
+		const t = document.createElement("div"); t.style.minWidth = "0";
+		t.innerHTML = `<div class="num">#${d.i + 1} · ${C[d[0]][0]} + ${C[d[1]][0]}</div>
+			<div class="t">${d[5] ? '<span class="owner-mark">★</span> ' : ""}${d[2]}</div>
+			<div class="p">${d[3]}</div>
+			<div class="s">Thân ${C[d[4]][0].toLowerCase()}, hoa văn ${C[other][0].toLowerCase()}${d[5] ? ` · tranh số ${String(d[5]).padStart(2, "0")} của bạn` : ""}</div>`;
+		card.appendChild(t);
+		cards.appendChild(card);
+	});
+	g.appendChild(cards);
+	groups.appendChild(g);
+});
+</script>
