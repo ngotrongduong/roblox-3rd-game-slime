@@ -145,50 +145,79 @@ local TIERS: { Tier } = {
 }
 PantryStages.Tiers = TIERS
 
--- The store props: slot -> era -> kit model. Every model is scaled to its REAL height in studs, the
--- same scale as the player (5 studs = 1.75 m) and the store's door (4.3), so a wheelbarrow is waist
--- high and a forklift taller than a player (the owner: the props must be in proportion). Big props
--- (containers, transport) stand in the open front corners of the yard; slim ones (lifting, stock)
--- beside the house. A slot's width cap only keeps a model inside the yard.
+-- The store props, each placed for what it DOES (the owner, 2026-10-28: ask of every piece "does it
+-- belong here, is this the right spot, what goes beside it"; inside the yard where it works there,
+-- outside on the lawn only when it is too big or the yard is full; every one at its real size, the
+-- player is 5 studs = 1.75 m). The yard runs x -12..12, z -10..10; the house x -6..6, z 0..9 with
+-- its dock in front (z -3.4..0); its front corners (x 5..11, z -9..-4 each side) are the loading
+-- area, its sides (x 6.5..11.5, z 0..9) narrow strips along the walls. From the silo's era the yard
+-- grows a service yard on its right (x -26..-12) for the big things, and never shrinks again (the
+-- owner, 2026-10-28: an area may grow with an upgrade, never get smaller).
+--   transport  parked in the front-left loading corner, nose toward the dock
+--   containers small ones against the right wall at the back; the big ones (silo 4.9 m, a short
+--              container, the goo tank) in the service yard
+--   lifting    a ladder against the left wall, then a jib hoist beside it, a crane truck parked in
+--              front of the silo, a conveyor along the left wall, a robot arm by the dock
+--   stock      goods waiting on pallets in the front-right corner, shelving and then the vault
+--              against the right wall
 local PROPS = {
 	{ "Wheelbarrow", "HandCart", "PalletJack", "Forklift", "HoverCart" }, -- transport
 	{ "BarrelRack", "CrateWall", "GrainSilo", "ShippingContainer", "GooTank" }, -- containers
 	{ "Ladder", "PulleyHoist", "StoreCrane", "Conveyor", "RobotArm" }, -- lifting
 	{ "SackPallet", "StoreShelf", "MetalRack", "PlasticCrates", "Vault" }, -- stock
 }
--- The props stand on the lawn OUTSIDE the yard, where they have room for their real size (the
--- owner, 2026-10-28), turned toward the house (degrees: 90 faces -x, -90 faces +x): transport and
--- lifting on one side, containers and stock on the other.
-local SLOT_AT = { { 17.5, -4, 90 }, { -18, -3.5, -90 }, { 17.5, 6.5, 90 }, { -17.5, 7, -90 } }
--- A ring of store life round the yard that grows with the eras and is never taken away: kit
--- model, x, z, real height, foot, turn, from which era.
+-- slot -> era -> { x, z, turn (degrees: 90 faces -x, -90 faces +x, 180 faces the house), real
+-- height, the widest it may be, "pallet" (stands on a wooden pallet) or "side" (its long side
+-- front to back) }. The middle of the yard (x -3.5..3.5) stays a clear lane from the gate to the
+-- door (ChatGPT's 5th review). (Left and right as one walks in: +x is the left.)
+local SPOT: { { { any } } } = {
+	{
+		{ 8.5, -6.5, 60, 2.6, 3.2 }, -- 0.9 m wheelbarrow (handles at a grown-up's hands), at an angle
+		{ 8.5, -6.5, 90, 3, 3 }, -- 1 m hand cart
+		{ 8.5, -6.5, 90, 3.4, 4 }, -- 1.2 m pallet jack
+		{ 8.6, -6.6, 90, 6, 6.5 }, -- 2.1 m forklift, forks toward the dock
+		{ 8.5, -6.5, 90, 2.6, 4 }, -- hover cart
+	},
+	{
+		{ -9, 6.8, 90, 3.6, 4.5 }, -- 1.25 m barrel rack against the left wall
+		{ -8.4, 7.2, 0, 3.4, 3.4 }, -- 1.2 m crates in a low stack against the wall, a walk beside them
+		{ -20, 4.5, 0, 14, 8.5 }, -- 4.9 m grain silo at the back of the service yard
+		{ -19, 3.4, 0, 7, 6, "side" }, -- 2.5 m short container, doors to the front, 7 clear before them
+		{ -19, 3, 0, 8.5, 6.5 }, -- 3 m goo tank in the service yard, piped to the house
+	},
+	{
+		{ 7.2, 5.2, -90, 7, 2.5 }, -- 2.5 m ladder against the right wall
+		{ 9, 4.5, -90, 7, 5 }, -- 2.5 m jib hoist beside the wall
+		{ -19.5, -6.2, 90, 12, 13 }, -- 4.2 m (boom up) crane truck across the front of the silo, 4 clear
+		{ 8.8, 4.5, 0, 3, 6 }, -- 1.05 m conveyor along the right wall
+		{ 8.6, -2.6, 0, 6, 3 }, -- 2.1 m robot arm between the dock and the hover cart
+	},
+	{
+		{ -8.5, -6.5, 0, 3, 3.5, "pallet" }, -- 1.05 m sacks waiting on a pallet
+		{ -7.4, 3, 90, 5.6, 5 }, -- 2 m shelf against the left wall
+		{ -7.4, 3, 90, 6.3, 5 }, -- 2.2 m metal rack against the left wall
+		{ -9, 2.6, 0, 3.4, 3.5, "pallet" }, -- 1.2 m crates waiting on a pallet by the right wall
+		{ -9, 5.5, 0, 3.5, 3.2 }, -- 1.2 m vault against the left wall, its door to the approach
+	},
+}
+-- Store life round the house and the yard, never taken away (kit model, x, z, real height, the
+-- widest it may be, turn, from which era, lift): barrels and crates waiting by the dock, a hay
+-- store behind the house, shrubs on the yard's front corners, planters by the gate.
 local SURROUND: { { any } } = {
-	{ "WoodBarrel", 14.5, -9, 2.6, 2, 0, 1 },
-	{ "CrateStack", -14.8, -9.5, 3, 3, 0, 1 },
-	{ "HayBale", 6, 13, 2.4, 3.4, 0, 1 },
-	{ "FlowerShrub", -8, 13.5, 2.2, 3, 0, 1 },
-	{ "SackPallet", -6, 13.5, 2.6, 3.6, 180, 2 },
-	{ "WoodBarrel", 16, -11, 2.6, 2, 0, 2 },
-	{ "Wheelbarrow", 9.5, 13.5, 2.2, 3.4, 30, 2 },
-	{ "BarrelRack", 15, 13.5, 3.4, 4.6, 180, 3 },
-	{ "CrateStack", -15, 13.5, 3, 3, 0, 3 },
-	{ "PlasticCrates", -15.5, -12.5, 2.8, 3, 0, 4 },
-	{ "HandCart", 2, 14, 2.8, 3.4, 0, 4 },
+	{ "WoodBarrel", -5.4, -1.3, 2.6, 2, 0, 1 },
+	{ "WoodBarrel", -7.2, -1.2, 2.6, 2, 0, 1 },
+	{ "CrateStack", 5.8, -1.4, 2.9, 2.6, 0, 1 },
+	{ "HayBale", 2.5, 12.6, 1.6, 2.8, 0, 1 },
+	{ "HayBale", 5.3, 12.6, 1.6, 2.8, 0, 1 },
+	{ "HayBale", 3.9, 12.6, 1.6, 2.8, 90, 1, 1.6 },
+	{ "FlowerShrub", 13.8, -11.6, 2.2, 3, 0, 1 },
+	{ "FlowerShrub", -13.8, -11.6, 2.2, 3, 0, 1 },
+	{ "Wheelbarrow", 8.5, 12.8, 2.2, 3, 60, 2 },
+	{ "BarrelRack", -4.5, 12.6, 3.4, 4.5, 180, 3 },
+	{ "PlasticCrates", -8.5, 12.8, 3.2, 3, 0, 4 },
 	{ "Planter", 4.5, -12, 1.6, 2.8, 0, 5 },
 	{ "Planter", -4.5, -12, 1.6, 2.8, 0, 5 },
 }
--- real heights (studs): 0.75 m wheelbarrow, 1 m cart, 1.1 m pallet jack (handle), 1.9 m forklift,
--- 0.85 m hover cart; 1.25 m barrel rack, 1.5 m crate wall, 2.1 m silo, 1.4 m mini container, 2.1 m
--- goo tank; 2.1 m ladder, 1.8 m hoist, 2.1 m yard crane, 1.05 m conveyor, 1.9 m robot arm; 1.05 m
--- sack pallet, 1.75 m shelf, 2.1 m rack, 1.2 m crate stack, 1.25 m vault
-local HEIGHT = {
-	{ 2.2, 3, 3.2, 5.5, 2.4 },
-	{ 3.6, 4.4, 6, 4, 6 },
-	{ 6, 5.2, 6, 3, 5.5 },
-	{ 3, 5, 6, 3.4, 3.6 },
-}
-local FOOT = { 8, 8, 7, 6 } -- the widest a slot's model may be (the room it has)
-
 -- the house: 12 wide (x), 9 deep (z from 0 to 9), its door to the front (-z)
 local W, D, Z0 = 12, 9, 0
 local H1, H2 = 6, 4.6 -- ground storey, upper storeys
@@ -323,6 +352,7 @@ function PantryStages.build(area: Instance, frame: CFrame, level: number): Model
 	m:SetAttribute("Level", level)
 
 	-- the yard: the area's own floor and edging take the yard tier
+	local wing = level >= 21
 	for _, d in area:GetChildren() do
 		-- the old kit shed, barrels and crates: the house and the store props stand in for them
 		if (d.Name == "StorageShed" or d.Name == "WoodBarrel" or d.Name == "CrateStack") and d:IsA("Model") then
@@ -333,6 +363,28 @@ function PantryStages.build(area: Instance, frame: CFrame, level: number): Model
 		elseif d.Name == "FloorEdge" and d:IsA("BasePart") then
 			d.Color = ty.edge
 			PondStages.studLook(d, ty.yardMat)
+			-- (the right edge opens into the service yard once it is there)
+			local open = wing and frame:PointToObjectSpace(d.Position).X < -12
+			d.Transparency = if open then 1 else 0
+			d.CanCollide = not open
+		end
+	end
+	if wing then
+		-- the service yard on the right, as deep as the yard, edged the same; any bush or fern of the
+		-- scenery standing where it is paved goes
+		part(m, "ServiceYard", Vector3.new(14, 0.4, 20), frame * CFrame.new(-19, 0.2, 0), ty.yard, ty.yardMat)
+		for _, z in { -10.5, 10.5 } do
+			part(m, "ServiceEdge", Vector3.new(14, 0.6, 1), frame * CFrame.new(-20, 0.3, z), ty.edge, ty.yardMat)
+		end
+		part(m, "ServiceEdge", Vector3.new(1, 0.6, 20), frame * CFrame.new(-26.5, 0.3, 0), ty.edge, ty.yardMat)
+		local plot: Instance = area.Parent or area
+		for _, d in plot:GetDescendants() do
+			if d:IsA("Model") and d.Parent and d.Parent.Name == "Nature" then
+				local p = frame:PointToObjectSpace(d:GetPivot().Position)
+				if p.X > -28 and p.X < -11 and math.abs(p.Z) < 12 then
+					d.Parent = nil
+				end
+			end
 		end
 	end
 
@@ -653,19 +705,31 @@ function PantryStages.build(area: Instance, frame: CFrame, level: number): Model
 			part(
 				m,
 				"HoistRope",
-				Vector3.new(0.1, 0.8, 0.1), -- (short: the crate hangs clear above the canopy)
+				Vector3.new(0.1, 0.8, 0.1),
 				at(0, top + h - 1.45, Z0 - 2.2),
 				Color3.fromRGB(226, 196, 140),
 				Enum.Material.Fabric
 			)
-			part(
-				m,
-				"HoistCrate",
-				Vector3.new(1.1, 0.9, 1.1),
-				at(0, top + h - 2.3, Z0 - 2.2),
-				Color3.fromRGB(196, 140, 80),
-				Enum.Material.WoodPlanks
-			)
+			if canopy then
+				-- the canopy is under it: only an iron hook waits (a crate could not come down)
+				part(
+					m,
+					"HoistHook",
+					Vector3.new(0.3, 0.4, 0.3),
+					at(0, top + h - 2, Z0 - 2.2),
+					Color3.fromRGB(60, 60, 66),
+					Enum.Material.Metal
+				)
+			else
+				part(
+					m,
+					"HoistCrate",
+					Vector3.new(1.1, 0.9, 1.1),
+					at(0, top + h - 2.3, Z0 - 2.2),
+					Color3.fromRGB(196, 140, 80),
+					Enum.Material.WoodPlanks
+				)
+			end
 		end
 		top += h + 0.4
 	end
@@ -1031,19 +1095,166 @@ function PantryStages.build(area: Instance, frame: CFrame, level: number): Model
 			model:PivotTo(centre * CFrame.Angles(0, math.rad(degrees), 0) * centre:ToObjectSpace(model:GetPivot()))
 		end
 	end
+	-- what stands on the yard's paving stands on its top, 0.4 above the lawn
+	local FLOOR = 0.4
+	local function floorAt(x: number, z: number): number
+		local onYard = math.abs(z) <= 10 and (math.abs(x) <= 12 or (wing and x >= -26 and x < 0))
+		return if onYard then FLOOR else 0
+	end
+	-- a model's middle and size along the area's own axes (GetBoundingBox answers in the model's axes,
+	-- which a turned model no longer shares)
+	local function extents(model: Model): (Vector3, Vector3)
+		local lo, hi = Vector3.one * math.huge, -Vector3.one * math.huge
+		for _, d in model:GetDescendants() do
+			if d:IsA("BasePart") then
+				local h = d.Size / 2
+				for _, c in
+					{ Vector3.new(1, 1, 1), Vector3.new(1, 1, -1), Vector3.new(1, -1, 1), Vector3.new(-1, 1, 1) }
+				do
+					for _, sgn in { 1, -1 } do
+						local q = frame:PointToObjectSpace((d.CFrame * CFrame.new(h * c * sgn)).Position)
+						lo, hi = lo:Min(q), hi:Max(q)
+					end
+				end
+			end
+		end
+		return (lo + hi) / 2, hi - lo
+	end
 	-- the store life round the yard
 	local nowEra = math.clamp(math.ceil(level / 10), 1, 5)
 	for _, s in SURROUND do
 		if nowEra >= s[7] then
-			turn(place(m, frame, s[1], s[2], s[3], s[4], s[5]), s[6])
+			turn(place(m, frame, s[1], s[2], s[3], s[4], s[5], (s[8] or 0) + floorAt(s[2], s[3])), s[6])
 		end
 	end
 	-- the store props
+	local PALLET = 0.35
 	for j = 1, 4 do
 		local era = props[j]
 		if era > 0 then
-			local slot = SLOT_AT[j]
-			turn(place(m, frame, PROPS[j][era], slot[1], slot[2], HEIGHT[j][era], FOOT[j]), slot[3])
+			local spot = SPOT[j][era]
+			local x, z = spot[1], spot[2]
+			local onPallet = spot[6] == "pallet"
+			local lift = floorAt(x, z) + (if onPallet then PALLET else 0)
+			local model = place(m, frame, PROPS[j][era], x, z, spot[4], spot[5], lift, spot[6] == "side")
+			turn(model, spot[3])
+			if model and onPallet then
+				part(
+					m,
+					"Pallet",
+					Vector3.new(spot[5] * 0.85, PALLET, spot[5] * 0.85),
+					at(x, lift - PALLET / 2, z),
+					Color3.fromRGB(176, 132, 84),
+					Enum.Material.WoodPlanks
+				)
+			end
+			local name = PROPS[j][era]
+			if model and name == "GooTank" then
+				-- a chunky pipe from the tank's back round to the house's side wall, behind the vault
+				-- and clear of the working space (ChatGPT's 6th review), on posts, with a valve block
+				local p, size = extents(model)
+				local zp, py = 8.4, 1.3
+				local pipeCol = Color3.fromRGB(70, 150, 140)
+				local back = p.Z + size.Z / 2 - 0.5
+				local run = part(
+					m,
+					"GooPipe",
+					Vector3.new(zp - back, 0.6, 0.6),
+					at(p.X, py, (back + zp) / 2) * CFrame.Angles(0, math.pi / 2, 0),
+					pipeCol,
+					Enum.Material.Metal
+				) :: Part
+				run.Shape = Enum.PartType.Cylinder
+				local len = -W / 2 - p.X
+				local pipe = part(
+					m,
+					"GooPipe",
+					Vector3.new(len, 0.6, 0.6),
+					at(p.X + len / 2, py, zp),
+					pipeCol,
+					Enum.Material.Metal
+				) :: Part
+				pipe.Shape = Enum.PartType.Cylinder
+				part(m, "PipeBend", Vector3.new(0.8, 0.8, 0.8), at(p.X, py, zp), pipeCol, Enum.Material.Metal)
+				for _, t in { 0.3, 0.7 } do
+					part(m, "PipePost", Vector3.new(0.4, py, 0.4), at(p.X + len * t, py / 2, zp), tf.base, tf.baseMat)
+				end
+				part(
+					m,
+					"PipeValve",
+					Vector3.new(0.8, 0.9, 0.9),
+					at(p.X + len * 0.5, py, zp),
+					Color3.fromRGB(60, 60, 66),
+					Enum.Material.Metal
+				)
+			elseif model and name == "StoreCrane" then
+				-- four outriggers on pads: a crane at work stands on its legs (ChatGPT's 6th review)
+				local p, size = extents(model)
+				for _, ex in { -0.3, 0.3 } do
+					for _, s in { -1, 1 } do
+						local oz = p.Z + s * (size.Z / 2 + 0.5)
+						part(
+							m,
+							"Outrigger",
+							Vector3.new(0.4, 0.35, 1.4),
+							at(p.X + ex * size.X, FLOOR + 0.9, p.Z + s * (size.Z / 2)),
+							Color3.fromRGB(60, 60, 66),
+							Enum.Material.Metal
+						)
+						part(
+							m,
+							"OutriggerLeg",
+							Vector3.new(0.3, 0.9, 0.3),
+							at(p.X + ex * size.X, FLOOR + 0.5, oz),
+							Color3.fromRGB(60, 60, 66),
+							Enum.Material.Metal
+						)
+						part(
+							m,
+							"OutriggerPad",
+							Vector3.new(1, 0.15, 1),
+							at(p.X + ex * size.X, FLOOR + 0.08, oz),
+							Color3.fromRGB(230, 180, 60)
+						)
+					end
+				end
+			elseif model and name == "GrainSilo" then
+				-- a discharge chute on the side toward the house, a pallet of filled sacks under it
+				local p, size = extents(model)
+				local sx = p.X + size.X / 2
+				part(m, "SiloHopper", Vector3.new(1, 1, 1.2), at(sx - 0.2, FLOOR + 3.2, p.Z), tf.base, tf.baseMat)
+				part(
+					m,
+					"SiloChute",
+					Vector3.new(1.5, 0.45, 0.8),
+					at(sx + 0.6, FLOOR + 2.6, p.Z) * CFrame.Angles(0, 0, -0.6),
+					tf.base,
+					tf.baseMat
+				)
+				place(m, frame, "SackPallet", sx + 1.8, p.Z, 2.2, 2.4, FLOOR)
+			end
+		end
+	end
+	-- a lean-to against the right wall over the small containers of the first eras (ChatGPT's 6th
+	-- review: the rack stood alone): two posts and a sloping roof down from the wall
+	if props[2] == 1 or props[2] == 2 then
+		for _, z in { 5.8, 9.4 } do
+			part(m, "LeanToPost", Vector3.new(0.4, 4.2, 0.4), at(-11.4, FLOOR + 2.1, z), tf.frame, tf.frameMat)
+		end
+		part(m, "LeanToBeam", Vector3.new(0.4, 0.4, 4), at(-11.4, FLOOR + 4.2, 7.6), tf.frame, tf.frameMat)
+		part(
+			m,
+			"LeanToRoof",
+			Vector3.new(6.2, 0.25, 4.6),
+			at(-8.8, FLOOR + 4.85, 7.6) * CFrame.Angles(0, 0, 0.19),
+			tr.roof,
+			tr.roofMat
+		)
+	end
+	-- the forklift's parking bay, two painted lines, from the forklift's era
+	if props[1] >= 4 then
+		for _, x in { 5.9, 11.3 } do
+			part(m, "BayLine", Vector3.new(0.25, 0.04, 5.8), at(x, FLOOR + 0.02, -6.7), Color3.fromRGB(240, 200, 60))
 		end
 	end
 	return m

@@ -27,58 +27,81 @@ local part, wedge, place = PantryStages.part, PantryStages.wedge, PantryStages.p
 -- the fence (inside the area's frame): x from -13 to 13, z from -9 (front, gate x -4..4) to 15
 local FX, FZ0, FZ1, GATE = 13, -9, 15, 4
 
--- props: slot -> era -> kit model, real height (studs), where, the room it has, a hover lift
+-- The garden props, each placed for what it DOES (the owner, 2026-10-28: ask of every piece "does it
+-- belong here, is this the right spot, what goes beside it"; inside the fence where it works, outside
+-- only when it is too big or the garden is full; each at its real size, the player is 5 studs). The
+-- fence runs x -13..13, z -9..15 (19 from the shed's era); the beds x -9.3..9.3, z -2.3..10.3 with
+-- the work path between them; the front corners inside (x 2..12, z -8..-3 each side) are open
+-- ground, the sides (x 9.5..12.5) narrow strips along the beds, the back (z 10.5..) the working
+-- corner; the shed stands back-left (+x is the garden's left as one walks in).
+--   water      a watering can at a bed's front edge; then a rain barrel under the shed's eaves; a
+--              hand pump in the front-right corner; a sprinkler on a stand between the beds' far
+--              ends; a watering drone hovering over the beds
+--   tools      a tool rack against the right fence by the beds; then carts and machines parked in
+--              the front-left corner, turned to the path
+--   compost    in the back-left corner, where the beds' waste goes (clear of the shed door)
+--   scarecrow  in the right side strip beside the beds, facing the gate
 local PROPS = {
 	{ "WateringCan", "RainBarrel", "HandPump", "Sprinkler", "WaterDrone" },
 	{ "ToolRack", "SoilCart", "SeedSpreader", "Tiller", "GardenBot" },
 	{ "CompostBin", "CompostTumbler", "FertiliserSacks", "FertiliserTank", "GooComposter" },
 	{ "StrawScarecrow", "HatScarecrow", "PinwheelPost", "BirdRepeller", "RobotScarecrow" },
 }
--- 0.4 m can, 1 m barrel, 1.2 m pump, 0.9 m sprinkler, drone; 1.6 m rack, 0.8 m cart, 1 m spreader,
--- 1 m tiller, 1.2 m robot; 1 m bin, 1.3 m tumbler, 0.9 m sacks, 1.6 m tank, 1.6 m composter;
--- scarecrows 1.8-2 m
-local HEIGHT = {
-	{ 1.2, 2.9, 3.4, 2.6, 1.4 },
-	{ 4.6, 2.3, 2.9, 2.9, 3.4 },
-	{ 2.9, 2.4, 2.6, 4.6, 4.6 }, -- (the tumbler mesh is a wide drum: 2.4 keeps it in proportion)
-	{ 5.4, 5.7, 5.1, 5.7, 5.4 },
+-- slot -> era -> { x, z, turn (degrees: 90 faces -x, -90 faces +x, 180 faces the back), real
+-- height, the widest it may be, a hover lift }
+local SPOT = {
+	{
+		{ -4.6, -3.2, 30, 1.2, 1.6 }, -- 0.4 m watering can by the right bed's front edge
+		{ -5.6, 15.6, 0, 2.9, 2.4 }, -- 1 m rain barrel at the shed's side, under its eaves
+		{ -9.5, -6.2, 0, 3.4, 2.4 }, -- 1.2 m hand pump in the front-right corner
+		{ 0, 11.6, 0, 2.8, 2 }, -- 1 m sprinkler on its stand between the beds' far ends
+		{ 0, 4, 0, 1.4, 2.4, 4.2 }, -- watering drone over the work path
+	},
+	{
+		{ 11.6, 4, -90, 4.6, 3.6 }, -- 1.6 m tool rack against the left fence, facing the beds
+		{ 8.5, -6, -60, 2.6, 2.6 }, -- 0.9 m soil cart parked in the front-left corner
+		{ 8.5, -6, -90, 3, 3.6 }, -- 1 m seed spreader
+		{ 8.5, -6, -90, 3.2, 4.4 }, -- 1.1 m tiller, handles toward the path
+		{ 8.5, -6, -90, 3.6, 3.4 }, -- 1.25 m garden robot
+	},
+	{
+		{ 10.4, 12.6, 0, 2.9, 2.6 }, -- 1 m compost bin in the back-left corner (clear of the shed door)
+		{ 10.4, 12.6, 0, 3.2, 3.4 }, -- 1.1 m tumbler
+		{ 10.4, 12.6, 0, 2.6, 2.8 }, -- 0.9 m stack of fertiliser sacks
+		{ 10.4, 12.8, 0, 5, 3 }, -- 1.75 m fertiliser tank
+		{ 10.4, 12.8, 0, 5, 3.6 }, -- 1.75 m goo composter
+	},
+	{
+		{ -11.3, 3.8, 90, 5.4, 3.8 }, -- 1.9 m scarecrow beside the right bed, arms along it
+		{ -11.3, 3.8, 90, 5.7, 3.8 },
+		{ -11.3, 3.8, 0, 5.4, 2.8 }, -- pinwheel post
+		{ -11.3, 3.8, 0, 5.7, 3.2 }, -- bird repeller
+		{ -11.3, 3.8, 90, 5.6, 4 }, -- robot scarecrow
+	},
 }
--- The props stand on the lawn OUTSIDE the fence, where they have room for their real size (the
--- owner, 2026-10-28: squeezed into the paths they looked like toys): water and scarecrow by the
--- front corners, tools and compost along the sides; each turned toward the garden (degrees: 90
--- faces -x, -90 faces +x, 0 the front).
-local SLOT_AT = { { 17, -4.5, 90 }, { 17.5, 6.5, 90 }, { -17.5, 6.5, -90 }, { -16.5, -4.5, 0 } }
-local FOOT = { 4.5, 6, 6, 4.5 }
-
--- A ring of farm life on the lawn round all four sides, growing with the eras and never taken away
--- (the owner, 2026-10-28: use the space round the old pad): kit model, x, z, real height, foot,
--- turn (as SLOT_AT), from which era. +x is the garden's left as one walks in.
+-- Farm life round the garden that grows with the eras and is never taken away (kit model, x, z,
+-- real height, the widest it may be, turn, from which era): flowers at the gate, harvest crates
+-- waiting inside by the path, a wheelbarrow of produce by the gate outside, benches along the
+-- path outside, shrubs on the outside corners and behind.
 local SURROUND: { { any } } = {
 	{ "WildflowersGrass", 7.5, -11.5, 1.6, 4, 0, 1 },
 	{ "FlowerShrub", -10.5, -11, 2.4, 3, 0, 1 },
-	{ "HayBale", 17, 13, 2.4, 3.6, 90, 1 },
-	{ "FernCluster", -11, 21.5, 2.2, 3, 0, 1 },
-	{ "Wheelbarrow", -15.5, 1, 2.2, 3.6, -60, 2 },
-	{ "CrateStack", 16.5, 1, 3, 3.2, 90, 2 },
-	{ "FlowerPot", 4.6, -10.4, 1.6, 1.4, 0, 2 },
-	{ "FlowerPot", -4.6, -10.4, 1.6, 1.4, 0, 2 },
-	{ "LogBench", 9, -13.5, 1.8, 4.6, 0, 3 },
-	{ "WoodBarrel", -15.5, -8, 2.8, 2.2, 0, 3 },
-	{ "WildflowersGrass", -20.5, 2.5, 1.6, 4, 0, 3 },
-	{ "HayBale", 19.5, 10.5, 2.4, 3.6, 70, 4 },
-	{ "RainBarrel", 15, -8.5, 2.9, 2.4, 90, 4 },
-	{ "Planter", 13, -11.5, 1.6, 3, 0, 4 },
-	{ "Planter", -13.5, -11.5, 1.6, 3, 0, 4 },
-	-- (ChatGPT's 2nd review: the back was empty next to the front) planting behind from the start
+	{ "FlowerShrub", 14.5, -10.5, 2.2, 3, 0, 1 },
 	{ "PineBerryBush", 11, 21.5, 2.4, 3, 0, 1 },
+	{ "FernCluster", -11, 21.5, 2.2, 3, 0, 1 },
+	{ "CrateStack", -4.2, -6.5, 2.8, 2.6, 20, 2 }, -- harvest waiting by the path
+	{ "Wheelbarrow", 6.8, -11.6, 2.2, 3, -30, 2 },
 	{ "FlowerShrub", 16.5, 18.5, 2.2, 3, 0, 2 },
 	{ "WildflowersGrass", 3, 21.5, 1.4, 3.5, 0, 2 },
+	{ "LogBench", 9.5, -14, 1.8, 4.6, 0, 3 },
+	{ "HayBale", 16.5, 13, 1.6, 2.8, 90, 3 }, -- straw for mulch, outside by the compost corner
+	{ "HayBale", 16.5, 15.6, 1.6, 2.8, 90, 3 },
+	{ "Planter", 13, -11.5, 1.6, 3, 0, 4 },
+	{ "Planter", -13.5, -11.5, 1.6, 3, 0, 4 },
 	{ "FlowerShrub", 6, 21.5, 2.4, 3, 0, 5 },
 	{ "FlowerShrub", -6, 21.5, 2.4, 3, 0, 5 },
-	{ "LogBench", -9.5, -13.5, 1.8, 4.6, 0, 5 },
+	{ "LogBench", -9.5, -14, 1.8, 4.6, 0, 5 },
 }
-local LIFT = { [5] = 2.4 } -- the watering drone hovers
-
 -- What a level holds: shed, pergola, greenhouse, windmill; each prop slot's era (0: none); each
 -- build's tier (bed frames, fence, path, shed, pergola and greenhouse).
 function GardenStages.state(level: number): ({ boolean }, { number }, { number })
@@ -888,10 +911,14 @@ function GardenStages.build(area: Instance, frame: CFrame, level: number): Model
 	end
 
 	-- the farm life round the outside
+	-- (the garden's floor stands 0.2 above the lawn: what is inside the fence stands on it)
+	local function floorAt(x: number, z: number): number
+		return if math.abs(x) <= FX and z >= FZ0 and z <= back then 0.2 else 0
+	end
 	local nowEra = math.clamp(math.ceil(level / 10), 1, 5)
 	for _, s in SURROUND do
 		if nowEra >= s[7] then
-			local prop = place(m, frame, s[1], s[2], s[3], s[4], s[5])
+			local prop = place(m, frame, s[1], s[2], s[3], s[4], s[5], floorAt(s[2], s[3]))
 			if prop and s[6] ~= 0 then
 				local box = prop:GetBoundingBox()
 				local centre = CFrame.new(box.Position)
@@ -904,17 +931,9 @@ function GardenStages.build(area: Instance, frame: CFrame, level: number): Model
 	for j = 1, 4 do
 		local era = props[j]
 		if era > 0 then
-			local slot = SLOT_AT[j]
-			local prop = place(
-				m,
-				frame,
-				PROPS[j][era],
-				slot[1],
-				slot[2],
-				HEIGHT[j][era],
-				FOOT[j],
-				if j == 1 then LIFT[era] else nil
-			)
+			local slot = SPOT[j][era]
+			local lift = (slot[6] or 0) + floorAt(slot[1], slot[2])
+			local prop = place(m, frame, PROPS[j][era], slot[1], slot[2], slot[4], slot[5], lift)
 			if prop and slot[3] ~= 0 then
 				-- turned on the spot, about its own middle
 				local box = prop:GetBoundingBox()

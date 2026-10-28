@@ -232,10 +232,19 @@ was left there (this game has none); read it there if a cave is ever wanted.
 - ChatGPT's review (skill `chatgpt-review`) is worth it: round 1 found the silhouettes, round 2 the contrast and
   function. Weigh each point (it does not know the doors are props); 3 rounds were enough.
 
-- 2026-10-28 (garden). An area is more than its square pad: props squeezed into the pad's paths shrank
-  to toys. Put yard props on the lawn round the fence at real size, turned toward the area, and add
-  a ring of farm life on all four sides that grows with the eras; keep the back as dressed as the
-  front. Check every prop against a 5-stud block before sending pictures.
+- 2026-10-28 (garden, then the owner corrected it). Props squeezed into a pad's paths shrank to toys, but
+  moving EVERY prop out to the lawn was wrong too. Judge each prop on its own: does it belong here for
+  what it does, is it at its real size against a 5-stud block, what would stand beside it. A prop that
+  fits stays inside; only when the area is cramped, either the area grows or that prop moves out to a
+  fitting spot. Keep a ring of life on all four sides that grows with the eras.
+- An area may grow with an upgrade but NEVER shrinks at a later level (the owner, 2026-10-28). Pads
+  that come and go with one era's prop break this: grow the yard once (the pantry's 14 x 20 service yard
+  from L21, its old edge hidden, the scenery bushes inside it removed) and let later eras use it.
+- Big lawn things (crane, silo, container, tank) stand on paving, never on grass, and show how they
+  connect (a container's doors with room before them, a tank piped to the house). Keep a clear lane from
+  the gate to the door at every level. Waiting goods stand on a pallet.
+- The area's frame is the lawn's top; its own floor is 0.4 above it, so anything on the paving needs
+  that 0.4 as lift or it sinks (a pallet disappears).
 - A landmark must win its silhouette against the building beside it (a windmill below a greenhouse
   ridge reads as an ornament); if the kit model's proportions are wrong (a barrel on scaffolding),
   generate a better one rather than scaling.
