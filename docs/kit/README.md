@@ -69,6 +69,7 @@ by slot and era. Kitchen and training ground models (asset ids of the published 
 | PunchingBag, ChampionTrophy | 106739653183504, 121466755406359 | training, eras 3 and 5 |
 | FlowerBedWood, FlowerBedBrick, FlowerBedSteel2, FlowerBedMarble | 92089182893246, 120841523625422, 78643288731064, 84253715977949 | village planters, eras 1-2, 3, 4, 5 (FlowerBedSteel 76502321904483 came out bent: unused) |
 | EmblemBreeding, EmblemKitchen, EmblemTraining | 121457674801892, 114509872454727, 105153830412202 | the top of each area's entrance arch (GateArch) |
+| WallLantern, TorchSconce, MarbleUrn, GoldCrest | 130426004663067, 137742128678187, 102536557732140, 113569450995994 | the plot's fence and main gate (VillageWalls) |
 | IvyLeaf | 140233145136608 | one ivy leaf: the brick wall's vines are built from it (VillageStages ivyVine) |
 | PicnicTable | 105886899973840 | village picnic green |
 | PavilionWood, PavilionMarble | 125901976896948, 118518637222522 | village picnic gazebo, eras 2-3 and 4-5 |
