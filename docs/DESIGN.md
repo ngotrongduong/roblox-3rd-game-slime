@@ -74,7 +74,10 @@ an Open Cloud key the owner creates); Claude never signs in or uploads with the 
   behind slimes; no boxes or crack lines on the hatching egg; no white full-screen flash.
 - Ground effects sit at the feet, centred on the shadow, under the units; only hits, slashes and
   projectiles go on top. No plain colour rings and no one asset recoloured per element.
-- Auras do not bounce with the slime; wings flap gently and slowly; no random squash-and-bounce.
+- Auras do not bounce with the slime; wings flap gently and slowly.
+- The slime body moves with natural jelly physics in 3D (owner, 2026-10-29): anticipation squash before a
+  hop, landing squash and settle, wobble that dies down. This lifts the original's 2D vetoes on body squash
+  (`docs/reference/04-vfx-animation.md` §2 and §14 items 8-9); the blink itself stays on the face.
 - No sound per hop or per enemy death; hit sounds and music are welcome.
 - Drops are rare; difficulty steps are big; cosmetics are expensive.
 - No animated slime bodies or avatar backgrounds (static originals; procedural squash/hop is fine).
