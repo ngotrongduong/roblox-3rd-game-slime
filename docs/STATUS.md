@@ -244,8 +244,10 @@ Done (all checked in Studio at every era, committed, the kit exported into `asse
   Silver, Chrome as "Mirror" metals (metalness 1, roughness 0.03, the chrome reflection map
   `art/models/slime_body/skins/mirror_metal.png` id 138184721337623 tinted per metal; standard PBR read milky because
   Roblox reflects only a blurred sky), Ice and Jelly see-through, and 14 Roblox materials: Neon, Wood, Marble,
-  CrackedLava, Brick, Granite, Mud, Fabric, Sand, Grass, Glass, ForceField, ClayRoofTiles, Leather. How they enter the
-  game (a mutation, a cosmetic) is not decided yet.
+  CrackedLava, Brick, Granite, Mud, Fabric, Sand, Grass, Glass, ForceField, ClayRoofTiles, Leather. They are a rare
+  hatch mutation (`docs/MATERIALS.md`, `src/shared/Materials.luau`, rolled in `Mutations`); the Duals are one design
+  per pair (55). Logic and tests done (save schema 2); the client drawing, the Sell remote and the book UI come with
+  Phase 2.
 - How it was done is packaged: skills `area-review`, `prop-craft` (new: the owner's quality bar and placing rules,
   the generate/check/export tools `tools/kit/intake|viewer|upright|export_kit|check_kit.luau`), `chatgpt-review`;
   lessons in `.claude/skills/studio-build/LESSONS.md`; shots in `docs/areas/upgrades/review/`.
