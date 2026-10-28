@@ -1,0 +1,27 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>carry</title>
+<script>
+// Carries pictures (?f=path1,path2 from the repo root) to chatgpt.com in this same tab, inside the
+// address's hash (a hash is never sent to a server). ChatGPT's page cannot fetch or frame
+// 127.0.0.1 and the pane has no file upload, so this is the way in (skill chatgpt-review). Each
+// picture is made at most 1400 wide (JPEG 0.85) so several fit in one address (Chrome: 2 MB).
+(async () => {
+  const names = new URLSearchParams(location.search).get('f').split(',');
+  const parts = [];
+  for (const n of names) {
+    const img = new Image();
+    img.src = '/' + n + '?t=' + Date.now();
+    await img.decode();
+    const w = Math.min(1400, img.naturalWidth);
+    const c = document.createElement('canvas');
+    c.width = w;
+    c.height = Math.round(img.naturalHeight * w / img.naturalWidth);
+    c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+    parts.push(encodeURIComponent(n.split('/').pop()) + '|' + c.toDataURL('image/jpeg', 0.85).split(',')[1]);
+  }
+  // &to=/c/<id> lands in that chat (a follow-up), else a new chat
+  const to = new URLSearchParams(location.search).get('to') || '/';
+  location.href = 'https://chatgpt.com' + to + '#review=' + parts.join('~');
+})();
+</script>

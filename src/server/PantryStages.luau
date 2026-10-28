@@ -318,13 +318,55 @@ function PantryStages.build(area: Instance, frame: CFrame, level: number): Model
 
 	-- A window on a wall face (its middle at `cf`): a frame with depth, a cross of glazing bars, a
 	-- sill; wooden shutters while the openings are timber, a stone lintel on brick.
+	-- Each opening tier has its own window (ChatGPT's review, 2026-10-28: windows by function, less
+	-- glow so the doors lead): small square ones on timber and brick, a wide low strip on steel and
+	-- slime tech, a tall narrow one on marble. Only slime tech glows.
+	local winW, winH = 1.4, 1.4
+	if openTier == 4 or openTier == 5 then
+		winW, winH = 2.4, 0.9
+	elseif openTier >= 6 then
+		winW, winH = 1, 2
+	end
 	local function window(cf: CFrame)
-		part(m, "WindowFrame", Vector3.new(1.9, 1.9, 0.3), cf * CFrame.new(0, 0, -0.05), to.trim, to.trimMat)
-		part(m, "Window", Vector3.new(1.4, 1.4, 0.32), cf * CFrame.new(0, 0, -0.06), to.glass, Enum.Material.Neon).CastShadow =
-			false
-		part(m, "GlazingBar", Vector3.new(0.14, 1.4, 0.36), cf * CFrame.new(0, 0, -0.07), to.trim, to.trimMat)
-		part(m, "GlazingBar", Vector3.new(1.4, 0.14, 0.36), cf * CFrame.new(0, 0, -0.07), to.trim, to.trimMat)
-		part(m, "Sill", Vector3.new(2.3, 0.22, 0.5), cf * CFrame.new(0, -1.05, -0.2), tf.base, tf.baseMat)
+		part(
+			m,
+			"WindowFrame",
+			Vector3.new(winW + 0.5, winH + 0.5, 0.3),
+			cf * CFrame.new(0, 0, -0.05),
+			to.trim,
+			to.trimMat
+		)
+		local pane = part(
+			m,
+			"Window",
+			Vector3.new(winW, winH, 0.32),
+			cf * CFrame.new(0, 0, -0.06),
+			to.glass,
+			if openTier == 5 then Enum.Material.Neon else Enum.Material.Glass
+		)
+		pane.CastShadow = false
+		part(m, "GlazingBar", Vector3.new(0.14, winH, 0.36), cf * CFrame.new(0, 0, -0.07), to.trim, to.trimMat)
+		if winH < 2 then
+			part(m, "GlazingBar", Vector3.new(winW, 0.14, 0.36), cf * CFrame.new(0, 0, -0.07), to.trim, to.trimMat)
+		else
+			part(m, "GlazingBar", Vector3.new(winW, 0.14, 0.36), cf * CFrame.new(0, 0.35, -0.07), to.trim, to.trimMat)
+			part(
+				m,
+				"WindowCap",
+				Vector3.new(winW + 0.8, 0.3, 0.45),
+				cf * CFrame.new(0, winH / 2 + 0.4, -0.15),
+				to.trim,
+				to.trimMat
+			)
+		end
+		part(
+			m,
+			"Sill",
+			Vector3.new(winW + 0.9, 0.22, 0.5),
+			cf * CFrame.new(0, -winH / 2 - 0.35, -0.2),
+			tf.base,
+			tf.baseMat
+		)
 		if openTier <= 2 then
 			for _, s in { -1, 1 } do
 				part(
@@ -352,7 +394,7 @@ function PantryStages.build(area: Instance, frame: CFrame, level: number): Model
 					to.trimMat
 				)
 			end
-		elseif wallTier == 3 then
+		elseif openTier == 3 then
 			part(m, "Lintel", Vector3.new(2.3, 0.35, 0.4), cf * CFrame.new(0, 1.12, -0.12), tf.base, tf.baseMat)
 		end
 	end
@@ -405,24 +447,45 @@ function PantryStages.build(area: Instance, frame: CFrame, level: number): Model
 					false
 			end
 		else
+			-- marble: sandstone pilasters that stand out from the ivory walls, sunk panels between them,
+			-- a cornice at the top of each storey (ChatGPT's review: white on white did not read)
+			local sand = Color3.fromRGB(222, 198, 156)
 			for _, x in { -len / 3, len / 3 } do
 				part(
 					m,
 					"Pilaster",
-					Vector3.new(0.6, h - 0.3, 0.18),
-					cf * CFrame.new(x, -0.05, -0.06),
-					tw.walls,
-					tw.wallMat
+					Vector3.new(0.65, h - 0.3, 0.32),
+					cf * CFrame.new(x, -0.05, -0.12),
+					sand,
+					Enum.Material.Marble
 				)
 				part(
 					m,
 					"PilasterCap",
-					Vector3.new(0.9, 0.25, 0.3),
-					cf * CFrame.new(x, h / 2 - 0.22, -0.1),
+					Vector3.new(0.95, 0.25, 0.42),
+					cf * CFrame.new(x, h / 2 - 0.45, -0.16),
 					tw.trim,
 					tw.trimMat
 				)
 			end
+			for _, x in { -len / 2 + len / 6 + 0.1, 0, len / 2 - len / 6 - 0.1 } do
+				part(
+					m,
+					"InsetPanel",
+					Vector3.new(len / 3 - 1.1, h - 1.8, 0.06),
+					cf * CFrame.new(x, -0.1, -0.01),
+					Color3.fromRGB(228, 220, 204),
+					Enum.Material.Marble
+				)
+			end
+			part(
+				m,
+				"Cornice",
+				Vector3.new(len + 0.6, 0.35, 0.4),
+				cf * CFrame.new(0, h / 2 - 0.2, -0.18),
+				sand,
+				Enum.Material.Marble
+			)
 		end
 	end
 
@@ -504,7 +567,13 @@ function PantryStages.build(area: Instance, frame: CFrame, level: number): Model
 	end
 	-- the store door: timber barn doors with Z braces and iron handles while the openings are timber or
 	-- brick, a roll-up shutter with its box from steel on
-	part(m, "DoorFrame", Vector3.new(3.8, 4.8, 0.3), at(0, BASE + 2.4, Z0 - 0.05), to.trim, to.trimMat)
+	-- a dark recess behind the doors and a thick frame round them, so the loading door leads the
+	-- front (ChatGPT's review)
+	part(m, "DoorRecess", Vector3.new(3.6, 4.6, 0.3), at(0, BASE + 2.3, Z0 - 0.02), Color3.fromRGB(42, 34, 30))
+	for _, s in { -1, 1 } do
+		part(m, "DoorJamb", Vector3.new(0.5, 4.9, 0.6), at(s * 1.95, BASE + 2.45, Z0 - 0.2), to.trim, to.trimMat)
+	end
+	part(m, "DoorHeader", Vector3.new(4.4, 0.6, 0.65), at(0, BASE + 4.9, Z0 - 0.22), to.trim, to.trimMat)
 	local iron = Color3.fromRGB(60, 60, 66)
 	if openTier <= 3 then
 		for _, s in { -1, 1 } do
@@ -570,25 +639,119 @@ function PantryStages.build(area: Instance, frame: CFrame, level: number): Model
 			)
 		end
 	end
-	-- the gable roof, ridge along x
-	local rh = 3.2
-	wedge(
-		m,
-		"RoofFront",
-		Vector3.new(W + 1.2, rh, D / 2 + 0.6),
-		at(0, top + rh / 2, Z0 + D / 4 - 0.3),
-		tr.roof,
-		tr.roofMat
-	)
-	wedge(
-		m,
-		"RoofBack",
-		Vector3.new(W + 1.2, rh, D / 2 + 0.6),
-		at(0, top + rh / 2, Z0 + D * 3 / 4 + 0.3) * CFrame.Angles(0, math.pi, 0),
-		tr.roof,
-		tr.roofMat
-	)
-	part(m, "Ridge", Vector3.new(W + 1.4, 0.4, 0.6), at(0, top + rh + 0.1, zc), tf.frame, tf.frameMat)
+	-- The roof, ridge along x, its shape by the roof's tier (ChatGPT's review, 2026-10-28: each level
+	-- its own silhouette): a gambrel barn roof on wood, a gable on brick, a low steel roof with
+	-- standing seams on steel and slime tech, a gable with a cornice on marble. A profile is a list of
+	-- (distance from the ridge line, height) from the eave in to the ridge; every segment is a wedge
+	-- with a block under it, and the gable ends are filled the same way in the wall's material.
+	local roofTier = tiers[2]
+	local half = D / 2 + 0.6
+	local profile: { { number } }
+	if roofTier <= 2 then
+		profile = { { half, 0 }, { half - 1.6, 2.3 }, { 0, 3.6 } }
+	elseif roofTier == 4 or roofTier == 5 then
+		profile = { { half, 0 }, { 0, 1.7 } }
+	else
+		profile = { { half, 0 }, { 0, 3 } }
+	end
+	local rh = profile[#profile][2]
+	local function heightAt(e: number): number
+		for k = 1, #profile - 1 do
+			local a, b = profile[k], profile[k + 1]
+			if e <= a[1] and e >= b[1] then
+				return a[2] + (b[2] - a[2]) * (a[1] - e) / (a[1] - b[1])
+			end
+		end
+		return rh
+	end
+	for _, sz in { -1, 1 } do
+		local turn = if sz < 0 then CFrame.identity else CFrame.Angles(0, math.pi, 0)
+		for k = 1, #profile - 1 do
+			local a, b = profile[k], profile[k + 1]
+			local depth, rise, mid = a[1] - b[1], b[2] - a[2], (a[1] + b[1]) / 2
+			wedge(
+				m,
+				"Roof",
+				Vector3.new(W + 1.2, rise, depth),
+				at(0, top + a[2] + rise / 2, zc + sz * mid) * turn,
+				tr.roof,
+				tr.roofMat
+			)
+			if a[2] > 0 then
+				part(
+					m,
+					"RoofBase",
+					Vector3.new(W + 1.2, a[2], depth),
+					at(0, top + a[2] / 2, zc + sz * mid),
+					tr.roof,
+					tr.roofMat
+				)
+			end
+			-- the gable ends between the walls, and a barge board along each slope
+			local eo = math.min(a[1], D / 2)
+			if eo > b[1] then
+				local yo = heightAt(eo)
+				for _, s in { -1, 1 } do
+					wedge(
+						m,
+						"Gable",
+						Vector3.new(0.5, b[2] - yo, eo - b[1]),
+						at(s * (W / 2 - 0.25), top + yo + (b[2] - yo) / 2, zc + sz * (eo + b[1]) / 2) * turn,
+						tw.walls,
+						tw.wallMat
+					)
+					if yo > 0 then
+						part(
+							m,
+							"GableBase",
+							Vector3.new(0.5, yo, eo - b[1]),
+							at(s * (W / 2 - 0.25), top + yo / 2, zc + sz * (eo + b[1]) / 2),
+							tw.walls,
+							tw.wallMat
+						)
+					end
+				end
+			end
+			local len = math.sqrt(depth ^ 2 + rise ^ 2)
+			for _, s in { -1, 1 } do
+				part(
+					m,
+					"BargeBoard",
+					Vector3.new(0.22, 0.42, len),
+					at(s * (W / 2 + 0.65), top + (a[2] + b[2]) / 2 + 0.12, zc + sz * mid)
+						* CFrame.Angles(sz * math.atan2(rise, depth), 0, 0),
+					tf.frame,
+					tf.frameMat
+				)
+			end
+		end
+		-- standing seams down the low steel roof
+		if roofTier == 4 or roofTier == 5 then
+			local len = math.sqrt(half ^ 2 + rh ^ 2)
+			for x = -W / 2, W / 2 + 0.01, 1.5 do
+				part(
+					m,
+					"RoofSeam",
+					Vector3.new(0.14, 0.14, len),
+					at(x, top + rh / 2 + 0.12, zc + sz * half / 2) * CFrame.Angles(sz * math.atan2(rh, half), 0, 0),
+					tr.trim,
+					tr.trimMat
+				)
+			end
+		end
+	end
+	-- a chunky ridge cap; on marble a cornice ring under the roof
+	part(m, "Ridge", Vector3.new(W + 1.6, 0.6, 0.9), at(0, top + rh + 0.15, zc), tf.frame, tf.frameMat)
+	if roofTier >= 6 then
+		part(
+			m,
+			"RoofCornice",
+			Vector3.new(W + 1.6, 0.5, D + 1.6),
+			at(0, top - 0.1, zc),
+			Color3.fromRGB(222, 198, 156),
+			Enum.Material.Marble
+		)
+	end
 	-- eaves: a fascia board under each roof edge, a gutter at the front, a downspout at a corner
 	for _, sz in { -1, 1 } do
 		local ez = if sz < 0 then Z0 - 0.6 else Z0 + D + 0.6
@@ -605,27 +768,15 @@ function PantryStages.build(area: Instance, frame: CFrame, level: number): Model
 		tf.frame,
 		tf.frameMat
 	)
-	-- barge boards along the gables' sloping edges
-	local slopeLen = math.sqrt((D / 2 + 0.6) ^ 2 + rh ^ 2)
-	local slope = math.atan2(rh, D / 2 + 0.6)
-	for _, s in { -1, 1 } do
-		for _, sz in { -1, 1 } do
-			part(
-				m,
-				"BargeBoard",
-				Vector3.new(0.2, 0.4, slopeLen),
-				at(s * (W / 2 + 0.65), top + rh / 2 + 0.1, zc + sz * (D / 4 + 0.3)) * CFrame.Angles(sz * slope, 0, 0),
-				tf.frame,
-				tf.frameMat
-			)
-		end
-	end
 	-- a vent cupola on the ridge until the lantern tower takes its place
 	if not rooftop then
 		local ry = top + rh
 		part(m, "Cupola", Vector3.new(1.6, 1.3, 1.6), at(0, ry + 0.45, zc), tw.walls, tw.wallMat)
 		for _, s in { -1, 1 } do
-			part(m, "Louvre", Vector3.new(1.1, 0.7, 0.1), at(0, ry + 0.5, zc + s * 0.82), tf.frame, tf.frameMat)
+			part(m, "Louvre", Vector3.new(1.3, 0.8, 0.12), at(0, ry + 0.5, zc + s * 0.82), Color3.fromRGB(46, 40, 38))
+			for _, y in { 0.3, 0.55, 0.8 } do
+				part(m, "LouvreSlat", Vector3.new(1.3, 0.08, 0.16), at(0, ry + y, zc + s * 0.86), tw.walls, tw.wallMat)
+			end
 			wedge(
 				m,
 				"CupolaRoof",
@@ -635,25 +786,6 @@ function PantryStages.build(area: Instance, frame: CFrame, level: number): Model
 				tr.roofMat
 			)
 		end
-	end
-	for _, s in { -1, 1 } do
-		-- the gable ends, filled with the wall material
-		wedge(
-			m,
-			"Gable",
-			Vector3.new(0.5, rh, D / 2),
-			at(s * (W / 2 - 0.25), top + rh / 2, Z0 + D / 4),
-			tw.walls,
-			tw.wallMat
-		)
-		wedge(
-			m,
-			"Gable",
-			Vector3.new(0.5, rh, D / 2),
-			at(s * (W / 2 - 0.25), top + rh / 2, Z0 + D * 3 / 4) * CFrame.Angles(0, math.pi, 0),
-			tw.walls,
-			tw.wallMat
-		)
 	end
 	-- a wall lantern on a bracket either side of the door
 	for _, s in { -1, 1 } do
