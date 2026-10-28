@@ -660,21 +660,34 @@ function TrainingStages.build(area: Instance, frame: CFrame, level: number): Mod
 		if era == 2 then
 			d("HeadGuard", Vector3.new(1.9, 0.5, 1.9), 0, hy + 0.65, 0, td.frame, td.frameMat)
 		elseif era >= 3 then
-			d(
+			-- (a round helmet down over the head, cheek guards either side, the visor slit across)
+			local helmet = d(
 				"Helmet",
-				Vector3.new(1.9, 0.9, 1.9),
+				Vector3.one * 2,
 				0,
-				hy + 0.5,
+				hy + 0.2,
 				0,
 				if era == 3 then iron else steel,
 				Enum.Material.Metal
-			)
+			) :: Part
+			helmet.Shape = Enum.PartType.Ball
+			for _, s in { -1, 1 } do
+				d(
+					"CheekGuard",
+					Vector3.new(0.3, 1, 1.2),
+					s * 0.85,
+					hy - 0.3,
+					-0.2,
+					if era == 3 then iron else steel,
+					Enum.Material.Metal
+				)
+			end
 			d(
 				"Visor",
-				Vector3.new(1.5, 0.25, 0.2),
+				Vector3.new(1.4, 0.25, 0.2),
 				0,
-				hy,
-				-0.85,
+				hy + 0.1,
+				-0.98,
 				if era == 5 then mint else iron,
 				if era == 5 then Enum.Material.Neon else Enum.Material.Metal
 			)
