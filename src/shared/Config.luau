@@ -178,6 +178,76 @@ Config.Map = {
 	DuelRingDistance = 78,
 }
 
+-- ===== The slime body, face and motion =====
+-- (owned by SlimeShape, SlimeMotion, Expressions and the client's SlimeFace / SlimeActor). Lengths are in
+-- body heights (one slime is 1.0 high at scale 1); the farm scales the model, the code multiplies by it.
+
+Config.Slime = {
+	-- The skinned body (art/models/slime_body/rounds.md): mesh height, and the bone weight divisor
+	-- (a vertex is pulled by its height / BoneK toward the Top bone, by its width / BoneK toward a side bone).
+	MeshHeight = 0.999933,
+	-- (the body MeshPart's centre is this far above the feet)
+	MeshCentre = 0.4999665,
+	BoneK = 1.5,
+	-- The face's centre sits this far up the body (the original game: 0.51), and a face picture is
+	-- drawn 0.64 body widths wide.
+	FaceHeight = 0.51,
+	-- Where the eye and mouth plates sit on the face (x from the middle, y from the face centre).
+	EyeX = 0.215,
+	EyeY = 0,
+	MouthY = -0.1,
+	-- A face plate stands this far off the skin so it never fights the body's own pixels.
+	PlateOffset = 0.006,
+	-- Pixels of face picture per body height (the owner's face pictures are about this sharp).
+	CanvasPerUnit = 365,
+
+	-- The jelly: damped springs. Hz = how fast it rings, Damping = 0 rings forever, 1 never rings.
+	SquashHz = 3.2,
+	SquashDamping = 0.28,
+	LeanHz = 2.2,
+	LeanDamping = 0.4,
+	YawHz = 3,
+	YawDamping = 0.6,
+	PuffHz = 4,
+	PuffDamping = 0.35,
+	-- Width follows the squash by this much (1 would keep the volume); jelly bulges a little less.
+	VolumeBulge = 0.55,
+	-- Hops: gravity in body heights per second squared, the crouch before the jump, the stretch
+	-- while airborne and the landing's push into the squash spring (the owner, 2026-10-29: a soft body
+	-- with weight, crouch before a hop, a landing squash and a wobble that dies down).
+	Gravity = 10,
+	CrouchSeconds = 0.13,
+	CrouchSquash = -0.26,
+	AirStretch = 0.12,
+	LandKick = 3,
+	-- The physics never takes a step longer than this, and integrates in pieces of SubStep.
+	MaxStep = 1 / 15,
+	SubStep = 1 / 120,
+
+	-- Blinks: the face only, with a hardly visible dip of the body.
+	BlinkMinSeconds = 3.5,
+	BlinkMaxSeconds = 6,
+	BlinkSeconds = 0.12,
+	BlinkShut = 0.88,
+	DoubleBlinkChance = 0.18,
+	DoubleBlinkGapSeconds = 0.22,
+	BlinkBodyKick = -0.7,
+	-- Eyes: how fast they turn toward a target, and how far they may move inside the face.
+	GazeRate = 9,
+	GazeX = 0.022,
+	GazeY = 0.015,
+	-- An emotion swap swells the face by PopSize for PopSeconds.
+	PopSeconds = 0.15,
+	PopSize = 0.08,
+
+	-- Cost: every slime closer than FullStuds is drawn every frame, up to FarStuds at 10 Hz,
+	-- beyond that only its physics runs (and not even that beyond SleepStuds).
+	FullStuds = 70,
+	FarStuds = 160,
+	SleepStuds = 400,
+	FarHz = 10,
+}
+
 -- ===== Player profiles and saving =====
 -- (owned by ProfileLogic, server ProfileStore and PlayerData)
 -- The owner's sharpest complaint about the web game was lost progress, and they also disliked
