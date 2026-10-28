@@ -230,16 +230,16 @@ Done (all checked in Studio at every era, committed, the kit exported into `asse
 - The base slime body (2026-10-28): Blender build `tools/blender/slime_body.py`, files in `art/models/slime_body/`
   (rigged `SlimeBody.fbx` + `SlimeBodyOutline.fbx` hull, overlay/roughness/normal maps, `rounds.md`). Front silhouette
   IoU 0.984 against `slime.base.navy.png` (the ceiling for a round body); 2,400 triangles; bones Root/Base/Top and
-  Left/Right/Front/Back (Bone.Transform squash about the feet). Imported by the owner on Mue_you: model ids SlimeBody
-  89067624889078, SlimeBodyOutline 125941562766782. The look (owner): nothing painted on - highlights and shading come
+  Left/Right/Front/Back (Bone.Transform squash about the feet). (First import 89067624889078 is superseded by the
+  re-import below.) The look (owner): nothing painted on - highlights and shading come
   from the light; colour = Colours.luau's swatch on a glossy SurfaceAppearance (roughness 0.10), the hull at x0.6;
   `Lighting.EnvironmentSpecularScale` 1 (was 0) so the gloss reflects the sky. The baked overlay map is unused.
   `tools/slime/showcase.luau` puts the 11 on a stage in MapWork (shot `art/models/slime_body/studio_lineup.jpg`).
 - The 55 Dual skins (2026-10-29, `docs/DUALS.md`): one design per colour pair, made by `tools/skins/make_skins.py`
   on the body's new all-round UV; re-imported body ids SlimeBody 71117254607762, SlimeBodyOutline 99817746239640;
   skin image ids in `art/models/slime_body/skins/asset_ids.json`. All 66 stand on the MapWork stage
-  (`tools/slime/showcase.luau`, run with `node tools/studio_mcp.js run`). Waiting for the owner's look in play.
-  Next: `DualDesigns.luau` to 55 pairs, then the face decal and the hop in the farm code.
+  (`tools/slime/showcase.luau`, run with `node tools/studio_mcp.js run`). Approved by the owner in play
+  ("every design is very beautiful"); `DualDesigns.luau` holds the 55.
 - Slime materials (2026-10-29, the owner's pick; stage `tools/slime/materials.luau` beside the slime stage): Gold,
   Silver as "Mirror" metals (Chrome cut: it looked like Silver) (metalness 1, roughness 0.03, the chrome reflection map
   `art/models/slime_body/skins/mirror_metal.png` id 138184721337623 tinted per metal; standard PBR read milky because
@@ -248,12 +248,31 @@ Done (all checked in Studio at every era, committed, the kit exported into `asse
   hatch mutation (`docs/MATERIALS.md`, `src/shared/Materials.luau`, rolled in `Mutations`); the Duals are one design
   per pair (55). Logic and tests done (save schema 2); the client drawing, the Sell remote and the book UI come with
   Phase 2.
+- Faces, emotions and jelly motion (2026-10-29, approved by the owner in play: "everything is very good"): the owner's
+  9 faces cut into parts plus drawn pieces (`art/faces/`, `tools/faces/make_faces.py`, ids in `src/shared/FaceArt.luau`);
+  24 emotions as data (`src/shared/Expressions.luau`); face plates that ride the deformed skin
+  (`src/shared/SlimeShape.luau`); spring-based jelly body motion with crouch-launch-land-wobble hops
+  (`src/shared/SlimeMotion.luau`; the owner lifted the 2D squash vetoes, `docs/DESIGN.md`); the client rig
+  `src/client/SlimeFace.luau` and the API for the future brain `src/client/SlimeActor.luau` (`Actor.new(model, emotion)`,
+  `:setEmotion`, `:lookAt`, `:playMotion`, `:hop`); numbers in `Config.Slime`. Weak spots the owner may raise: gaze
+  slides the whole eye (pupils are painted in), the yawn mouth, sulk turns far, every spring number untuned, drawn
+  pieces (lids, swirl, brows, blush, sweat, emote icons) could become art.
+- Review stages in MapWork, all at y 300 around z -800, joined by walkways: emotions at x -75
+  (`tools/slime/emotions.ps1`), the 66 slimes at x 0 (`tools/slime/showcase.luau`), materials at x 75
+  (`tools/slime/materials.luau`). `tools/slime/spawn_at_stage.luau` makes every Play start in front of the emotion
+  stage (delete `Workspace.SlimeEmotions.SpawnAtStage` to spawn at the map's spawn again).
 - How it was done is packaged: skills `area-review`, `prop-craft` (new: the owner's quality bar and placing rules,
   the generate/check/export tools `tools/kit/intake|viewer|upright|export_kit|check_kit.luau`), `chatgpt-review`;
   lessons in `.claude/skills/studio-build/LESSONS.md`; shots in `docs/areas/upgrades/review/`.
 
-Next
-- The owner chooses the next session's direction (Phase 2, the farm and its slimes, is the next build phase).
+Next (proposed to the owner 2026-10-29, he ended the session before choosing; ask him first)
+- Phase 2, step 1 (recommended): the slimes live on the farm with a first brain - a player's slimes appear on their
+  plot drawn with their colour / Dual skin / material and faces (`SlimeActor`), the server owns needs (hunger, energy,
+  fun, social), personality per slime and positions; Sims-style "smart objects" (the pantry, beds, the pond,
+  benches, flowers...) advertise actions; slimes wander, eat, sleep, play, greet and argue, with emotions and looks
+  toward the player. The owner wants motion, interaction and emotion as rich as possible: this game is a life-SIM.
+- Step 2: breeding, eggs and the hatch reveal (escalating by rarity: normal, Dual, Material, Secret).
+- Step 3: the collection book (11 + 55 + 18 + 66), selling (helpers exist in `Mutations`), the HUD strip.
 - Not measured yet: the frame time of the full plot at the last era on a phone (the fountain alone is ~200 particles/s;
   the brick wall's ivy is ~1,100 small parts).
 
