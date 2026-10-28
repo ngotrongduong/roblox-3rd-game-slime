@@ -197,6 +197,13 @@ warm window, and a real slime model; the roof is a little lilac.
   (24 new PropKit models). Redone at the owner's word the same day: fence, gate, lamps and paving
   change style every era, decorations come in groups (benches, lamps, stalls, gardens, planters);
   7 more PropKit models (era lamps and benches). Waiting for the owner's review.
+- Detail review loop (the owner, 2026-10-28): each main building is rebuilt with more detail,
+  self-reviewed, then reviewed by ChatGPT in Claude's own browser pane (skill `chatgpt-review`) and
+  revised. Pantry done in 3 rounds (pictures `docs/areas/upgrades/review/pantry-r*`): a roof shape
+  per level (gable shed, gambrel barn, brick gable, low seamed steel, corniced marble), loading doors
+  that lead the front, loft doors and hoist, then a cargo hatch from steel, windows by function,
+  sandstone detail and a real lantern tower on marble. Next: the garden, breeding pen, kitchen,
+  training ground and dock the same way.
 - `tools/map/sync_client.luau` copies the client scripts into the work place for play tests.
 - `tools/map/sync_shared.luau` copies the repo's Config and Layout into the work place (it swaps in
   fresh ModuleScripts, since Studio caches what require returned).

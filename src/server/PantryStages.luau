@@ -288,6 +288,16 @@ end
 function PantryStages.build(area: Instance, frame: CFrame, level: number): Model
 	local storeys, canopy, rooftop, props, tiers = PantryStages.state(level)
 	local tw, tr, to, tf, ty = TIERS[tiers[1]], TIERS[tiers[2]], TIERS[tiers[3]], TIERS[tiers[4]], TIERS[tiers[5]]
+	-- (ChatGPT's 3rd review: glowing cyan belongs to slime tech; on the steel openings the trim is
+	-- plain steel)
+	if tiers[3] == 4 then
+		to = table.clone(to)
+		to.trim = Color3.fromRGB(150, 158, 170)
+		to.trimMat = Enum.Material.Metal
+	end
+	-- doors and hatches stand out from pale trim in dark wood (ChatGPT's 3rd review)
+	local leafCol = if tiers[4] == 3 or tiers[4] == 6 then Color3.fromRGB(104, 66, 44) else tf.frame
+	local leafMat = if tiers[4] == 3 or tiers[4] == 6 then Enum.Material.Wood else tf.frameMat
 	local m = Instance.new("Model")
 	m.Name = "AreaStage"
 	m:SetAttribute("Level", level)
@@ -523,7 +533,11 @@ function PantryStages.build(area: Instance, frame: CFrame, level: number): Model
 		-- storey's middle one is the loft door), one each side
 		local wy = top + h * 0.55
 		-- (no ground-floor front windows beside a wide shutter; the top storey's middle is a vent)
-		local xs: { number } = if k == 1 then (if doorW > 5 then {} else { -4.2, 4.2 }) else { -3.4, 3.4 }
+		-- (on marble the top storey keeps only its vent: a store, not another floor of rooms)
+		local xs: { number } = if k == 1
+			then (if doorW > 5 then {} else { -4.2, 4.2 })
+			elseif k == 3 and openTier >= 6 then {}
+			else { -3.4, 3.4 }
 		for _, wx in xs do
 			window(face(wx, wy, Z0, Vector3.new(0, 0, -1)))
 		end
@@ -549,23 +563,50 @@ function PantryStages.build(area: Instance, frame: CFrame, level: number): Model
 				part(m, "LoftJamb", Vector3.new(0.35, 3.9, 0.5), at(s * 1.55, ly + 1.95, Z0 - 0.3), to.trim, to.trimMat)
 			end
 			part(m, "LoftSill", Vector3.new(3.5, 0.3, 0.6), at(0, ly + 0.1, Z0 - 0.3), to.trim, to.trimMat)
-			for _, s in { -1, 1 } do
-				part(
-					m,
-					"LoftDoor",
-					Vector3.new(1.35, 3.4, 0.2),
-					at(s * 0.69, ly + 1.95, Z0 - 0.12),
-					tf.frame,
-					tf.frameMat
-				)
-				part(
-					m,
-					"LoftBrace",
-					Vector3.new(0.2, 3.3, 0.1),
-					at(s * 0.69, ly + 1.95, Z0 - 0.25) * CFrame.Angles(0, 0, s * 0.35),
-					to.trim,
-					to.trimMat
-				)
+			part(m, "LoftRecess", Vector3.new(2.8, 3.6, 0.1), at(0, ly + 1.95, Z0 - 0.02), Color3.fromRGB(42, 34, 30))
+			if openTier <= 3 then
+				-- braced timber doors set back in the opening
+				for _, s in { -1, 1 } do
+					part(
+						m,
+						"LoftDoor",
+						Vector3.new(1.3, 3.3, 0.16),
+						at(s * 0.68, ly + 1.95, Z0 - 0.1),
+						leafCol,
+						leafMat
+					)
+					part(
+						m,
+						"LoftBrace",
+						Vector3.new(0.2, 3.2, 0.1),
+						at(s * 0.68, ly + 1.95, Z0 - 0.22) * CFrame.Angles(0, 0, s * 0.35),
+						to.trim,
+						to.trimMat
+					)
+				end
+			else
+				-- a sealed steel cargo hatch: a panel, two bars, two lock blocks
+				part(m, "Hatch", Vector3.new(2.5, 3.2, 0.16), at(0, ly + 1.95, Z0 - 0.1), tf.frame, tf.frameMat)
+				for _, dy in { -0.7, 0.7 } do
+					part(
+						m,
+						"HatchBar",
+						Vector3.new(2.6, 0.3, 0.22),
+						at(0, ly + 1.95 + dy, Z0 - 0.2),
+						to.trim,
+						to.trimMat
+					)
+				end
+				for _, s in { -1, 1 } do
+					part(
+						m,
+						"HatchLock",
+						Vector3.new(0.35, 0.5, 0.3),
+						at(s * 1, ly + 1.95, Z0 - 0.25),
+						Color3.fromRGB(60, 60, 66),
+						Enum.Material.Metal
+					)
+				end
 			end
 			part(m, "LoftLintel", Vector3.new(3.8, 0.45, 0.7), at(0, ly + 4.05, Z0 - 0.3), tf.base, tf.baseMat)
 		end
@@ -620,29 +661,33 @@ function PantryStages.build(area: Instance, frame: CFrame, level: number): Model
 		at(0, BASE + DOOR_H / 2, Z0 - 0.02),
 		Color3.fromRGB(42, 34, 30)
 	)
+	-- (on marble a sandstone portal of two columns and a lintel, to carry the tall front)
+	local jambCol = if openTier >= 6 then Color3.fromRGB(196, 174, 136) else to.trim
+	local jambMat = if openTier >= 6 then Enum.Material.Marble else to.trimMat
+	local jambW = if openTier >= 6 then 0.7 else 0.5
 	for _, s in { -1, 1 } do
 		part(
 			m,
 			"DoorJamb",
-			Vector3.new(0.5, DOOR_H + 0.6, 0.6),
-			at(s * (doorW / 2 + 0.25), BASE + DOOR_H / 2 + 0.3, Z0 - 0.2),
-			to.trim,
-			to.trimMat
+			Vector3.new(jambW, DOOR_H + 0.6, 0.6),
+			at(s * (doorW / 2 + jambW / 2), BASE + DOOR_H / 2 + 0.3, Z0 - 0.2),
+			jambCol,
+			jambMat
 		)
 	end
 	part(
 		m,
 		"DoorHeader",
-		Vector3.new(doorW + 1.1, 0.6, 0.65),
+		Vector3.new(doorW + jambW * 2 + 0.1, 0.6, 0.65),
 		at(0, BASE + DOOR_H + 0.5, Z0 - 0.22),
-		to.trim,
-		to.trimMat
+		jambCol,
+		jambMat
 	)
 	if openTier <= 3 then
 		local leafW = doorW / 2 - 0.05
 		for _, s in { -1, 1 } do
 			local leaf = at(s * doorW / 4, BASE + DOOR_H / 2, Z0 - 0.1)
-			part(m, "Door", Vector3.new(leafW, DOOR_H, 0.35), leaf, tf.frame, tf.frameMat)
+			part(m, "Door", Vector3.new(leafW, DOOR_H, 0.35), leaf, leafCol, leafMat)
 			for _, ry in { DOOR_H / 2 - 0.5, -DOOR_H / 2 + 0.5 } do
 				part(
 					m,
@@ -669,26 +714,6 @@ function PantryStages.build(area: Instance, frame: CFrame, level: number): Model
 				iron,
 				Enum.Material.Metal
 			)
-		end
-		if openTier == 2 then
-			part(
-				m,
-				"SlideRail",
-				Vector3.new(doorW + 2, 0.22, 0.25),
-				at(0, BASE + DOOR_H + 0.95, Z0 - 0.4),
-				iron,
-				Enum.Material.Metal
-			)
-			for _, s in { -1, 1 } do
-				part(
-					m,
-					"RailStop",
-					Vector3.new(0.3, 0.4, 0.35),
-					at(s * (doorW / 2 + 1), BASE + DOOR_H + 0.95, Z0 - 0.42),
-					iron,
-					Enum.Material.Metal
-				)
-			end
 		end
 	else
 		local shutter = at(0, BASE + DOOR_H / 2, Z0 - 0.1)
@@ -796,7 +821,8 @@ function PantryStages.build(area: Instance, frame: CFrame, level: number): Model
 						m,
 						"Gable",
 						Vector3.new(0.5, b[2] - yo, eo - b[1]),
-						at(s * (W / 2 - 0.25), top + yo + (b[2] - yo) / 2, zc + sz * (eo + b[1]) / 2) * turn,
+						-- (sunk 0.2 under the roof's face, else the two faces flicker as a pale streak)
+						at(s * (W / 2 - 0.25), top + yo + (b[2] - yo) / 2 - 0.2, zc + sz * (eo + b[1]) / 2) * turn,
 						tw.walls,
 						tw.wallMat
 					)
@@ -834,8 +860,9 @@ function PantryStages.build(area: Instance, frame: CFrame, level: number): Model
 					"RoofSeam",
 					Vector3.new(0.14, 0.14, len),
 					at(x, top + rh / 2 + 0.12, zc + sz * half / 2) * CFrame.Angles(sz * math.atan2(rh, half), 0, 0),
-					tr.trim,
-					tr.trimMat
+					-- (plain steel on steel; only slime tech glows)
+					if roofTier == 4 then Color3.fromRGB(150, 158, 170) else tr.trim,
+					if roofTier == 4 then Enum.Material.Metal else tr.trimMat
 				)
 			end
 		end
@@ -912,7 +939,7 @@ function PantryStages.build(area: Instance, frame: CFrame, level: number): Model
 			local light = Instance.new("PointLight")
 			light.Color = to.glass
 			light.Range = 12
-			light.Brightness = 0.8
+			light.Brightness = 0.45 -- (a warm glow that does not outshine the door)
 			light.Parent = lamp
 		end
 	end
@@ -954,7 +981,9 @@ function PantryStages.build(area: Instance, frame: CFrame, level: number): Model
 		local ry = top + rh - 0.4
 		part(m, "TowerBase", Vector3.new(2.6, 1.8, 2.6), at(0, ry + 0.9, zc), tw.walls, tw.wallMat)
 		part(m, "TowerCornice", Vector3.new(3, 0.3, 3), at(0, ry + 1.95, zc), tw.trim, tw.trimMat)
-		part(m, "TowerLight", Vector3.new(1.6, 1.8, 1.6), at(0, ry + 3, zc), to.glass, Enum.Material.Glass).CastShadow =
+		-- (open between the posts: a dark inside with one warm lamp, ChatGPT's 3rd review)
+		part(m, "TowerInside", Vector3.new(1.5, 1.8, 1.5), at(0, ry + 3, zc), Color3.fromRGB(46, 40, 38))
+		part(m, "TowerLamp", Vector3.new(0.7, 0.9, 0.7), at(0, ry + 3, zc), to.glass, Enum.Material.Neon).CastShadow =
 			false
 		for _, o in { Vector3.new(1, 0, 1), Vector3.new(-1, 0, 1), Vector3.new(1, 0, -1), Vector3.new(-1, 0, -1) } do
 			part(m, "TowerPost", Vector3.new(0.4, 1.9, 0.4), at(o.X, ry + 3, zc + o.Z), tw.walls, tw.wallMat)
