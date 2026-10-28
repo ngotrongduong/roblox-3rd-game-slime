@@ -30,6 +30,10 @@ local part, place = PantryStages.part, PantryStages.place
 
 -- the fence line: x -13.4 .. 13.4, z -12.4 .. 12.4, the entrance x -4 .. 4 at the front
 local XF, ZF, GATE = 13.4, 12.4, 4
+-- From the stands' era the ground grows 6 studs at the back, so the stands sit behind the dummy
+-- instead of against it (the owner, 2026-10-28: a cramped area grows, and never shrinks again)
+local GROW, GROW_FROM = 6, 11
+local FLOOR = 0.4 -- the ground's floor stands this far above the lawn; props stand on its top
 
 -- training spots: where, and from which level (the first is the area's own)
 local SPOTS = { { 0, 1, 1 }, { -6.5, -0.8, 21 }, { 5.5, -3, 31 } }
@@ -42,16 +46,17 @@ local PROPS = {
 }
 -- real heights (studs, the player is 5)
 local HEIGHT = {
-	{ 1.4, 2.4, 3.2, 3.2, 5 },
-	{ 1.2, 2, 2.2, 6, 4 },
+	{ 2.2, 2.8, 3.4, 3.4, 5 }, -- (big enough to read against the player)
+	{ 1.8, 2.4, 2.6, 6, 4 },
 	{ 1.8, 3.6, 2.6, 2.4, 5 },
 	{ 3, 4, 5.5, 5, 5 },
 }
 -- where each slot stands and which way it faces (degrees; 0 to the front, 90 to -x, -90 to +x):
 -- strength and agility against the side fences, recovery and gear in the back corners beside the
 -- stands, all facing in
+-- (recovery and gear move back into the grown strip beside the stands once it is there)
 local SLOT_AT = { { -11.2, -4, -90 }, { 11.2, -3.5, 90 }, { -11.3, 10, -90 }, { 11.3, 10, 90 } }
-local FOOT = { 3.2, 3.4, 2.8, 2.8 }
+local FOOT = { 4, 4.4, 3.4, 3.4 }
 -- kit models whose front came out of generate_mesh sideways: the turn (degrees) that brings it to -Z
 local FRONT_TURN: { [string]: number } = {}
 
@@ -142,6 +147,8 @@ function TrainingStages.build(area: Instance, frame: CFrame, level: number): Mod
 		return frame * CFrame.new(x, y, z)
 	end
 
+	local back = if level >= GROW_FROM then ZF + GROW else ZF
+	local dz = back - ZF
 	for _, d in area:GetChildren() do
 		if d.Name == "Fence" and d:IsA("Folder") then
 			d.Parent = nil
@@ -149,6 +156,19 @@ function TrainingStages.build(area: Instance, frame: CFrame, level: number): Mod
 			skin(d, tiers[1], TIERS[tiers[1]].yard, TIERS[tiers[1]].yardMat)
 		elseif d.Name == "FloorEdge" and d:IsA("BasePart") then
 			skin(d, tiers[2], TIERS[tiers[2]].edge, TIERS[tiers[2]].yardMat)
+			-- (the back edge moves out with the grown floor, the side edges stretch to it)
+			local q = frame:ToObjectSpace(d.CFrame)
+			if d:GetAttribute("HomeZ") == nil then
+				d:SetAttribute("HomeZ", q.Z)
+				d:SetAttribute("HomeLen", d.Size.Z)
+			end
+			local hz, hl = d:GetAttribute("HomeZ") :: number, d:GetAttribute("HomeLen") :: number
+			if hz > ZF then
+				d.CFrame = d.CFrame + frame:VectorToWorldSpace(Vector3.new(0, 0, hz + dz - q.Z))
+			elseif math.abs(hz) < 1 then
+				d.Size = Vector3.new(d.Size.X, d.Size.Y, hl + dz)
+				d.CFrame = d.CFrame + frame:VectorToWorldSpace(Vector3.new(0, 0, dz / 2 - q.Z))
+			end
 		elseif d.Name == "WeaponRack" and d:IsA("Model") and not d:GetAttribute("Turned") then
 			d:SetAttribute("Turned", true)
 			turn(d, -90)
@@ -157,10 +177,24 @@ function TrainingStages.build(area: Instance, frame: CFrame, level: number): Mod
 		end
 	end
 
+	if dz > 0 then
+		local floor = area:FindFirstChild("Floor")
+		local ext = part(
+			m,
+			"FloorExt",
+			Vector3.new(XF * 2 - 0.8, 0.4, dz),
+			at(0, 0.2, ZF - 0.4 + dz / 2),
+			if floor and floor:IsA("BasePart") then floor.Color else TIERS[tiers[1]].yard
+		)
+		if floor and floor:IsA("BasePart") then
+			ext.Material, ext.MaterialVariant, ext.TopSurface = floor.Material, floor.MaterialVariant, floor.TopSurface
+		end
+	end
+
 	-- 3 the fence, open at the entrance
-	fenceRun(m, frame, -XF, ZF, XF, ZF, tf)
-	fenceRun(m, frame, -XF, -ZF, -XF, ZF, tf)
-	fenceRun(m, frame, XF, -ZF, XF, ZF, tf)
+	fenceRun(m, frame, -XF, back, XF, back, tf)
+	fenceRun(m, frame, -XF, -ZF, -XF, back, tf)
+	fenceRun(m, frame, XF, -ZF, XF, back, tf)
 	fenceRun(m, frame, -XF, -ZF, -GATE, -ZF, tf)
 	fenceRun(m, frame, GATE, -ZF, XF, -ZF, tf)
 
@@ -197,19 +231,19 @@ function TrainingStages.build(area: Instance, frame: CFrame, level: number): Mod
 
 	-- era 2: wooden stands along the back, two steps behind the dummy
 	if era >= 2 then
-		for k, step in { { 9.6, 1.2 }, { 11.2, 2.4 } } do
+		for k, step in { { 9.6 + dz, 1.2 }, { 11.2 + dz, 2.4 } } do
 			part(m, "Stand", Vector3.new(18, step[2], 1.6), at(0, step[2] / 2, step[1]), tf.walls, tf.wallMat)
 			part(m, "Seat", Vector3.new(18.2, 0.25, 0.7), at(0, step[2] + 0.12, step[1] - 0.45), tf.trim, tf.trimMat)
 			if k == 2 then
-				part(m, "StandBack", Vector3.new(18, 1.4, 0.3), at(0, 3.1, 11.95), tf.frame, tf.frameMat)
+				part(m, "StandBack", Vector3.new(18, 1.4, 0.3), at(0, 3.1, 11.95 + dz), tf.frame, tf.frameMat)
 			end
 		end
 	end
 	-- era 3: the punching bag with its spot, and floodlight masts at the corners
 	if era >= 3 then
-		place(m, frame, "PunchingBag", -6.5, 3, 5.5, 2.4)
+		place(m, frame, "PunchingBag", -6.5, 3, 5.5, 2.4, FLOOR)
 		for _, s in { -1, 1 } do
-			for _, z in { -12.9, 12.9 } do
+			for _, z in { -12.9, back + 0.5 } do
 				local x = s * 12.9
 				part(m, "Mast", Vector3.new(0.6, 11, 0.6), at(x, 5.5, z), tl.frame, tl.frameMat)
 				local face = CFrame.lookAt(at(x, 11.2, z).Position, at(0, 0, 0).Position)
@@ -229,7 +263,7 @@ function TrainingStages.build(area: Instance, frame: CFrame, level: number): Mod
 	-- era 4: a canopy over the stands, a scoreboard on top
 	if era >= 4 then
 		for _, x in { -9, 9 } do
-			for _, z in { 8.9, 11.9 } do
+			for _, z in { 8.9 + dz, 11.9 + dz } do
 				part(m, "CanopyPost", Vector3.new(0.5, 7, 0.5), at(x, 3.5, z), tl.frame, tl.frameMat)
 			end
 		end
@@ -237,17 +271,17 @@ function TrainingStages.build(area: Instance, frame: CFrame, level: number): Mod
 			m,
 			"Canopy",
 			Vector3.new(19.4, 0.5, 4.4),
-			at(0, 7.2, 10.4) * CFrame.Angles(math.rad(-6), 0, 0),
+			at(0, 7.2, 10.4 + dz) * CFrame.Angles(math.rad(-6), 0, 0),
 			tl.roof,
 			tl.roofMat
 		)
-		part(m, "Scoreboard", Vector3.new(6.4, 2.8, 0.5), at(0, 9.2, 11.4), tl.frame, tl.frameMat)
+		part(m, "Scoreboard", Vector3.new(6.4, 2.8, 0.5), at(0, 9.2, 11.4 + dz), tl.frame, tl.frameMat)
 		for _, s in { -1, 1 } do
 			local score = part(
 				m,
 				"ScoreLight",
 				Vector3.new(2.2, 1.6, 0.2),
-				at(s * 1.5, 9.2, 11.1),
+				at(s * 1.5, 9.2, 11.1 + dz),
 				if s < 0 then Color3.fromRGB(255, 120, 90) else Color3.fromRGB(110, 200, 255),
 				Enum.Material.Neon
 			)
@@ -285,8 +319,8 @@ function TrainingStages.build(area: Instance, frame: CFrame, level: number): Mod
 			"TrainSpot" .. i,
 			Vector3.new(0.1, 3.6, 3.6),
 			at(p[1], 0.45, p[2]) * CFrame.Angles(0, 0, math.rad(90)),
-			Color3.fromRGB(226, 190, 120),
-			Enum.Material.Fabric
+			TIERS[tiers[1]].base,
+			TIERS[tiers[1]].baseMat
 		) :: Part
 		mat.Shape = Enum.PartType.Cylinder
 		mat.CanCollide = false
@@ -295,12 +329,23 @@ function TrainingStages.build(area: Instance, frame: CFrame, level: number): Mod
 		mark.Parent = mat
 	end
 
+	-- spectators' benches on the lawn either side of the path, facing the ground, from the stands' era
+	if era >= 2 then
+		for _, x in { -9.5, 11.5 } do
+			local bench = place(m, frame, "LogBench", x, -16, 1.8, 4.6)
+			if bench then
+				turn(bench, 180)
+			end
+		end
+	end
+
 	-- the training props
 	for j = 1, 4 do
 		local e = props[j]
 		if e > 0 then
 			local slot = SLOT_AT[j]
-			local prop = place(m, frame, PROPS[j][e], slot[1], slot[2], HEIGHT[j][e], FOOT[j])
+			local z = if j >= 3 and dz > 0 then 15 else slot[2]
+			local prop = place(m, frame, PROPS[j][e], slot[1], z, HEIGHT[j][e], FOOT[j], FLOOR)
 			local yaw = slot[3] + (FRONT_TURN[PROPS[j][e]] or 0)
 			if prop and yaw ~= 0 then
 				turn(prop, yaw)
