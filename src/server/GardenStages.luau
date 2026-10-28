@@ -70,8 +70,9 @@ local SPOT = {
 		{ 10.4, 12.6, 0, 2.9, 2.6 }, -- 1 m compost bin in the back-left corner (clear of the shed door)
 		{ 10.4, 12.6, 0, 3.2, 3.4 }, -- 1.1 m tumbler
 		{ 10.4, 12.6, 0, 2.6, 2.8 }, -- 0.9 m stack of fertiliser sacks
-		{ 10.4, 12.8, 0, 5, 3 }, -- 1.75 m fertiliser tank
-		{ 10.4, 12.8, 0, 5, 3.6 }, -- 1.75 m goo composter
+		-- (the tanks stand beside the shed, clear of the greenhouse corner; the owner, 2026-10-28)
+		{ -4.6, 16.4, 0, 5, 3 }, -- 1.75 m fertiliser tank
+		{ -4.6, 16.4, 0, 5, 3.6 }, -- 1.75 m goo composter
 	},
 	{
 		-- (in the right strip beside the beds, clear of the pickets, facing the vegetables)
@@ -237,6 +238,19 @@ function GardenStages.build(area: Instance, frame: CFrame, level: number): Model
 	-- From the shed's era the garden grows 4 studs at the back, so the shed stands clear of the beds
 	-- with a proper walk between (the owner, 2026-10-28): a strip of floor and the fence moved back.
 	local back = if builds[1] then FZ1 + 4 else FZ1
+	-- the two sunflowers of the scenery go back against the fence as soon as the garden grows (the
+	-- owner, 2026-10-28: by the beds they pressed into the greenhouse's corner)
+	local nature: Instance = area:FindFirstChild("Nature") or area
+	for _, s in nature:GetChildren() do
+		if s.Name == "Sunflower" and s:IsA("Model") then
+			local p = frame:PointToObjectSpace(s:GetPivot().Position)
+			if s:GetAttribute("HomeZ") == nil then
+				s:SetAttribute("HomeZ", p.Z)
+			end
+			local z = if builds[1] then back - 1.6 else s:GetAttribute("HomeZ") :: number
+			s:PivotTo(s:GetPivot() + frame:VectorToWorldSpace(Vector3.new(0, 0, z - p.Z)))
+		end
+	end
 	if builds[1] then
 		local floor = area:FindFirstChild("Floor")
 		local ext = part(
@@ -940,7 +954,14 @@ function GardenStages.build(area: Instance, frame: CFrame, level: number): Model
 		if era > 0 then
 			local slot = SPOT[j][era]
 			local name = PROPS[j][era]
-			local x, z = slot[1], slot[2]
+			local x, z, yaw = slot[1], slot[2], slot[3]
+			if builds[3] and j == 4 then
+				-- once the greenhouse stands the side strip is a walk: the bird scarer moves to the
+				-- empty front-right corner, facing the beds (the owner, 2026-10-28)
+				x, z, yaw = -10.4, -6.6, 180
+			elseif builds[3] and j == 1 and era == 3 then
+				x, z = -7.4, -4.4 -- (the hand pump makes room for it, the one level they meet)
+			end
 			local lift = (slot[6] or 0) + floorAt(x, z)
 			-- small parts that say what a prop is for (ChatGPT's 5th garden review)
 			local function bit(
@@ -997,11 +1018,11 @@ function GardenStages.build(area: Instance, frame: CFrame, level: number): Model
 				lift += 0.1
 			end
 			local prop = place(m, frame, name, x, z, slot[4], slot[5], lift)
-			if prop and slot[3] ~= 0 then
+			if prop and yaw ~= 0 then
 				-- turned on the spot, about its own middle
 				local box = prop:GetBoundingBox()
 				local centre = CFrame.new(box.Position)
-				prop:PivotTo(centre * CFrame.Angles(0, math.rad(slot[3]), 0) * centre:ToObjectSpace(prop:GetPivot()))
+				prop:PivotTo(centre * CFrame.Angles(0, math.rad(yaw), 0) * centre:ToObjectSpace(prop:GetPivot()))
 			end
 		end
 	end

@@ -14,6 +14,7 @@
 -- Tiers: rustic wood, painted timber, brick, steel and glass, slime tech, marble and gold.
 -- The house is built from parts so its materials and floors can change; props are kit models
 -- (ServerStorage PropKit / Kit.PropKit). Positions are in the pantry's own frame, y up from the ground.
+local CollectionService = game:GetService("CollectionService")
 local ServerStorage = game:GetService("ServerStorage")
 local PondStages = require(script.Parent.PondStages)
 
@@ -175,8 +176,10 @@ local SPOT: { { { any } } } = {
 		{ 8.5, -6.5, 60, 2.6, 3.2 }, -- 0.9 m wheelbarrow (handles at a grown-up's hands), at an angle
 		{ 8.5, -6.5, 90, 3, 3 }, -- 1 m hand cart
 		{ 8.5, -6.5, 90, 3.4, 4 }, -- 1.2 m pallet jack
-		{ 8.6, -6.6, 90, 6, 6.5 }, -- 2.1 m forklift, forks toward the dock
-		{ 8.5, -6.5, 90, 2.6, 4 }, -- hover cart
+		-- a real forklift, twice the first try (the owner, 2026-10-28): 4.2 m to the guard's top, its
+		-- length along the left side, in the left service strip that grows with it
+		{ 10.4, -3.6, 0, 12, 12.6, "side" },
+		{ 8.5, -7, 90, 2.6, 4 }, -- hover cart, floating (the owner: it has no weight)
 	},
 	{
 		{ -9, 6.8, 90, 3.6, 4.5 }, -- 1.25 m barrel rack against the left wall
@@ -187,10 +190,12 @@ local SPOT: { { { any } } } = {
 	},
 	{
 		{ 7.2, 5.2, -90, 7, 2.5 }, -- 2.5 m ladder against the right wall
-		{ 9, 4.5, -90, 7, 5 }, -- 2.5 m jib hoist beside the wall
+		-- (the jib hoist, twice as tall, at the front of the yard: its post at the left edge, the jib
+		-- over the loading corner where the hand cart waits; the owner, 2026-10-28)
+		{ 7.6, -6.8, 90, 10, 9.4 },
 		{ -19.5, -6.2, 90, 12, 13 }, -- 4.2 m (boom up) crane truck across the front of the silo, 4 clear
-		{ 8.8, 4.5, 0, 3, 6 }, -- 1.05 m conveyor along the right wall
-		{ 8.6, -2.6, 0, 6, 3 }, -- 2.1 m robot arm between the dock and the hover cart
+		{ 8.6, 6.4, 0, 3, 6 }, -- 1.05 m conveyor along the left wall, behind the forklift
+		{ 9.6, -1.4, 0, 8, 6.1 }, -- 2.8 m robot arm (twice the first try) between the dock and the cart
 	},
 	{
 		{ -8.5, -6.5, 0, 3, 3.5, "pallet" }, -- 1.05 m sacks waiting on a pallet
@@ -217,6 +222,11 @@ local SURROUND: { { any } } = {
 	{ "PlasticCrates", -8.5, 12.8, 3.2, 3, 0, 4 },
 	{ "Planter", 4.5, -12, 1.6, 2.8, 0, 5 },
 	{ "Planter", -4.5, -12, 1.6, 2.8, 0, 5 },
+	-- the front of the service yard is not left bare (the owner, 2026-10-28): goods waiting to ship
+	-- beside the container's apron from the steel era (a small store hut joins them on slime tech)
+	{ "CrateStack", -14.3, -8.3, 2.9, 2.6, 0, 4 },
+	{ "SackPallet", -14.3, -5.4, 3, 3, 0, 4 },
+	{ "PlasticCrates", -24.8, -1, 3.2, 3, 0, 4 },
 }
 -- the house: 12 wide (x), 9 deep (z from 0 to 9), its door to the front (-z)
 local W, D, Z0 = 12, 9, 0
@@ -352,7 +362,9 @@ function PantryStages.build(area: Instance, frame: CFrame, level: number): Model
 	m:SetAttribute("Level", level)
 
 	-- the yard: the area's own floor and edging take the yard tier
-	local wing = level >= 21
+	-- the yard grows and never shrinks: a service yard on the right from L21, a strip on the left for
+	-- the forklift from L31
+	local wing, wingL = level >= 21, level >= 31
 	for _, d in area:GetChildren() do
 		-- the old kit shed, barrels and crates: the house and the store props stand in for them
 		if (d.Name == "StorageShed" or d.Name == "WoodBarrel" or d.Name == "CrateStack") and d:IsA("Model") then
@@ -363,8 +375,9 @@ function PantryStages.build(area: Instance, frame: CFrame, level: number): Model
 		elseif d.Name == "FloorEdge" and d:IsA("BasePart") then
 			d.Color = ty.edge
 			PondStages.studLook(d, ty.yardMat)
-			-- (the right edge opens into the service yard once it is there)
-			local open = wing and frame:PointToObjectSpace(d.Position).X < -12
+			-- (a side edge opens into the yard grown beyond it)
+			local ex = frame:PointToObjectSpace(d.Position).X
+			local open = (wing and ex < -12) or (wingL and ex > 12)
 			d.Transparency = if open then 1 else 0
 			d.CanCollide = not open
 		end
@@ -377,11 +390,22 @@ function PantryStages.build(area: Instance, frame: CFrame, level: number): Model
 			part(m, "ServiceEdge", Vector3.new(14, 0.6, 1), frame * CFrame.new(-20, 0.3, z), ty.edge, ty.yardMat)
 		end
 		part(m, "ServiceEdge", Vector3.new(1, 0.6, 20), frame * CFrame.new(-26.5, 0.3, 0), ty.edge, ty.yardMat)
+	end
+	if wingL then
+		part(m, "ServiceYard", Vector3.new(5, 0.4, 20), frame * CFrame.new(14.5, 0.2, 0), ty.yard, ty.yardMat)
+		for _, z in { -10.5, 10.5 } do
+			part(m, "ServiceEdge", Vector3.new(5, 0.6, 1), frame * CFrame.new(15.5, 0.3, z), ty.edge, ty.yardMat)
+		end
+		part(m, "ServiceEdge", Vector3.new(1, 0.6, 20), frame * CFrame.new(17.5, 0.3, 0), ty.edge, ty.yardMat)
+	end
+	if wing then
 		local plot: Instance = area.Parent or area
 		for _, d in plot:GetDescendants() do
 			if d:IsA("Model") and d.Parent and d.Parent.Name == "Nature" then
 				local p = frame:PointToObjectSpace(d:GetPivot().Position)
-				if p.X > -28 and p.X < -11 and math.abs(p.Z) < 12 then
+				local inR = p.X > -28 and p.X < -11
+				local inL = wingL and p.X > 11 and p.X < 19
+				if (inR or inL) and math.abs(p.Z) < 12 then
 					d.Parent = nil
 				end
 			end
@@ -1098,7 +1122,8 @@ function PantryStages.build(area: Instance, frame: CFrame, level: number): Model
 	-- what stands on the yard's paving stands on its top, 0.4 above the lawn
 	local FLOOR = 0.4
 	local function floorAt(x: number, z: number): number
-		local onYard = math.abs(z) <= 10 and (math.abs(x) <= 12 or (wing and x >= -26 and x < 0))
+		local onYard = math.abs(z) <= 10
+			and (math.abs(x) <= 12 or (wing and x >= -26 and x < 0) or (wingL and x > 0 and x <= 17))
 		return if onYard then FLOOR else 0
 	end
 	-- a model's middle and size along the area's own axes (GetBoundingBox answers in the model's axes,
@@ -1127,6 +1152,41 @@ function PantryStages.build(area: Instance, frame: CFrame, level: number): Model
 			turn(place(m, frame, s[1], s[2], s[3], s[4], s[5], (s[8] or 0) + floorAt(s[2], s[3])), s[6])
 		end
 	end
+	-- from slime tech a small store hut fills the front of the service yard, built like the house in
+	-- the house's own tiers (the owner, 2026-10-28: the front stood bare): walls on a base, a roof
+	-- overhanging on a trim, a roll-up door in a frame, a lamp over it
+	if nowEra >= 5 then
+		local hx, hz, hw, hd, hh = -20.5, -5.8, 7, 5.5, 5.2
+		local hf = hz - hd / 2 -- its front face
+		part(m, "HutBase", Vector3.new(hw + 0.3, 0.4, hd + 0.3), at(hx, FLOOR + 0.2, hz), tf.base, tf.baseMat)
+		part(m, "HutWalls", Vector3.new(hw, hh, hd), at(hx, FLOOR + hh / 2, hz), tw.walls, tw.wallMat)
+		part(m, "HutFascia", Vector3.new(hw + 0.9, 0.3, hd + 0.9), at(hx, FLOOR + hh + 0.15, hz), to.trim, to.trimMat)
+		part(m, "HutRoof", Vector3.new(hw + 0.8, 0.4, hd + 0.8), at(hx, FLOOR + hh + 0.5, hz), tr.roof, tr.roofMat)
+		part(m, "HutDoorDark", Vector3.new(3.2, 3.9, 0.1), at(hx, FLOOR + 1.95, hf - 0.03), Color3.fromRGB(42, 34, 30))
+		for k = 0, 6 do
+			part(
+				m,
+				"HutShutter",
+				Vector3.new(3, 0.14, 0.08),
+				at(hx, FLOOR + 0.5 + k * 0.5, hf - 0.1),
+				to.trim,
+				to.trimMat
+			)
+		end
+		for _, s in { -1, 1 } do
+			part(
+				m,
+				"HutJamb",
+				Vector3.new(0.35, 4.2, 0.35),
+				at(hx + s * 1.78, FLOOR + 2.1, hf - 0.12),
+				tf.frame,
+				tf.frameMat
+			)
+		end
+		part(m, "HutHeader", Vector3.new(3.9, 0.4, 0.4), at(hx, FLOOR + 4.2, hf - 0.14), tf.frame, tf.frameMat)
+		part(m, "HutLamp", Vector3.new(0.8, 0.3, 0.3), at(hx, FLOOR + 4.65, hf - 0.2), to.glass, Enum.Material.Neon).CastShadow =
+			false
+	end
 	-- the store props
 	local PALLET = 0.35
 	for j = 1, 4 do
@@ -1135,9 +1195,25 @@ function PantryStages.build(area: Instance, frame: CFrame, level: number): Model
 			local spot = SPOT[j][era]
 			local x, z = spot[1], spot[2]
 			local onPallet = spot[6] == "pallet"
-			local lift = floorAt(x, z) + (if onPallet then PALLET else 0)
+			local floats = PROPS[j][era] == "HoverCart"
+			local lift = floorAt(x, z) + (if onPallet then PALLET elseif floats then 1.3 else 0)
 			local model = place(m, frame, PROPS[j][era], x, z, spot[4], spot[5], lift, spot[6] == "side")
 			turn(model, spot[3])
+			if model and floats then
+				-- it bobs on each player's screen (HoverBob), over a soft glow on the paving
+				CollectionService:AddTag(model, "Hover")
+				local glow = part(
+					m,
+					"HoverGlow",
+					Vector3.new(0.06, 3.6, 3.2),
+					at(x, floorAt(x, z) + 0.04, z) * CFrame.Angles(0, 0, math.pi / 2),
+					Color3.fromRGB(120, 255, 210),
+					Enum.Material.Neon
+				) :: Part
+				glow.Shape = Enum.PartType.Cylinder
+				glow.Transparency = 0.55
+				glow.CastShadow = false
+			end
 			if model and onPallet then
 				part(
 					m,
@@ -1251,10 +1327,10 @@ function PantryStages.build(area: Instance, frame: CFrame, level: number): Model
 			tr.roofMat
 		)
 	end
-	-- the forklift's parking bay, two painted lines, from the forklift's era
-	if props[1] >= 4 then
-		for _, x in { 5.9, 11.3 } do
-			part(m, "BayLine", Vector3.new(0.25, 0.04, 5.8), at(x, FLOOR + 0.02, -6.7), Color3.fromRGB(240, 200, 60))
+	-- the forklift's parking bay, two painted lines either side of it
+	if props[1] == 4 then
+		for _, x in { 6.4, 14.4 } do
+			part(m, "BayLine", Vector3.new(0.25, 0.04, 13.2), at(x, FLOOR + 0.02, -3.4), Color3.fromRGB(240, 200, 60))
 		end
 	end
 	return m

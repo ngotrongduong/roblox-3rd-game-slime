@@ -21,18 +21,23 @@ local sources = {
 	{ "VillageStages", VillageStages, "ModuleScript" },
 	{ "PondStages", PondStages, "ModuleScript" },
 	{ "AreaUpgrade", AreaUpgrade, "Script" },
+	-- (client scripts the stages lean on, e.g. HoverBob=src/client/HoverBob.client.luau)
+	{ "HoverBob", HoverBob, "LocalScript" },
 }
 local done = {}
 for _, s in sources do
 	if s[2] then
-		local old = folder:FindFirstChild(s[1])
+		local home = if s[3] == "LocalScript"
+			then game:GetService("StarterPlayer"):FindFirstChildOfClass("StarterPlayerScripts")
+			else folder
+		local old = home:FindFirstChild(s[1])
 		if old then
 			old:Destroy()
 		end
 		local inst = Instance.new(s[3])
 		inst.Name = s[1]
 		inst.Source = s[2]
-		inst.Parent = folder
+		inst.Parent = home
 		table.insert(done, s[1])
 	end
 end
