@@ -212,6 +212,26 @@ was left there (this game has none); read it there if a cave is ever wanted.
 - 2026-10-21. One plan file read by every step, and one runner that sends the steps in one session: a whole rebuild is
   one command and takes about 15 s.
 
+## Buildings that upgrade (the pantry's detail review with ChatGPT, 2026-10-28)
+
+- Each level must read from its SILHOUETTE alone, from a distance: give each era its own roof shape (gable shed >
+  gambrel barn > brick gable > low seamed steel > corniced marble), not the same house with better materials.
+- A building's function leads its front: for a store, the loading door is the biggest, darkest-framed thing (wider each
+  level, a dark recess behind it, thick jambs and header); windows are small and say what the floor is for (a top
+  storey of a store is a vent, not another row of rooms). Bright windows and lamps turn any building into a home.
+- Contrast beats ornament: dark wood doors in pale trim; sandstone against ivory (#C4AE88 on marble), not white on
+  white; gold on a few edges only, never outlining every part; glowing cyan only on the slime-tech tier.
+- Depth beats colour: a pilaster, cornice or frame that stands 0.2-0.5 proud of the wall reads; a flat strip does not.
+  Doors sit back inside their frame.
+- Check function: a hoist must not lower its crate through a canopy (from steel on: a sealed cargo hatch); canopy
+  clearance above a player; a sliding-door rail needs room for the door to slide, else leave hinged doors.
+- Two parts whose faces lie in one plane flicker as a streak (a gable fill under the roof): sink one 0.2.
+- Spend the part budget on shapes that change the silhouette or cast deep shadows; a dozen roof parts beat 60 rivets.
+  Few broad roof seams (4 a side), not many thin ones that shimmer on phones. Stop detailing when the level reads.
+- Shoot every era from one fixed camera (`tools/chatgpt/shoot_setup.luau` + `shoot_camera.luau`) so rounds compare.
+- ChatGPT's review (skill `chatgpt-review`) is worth it: round 1 found the silhouettes, round 2 the contrast and
+  function. Weigh each point (it does not know the doors are props); 3 rounds were enough.
+
 ## Bringing a built map into the game
 
 - 2026-10-23. A map went into the game as files, no Studio at build time: in Studio, `CopyRegion` in 128-cell blocks
