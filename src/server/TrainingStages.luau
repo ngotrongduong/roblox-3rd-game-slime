@@ -26,7 +26,7 @@ local TrainingStages = {}
 TrainingStages.MaxLevel = 50
 
 local TIERS = PantryStages.Tiers
-local part, place = PantryStages.part, PantryStages.place
+local part, wedge, place = PantryStages.part, PantryStages.wedge, PantryStages.place
 
 -- the fence line: x -13.4 .. 13.4, z -12.4 .. 12.4, the entrance x -4 .. 4 at the front
 local XF, ZF, GATE = 13.4, 12.4, 4
@@ -46,8 +46,8 @@ local PROPS = {
 }
 -- real heights (studs, the player is 5)
 local HEIGHT = {
-	{ 2.2, 2.8, 3.4, 3.4, 5 }, -- (big enough to read against the player)
-	{ 1.8, 2.4, 2.6, 6, 4 },
+	{ 2.6, 3, 3.6, 3.8, 5.8 }, -- (big enough to read against the player)
+	{ 2.2, 2.4, 2.8, 6.4, 5.4 },
 	{ 1.8, 3.6, 2.6, 2.4, 5 },
 	{ 3, 4, 5.5, 5, 5 },
 }
@@ -56,7 +56,7 @@ local HEIGHT = {
 -- stands, all facing in
 -- (recovery and gear move back into the grown strip beside the stands once it is there)
 local SLOT_AT = { { -11.2, -4, -90 }, { 11.2, -3.5, 90 }, { -11.3, 10, -90 }, { 11.3, 10, 90 } }
-local FOOT = { 4, 4.4, 3.4, 3.4 }
+local FOOT = { 5, 5.6, 3.8, 3.8 }
 -- kit models whose front came out of generate_mesh sideways: the turn (degrees) that brings it to -Z
 local FRONT_TURN: { [string]: number } = {}
 
@@ -116,12 +116,34 @@ local function fenceRun(m: Model, frame: CFrame, x0: number, z0: number, x1: num
 	local len = (b - a).Magnitude
 	local dir = (b - a).Unit
 	local n = math.max(1, math.round(len / 3))
+	local mid = (a + b) / 2
+	local brick = t.wallMat == Enum.Material.Brick
+	if brick then
+		-- a low brick foundation under the brick era's fence (ChatGPT's 1st training review)
+		part(
+			m,
+			"FenceBase",
+			Vector3.new(0.9, 0.6, len + 0.9),
+			frame * CFrame.new(mid.X, 0.3, mid.Z) * CFrame.lookAt(Vector3.zero, dir),
+			t.walls,
+			t.wallMat
+		)
+	end
 	for k = 0, n do
 		local p = a + dir * (len * k / n)
-		part(m, "FencePost", Vector3.new(0.7, 3.2, 0.7), frame * CFrame.new(p.X, 1.6, p.Z), t.frame, t.frameMat)
-		part(m, "FenceCap", Vector3.new(0.95, 0.3, 0.95), frame * CFrame.new(p.X, 3.3, p.Z), t.trim, t.trimMat)
+		local w = if brick then 0.95 else 0.7
+		part(m, "FencePost", Vector3.new(w, 3.2, w), frame * CFrame.new(p.X, 1.6, p.Z), t.frame, t.frameMat)
+		-- (a glowing trim lights every other cap only, so the fence frames the ground and no more)
+		local dim = t.trimMat == Enum.Material.Neon and k % 2 == 1
+		part(
+			m,
+			"FenceCap",
+			Vector3.new(w + 0.25, 0.3, w + 0.25),
+			frame * CFrame.new(p.X, 3.3, p.Z),
+			if dim then t.frame else t.trim,
+			if dim then t.frameMat else t.trimMat
+		)
 	end
-	local mid = (a + b) / 2
 	for _, y in { 1.1, 2.5 } do
 		part(
 			m,
@@ -168,6 +190,13 @@ function TrainingStages.build(area: Instance, frame: CFrame, level: number): Mod
 			elseif math.abs(hz) < 1 then
 				d.Size = Vector3.new(d.Size.X, d.Size.Y, hl + dz)
 				d.CFrame = d.CFrame + frame:VectorToWorldSpace(Vector3.new(0, 0, dz / 2 - q.Z))
+			end
+		elseif (d.Name == "BannerFlag" and d:IsA("Model")) or (d.Name == "FlagBase" and d:IsA("BasePart")) then
+			-- the banner stands outside the front fence beside the gate, not in the entrance where it hid
+			-- the dummy (ChatGPT's 1st training review)
+			if d:GetAttribute("Moved") == nil then
+				d:SetAttribute("Moved", true)
+				d:PivotTo(d:GetPivot() + frame:VectorToWorldSpace(Vector3.new(-2.6, 0, -5.4)))
 			end
 		elseif d.Name == "WeaponRack" and d:IsA("Model") and not d:GetAttribute("Turned") then
 			d:SetAttribute("Turned", true)
@@ -290,11 +319,13 @@ function TrainingStages.build(area: Instance, frame: CFrame, level: number): Mod
 	end
 	-- era 5: the champion's podium by the entrance, a golden trophy on it
 	if era >= 5 then
+		-- two steps up to the podium, the trophy on top
+		part(m, "PodiumStep", Vector3.new(4.6, 0.5, 4.6), at(8, FLOOR + 0.25, -8), ta.base, ta.baseMat)
 		local podium = part(
 			m,
 			"Podium",
 			Vector3.new(1.2, 3.4, 3.4),
-			at(8, 0.6, -8) * CFrame.Angles(0, 0, math.rad(90)),
+			at(8, FLOOR + 0.9, -8) * CFrame.Angles(0, 0, math.rad(90)),
 			ta.base,
 			ta.baseMat
 		) :: Part
@@ -303,12 +334,12 @@ function TrainingStages.build(area: Instance, frame: CFrame, level: number): Mod
 			m,
 			"PodiumRim",
 			Vector3.new(0.3, 3.7, 3.7),
-			at(8, 1.25, -8) * CFrame.Angles(0, 0, math.rad(90)),
+			at(8, FLOOR + 1.55, -8) * CFrame.Angles(0, 0, math.rad(90)),
 			ta.trim,
 			ta.trimMat
 		) :: Part
 		rim.Shape = Enum.PartType.Cylinder
-		place(m, frame, "ChampionTrophy", 8, -8, 3.6, 3, 1.4)
+		place(m, frame, "ChampionTrophy", 8, -8, 3.6, 3, FLOOR + 1.7)
 	end
 
 	-- the training spots beyond the area's own: a straw mat each, with its marker
@@ -329,10 +360,75 @@ function TrainingStages.build(area: Instance, frame: CFrame, level: number): Mod
 		mark.Parent = mat
 	end
 
+	-- the practice arena in the middle: a low outline round the three training spots, worn patches
+	-- before the dummy, straw fallen from it (ChatGPT's 1st training review)
+	local tb = TIERS[tiers[1]]
+	local ax0, ax1, az0, az1 = -9, 9, -5.5, 8
+	for _, e in
+		{
+			{ (ax0 + ax1) / 2, az0, ax1 - ax0, 0.3 },
+			{ (ax0 + ax1) / 2, az1, ax1 - ax0, 0.3 },
+			{ ax0, (az0 + az1) / 2, 0.3, az1 - az0 },
+			{ ax1, (az0 + az1) / 2, 0.3, az1 - az0 },
+		}
+	do
+		part(m, "ArenaLine", Vector3.new(e[3], 0.1, e[4]), at(e[1], FLOOR + 0.05, e[2]), tb.edge, tb.yardMat).CastShadow =
+			false
+	end
+	for k, o in { { -0.8, 2.6, 2.2 }, { 1.1, 3.4, 1.6 } } do
+		local worn = part(
+			m,
+			"Worn",
+			Vector3.new(0.04, o[3], o[3] * 0.8),
+			at(o[1], FLOOR + 0.03, o[2]) * CFrame.Angles(0, k, math.pi / 2),
+			Color3.fromRGB(150, 130, 100)
+		) :: Part
+		worn.Shape = Enum.PartType.Cylinder
+		worn.Transparency = 0.6
+		worn.CastShadow = false
+	end
+	for k, o in { { -1.6, 4.6 }, { 1.4, 4.9 } } do
+		wedge(
+			m,
+			"Straw",
+			Vector3.new(1, 0.3, 0.7),
+			at(o[1], FLOOR + 0.15, o[2]) * CFrame.Angles(0, k * 1.3, 0),
+			Color3.fromRGB(232, 196, 120),
+			Enum.Material.SmoothPlastic
+		)
+	end
+	-- the dummy gets tougher with the eras: iron shoulder plates from brick on, a glowing slime core on
+	-- slime tech
+	if era >= 3 then
+		for _, sx in { -1, 1 } do
+			part(
+				m,
+				"ShoulderPlate",
+				Vector3.new(1.4, 0.4, 1.2),
+				at(sx * 1.25, FLOOR + 6.4, 6) * CFrame.Angles(0, 0, sx * -0.35),
+				Color3.fromRGB(150, 156, 166),
+				Enum.Material.Metal
+			)
+		end
+		part(m, "DummyBase", Vector3.new(3, 0.6, 3), at(0, FLOOR + 0.3, 6), TIERS[3].walls, TIERS[3].wallMat)
+	end
+	if era >= 5 then
+		local core = part(
+			m,
+			"DummyCore",
+			Vector3.one * 1.1,
+			at(0, FLOOR + 5.2, 4.5),
+			Color3.fromRGB(120, 240, 220),
+			Enum.Material.Neon
+		) :: Part
+		core.Shape = Enum.PartType.Ball
+		core.CastShadow = false
+	end
+
 	-- spectators' benches on the lawn either side of the path, facing the ground, from the stands' era
 	if era >= 2 then
 		for _, x in { -9.5, 11.5 } do
-			local bench = place(m, frame, "LogBench", x, -16, 1.8, 4.6)
+			local bench = place(m, frame, "LogBench", x, -16, 2, 5.6)
 			if bench then
 				turn(bench, 180)
 			end
@@ -345,7 +441,16 @@ function TrainingStages.build(area: Instance, frame: CFrame, level: number): Mod
 		if e > 0 then
 			local slot = SLOT_AT[j]
 			local z = if j >= 3 and dz > 0 then 15 else slot[2]
-			local prop = place(m, frame, PROPS[j][e], slot[1], z, HEIGHT[j][e], FOOT[j], FLOOR)
+			-- each station on its own pad (ChatGPT's 1st training review)
+			part(
+				m,
+				"StationPad",
+				Vector3.new(FOOT[j] + 0.8, 0.08, FOOT[j] + 0.8),
+				at(slot[1] + (if slot[1] > 0 then -0.4 else 0.4), FLOOR + 0.04, z),
+				TIERS[tiers[1]].base,
+				TIERS[tiers[1]].baseMat
+			)
+			local prop = place(m, frame, PROPS[j][e], slot[1], z, HEIGHT[j][e], FOOT[j], FLOOR + 0.08)
 			local yaw = slot[3] + (FRONT_TURN[PROPS[j][e]] or 0)
 			if prop and yaw ~= 0 then
 				turn(prop, yaw)
