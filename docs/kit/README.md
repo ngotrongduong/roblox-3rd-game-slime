@@ -70,6 +70,7 @@ by slot and era. Kitchen and training ground models (asset ids of the published 
 | FlowerBedWood, FlowerBedBrick, FlowerBedSteel2, FlowerBedMarble | 92089182893246, 120841523625422, 78643288731064, 84253715977949 | village planters, eras 1-2, 3, 4, 5 (FlowerBedSteel 76502321904483 came out bent: unused) |
 | EmblemBreeding, EmblemKitchen, EmblemTraining | 121457674801892, 114509872454727, 105153830412202 | the top of each area's entrance arch (GateArch) |
 | WallLantern, TorchSconce, MarbleUrn, GoldCrest | 130426004663067, 137742128678187, 102536557732140, 113569450995994 | the plot's fence and main gate (VillageWalls) |
+| SlimeStatue, KoiSpout | 114758986895985, 111368147797938 | the village fountain: the golden slime on the marble one, the koi spouts on the brick one |
 | IvyLeaf | 140233145136608 | one ivy leaf: the brick wall's vines are built from it (VillageStages ivyVine) |
 | PicnicTable | 105886899973840 | village picnic green |
 | PavilionWood, PavilionMarble | 125901976896948, 118518637222522 | village picnic gazebo, eras 2-3 and 4-5 |
@@ -130,3 +131,7 @@ tufts, rocks, stumps, logs, water lilies, trees.
 The finished level-1 home plot (Plot 5, the village) as built by `tools/map/*`. The terrain under it
 (the flat plot, the ring round it, the pond's water) is not in the file: `stud_floor.luau` and
 `pond_water_l1.luau` make it.
+
+## Effect textures (free Creator Store images, used by VillageFountain)
+
+Water droplet (decal 111709169217539, daye_dreamer), "PARTICLE Water Splash" (decal 243457341, dragonome), "WaterRipple" (decal 95861972723548, Wond3rShark), "Waterfall Texture" (decal 1610017853, scopedrifle29). Images only, no scripts.

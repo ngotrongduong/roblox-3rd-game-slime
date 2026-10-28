@@ -26,6 +26,7 @@
 local PantryStages = require(script.Parent.PantryStages)
 local PondStages = require(script.Parent.PondStages)
 local VillageWalls = require(script.Parent.VillageWalls)
+local VillageFountain = require(script.Parent.VillageFountain)
 local ServerStorage = game:GetService("ServerStorage")
 
 local VillageStages = {}
@@ -54,8 +55,6 @@ local PATHS = {
 -- the gaps between the paths, round the plaza (degrees)
 local GAPS = { 21, 66, 112.5, 157.5, -157.5, -109.6, -64.6, -22.5 }
 
-local CENTRES = { "", "SmallFountain", "TieredFountain", "StatueFountain", "GrandFountain" }
-local CENTRE_HEIGHT = { 0, 5, 8, 9.5, 11 }
 local CENTRE_FOOT = { 0, 9, 11, 12.5, 13.5 }
 
 -- the era's models and their real heights
@@ -492,9 +491,9 @@ function VillageStages.build(village: Instance, frame: CFrame, level: number): M
 		end
 	end
 
-	-- ===== the plaza's centrepiece =====
+	-- ===== the plaza's centrepiece: the era's fountain, built with its moving water (VillageFountain)
 	if era >= 2 then
-		place(m, frame, CENTRES[era], 0, 0, CENTRE_HEIGHT[era], CENTRE_FOOT[era])
+		VillageFountain.build(m, frame, era, tiers[1])
 		table.insert(taken, { at = Vector3.zero, r = CENTRE_FOOT[era] / 2 })
 	end
 
