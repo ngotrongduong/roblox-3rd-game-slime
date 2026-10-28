@@ -3,7 +3,8 @@
 Everything made for the map is kept here so it never has to be made again (the owner, 2026-10-27).
 The models live in `assets/Kit/*.rbxm` and Rojo puts them in the game's `ServerStorage.Kit`
 (`default.project.json`). They are exported from the Studio work place by
-`lune run tools/kit/export_kit.luau` after the place is saved (Ctrl+S in Studio).
+`lune run tools/kit/export_kit.luau` after the place is saved (Ctrl+S in Studio);
+`lune run tools/kit/check_kit.luau Name1 Name2 ...` then says whether those models made it in.
 
 Every kit model is fitted for placing: one mesh part, set square, pivot at the middle of its foot,
 front toward -Z. The map scripts (`tools/map/replace_props.luau`, `replace_fences.luau`) scale each
