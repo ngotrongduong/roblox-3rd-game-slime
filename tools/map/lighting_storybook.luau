@@ -21,7 +21,9 @@ L.OutdoorAmbient = Color3.fromRGB(150, 140, 175)
 L.ColorShift_Top = Color3.fromRGB(255, 236, 205)
 L.ColorShift_Bottom = Color3.fromRGB(120, 140, 190)
 L.EnvironmentDiffuseScale = 0.5
-L.EnvironmentSpecularScale = 0
+-- 1, not 0: the slimes' wet shine is the sky reflected in their gloss (owner, 2026-10-28: highlights
+-- come from light, never painted on); the plastic scenery barely changes at play distance.
+L.EnvironmentSpecularScale = 1
 L.ShadowSoftness = 0.25
 L.GlobalShadows = true
 local function get(cls: string): Instance

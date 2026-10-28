@@ -230,8 +230,12 @@ Done (all checked in Studio at every era, committed, the kit exported into `asse
 - The base slime body (2026-10-28): Blender build `tools/blender/slime_body.py`, files in `art/models/slime_body/`
   (rigged `SlimeBody.fbx` + `SlimeBodyOutline.fbx` hull, overlay/roughness/normal maps, `rounds.md`). Front silhouette
   IoU 0.984 against `slime.base.navy.png` (the ceiling for a round body); 2,400 triangles; bones Root/Base/Top and
-  Left/Right/Front/Back (Bone.Transform squash about the feet). Look: MeshPart.Color = the slime colour, SurfaceAppearance
-  AlphaMode Overlay with the painting's highlights. Not yet in Studio: the owner imports the FBX (File > Import 3D).
+  Left/Right/Front/Back (Bone.Transform squash about the feet). Imported by the owner on Mue_you: model ids SlimeBody
+  89067624889078, SlimeBodyOutline 125941562766782. The look (owner): nothing painted on - highlights and shading come
+  from the light; colour = Colours.luau's swatch on a glossy SurfaceAppearance (roughness 0.10), the hull at x0.6;
+  `Lighting.EnvironmentSpecularScale` 1 (was 0) so the gloss reflects the sky. The baked overlay map is unused.
+  `tools/slime/showcase.luau` puts the 11 on a stage in MapWork (shot `art/models/slime_body/studio_lineup.jpg`).
+  Next: the 20 Dual designs (pattern textures on the same body), then the face decal and the hop in the farm code.
 - How it was done is packaged: skills `area-review`, `prop-craft` (new: the owner's quality bar and placing rules,
   the generate/check/export tools `tools/kit/intake|viewer|upright|export_kit|check_kit.luau`), `chatgpt-review`;
   lessons in `.claude/skills/studio-build/LESSONS.md`; shots in `docs/areas/upgrades/review/`.
