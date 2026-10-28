@@ -235,7 +235,11 @@ Done (all checked in Studio at every era, committed, the kit exported into `asse
   from the light; colour = Colours.luau's swatch on a glossy SurfaceAppearance (roughness 0.10), the hull at x0.6;
   `Lighting.EnvironmentSpecularScale` 1 (was 0) so the gloss reflects the sky. The baked overlay map is unused.
   `tools/slime/showcase.luau` puts the 11 on a stage in MapWork (shot `art/models/slime_body/studio_lineup.jpg`).
-  Next: the 20 Dual designs (pattern textures on the same body), then the face decal and the hop in the farm code.
+- The 55 Dual skins (2026-10-29, `docs/DUALS.md`): one design per colour pair, made by `tools/skins/make_skins.py`
+  on the body's new all-round UV; re-imported body ids SlimeBody 71117254607762, SlimeBodyOutline 99817746239640;
+  skin image ids in `art/models/slime_body/skins/asset_ids.json`. All 66 stand on the MapWork stage
+  (`tools/slime/showcase.luau`, run with `node tools/studio_mcp.js run`). Waiting for the owner's look in play.
+  Next: `DualDesigns.luau` to 55 pairs, then the face decal and the hop in the farm code.
 - How it was done is packaged: skills `area-review`, `prop-craft` (new: the owner's quality bar and placing rules,
   the generate/check/export tools `tools/kit/intake|viewer|upright|export_kit|check_kit.luau`), `chatgpt-review`;
   lessons in `.claude/skills/studio-build/LESSONS.md`; shots in `docs/areas/upgrades/review/`.
