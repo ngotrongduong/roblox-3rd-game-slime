@@ -196,8 +196,25 @@ function VillageStages.build(village: Instance, frame: CFrame, level: number): M
 		end
 		return true
 	end
+	-- the nearest free spot for something of radius `r` meant for `pos`: it slides along `slide` (2
+	-- studs a step, either way) and a little back from what it faces, or there is none
+	local function findSpot(pos: Vector3, look: Vector3, r: number, slide: Vector3?): Vector3?
+		local step = (slide or Vector3.new(look.Z, 0, -look.X)).Unit * 2
+		local back = -look.Unit
+		for _, out in { 0, 1.5, 3 } do
+			for k = 0, 8 do
+				for _, sign in (if k == 0 then { 1 } else { 1, -1 }) :: { number } do
+					local p = pos + step * k * sign + back * out
+					if free(p, r) then
+						return p
+					end
+				end
+			end
+		end
+		return nil
+	end
 	-- a kit model standing at `pos`, its front turned toward `look`, on free ground: if the spot is
-	-- taken it slides along `slide` (2 studs a step, either way) until it is free, or is left out
+	-- taken it slides (findSpot) until it is free, or is left out
 	local function put(
 		key: string,
 		pos: Vector3,
@@ -214,19 +231,11 @@ function VillageStages.build(village: Instance, frame: CFrame, level: number): M
 		end
 		local _, size = model:GetBoundingBox()
 		local r = math.max(size.X, size.Z) / 2
-		local step = (slide or Vector3.new(look.Z, 0, -look.X)).Unit * 2
-		local back = -look.Unit -- (a little further back from what it faces, when it must)
-		for _, out in { 0, 1.5, 3 } do
-			for k = 0, 8 do
-				for _, sign in (if k == 0 then { 1 } else { 1, -1 }) :: { number } do
-					local p = pos + step * k * sign + back * out
-					if free(p, r) then
-						model:PivotTo(model:GetPivot() + frame:VectorToWorldSpace(p - pos))
-						table.insert(taken, { at = p, r = r })
-						return model
-					end
-				end
-			end
+		local p = findSpot(pos, look, r, slide)
+		if p then
+			model:PivotTo(model:GetPivot() + frame:VectorToWorldSpace(p - pos))
+			table.insert(taken, { at = p, r = r })
+			return model
 		end
 		model:Destroy()
 		return nil
@@ -300,6 +309,34 @@ function VillageStages.build(village: Instance, frame: CFrame, level: number): M
 		end
 		d.Color = colour
 		PondStages.studLook(d, Enum.Material.Plastic)
+	end
+
+	-- ===== the plaza grows each era, never smaller (ChatGPT's 1st village review: the heart of the
+	-- village was only a crossroads): a ring of tiles round it, out to plazaR, in the plaza's colours
+	-- with a darker rim =====
+	local plazaR = PLAZA + (era - 1) * 1.5
+	do
+		local tp1 = TIERS[tiers[1]]
+		local gr = math.ceil(plazaR / 2)
+		for gx = -gr, gr - 1 do
+			for gz = -gr, gr - 1 do
+				local key = gx .. "," .. gz
+				local cx, cz = gx * 2 + 1, gz * 2 + 1
+				local r = Vector2.new(cx, cz).Magnitude
+				if not paved[key] and r <= plazaR and r > PLAZA - 1 then
+					paved[key] = true
+					local tile = part(
+						m,
+						"PlazaTile",
+						Vector3.new(2, 0.4, 2),
+						at(cx, 0.2, cz),
+						if r > plazaR - 2.2 then tp1.edge else tp1.base,
+						Enum.Material.Plastic
+					)
+					tile.CastShadow = false
+				end
+			end
+		end
 	end
 
 	-- ===== the plaza's centrepiece =====
@@ -587,11 +624,12 @@ function VillageStages.build(village: Instance, frame: CFrame, level: number): M
 
 	-- ===== the lamps: 12 at the era's start (four on the lawn at the plaza's edge, one beside each
 	-- path), 8 more at its level 3 (the paths' far halves, the other side); all on the lawn, off the
-	-- paving; the first 12 give light =====
+	-- paving; the first 12 give light. The steel era's lamp is built here: a straight post and a long
+	-- lit head (ChatGPT's 1st village review: the kit one read as a little windmill) =====
 	local lampSpots: { { Vector3 } } = {}
 	for g = 1, 8, 2 do
 		local d = dirOf(GAPS[g])
-		table.insert(lampSpots, { d * 17, -d })
+		table.insert(lampSpots, { d * (plazaR + 2), -d })
 	end
 	for i = 1, #PATHS do
 		local p, look = besidePath(i, 0.5, if i % 2 == 0 then 1 else -1, 5.6)
@@ -603,13 +641,69 @@ function VillageStages.build(village: Instance, frame: CFrame, level: number): M
 			table.insert(lampSpots, { p, look })
 		end
 	end
+	local steel, steelDark = Color3.fromRGB(176, 182, 192), Color3.fromRGB(70, 74, 84)
 	for k, spot in lampSpots do
-		local lamp = put(LAMPS[era], spot[1], spot[2], LAMP_HEIGHT[era], 3)
+		local lamp: Instance? = nil
+		if era == 4 then
+			local p = findSpot(spot[1], spot[2], 1.2)
+			if p then
+				table.insert(taken, { at = p, r = 1.2 })
+				local base = frame * CFrame.new(p) * CFrame.lookAt(Vector3.zero, spot[2])
+				local lm = Instance.new("Model")
+				lm.Name = "SteelLamp"
+				part(
+					lm,
+					"LampFoot",
+					Vector3.new(1.4, 0.5, 1.4),
+					base * CFrame.new(0, 0.25, 0),
+					steelDark,
+					Enum.Material.Metal
+				)
+				part(
+					lm,
+					"LampPost",
+					Vector3.new(0.45, 8.6, 0.45),
+					base * CFrame.new(0, 4.5, 0),
+					steel,
+					Enum.Material.Metal
+				)
+				part(
+					lm,
+					"LampArm",
+					Vector3.new(0.35, 0.35, 2.2),
+					base * CFrame.new(0, 8.6, -0.9),
+					steel,
+					Enum.Material.Metal
+				)
+				part(
+					lm,
+					"LampHood",
+					Vector3.new(1.2, 0.35, 2.4),
+					base * CFrame.new(0, 8.95, -1.6),
+					steelDark,
+					Enum.Material.Metal
+				)
+				local head = part(
+					lm,
+					"LampHead",
+					Vector3.new(0.9, 0.25, 2),
+					base * CFrame.new(0, 8.65, -1.6),
+					Color3.fromRGB(255, 236, 190),
+					Enum.Material.Neon
+				)
+				head.CastShadow = false
+				lm.Parent = m
+				lamp = lm
+			end
+		else
+			lamp = put(LAMPS[era], spot[1], spot[2], LAMP_HEIGHT[era], 3)
+		end
 		if lamp and k <= 12 and era >= 2 then
 			-- the generated lamps carry no light of their own: one at the head
-			local box, size = lamp:GetBoundingBox()
+			local model = lamp :: Model
+			local box, size = model:GetBoundingBox()
 			local head = Instance.new("Attachment")
-			head.Parent = lamp.PrimaryPart or lamp:FindFirstChildWhichIsA("BasePart", true)
+			head.Parent = model.PrimaryPart or model:FindFirstChildWhichIsA("BasePart", true)
 			head.WorldPosition = box.Position + Vector3.new(0, size.Y / 2 - 1, 0)
 			local light = Instance.new("PointLight")
 			light.Color = Color3.fromRGB(255, 214, 150)
@@ -619,45 +713,276 @@ function VillageStages.build(village: Instance, frame: CFrame, level: number): M
 		end
 	end
 
-	-- ===== level 2: benches beside every path, two facing the fountain =====
+	-- a little paved pad under something set on the lawn (a bench, a sign): it reads as placed there
+	local tPath = TIERS[tiers[2]]
+	local function pad(model: Model?, grow: number)
+		if model then
+			local cf, size = model:GetBoundingBox()
+			local q = frame:PointToObjectSpace(cf.Position)
+			local look = frame:VectorToObjectSpace(cf.LookVector)
+			local turn = CFrame.lookAt(Vector3.zero, Vector3.new(look.X, 0, look.Z))
+			local p = part(
+				m,
+				"Pad",
+				Vector3.new(size.X + grow, 0.12, size.Z + grow),
+				frame * CFrame.new(q.X, 0.06, q.Z) * turn,
+				tPath.base,
+				tPath.baseMat
+			)
+			p.CastShadow = false
+		end
+	end
+	local function bit(name: string, size: Vector3, cf: CFrame, colour: Color3, material: Enum.Material?): BasePart
+		local p = part(m, name, size, cf, colour, material or Enum.Material.SmoothPlastic)
+		p.CanCollide = false
+		p.CastShadow = false
+		return p
+	end
+	-- a line of bunting between two points `h` high: a cord and little coloured flags
+	local bunt = {
+		Color3.fromRGB(240, 110, 110),
+		Color3.fromRGB(250, 210, 90),
+		Color3.fromRGB(110, 180, 240),
+		Color3.fromRGB(150, 220, 130),
+	}
+	local function bunting(a: Vector3, b: Vector3, h: number)
+		local len = (b - a).Magnitude
+		local dir = (b - a).Unit
+		local along = CFrame.lookAt(Vector3.zero, dir)
+		bit(
+			"BuntingCord",
+			Vector3.new(0.06, 0.06, len),
+			frame * CFrame.new((a + b) / 2 + Vector3.new(0, h, 0)) * along,
+			Color3.fromRGB(240, 240, 240)
+		)
+		local n = math.floor(len / 1.4)
+		for k = 1, n - 1 do
+			local p = a:Lerp(b, k / n)
+			local sag = -0.6 * math.sin(math.pi * k / n)
+			local flag = Instance.new("WedgePart")
+			flag.Name = "BuntingFlag"
+			flag.Size = Vector3.new(0.08, 0.8, 0.7)
+			flag.CFrame = frame
+				* CFrame.new(p + Vector3.new(0, h + sag - 0.4, 0))
+				* along
+				* CFrame.Angles(math.pi, 0, 0)
+			flag.Color = bunt[k % 4 + 1]
+			flag.Anchored = true
+			flag.CanCollide = false
+			flag.CastShadow = false
+			PondStages.studLook(flag, Enum.Material.SmoothPlastic)
+			flag.Parent = m
+		end
+	end
+	local function pole(x: number, z: number, h: number)
+		part(m, "Pole", Vector3.new(0.35, h, 0.35), at(x, h / 2, z), tPath.frame, tPath.frameMat)
+	end
+
+	-- ===== level 2: benches beside every path on a little pad; the two front greens =====
 	if s >= 2 then
 		for i = 1, #PATHS do
-			local p, look = besidePath(i, 0.32, if i % 2 == 0 then -1 else 1, 6.2)
-			put(BENCHES[era], p, look, BENCH_HEIGHT[era], 4.4)
+			if i ~= 5 then -- (the gate path is lined by the flower beds)
+				local p, look = besidePath(i, 0.32, if i % 2 == 0 then -1 else 1, 6.2)
+				pad(put(BENCHES[era], p, look, BENCH_HEIGHT[era], 4.4), 1.2)
+			end
 		end
-		for _, g in { 4, 5 } do
-			local d = dirOf(GAPS[g])
-			put(BENCHES[era], d * 18.5, -d, BENCH_HEIGHT[era], 4.4)
+		-- benches round the plaza's edge facing the centrepiece, in pairs either side of the gate path
+		for _, a in { 168, 192 } do
+			local d = dirOf(a)
+			pad(put(BENCHES[era], d * (plazaR + 3), -d, BENCH_HEIGHT[era], 4.4), 1.2)
+		end
+
+		-- the picnic green, front-left of the gate path (ChatGPT's 1st village review): a shade tree,
+		-- a picnic table with log seats, a flower bed with a garden piece; a shade roof from the brick
+		-- era; half the green left open
+		local g = dirOf(GAPS[4])
+		local gc = g * 41
+		local across = Vector3.new(g.Z, 0, -g.X)
+		place(m, frame, "BroadleafTree", gc.X - across.X * 7, gc.Z - across.Z * 7, 13, 11)
+		table.insert(taken, { at = gc - across * 7, r = 5 })
+		local tc = gc + across * 1.5
+		local tt = TIERS[tiers[2]]
+		local face = CFrame.lookAt(Vector3.zero, g)
+		local tbl = frame * CFrame.new(tc) * face
+		part(m, "PicnicTop", Vector3.new(5.2, 0.3, 2.2), tbl * CFrame.new(0, 2.5, 0), tt.walls, tt.wallMat)
+		for _, bz in { -1.5, 1.5 } do
+			part(m, "PicnicSeat", Vector3.new(5.2, 0.3, 0.9), tbl * CFrame.new(0, 1.45, bz), tt.walls, tt.wallMat)
+		end
+		for _, ex in { -2, 2 } do
+			part(m, "PicnicEnd", Vector3.new(0.3, 2.4, 3.8), tbl * CFrame.new(ex, 1.2, 0), tt.frame, tt.frameMat)
+		end
+		local basket = bit(
+			"Basket",
+			Vector3.new(1, 0.6, 0.7),
+			tbl * CFrame.new(0.8, 2.95, 0),
+			Color3.fromRGB(196, 140, 84),
+			Enum.Material.Wood
+		)
+		basket.Name = "PicnicBasket"
+		bit("Cloth", Vector3.new(2.6, 0.04, 1.6), tbl * CFrame.new(-0.6, 2.67, 0), Color3.fromRGB(230, 90, 90))
+		table.insert(taken, { at = tc, r = 4 })
+		if era >= 3 then
+			for _, ex in { -2.9, 2.9 } do
+				for _, ez in { -2.2, 2.2 } do
+					part(
+						m,
+						"ShadePost",
+						Vector3.new(0.45, 6.4, 0.45),
+						tbl * CFrame.new(ex, 3.2, ez),
+						tt.frame,
+						tt.frameMat
+					)
+				end
+			end
+			part(
+				m,
+				"ShadeRoof",
+				Vector3.new(7, 0.4, 5.6),
+				tbl * CFrame.new(0, 6.6, 0),
+				TIERS[tiers[4]].roof,
+				TIERS[tiers[4]].roofMat
+			)
+		end
+		-- the flower bed in front of the green, with the era's garden piece in it
+		local bc = gc + g * 7 + across * 4
+		local bed = frame * CFrame.new(bc) * face
+		part(m, "BedEdge", Vector3.new(6, 0.7, 3.2), bed * CFrame.new(0, 0.35, 0), tPath.edge, tPath.baseMat)
+		part(
+			m,
+			"BedSoil",
+			Vector3.new(5.4, 0.2, 2.6),
+			bed * CFrame.new(0, 0.75, 0),
+			Color3.fromRGB(110, 80, 56),
+			Enum.Material.Ground
+		)
+		for k = 0, 7 do
+			local fl = bit(
+				"Flower",
+				Vector3.one * 0.7,
+				bed * CFrame.new(-2.2 + (k % 4) * 1.45, 1.15, -0.6 + math.floor(k / 4) * 1.2),
+				bunt[k % 4 + 1]
+			) :: Part
+			fl.Shape = Enum.PartType.Ball
+		end
+		table.insert(taken, { at = bc, r = 3.4 })
+		put(GARDENS[era], gc - g * 6 + across * 2, g, GARDEN_HEIGHT[era], 3.4)
+
+		-- the community green, front-right: an open patch in a half ring of benches, a notice board,
+		-- a banner pole and bunting from the painted era
+		local h = dirOf(GAPS[5])
+		local hc = h * 40
+		for _, a in { -55, 0, 55 } do
+			local d = (CFrame.Angles(0, math.rad(a), 0) * CFrame.lookAt(Vector3.zero, -h)).LookVector
+			pad(put(BENCHES[era], hc - d * 6, d, BENCH_HEIGHT[era], 4.4), 1.2)
+		end
+		-- (a round worn patch in the middle of the half ring, where the gathering happens)
+		local patch = part(
+			m,
+			"GreenPatch",
+			Vector3.new(0.1, 8, 8),
+			frame * CFrame.new(hc + Vector3.new(0, 0.05, 0)) * CFrame.Angles(0, 0, math.pi / 2),
+			Color3.fromRGB(196, 176, 130)
+		) :: Part
+		patch.Shape = Enum.PartType.Cylinder
+		patch.CastShadow = false
+		local hAcross = Vector3.new(h.Z, 0, -h.X)
+		local poleA, poleB = hc - h * 7 + hAcross * 7, hc - h * 7 - hAcross * 7
+		if era >= 2 then
+			pole(poleA.X, poleA.Z, 6)
+			pole(poleB.X, poleB.Z, 6)
+			bunting(poleA, poleB, 5.8)
 		end
 	end
 
-	-- ===== level 4: the market and the notice boards =====
+	-- ===== level 4: the market, one place for every stall (ChatGPT's 1st village review): in the
+	-- green between the pantry and the garden paths, a shallow U facing the plaza, one stall more
+	-- each era (the older ones stay), crates, barrels and a cart beside them, a market sign and
+	-- bunting over it; the notice boards at the gate and by the market =====
 	if s >= 4 then
-		-- a stall for every era so far, round the plaza, facing it
-		local stallGaps = { 2, 7, 3, 6, 1 }
+		local md = dirOf(GAPS[8])
+		local mAcross = Vector3.new(md.Z, 0, -md.X)
+		local spots =
+			{ md * 30, md * 30 + mAcross * 6, md * 30 - mAcross * 6, md * 37 + mAcross * 4, md * 37 - mAcross * 4 }
 		for e = 1, era do
-			local d = dirOf(GAPS[stallGaps[e]])
-			put(STALLS[e], d * 23, -d, STALL_HEIGHT[e], 5)
+			pad(put(STALLS[e], spots[e], -md, STALL_HEIGHT[e], 5), 1.6)
 		end
-		-- a notice board inside the gate, turned to the path, and one at the plaza's back
+		put("CrateStack", md * 26 + mAcross * 9, -md, 2.6, 2.4)
+		put("WoodBarrel", md * 26 - mAcross * 9, -md, 2.4, 1.8)
+		put("HandCart", md * 34 + mAcross * 10, -md, 3, 3)
+		-- the market sign at its front, on two posts
+		local sc = md * 23.5
+		local sign = frame * CFrame.new(sc) * CFrame.lookAt(Vector3.zero, -md)
+		for _, ex in { -1.8, 1.8 } do
+			part(m, "SignPost", Vector3.new(0.35, 4, 0.35), sign * CFrame.new(ex, 2, 0), tPath.frame, tPath.frameMat)
+		end
+		part(
+			m,
+			"SignBoard",
+			Vector3.new(4.4, 1.4, 0.3),
+			sign * CFrame.new(0, 3.7, 0),
+			TIERS[tiers[2]].walls,
+			TIERS[tiers[2]].wallMat
+		)
+		for k = -1, 1 do -- (three little fruit shapes on it: a market without words)
+			local fr = bit("SignFruit", Vector3.one * 0.7, sign * CFrame.new(k * 1.2, 3.7, -0.25), bunt[k + 2]) :: Part
+			fr.Shape = Enum.PartType.Ball
+		end
+		table.insert(taken, { at = sc, r = 2.6 })
+		local ba, bb = md * 33 + mAcross * 10, md * 33 - mAcross * 10
+		pole(ba.X, ba.Z, 7)
+		pole(bb.X, bb.Z, 7)
+		bunting(ba, bb, 6.8)
 		put(NOTICES[era], Vector3.new(6.5, 0, -HALF + 10), Vector3.new(-1, 0, 0), NOTICE_HEIGHT[era], 3.6)
-		local d = dirOf(GAPS[8])
-		put(NOTICES[era], d * 18.5, -d, NOTICE_HEIGHT[era], 3.6)
+		pad(put(NOTICES[era], md * 24 + mAcross * 6, -md, NOTICE_HEIGHT[era], 3.6), 1)
 	end
 
-	-- ===== level 5: the gardens and the gate path's planters =====
+	-- ===== level 5: the gardens in the back gaps and two flower beds lining the gate path =====
 	if s >= 5 then
-		local gardenGaps: { number } = if era >= 3 then { 4, 5, 1, 8 } else { 4, 5 }
-		for j, g in ipairs(gardenGaps) do
-			local d = dirOf(GAPS[g])
+		local gardenGaps: { number } = if era >= 3 then { 1, 7, 2, 3 } else { 1, 7 }
+		for j, gg in ipairs(gardenGaps) do
+			local d = dirOf(GAPS[gg])
 			-- the newest garden piece and the one before it, by turns
 			local e = if j % 2 == 0 and era > 1 then era - 1 else era
 			put(GARDENS[e], d * 25, -d, GARDEN_HEIGHT[e], 4.5)
 		end
-		for _, t in { 0.3, 0.45, 0.6, 0.75 } do
+		-- (long raised beds with edging in the paths' material and flowers in clusters, broken where
+		-- the benches and lamps stand; ChatGPT's 1st village review: the pots read as loose dots)
+		for _, seg in { { 0.28, 0.46 }, { 0.56, 0.78 } } do
 			for _, side in { -1, 1 } do
-				local p, look = besidePath(5, t, side, 5.4)
-				put("Planter", p, look, 1.8, 2)
+				local a = besidePath(5, seg[1], side, 5.6)
+				local b = besidePath(5, seg[2], side, 5.6)
+				local len = (b - a).Magnitude
+				local mid = (a + b) / 2
+				local bed = frame * CFrame.new(mid) * CFrame.lookAt(Vector3.zero, (b - a).Unit)
+				part(m, "BedEdge", Vector3.new(2.4, 0.7, len), bed * CFrame.new(0, 0.35, 0), tPath.edge, tPath.baseMat)
+				part(
+					m,
+					"BedSoil",
+					Vector3.new(1.9, 0.2, len - 0.5),
+					bed * CFrame.new(0, 0.75, 0),
+					Color3.fromRGB(110, 80, 56),
+					Enum.Material.Ground
+				)
+				local n = math.floor(len / 1.3)
+				for k = 0, n - 1 do
+					local z = -len / 2 + 0.65 + k * 1.3
+					local fl = bit(
+						"Flower",
+						Vector3.one * (0.6 + (k % 3) * 0.15),
+						bed * CFrame.new((k % 2) * 0.5 - 0.25, 1.1 + (k % 3) * 0.1, z),
+						bunt[(k + (if side > 0 then 1 else 3)) % 4 + 1]
+					) :: Part
+					fl.Shape = Enum.PartType.Ball
+					if k % 3 == 1 then
+						bit(
+							"Leaf",
+							Vector3.new(0.9, 0.5, 0.9),
+							bed * CFrame.new(0, 0.95, z + 0.4),
+							Color3.fromRGB(96, 160, 70)
+						)
+					end
+				end
+				table.insert(taken, { at = mid, r = 1.5 })
 			end
 		end
 	end
