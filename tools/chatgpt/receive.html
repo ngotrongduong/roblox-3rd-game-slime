@@ -1,0 +1,28 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>receive</title>
+<pre id="log">saving…</pre>
+<script>
+// The way back from ChatGPT (skill chatgpt-review): a script on chatgpt.com opens this page with
+// #back=<chat url>&files=<name>|<base64>~<name>|<base64>... ; each is posted to serve.py, which
+// writes art/inbox/<name>, then the tab returns to the chat.
+(async () => {
+	const hash = location.hash.slice(1);
+	const i = hash.indexOf('&files=');
+	const back = decodeURIComponent(hash.slice(5, i));
+	const log = [];
+	let ok = true;
+	for (const part of hash.slice(i + 7).split('~')) {
+		const [name, b64] = part.split('|');
+		const bin = atob(b64);
+		const bytes = new Uint8Array(bin.length);
+		for (let k = 0; k < bin.length; k++) bytes[k] = bin.charCodeAt(k);
+		const r = await fetch('/save?name=' + encodeURIComponent(name), { method: 'POST', body: bytes });
+		ok = ok && r.ok;
+		log.push(name + ': ' + r.status + ' ' + bytes.length + ' bytes');
+	}
+	document.getElementById('log').textContent = log.join('\n');
+	sessionStorage.setItem('lastSaved', log.join(' / '));
+	if (ok && back) setTimeout(() => location.replace(back), 300);
+})();
+</script>
