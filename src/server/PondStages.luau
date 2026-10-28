@@ -257,18 +257,18 @@ local LOBES = { { 0, 5, 16 }, { 9, 11, 11 }, { -9, 2, 11 } }
 local GROW = { { 15, 1, 7.5, 21 }, { -14, -5, 7, 41 } }
 local DOCK_X = -3 -- the dock's line in the area (AreaUpgrade's DOCK_X)
 local WATER_Y = -2.3 -- the water's surface in the area's frame
+local JETTY_Y = -1 -- the small jetty's planks, down on the sand step (the owner: touching the ground)
+local LIGHTHOUSE = Vector3.new(0, 0, 30.5) -- the garden's back corner (the area sits turned: it is behind the pond)
 -- Life round the pond, growing each era and never taken away (kit model, x, z, real height, the
--- widest it may be, turn, from which level, lift): a bench on the bank; a rowboat moored by the
--- dock and a net rack by the fishing shed; a cooler by the jetty on the new left lobe; a glowing buoy
--- in the right lobe and an auto reel at the fishing spot on its bank. (The shed, the paths, the
--- fishing spot, the back bank and the beacon are built from parts in `build`.)
+-- widest it may be, turn, from which level, lift): a bench on the bank; a net rack by the bank path;
+-- a cooler by the jetty on the new left lobe; a glowing buoy in the right lobe. (No boat, rods or
+-- reels: the owner, 2026-10-28. The shed, the paths, the fishing spot, the back bank and the
+-- lighthouse are built from parts in `build`.)
 local SHORE: { { any } } = {
 	{ "LogBench", 8.5, -12, 1.8, 4.6, 180, 1 },
-	{ "RowBoat", -9, -5.6, 1.6, 4.8, 30, 11, WATER_Y - 0.4 },
-	{ "NetRack", 20.6, -17.6, 2.6, 2.8, 180, 11 },
+	{ "NetRack", 7.6, -18.8, 3.2, 3.4, 0, 11 }, -- (by the path, its nets to the way in)
 	{ "FishCooler", 18.6, -8.6, 2, 2, 0, 21 },
 	{ "CrystalBuoy", -14.5, -3.5, 3, 1.4, 0, 41, WATER_Y - 0.8 },
-	{ "AutoReel", -16.6, -12.6, 4.4, 3.6, 180, 41 },
 }
 
 -- room kept clear of scenery for what `build` makes from parts (x, z, radius, from which level)
@@ -278,7 +278,7 @@ local CLEAR = {
 	{ 15.5, -12, 2.5, 21 },
 	{ -12.6, -12, 2.5, 1 },
 	{ -14, -14.6, 2.5, 41 },
-	{ -21.5, 10, 3, 41 },
+	{ 0, 30.5, 6, 41 },
 }
 
 -- Grows the pond to `level` (its lobes from GROW, once each) and clears the scenery standing where
@@ -342,6 +342,19 @@ function PondStages.grow(pond: Instance, frame: CFrame, level: number)
 				if level >= s[7] and Vector2.new(q.X - s[2], q.Z - s[3]).Magnitude < s[5] / 2 + 2 then
 					clear = true
 				end
+			end
+			-- (and anything left standing over a lowered sand step or the water: it would float)
+			local best = math.huge
+			for _, l in LOBES do
+				best = math.min(best, Vector2.new(q.X - l[1], q.Z - l[2]).Magnitude - l[3])
+			end
+			for _, g in GROW do
+				if level >= g[4] then
+					best = math.min(best, Vector2.new(q.X - g[1], q.Z - g[2]).Magnitude - g[3])
+				end
+			end
+			if best < 2.6 then
+				clear = true
 			end
 			for _, c in CLEAR do
 				if level >= c[4] and Vector2.new(q.X - c[1], q.Z - c[2]).Magnitude < c[3] then
@@ -584,7 +597,7 @@ function PondStages.build(level: number, cell: CFrame, showcase: boolean?): Mode
 				m,
 				"JettyPlank",
 				Vector3.new(3, 0.5, 1.4),
-				area * CFrame.new(jx, DECK_Y, jz + 0.7),
+				area * CFrame.new(jx, JETTY_Y, jz + 0.7),
 				j.planks[(k % 2) + 1],
 				j.deck
 			)
@@ -592,10 +605,10 @@ function PondStages.build(level: number, cell: CFrame, showcase: boolean?): Mode
 		end
 		for _, s in { -1, 1 } do
 			for _, pz in { jz1 - 0.6, (jz0 + jz1) / 2 } do
-				pole(m, "JettyPost", area * CFrame.new(jx + s * 1.2, DECK_Y - 2, pz), 4, 0.7, j.frame, j.frameMat)
+				pole(m, "JettyPost", area * CFrame.new(jx + s * 1.2, JETTY_Y - 2, pz), 4, 0.7, j.frame, j.frameMat)
 			end
 		end
-		pole(m, "JettyBollard", area * CFrame.new(jx + 1, DECK_Y + 0.75, jz1 - 0.5), 1, 0.6, j.frame, j.frameMat)
+		pole(m, "JettyBollard", area * CFrame.new(jx + 1, JETTY_Y + 0.75, jz1 - 0.5), 1, 0.6, j.frame, j.frameMat)
 	end
 
 	-- The working banks (ChatGPT's 1st pond review): a plank path from the entrance along the front-left
@@ -653,28 +666,98 @@ function PondStages.build(level: number, cell: CFrame, showcase: boolean?): Mode
 			woodMat
 		)
 		part(m, "ShedBack", Vector3.new(hw * 2, 5, 0.3), sh(0, 2.5, hd), wood, woodMat)
-		part(m, "Counter", Vector3.new(hw * 2 - 0.6, 0.35, 1.2), sh(0, 2.6, -hd + 0.7), wood, woodMat)
-		part(m, "CounterFront", Vector3.new(hw * 2 - 0.6, 2.3, 0.2), sh(0, 1.3, -hd + 0.15), wood, woodMat)
-		for k, dx in { -1.6, 0.2 } do
-			local fish = part(
-				m,
-				"FishOnCounter",
-				Vector3.new(1.2, 0.4, 0.5),
-				sh(dx, 2.98, -hd + 0.7) * CFrame.Angles(0, k * 0.3, 0),
-				if k == 1 then Color3.fromRGB(110, 170, 210) else Color3.fromRGB(240, 150, 90)
-			) :: Part
-			fish.Shape = Enum.PartType.Ball
+		-- the fish counter (the owner, 2026-10-28: more detail): a plank front with a trim and a foot, a
+		-- pale top, a cutting board with a fish and a knife, a basin of water, an ice box of fish at one
+		-- end, a crate of fish under the counter, three fish hung from the roof beam, a little fish sign
+		local light, ice = Color3.fromRGB(236, 214, 170), Color3.fromRGB(214, 238, 246)
+		local fishCols = { Color3.fromRGB(110, 170, 210), Color3.fromRGB(240, 150, 90), Color3.fromRGB(160, 200, 120) }
+		local cz = -hd + 0.75
+		local function fish(name: string, cf: CFrame, col: Color3, len: number)
+			local body = part(m, name, Vector3.new(len, len * 0.38, len * 0.42), cf, col) :: Part
+			body.Shape = Enum.PartType.Ball
+			local tail = Instance.new("WedgePart")
+			tail.Name = name .. "Tail"
+			tail.Size = Vector3.new(0.1, len * 0.4, len * 0.3)
+			tail.CFrame = cf * CFrame.new(len * 0.55, 0, 0) * CFrame.Angles(0, math.pi / 2, 0)
+			tail.Color = col
+			tail.Anchored = true
+			tail.CastShadow = false
+			PondStages.studLook(tail, Enum.Material.SmoothPlastic)
+			tail.Parent = m
 		end
-		part(m, "Board", Vector3.new(1.2, 0.15, 0.8), sh(1.8, 2.85, -hd + 0.7), Color3.fromRGB(214, 176, 124), woodMat)
+		for k = -2, 2 do -- (planks across the front, with gaps between)
+			part(
+				m,
+				"CounterPlank",
+				Vector3.new(1.18, 2.2, 0.22),
+				sh(k * 1.22, 1.3, -hd + 0.12),
+				if k % 2 == 0 then wood else light,
+				woodMat
+			)
+		end
+		part(m, "CounterFoot", Vector3.new(hw * 2 - 0.2, 0.3, 1.5), sh(0, 0.15, cz), dark, woodMat)
+		part(m, "CounterTop", Vector3.new(hw * 2 - 0.2, 0.3, 1.5), sh(0, 2.55, cz), light, woodMat)
+		part(m, "CounterTrim", Vector3.new(hw * 2 - 0.1, 0.2, 0.25), sh(0, 2.35, -hd + 0.05), dark, woodMat)
+		-- the cutting board, a fish on it, a knife beside it
+		part(m, "CuttingBoard", Vector3.new(1.6, 0.15, 1), sh(0.4, 2.78, cz), Color3.fromRGB(214, 176, 124), woodMat)
+		fish("CounterFish", sh(0.3, 2.98, cz), fishCols[1], 1.2)
 		part(
 			m,
-			"HungNet",
-			Vector3.new(2.8, 2.2, 0.1),
-			sh(0, 4, hd - 0.25),
-			Color3.fromRGB(230, 220, 190),
-			Enum.Material.Fabric
-		).Transparency =
-			0.3
+			"KnifeBlade",
+			Vector3.new(0.7, 0.05, 0.16),
+			sh(1.45, 2.74, cz + 0.4),
+			Color3.fromRGB(200, 206, 214),
+			Enum.Material.Metal
+		)
+		part(m, "KnifeHandle", Vector3.new(0.4, 0.12, 0.14), sh(1.95, 2.76, cz + 0.4), dark, woodMat)
+		-- a basin of water at the right end
+		part(
+			m,
+			"Basin",
+			Vector3.new(1.4, 0.5, 1.1),
+			sh(-2.2, 2.95, cz),
+			Color3.fromRGB(150, 156, 166),
+			Enum.Material.Metal
+		)
+		part(m, "BasinWater", Vector3.new(1.2, 0.08, 0.9), sh(-2.2, 3.18, cz), Color3.fromRGB(110, 190, 220)).CastShadow =
+			false
+		-- the ice box of fish at the left end
+		part(m, "IceBox", Vector3.new(1.5, 0.7, 1.2), sh(2.55, 3.05, cz), Color3.fromRGB(70, 130, 200))
+		part(m, "Ice", Vector3.new(1.3, 0.1, 1), sh(2.55, 3.4, cz), ice).CastShadow = false
+		for k = 1, 3 do
+			fish(
+				"IcedFish",
+				sh(2.25 + k * 0.15, 3.52, cz - 0.4 + k * 0.25) * CFrame.Angles(0, k * 0.5, 0),
+				fishCols[k],
+				0.7
+			)
+		end
+		-- a crate of fish under the counter, at its open side
+		part(m, "FishCrate", Vector3.new(1.4, 0.7, 1), sh(hw + 0.9, 0.35, -hd + 0.4), wood, woodMat)
+		for k = 1, 3 do
+			fish(
+				"CrateFish",
+				sh(hw + 0.6 + k * 0.2, 0.8, -hd + 0.2 + k * 0.15) * CFrame.Angles(0, k, 0),
+				fishCols[k],
+				0.7
+			)
+		end
+		-- three fish hung on a line under the front of the roof
+		part(m, "HangBar", Vector3.new(hw * 2 - 1, 0.15, 0.15), sh(0, 5.8, -hd + 0.4), dark, woodMat)
+		for k = -1, 1 do
+			part(m, "HangCord", Vector3.new(0.05, 0.6, 0.05), sh(k * 1.3, 5.45, -hd + 0.4), rope, Enum.Material.Fabric)
+			fish("HungFish", sh(k * 1.3, 4.85, -hd + 0.4) * CFrame.Angles(0, 0, math.pi / 2), fishCols[k + 2], 0.9)
+		end
+		-- a little sign on the roof's front edge: a fish on a board
+		part(
+			m,
+			"SignBoard",
+			Vector3.new(2.4, 0.9, 0.15),
+			sh(0, 6.95, -hd - 0.95) * CFrame.Angles(-0.25, 0, 0),
+			light,
+			woodMat
+		)
+		fish("SignFish", sh(0, 6.95, -hd - 1.05) * CFrame.Angles(-0.25, 0, 0), fishCols[1], 1.3)
 		part(
 			m,
 			"ShedRod",
@@ -683,31 +766,12 @@ function PondStages.build(level: number, cell: CFrame, showcase: boolean?): Mode
 			dark,
 			woodMat
 		)
-		-- the boat tied to the dock: a line from its bow to the dock's side, two oars in it
-		part(
-			m,
-			"MooringLine",
-			Vector3.new(0.1, 0.1, 2.6),
-			at2(-6.9, WATER_Y + 0.9, -8.4) * CFrame.Angles(0.2, -0.7, 0),
-			rope,
-			Enum.Material.Fabric
-		)
-		for _, ox in { -0.35, 0.35 } do
-			part(
-				m,
-				"Oar",
-				Vector3.new(0.15, 0.1, 3.2),
-				at2(-9 + ox, WATER_Y + 0.5, -5.6) * CFrame.Angles(0, math.rad(30) + ox * 0.3, 0),
-				dark,
-				woodMat
-			)
-		end
 	end
 	if level >= 21 then
 		plankRun("BankPath", 13, -15.4, 15, -9.4, 2.6)
 	end
-	-- the near-right fishing spot: a stool, a rod holder with two rods leaning out over the water, lines
-	-- and bobbers, a bait bucket; on the new right lobe's bank from 41 (where the auto reel joins it)
+	-- the near-right fishing spot: a stool and a bait bucket on a worn pad (the slimes bring their own
+	-- rods); on the new right lobe's bank from 41
 	local fx, fz, toward = -12.6, -12, Vector3.new(-9, 0, 2)
 	if level >= 41 then
 		fx, fz, toward = -14, -14.6, Vector3.new(-14, 0, -5)
@@ -719,28 +783,6 @@ function PondStages.build(level: number, cell: CFrame, showcase: boolean?): Mode
 	part(m, "Stool", Vector3.new(1.3, 0.4, 1.3), base * CFrame.new(-0.9, 1.9, 0.5), wood, woodMat)
 	for _, o in { { -1.4, 0 }, { -0.4, 0 }, { -1.4, 1 }, { -0.4, 1 } } do
 		part(m, "StoolLeg", Vector3.new(0.25, 1.7, 0.25), base * CFrame.new(o[1], 0.85, o[2]), dark, woodMat)
-	end
-	part(m, "RodHolder", Vector3.new(1.6, 0.5, 0.4), base * CFrame.new(0.6, 0.6, -0.8), dark, woodMat)
-	for _, dx in { 0.2, 1 } do
-		local rod = base * CFrame.new(dx, 2.2, -2.6) * CFrame.Angles(math.rad(-58), 0, 0)
-		part(m, "Rod", Vector3.new(0.12, 0.12, 4.6), rod * CFrame.new(0, 0, 0), dark, woodMat)
-		local tip = (rod * CFrame.new(0, 0, -2.3)).Position
-		local water = Vector3.new(tip.X, (area * CFrame.new(0, WATER_Y, 0)).Position.Y, tip.Z)
-		part(
-			m,
-			"Line",
-			Vector3.new(0.05, (tip - water).Magnitude, 0.05),
-			CFrame.new((tip + water) / 2),
-			Color3.fromRGB(240, 240, 240)
-		)
-		local bob = part(
-			m,
-			"Bobber",
-			Vector3.one * 0.45,
-			CFrame.new(water + Vector3.new(0, 0.2, 0)),
-			Color3.fromRGB(230, 60, 50)
-		) :: Part
-		bob.Shape = Enum.PartType.Ball
 	end
 	if place and level < 41 then
 		place(m, area, "FishBucket", fx + face.Z * 2.4, fz - face.X * 2.4, 1.8, 1.5, 0)
@@ -797,34 +839,139 @@ function PondStages.build(level: number, cell: CFrame, showcase: boolean?): Mode
 		) :: Part
 		sunk.Shape = Enum.PartType.Cylinder
 	end
-	-- the pond beacon on the back-right bank: a square stone base, a tapered striped tower, a lantern
-	-- room with its light, a roof, and a life ring on its base
+	-- the lighthouse in the garden's back corner, right behind the pond, from 41 (the owner, 2026-10-28: in
+	-- the corner, three times taller, more detail): a stone plinth with steps and a door, a round tower
+	-- tapering in red and white bands with small windows, a gallery with a railing, a glass lamp room
+	-- with its light, a red dome and a weather vane, a life ring and a lamp on the plinth
 	if level >= 41 then
-		local bx, bz = -21.5, 10
-		local stone = Color3.fromRGB(176, 170, 160)
-		part(m, "BeaconBase", Vector3.new(3.6, 1.2, 3.6), at2(bx, 0.6, bz), stone, Enum.Material.Slate)
-		for k = 0, 4 do
-			local w = 2.4 - k * 0.22
+		local bx, bz = LIGHTHOUSE.X, LIGHTHOUSE.Z
+		-- (turned so its door and steps face the pond)
+		local lh = area * CFrame.new(bx, 0, bz) * CFrame.Angles(0, math.rad(90), 0)
+		local function lp(px: number, py: number, pz: number): CFrame
+			return lh * CFrame.new(px - bx, py, pz - bz)
+		end
+		local stone, stoneDark = Color3.fromRGB(176, 170, 160), Color3.fromRGB(128, 122, 116)
+		local white, red = Color3.fromRGB(248, 246, 240), Color3.fromRGB(214, 64, 56)
+		local function ring(name: string, y: number, h: number, d: number, col: Color3, mat: Enum.Material?)
+			pole(m, name, lp(bx, y + h / 2, bz), h, d, col, mat)
+		end
+		part(m, "Plinth", Vector3.new(6.4, 1.4, 6.4), lp(bx, 0.7, bz), stone, Enum.Material.Slate)
+		part(m, "PlinthCap", Vector3.new(6.8, 0.3, 6.8), lp(bx, 1.55, bz), stoneDark, Enum.Material.Slate)
+		for k = 1, 2 do
 			part(
 				m,
-				"BeaconTower",
-				Vector3.new(w, 1, w),
-				at2(bx, 1.7 + k, bz),
-				if k % 2 == 0 then Color3.fromRGB(245, 245, 240) else Color3.fromRGB(70, 120, 200)
+				"Step",
+				Vector3.new(2, 0.45, 0.8),
+				lp(bx + 3.4 + k * 0.8 - 0.8, 1.45 - k * 0.45 + 0.22, bz),
+				stoneDark,
+				Enum.Material.Slate
 			)
 		end
-		part(m, "BeaconGallery", Vector3.new(2.4, 0.25, 2.4), at2(bx, 6.3, bz), stone, Enum.Material.Slate)
-		local lamp = part(
+		-- the tower: eight bands, each a little narrower, red and white
+		local y = 1.7
+		local towerW = 4.2
+		for k = 0, 7 do
+			local d = towerW - k * 0.24
+			ring("TowerBand", y, 2.4, d, if k % 2 == 0 then white else red)
+			y += 2.4
+		end
+		local top = y
+		-- the door facing the steps, and small windows up the tower facing the pond
+		part(
 			m,
-			"BeaconLight",
-			Vector3.new(1.7, 1.2, 1.7),
-			at2(bx, 7, bz),
-			Color3.fromRGB(255, 226, 150),
-			Enum.Material.Neon
+			"Door",
+			Vector3.new(0.2, 2.4, 1.3),
+			lp(bx + towerW / 2 - 0.05, 2.9, bz),
+			Color3.fromRGB(90, 60, 40),
+			Enum.Material.Wood
 		)
+		part(
+			m,
+			"DoorArch",
+			Vector3.new(0.25, 0.3, 1.6),
+			lp(bx + towerW / 2 - 0.02, 4.2, bz),
+			stoneDark,
+			Enum.Material.Slate
+		)
+		for k = 1, 3 do
+			local wy = 1.7 + k * 4.6
+			local r = (towerW - (wy - 1.7) / 2.4 * 0.24) / 2
+			part(
+				m,
+				"Window",
+				Vector3.new(0.2, 1, 0.7),
+				lp(bx + r - 0.02, wy, bz),
+				Color3.fromRGB(255, 226, 150),
+				Enum.Material.Neon
+			).CastShadow =
+				false
+			part(
+				m,
+				"WindowSill",
+				Vector3.new(0.3, 0.15, 0.9),
+				lp(bx + r + 0.02, wy - 0.58, bz),
+				stoneDark,
+				Enum.Material.Slate
+			)
+		end
+		-- the gallery: a wide stone deck with a railing of posts and a rail ring
+		ring("Gallery", top, 0.4, 4.6, stoneDark, Enum.Material.Slate)
+		for k = 0, 11 do
+			local a = k * math.pi / 6
+			part(
+				m,
+				"GalleryPost",
+				Vector3.new(0.15, 1.1, 0.15),
+				lp(bx + math.cos(a) * 2.15, top + 0.95, bz + math.sin(a) * 2.15),
+				Color3.fromRGB(60, 60, 66),
+				Enum.Material.Metal
+			)
+		end
+		local rail =
+			pole(m, "GalleryRail", lp(bx, top + 1.5, bz), 0.15, 4.5, Color3.fromRGB(60, 60, 66), Enum.Material.Metal)
+		rail.Transparency = 0
+		-- the lamp room: a glass drum round a glowing lamp, thin frames, a red dome, a vane
+		local glass =
+			pole(m, "LampGlass", lp(bx, top + 1.9, bz), 2.6, 2.6, Color3.fromRGB(200, 232, 245), Enum.Material.Glass)
+		glass.Transparency = 0.5
+		local lamp = pole(m, "Lamp", lp(bx, top + 1.9, bz), 1.4, 1.4, Color3.fromRGB(255, 226, 150), Enum.Material.Neon)
 		lamp.CastShadow = false
-		part(m, "BeaconRoof", Vector3.new(2.5, 0.6, 2.5), at2(bx, 7.9, bz), Color3.fromRGB(200, 60, 50))
-		part(m, "BeaconCap", Vector3.new(1, 0.6, 1), at2(bx, 8.5, bz), Color3.fromRGB(200, 60, 50))
+		local light = Instance.new("PointLight")
+		light.Color = Color3.fromRGB(255, 220, 150)
+		light.Range = 18
+		light.Brightness = 1
+		light.Parent = lamp
+		for k = 0, 5 do
+			local a = k * math.pi / 3
+			part(
+				m,
+				"LampFrame",
+				Vector3.new(0.15, 2.6, 0.15),
+				lp(bx + math.cos(a) * 1.3, top + 1.9, bz + math.sin(a) * 1.3),
+				red
+			)
+		end
+		ring("LampRoofBase", top + 3.2, 0.3, 3.2, red)
+		local dome = part(m, "Dome", Vector3.one * 2.8, lp(bx, top + 3.6, bz), red) :: Part
+		dome.Shape = Enum.PartType.Ball
+		ring("VaneRod", top + 4.8, 1.4, 0.15, Color3.fromRGB(60, 60, 66), Enum.Material.Metal)
+		part(
+			m,
+			"VaneArrow",
+			Vector3.new(1.2, 0.1, 0.35),
+			lp(bx, top + 5.9, bz),
+			Color3.fromRGB(60, 60, 66),
+			Enum.Material.Metal
+		)
+		-- a life ring on the plinth's side
+		local lr = part(
+			m,
+			"LifeRing",
+			Vector3.new(0.25, 1.2, 1.2),
+			lp(bx + 2.2, 2.4, bz + 2.15) * CFrame.Angles(0, math.pi / 2, 0),
+			Color3.fromRGB(240, 90, 60)
+		) :: Part
+		lr.Shape = Enum.PartType.Cylinder
 		-- the buoy floats on a dark ring so it reads against the bright water
 		local float = part(
 			m,
@@ -834,39 +981,6 @@ function PondStages.build(level: number, cell: CFrame, showcase: boolean?): Mode
 			Color3.fromRGB(40, 60, 80)
 		) :: Part
 		float.Shape = Enum.PartType.Cylinder
-		local ring = part(
-			m,
-			"LifeRing",
-			Vector3.new(0.25, 1.1, 1.1),
-			at2(bx + 1.85, 0.8, bz) * CFrame.Angles(0, 0, 0),
-			Color3.fromRGB(240, 90, 60)
-		) :: Part
-		ring.Shape = Enum.PartType.Cylinder
-	end
-	-- the jetty's two rod holders at its end
-	if level >= 21 then
-		for _, dx in { -0.8, 0.8 } do
-			part(m, "JettyRodHolder", Vector3.new(0.3, 1, 0.3), at2(15 + dx, DECK_Y + 0.75, 0), dark, woodMat)
-			local rod = at2(15 + dx * 1.6, DECK_Y + 2.2, 1.9) * CFrame.Angles(math.rad(30), dx * 0.25, 0)
-			part(m, "JettyRod", Vector3.new(0.14, 0.14, 4.4), rod, dark, woodMat)
-			local tip = (rod * CFrame.new(0, 0, 2.2)).Position
-			local water = Vector3.new(tip.X, (area * CFrame.new(0, WATER_Y, 0)).Position.Y, tip.Z)
-			part(
-				m,
-				"Line",
-				Vector3.new(0.06, (tip - water).Magnitude, 0.06),
-				CFrame.new((tip + water) / 2),
-				Color3.fromRGB(240, 240, 240)
-			)
-			local bob = part(
-				m,
-				"Bobber",
-				Vector3.one * 0.55,
-				CFrame.new(water + Vector3.new(0, 0.25, 0)),
-				Color3.fromRGB(230, 60, 50)
-			) :: Part
-			bob.Shape = Enum.PartType.Ball
-		end
 	end
 
 	if showcase then
