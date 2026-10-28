@@ -33,16 +33,15 @@ Every job runs at ChatGPT's highest thinking effort.
 2. The ChatGPT tab must be the FRONTED tab (`tabs_select`): in a background tab images never
    decode and the carry page hangs. Navigate it to
    `http://127.0.0.1:18923/tools/chatgpt/carry.html?f=<path1>,<path2>,...&to=/c/<chat id>` (paths
-   from the repo root; `to` = a follow-up in that chat, leave it out for a new chat; for a NEW chat
-   add `&w=1000`: the landing on chatgpt.com's root fails with a ~1 MB address - if the tab says
-   "the last page load failed", select the tab and `location.reload()` once, it then lands). The page shrinks
-   each picture to 1400 wide, puts them all in the address hash and goes back to chatgpt.com by
-   itself (a javascript call that waits for it is cut off by the navigation: that is fine).
-3. On chatgpt.com, javascript call A: wait 2 s;
-   `sessionStorage.setItem('reviewFiles', location.hash.slice('#review='.length))`;
-   `location.replace(location.pathname)`. The page must load again CLEAN: with the ~1 MB hash still
-   in its address (even after `history.replaceState`) the send POST is reset almost every time.
-4. Javascript call B on the clean page: wait 4 s; read and remove `reviewFiles` from
+   from the repo root; `to` = a follow-up in that chat, leave it out for a new chat). The page
+   shrinks each picture (1400 wide, `&w=` to change), puts them all in the address hash and lands
+   on chatgpt.com's LIGHT static page `https://chatgpt.com/robots.txt#to=<path>&review=<...>`
+   (the ChatGPT app itself fails to load with a ~1 MB address, and a send from a page that has it
+   is reset). If the tab is still on carry after 8 s, `tabs_select` it and `location.reload()`.
+3. On robots.txt, javascript call A: read `to` and the `review` part from `location.hash`,
+   `sessionStorage.setItem('reviewFiles', <review part>)`, then
+   `setTimeout(() => location.replace(to), 100)`; the chat opens clean.
+4. Javascript call B on the chat page: wait 3 s; read and remove `reviewFiles` from
    sessionStorage; split it (`<name>|<base64>` parts joined by `~`) into `File`s; put them on the
    `input[type=file]` that is `multiple` with accept exactly `image/*` (in a new chat the first
    `image/*` one also works) through a `DataTransfer` and dispatch `change`. Wait 6 s; a screenshot

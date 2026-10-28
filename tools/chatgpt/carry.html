@@ -21,8 +21,10 @@
     c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
     parts.push(encodeURIComponent(n.split('/').pop()) + '|' + c.toDataURL('image/jpeg', 0.8).split(',')[1]);
   }
-  // &to=/c/<id> lands in that chat (a follow-up), else a new chat
+  // It lands on chatgpt.com's light static page (robots.txt: the app with a ~1 MB address fails
+  // to load); a script there keeps the pictures in sessionStorage and opens the chat: &to=/c/<id>
+  // for a follow-up, else a new chat.
   const to = new URLSearchParams(location.search).get('to') || '/';
-  location.href = 'https://chatgpt.com' + to + '#review=' + parts.join('~');
+  location.href = 'https://chatgpt.com/robots.txt#to=' + encodeURIComponent(to) + '&review=' + parts.join('~');
 })();
 </script>

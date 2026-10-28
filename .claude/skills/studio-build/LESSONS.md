@@ -232,6 +232,18 @@ was left there (this game has none); read it there if a cave is ever wanted.
 - ChatGPT's review (skill `chatgpt-review`) is worth it: round 1 found the silhouettes, round 2 the contrast and
   function. Weigh each point (it does not know the doors are props); 3 rounds were enough.
 
+- 2026-10-28 (garden). An area is more than its square pad: props squeezed into the pad's paths shrank
+  to toys. Put yard props on the lawn round the fence at real size, turned toward the area, and add
+  a ring of farm life on all four sides that grows with the eras; keep the back as dressed as the
+  front. Check every prop against a 5-stud block before sending pictures.
+- A landmark must win its silhouette against the building beside it (a windmill below a greenhouse
+  ridge reads as an ornament); if the kit model's proportions are wrong (a barrel on scaffolding),
+  generate a better one rather than scaling.
+- Foliage from parts: flat thin leaves lying nearly level (tilt under 15 degrees) in three greens,
+  on thin stems; round balls read as pom-poms, steep leaves as flying chips.
+- A greenhouse reads when its ridge runs toward the camera (a glass gable at the front), with few
+  slim bars and matte transparent glass (Reflectance 0).
+
 ## Bringing a built map into the game
 
 - 2026-10-23. A map went into the game as files, no Studio at build time: in Studio, `CopyRegion` in 128-cell blocks

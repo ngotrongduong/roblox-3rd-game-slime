@@ -69,6 +69,10 @@ local SURROUND: { { any } } = {
 	{ "RainBarrel", 15, -8.5, 2.9, 2.4, 90, 4 },
 	{ "Planter", 13, -11.5, 1.6, 3, 0, 4 },
 	{ "Planter", -13.5, -11.5, 1.6, 3, 0, 4 },
+	-- (ChatGPT's 2nd review: the back was empty next to the front) planting behind from the start
+	{ "PineBerryBush", 11, 17.5, 2.4, 3, 0, 1 },
+	{ "FlowerShrub", 16.5, 15.5, 2.2, 3, 0, 2 },
+	{ "WildflowersGrass", 3, 17.5, 1.4, 3.5, 0, 2 },
 	{ "FlowerShrub", 6, 17.5, 2.4, 3, 0, 5 },
 	{ "FlowerShrub", -6, 17.5, 2.4, 3, 0, 5 },
 	{ "LogBench", -9.5, -13.5, 1.8, 4.6, 0, 5 },
@@ -222,8 +226,8 @@ function GardenStages.build(area: Instance, frame: CFrame, level: number): Model
 	part(
 		m,
 		"PathBand",
-		Vector3.new(3.2, 0.2, zTo - zFrom),
-		frame * CFrame.new(0, 0.3, (zFrom + zTo) / 2),
+		Vector3.new(3.2, 0.1, zTo - zFrom), -- (flush: a raised band read as a bulky step)
+		frame * CFrame.new(0, 0.25, (zFrom + zTo) / 2),
 		bandCol,
 		Enum.Material.Plastic
 	)
@@ -232,8 +236,8 @@ function GardenStages.build(area: Instance, frame: CFrame, level: number): Model
 			part(
 				m,
 				"PathEdge",
-				Vector3.new(0.18, 0.3, zTo - zFrom),
-				frame * CFrame.new(s * 1.7, 0.35, (zFrom + zTo) / 2),
+				Vector3.new(0.18, 0.15, zTo - zFrom),
+				frame * CFrame.new(s * 1.7, 0.27, (zFrom + zTo) / 2),
 				tp.edge,
 				tp.yardMat
 			)
@@ -268,7 +272,7 @@ function GardenStages.build(area: Instance, frame: CFrame, level: number): Model
 	-- 2026-10-28: a gable roof with overhang and fascia, a braced door in a frame, a window with a
 	-- flower box, tools hung on the wall, battens on timber)
 	if builds[1] then
-		local sx, sz, w, d, h = -10.2, 12.65, 5.2, 3.8, 4.4 -- (bigger, ChatGPT's review)
+		local sx, sz, w, d, h = -9.8, 12.85, 6, 4.2, 4.8 -- (bigger, ChatGPT's reviews)
 		local at = function(x: number, y: number, z: number): CFrame
 			return frame * CFrame.new(sx + x, y, sz + z)
 		end
@@ -529,7 +533,7 @@ function GardenStages.build(area: Instance, frame: CFrame, level: number): Model
 					)
 			)
 		end
-		for _, x in { -2.8, -1.5, 0.4, 1.9, 3 } do
+		for _, x in { -3, -2.1, -1.2, 0, 1.1, 2.2, 3.1 } do
 			local len = 1 + rnd() * 0.8
 			part(
 				m,
@@ -616,6 +620,9 @@ function GardenStages.build(area: Instance, frame: CFrame, level: number): Model
 		if marble then
 			gFrame, gFrameMat = Color3.fromRGB(246, 243, 236), Enum.Material.SmoothPlastic
 		end
+		-- the door leaves' edges stand out from the frame (ChatGPT's 2nd review): dark on white
+		local doorEdge = if marble then Color3.fromRGB(96, 104, 116) else Color3.fromRGB(150, 158, 170)
+		local doorEdgeMat = Enum.Material.Metal
 		local function bar(name: string, size: Vector3, cf: CFrame)
 			part(m, name, size, cf, gFrame, gFrameMat)
 		end
@@ -770,9 +777,33 @@ function GardenStages.build(area: Instance, frame: CFrame, level: number): Model
 			leafPane.Transparency = 0.55
 			leafPane.CanCollide = false
 			for _, dy in { 2.55, -2.55, 0 } do
-				bar("GHDoorRail", Vector3.new(2.2, 0.22, 0.16), leafCf * CFrame.new(0, dy, 0))
+				part(
+					m,
+					"GHDoorRail",
+					Vector3.new(2.2, 0.25, 0.18),
+					leafCf * CFrame.new(0, dy, 0),
+					doorEdge,
+					doorEdgeMat
+				)
 			end
-			bar("GHDoorStile", Vector3.new(0.22, 5.2, 0.16), leafCf * CFrame.new(s * 1, 0, 0))
+			for _, ex in { -1, 1 } do
+				part(
+					m,
+					"GHDoorStile",
+					Vector3.new(0.25, 5.2, 0.18),
+					leafCf * CFrame.new(ex * 1, 0, 0),
+					doorEdge,
+					doorEdgeMat
+				)
+			end
+			part(
+				m,
+				"GHDoorHandle",
+				Vector3.new(0.12, 0.6, 0.25),
+				leafCf * CFrame.new(-s * 0.75, 0, -0.15),
+				Color3.fromRGB(60, 60, 66),
+				Enum.Material.Metal
+			)
 		end
 		bar("GHDoorHeader", Vector3.new(doorHalf * 2 + 0.4, 0.35, 0.35), frame * CFrame.new(0, 5.8, z0))
 	end
@@ -782,7 +813,9 @@ function GardenStages.build(area: Instance, frame: CFrame, level: number): Model
 		-- the landmark of the last era (ChatGPT's review: it read as a roof ornament; the owner: use
 		-- the lawn outside): tall, on the lawn behind the tool shed, its rotor clear of the greenhouse;
 		-- a pipe from it behind the fence and in at the back to two sprinkler heads over the beds
-		place(m, frame, "IrrigationWindmill", -19, 15, 18, 7)
+		-- (FarmWindmill: a slim lattice tower, a 7-stud rotor, a tank at its foot; ChatGPT's 2nd review:
+		-- the old one read as a barrel on scaffolding)
+		place(m, frame, "FarmWindmill", -19, 15, 18, 11)
 		local pipe = Color3.fromRGB(70, 130, 170)
 		part(
 			m,
