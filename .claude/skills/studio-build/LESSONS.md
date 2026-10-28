@@ -279,3 +279,9 @@ was left there (this game has none); read it there if a cave is ever wanted.
 - A map that goes under its own ground must be LIFTED in the game: parts below `FallenPartsDestroyHeight` (-120 in the
   previous game) are destroyed.
 - In Lune, `folder.Terrain` on an instance named like a service member fails: use `FindFirstChild`.
+- Measure a kit model before trusting its name: the kit LanternPost is a 4-stud wall lantern, so placed as a street
+  lamp it read as a garden stake. Street lamps stand 8-9 studs with a head 1.5-2 across; build them from parts.
+- Flat green slabs on a wall read as holes or paint, not ivy: build vines as chains of leaf clumps climbing from the
+  ground, thinning as they rise. Flowers on bare soil read as candy: sit each in a round leafy clump.
+- A flat disc on the lawn looks unfinished: give a gathering spot an uneven worn edge, a few stones, something at its
+  open side (a notice board, a stage) and its own edge each era, so the upgrade shows in its shape, not only colour.
