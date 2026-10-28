@@ -285,3 +285,12 @@ was left there (this game has none); read it there if a cave is ever wanted.
   ground, thinning as they rise. Flowers on bare soil read as candy: sit each in a round leafy clump.
 - A flat disc on the lawn looks unfinished: give a gathering spot an uneven worn edge, a few stones, something at its
   open side (a notice board, a stage) and its own edge each era, so the upgrade shows in its shape, not only colour.
+- A prop the owner will look at closely is a generated model, not parts: parts read as plain boxes beside the
+  greenhouse vegetables. Generate 2-3 at a time, lay them out on a stand away from the map and shoot each from the
+  front and the side before using it; about a third come out wrong (a closed gazebo, a tilted lamp, a lamp like a
+  table) and are generated again with plainer words ("straight vertical", "open on all sides", "no walls").
+- A lamp that looks tilted in one shot may only be seen at an angle: check from a second side before turning it.
+- Every bench needs a reason: facing a view (the fountain), a stage or a table, with its lamp and a pot beside it.
+  A row of benches along every path reads as random. One of each garden piece, never two of a kind side by side.
+- A level step's additions must stay in later eras (has(step) = era > 1 or s >= step), or a new era's first level
+  loses the market and the benches the level before had.
