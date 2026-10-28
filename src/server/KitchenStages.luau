@@ -342,14 +342,14 @@ function KitchenStages.build(area: Instance, frame: CFrame, level: number): Mode
 		p.CastShadow = false
 		return p
 	end
-	local tx, tz = -6.5, -6
-	-- the dining nook on its own deck, the grill on its own heatproof slab: cook outside on the left,
-	-- eat outside on the right (ChatGPT's 1st kitchen review)
+	-- the dining table, out on the lawn beside the kitchen's right as a big outdoor table on its own
+	-- deck (the owner, 2026-10-28: bigger, and outside), the grill on its heatproof slab in the yard
+	local tx, tz, DY = -17.5, -6.6, 0.12
 	part(
 		m,
 		"DiningDeck",
-		Vector3.new(6.2, 0.08, 4.8),
-		at(tx, FLOOR + 0.04, tz),
+		Vector3.new(8.4, 0.12, 6.6),
+		at(tx, 0.06, tz),
 		Color3.fromRGB(214, 176, 124),
 		Enum.Material.WoodPlanks
 	)
@@ -384,39 +384,40 @@ function KitchenStages.build(area: Instance, frame: CFrame, level: number): Mode
 			Enum.Material.Wood
 		)
 	end
-	part(m, "TableTop", Vector3.new(4.6, 0.3, 2), at(tx, FLOOR + 2.4, tz), tt.walls, tt.wallMat)
-	for _, lx in { -2, 2 } do
-		for _, lz in { -0.75, 0.75 } do
-			part(m, "TableLeg", Vector3.new(0.3, 2.25, 0.3), at(tx + lx, FLOOR + 1.13, tz + lz), tt.frame, tt.frameMat)
+	local top = DY + 2.75
+	part(m, "TableTop", Vector3.new(6.4, 0.35, 2.6), at(tx, top, tz), tt.walls, tt.wallMat)
+	for _, lx in { -2.8, 2.8 } do
+		for _, lz in { -1, 1 } do
+			part(m, "TableLeg", Vector3.new(0.35, 2.6, 0.35), at(tx + lx, DY + 1.3, tz + lz), tt.frame, tt.frameMat)
 		end
 	end
-	for _, bz in { -1.35, 1.35 } do
-		part(m, "Bench", Vector3.new(4.2, 0.3, 0.9), at(tx, FLOOR + 1.4, tz + bz), tt.walls, tt.wallMat)
-		for _, lx in { -1.7, 1.7 } do
-			part(m, "BenchLeg", Vector3.new(0.3, 1.25, 0.7), at(tx + lx, FLOOR + 0.63, tz + bz), tt.frame, tt.frameMat)
+	for _, bz in { -1.9, 1.9 } do
+		part(m, "Bench", Vector3.new(6, 0.3, 1), at(tx, DY + 1.6, tz + bz), tt.walls, tt.wallMat)
+		for _, lx in { -2.4, 2.4 } do
+			part(m, "BenchLeg", Vector3.new(0.35, 1.45, 0.8), at(tx + lx, DY + 0.73, tz + bz), tt.frame, tt.frameMat)
 		end
 	end
-	for _, o in { { -1.3, -0.45 }, { 1.3, -0.45 }, { -1.3, 0.45 }, { 1.3, 0.45 } } do
+	for _, o in { { -2.2, -0.65 }, { 2.2, -0.65 }, { -2.2, 0.65 }, { 2.2, 0.65 } } do
 		local plate = bit(
 			"Plate",
-			Vector3.new(0.08, 0.8, 0.8),
-			at(tx + o[1], FLOOR + 2.6, tz + o[2]) * CFrame.Angles(0, 0, math.pi / 2),
+			Vector3.new(0.08, 1, 1),
+			at(tx + o[1], top + 0.22, tz + o[2]) * CFrame.Angles(0, 0, math.pi / 2),
 			Color3.fromRGB(250, 248, 240)
 		) :: Part
 		plate.Shape = Enum.PartType.Cylinder
 	end
 	local bowl = bit(
 		"FruitBowl",
-		Vector3.new(0.3, 1, 1),
-		at(tx, FLOOR + 2.7, tz) * CFrame.Angles(0, 0, math.pi / 2),
+		Vector3.new(0.35, 1.2, 1.2),
+		at(tx, top + 0.3, tz) * CFrame.Angles(0, 0, math.pi / 2),
 		Color3.fromRGB(196, 140, 84)
 	) :: Part
 	bowl.Shape = Enum.PartType.Cylinder
 	for k, c in { Color3.fromRGB(240, 150, 60), Color3.fromRGB(150, 210, 80), Color3.fromRGB(230, 70, 70) } do
 		local fruit = bit(
 			"Fruit",
-			Vector3.one * 0.45,
-			at(tx - 0.25 + (k - 1) * 0.25, FLOOR + 3, tz + (k % 2) * 0.2 - 0.1),
+			Vector3.one * 0.5,
+			at(tx - 0.3 + (k - 1) * 0.3, top + 0.62, tz + (k % 2) * 0.2 - 0.1),
 			c
 		) :: Part
 		fruit.Shape = Enum.PartType.Ball
@@ -463,6 +464,275 @@ function KitchenStages.build(area: Instance, frame: CFrame, level: number): Mode
 	) :: Part
 	dish.Shape = Enum.PartType.Cylinder
 	bit("BoardFork", Vector3.new(0.1, 0.8, 0.05), board * CFrame.new(0.45, 0, -0.1), Color3.fromRGB(250, 248, 240))
+
+	-- the cooking story, station by station (ChatGPT's 2nd kitchen review): a bread shelf with loaves
+	-- and a flour sack beside the bread oven; a burner with a big pot for the third cook; a bread
+	-- basket and a pie on the table; a ladle on the pot rack
+	local loafCol = Color3.fromRGB(206, 146, 80)
+	if era >= 3 then
+		part(m, "BreadShelf", Vector3.new(1.8, 0.2, 1.1), at(3.8, FLOOR + 2.2, 8.2), tt.frame, tt.frameMat)
+		for _, lx in { -0.5, 0.5 } do
+			part(m, "ShelfLeg", Vector3.new(0.2, 2.2, 0.2), at(3.8 + lx * 1.5, FLOOR + 1.1, 8.2), tt.frame, tt.frameMat)
+		end
+		for k = -1, 1 do
+			local loaf = bit("Loaf", Vector3.new(0.5, 0.45, 0.8), at(3.8 + k * 0.55, FLOOR + 2.5, 8.2), loafCol) :: Part
+			loaf.Shape = Enum.PartType.Ball
+		end
+		bit("FlourSack", Vector3.new(0.9, 1.2, 0.8), at(3.8, FLOOR + 0.6, 8.2), Color3.fromRGB(240, 232, 210))
+	end
+	if spots >= 3 then
+		part(
+			m,
+			"Burner",
+			Vector3.new(1.3, 1.5, 1.3),
+			at(-3.6, FLOOR + 0.75, 3.2),
+			Color3.fromRGB(60, 60, 66),
+			Enum.Material.Metal
+		)
+		bit(
+			"BurnerFlame",
+			Vector3.new(1, 0.12, 1),
+			at(-3.6, FLOOR + 1.56, 3.2),
+			Color3.fromRGB(255, 140, 60),
+			Enum.Material.Neon
+		)
+		local pot = part(
+			m,
+			"BigPot",
+			Vector3.new(1.2, 1.4, 1.4),
+			at(-3.6, FLOOR + 2.2, 3.2) * CFrame.Angles(0, 0, math.pi / 2),
+			Color3.fromRGB(196, 112, 64),
+			Enum.Material.Metal
+		) :: Part
+		pot.Shape = Enum.PartType.Cylinder
+		local soup = bit(
+			"Soup",
+			Vector3.new(0.06, 1.2, 1.2),
+			at(-3.6, FLOOR + 2.86, 3.2) * CFrame.Angles(0, 0, math.pi / 2),
+			Color3.fromRGB(240, 170, 80)
+		) :: Part
+		soup.Shape = Enum.PartType.Cylinder
+		bit(
+			"Ladle",
+			Vector3.new(0.12, 1.6, 0.12),
+			at(-7, EAVE - 2.3, 4.2),
+			Color3.fromRGB(150, 156, 166),
+			Enum.Material.Metal
+		)
+	end
+	local basket = bit(
+		"BreadBasket",
+		Vector3.new(1, 0.4, 0.8),
+		at(tx - 1.15, top + 0.38, tz),
+		Color3.fromRGB(196, 140, 84),
+		Enum.Material.Wood
+	)
+	basket.Name = "BreadBasket"
+	for k = -1, 1, 2 do
+		local loaf =
+			bit("Loaf", Vector3.new(0.45, 0.4, 0.65), at(tx - 1.15 + k * 0.22, top + 0.62, tz), loafCol) :: Part
+		loaf.Shape = Enum.PartType.Ball
+	end
+	local pie = bit(
+		"Pie",
+		Vector3.new(0.35, 1.2, 1.2),
+		at(tx + 1.15, top + 0.35, tz) * CFrame.Angles(0, 0, math.pi / 2),
+		Color3.fromRGB(230, 170, 90)
+	) :: Part
+	pie.Shape = Enum.PartType.Cylinder
+
+	-- one construction signature per era (ChatGPT's 2nd kitchen review): brick plinths at the posts,
+	-- metal seams on the steel roof, a goo pipe from the vent down the back corner
+	if era == 3 then
+		for _, sx in { -1, 1 } do
+			for _, z in { ZF, ZB } do
+				part(
+					m,
+					"Plinth",
+					Vector3.new(1.5, 1.3, 1.5),
+					at(sx * XW, FLOOR + 0.65, z),
+					TIERS[3].walls,
+					TIERS[3].wallMat
+				)
+				part(
+					m,
+					"PlinthCap",
+					Vector3.new(1.7, 0.2, 1.7),
+					at(sx * XW, FLOOR + 1.4, z),
+					TIERS[3].base,
+					TIERS[3].baseMat
+				)
+			end
+		end
+	elseif era == 4 then
+		local pitch = math.atan2(RISE, XW)
+		local reach = XW + 0.8
+		for _, sx in { -1, 1 } do
+			local slab = at(sx * reach / 2, EAVE + RISE - reach * math.tan(pitch) / 2 + 0.2, (ZF + ZB) / 2)
+				* CFrame.Angles(0, 0, -sx * pitch)
+			for _, dz in { -4, 0, 4 } do
+				part(
+					m,
+					"RoofSeam",
+					Vector3.new(reach / math.cos(pitch), 0.14, 0.3),
+					slab * CFrame.new(0, 0.28, dz),
+					Color3.fromRGB(150, 158, 170),
+					Enum.Material.Metal
+				)
+			end
+		end
+	elseif era == 5 then
+		local mint = Color3.fromRGB(120, 230, 200)
+		part(
+			m,
+			"GooPipe",
+			Vector3.new(0.55, EAVE - 0.8, 0.55),
+			at(-10.1, FLOOR + (EAVE - 0.8) / 2, 8.3),
+			Color3.fromRGB(70, 150, 140),
+			Enum.Material.Metal
+		)
+		part(
+			m,
+			"GooPipe",
+			Vector3.new(10.1, 0.55, 0.55),
+			at(-5.05, EAVE - 0.8, 8.3),
+			Color3.fromRGB(70, 150, 140),
+			Enum.Material.Metal
+		)
+		for _, y in { 1.6, 4.2 } do
+			bit("PipeRing", Vector3.new(0.7, 0.18, 0.7), at(-10.1, FLOOR + y, 8.3), mint, Enum.Material.Neon)
+		end
+	end
+
+	-- outdoor dining on the lawn round the kitchen (the owner, 2026-10-28: the lawn round an area is
+	-- there to use; picnic and outdoor tables), growing each era and never taken away: on the right
+	-- (by the dining nook) a picnic blanket, then picnic tables with sunshades, string lights, and a
+	-- deck under them on slime tech; on the left (by the grill) a blanket and a table later on
+	local function picnicTable(x: number, z: number, shade: Color3?)
+		part(m, "PicnicTop", Vector3.new(4.8, 0.3, 2), at(x, 2.5, z), tt.walls, tt.wallMat)
+		for _, bz in { -1.35, 1.35 } do
+			part(m, "PicnicBench", Vector3.new(4.8, 0.25, 0.9), at(x, 1.45, z + bz), tt.walls, tt.wallMat)
+		end
+		for _, ex in { -1.6, 1.6 } do
+			part(m, "PicnicEnd", Vector3.new(0.3, 2.4, 3.4), at(x + ex, 1.2, z), tt.frame, tt.frameMat)
+		end
+		for _, o in { { -1.1, -0.4 }, { 1.1, 0.4 } } do
+			local plate = bit(
+				"Plate",
+				Vector3.new(0.08, 0.8, 0.8),
+				at(x + o[1], 2.6, z + o[2]) * CFrame.Angles(0, 0, math.pi / 2),
+				Color3.fromRGB(250, 248, 240)
+			) :: Part
+			plate.Shape = Enum.PartType.Cylinder
+		end
+		local jug = bit(
+			"Jug",
+			Vector3.new(0.5, 0.8, 0.5),
+			at(x, 2.95, z),
+			Color3.fromRGB(200, 230, 245),
+			Enum.Material.Glass
+		) :: Part
+		jug.Transparency = 0.3
+		if shade then
+			part(m, "ShadePole", Vector3.new(0.25, 5.6, 0.25), at(x, 2.8, z), tt.frame, tt.frameMat)
+			local canopy = part(
+				m,
+				"Shade",
+				Vector3.new(0.35, 4.6, 4.6),
+				at(x, 5.6, z) * CFrame.Angles(0, 0, math.pi / 2),
+				shade,
+				Enum.Material.Fabric
+			) :: Part
+			canopy.Shape = Enum.PartType.Cylinder
+			local shadeTop = part(
+				m,
+				"ShadeTop",
+				Vector3.new(0.5, 1.6, 1.6),
+				at(x, 5.95, z) * CFrame.Angles(0, 0, math.pi / 2),
+				shade,
+				Enum.Material.Fabric
+			) :: Part
+			shadeTop.Shape = Enum.PartType.Cylinder
+		end
+	end
+	local function blanket(x: number, z: number, a: Color3)
+		for qx = -1, 1, 2 do
+			for qz = -1, 1, 2 do
+				bit(
+					"Blanket",
+					Vector3.new(1.6, 0.06, 1.6),
+					at(x + qx * 0.8, 0.04, z + qz * 0.8),
+					if qx == qz then a else Color3.fromRGB(250, 248, 240)
+				)
+			end
+		end
+		bit(
+			"Basket",
+			Vector3.new(1, 0.6, 0.7),
+			at(x + 0.6, 0.35, z - 0.5),
+			Color3.fromRGB(196, 140, 84),
+			Enum.Material.Wood
+		)
+		bit(
+			"BasketHandle",
+			Vector3.new(0.9, 0.12, 0.12),
+			at(x + 0.6, 0.9, z - 0.5),
+			Color3.fromRGB(176, 120, 70),
+			Enum.Material.Wood
+		)
+		local apple = bit("Apple", Vector3.one * 0.45, at(x - 0.5, 0.28, z + 0.4), Color3.fromRGB(230, 70, 70)) :: Part
+		apple.Shape = Enum.PartType.Ball
+	end
+	local red, pinkShade, cream =
+		Color3.fromRGB(220, 80, 80), Color3.fromRGB(240, 150, 180), Color3.fromRGB(250, 236, 200)
+	blanket(19, -5, red)
+	if era >= 2 then
+		picnicTable(-15.2, -0.8)
+		blanket(21, -10, Color3.fromRGB(90, 140, 220))
+	end
+	if era >= 3 then
+		picnicTable(-21, -0.8, pinkShade)
+	end
+	if era >= 4 then
+		picnicTable(20, 1.2, cream)
+		-- string lights over the right-hand tables
+		local corners =
+			{ Vector3.new(-13, 0, -3.8), Vector3.new(-23, 0, -3.8), Vector3.new(-23, 0, 2.6), Vector3.new(-13, 0, 2.6) }
+		for _, c in corners do
+			part(m, "LightPost", Vector3.new(0.3, 6, 0.3), at(c.X, 3, c.Z), tt.frame, tt.frameMat)
+		end
+		for k = 1, 4 do
+			local a, b = corners[k], corners[k % 4 + 1]
+			local mid = (a + b) / 2
+			bit(
+				"LightLine",
+				Vector3.new(0.06, 0.06, (b - a).Magnitude),
+				at(mid.X, 5.7, mid.Z) * CFrame.lookAt(Vector3.zero, (b - a).Unit),
+				Color3.fromRGB(60, 60, 66)
+			)
+			for t = 1, 3 do
+				local p = a + (b - a) * (t / 4)
+				local bulb = bit(
+					"Bulb",
+					Vector3.one * 0.3,
+					at(p.X, 5.55, p.Z),
+					Color3.fromRGB(255, 220, 140),
+					Enum.Material.Neon
+				) :: Part
+				bulb.Shape = Enum.PartType.Ball
+			end
+		end
+	end
+	if era >= 5 then
+		part(
+			m,
+			"PicnicDeck",
+			Vector3.new(10, 0.12, 6.4),
+			at(-18, 0.06, -0.6),
+			Color3.fromRGB(214, 176, 124),
+			Enum.Material.WoodPlanks
+		)
+	end
 
 	-- the kitchen props
 	for j = 1, 4 do
