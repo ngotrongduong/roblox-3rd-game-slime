@@ -154,6 +154,10 @@ local function setUp(name: string, col: number, row: number)
 	local layer: Model? = nil
 
 	local function show(newLevel: number)
+		if isPond then
+			-- (the pond itself grows: its new lobes are carved before the layer stands on them)
+			PondStages.grow(area, frame, newLevel)
+		end
 		local old = layer
 		local own = OWN_STAGES[name]
 		local stage = if own

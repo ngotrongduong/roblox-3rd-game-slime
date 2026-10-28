@@ -13,6 +13,8 @@
 local PondStages = {}
 
 PondStages.MaxLevel = 50
+-- the kit placer (PantryStages.place), handed over by PantryStages when it loads
+PondStages.kitPlace = nil :: ((Instance, CFrame, string, number, number, number, number, number?) -> Model?)?
 
 -- the dock, in the pond's frame: along +Z from the shore, the same size as the level-1 dock
 local WIDTH = 6
@@ -247,6 +249,100 @@ function PondStages.parts(level: number): { number }
 	return out
 end
 
+-- The pond grows as well as the dock (the owner, 2026-10-28: "the fishing area is more than the dock;
+-- the lawn round the pond may be used, and the pond may grow"), never smaller again: a lobe on its
+-- left at 21 and one on its right at 41 (area-local x, z, radius, from which level), carved out of the
+-- stud floor and filled with real water like the level-1 pond (tools/map/pond_water_l1).
+local LOBES = { { 0, 5, 16 }, { 9, 11, 11 }, { -9, 2, 11 } }
+local GROW = { { 15, 1, 7.5, 21 }, { -14, -5, 7, 41 } }
+local DOCK_X = -3 -- the dock's line in the area (AreaUpgrade's DOCK_X)
+local WATER_Y = -2.3 -- the water's surface in the area's frame
+-- Life round the pond, growing each era and never taken away (kit model, x, z, real height, the
+-- widest it may be, turn, from which level, lift): a bench on the bank; a rowboat moored by the
+-- dock, a fishing hut and a net rack at the front; on the new left lobe a cooler; a water wheel at
+-- its far edge; a glowing buoy in the right lobe, an auto reel on its bank and a small lighthouse
+-- on the right bank behind it.
+local SHORE: { { any } } = {
+	{ "LogBench", 8.5, -13, 1.8, 4.6, 180, 1 },
+	{ "RowBoat", -8.4, -7, 1.6, 4.8, 0, 11, WATER_Y - 0.4 },
+	{ "FishingHut", 15.5, -17.5, 6.5, 7, 0, 11 },
+	{ "NetRack", 20.5, -13, 2.6, 2.8, -90, 11 },
+	{ "FishCooler", 18.6, -8.6, 2, 2, 0, 21 },
+	{ "WaterWheel", 22.6, 2, 4.8, 4.8, 90, 31, -1.6 },
+	{ "CrystalBuoy", -14.5, -3.5, 3, 1.4, 0, 41, WATER_Y - 0.8 },
+	{ "AutoReel", -16, -13.5, 3.6, 3, 180, 41 },
+	{ "Lighthouse", -21.5, 10, 10, 4.4, 0, 41 },
+}
+
+-- Grows the pond to `level` (its lobes from GROW, once each) and clears the scenery standing where
+-- the water and the shore life come. `pond` is the area model, `frame` its frame at the ground's top.
+function PondStages.grow(pond: Instance, frame: CFrame, level: number)
+	local plot: Instance = pond.Parent or pond
+	local lawn: Instance = plot:FindFirstChild("StudLawn") or pond
+	local nature: Instance = pond:FindFirstChild("Nature") or pond
+	for i, g in GROW do
+		if level >= g[4] and not pond:GetAttribute("Lobe" .. i) then
+			pond:SetAttribute("Lobe" .. i, true)
+			local function dist(x: number, z: number): number
+				local best = math.huge
+				for _, l in LOBES do
+					best = math.min(best, Vector2.new(x - l[1], z - l[2]).Magnitude - l[3])
+				end
+				for k = 1, i do
+					local l = GROW[k]
+					best = math.min(best, Vector2.new(x - l[1], z - l[2]).Magnitude - l[3])
+				end
+				return best
+			end
+			-- the floor's fine tiles: gone over the water, two sand steps at its bank
+			local top = frame.Position.Y
+			for _, t in lawn:GetChildren() do
+				if t:IsA("BasePart") and t.Name == "Tile" and t.Size.X < 3 then
+					local q = frame:PointToObjectSpace(t.Position)
+					if Vector2.new(q.X - g[1], q.Z - g[2]).Magnitude < g[3] + 3 then
+						local d = dist(q.X, q.Z)
+						if d <= 0 then
+							t:Destroy()
+						elseif d < 2.4 then
+							t.Color = Color3.fromRGB(232, 206, 142)
+							local drop = if d < 1.2 then 1.6 else 0.8
+							t.Position = Vector3.new(t.Position.X, top - drop - t.Size.Y / 2, t.Position.Z)
+						end
+					end
+				end
+			end
+			-- real water, as the level-1 pond's lobes
+			local terrain = workspace.Terrain
+			local c = (frame * CFrame.new(g[1], 0, g[2])).Position
+			local flat = CFrame.new(c.X, 0, c.Z)
+			local surface = top - 0.3
+			terrain:FillCylinder(flat + Vector3.new(0, surface - 8, 0), 4, g[3], Enum.Material.Sand)
+			terrain:FillCylinder(flat + Vector3.new(0, surface - 3, 0), 6, g[3] + 1, Enum.Material.Air)
+			terrain:FillCylinder(flat + Vector3.new(0, surface - 3, 0), 6, g[3] + 1, Enum.Material.Water)
+		end
+	end
+	-- the scenery where water or shore life now is (the lilies stay, they float)
+	for _, n in nature:GetChildren() do
+		if n:IsA("Model") and n.Name ~= "WaterLily" then
+			local q = frame:PointToObjectSpace(n:GetPivot().Position)
+			local clear = false
+			for _, g in GROW do
+				if level >= g[4] and Vector2.new(q.X - g[1], q.Z - g[2]).Magnitude < g[3] + 2.5 then
+					clear = true
+				end
+			end
+			for _, s in SHORE do
+				if level >= s[7] and Vector2.new(q.X - s[2], q.Z - s[3]).Magnitude < s[5] / 2 + 2 then
+					clear = true
+				end
+			end
+			if clear then
+				n.Parent = nil
+			end
+		end
+	end
+end
+
 -- how many slimes can fish at a level
 local function spots(level: number): number
 	if level >= 31 then
@@ -446,6 +542,45 @@ function PondStages.build(level: number, cell: CFrame, showcase: boolean?): Mode
 		)
 		mark.Transparency = 1
 		mark.CanCollide = false
+	end
+
+	-- the life round the pond (SHORE), in the area's frame (the dock's cell is DOCK_X along it); the
+	-- kit placer is the pantry's, handed over by PantryStages (which requires this module)
+	local area = cell * CFrame.new(-DOCK_X, 0, 0)
+	local place = PondStages.kitPlace
+	for _, s in SHORE do
+		if place and level >= s[7] then
+			local model = place(m, area, s[1], s[2], s[3], s[4], s[5], s[8])
+			if model and s[6] ~= 0 then
+				local box = model:GetBoundingBox()
+				local centre = CFrame.new(box.Position)
+				model:PivotTo(centre * CFrame.Angles(0, math.rad(s[6]), 0) * centre:ToObjectSpace(model:GetPivot()))
+			end
+		end
+	end
+	-- from 21 a small fishing jetty out into the new left lobe, in the dock's deck tier, two posts and
+	-- a bollard at its end
+	if level >= 21 then
+		local j = TIERS[at[1]]
+		local jx, jz0, jz1 = 15, -8.6, -3
+		local k = 0
+		local jz = jz0
+		while jz < jz1 do
+			k += 1
+			part(
+				m,
+				"JettyPlank",
+				Vector3.new(3, 0.5, 1.4),
+				area * CFrame.new(jx, DECK_Y, jz + 0.7),
+				j.planks[(k % 2) + 1],
+				j.deck
+			)
+			jz += 1.52
+		end
+		for _, s in { -1, 1 } do
+			pole(m, "JettyPost", area * CFrame.new(jx + s * 1.2, DECK_Y - 2, jz1 - 0.6), 4, 0.7, j.frame, j.frameMat)
+		end
+		pole(m, "JettyBollard", area * CFrame.new(jx + 1, DECK_Y + 0.75, jz1 - 0.5), 1, 0.6, j.frame, j.frameMat)
 	end
 
 	if showcase then

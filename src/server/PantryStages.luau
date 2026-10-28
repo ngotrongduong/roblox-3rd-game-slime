@@ -1397,5 +1397,6 @@ end
 PantryStages.part = part
 PantryStages.wedge = wedge
 PantryStages.place = place
+PondStages.kitPlace = place
 
 return PantryStages
