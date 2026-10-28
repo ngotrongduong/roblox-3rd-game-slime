@@ -69,11 +69,13 @@ local HEIGHT = {
 -- incubators stand outside its right fence.
 --   feed     back-left, the feed and rest corner, beside the hay store
 --   egg care back-right, the water and egg corner, just inside the side gate to the incubators
---   comfort  back-left behind the feeder, a quiet bed beside the shelter
+--   comfort  back-left at the front of the straw mat, facing the nests (the hay store and the
+--            feeder behind it against the back fence; ChatGPT's 3rd breeding review)
 --   warmth   against the right fence between the two right-hand nests, warming them (a flower box
 --            stands in the same place between the left-hand nests)
-local SLOT_AT = { { 17.3, 7.2 }, { -8.6, 4.8 }, { 16.4, 10.8 }, { -9.6, -5.2 } }
+local SLOT_AT = { { 17.6, 9 }, { -8.6, 4.8 }, { 15.2, 5.6 }, { -9.6, -5.2 } }
 local FOOT = { 2.6, 3, 3.6, 2.2 }
+local HAY = Vector3.new(14.8, 0, 11.4) -- the hay store, against the back fence
 local LIFT = { [3] = { [5] = 1 } } -- the cloud bed floats
 local FLOOR = 0.4 -- the pen's floor stands this far above the lawn; what is on it stands on its top
 -- the side gate in the right fence, toward the incubators
@@ -315,6 +317,48 @@ local function nestingBarn(m: Model, frame: CFrame, era: number)
 		)
 	end
 
+	-- lived in (ChatGPT's 3rd breeding review): a rolled sleeping mat at the back on the left, a
+	-- folded blanket on the right (two plump pillows on the slime mattress), the middle left open
+	local roll = part(
+		m,
+		"RolledMat",
+		Vector3.new(1.8, 0.7, 0.7),
+		at(bx + bw / 2 - 1.1, bedTop + 0.65, bz + bd / 2 - 0.7),
+		if era >= 4 then Color3.fromRGB(150, 200, 230) else Color3.fromRGB(214, 170, 96),
+		Enum.Material.SmoothPlastic
+	) :: Part
+	roll.Shape = Enum.PartType.Cylinder
+	if era == 5 then
+		for _, dx in { -1.2, 1.2 } do
+			local pillow = part(
+				m,
+				"Pillow",
+				Vector3.new(1.6, 0.7, 1.1),
+				at(bx + dx - 1.2, bedTop + 0.75, bz + bd / 2 - 0.8),
+				Color3.fromRGB(255, 240, 246),
+				Enum.Material.SmoothPlastic
+			) :: Part
+			pillow.Shape = Enum.PartType.Ball
+		end
+	else
+		part(
+			m,
+			"Blanket",
+			Vector3.new(1.7, 0.3, 1.1),
+			at(bx - bw / 2 + 1.2, bedTop + 0.45, bz + bd / 2 - 0.7),
+			Color3.fromRGB(196, 220, 255),
+			Enum.Material.SmoothPlastic
+		)
+		part(
+			m,
+			"Blanket",
+			Vector3.new(1.5, 0.22, 1),
+			at(bx - bw / 2 + 1.25, bedTop + 0.7, bz + bd / 2 - 0.7),
+			Color3.fromRGB(255, 214, 226),
+			Enum.Material.SmoothPlastic
+		)
+	end
+
 	-- posts (brick piers with caps and feet on the brick era, flanged steel from the steel era), the
 	-- beams round the top, knee braces at the open front
 	local postCol, postMat, pw = t.frame, t.frameMat, 0.55
@@ -453,7 +497,18 @@ local function nestingBarn(m: Model, frame: CFrame, era: number)
 			part(m, "CubbySide", Vector3.new(0.2, 1.7, 1.4), at(x + ex * 0.85, 1.35, cz), soft, softMat)
 		end
 		part(m, "CubbyTop", Vector3.new(1.9, 0.2, 1.4), at(x, 2.2, cz), soft, softMat)
-		part(m, "CubbyStraw", Vector3.new(1.5, 0.35, 1.2), at(x, 0.7, cz), straw, Enum.Material.SmoothPlastic)
+		if k == 2 then
+			part(
+				m,
+				"CubbyCushion",
+				Vector3.new(1.4, 0.5, 1.1),
+				at(x, 0.78, cz),
+				Color3.fromRGB(255, 196, 214),
+				Enum.Material.SmoothPlastic
+			)
+		else
+			part(m, "CubbyStraw", Vector3.new(1.5, 0.35, 1.2), at(x, 0.7, cz), straw, Enum.Material.SmoothPlastic)
+		end
 		if era == 5 then
 			part(m, "CubbyEdge", Vector3.new(1.9, 0.08, 0.08), at(x, 2.3, cz - 0.7), mint, Enum.Material.Neon).CastShadow =
 				false
@@ -573,6 +628,10 @@ function BreedingStages.build(area: Instance, frame: CFrame, level: number): Mod
 			skin(d, tiers[2], TIERS[tiers[2]].yard, TIERS[tiers[2]].yardMat)
 		elseif d.Name == "IncubatorPad" and d:IsA("BasePart") then
 			skin(d, tiers[4], tp.base, tp.baseMat)
+		elseif d.Name == "HayBale" and d:IsA("Model") then
+			-- the hay store stands against the back fence, the bed in front of it
+			local hp = frame:PointToObjectSpace(d:GetPivot().Position)
+			d:PivotTo(d:GetPivot() + frame:VectorToWorldSpace(Vector3.new(HAY.X - hp.X, 0, HAY.Z - hp.Z)))
 		end
 	end
 
@@ -714,7 +773,7 @@ function BreedingStages.build(area: Instance, frame: CFrame, level: number): Mod
 	flat("FeedMat", 11.4, 18.6, 3.4, 12.6, Color3.fromRGB(226, 192, 120), Enum.Material.SmoothPlastic)
 	flat("WaterMat", X0 + 0.4, -3.4, 3.4, 12.6, tfl.base, tfl.baseMat)
 	-- a second bale on the hay store, a water barrel by the trough
-	place(m, frame, "HayBale", 14.5, 8, 1.7, 2.4, 2.45)
+	place(m, frame, "HayBale", HAY.X, HAY.Z, 1.7, 2.4, 2.45)
 	place(m, frame, "WoodBarrel", -9.6, 10.6, 2.4, 1.8, FLOOR)
 	-- a flower box between the left-hand nests, planters inside the gate, pots at the shelter's front
 	place(m, frame, "Planter", 17.7, -5.2, 1.5, 2.2, FLOOR)
@@ -726,11 +785,165 @@ function BreedingStages.build(area: Instance, frame: CFrame, level: number): Mod
 		place(m, frame, "FlowerPot", BX + sx * (half + 0.9), BZ - 0.8, 1.8, 1.4, FLOOR)
 	end
 
+	-- signs of everyday life (ChatGPT's 3rd breeding review: "a nursery, not a showroom"); small,
+	-- few, and kept off the lane
+	local wood, woodMat = Color3.fromRGB(150, 104, 62), Enum.Material.Wood
+	local hay = Color3.fromRGB(232, 196, 120)
+	local metal = Color3.fromRGB(150, 156, 166)
+	local function bit(name: string, size: Vector3, cf: CFrame, col: Color3, mat: Enum.Material?): BasePart
+		local p = part(m, name, size, cf, col, mat or Enum.Material.SmoothPlastic)
+		p.CanCollide = false
+		p.CastShadow = false
+		return p
+	end
+	local function on(x: number, y: number, z: number): CFrame
+		return frame * CFrame.new(x, FLOOR + y, z)
+	end
+	-- the feed corner: loose hay by the store, a scoop by the feeder, a broom against the fence
+	for _, h in { { 12.9, 10.4, 0.4 }, { 13.4, 9.3, 2.2 } } do
+		wedge(
+			m,
+			"LooseHay",
+			Vector3.new(1.4, 0.45, 1),
+			on(h[1], 0.22, h[2]) * CFrame.Angles(0, h[3], 0),
+			hay,
+			Enum.Material.SmoothPlastic
+		)
+	end
+	bit("ScoopBowl", Vector3.new(0.7, 0.35, 0.5), on(17.8, 0.18, 11.4), if era >= 4 then metal else wood, woodMat)
+	bit("ScoopHandle", Vector3.new(0.15, 0.15, 0.9), on(17.8, 0.25, 12) * CFrame.Angles(0.2, 0, 0), wood, woodMat)
+	bit("BroomStick", Vector3.new(0.15, 3.2, 0.15), on(18.4, 1.55, 6.4) * CFrame.Angles(0, 0, -0.22), wood, woodMat)
+	bit("BroomHead", Vector3.new(0.4, 0.7, 1.1), on(18.0, 0.35, 6.4), hay)
+	-- the water side: a bucket by the trough, a damp patch before it; the egg side dry, on a slab,
+	-- and a sign with an egg and an arrow by the side gate, pointing out to the incubators
+	local bucket = bit(
+		"Bucket",
+		Vector3.new(1, 0.9, 0.9),
+		on(-4.2, 0.5, 9.8) * CFrame.Angles(0, 0, math.pi / 2),
+		if era >= 3 then metal else wood,
+		if era >= 3 then Enum.Material.Metal else woodMat
+	) :: Part
+	bucket.Shape = Enum.PartType.Cylinder
+	local damp = bit(
+		"DampPatch",
+		Vector3.new(0.04, 3, 1.4),
+		on(-6, 0.02, 6.2) * CFrame.Angles(0, 0, math.pi / 2),
+		Color3.fromRGB(90, 120, 150)
+	) :: Part
+	damp.Transparency = 0.6
+	bit("EggSlab", Vector3.new(3.4, 0.1, 3.4), on(-8.6, 0.05, 4.8), Color3.fromRGB(240, 226, 196))
+	part(m, "SignPost", Vector3.new(0.25, 3, 0.25), on(-10.3, 1.5, -2.4), wood, woodMat)
+	local board = on(-10.3, 2.7, -2.4) * CFrame.Angles(0, -math.pi / 2, 0) -- its front to the pen
+	bit(
+		"SignBoard",
+		Vector3.new(1.8, 1.1, 0.15),
+		board * CFrame.new(0, 0, -0.15),
+		if era >= 4 then metal else wood,
+		woodMat
+	)
+	local egg = bit(
+		"SignEgg",
+		Vector3.new(0.5, 0.7, 0.12),
+		board * CFrame.new(0.35, 0, -0.25),
+		Color3.fromRGB(255, 250, 240)
+	) :: Part
+	egg.Shape = Enum.PartType.Ball
+	wedge(
+		m,
+		"SignArrow",
+		Vector3.new(0.1, 0.5, 0.6),
+		board * CFrame.new(-0.45, 0, -0.25) * CFrame.Angles(0, math.pi / 2, math.pi / 2),
+		Color3.fromRGB(240, 132, 168),
+		Enum.Material.SmoothPlastic
+	)
+	-- the nests: a tuft of straw at each, and the era's small marker on the front of the rim
+	local accents = {
+		Color3.fromRGB(255, 196, 214),
+		Color3.fromRGB(196, 220, 255),
+		Color3.fromRGB(255, 226, 150),
+		Color3.fromRGB(200, 240, 210),
+	}
+	for i = 1, nests do
+		local n = NESTS[i]
+		local side = if n[1] > BX then 1 else -1
+		wedge(
+			m,
+			"NestStraw",
+			Vector3.new(1.2, 0.4, 0.9),
+			on(n[1] + side * 2.9, 0.2, n[2] + (i % 2) * 1.2 - 0.6) * CFrame.Angles(0, side * 1.2 + i, 0),
+			hay,
+			Enum.Material.SmoothPlastic
+		)
+		local rim = on(n[1], 1.9, n[2] - 2.45)
+		if era == 2 then
+			bit("NestRibbon", Vector3.new(1.2, 0.35, 0.12), rim, accents[i])
+		elseif era == 3 then
+			part(
+				m,
+				"NestMarker",
+				Vector3.new(0.7, 0.6, 0.4),
+				on(n[1], 0.35, n[2] - 2.9),
+				TIERS[3].walls,
+				TIERS[3].wallMat
+			)
+		elseif era == 4 then
+			bit("NestTab", Vector3.new(0.8, 0.45, 0.1), rim, metal, Enum.Material.Metal)
+			bit("NestTabStripe", Vector3.new(0.8, 0.12, 0.12), rim * CFrame.new(0, 0, -0.03), accents[i])
+		elseif era == 5 then
+			bit("NestGlow", Vector3.new(1.4, 0.1, 0.1), rim, Color3.fromRGB(120, 230, 200), Enum.Material.Neon)
+		end
+	end
+	-- the floor: a slime's shiny trail mark by the right nests, pebbles in the front-left corner
+	local trail = bit(
+		"SlimeMark",
+		Vector3.new(0.04, 1.3, 0.9),
+		on(-0.8, 0.02, -5.2) * CFrame.Angles(0, 0, math.pi / 2),
+		Color3.fromRGB(150, 230, 200)
+	) :: Part
+	trail.Shape = Enum.PartType.Cylinder
+	trail.Transparency = 0.45
+	for k, o in { { 17.6, -11.2 }, { 18.1, -10.6 }, { 17.2, -10.4 } } do
+		local stone = bit(
+			"Pebble",
+			Vector3.one * (0.5 + k * 0.08),
+			on(o[1], 0.2, o[2]),
+			Color3.fromRGB(176, 170, 160),
+			Enum.Material.Slate
+		) :: Part
+		stone.Shape = Enum.PartType.Ball
+	end
+	-- the gate: a heart-and-egg plaque on its left post, a little bell on its right one
+	local plaque = frame * CFrame.new(GATE1, 4.3, Z0 - 0.55)
+	bit("GatePlaque", Vector3.new(1.3, 1.3, 0.15), plaque, tg.walls, tg.wallMat)
+	local pegg = bit(
+		"PlaqueEgg",
+		Vector3.new(0.5, 0.7, 0.1),
+		plaque * CFrame.new(0.25, 0, -0.1),
+		Color3.fromRGB(255, 250, 240)
+	) :: Part
+	pegg.Shape = Enum.PartType.Ball
+	local pheart = bit(
+		"PlaqueHeart",
+		Vector3.new(0.45, 0.45, 0.1),
+		plaque * CFrame.new(-0.3, 0.05, -0.1) * CFrame.Angles(0, 0, math.rad(45)),
+		Color3.fromRGB(240, 132, 168)
+	)
+	pheart.Name = "PlaqueHeart"
+	bit("BellArm", Vector3.new(0.12, 0.12, 0.9), frame * CFrame.new(GATE0, 5.2, Z0 - 0.7), wood, woodMat)
+	local bell = bit(
+		"Bell",
+		Vector3.new(0.6, 0.6, 0.6),
+		frame * CFrame.new(GATE0, 4.85, Z0 - 1.1),
+		if era == 5 then Color3.fromRGB(120, 230, 200) else Color3.fromRGB(226, 180, 70),
+		if era == 5 then Enum.Material.Neon else Enum.Material.Metal
+	) :: Part
+	bell.Shape = Enum.PartType.Ball
+
 	-- the care props
 	for j = 1, 4 do
 		local e = props[j]
 		if e > 0 then
-			local lift = FLOOR + (LIFT[j] and LIFT[j][e] or 0)
+			local lift = FLOOR + (LIFT[j] and LIFT[j][e] or 0) + (if j == 2 then 0.1 else 0)
 			if j == 3 and e == 5 then
 				-- the floating cloud bed, built: a plump pad ringed with cloud puffs, a pink cushion in
 				-- it (ChatGPT's 2nd breeding review: the kit model read as a ring on the floor)
