@@ -24,14 +24,14 @@ function Food.total(stock: { [string]: number }): number
 end
 
 function Food.add(stock: { [string]: number }, item: string, amount: number, capacity: number): number
-	if Config.Food.Raw[item] == nil and Config.Food.Dishes[item] == nil then return 0 end
+	if (Config.Food.Raw :: any)[item] == nil and (Config.Food.Dishes :: any)[item] == nil then return 0 end
 	local moved = math.min(math.max(0, math.floor(amount)), math.max(0, capacity - Food.total(stock)))
 	if moved > 0 then stock[item] = (stock[item] or 0) + moved end
 	return moved
 end
 
 function Food.take(stock: { [string]: number }, item: string, amount: number): number
-	if Config.Food.Raw[item] == nil and Config.Food.Dishes[item] == nil then return 0 end
+	if (Config.Food.Raw :: any)[item] == nil and (Config.Food.Dishes :: any)[item] == nil then return 0 end
 	local moved = math.min(math.max(0, math.floor(amount)), math.max(0, stock[item] or 0))
 	if moved > 0 then
 		local remaining = (stock[item] or 0) - moved
@@ -42,7 +42,7 @@ end
 
 function Food.bestDish(stock: { [string]: number }): string?
 	for _, id in Config.Food.DishOrder do
-		local dish = Config.Food.Dishes[id]
+		local dish = (Config.Food.Dishes :: any)[id]
 		local ready = true
 		for item, count in dish.ingredients do
 			if (stock[item] or 0) < count then ready = false; break end
@@ -55,7 +55,7 @@ end
 -- A kitchen orders only a dish it could complete using the counter and current pantry.
 function Food.ingredientsWanted(farm: Farm): { [string]: number }
 	for _, id in Config.Food.DishOrder do
-		local recipe = Config.Food.Dishes[id]
+		local recipe = (Config.Food.Dishes :: any)[id]
 		local possible = true
 		for item, count in recipe.ingredients do
 			if (farm.counter[item] or 0) + (farm.storehouse[item] or 0) < count then
@@ -100,8 +100,8 @@ function Food.eat(farm: Farm, slimeId: string, now: number): string?
 	if not item then return nil end
 	local stock = if location == "fridge" then farm.fridge else farm.storehouse
 	if Food.take(stock, item, 1) == 0 then return nil end
-	local dish = Config.Food.Dishes[item]
-	slime.needs = Needs.eatValue(slime.needs, if dish then dish.fullness else Config.Food.Raw[item])
+	local dish = (Config.Food.Dishes :: any)[item]
+	slime.needs = Needs.eatValue(slime.needs, if dish then dish.fullness else (Config.Food.Raw :: any)[item])
 	if dish then
 		slime.buff = { stat = dish.stat, percent = dish.percent, untilTime = now + Config.Food.BuffSeconds }
 	end
