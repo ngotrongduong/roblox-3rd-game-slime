@@ -85,7 +85,7 @@ function SlimeLook.build(attrs: { [string]: any }): Model
 	if not base then
 		local fallback = standIn()
 		local scale = attrs.Scale
-		fallback:ScaleTo(C.BodyHeight * (if type(scale) == "number" then math.clamp(scale, 0.1, 1) else 1))
+		fallback:ScaleTo(C.BodyHeight * (if type(scale) == "number" then math.clamp(scale, C.MinimumBodyScale, 1) else 1))
 		return fallback
 	end
 
@@ -179,12 +179,12 @@ function SlimeLook.build(attrs: { [string]: any }): Model
 	end
 	model.WorldPivot = CFrame.new()
 	local scale = attrs.Scale
-	model:ScaleTo(C.BodyHeight * (if type(scale) == "number" then math.clamp(scale, 0.1, 1) else 1))
+	model:ScaleTo(C.BodyHeight * (if type(scale) == "number" then math.clamp(scale, C.MinimumBodyScale, 1) else 1))
 	if attrs.Ghost == true then
 		for _, item in model:GetDescendants() do
 			if item:IsA("BasePart") then
-				item.Transparency = math.max(item.Transparency, 0.55)
-				item.Color = item.Color:Lerp(Color3.new(1, 1, 1), 0.5)
+				item.Transparency = math.max(item.Transparency, C.GhostTransparency)
+				item.Color = item.Color:Lerp(Color3.new(1, 1, 1), C.GhostWhiten)
 			end
 		end
 	end
