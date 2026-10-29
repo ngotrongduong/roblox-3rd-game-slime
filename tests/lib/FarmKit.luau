@@ -22,19 +22,21 @@ function FarmKit.slime(id: string, opts: { [string]: any }?): any
 	return {
 		id = id,
 		name = o.name or id,
-		seed = 1,
+		seed = o.seed or 1,
 		assetId = "slime.base." .. Genetics.visibleColour(appearance, genotype),
 		stats = o.stats or { attack = 1, defence = 1, speed = 1, hp = 10 },
 		colourGenotype = genotype,
 		visibleColour = Genetics.visibleColour(appearance, genotype),
 		appearanceMutation = appearance,
 		isFavourite = false,
-		needs = FarmState.fullNeeds(),
+		needs = o.needs or FarmState.fullNeeds(),
+		trait = FarmState.traitForSeed(o.seed or 1),
+		friends = {},
+		buff = nil,
+		ghostUntil = o.ghostUntil,
 		createdAt = o.createdAt or 0,
 		breedReadyAt = o.breedReadyAt or 0,
 		loadout = {},
-		fallen = o.fallen == true,
-		previousLoadout = nil,
 	}
 end
 
