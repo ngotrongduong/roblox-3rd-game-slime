@@ -25,7 +25,7 @@ end
 
 function Food.add(stock: { [string]: number }, item: string, amount: number, capacity: number): number
 	if (Config.Food.Raw :: any)[item] == nil and (Config.Food.Dishes :: any)[item] == nil then return 0 end
-	local amountToAdd = if amount == amount and amount ~= math.huge and amount ~= -math.huge
+	local amountToAdd = if type(amount) == "number" and amount == amount and amount ~= math.huge and amount ~= -math.huge
 		then math.max(0, math.floor(amount)) else 0
 	local moved = math.min(amountToAdd, math.max(0, capacity - Food.total(stock)))
 	if moved > 0 then stock[item] = math.max(0, stock[item] or 0) + moved end
