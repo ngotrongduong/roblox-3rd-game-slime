@@ -209,8 +209,12 @@ function Brain.choose(farm: Farm, slimeId: string, ctx: Context, now: number, rn
 				break
 			end
 		end
-		if not occupied and not (ctx.reserved and ctx.reserved["incubator:" .. slot]) then
-			freeIncubator = slot
+		if not occupied then
+			-- The shared incubator placer chooses the first free slot; do not skip a
+			-- claimed first slot and send a second courier to a later one.
+			if not (ctx.reserved and ctx.reserved["incubator:" .. slot]) then
+				freeIncubator = slot
+			end
 			break
 		end
 	end
