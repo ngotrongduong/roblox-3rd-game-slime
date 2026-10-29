@@ -54,7 +54,7 @@ Config.Breeding = {
 	-- How many fresh ids to ask for before giving up (a counter or GUID never collides).
 	IdAttempts = 32,
 	-- Two places at level 1, one extra at each milestone.
-	SlotLevels = { 11, 21, 31, 41 },
+	SlotLevels = { 21, 41 },
 	BasePlaces = 2,
 	CourtshipSeconds = 60,
 	LayEnergy = 30,
@@ -236,6 +236,8 @@ Config.Village = {
 	},
 	SpotSearchStuds = 30,
 	SpotDoorOffset = 2,
+	-- Near-door candidates before wider/forward detours if the obvious point is blocked.
+	SpotOutsideOffsets = { { 0, 0 }, { 0, 2 }, { -3, 2 }, { 3, 2 }, { -6, 4 }, { 6, 4 } },
 	SpotCounterOffsetX = -2,
 	SpotFridgeOffsetX = 4,
 	SpotBoxOffsetX = -4,
@@ -347,6 +349,39 @@ Config.Work = {
 	FishingYield = 1,
 	GardenYield = 3,
 	GardenCarrotChance = 0.5,
+	SpeedBonusPerSpd = 0.05,
+	SpeedBonusMax = 3,
+	GardenPlotCount = 20,
+	GardenMaxPlotCount = 60,
+	GardenStageSeconds = 75,
+	GardenDryGrowthFactor = 0.15,
+	GardenWaterBoostSeconds = 12,
+	-- Six tending actions per harvest: 3600 / (6 * 13.5) ~= 44 vegetables/hour, near the old 45.
+	GardenActionSeconds = 13.5,
+	FishCastSeconds = 3,
+	FishReelSeconds = 3,
+	WorkDropSeconds = 2,
+	GardenCropScaleStart = 0.78,
+	GardenCropGrowSteps = 5,
+	GardenCropGrowStepSeconds = 0.06,
+	GardenCropLift = 0.2,
+	WorkToolOffset = 0.55,
+	WorkRodTiltDegrees = 26,
+	WorkHoeTiltDegrees = 40,
+	WorkWaterTiltDegrees = 70,
+	WorkBobHz = 1.2,
+	WorkBobStuds = 0.12,
+	WorkShakeHz = 2.6,
+	WorkShakeDegrees = 14,
+	WorkDropsPerWater = 3,
+	WorkWaterDropTexture = "rbxasset://textures/particles/sparkles_main.dds",
+	WorkWaterDropColour = { 130, 205, 255 },
+	WorkWaterDropSize = 0.14,
+	WorkWaterDropLifetime = 0.4,
+	WorkWaterDropSpeed = 1.6,
+	WorkWaterDropGravity = 5,
+	WorkDropDistance = 0.65,
+	WorkToolScale = 0.55,
 	KitchenYield = 1,
 }
 
@@ -485,10 +520,7 @@ Config.Slime = {
 	-- An emotion swap swells the face by PopSize for PopSeconds.
 	PopSeconds = 0.15,
 	PopSize = 0.08,
-	-- The emote icon pops up for EmoteShowSeconds when a feeling starts, fading over the last EmoteFadeSeconds (the
-	-- owner, 2026-10-29: a pop-up at the event, not a sign that stays). Lasting effects: a z rises every ZzzEverySeconds
-	-- and lives ZzzLifeSeconds (sleep, sleepy); hearts likewise (loved); OrbitStars stars circle the head at OrbitHz
-	-- turns a second (dizzy).
+	-- Emotes pop once; sleep, love and dizzy effects keep their own short lifetimes.
 	EmoteShowSeconds = 1.8,
 	EmoteFadeSeconds = 0.45,
 	ZzzEverySeconds = 0.9,
@@ -520,7 +552,8 @@ Config.Save = {
 	-- 2: discoveries gained the material bucket (docs/MATERIALS.md).
 	-- 3: appearance determines colour genes; the pattern gene is retired.
 	-- 4: living-village needs, jobs, pantry, pairs and incubators replace legacy farm fields.
-	SchemaVersion = 4,
+	-- 5: plot-by-plot growing vegetables with safe migration from the old timed output.
+	SchemaVersion = 5,
 	-- A stored envelope without a version is this one.
 	FirstSchemaVersion = 1,
 

@@ -21,6 +21,8 @@ type Entry = {
 	carry: Model?,
 	lastAction: string,
 	lastEmotion: string,
+	lastPhase: string,
+	rod: Model?,
 }
 type Village = {
 	root: Folder,
@@ -98,6 +100,14 @@ local function clearEntry(entry: Entry)
 	if entry.actor then
 		SlimeActor.destroy(entry.actor)
 	end
+	if entry.rod then
+		for _, piece in entry.rod:GetDescendants() do
+			if piece:IsA("BasePart") then
+				piece.LocalTransparencyModifier = 0
+			end
+		end
+		entry.rod = nil
+	end
 	if entry.model then
 		entry.model:Destroy()
 	end
@@ -166,6 +176,7 @@ local function refreshLook(entry: Entry)
 	entry.signature = signature
 	entry.lastEmotion = ""
 	entry.lastAction = ""
+	entry.lastPhase = ""
 end
 
 local function actionMotion(action: string, working: string): string?
@@ -254,6 +265,7 @@ local function animate(village: Village, entry: Entry, now: number)
 		model:PivotTo(cf)
 	end
 	local emotion = stringAttr(entry.config, "Emotion", "normal")
+	local phase = stringAttr(entry.config, "WorkPhase", "")
 	local action = stringAttr(entry.config, "Action", "idle")
 	local face = if ghost
 		then "sad"
@@ -261,13 +273,24 @@ local function animate(village: Village, entry: Entry, now: number)
 			then "eating"
 			else if not moving and action == "sleep" then "sleep" else emotion
 	if actor then
-		if entry.lastEmotion ~= face or entry.lastAction ~= action then
+		if entry.lastEmotion ~= face or entry.lastAction ~= action or entry.lastPhase ~= phase then
 			SlimeActor.setEmotion(actor, face)
-			local motion = actionMotion(action, stringAttr(entry.config, "Working", ""))
+			local motion = if action == "work"
+					and (
+						phase == "cast"
+						or phase == "wait"
+						or phase == "reel"
+						or phase == "hoe"
+						or phase == "plant"
+						or phase == "water"
+						or phase == "harvest"
+					)
+				then "work" .. string.upper(string.sub(phase, 1, 1)) .. string.sub(phase, 2)
+				else actionMotion(action, stringAttr(entry.config, "Working", ""))
 			if motion then
 				SlimeActor.playMotion(actor, motion)
 			end
-			entry.lastEmotion, entry.lastAction = face, action
+			entry.lastEmotion, entry.lastAction, entry.lastPhase = face, action, phase
 		end
 		if moving then
 			SlimeActor.lookAt(actor, to)
@@ -284,36 +307,141 @@ local function animate(village: Village, entry: Entry, now: number)
 		then
 			SlimeActor.lookAt(actor, partnerPosition(village, entry))
 		elseif action == "work" and stringAttr(entry.config, "Working", "") == "fishing" then
-			SlimeActor.lookAt(actor, to + (to - from))
+			local map = workspace:FindFirstChild("Map")
+			local plot = if map then map:FindFirstChild("Plot" .. Config.Village.DevPlot) else nil
+			local pond = if plot then plot:FindFirstChild("FishingPondL1") else nil
+			local stage = if pond then pond:FindFirstChild("AreaStage") else nil
+			local marker = if stage
+				then stage:FindFirstChild("WorkSpot" .. number(entry.config, "WorkSlot", 1))
+				else nil
+			if marker and marker:IsA("BasePart") then
+				-- PondStage dock runs toward its +Z far end, opposite the marker's LookVector.
+				local direction = -marker.CFrame.LookVector
+				SlimeActor.lookAt(actor, marker.Position + direction * C.BodyHeight)
+			else
+				SlimeActor.lookAt(actor, to + (to - from))
+			end
 		else
 			SlimeActor.lookAt(actor, nil)
 		end
 	end
 
 	local carryName = stringAttr(entry.config, "Carry", "")
-	if carryName ~= entry.carryName then
+	local tool = if action == "work"
+			and not moving
+			and carryName == ""
+		then (if phase == "cast"
+				or phase == "wait"
+				or phase == "reel"
+			then "FishingRod"
+			else if phase == "hoe" then "Hoe" else if phase == "water" then "WateringCan" else "")
+		else ""
+	local shown = if carryName ~= "" then carryName else tool
+	if shown ~= entry.carryName then
 		if actor then
 			SlimeActor.detach(actor)
 		end
 		if entry.carry then
 			entry.carry:Destroy()
 		end
-		entry.carryName = carryName
+		entry.carryName = shown
 		entry.carry = nil
-		if carryName ~= "" then
-			local carried = asset(carryName)
+		if shown ~= "" then
+			local carried = asset(shown)
 			if carried then
-				carried:ScaleTo(C.CarryScale)
+				carried:ScaleTo(if tool ~= "" then Config.Work.WorkToolScale else C.CarryScale)
 				carried.Parent = renderFolder
+				if tool == "WateringCan" then
+					local spout = carried:FindFirstChildWhichIsA("BasePart", true)
+					if spout and spout:IsA("BasePart") then
+						local drop = Instance.new("Attachment")
+						drop.Name = "WaterDrops"
+						drop.Position = Vector3.new(0, -spout.Size.Y / 2, 0)
+						drop.Parent = spout
+						local emitter = Instance.new("ParticleEmitter")
+						emitter.Name = "Watering"
+						-- Built-in Roblox particle texture: no invented art or image upload needed.
+						emitter.Texture = Config.Work.WorkWaterDropTexture
+						local rgb = Config.Work.WorkWaterDropColour
+						emitter.Color = ColorSequence.new(Color3.fromRGB(rgb[1], rgb[2], rgb[3]))
+						emitter.Size = NumberSequence.new(Config.Work.WorkWaterDropSize)
+						emitter.Lifetime = NumberRange.new(Config.Work.WorkWaterDropLifetime)
+						emitter.Speed = NumberRange.new(Config.Work.WorkWaterDropSpeed)
+						emitter.Acceleration = Vector3.new(0, -Config.Work.WorkWaterDropGravity, 0)
+						emitter.Rate = Config.Work.WorkDropsPerWater
+						emitter.Parent = drop
+					end
+				end
 			end
 			entry.carry = carried
 			if actor then
-				SlimeActor.attach(actor, carried, CFrame.new())
+				local offset = if tool == "WateringCan"
+					then CFrame.new(0, Config.Work.WorkToolOffset, 0) * CFrame.Angles(
+						0,
+						0,
+						math.rad(Config.Work.WorkWaterTiltDegrees)
+					)
+					else if tool == "Hoe"
+						then CFrame.new(0, -C.BodyHeight, -Config.Work.WorkToolOffset) * CFrame.Angles(
+							math.rad(Config.Work.WorkHoeTiltDegrees),
+							0,
+							0
+						)
+						else if tool == "FishingRod"
+							then CFrame.new(0, -C.BodyHeight, -Config.Work.WorkToolOffset) * CFrame.Angles(
+								math.rad(Config.Work.WorkRodTiltDegrees),
+								0,
+								0
+							)
+							else CFrame.new()
+				SlimeActor.attach(actor, carried, offset)
 			end
 		end
 	end
 	if entry.carry and not actor then
 		entry.carry:PivotTo(CFrame.new(pos) * CFrame.new(0, C.BodyHeight * C.CarryHeight, 0))
+	end
+	-- The place's real rod returns to its stand on departure; only this client hides it in use.
+	local activeRod: Model? = nil
+	if stringAttr(entry.config, "Working", "") == "fishing" then
+		local map = workspace:FindFirstChild("Map")
+		local plot = if map then map:FindFirstChild("Plot" .. Config.Village.DevPlot) else nil
+		local pond = if plot then plot:FindFirstChild("FishingPondL1") else nil
+		local stage = if pond then pond:FindFirstChild("AreaStage") else nil
+		local marker = if stage then stage:FindFirstChild("WorkSpot" .. number(entry.config, "WorkSlot", 1)) else nil
+		if stage and marker and marker:IsA("BasePart") then
+			local nearest: Model? = nil
+			local distance = math.huge
+			for _, stand in stage:GetChildren() do
+				if stand:IsA("Model") and stand.Name == "RodStand" then
+					local d = (stand:GetPivot().Position - marker.Position).Magnitude
+					if d < distance then
+						distance, nearest = d, stand
+					end
+				end
+			end
+			local rod = if nearest then nearest:FindFirstChild("FishingRod") else nil
+			if rod and rod:IsA("Model") then
+				activeRod = rod
+			end
+		end
+	end
+	if entry.rod ~= activeRod then
+		if entry.rod then
+			for _, part in entry.rod:GetDescendants() do
+				if part:IsA("BasePart") then
+					part.LocalTransparencyModifier = 0
+				end
+			end
+		end
+		entry.rod = activeRod
+	end
+	if entry.rod then
+		for _, part in entry.rod:GetDescendants() do
+			if part:IsA("BasePart") then
+				part.LocalTransparencyModifier = if tool == "FishingRod" then 1 else 0
+			end
+		end
 	end
 end
 
@@ -361,8 +489,10 @@ local function addSlime(village: Village, child: Instance)
 		lastUpdate = 0,
 		lastAction = "",
 		lastEmotion = "",
+		lastPhase = "",
 		carryName = "",
 		carry = nil,
+		rod = nil,
 	}
 	village.slimes[child] = entry
 	for _, name in { "Look", "Colour", "Material", "DualId", "SecretId", "Ghost", "Scale" } do

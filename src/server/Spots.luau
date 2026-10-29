@@ -1,6 +1,7 @@
 --!strict
 -- Prefer true interaction markers; use existing prop geometry when a stage has no markers.
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local PathfindingService = game:GetService("PathfindingService")
 local Config = require(ReplicatedStorage.Shared.Config)
 local Layout = require(ReplicatedStorage.Shared.Layout)
 
@@ -75,6 +76,42 @@ local function near(container: Instance?, names: { string }, centre: Vector3): V
 	return nearest
 end
 
+-- Service markers may be the *inside* pivot of a counter or a door.
+-- Move them to the path-facing side of the whole building, not the pivot of that prop.
+local function outside(model: Instance?, position: Vector3?, plaza: Vector3): Vector3?
+	if not model or not model:IsA("Model") or not position then
+		return position
+	end
+	-- Use the building pivot's facing, not the world-aligned bounding-box rotation.
+	local cf, size = model:GetPivot(), model:GetExtentsSize()
+	local p = cf:PointToObjectSpace(position)
+	local frontZ = -size.Z / 2 - Config.Village.SpotDoorOffset
+	local x = math.clamp(p.X, -size.X / 2, size.X / 2)
+	local nearest: Vector3? = nil
+	-- Test the nearest door-facing points first; the kitchen counter and fridge used to target
+	-- their interior pivots, making every path from the plaza fail.
+	for _, offset in Config.Village.SpotOutsideOffsets do
+		local candidate =
+			cf:PointToWorldSpace(Vector3.new(math.clamp(x + offset[1], -size.X / 2, size.X / 2), 0, frontZ - offset[2]))
+		candidate = Vector3.new(candidate.X, Config.Map.GroundY, candidate.Z)
+		nearest = nearest or candidate
+		local path = PathfindingService:CreatePath({
+			AgentRadius = Config.Village.PathMinRadius,
+			AgentHeight = Config.Village.PathHeightPerScale,
+			AgentCanJump = false,
+			WaypointSpacing = Config.Village.PathWaypointStuds,
+			Costs = { Water = Config.Village.PathWaterCost },
+		})
+		local ok = pcall(function()
+			path:ComputeAsync(plaza, candidate)
+		end)
+		if ok and path.Status == Enum.PathStatus.Success then
+			return candidate
+		end
+	end
+	return nearest
+end
+
 local function front(model: Instance?): Vector3?
 	if model and model:IsA("Model") then
 		-- Kit buildings face into the village; put feet on the door side, not at the pivot.
@@ -108,6 +145,9 @@ function Spots.build(plotNumber: number, plot: Instance?): { [string]: Spot }
 			position = frames[area] or frames.plaza
 			fallback += 1
 			table.insert(fallbackNames, id)
+		end
+		if id == "storehouse" or id == "counter" or id == "fridge" then
+			position = outside(container, position, frames.plaza)
 		end
 		result[id] = plain(id, area, position :: Vector3)
 	end
@@ -163,6 +203,14 @@ function Spots.build(plotNumber: number, plot: Instance?): { [string]: Spot }
 		add("box:" .. area, area, model, spots.Box, approximate)
 	end
 
+	local gardenStage = if garden then garden:FindFirstChild("AreaStage") else nil
+	local stageCount = if gardenStage then gardenStage:GetAttribute("CropPlots") else nil
+	local cropCount = if type(stageCount) == "number"
+		then math.clamp(math.floor(stageCount), 1, Config.Work.GardenMaxPlotCount)
+		else Config.Work.GardenPlotCount
+	for index = 1, cropCount do
+		add("crop:" .. index, "garden", garden, { "CropPlot" .. index }, nil)
+	end
 	add("breeding", "breeding", breeding, { "Entrance", "Nest1" }, front(breeding))
 	add("nursery", "breeding", breeding, spots.Nursery, nil)
 	for index, name in spots.Nest do

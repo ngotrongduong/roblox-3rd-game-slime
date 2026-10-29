@@ -5,6 +5,7 @@ local Config = if script then require(script.Parent.Config) else require("./Conf
 local FarmState = if script then require(script.Parent.FarmState) else require("./FarmState")
 local Food = if script then require(script.Parent.Food) else require("./Food")
 local Growth = if script then require(script.Parent.Growth) else require("./Growth")
+local GardenPlots = if script then require(script.Parent.GardenPlots) else require("./GardenPlots")
 local Hatching = if script then require(script.Parent.Hatching) else require("./Hatching")
 local Luck = if script then require(script.Parent.Luck) else require("./Luck")
 local Needs = if script then require(script.Parent.Needs) else require("./Needs")
@@ -16,7 +17,15 @@ local Training = if script then require(script.Parent.Training) else require("./
 
 type Farm = typeof(FarmState.newFarm(0))
 type Rng = typeof(Rng.new(0))
-export type Event = { kind: string, item: string?, slimeId: string?, eggId: string? }
+export type Event = {
+	kind: string,
+	item: string?,
+	slimeId: string?,
+	eggId: string?,
+	area: string?,
+	plot: number?,
+	phase: string?,
+}
 export type Options = { errands: boolean, workReady: { [string]: string }?, courtReady: { [number]: boolean }? }
 local VillageSim = {}
 
@@ -68,11 +77,48 @@ local function doWork(
 	events: { Event },
 	workReady: { [string]: string }?
 )
+	local plots = farm.work.garden.plots
+	if plots then
+		GardenPlots.grow(plots, seconds)
+	end
+	local reservedPlots: { [number]: boolean } = {}
+	for _, slot in farm.work.garden.slots do
+		if slot.plot and slot.task then
+			reservedPlots[slot.plot] = true
+		end
+	end
 	for _, areaId in Config.Work.Areas do
 		local workArea = (farm.work :: any)[areaId]
 		local level = (farm.areas :: any)[areaId].level
 		local cycle = Stations.cycleSeconds(areaId, level)
 		for slotIndex, slot in workArea.slots do
+			if areaId == "garden" and plots and slot.task and slot.plot then
+				if workReady == nil then
+					-- A logged-out worker's saved chore is finished in abstract simulation.
+					local crop =
+						GardenPlots.apply(plots, slot.plot, slot.task, rng:next() < Config.Work.GardenCarrotChance)
+					if crop then
+						if Food.add(workArea.box, crop, 1, Config.Work.BoxCapacity) == 0 then
+							slot.pending = crop
+						end
+						local event: Event = { kind = "collected", area = "garden", item = crop, plot = slot.plot }
+						table.insert(events, event)
+					end
+					slot.task, slot.plot = nil, nil
+				else
+					continue
+				end
+			end
+			if slot.pending then
+				-- On reconnect/offline the missing actor must never make an earned item vanish.
+				-- Deliver it to the bin as soon as there is room, or keep the pending item saved.
+				if workReady == nil and Food.add(workArea.box, slot.pending, 1, Config.Work.BoxCapacity) > 0 then
+					slot.pending = nil
+				end
+				if slot.pending then
+					continue
+				end
+			end
 			local worker = Stations.activeWorker(farm, slot, now)
 			if
 				not worker
@@ -87,10 +133,68 @@ local function doWork(
 			then
 				continue
 			end
-			local progress = slot.progress + math.max(0, seconds) * Needs.workFactor(worker.needs)
+			local progress = slot.progress
+				+ math.max(0, seconds)
+					* Needs.workFactor(worker.needs)
+					/ Stations.speedTimeFactor(worker.stats.speed)
+			if areaId == "garden" and plots then
+				local actionSeconds = Config.Work.GardenActionSeconds
+					* Config.Work.CycleLevelFactor ^ (level - Config.Village.StartLevel)
+				local iterations = 0
+				while progress >= actionSeconds and iterations < Config.Work.GardenPlotCount do
+					iterations += 1
+					local index, action = GardenPlots.choose(plots, reservedPlots)
+					if not index or not action then
+						progress = 0
+						break
+					end
+					if action == "harvest" and Food.total(workArea.box) >= Config.Work.BoxCapacity then
+						progress = actionSeconds
+						break
+					end
+					if workReady then
+						-- A live chore is recorded now but changes the crop only after its visible action.
+						slot.plot, slot.task = index, action
+						reservedPlots[index] = true
+						local event: Event = {
+							kind = "gardenAction",
+							area = "garden",
+							slimeId = worker.id,
+							plot = index,
+							phase = action,
+						}
+						table.insert(events, event)
+					else
+						local crop =
+							GardenPlots.apply(plots, index, action, rng:next() < Config.Work.GardenCarrotChance)
+						if crop then
+							Food.add(workArea.box, crop, 1, Config.Work.BoxCapacity)
+							table.insert(
+								events,
+								{ kind = "collected", area = "garden", item = crop, slimeId = worker.id, plot = index }
+							)
+						else
+							local event: Event = {
+								kind = "gardenAction",
+								area = "garden",
+								slimeId = worker.id,
+								plot = index,
+								phase = action,
+							}
+							table.insert(events, event)
+						end
+					end
+					progress -= actionSeconds
+					if slot.task then
+						break
+					end
+				end
+				slot.progress = progress
+				continue
+			end
 			while progress >= cycle do
 				-- A batch never partly fits: leave progress waiting until a carrier empties the box.
-				local output = if areaId == "garden" then Config.Work.GardenYield else Config.Work.FishingYield
+				local output = Config.Work.FishingYield
 				if
 					(areaId == "fishing" or areaId == "garden")
 					and Food.total(workArea.box) + output > Config.Work.BoxCapacity
@@ -99,12 +203,13 @@ local function doWork(
 					break
 				end
 				if areaId == "fishing" then
-					Food.add(workArea.box, "fish", Config.Work.FishingYield, Config.Work.BoxCapacity)
-					table.insert(events, { kind = "collected", item = "fish" })
-				elseif areaId == "garden" then
-					local item = if rng:next() < Config.Work.GardenCarrotChance then "carrot" else "cabbage"
-					Food.add(workArea.box, item, Config.Work.GardenYield, Config.Work.BoxCapacity)
-					table.insert(events, { kind = "collected", item = item })
+					if workReady then
+						-- Online the catch is held until the fish reaches the visible bin.
+						slot.pending = "fish"
+					else
+						Food.add(workArea.box, "fish", Config.Work.FishingYield, Config.Work.BoxCapacity)
+					end
+					table.insert(events, { kind = "collected", item = "fish", area = "fishing", slimeId = worker.id })
 				elseif areaId == "kitchen" then
 					local id = Food.bestDish(farm.counter)
 					if id == nil then
@@ -124,6 +229,9 @@ local function doWork(
 					worker.stats = Training.finishSession(worker.stats, statKey, rng, chance)
 				end
 				progress -= cycle
+				if slot.pending then
+					break
+				end
 			end
 			slot.progress = progress
 		end

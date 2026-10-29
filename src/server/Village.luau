@@ -13,6 +13,7 @@ local VillageCarry = require(ReplicatedStorage.Shared.VillageCarry)
 local VillagePath = require(ReplicatedStorage.Shared.VillagePath)
 local Config = require(ReplicatedStorage.Shared.Config)
 local FarmState = require(ReplicatedStorage.Shared.FarmState)
+local GardenPlots = require(ReplicatedStorage.Shared.GardenPlots)
 local Growth = require(ReplicatedStorage.Shared.Growth)
 local Rng = require(ReplicatedStorage.Shared.Rng)
 local Stats = require(ReplicatedStorage.Shared.Stats)
@@ -46,6 +47,12 @@ type Actor = {
 	pickupId: string?,
 	carrying: boolean?,
 	lastRefresh: number?,
+	workPhase: string?,
+	workStart: number?,
+	workEnd: number?,
+	workTask: string?,
+	workItem: string?,
+	workPlot: number?,
 }
 type Session = {
 	root: Folder,
@@ -205,18 +212,56 @@ local function show(session: Session, farm: Farm, epoch: number)
 		set(model, "Name", slime.name)
 		set(model, "Trait", slime.trait)
 		set(model, "Action", if actor and actor.action then actor.action.kind else "idle")
+		local area, slot, isReserve = working(farm, slime.id)
+		local phase, phaseStart, phaseEnd = "", 0, 0
+		if actor and actor.workPhase then
+			phase = actor.workPhase
+			phaseStart, phaseEnd = actor.workStart or 0, actor.workEnd or 0
+		elseif actor and actor.action and actor.action.kind == "work" then
+			if actor.index > 0 then
+				phase = "walk"
+			elseif area == "fishing" then
+				local assigned = farm.work.fishing.slots[slot]
+				local active = if assigned then Stations.activeWorker(farm, assigned, epoch) else nil
+				if active and active.id == slime.id then
+					local factor = Stations.speedTimeFactor(slime.stats.speed)
+					local cycle = Stations.cycleSeconds("fishing", farm.areas.fishing.level) * factor
+					local passed = assigned.progress * factor
+					local cast = Config.Work.FishCastSeconds * factor
+					local reel = Config.Work.FishReelSeconds * factor
+					phase = if passed < cast then "cast" else if passed >= cycle - reel then "reel" else "wait"
+					local nowClock = workspace:GetServerTimeNow()
+					phaseStart = nowClock
+						- (
+							if phase == "cast"
+								then passed
+								else if phase == "wait" then passed - cast else passed - cycle + reel
+						)
+					phaseEnd = phaseStart
+						+ (if phase == "cast" then cast else if phase == "wait" then cycle - cast - reel else reel)
+				end
+			elseif area == "garden" then
+				phase = "wait"
+			end
+		end
+		set(model, "WorkPhase", phase)
+		set(model, "WorkStart", phaseStart)
+		set(model, "WorkEnd", phaseEnd)
+		set(model, "WorkPlot", if actor then actor.workPlot or 0 else 0)
 		set(model, "Emotion", if actor and actor.action then actor.action.emotion else "normal")
 		set(
 			model,
 			"Carry",
-			if actor
-					and actor.carrying
-					and actor.index > 0
-					and actor.action
-				then (if actor.action.kind == "carryEgg"
-					then "Egg"
-					else if actor.action.carry then actor.action.carry.item else "")
-				else ""
+			if actor and actor.workPhase == "carry"
+				then actor.workItem or ""
+				else if actor
+						and actor.carrying
+						and actor.index > 0
+						and actor.action
+					then (if actor.action.kind == "carryEgg"
+						then "Egg"
+						else if actor.action.carry then actor.action.carry.item else "")
+					else ""
 		)
 		set(model, "FromX", from.x)
 		set(model, "FromY", from.y)
@@ -228,7 +273,6 @@ local function show(session: Session, farm: Farm, epoch: number)
 		set(model, "LegEnd", if actor then actor.legEnd else 0)
 		set(model, "Ghost", slime.ghostUntil ~= nil and slime.ghostUntil > epoch)
 		set(model, "Sleeping", slime.sleeping == true)
-		local area, slot, isReserve = working(farm, slime.id)
 		set(model, "Working", area or "")
 		set(model, "WorkArea", area or "")
 		set(model, "WorkSlot", slot)
@@ -302,10 +346,8 @@ end
 local function stopShort(origin: Spot, target: Spot): Spot
 	local delta = point(target) - point(origin)
 	local flat = Vector3.new(delta.X, 0, delta.Z)
-	if flat.Magnitude <= Config.Brain.StopStuds then
-		return { id = target.id, area = origin.area, x = origin.x, y = origin.y, z = origin.z }
-	end
-	local position = point(target) - flat.Unit * Config.Brain.StopStuds
+	local away = if flat.Magnitude > Config.Village.PathPointEpsilon then flat.Unit else Vector3.new(1, 0, 0)
+	local position = point(target) - away * Config.Brain.StopStuds
 	return { id = target.id, area = target.area, x = position.X, y = origin.y, z = position.Z }
 end
 
@@ -482,7 +524,8 @@ local function advance(
 	actor: Actor,
 	speed: number,
 	clock: number,
-	epoch: number
+	epoch: number,
+	workFactor: number
 )
 	if not actor.action then
 		return
@@ -504,6 +547,22 @@ local function advance(
 			actor.carrying = false
 			actor.from, actor.to = actor.current, actor.current
 			actor.legStart, actor.legEnd = reachedAt, reachedAt
+			if actor.workPhase == "walk" and actor.workPlot and actor.current.id == "crop:" .. actor.workPlot then
+				actor.workPhase = actor.workTask
+				actor.workStart = clock
+				actor.workEnd = clock + Config.Work.WorkDropSeconds * workFactor
+				actor.finishAt = math.huge
+				continue
+			elseif actor.workPhase == "carry" and string.sub(actor.current.id, 1, 4) == "box:" then
+				actor.workPhase = "drop"
+				actor.workStart = clock
+				actor.workEnd = clock + Config.Work.WorkDropSeconds * workFactor
+				actor.finishAt = math.huge
+				continue
+			elseif actor.workPhase == "return" then
+				actor.workPhase, actor.workTask, actor.workItem, actor.workPlot = nil, nil, nil, nil
+				actor.workEnd = nil
+			end
 			local action = actor.action
 			local did = false
 			if action then
@@ -709,7 +768,7 @@ local function refreshMoving(
 	epoch: number
 )
 	local action = actor.action
-	if not action or actor.index == 0 or actor.pickupId then
+	if not action or (actor.index == 0 and action.kind ~= "player") or actor.pickupId or actor.workPhase then
 		return
 	end
 	if clock - (actor.lastRefresh or 0) < Config.Village.PathRefreshSeconds then
@@ -749,10 +808,12 @@ local function refreshMoving(
 		return
 	end
 	local fraction = VillagePath.progress(actor.legStart, actor.legEnd, clock)
-	local position = point(actor.from):Lerp(point(actor.to), fraction)
+	local position = if actor.index == 0
+		then point(actor.current)
+		else point(actor.from):Lerp(point(actor.to), fraction)
 	local start: Spot = { id = "via", area = actor.from.area, x = position.X, y = position.Y, z = position.Z }
 	target = stopShort(start, target)
-	local destination = actor.route[#actor.route]
+	local destination = if actor.index == 0 then actor.current else actor.route[#actor.route]
 	if destination and (point(destination) - point(target)).Magnitude < Config.Village.PathRefreshStuds then
 		return
 	end
@@ -776,6 +837,128 @@ local function refreshMoving(
 	end
 end
 
+-- A finished garden action visits the actual plant; a caught fish visits the pond bin.
+-- Every journey uses the normal path planner and keeps work blocked until the slime returns.
+local function workTravel(
+	session: Session,
+	actor: Actor,
+	target: Spot,
+	speed: number,
+	clock: number,
+	workFactor: number
+)
+	local action = actor.action
+	if not action then
+		return
+	end
+	actor.route = route(session, actor, action, target, 1)
+	actor.index = if #actor.route > 0 then 1 else 0
+	actor.finishAt = math.huge
+	if actor.index > 0 then
+		startLeg(session, actor, speed, clock)
+	else
+		actor.current = target
+		actor.from, actor.to = target, target
+		actor.legStart, actor.legEnd = clock, clock
+		-- A marker directly beneath a worker needs no walking leg, but still starts its work timer.
+		if actor.workPhase == "walk" then
+			actor.workPhase = actor.workTask
+			actor.workStart, actor.workEnd = clock, clock + Config.Work.WorkDropSeconds * workFactor
+		elseif actor.workPhase == "carry" then
+			actor.workPhase = "drop"
+			actor.workStart, actor.workEnd = clock, clock + Config.Work.WorkDropSeconds * workFactor
+		elseif actor.workPhase == "return" then
+			actor.workPhase, actor.workTask, actor.workItem, actor.workPlot = nil, nil, nil, nil
+			actor.workEnd = nil
+			actor.finishAt = clock
+		end
+	end
+end
+
+local function gardenKit(): Instance?
+	local kit = ServerStorage:FindFirstChild("CropKit")
+	local bundle = ServerStorage:FindFirstChild("Kit")
+	return kit or (if bundle then bundle:FindFirstChild("CropKit") else nil)
+end
+
+local function syncGarden(session: Session, farm: Farm)
+	if session.root:GetAttribute("Plot") ~= Config.Village.DevPlot then
+		return
+	end
+	local map = workspace:FindFirstChild("Map")
+	local plot = if map then map:FindFirstChild("Plot" .. Config.Village.DevPlot) else nil
+	local garden = if plot then plot:FindFirstChild("GardenL1") else nil
+	local stage = if garden then garden:FindFirstChild("AreaStage") else nil
+	local plots: typeof(GardenPlots.new(1)) = farm.work.garden.plots
+	if not garden or not stage then
+		return
+	end
+	-- Farm data is never changed here; any expansion is done inside PlayerData.update.
+	-- Source meshes remain in place for the stage builder to locate the bed positions on upgrades.
+	-- Hide their original vegetables, otherwise empty plots still look ripe.
+	for _, decoration in garden:GetChildren() do
+		if decoration:IsA("Model") and decoration.Name == "Crop" then
+			for _, part in decoration:GetDescendants() do
+				if part:IsA("BasePart") then
+					part.Transparency = 1
+				end
+			end
+		end
+	end
+	local crops = child(stage, "GrowingCrops", "Folder")
+	local kit = gardenKit()
+	for index, plotState in plots do
+		local marker = stage:FindFirstChild("CropPlot" .. index)
+		if not marker or not marker:IsA("BasePart") then
+			continue
+		end
+		local name = if plotState.crop == ""
+			then ""
+			else (if plotState.crop == "carrot" then "Carrot" else "Cabbage") .. plotState.stage
+		if
+			marker:GetAttribute("ShownCrop") ~= name or (name ~= "" and crops:FindFirstChild("Crop" .. index) == nil)
+		then
+			marker:SetAttribute("ShownCrop", name)
+			local old = crops:FindFirstChild("Crop" .. index)
+			if old then
+				old:Destroy()
+			end
+			local source = if kit then kit:FindFirstChild(name) else nil
+			if source and source:IsA("Model") then
+				local model = source:Clone()
+				model.Name = "Crop" .. index
+				for _, part in model:GetDescendants() do
+					if part:IsA("BasePart") then
+						part.Anchored = true
+						part.CanCollide = false
+						part.CanTouch = false
+						part.CanQuery = false
+						part.CastShadow = false
+					end
+				end
+				local fullScale = model:GetScale()
+				-- CropPlot markers are built at the original crop pivot, not at soil height.
+				model:PivotTo(CFrame.new(marker.Position + Vector3.new(0, Config.Work.GardenCropLift, 0)))
+				model:ScaleTo(fullScale * Config.Work.GardenCropScaleStart)
+				model.Parent = crops
+				task.spawn(function()
+					for step = 1, Config.Work.GardenCropGrowSteps do
+						if not model.Parent then
+							break
+						end
+						local fraction = step / Config.Work.GardenCropGrowSteps
+						model:ScaleTo(
+							fullScale
+								* (Config.Work.GardenCropScaleStart + (1 - Config.Work.GardenCropScaleStart) * fraction)
+						)
+						task.wait(Config.Work.GardenCropGrowStepSeconds)
+					end
+				end)
+			end
+		end
+	end
+end
+
 local function tick(player: Player, session: Session)
 	if not PlayerData.isReady(player) then
 		return
@@ -792,11 +975,28 @@ local function tick(player: Player, session: Session)
 			and actor.action.kind == "work"
 			and actor.index == 0
 			and actor.current.id == actor.action.spot
+			and actor.workPhase == nil
 		then
 			workReady[id] = actor.action.spot
 		end
 	end
 	PlayerData.update(player, function(data: any)
+		-- Stage upgrades may add beds. Grow the saved array before the simulation, never in the renderer.
+		if session.root:GetAttribute("Plot") == Config.Village.DevPlot then
+			local map = workspace:FindFirstChild("Map")
+			local plot = if map then map:FindFirstChild("Plot" .. Config.Village.DevPlot) else nil
+			local garden = if plot then plot:FindFirstChild("GardenL1") else nil
+			local stage = if garden then garden:FindFirstChild("AreaStage") else nil
+			local count = if stage then stage:GetAttribute("CropPlots") else nil
+			if
+				type(count) == "number"
+				and count >= 1
+				and count <= Config.Work.GardenMaxPlotCount
+				and count > #data.work.garden.plots
+			then
+				data.work.garden.plots = GardenPlots.repair(data.work.garden.plots, count)
+			end
+		end
 		local elapsed = math.max(0, epoch - data.lastSimulatedAt)
 		local courtReady: { [number]: boolean } = {}
 		for index, pair in data.breeding.pairs do
@@ -833,7 +1033,39 @@ local function tick(player: Player, session: Session)
 		return
 	end
 	local snapshot = farm :: Farm
+	syncGarden(session, snapshot)
 	for _, event in events do
+		if (event.kind == "collected" or event.kind == "gardenAction") and event.slimeId then
+			local actor = session.actors[event.slimeId]
+			local worker = FarmState.findSlime(snapshot, event.slimeId)
+			if actor and worker and actor.action and actor.action.kind == "work" and actor.index == 0 then
+				local speed = Config.Village.WalkSpeed
+					* (1 + (worker.stats.speed - Config.Stats.Starter.speed) * Config.Village.WalkPerSpeed)
+				actor.workTask, actor.workItem, actor.workPlot = event.phase or "harvest", event.item, event.plot
+				actor.workStart, actor.workEnd = clock, nil
+				if event.area == "garden" and event.plot then
+					actor.workPhase = "walk"
+					workTravel(
+						session,
+						actor,
+						session.spots["crop:" .. event.plot] or actor.current,
+						speed,
+						clock,
+						Stations.speedTimeFactor(worker.stats.speed)
+					)
+				elseif event.area == "fishing" then
+					actor.workPhase = "carry"
+					workTravel(
+						session,
+						actor,
+						session.spots["box:fishing"],
+						speed,
+						clock,
+						Stations.speedTimeFactor(worker.stats.speed)
+					)
+				end
+			end
+		end
 		if event.kind == "laid" or event.kind == "hatched" then
 			PlayerData.markKeyMoment(player, event.kind)
 		end
@@ -843,7 +1075,79 @@ local function tick(player: Player, session: Session)
 		if slime then
 			local speed = Config.Village.WalkSpeed
 				* (1 + (slime.stats.speed - Config.Stats.Starter.speed) * Config.Village.WalkPerSpeed)
-			advance(player, session, id, actor, speed, clock, epoch)
+			advance(player, session, id, actor, speed, clock, epoch, Stations.speedTimeFactor(slime.stats.speed))
+			if actor.workPhase and actor.index == 0 and actor.workEnd and clock >= actor.workEnd then
+				local action = actor.action
+				local area = if action then string.match(action.spot, "^work:(%a+):") else nil
+				if area and action then
+					if
+						area == "garden"
+						and (
+							actor.workPhase == "hoe"
+							or actor.workPhase == "plant"
+							or actor.workPhase == "water"
+							or actor.workPhase == "harvest"
+						)
+					then
+						PlayerData.update(player, function(data: any)
+							local index = tonumber(string.match(action.spot, "^work:garden:(%d+)$"))
+							local slot = if index then data.work.garden.slots[index] else nil
+							if slot and slot.task == actor.workPhase and slot.plot == actor.workPlot then
+								local harvested = GardenPlots.apply(
+									data.work.garden.plots,
+									slot.plot,
+									slot.task,
+									session.rng:next() < Config.Work.GardenCarrotChance
+								)
+								if harvested then
+									slot.pending = harvested
+									actor.workItem = harvested
+								end
+								slot.plot, slot.task = nil, nil
+							end
+						end)
+					end
+					if actor.workPhase == "drop" then
+						local deposited = false
+						PlayerData.update(player, function(data: any)
+							local index = tonumber(string.match(action.spot, "^work:%a+:(%d+)$"))
+							local slot = if index and data.work[area] then data.work[area].slots[index] else nil
+							if
+								slot
+								and slot.pending
+								and Food.add(data.work[area].box, slot.pending, 1, Config.Work.BoxCapacity) > 0
+							then
+								slot.pending = nil
+								deposited = true
+							end
+						end)
+						if not deposited then
+							continue
+						end
+					end
+					local nextSpot = if actor.workPhase == "harvest" and actor.workItem
+						then "box:" .. area
+						else (if actor.workPhase == "drop"
+								or actor.workPhase == "hoe"
+								or actor.workPhase == "plant"
+								or actor.workPhase == "water"
+								or actor.workPhase == "harvest"
+							then action.spot
+							else nil)
+					if nextSpot then
+						actor.workPhase = if actor.workPhase == "harvest" and actor.workItem then "carry" else "return"
+						actor.workEnd = nil
+						workTravel(
+							session,
+							actor,
+							session.spots[nextSpot],
+							speed,
+							clock,
+							Stations.speedTimeFactor(slime.stats.speed)
+						)
+					end
+				end
+			end
 			refreshMoving(player, session, snapshot, id, actor, clock, epoch)
 		end
 	end
@@ -1150,8 +1454,17 @@ function Village.start()
 		changed.Event:Connect(function(player: Player)
 			local session = sessions[player]
 			if session then
-				-- An upgraded building may have a different walkable footprint.
+				-- An upgraded building may have a different walkable footprint or more crop markers.
 				table.clear(session.pathCache)
+				if session.root:GetAttribute("Plot") == Config.Village.DevPlot then
+					task.defer(function()
+						if session.active then
+							local map = workspace:FindFirstChild("Map")
+							local plot = if map then map:FindFirstChild("Plot" .. Config.Village.DevPlot) else nil
+							session.spots = Spots.build(Config.Village.DevPlot, plot)
+						end
+					end)
+				end
 			end
 		end)
 	end

@@ -1,0 +1,140 @@
+--!strict
+local Config = require("../../src/shared/Config")
+local GardenPlots = require("../../src/shared/GardenPlots")
+local FarmKit = require("../lib/FarmKit")
+local Rng = require("../../src/shared/Rng")
+local Stations = require("../../src/shared/Stations")
+local VillageSim = require("../../src/shared/VillageSim")
+
+return function(T: any)
+	T.test("new garden plots hoe, plant, water, grow and harvest in order", function()
+		local plots = GardenPlots.new(Config.Work.GardenPlotCount)
+		T.eq(#plots, Config.Work.GardenPlotCount)
+		T.same(plots[1], { crop = "", stage = 0, progress = 0, watered = false })
+		T.eq(select(2, GardenPlots.choose(plots)), "hoe")
+		GardenPlots.apply(plots, 1, "water", true)
+		T.eq(plots[1].stage, 0, "cannot water bare ground")
+		GardenPlots.apply(plots, 1, "hoe", true)
+		T.eq(plots[1].stage, -1)
+		GardenPlots.apply(plots, 1, "hoe", true)
+		T.eq(plots[1].stage, -1, "hoeing twice does not plant")
+		GardenPlots.apply(plots, 1, "plant", true)
+		T.same(plots[1], { crop = "carrot", stage = 1, progress = 0, watered = false })
+		GardenPlots.apply(plots, 1, "plant", false)
+		T.eq(plots[1].crop, "carrot", "cannot replace a planted crop")
+		T.eq(GardenPlots.apply(plots, 1, "harvest", true), nil, "unripe crop cannot be picked")
+		GardenPlots.apply(plots, 1, "water", true)
+		T.ok(plots[1].watered)
+		for stage = 2, 4 do
+			GardenPlots.grow(plots, Config.Work.GardenStageSeconds)
+			T.eq(plots[1].stage, stage)
+			if stage < 4 then
+				T.eq(plots[1].watered, false)
+				GardenPlots.apply(plots, 1, "water", true)
+			end
+		end
+		T.eq(GardenPlots.apply(plots, 1, "harvest", false), "carrot")
+		T.same(plots[1], { crop = "", stage = 0, progress = 0, watered = false })
+	end)
+
+	T.test("dry crops grow slowly; watered crops advance quickly", function()
+		local dry = GardenPlots.new(1)
+		local wet = GardenPlots.new(1)
+		for _, plots in { dry, wet } do
+			GardenPlots.apply(plots, 1, "hoe", true)
+			GardenPlots.apply(plots, 1, "plant", false)
+		end
+		GardenPlots.apply(wet, 1, "water", true)
+		GardenPlots.grow(dry, Config.Work.GardenStageSeconds)
+		GardenPlots.grow(wet, Config.Work.GardenStageSeconds)
+		T.eq(dry[1].stage, 1)
+		T.eq(wet[1].stage, 2)
+		local developmentDry = (dry[1].stage - 1) * Config.Work.GardenStageSeconds + dry[1].progress
+		local developmentWet = (wet[1].stage - 1) * Config.Work.GardenStageSeconds + wet[1].progress
+		T.ok(developmentWet > developmentDry, "watering advances overall crop maturity despite stage progress reset")
+	end)
+
+	T.test("large time steps consume water only for the first growth stage", function()
+		local plots = GardenPlots.new(1)
+		GardenPlots.apply(plots, 1, "hoe", false)
+		GardenPlots.apply(plots, 1, "plant", false)
+		GardenPlots.apply(plots, 1, "water", false)
+		GardenPlots.grow(plots, Config.Work.GardenStageSeconds * 2)
+		T.eq(plots[1].stage, 2)
+		T.ok(plots[1].progress < Config.Work.GardenStageSeconds)
+		T.eq(plots[1].watered, false)
+	end)
+
+	T.test("invalid garden plots repair independently without touching healthy plants", function()
+		local raw = {
+			{ crop = "cabbage", stage = 3, progress = 12, watered = true },
+			{ crop = "fake", stage = 99, progress = -6, watered = true },
+			{ crop = "carrot", stage = -1, progress = 0 / 0, watered = false },
+		}
+		local out = GardenPlots.repair(raw, 3)
+		T.same(out[1], raw[1])
+		T.same(out[2], { crop = "", stage = 0, progress = 0, watered = false })
+		T.eq(out[3].stage, 1)
+		T.eq(out[3].progress, 0)
+	end)
+
+	T.test("online garden work defers crop changes until the visible chore, offline resumes it", function()
+		local now = 1000000
+		local farm = FarmKit.farm(now)
+		T.ok(Stations.assign(farm, "slime-1", "garden", 1, false, now))
+		local online, events = VillageSim.step(farm, now + 20, 20, Rng.new(6), {
+			errands = false,
+			workReady = { ["slime-1"] = "work:garden:1" },
+		})
+		T.eq(online.work.garden.slots[1].task, "hoe")
+		T.eq(online.work.garden.plots[1].stage, 0, "crop is not changed before arrival")
+		T.eq(events[1].phase, "hoe")
+		local offline = VillageSim.step(online, now + 21, 1, Rng.new(6), { errands = true })
+		T.eq(offline.work.garden.slots[1].task, nil)
+		T.eq(offline.work.garden.plots[1].stage, -1)
+	end)
+
+	T.test("online fish are pending until the bin handoff, then offline reconnect recovers them", function()
+		local now = 1000000
+		local farm = FarmKit.farm(now)
+		T.ok(Stations.assign(farm, "slime-1", "fishing", 1, false, now))
+		local after, events = VillageSim.step(farm, now + 60, 60, Rng.new(2), {
+			errands = false,
+			workReady = { ["slime-1"] = "work:fishing:1" },
+		})
+		T.eq(after.work.fishing.box.fish, nil)
+		T.eq(after.work.fishing.slots[1].pending, "fish")
+		T.eq(events[1].kind, "collected")
+		-- Offline errands may move stock from the bin to the storehouse and onward to the
+		-- kitchen counter. Count all three destinations, not just the first two.
+		local function fishStock(snapshot: any): number
+			return (snapshot.work.fishing.box.fish or 0)
+				+ (snapshot.storehouse.fish or 0)
+				+ (snapshot.counter.fish or 0)
+		end
+		local originalStock = fishStock(after)
+		local offline = VillageSim.step(after, now + 61, 0, Rng.new(3), { errands = true })
+		T.eq(offline.work.fishing.slots[1].pending, nil)
+		T.eq(fishStock(offline), originalStock + Config.Work.FishingYield, "recovered fish is neither lost nor doubled")
+		T.eq(after.work.fishing.slots[1].pending, "fish", "the input state remains unchanged")
+		local again = VillageSim.step(offline, now + 62, 0, Rng.new(3), { errands = true })
+		T.eq(fishStock(again), fishStock(offline), "replaying offline transfer never deposits the same fish twice")
+		T.eq(again.work.fishing.slots[1].pending, nil)
+	end)
+
+	T.test("offline village grows real plots and collects vegetables", function()
+		local now = 1000000
+		local farm = FarmKit.farm(now)
+		T.ok(Stations.assign(farm, "slime-1", "garden", 1, false, now))
+		local after, events = VillageSim.catchUp(farm, now, now + Config.Village.OfflineCapSeconds, Rng.new(7))
+		local grown = 0
+		for _, event in events do
+			if event.kind == "collected" and (event.item == "carrot" or event.item == "cabbage") then
+				grown += 1
+			end
+		end
+		T.ok(grown > 0, "offline gardener collects actual ripe crops")
+		T.eq(#after.work.garden.plots, Config.Work.GardenPlotCount)
+		T.eq(farm.work.garden.plots[1].stage, 0, "input is immutable")
+	end)
+end
