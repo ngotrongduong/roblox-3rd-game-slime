@@ -14,6 +14,7 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Config = require(ReplicatedStorage.Shared.Config)
+local RockSeat = require(script.Parent.RockSeat)
 local WorkProps = require(script.Parent.WorkProps)
 
 local PondStages = {}
@@ -602,6 +603,11 @@ function PondStages.build(level: number, cell: CFrame, showcase: boolean?): Mode
 				d.CanCollide = true
 			end
 		end
+		-- Seated on the bank before anything is put on it (the owner, 2026-10-29: it hung over the pond's rim).
+		local holder = rock.Parent
+		rock.Parent = workspace
+		RockSeat.seat(rock)
+		rock.Parent = holder
 		local box, size = rock:GetBoundingBox()
 		if open >= 4 then
 			-- The rock's real surface under a point (the owner, 2026-10-29: the stand hung in the air above the

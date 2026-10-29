@@ -46,6 +46,8 @@ type Actor = {
 	legEnd: number,
 	-- The gait of the current leg (a Config.Gaits name), published as the slime's Gait attribute.
 	gait: string?,
+	-- the gait the action asks for; each leg walks it, or the normal walk outside the breeding area (Gaits.forLeg)
+	baseGait: string?,
 	finishAt: number,
 	babyOnboard: boolean?,
 	pickupId: string?,
@@ -637,12 +639,33 @@ local function chooseGait(farm: Farm, slime: any, action: Action, epoch: number)
 	})
 end
 
+-- Inside the breeding area's footprint (the BreedingL1 model, at whatever level it is built). Measured again
+-- every few seconds, since an upgrade rebuilds the area.
+local breedingBox: { cf: CFrame, size: Vector3, at: number }? = nil
+local function insideBreeding(p: Vector3): boolean
+	local clock = os.clock()
+	if not breedingBox or clock - breedingBox.at > Config.Village.BreedingBoxSeconds then
+		local map = workspace:FindFirstChild("Map")
+		local plot = if map then map:FindFirstChild("Plot" .. Config.Village.DevPlot) else nil
+		local area = if plot then plot:FindFirstChild("BreedingL1") else nil
+		if not area or not area:IsA("Model") then
+			return false
+		end
+		local cf, size = area:GetBoundingBox()
+		breedingBox = { cf = cf, size = size, at = clock }
+	end
+	local box = breedingBox :: { cf: CFrame, size: Vector3, at: number }
+	local rel = box.cf:PointToObjectSpace(p)
+	return math.abs(rel.X) <= box.size.X / 2 and math.abs(rel.Z) <= box.size.Z / 2
+end
+
 -- `factor` is the slime's speed stat factor (Gaits.factor); the leg's time comes from the actor's gait.
 local function startLeg(session: Session, actor: Actor, factor: number, when: number)
 	local to = actor.route[actor.index]
 	if not to then
 		return
 	end
+	actor.gait = Gaits.forLeg(actor.baseGait or "walk", insideBreeding(point(actor.current)), insideBreeding(point(to)))
 	local duration = VillagePath.duration((point(to) - point(actor.current)).Magnitude, factor, actor.gait)
 	-- Waypoints are only intent, not physical NPCs. Queue shared corners so two slimes
 	-- do not get the same server-arrival time even if the client is rendering from afar.
@@ -919,7 +942,7 @@ local function think(
 		depart = clock + Config.Village.TakeSeconds
 	end
 	if actor.index > 0 then
-		actor.gait = chooseGait(farm, slime, action, epoch)
+		actor.baseGait = chooseGait(farm, slime, action, epoch)
 		startLeg(session, actor, Gaits.factor(slime.stats.speed), depart)
 	else
 		-- Already close enough to walk nowhere: it is now AT the action's spot (a worker standing near its work spot
@@ -1023,7 +1046,7 @@ local function refreshMoving(
 	actor.route = route(session, actor, action, target, scale)
 	actor.index = if #actor.route > 0 then 1 else 0
 	if actor.index > 0 then
-		actor.gait = chooseGait(farm, slime, action, epoch)
+		actor.baseGait = chooseGait(farm, slime, action, epoch)
 		startLeg(session, actor, Gaits.factor(slime.stats.speed), clock)
 	end
 end
@@ -1233,7 +1256,7 @@ local function tick(player: Player, session: Session)
 			local worker = FarmState.findSlime(snapshot, event.slimeId)
 			if actor and worker and actor.action and actor.action.kind == "work" and actor.index == 0 then
 				local speed = Gaits.factor(worker.stats.speed)
-				actor.gait = chooseGait(snapshot, worker, actor.action, epoch)
+				actor.baseGait = chooseGait(snapshot, worker, actor.action, epoch)
 				actor.workTask, actor.workItem, actor.workPlot = event.phase or "harvest", event.item, event.plot
 				actor.workStart, actor.workEnd = clock, nil
 				if event.area == "garden" and event.plot then

@@ -9,6 +9,7 @@
 -- or rebuilt (any level), and tools/map/fix_zfight.luau runs it on the parts saved in the place.
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Config = require(ReplicatedStorage.Shared.Config)
+local RockSeat = require(script.Parent.RockSeat)
 
 local ZFight = {}
 
@@ -189,6 +190,12 @@ function ZFight.watch(map: Instance)
 			end
 			local area = stage.Parent
 			if area and plot then
+				-- (the area's rocks rest on the ground first, saved ones too: the new stage may have dug or raised the
+				-- ground under them; src/server/RockSeat.luau)
+				local seated = RockSeat.seatAll(area)
+				if seated > 0 then
+					print(Config.LogPrefix, "rocks: seated", seated, "in", area.Name .. "." .. stage.Name)
+				end
 				local moved = ZFight.resolve(stage, plot)
 				if moved > 0 then
 					print(Config.LogPrefix, "z-fight: raised", moved, "parts in", area.Name .. "." .. stage.Name)

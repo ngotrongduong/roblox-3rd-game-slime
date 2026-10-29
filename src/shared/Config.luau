@@ -282,6 +282,8 @@ Config.Village = {
 	TossSeconds = 0.8,
 	-- A slime assigned to a work place pops into it (the owner, 2026-10-29: no walk there).
 	PopSeconds = 0.5,
+	-- How often the breeding area's footprint is measured again (a courting slime strolls only inside it).
+	BreedingBoxSeconds = 5,
 	-- An item tossed flies this high above the straight line between the slime and the bin.
 	TossArcStuds = 2.5,
 }
@@ -507,6 +509,17 @@ Config.Map = {
 	ZFightStep = 0.03,
 	ZFightPasses = 12,
 	ZFightCell = 8,
+	-- Rocks rest on the ground (src/server/RockSeat.luau): under the edge of a rock the ground is looked for from
+	-- RockProbeUp above its base to RockProbeDown below; it sinks RockBury into it, at most RockMaxSink, and
+	-- moves toward higher ground in rings RockShiftStep apart (RockShiftSteps rings) when that is not enough.
+	RockProbeUp = 1,
+	RockProbeDown = 8,
+	RockBury = 0.25,
+	RockMaxSink = 1.2,
+	RockMaxBuried = 0.6,
+	RockShiftStep = 0.5,
+	RockShiftSteps = 8,
+	RockSeatTolerance = 0.05,
 }
 
 -- ===== The slime body, face and motion =====
@@ -1013,8 +1026,8 @@ Config.Ui = {
 	PortraitLook = 0.5,
 	TagHeight = 26,
 	-- World markers of the work positions: size in studs, lift above the marker, how far they show, prompt reach.
-	SpotSize = 2.4,
-	SpotLift = 3,
+	SpotSize = 1.3,
+	SpotLift = 2,
 	SpotDistance = 45,
 	SpotPromptDistance = 7,
 	PendingSeconds = 4,

@@ -806,6 +806,9 @@ local modelNames: { [string]: string } = {
 	breeding = "Breeding",
 }
 
+-- Work areas have no entrance prompt any more (their positions have their own); only the breeding program keeps one.
+local manageAreas: { string } = { "breeding" }
+
 -- The area's model on the player's plot (named "<Area>L<level>").
 local function areaModel(area: string): Instance?
 	local plotId = if own then own:GetAttribute("Plot") else nil
@@ -839,7 +842,7 @@ local function createPrompts(root: Folder)
 	if not plot then
 		return
 	end
-	for _, area in Config.Village.Areas do
+	for _, area in manageAreas do
 		local model: Instance? = nil
 		for _, child in plot:GetChildren() do
 			if string.match(string.lower(child.Name), "^" .. string.lower(modelNames[area]) .. "l") then
@@ -855,7 +858,7 @@ local function createPrompts(root: Folder)
 			if target then
 				local prompt = Instance.new("ProximityPrompt")
 				prompt.Name = "VillageManage"
-				prompt.ActionText = "Manage"
+				prompt.ActionText = "Pairs"
 				prompt.ObjectText = areaTitles[area]
 				prompt.KeyboardKeyCode = Enum.KeyCode.F
 				prompt.HoldDuration = C.PromptHoldSeconds
@@ -1046,7 +1049,7 @@ function VillageUI.start()
 				own
 				and type(own:GetAttribute("Plot")) == "number"
 				and (own:GetAttribute("Plot") :: number) > 0
-				and #prompts < #Config.Village.Areas
+				and #prompts < #manageAreas
 			then
 				createPrompts(own)
 			end

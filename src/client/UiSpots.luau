@@ -6,7 +6,6 @@ local HttpService = game:GetService("HttpService")
 
 local Config = require(ReplicatedStorage.Shared.Config)
 local UiKit = require(script.Parent.UiKit)
-local UiSlimes = require(script.Parent.UiSlimes)
 
 local U = Config.Ui
 
@@ -89,19 +88,11 @@ function UiSpots.workerAt(area: string, slot: number): string
 	return workerOf(area, slot, stations[slot] or {})
 end
 
-local function buildBody(spot: Spot, own: Folder?, id: string)
-	local old = spot.body:FindFirstChild("Portrait")
-	if old then
-		old.Parent = nil
-	end
+local function buildBody(spot: Spot, id: string)
+	-- A filled position shows nothing: the slime working there is the sign. Only its prompt stays.
+	spot.gui.Enabled = id == ""
 	UiKit.clear(spot.body)
-	local slime = if own and id ~= "" then own:FindFirstChild("Slimes") else nil
-	local found = if slime then slime:FindFirstChild(id) else nil
-	if found and found:IsA("Configuration") then
-		local view = UiSlimes.acquire(found, "spot", spot.body)
-		view.Size = UDim2.fromScale(1, 1)
-		view.ZIndex = 1
-	else
+	if id == "" then
 		local iconId = (U.Icons :: any).plus
 		if type(iconId) == "number" and iconId > 0 then
 			UiKit.make("ImageLabel", {
@@ -139,27 +130,20 @@ local function create(area: string, slot: number, marker: Instance): Spot
 		Name = "Fill",
 		AnchorPoint = Vector2.new(0.5, 0.5),
 		Position = UDim2.fromScale(0.5, 0.5),
-		Size = UDim2.fromScale(0.8, 0.8),
+		Size = UDim2.fromScale(1, 1),
 		BackgroundColor3 = UiKit.colour("Parchment"),
+		BackgroundTransparency = 0.15,
 		BorderSizePixel = 0,
 	}, gui)
-	UiKit.make("UICorner", { CornerRadius = UDim.new(0.18, 0) }, fill)
+	UiKit.make("UICorner", { CornerRadius = UDim.new(0.5, 0) }, fill)
+	UiKit.make("UIStroke", { Color = UiKit.colour("Wood"), Thickness = 2 }, fill)
 	local body = UiKit.make("Frame", {
 		Name = "Body",
 		BackgroundTransparency = 1,
 		Size = UDim2.fromScale(1, 1),
 		ClipsDescendants = true,
 	}, fill)
-	UiKit.make("UICorner", { CornerRadius = UDim.new(0.18, 0) }, body)
-	-- The owner's wood frame, whole and in proportion, around the picture.
-	UiKit.make("ImageLabel", {
-		Name = "Frame",
-		BackgroundTransparency = 1,
-		Image = "rbxassetid://" .. tostring(U.Frames.Wood.Id),
-		ScaleType = Enum.ScaleType.Fit,
-		Size = UDim2.fromScale(1, 1),
-		ZIndex = 2,
-	}, gui)
+	UiKit.make("UICorner", { CornerRadius = UDim.new(0.5, 0) }, body)
 	local prompt = UiKit.make("ProximityPrompt", {
 		Name = "SpotPrompt",
 		ActionText = "Pick",
@@ -202,7 +186,7 @@ function UiSpots.refresh()
 				local id = workerOf(area, slot, saved)
 				if spot.shown ~= id then
 					spot.shown = id
-					buildBody(spot, own, id)
+					buildBody(spot, id)
 					spot.prompt.ActionText = if id ~= "" then "Change" else "Assign"
 				end
 			end

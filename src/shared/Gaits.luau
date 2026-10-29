@@ -36,6 +36,15 @@ function Gaits.choose(info: Info): string
 	return "walk"
 end
 
+-- The gait of one leg: a stroll only while both ends of the leg are inside the breeding area; the walk there
+-- and back is the normal walk (the owner, 2026-10-29: "it changes only when they are inside the breeding area").
+function Gaits.forLeg(gait: string, fromInside: boolean, toInside: boolean): string
+	if gait == "stroll" and not (fromInside and toInside) then
+		return "walk"
+	end
+	return gait
+end
+
 -- The numbers of a gait by name (an unknown name walks).
 function Gaits.get(name: string?): any
 	local gaits = Config.Gaits :: any
