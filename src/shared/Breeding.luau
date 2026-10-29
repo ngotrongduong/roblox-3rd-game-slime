@@ -407,7 +407,7 @@ function Breeding.layEgg(farm: Farm, index: number, now: number, rng: Rng, newId
 	return result
 end
 
-function Breeding.placeInIncubator(farm: Farm, eggId: string, now: number): (boolean, string?)
+function Breeding.placeInIncubator(farm: Farm, eggId: string, now: number, requestedSlot: number?): (boolean, string?)
 	local egg = FarmState.findEgg(farm, eggId)
 	if not egg then
 		return false, "MISSING_EGG"
@@ -421,8 +421,15 @@ function Breeding.placeInIncubator(farm: Farm, eggId: string, now: number): (boo
 			occupied[other.slot] = true
 		end
 	end
-	for slot = 1, FarmState.breedingCount(farm.areas.breeding.level) do
-		if not occupied[slot] then
+	local limit = FarmState.breedingCount(farm.areas.breeding.level)
+	if
+		requestedSlot ~= nil
+		and (requestedSlot % 1 ~= 0 or requestedSlot < 1 or requestedSlot > limit or occupied[requestedSlot])
+	then
+		return false, "NO_INCUBATOR"
+	end
+	for slot = 1, limit do
+		if not occupied[slot] and (requestedSlot == nil or slot == requestedSlot) then
 			egg.place, egg.slot = "incubator", slot
 			egg.hatchAt = now + Breeding.incubationSeconds(Stats.level(egg.embryo.stats), farm.areas.breeding.level)
 			egg.status = FarmState.eggStatus(egg, now)

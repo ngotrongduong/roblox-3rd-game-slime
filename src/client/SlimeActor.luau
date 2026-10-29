@@ -21,10 +21,13 @@ local RunService = game:GetService("RunService")
 local Config = require(ReplicatedStorage.Shared.Config)
 local Expressions = require(ReplicatedStorage.Shared.Expressions)
 local SlimeMotion = require(ReplicatedStorage.Shared.SlimeMotion)
+local VillagePath = require(ReplicatedStorage.Shared.VillagePath)
 local SlimeShape = require(ReplicatedStorage.Shared.SlimeShape)
 local SlimeFace = require(script.Parent.SlimeFace)
 
 local C = Config.Slime
+-- The village's presentation numbers (ghost float, separation, facing, carried items).
+local VC = Config.VillageClient
 
 type BoneSet = { top: Bone, left: Bone, right: Bone, front: Bone, back: Bone }
 
@@ -45,6 +48,18 @@ export type Slime = {
 	yawning: boolean,
 	pose: SlimeMotion.Pose,
 	destroyed: boolean,
+	travelFrom: Vector3?,
+	travelTo: Vector3?,
+	travelStart: number,
+	travelEnd: number,
+	hopIndex: number,
+	ghost: boolean,
+	ground: Vector3,
+	separation: Vector3,
+	attached: Model?,
+	attachedParts: { BasePart },
+	attachedOffsets: { CFrame },
+	attachOffset: CFrame,
 }
 
 local Actor = {}
@@ -99,7 +114,75 @@ local function targetPosition(a: Slime): Vector3?
 	return a.target
 end
 
+-- Replicated endpoints stay fixed for a leg. Movement is evaluated in the single render loop,
+-- never from the village's slower network/metadata polling loop.
+local function desired(a: Slime, now: number): Vector3
+	local from, to = a.travelFrom, a.travelTo
+	if not from or not to then
+		return a.root.Position
+	end
+	local fraction = VillagePath.progress(a.travelStart, a.travelEnd, now)
+	local pos = from:Lerp(to, fraction)
+	if a.ghost then
+		pos += Vector3.new(0, VC.GhostFloat + VC.GhostFloat * math.sin(now * VC.GhostFloatHz * math.pi * 2), 0)
+	end
+	return pos
+end
+
+local function walk(a: Slime, dt: number, now: number)
+	local from, to = a.travelFrom, a.travelTo
+	if not from or not to then
+		return
+	end
+	local fraction, index = VillagePath.progress(a.travelStart, a.travelEnd, now)
+	local moving = a.travelEnd > a.travelStart and now >= a.travelStart and now < a.travelEnd
+	a.motion.walking = moving
+	if moving and index ~= a.hopIndex then
+		SlimeMotion.hop(a.motion, VC.HopHeight)
+	end
+	a.hopIndex = index
+	local pos = from:Lerp(to, fraction)
+	if a.ghost then
+		pos += Vector3.new(0, VC.GhostFloat + VC.GhostFloat * math.sin(now * VC.GhostFloatHz * math.pi * 2), 0)
+	end
+	local away = Vector3.zero
+	for _, other in actors do
+		if
+			other ~= a
+			and not other.destroyed
+			and math.abs(pos.X - other.ground.X) < VC.SlimeSeparationStuds
+			and math.abs(pos.Z - other.ground.Z) < VC.SlimeSeparationStuds
+		then
+			local delta = pos - other.ground
+			local flat = Vector3.new(delta.X, 0, delta.Z)
+			if flat.Magnitude < VC.SlimeSeparationStuds then
+				local direction = if flat.Magnitude > Config.Village.PathPointEpsilon
+					then flat.Unit
+					else Vector3.new(math.cos(a.motion.phase), 0, math.sin(a.motion.phase))
+				away += direction * ((VC.SlimeSeparationStuds - flat.Magnitude) * VC.SeparationBlend)
+			end
+		end
+	end
+	if away.Magnitude > VC.SeparationMaxStuds then
+		away = away.Unit * VC.SeparationMaxStuds
+	end
+	a.separation = a.separation:Lerp(away, 1 - math.exp(-dt / VC.SeparationSmoothSeconds))
+	pos += a.separation
+	local direction = to - from
+	local flat = Vector3.new(direction.X, 0, direction.Z)
+	if flat.Magnitude > VC.FacingThreshold then
+		local goal = CFrame.lookAt(pos, pos + flat)
+		-- Interpolate rotation only: an old yaw must never pull the feet off the server's path.
+		local alpha = 1 - math.exp(-dt / VC.FacingTurnSeconds)
+		local turned = a.root.Rotation:Lerp(goal.Rotation, alpha)
+		a.root = CFrame.new(pos) * turned
+	else
+		a.root = CFrame.new(pos) * a.root.Rotation
+	end
+end
+
 local function tick(a: Slime, dt: number, write: boolean)
+	walk(a, dt, workspace:GetServerTimeNow())
 	-- where the target is, in the slime's own frame
 	local dirFwd, dirSide, gx, gy = 0, 0, nil :: number?, nil :: number?
 	local tp = targetPosition(a)
@@ -149,6 +232,18 @@ local function tick(a: Slime, dt: number, write: boolean)
 		parts[n] = a.hull
 		cfs[n] = bodyCf
 	end
+	if a.attached then
+		-- Carries share this BulkMoveTo, including lift, squash and the jelly's lean.
+		local top = a.root
+			* CFrame.new(-pose.leanSide * s, pose.lift * s + s * pose.sy + VC.CarryTopOffset, -pose.leanFwd * s)
+			* CFrame.Angles(pose.leanFwd, pose.yaw, pose.leanSide)
+			* a.attachOffset
+		for i, part in a.attachedParts do
+			n += 1
+			parts[n] = part
+			cfs[n] = top * a.attachedOffsets[i]
+		end
+	end
 	local blinked = SlimeFace.update(a.face, dt, bones, feet, parts, cfs)
 	if blinked then
 		SlimeMotion.kick(a.motion, "squash", C.BlinkBodyKick)
@@ -168,6 +263,10 @@ local function stepAll(dt: number, force: boolean?)
 	local camCf = if camera then camera.CFrame else nil
 	table.clear(parts)
 	table.clear(cfs)
+	local now = workspace:GetServerTimeNow()
+	for _, actor in actors do
+		actor.ground = desired(actor, now)
+	end
 	for i = #actors, 1, -1 do
 		local a = actors[i]
 		if a.destroyed or not a.model.Parent then
@@ -242,7 +341,24 @@ function Actor.new(model: Model, emotion: string?): Slime?
 		yawning = false,
 		pose = { sy = 1, sx = 1, leanFwd = 0, leanSide = 0, yaw = 0, lift = 0 },
 		destroyed = false,
+		travelFrom = nil,
+		travelTo = nil,
+		travelStart = 0,
+		travelEnd = 0,
+		hopIndex = -1,
+		ghost = false,
+		ground = root.Position,
+		separation = Vector3.zero,
+		attached = nil,
+		attachedParts = {},
+		attachedOffsets = {},
+		attachOffset = CFrame.new(),
 	}
+	-- Only the body is a collision surface. The outline and face remain non-collidable.
+	body.CanCollide = true
+	if hull then
+		hull.CanCollide = false
+	end
 	local self: any = setmetatable(a :: any, Actor)
 	self:setEmotion(emotion or "normal")
 	register(self)
@@ -289,7 +405,42 @@ function Actor.setCFrame(self: Slime, cf: CFrame)
 	self.root = cf
 end
 
+-- The server owns the leg clock; the actor interpolates the same hop progress every frame.
+function Actor.setTravel(self: Slime, from: Vector3, to: Vector3, startTime: number, endTime: number, ghost: boolean)
+	if self.travelStart ~= startTime or self.travelEnd ~= endTime then
+		self.hopIndex = -1
+	end
+	self.travelFrom, self.travelTo = from, to
+	self.travelStart, self.travelEnd = startTime, endTime
+	self.ghost = ghost
+end
+
+function Actor.attach(self: Slime, model: Model, offset: CFrame?)
+	self.attached = model
+	-- The kit items pivot around different centres; rest their bottom at the slime's top.
+	self.attachOffset = (offset or CFrame.new()) * CFrame.new(0, model:GetExtentsSize().Y / 2, 0)
+	table.clear(self.attachedParts)
+	table.clear(self.attachedOffsets)
+	local pivot = model:GetPivot()
+	for _, inst in model:GetDescendants() do
+		if inst:IsA("BasePart") then
+			-- A carried item is presentation-only; collisions are owned by the slime body.
+			inst.Anchored = true
+			inst.CanCollide = false
+			table.insert(self.attachedParts, inst)
+			table.insert(self.attachedOffsets, pivot:ToObjectSpace(inst.CFrame))
+		end
+	end
+end
+
+function Actor.detach(self: Slime)
+	self.attached = nil
+	table.clear(self.attachedParts)
+	table.clear(self.attachedOffsets)
+end
+
 function Actor.destroy(self: Slime)
+	Actor.detach(self)
 	self.destroyed = true
 	SlimeFace.destroy(self.face)
 end

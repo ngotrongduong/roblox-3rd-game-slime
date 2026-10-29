@@ -7,6 +7,7 @@ local Config = require(ReplicatedStorage.Shared.Config)
 local Layout = require(ReplicatedStorage.Shared.Layout)
 local SlimeActor = require(script.Parent.SlimeActor)
 local SlimeLook = require(script.Parent.SlimeLook)
+local VillagePath = require(ReplicatedStorage.Shared.VillagePath)
 
 local C = Config.VillageClient
 type Entry = {
@@ -16,7 +17,6 @@ type Entry = {
 	connections: { RBXScriptConnection },
 	signature: string,
 	lastUpdate: number,
-	lastHop: number,
 	carryName: string,
 	carry: Model?,
 	lastAction: string,
@@ -153,6 +153,16 @@ local function refreshLook(entry: Entry)
 	model.Parent = renderFolder
 	entry.model = model
 	entry.actor = SlimeActor.new(model, stringAttr(config, "Emotion", "normal"))
+	if entry.actor and entry.carry then
+		SlimeActor.attach(entry.actor, entry.carry, CFrame.new())
+	elseif not entry.actor then
+		-- The emergency stand-in still occupies physical space for the local character.
+		for _, descendant in model:GetDescendants() do
+			if descendant:IsA("BasePart") then
+				descendant.CanCollide = true
+			end
+		end
+	end
 	entry.signature = signature
 	entry.lastEmotion = ""
 	entry.lastAction = ""
@@ -207,35 +217,40 @@ local function animate(village: Village, entry: Entry, now: number)
 	local from, to = at(entry.config, "From"), at(entry.config, "To")
 	local start = number(entry.config, "LegStart", 0)
 	local finish = number(entry.config, "LegEnd", 0)
-	local moving = finish > start and now < finish and (to - from).Magnitude > 0
-	local fraction = if finish > start then math.clamp((now - start) / (finish - start), 0, 1) else 1
+	local moving = finish > start and now >= start and now < finish and (to - from).Magnitude > 0
+	local fraction = VillagePath.progress(start, finish, now)
 	local pos = from:Lerp(to, fraction)
 	local ghost = entry.config:GetAttribute("Ghost") == true
-	if ghost then
-		pos += Vector3.new(0, C.GhostFloat + C.GhostFloat * math.sin(now * C.GhostFloatHz * math.pi * 2), 0)
-	end
 	local bearing = to - from
 	local flat = Vector3.new(bearing.X, 0, bearing.Z)
+	local drawFrom, drawTo = from, to
 	if
 		moving
 		and stringAttr(entry.config, "Action", "") == "walkBaby"
 		and number(entry.config, "Scale", 1) < 1
 		and flat.Magnitude > C.FacingThreshold
 	then
-		-- The server gives the child its guardian's leg; follow behind instead of overlapping.
+		-- Both endpoints move back equally, preserving the guardian's exact hop clock.
+		drawFrom -= flat.Unit * C.BabyFollowStuds
+		drawTo -= flat.Unit * C.BabyFollowStuds
 		pos -= flat.Unit * C.BabyFollowStuds
 	elseif
 		not moving
 		and stringAttr(entry.config, "Action", "") == "work"
 		and stringAttr(entry.config, "Working", "") == "garden"
 	then
-		-- A little local movement between crops is presentation only.
-		pos += Vector3.new(math.sin(now * C.WorkShiftHz) * C.WorkShiftStuds, 0, 0)
+		local shift = Vector3.new(math.sin(now * C.WorkShiftHz) * C.WorkShiftStuds, 0, 0)
+		drawFrom += shift
+		drawTo += shift
+		pos += shift
 	end
-	local cf = if flat.Magnitude > C.FacingThreshold then CFrame.lookAt(pos, pos + flat) else CFrame.new(pos)
 	if actor then
-		SlimeActor.setCFrame(actor, cf)
+		SlimeActor.setTravel(actor, drawFrom, drawTo, start, finish, ghost)
 	else
+		if ghost then
+			pos += Vector3.new(0, C.GhostFloat + C.GhostFloat * math.sin(now * C.GhostFloatHz * math.pi * 2), 0)
+		end
+		local cf = if flat.Magnitude > C.FacingThreshold then CFrame.lookAt(pos, pos + flat) else CFrame.new(pos)
 		model:PivotTo(cf)
 	end
 	local emotion = stringAttr(entry.config, "Emotion", "normal")
@@ -255,10 +270,6 @@ local function animate(village: Village, entry: Entry, now: number)
 			entry.lastEmotion, entry.lastAction = face, action
 		end
 		if moving then
-			if now - entry.lastHop >= Config.Brain.HopSeconds then
-				SlimeActor.hop(actor, C.HopHeight)
-				entry.lastHop = now
-			end
 			SlimeActor.lookAt(actor, to)
 		elseif action == "player" then
 			local player = Players.LocalPlayer
@@ -280,10 +291,10 @@ local function animate(village: Village, entry: Entry, now: number)
 	end
 
 	local carryName = stringAttr(entry.config, "Carry", "")
-	if entry.lastAction == "carryEgg" then
-		carryName = "Egg"
-	end
 	if carryName ~= entry.carryName then
+		if actor then
+			SlimeActor.detach(actor)
+		end
 		if entry.carry then
 			entry.carry:Destroy()
 		end
@@ -296,10 +307,13 @@ local function animate(village: Village, entry: Entry, now: number)
 				carried.Parent = renderFolder
 			end
 			entry.carry = carried
+			if actor then
+				SlimeActor.attach(actor, carried, CFrame.new())
+			end
 		end
 	end
-	if entry.carry then
-		entry.carry:PivotTo(cf * CFrame.new(0, C.BodyHeight * C.CarryHeight, 0))
+	if entry.carry and not actor then
+		entry.carry:PivotTo(CFrame.new(pos) * CFrame.new(0, C.BodyHeight * C.CarryHeight, 0))
 	end
 end
 
@@ -345,7 +359,6 @@ local function addSlime(village: Village, child: Instance)
 		connections = {},
 		signature = "",
 		lastUpdate = 0,
-		lastHop = 0,
 		lastAction = "",
 		lastEmotion = "",
 		carryName = "",
@@ -471,6 +484,12 @@ task.spawn(function()
 				end
 			end
 			for egg, model in village.eggs do
+				if egg:GetAttribute("Held") == true then
+					model.Parent = nil
+					continue
+				elseif model.Parent ~= renderFolder then
+					model.Parent = renderFolder
+				end
 				local position = eggPosition(village, egg :: Configuration)
 				if not camera or (camera.CFrame.Position - position).Magnitude <= C.MaxDrawDistance then
 					local hatchAt = number(egg, "HatchAt", 0)
