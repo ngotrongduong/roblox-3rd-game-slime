@@ -2,9 +2,14 @@
 -- Server-authoritative village clocks and errands. Only lightweight intent is replicated.
 local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
+local PathfindingService = game:GetService("PathfindingService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Brain = require(ReplicatedStorage.Shared.Brain)
+local Breeding = require(ReplicatedStorage.Shared.Breeding)
+local Food = require(ReplicatedStorage.Shared.Food)
+local VillageCarry = require(ReplicatedStorage.Shared.VillageCarry)
+local VillagePath = require(ReplicatedStorage.Shared.VillagePath)
 local Config = require(ReplicatedStorage.Shared.Config)
 local FarmState = require(ReplicatedStorage.Shared.FarmState)
 local Growth = require(ReplicatedStorage.Shared.Growth)
@@ -19,6 +24,13 @@ local Spots = require(script.Parent.Spots)
 type Farm = typeof(FarmState.newFarm(0))
 type Spot = Spots.Spot
 type Action = Brain.Action
+type Carried = {
+	item: string,
+	origin: string,
+	eggId: string?,
+	model: Model?,
+}
+type PathCache = { at: number, points: { Spot } }
 type Actor = {
 	current: Spot,
 	from: Spot,
@@ -30,6 +42,9 @@ type Actor = {
 	legEnd: number,
 	finishAt: number,
 	babyOnboard: boolean?,
+	pickupId: string?,
+	carrying: boolean?,
+	lastRefresh: number?,
 }
 type Session = {
 	root: Folder,
@@ -41,6 +56,12 @@ type Session = {
 	rng: typeof(Rng.new(0)),
 	cursor: number,
 	active: boolean,
+	pathCache: { [string]: PathCache },
+	pathWarnings: { [string]: number },
+	carried: Carried?,
+	prompts: { Instance },
+	characterConnection: RBXScriptConnection?,
+	deathConnection: RBXScriptConnection?,
 }
 
 local Village = {}
@@ -184,7 +205,13 @@ local function show(session: Session, farm: Farm, epoch: number)
 		set(model, "Trait", slime.trait)
 		set(model, "Action", if actor and actor.action then actor.action.kind else "idle")
 		set(model, "Emotion", if actor and actor.action then actor.action.emotion else "normal")
-		set(model, "Carry", if actor and actor.action and actor.action.carry then actor.action.carry.item else "")
+		set(
+			model,
+			"Carry",
+			if actor and actor.carrying and actor.index > 0 and actor.action
+				then (if actor.action.kind == "carryEgg" then "Egg" else if actor.action.carry then actor.action.carry.item else "")
+				else ""
+		)
 		set(model, "FromX", from.x)
 		set(model, "FromY", from.y)
 		set(model, "FromZ", from.z)
@@ -246,6 +273,17 @@ local function show(session: Session, farm: Farm, epoch: number)
 		set(model, "Place", egg.place)
 		set(model, "Slot", egg.slot)
 		set(model, "HatchAt", egg.hatchAt or 0)
+		local held = session.carried
+		local hidden = held ~= nil and held.eggId == egg.id
+		if not hidden then
+			for _, courier in session.actors do
+				if courier.carrying and courier.index > 0 and courier.action and courier.action.eggId == egg.id then
+					hidden = true
+					break
+				end
+			end
+		end
+		set(model, "Held", hidden)
 	end
 	for _, inst in eggs:GetChildren() do
 		if not liveEggs[inst.Name] then
@@ -254,7 +292,7 @@ local function show(session: Session, farm: Farm, epoch: number)
 	end
 end
 
--- Move toward the target but leave personal space; no physics collision is needed.
+-- Stop at a safe social distance instead of trying to occupy a character or another slime.
 local function stopShort(origin: Spot, target: Spot): Spot
 	local delta = point(target) - point(origin)
 	local flat = Vector3.new(delta.X, 0, delta.Z)
@@ -265,16 +303,75 @@ local function stopShort(origin: Spot, target: Spot): Spot
 	return { id = target.id, area = target.area, x = position.X, y = origin.y, z = position.Z }
 end
 
-local function route(session: Session, actor: Actor, action: Action, target: Spot): { Spot }
+-- Path computations use the real plot's navigation mesh; cache only unchanged fixed markers.
+local function fixed(session: Session, spot: Spot): boolean
+	local known = session.spots[spot.id]
+	return known ~= nil and (point(known) - point(spot)).Magnitude <= Config.Village.PathPointEpsilon
+end
+
+local function pathBetween(session: Session, start: Spot, target: Spot, scale: number): { Spot }?
+	local radius = math.max(Config.Village.PathMinRadius, Config.Village.PathRadiusPerScale * scale)
+	local cacheKey: string? = nil
+	if fixed(session, start) and fixed(session, target) then
+		cacheKey = start.id .. ">" .. target.id .. ":" .. tostring(radius)
+		local cached = session.pathCache[cacheKey]
+		if cached and os.clock() - cached.at < Config.Village.PathCacheSeconds then
+			return table.clone(cached.points)
+		end
+	end
+	local path = PathfindingService:CreatePath({
+		AgentRadius = radius,
+		AgentHeight = math.max(Config.Village.PathHeightPerScale * scale, radius * 2),
+		AgentCanJump = false,
+		WaypointSpacing = Config.Village.PathWaypointStuds,
+	})
+	local ok = pcall(function()
+		path:ComputeAsync(point(start), point(target))
+	end)
+	if not ok or path.Status ~= Enum.PathStatus.Success then
+		return nil
+	end
+	local waypoints = path:GetWaypoints()
+	if #waypoints == 0 then
+		return nil
+	end
+	local points: { Spot } = {}
+	for index, waypoint in waypoints do
+		if waypoint.Action == Enum.PathWaypointAction.Jump then
+			return nil
+		end
+		if index > 1 and index < #waypoints then
+			table.insert(points, {
+				id = "via",
+				area = start.area,
+				x = waypoint.Position.X,
+				y = waypoint.Position.Y,
+				z = waypoint.Position.Z,
+			})
+		end
+	end
+	table.insert(points, target)
+	local merged = VillagePath.merge(start, points)
+	if cacheKey then
+		session.pathCache[cacheKey] = { at = os.clock(), points = table.clone(merged) }
+	end
+	return merged
+end
+
+local function route(session: Session, actor: Actor, action: Action, target: Spot, scale: number): { Spot }
 	local path: { Spot } = {}
 	local current = actor.current
 	local function add(spot: Spot?)
-		if spot and (point(current) - point(spot)).Magnitude > 0 then
+		if spot and (point(current) - point(spot)).Magnitude > Config.Village.PathPointEpsilon then
+			table.insert(path, spot)
+			current = spot
+		elseif spot and spot.id ~= "via" and current.id ~= spot.id then
+			-- A same-position service marker still matters to pickup / nursery state.
 			table.insert(path, spot)
 			current = spot
 		end
 	end
-	local function travel(destination: Spot)
+	local function fallback(destination: Spot)
 		if current.area ~= destination.area then
 			if current.area ~= "plaza" and current.area ~= "gate" then
 				add(session.spots["entrance:" .. current.area])
@@ -286,7 +383,27 @@ local function route(session: Session, actor: Actor, action: Action, target: Spo
 		end
 		add(destination)
 	end
-	-- Pick up before delivery. Stock is actually committed only at the final destination.
+	local function travel(destination: Spot)
+		local start = current
+		if (point(start) - point(destination)).Magnitude <= Config.Village.PathPointEpsilon then
+			add(destination)
+			return
+		end
+		local waypoints = pathBetween(session, start, destination, scale)
+		if waypoints then
+			for _, waypoint in waypoints do
+				add(waypoint)
+			end
+		else
+			local key = start.id .. " > " .. destination.id
+			local clock = os.clock()
+			if clock - (session.pathWarnings[key] or -math.huge) >= Config.Village.PathWarningSeconds then
+				session.pathWarnings[key] = clock
+				warn(Config.LogPrefix, "village path failed:", key, "- using plaza route")
+			end
+			fallback(destination)
+		end
+	end
 	local pickup: Spot? = nil
 	if action.kind == "carryBox" and action.source then
 		pickup = session.spots["box:" .. action.source]
@@ -301,12 +418,13 @@ local function route(session: Session, actor: Actor, action: Action, target: Spo
 	elseif action.kind == "walkBaby" then
 		pickup = session.spots.nursery
 	end
+	actor.pickupId = if pickup then pickup.id else nil
+	actor.carrying = pickup ~= nil and actor.current.id == pickup.id
 	if pickup then
 		travel(pickup)
 	end
 	travel(target)
 	if action.kind == "walkBaby" then
-		-- The nursery is both the pickup and the safe return point for the child.
 		travel(session.spots.nursery)
 	end
 	return path
@@ -321,7 +439,7 @@ local function startLeg(actor: Actor, speed: number, when: number)
 	actor.from = actor.current
 	actor.to = to
 	actor.legStart = when
-	actor.legEnd = when + (point(to) - point(actor.from)).Magnitude / speed
+	actor.legEnd = when + VillagePath.duration((point(to) - point(actor.from)).Magnitude, speed)
 end
 
 local function advance(
@@ -339,6 +457,9 @@ local function advance(
 	while actor.index > 0 and clock >= actor.legEnd do
 		local reachedAt = actor.legEnd
 		actor.current = actor.to
+		if actor.pickupId and actor.current.id == actor.pickupId then
+			actor.carrying = true
+		end
 		if actor.action.kind == "walkBaby" and actor.current.id == "nursery" then
 			actor.babyOnboard = true
 		end
@@ -347,6 +468,7 @@ local function advance(
 			startLeg(actor, speed, reachedAt)
 		else
 			actor.index = 0
+			actor.carrying = false
 			actor.from, actor.to = actor.current, actor.current
 			actor.legStart, actor.legEnd = reachedAt, reachedAt
 			local action = actor.action
@@ -482,6 +604,8 @@ local function think(
 					(other.action and other.action.spot == action.spot)
 					or (otherSpot and (point(otherSpot) - point(target)).Magnitude <= Config.Brain.StopStuds)
 					or (point(other.current) - point(target)).Magnitude <= Config.Brain.StopStuds
+					or (point(other.to) - point(target)).Magnitude <= Config.Village.PathAvoidStuds
+					or (other.route[#other.route] ~= nil and (point(other.route[#other.route]) - point(target)).Magnitude <= Config.Village.PathAvoidStuds)
 				)
 			then
 				order += 1
@@ -500,7 +624,14 @@ local function think(
 			}
 		end
 	end
-	actor.route = route(session, actor, action, target)
+	local scale = Growth.scale(
+		slime.createdAt,
+		epoch,
+		Stats.level(slime.stats),
+		farm.areas.breeding.level - Config.Village.StartLevel
+	)
+	actor.route = route(session, actor, action, target, scale)
+	actor.lastRefresh = clock
 	actor.index = if #actor.route > 0 then 1 else 0
 	if actor.index > 0 then
 		local speed = Config.Village.WalkSpeed
@@ -524,9 +655,73 @@ local function think(
 		release(session, slime.id, action)
 		actor.finishAt = clock + (if did or VISUAL[action.kind] then action.seconds else Config.Village.TickSeconds)
 		actor.from, actor.to = actor.current, actor.current
+		actor.carrying = false
 		actor.legStart, actor.legEnd = clock, clock
 	end
 	return true
+end
+
+-- Player and social targets move; replan only when they moved far enough and after a cooldown.
+local function refreshMoving(
+	player: Player,
+	session: Session,
+	farm: Farm,
+	id: string,
+	actor: Actor,
+	clock: number,
+	epoch: number
+)
+	local action = actor.action
+	if not action or actor.index == 0 or actor.pickupId then
+		return
+	end
+	if clock - (actor.lastRefresh or 0) < Config.Village.PathRefreshSeconds then
+		return
+	end
+	actor.lastRefresh = clock
+	local target: Spot? = nil
+	if action.kind == "player" then
+		local character = player.Character
+		local root = if character then character:FindFirstChild("HumanoidRootPart") else nil
+		if root and root:IsA("BasePart") then
+			target = { id = "player", area = actor.current.area, x = root.Position.X, y = root.Position.Y, z = root.Position.Z }
+		end
+	elseif action.partner and (
+		action.kind == "chat" or action.kind == "greet" or action.kind == "argue"
+		or action.kind == "makeup" or action.kind == "tag" or action.kind == "playBaby"
+	) then
+		local other = session.actors[action.partner]
+		if other then
+			target = other.to
+		end
+	end
+	if not target then
+		return
+	end
+	local fraction = VillagePath.progress(actor.legStart, actor.legEnd, clock)
+	local position = point(actor.from):Lerp(point(actor.to), fraction)
+	local start: Spot = { id = "via", area = actor.from.area, x = position.X, y = position.Y, z = position.Z }
+	target = stopShort(start, target)
+	local destination = actor.route[#actor.route]
+	if destination and (point(destination) - point(target)).Magnitude < Config.Village.PathRefreshStuds then
+		return
+	end
+	local slime = FarmState.findSlime(farm, id)
+	if not slime then
+		return
+	end
+	actor.current = start
+	local scale = Growth.scale(
+		slime.createdAt, epoch, Stats.level(slime.stats),
+		farm.areas.breeding.level - Config.Village.StartLevel
+	)
+	actor.route = route(session, actor, action, target, scale)
+	actor.index = if #actor.route > 0 then 1 else 0
+	if actor.index > 0 then
+		local speed = Config.Village.WalkSpeed
+			* (1 + (slime.stats.speed - Config.Stats.Starter.speed) * Config.Village.WalkPerSpeed)
+		startLeg(actor, speed, clock)
+	end
 end
 
 local function tick(player: Player, session: Session)
@@ -597,6 +792,7 @@ local function tick(player: Player, session: Session)
 			local speed = Config.Village.WalkSpeed
 				* (1 + (slime.stats.speed - Config.Stats.Starter.speed) * Config.Village.WalkPerSpeed)
 			advance(player, session, id, actor, speed, clock, epoch)
+			refreshMoving(player, session, snapshot, id, actor, clock, epoch)
 		end
 	end
 	if #snapshot.slimes > 0 then
@@ -661,6 +857,12 @@ function Village.start()
 			rng = rng,
 			cursor = 0,
 			active = true,
+			pathCache = {},
+			pathWarnings = {},
+			carried = nil,
+			prompts = {},
+			characterConnection = nil,
+			deathConnection = nil,
 		}
 		sessions[player] = session
 		local farm = PlayerData.get(player)
