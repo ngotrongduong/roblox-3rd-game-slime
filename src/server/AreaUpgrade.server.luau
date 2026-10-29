@@ -4,13 +4,15 @@
 -- swaps its stage layer for the next level (PondStages for the fishing pond, AreaStages for the
 -- others), with a burst of sparkles, bigger when a material tier starts. At the pond the original
 -- level-1 dock and its tools are hidden while the stage layer stands in for them.
--- shortcut: free upgrades and the levels kept only while the server runs (no cost, not saved, any
--- player may press); upgrade when the farm's coins and saved area levels exist (Phase 2).
-local Players = game:GetService("Players")
+-- Upgrades are saved and paid through VillageRemotes, including the E prompts.
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local ServerStorage = game:GetService("ServerStorage")
 
 local Config = require(ReplicatedStorage.Shared.Config)
 local Layout = require(ReplicatedStorage.Shared.Layout)
+local PlayerData = require(script.Parent.PlayerData)
+local Village = require(script.Parent.Village)
+local VillageRemotes = require(script.Parent.VillageRemotes)
 local AreaStages = require(script.Parent.AreaStages)
 local PantryStages = require(script.Parent.PantryStages)
 local GardenStages = require(script.Parent.GardenStages)
@@ -30,20 +32,19 @@ local PondStages = require(script.Parent.PondStages)
 -- the fence, gate and plaza: their level follows the areas' (VillageStages.levelOf)
 local VillageStages = require(script.Parent.VillageStages)
 
-local PLOT = 5
-local COOLDOWN = 0.4 -- seconds between two presses of one player
+local PLOT = Config.Village.DevPlot
 local GROUND = Config.Map.GroundY or 2
 local DOCK_X = -3 -- the level-1 dock's line in the pond's frame (build_fishing_l1)
 -- the level-1 pieces of the pond the stage layer replaces
 local REPLACED = { "Dock", "Rod", "RodHolder", "Line", "BobberTop", "BobberBottom", "FishBucket", "Bucket", "Catch" }
 -- the areas: model name, (col, row) in the plot
 local AREAS: { { any } } = {
-	{ "FishingPondL1", -1, 1 },
-	{ "GardenL1", 1, 1 },
-	{ "PantryL1", 0, 1 },
-	{ "KitchenL1", -1, 0 },
-	{ "BreedingL1", 1, 0 },
-	{ "TrainingL1", -1, -1 },
+	{ "FishingPondL1", -1, 1, "fishing" },
+	{ "GardenL1", 1, 1, "garden" },
+	{ "PantryL1", 0, 1, "pantry" },
+	{ "KitchenL1", -1, 0, "kitchen" },
+	{ "BreedingL1", 1, 0, "breeding" },
+	{ "TrainingL1", -1, -1, "training" },
 }
 
 local map = workspace:FindFirstChild("Map")
@@ -137,12 +138,9 @@ local function refreshVillage()
 	print(Config.LogPrefix, "village is now level", v)
 end
 
-local lastPress: { [Player]: number } = {}
-Players.PlayerRemoving:Connect(function(player: Player)
-	lastPress[player] = nil
-end)
+local applyLevel: { [string]: (number, boolean) -> () } = {}
 
-local function setUp(name: string, col: number, row: number)
+local function setUp(name: string, col: number, row: number, areaId: string)
 	local area = plot:FindFirstChild(name)
 	if not area then
 		return
@@ -196,19 +194,24 @@ local function setUp(name: string, col: number, row: number)
 		prompt.Enabled = level < PondStages.MaxLevel
 	end
 
-	prompt.Triggered:Connect(function(player: Player)
-		local now = os.clock()
-		if now - (lastPress[player] or 0) < COOLDOWN or level >= PondStages.MaxLevel then
+	local function apply(newLevel: number, effects: boolean)
+		if newLevel == level then
 			return
 		end
-		lastPress[player] = now
-		level += 1
+		level = newLevel
 		show(level)
-		burst(anchor.CFrame * CFrame.new(0, 0, 6), level % 5 == 1) -- dust when a material tier starts
+		if effects then
+			burst(anchor.CFrame * CFrame.new(0, 0, 6), level % 5 == 1)
+		end
 		refreshPrompt()
-		print(Config.LogPrefix, player.Name, "upgraded", label, "to level", level)
 		areaLevels[name] = level
 		refreshVillage()
+	end
+	applyLevel[areaId] = apply
+
+	prompt.Triggered:Connect(function(player: Player)
+		-- The same owner check, request limit, coin debit and save as the RemoteFunction.
+		VillageRemotes.upgrade(player, areaId)
 	end)
 
 	if isPond then
@@ -220,6 +223,38 @@ local function setUp(name: string, col: number, row: number)
 end
 
 for _, a in AREAS do
-	setUp(a[1], a[2], a[3])
+	setUp(a[1], a[2], a[3], a[4])
 end
 refreshVillage()
+
+-- The plot visuals are not save data: rebuild from the owner's saved levels on every join.
+local events = ServerStorage:WaitForChild("VillageEvents")
+local changed = events:WaitForChild("AreaLevelChanged") :: BindableEvent
+changed.Event:Connect(function(player: Player, areaId: string, level: number)
+	if not Village.ownsPlot(player) then
+		return
+	end
+	local apply = applyLevel[areaId]
+	if apply then
+		apply(level, true)
+	end
+end)
+
+PlayerData.onReady(function(player: Player, _data: any)
+	task.delay(Config.Village.TickSeconds, function()
+		if not Village.ownsPlot(player) then
+			return
+		end
+		local farm = PlayerData.get(player)
+		if not farm then
+			return
+		end
+		for _, row in AREAS do
+			local apply = applyLevel[row[4]]
+			local area = (farm.areas :: any)[row[4]]
+			if apply and area then
+				apply(area.level, false)
+			end
+		end
+	end)
+end)

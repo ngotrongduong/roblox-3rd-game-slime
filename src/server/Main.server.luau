@@ -1,9 +1,16 @@
+--!strict
 -- Starts the server services. The server decides everything; clients draw and ask.
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Config = require(ReplicatedStorage.Shared.Config)
 local FarmSave = require(ReplicatedStorage.Shared.FarmSave)
 local PlayerData = require(script.Parent.PlayerData)
+local Village = require(script.Parent.Village)
+local VillageRemotes = require(script.Parent.VillageRemotes)
+
+-- Register callbacks before profiles can finish loading.
+VillageRemotes.start()
+Village.start()
 
 -- Player profiles: load, save, session lock. The farm rules give the data its shape.
 PlayerData.start(FarmSave.hooks(function(line: string)
