@@ -334,7 +334,9 @@ renderArea = function(area: string)
 			local pair = pairs[index] or {}
 			local cell = row(scroller)
 			text(cell, tostring(index), UDim2.fromOffset(C.UiButtonSize / 2, C.UiButtonSize), C.FontSub)
-			button(cell, labelFor(pair.a) .. " + " .. labelFor(pair.b), function()
+			local courting = type(pair.courtingUntil) == "number" and pair.courtingUntil > os.time()
+			button(cell, labelFor(pair.a) .. " + " .. labelFor(pair.b)
+				.. (if courting then " (Courting)" else ""), function()
 				pickedFirst = nil
 				picker(area, function(first)
 					pickedFirst = first
@@ -408,14 +410,16 @@ renderArea = function(area: string)
 						)
 					end, false)
 				end, math.max(C.UiButtonSize, (scroller.AbsoluteSize.X - C.UiButtonSize - C.UiPadding * 4) / 2))
-				if selected then
+				if type(selected) == "string" and selected ~= "" then
 					chosenPortrait(slotButton, selected)
 				end
 			end
-			if saved.worker or saved.reserve then
+			local assigned = if type(saved.worker) == "string" and saved.worker ~= "" then saved.worker
+				else if type(saved.reserve) == "string" and saved.reserve ~= "" then saved.reserve else nil
+			if assigned then
 				local remove = row(scroller)
-				button(remove, "Remove " .. labelFor(saved.worker or saved.reserve), function()
-					local id = saved.worker or saved.reserve
+				button(remove, "Remove " .. labelFor(assigned), function()
+					local id = assigned
 					if id then
 						request({ action = "Unassign", slimeId = id }, function()
 							renderArea(area)
@@ -423,6 +427,11 @@ renderArea = function(area: string)
 					end
 				end, C.UiButtonSize * 4)
 			end
+			local progress = if type(saved.progress) == "number" then math.floor(saved.progress * Config.Needs.Max) else 0
+			local detail = row(scroller)
+			text(detail, "Progress " .. tostring(progress) .. "%"
+				.. (if area == "training" then " · " .. (if saved.stat ~= "" then tostring(saved.stat) else "Choose stat") else ""),
+				UDim2.new(1, 0, 0, C.HudHeight), C.FontTiny)
 			if area == "training" then
 				local stats = row(scroller)
 				for _, stat in { "attack", "defence", "speed", "hp" } do
@@ -441,7 +450,17 @@ renderArea = function(area: string)
 				end
 			end
 		end
-
+		local boxes = if own then parse(own:GetAttribute("Box")) else {}
+		local stock: { [string]: number } = boxes[area] or {}
+		local summary = ""
+		local order = if area == "kitchen" then Config.Food.DishOrder else Config.Food.RawOrder
+		for _, item in order do
+			if (stock[item] or 0) > 0 then
+				summary ..= (if summary == "" then "" else "  ·  ") .. item .. " " .. tostring(stock[item])
+			end
+		end
+		text(scroller, "Box: " .. (if summary == "" then "Empty" else summary),
+			UDim2.new(1, 0, 0, C.HudHeight), C.FontSmall)
 	end
 end
 
