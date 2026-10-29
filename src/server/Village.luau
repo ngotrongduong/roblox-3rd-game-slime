@@ -212,7 +212,7 @@ local function show(session: Session, farm: Farm, epoch: number)
 		set(model, "Name", slime.name)
 		set(model, "Trait", slime.trait)
 		set(model, "Action", if actor and actor.action then actor.action.kind else "idle")
-		local area, slot, _isReserve = working(farm, slime.id)
+		local area, slot, isReserve = working(farm, slime.id)
 		local phase, phaseStart, phaseEnd = "", 0, 0
 		if actor and actor.workPhase then
 			phase = actor.workPhase
