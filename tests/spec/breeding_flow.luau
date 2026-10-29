@@ -38,7 +38,7 @@ return function(T)
 		T.eq(Hatching.nextReadyEgg(result.farm, NOW + 999), nil)
 		T.eq(result.farm.slimes[1].needs.energy, 70)
 		T.ok(Breeding.placeInIncubator(result.farm, egg.id, NOW + 100))
-		T.eq(egg.place, "nest", "genetics result is a snapshot; the farm owns its own egg")
+		T.eq(egg.place, "incubator", "the returned egg is the farm egg")
 		local incubated = result.farm.eggs[1]
 		T.eq(incubated.place, "incubator")
 		T.eq(incubated.hatchAt, NOW + 160)
