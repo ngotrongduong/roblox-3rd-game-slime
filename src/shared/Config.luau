@@ -200,6 +200,7 @@ Config.Village = {
 	PathAvoidStuds = 2.5,
 	PathWaitSeconds = 0.55,
 	CarryPromptDistance = 10,
+	CarryPromptHeight = 1.5,
 	CarryPromptHoldSeconds = 0,
 	CarryReachStuds = 12,
 	CarryModelScale = 0.42,
