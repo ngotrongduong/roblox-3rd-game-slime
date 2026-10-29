@@ -132,8 +132,10 @@ end
 
 -- A derived standing place (a spread around a busy spot, a step short of a partner) moved onto free ground,
 -- so no slime is ever placed in water, in a model or in the air. It keeps the spot's name and what it faces.
-local function stand(s: Spot, toward: Vector3?): Spot
-	local settled = Spots.settle(point(s), toward, Config.Village.SpotMaxDrop)
+-- (`avoid`: where other slimes stand or are going; a spread place keeps clear of them)
+local function stand(s: Spot, toward: Vector3?, avoid: { Vector3 }?): Spot
+	local settled = Spots.settle(point(s), toward, Config.Village.SpotMaxDrop, avoid)
+
 	if not settled then
 		return s
 	end
@@ -858,6 +860,14 @@ local function think(
 				order += 1
 			end
 		end
+		-- Where the others stand or are bound: a spread place pushed out of a prop must not land on one of them
+		-- (two courting slimes ended on the same point by the pen).
+		local taken: { Vector3 } = {}
+		for otherId, other in session.actors do
+			if otherId ~= slime.id then
+				table.insert(taken, point(other.route[#other.route] or other.current))
+			end
+		end
 		if order > 1 then
 			local index = order - 2
 			local angle = (index % Config.Brain.SpotSpreadPlaces) * math.pi * 2 / Config.Brain.SpotSpreadPlaces
@@ -871,7 +881,7 @@ local function think(
 				fx = target.fx,
 				fy = target.fy,
 				fz = target.fz,
-			}, point(target))
+			}, point(target), taken)
 		end
 	end
 	local scale = Growth.scale(

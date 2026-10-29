@@ -260,6 +260,8 @@ Config.Village = {
 	SpotMaxRise = 0.6,
 	-- A spread or a step short of a partner may be at most this much lower than the spot it spreads from.
 	SpotMaxDrop = 1,
+	-- A spread standing place keeps at least this far from where another slime stands or is going.
+	SpotApartStuds = 3,
 	-- A spot inside a model moves out in rings this far apart, up to this many rings.
 	SpotSettleStep = 1,
 	SpotSettleRings = 14,
@@ -492,6 +494,14 @@ Config.Map = {
 	HeartRadius = 46,
 	DuelRingRadius = 14,
 	DuelRingDistance = 78,
+	-- No z-fighting (src/server/ZFight.luau): top faces closer than ZFightTolerance that overlap by more than
+	-- ZFightEdge in plan flicker; the smaller part rises by ZFightStep (up to ZFightPasses times). ZFightCell is
+	-- the plan grid of the search.
+	ZFightTolerance = 0.02,
+	ZFightEdge = 0.01,
+	ZFightStep = 0.03,
+	ZFightPasses = 12,
+	ZFightCell = 8,
 }
 
 -- ===== The slime body, face and motion =====
@@ -813,12 +823,25 @@ Config.VillageClient = {
 	HoeSwingDegrees = 50,
 	HoeSwingHz = 1.3,
 	CanScale = 0.8,
+	-- The can over the head (the owner, 2026-10-29: it lay on the ground): its foot this high above the feet
+	-- and this far forward (studs for a full-size slime), the spout (+X end of the kit can when 1, -X when -1)
+	-- turned to the front and tipped down this many degrees, wobbling as it pours.
+	CanUp = 3.2,
+	CanForward = 0.3,
+	CanSpoutSign = 1,
+	CanPourDegrees = 30,
+	CanPourWobble = 8,
+	CanPourHz = 0.9,
 	GhostFloat = 0.35,
 	GhostFloatHz = 0.35,
 	EggWobbleWindow = 8,
 	EggWobbleDegrees = 10,
 	EggWobbleHz = 4,
 	EggHeight = 1.4,
+	-- An egg stands on the bed found by a ray from this far above its marker down this far, this much above it.
+	EggRestProbeUp = 1.2,
+	EggRestProbeDown = 3,
+	EggRestLift = 0.02,
 	CarryHeight = 1.1,
 	CarryScale = 0.42,
 	SleepBillboardPixels = 32,

@@ -82,7 +82,7 @@ local function asset(name: string): Model
 		end
 		-- Keep the kit's pivot (a tool's is the foot of its handle), not the new model's bounding-box centre.
 		-- (carried food keeps the centre: it rests on the head by its bounding box)
-		if name == "FishingRod" or name == "Hoe" then
+		if name == "FishingRod" or name == "Hoe" or name == "WateringCan" then
 			model.WorldPivot = original:GetPivot()
 		end
 	elseif original and original:IsA("BasePart") then
@@ -297,7 +297,8 @@ local function addWaterDrops(carried: Model)
 	end
 	local drop = Instance.new("Attachment")
 	drop.Name = "WaterDrops"
-	drop.Position = Vector3.new(0, -spout.Size.Y / 2, 0)
+	-- at the spout's mouth (the can's long axis is its X; CanSpoutSign says which end), raining downward
+	drop.Position = Vector3.new(C.CanSpoutSign * spout.Size.X / 2, spout.Size.Y * 0.25, 0)
 	drop.Parent = spout
 	local emitter = Instance.new("ParticleEmitter")
 	emitter.Name = "Watering"
@@ -310,6 +311,7 @@ local function addWaterDrops(carried: Model)
 	emitter.Speed = NumberRange.new(Config.Work.WorkWaterDropSpeed)
 	emitter.Acceleration = Vector3.new(0, -Config.Work.WorkWaterDropGravity, 0)
 	emitter.Rate = Config.Work.WorkDropsPerWater
+	emitter.EmissionDirection = Enum.NormalId.Bottom
 	emitter.Parent = drop
 end
 
@@ -329,6 +331,13 @@ end
 local function toolPose(config: Configuration, tool: string, clock: number): CFrame
 	local phase = stringAttr(config, "WorkPhase", "")
 	local moving = clock >= number(config, "LegStart", 0) and clock < number(config, "LegEnd", 0)
+	if tool == "WateringCan" then
+		-- Over the head, the spout turned to the front and tipped down toward the crop, pouring in small waves.
+		local pour = C.CanPourDegrees + C.CanPourWobble * math.sin(clock * C.CanPourHz * math.pi * 2)
+		return CFrame.new(0, C.CanUp, -C.CanForward)
+			* CFrame.Angles(-math.rad(pour), 0, 0)
+			* CFrame.Angles(0, math.rad(C.CanSpoutSign * 90), 0)
+	end
 	if tool == "Hoe" then
 		local swing = C.HoeSwingDegrees * math.max(0, math.sin(clock * C.HoeSwingHz * math.pi * 2))
 		return CFrame.new(C.RodGripUp * 0.6, C.RodGripUp * 0.6, -C.RodGripForward)
@@ -566,13 +575,7 @@ local function animate(village: Village, entry: Entry, now: number)
 	if inHand and (hand == "take" or hand == "catch") then
 		carryName = ""
 	end
-	local overHead = if action == "work"
-			and not moving
-			and carryName == ""
-			and phase == "water"
-		then "WateringCan"
-		else ""
-	local shown = if carryName ~= "" then carryName else overHead
+	local shown = carryName
 	if shown ~= entry.carryName then
 		if actor then
 			SlimeActor.detach(actor)
@@ -584,21 +587,11 @@ local function animate(village: Village, entry: Entry, now: number)
 		entry.carry = nil
 		if shown ~= "" then
 			local carried = asset(shown)
-			carried:ScaleTo(if overHead ~= "" then C.CanScale else C.CarryScale)
+			carried:ScaleTo(C.CarryScale)
 			carried.Parent = renderFolder
-			if overHead == "WateringCan" then
-				addWaterDrops(carried)
-			end
 			entry.carry = carried
 			if actor then
-				local offset = if overHead == "WateringCan"
-					then CFrame.new(0, Config.Work.WorkToolOffset, 0) * CFrame.Angles(
-						0,
-						0,
-						math.rad(Config.Work.WorkWaterTiltDegrees)
-					)
-					else CFrame.new()
-				SlimeActor.attach(actor, carried, offset)
+				SlimeActor.attach(actor, carried, CFrame.new())
 			end
 		end
 	end
@@ -618,7 +611,11 @@ local function animate(village: Village, entry: Entry, now: number)
 
 	local tool = if holdingRod
 		then "FishingRod"
-		else (if action == "work" and not moving and phase == "hoe" then "Hoe" else "")
+		else (if action == "work"
+				and not moving
+				and carryName == ""
+			then (if phase == "hoe" then "Hoe" elseif phase == "water" then "WateringCan" else "")
+			else "")
 	if tool ~= entry.toolName then
 		entry.toolName = tool
 		if actor then
@@ -641,6 +638,9 @@ local function animate(village: Village, entry: Entry, now: number)
 					end
 				end
 				toolModel:ScaleTo(C.RodScale * scale / C.BodyHeight)
+			elseif tool == "WateringCan" then
+				toolModel:ScaleTo(C.CanScale * scale / C.BodyHeight)
+				addWaterDrops(toolModel)
 			else
 				toolModel:ScaleTo(C.HoeScale * scale / C.BodyHeight)
 			end
@@ -782,6 +782,33 @@ local function removeSlime(village: Village, child: Instance)
 	end
 end
 
+-- The owner, 2026-10-29: "the egg in the incubator only shows half". A nest or incubator marker sits at the
+-- bed's surface (or inside it), and the egg was centred on it. Find the bed under the marker and stand the
+-- egg's bottom on it. Markers never move, so each result is kept.
+local eggRest: { [string]: Vector3 } = {}
+local eggParams = RaycastParams.new()
+eggParams.FilterType = Enum.RaycastFilterType.Exclude
+eggParams.FilterDescendantsInstances = { renderFolder }
+local function restEgg(model: Model, marker: Vector3): Vector3
+	local key = string.format("%.2f,%.2f,%.2f", marker.X, marker.Y, marker.Z)
+	local known = eggRest[key]
+	if known then
+		return known
+	end
+	local box, size = model:GetBoundingBox()
+	-- how far the egg's bottom lies below its pivot (the egg is drawn by its pivot)
+	local below = model:GetPivot().Position.Y - (box.Position.Y - size.Y / 2)
+	local hit = workspace:Raycast(
+		marker + Vector3.new(0, C.EggRestProbeUp, 0),
+		Vector3.new(0, -C.EggRestProbeDown, 0),
+		eggParams
+	)
+	local floor = if hit then hit.Position.Y else marker.Y
+	local rest = Vector3.new(marker.X, floor + below + C.EggRestLift, marker.Z)
+	eggRest[key] = rest
+	return rest
+end
+
 local function addEgg(village: Village, child: Instance)
 	if child:IsA("Configuration") and not village.eggs[child] then
 		local model = asset("Egg")
@@ -888,7 +915,7 @@ task.spawn(function()
 				elseif model.Parent ~= renderFolder then
 					model.Parent = renderFolder
 				end
-				local position = eggPosition(village, egg :: Configuration)
+				local position = restEgg(model, eggPosition(village, egg :: Configuration))
 				if not camera or (camera.CFrame.Position - position).Magnitude <= C.MaxDrawDistance then
 					local hatchAt = number(egg, "HatchAt", 0)
 					local remaining = hatchAt - now

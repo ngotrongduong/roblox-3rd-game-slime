@@ -177,4 +177,18 @@ return function(T)
 		local second = Brain.choose(farm, "slime-4", { nearby = {}, reserved = locked }, NOW, Rng.new(1))
 		T.ok(second.kind ~= "carryEgg")
 	end)
+	T.test("a pair resting after laying hauls, then courts again when ready", function()
+		local farm = FarmKit.farm(NOW)
+		farm.breeding.pairs = { { a = "slime-1", b = "slime-2" } }
+		for _, s in farm.slimes do
+			s.trait = "hardworking"
+			s.breedReadyAt = NOW + 60
+		end
+		farm.storehouse = {}
+		farm.work.fishing.box = { fish = Config.Work.BoxCapacity }
+		local resting = Brain.choose(farm, "slime-1", CTX, NOW, Rng.new(2))
+		T.eq(resting.kind, "carryBox")
+		local ready = Brain.choose(farm, "slime-1", CTX, NOW + 61, Rng.new(2))
+		T.eq(ready.kind, "court")
+	end)
 end

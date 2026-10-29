@@ -78,7 +78,7 @@ end
 -- Rings of candidates widen until one fits; among one ring the one nearest `toward` wins (the side of a
 -- well or a bin that faces the path). Nil when nothing within SpotSettleRings fits.
 -- `maxDrop`: a derived place (a spread around a busy spot) also may not step down into a hollow (the pond's dry rim).
-function Spots.settle(position: Vector3, toward: Vector3?, maxDrop: number?): Vector3?
+function Spots.settle(position: Vector3, toward: Vector3?, maxDrop: number?, avoid: { Vector3 }?): Vector3?
 	for ring = 0, V.SpotSettleRings do
 		local radius = ring * V.SpotSettleStep
 		local count = if ring == 0 then 1 else math.max(V.SpotSettleMinAngles, ring * V.SpotSettleAnglesPerRing)
@@ -90,7 +90,22 @@ function Spots.settle(position: Vector3, toward: Vector3?, maxDrop: number?): Ve
 			local feet = Spots.ground(candidate)
 			-- (never on top of a prop: a log of the campfire, a bench, an incubator's lid)
 			local step = if feet then feet.Y - position.Y else 0
-			if feet and step <= V.SpotMaxRise and (not maxDrop or -step <= maxDrop) and Spots.free(feet) then
+			local taken = false
+			if feet and avoid then
+				for _, other in avoid do
+					if (Vector3.new(other.X - feet.X, 0, other.Z - feet.Z)).Magnitude < V.SpotApartStuds then
+						taken = true
+						break
+					end
+				end
+			end
+			if
+				feet
+				and not taken
+				and step <= V.SpotMaxRise
+				and (not maxDrop or -step <= maxDrop)
+				and Spots.free(feet)
+			then
 				local score = if toward
 					then (Vector3.new(feet.X, 0, feet.Z) - Vector3.new(toward.X, 0, toward.Z)).Magnitude
 					else 0
