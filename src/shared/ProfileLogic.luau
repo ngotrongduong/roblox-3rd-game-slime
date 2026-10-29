@@ -271,6 +271,7 @@ function ProfileLogic.migrateVillage(data: any, _now: number): any
 				slime.friends = {}
 				slime.buff = nil
 				slime.ghostUntil = nil
+				slime.sleeping = nil
 				slime.fallen = nil
 				slime.previousLoadout = nil
 			end
