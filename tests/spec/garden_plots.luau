@@ -52,6 +52,17 @@ return function(T: any)
 		T.ok(wet[1].progress >= dry[1].progress)
 	end)
 
+	T.test("large time steps consume water only for the first growth stage", function()
+		local plots = GardenPlots.new(1)
+		GardenPlots.apply(plots, 1, "hoe", false)
+		GardenPlots.apply(plots, 1, "plant", false)
+		GardenPlots.apply(plots, 1, "water", false)
+		GardenPlots.grow(plots, Config.Work.GardenStageSeconds * 2)
+		T.eq(plots[1].stage, 2)
+		T.ok(plots[1].progress < Config.Work.GardenStageSeconds)
+		T.eq(plots[1].watered, false)
+	end)
+
 	T.test("invalid garden plots repair independently without touching healthy plants", function()
 		local raw = {
 			{ crop = "cabbage", stage = 3, progress = 12, watered = true },

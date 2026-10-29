@@ -44,17 +44,23 @@ end
 
 function GardenPlots.grow(plots: { Plot }, seconds: number)
 	for _, plot in plots do
-		if plot.crop ~= "" and plot.stage < 4 then
+		local remaining = math.max(0, seconds)
+		while plot.crop ~= "" and plot.stage < 4 and remaining > 0 do
 			local speed = if plot.watered then 1 else Config.Work.GardenDryGrowthFactor
-			plot.progress += math.max(0, seconds) * speed
-			while plot.progress >= Config.Work.GardenStageSeconds and plot.stage < 4 do
-				plot.progress -= Config.Work.GardenStageSeconds
-				plot.stage += 1
-				-- Every new leaf stage asks for another watering, but dry plants still grow.
-				plot.watered = false
-			end
-			if plot.stage == 4 then
+			local needed = math.max(0, Config.Work.GardenStageSeconds - plot.progress) / speed
+			local used = math.min(remaining, needed)
+			plot.progress += used * speed
+			remaining -= used
+			if plot.progress >= Config.Work.GardenStageSeconds then
 				plot.progress = 0
+				plot.stage += 1
+				-- Water is consumed at each growth stage; leftover time now grows at the dry rate.
+				plot.watered = false
+				if plot.stage == 4 then
+					plot.progress = 0
+				end
+			else
+				break
 			end
 		end
 	end
