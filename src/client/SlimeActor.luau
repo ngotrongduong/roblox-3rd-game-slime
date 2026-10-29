@@ -418,7 +418,8 @@ end
 
 function Actor.attach(self: Slime, model: Model, offset: CFrame?)
 	self.attached = model
-	self.attachOffset = offset or CFrame.new()
+	-- The kit items pivot around different centres; rest their bottom at the slime's top.
+	self.attachOffset = (offset or CFrame.new()) * CFrame.new(0, model:GetExtentsSize().Y / 2, 0)
 	table.clear(self.attachedParts)
 	table.clear(self.attachedOffsets)
 	local pivot = model:GetPivot()
