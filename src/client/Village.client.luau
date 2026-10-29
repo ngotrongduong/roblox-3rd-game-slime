@@ -305,7 +305,8 @@ local function animate(village: Village, entry: Entry, now: number)
 			local stage = if pond then pond:FindFirstChild("AreaStage") else nil
 			local marker = if stage then stage:FindFirstChild("WorkSpot" .. number(entry.config, "WorkSlot", 1)) else nil
 			if marker and marker:IsA("BasePart") then
-				local direction = marker.CFrame.LookVector
+				-- PondStage dock runs toward its +Z far end, opposite the marker's LookVector.
+				local direction = -marker.CFrame.LookVector
 				SlimeActor.lookAt(actor, marker.Position + direction * C.BodyHeight)
 			else
 				SlimeActor.lookAt(actor, to + (to - from))
