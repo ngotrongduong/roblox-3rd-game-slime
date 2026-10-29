@@ -18,14 +18,15 @@ return function(T)
 	end)
 
 	T.test("each hop advances only after crouching and before landing", function()
-		local speed = Config.Village.WalkSpeed
-		local length = speed * Config.Village.HopSeconds * 3 - Config.Village.PathPointEpsilon
-		local duration = Path.duration(length, speed)
-		T.near(duration, 3 * Config.Village.HopSeconds, 0.0001)
+		local gait = Config.Gaits.walk
+		local length = gait.HopStuds * 3 - Config.Village.PathPointEpsilon
+		local duration = Path.duration(length, 1, "walk")
+		local cycle = Path.cycle("walk")
+		T.near(duration, 3 * cycle, 0.0001)
 		local start = 100
-		local p0 = Path.progress(start, start + duration, start + Config.Slime.CrouchSeconds / 2)
-		local p1 = Path.progress(start, start + duration, start + Config.Village.HopSeconds)
-		local p2 = Path.progress(start, start + duration, start + duration)
+		local p0 = Path.progress(start, start + duration, start + gait.CrouchSeconds / 2, "walk")
+		local p1 = Path.progress(start, start + duration, start + cycle, "walk")
+		local p2 = Path.progress(start, start + duration, start + duration, "walk")
 		T.near(p0, 0, 0.0001)
 		T.near(p1, 1 / 3, 0.0001)
 		T.near(p2, 1, 0.0001)

@@ -37,6 +37,11 @@ export type State = {
 	landed: boolean, -- set on touchdown; the caller clears it
 	launched: boolean,
 	walking: boolean,
+	-- The gait being walked (one Config.Gaits entry; nil = the default numbers of Config.Slime): this slime's own
+	-- hop and spring numbers, so no gait ever changes a global.
+	gait: any,
+	-- While a glide slides: its bob (a squash wave), Hz, forward lean, and how fast it goes now (0..1).
+	glide: { bob: number, hz: number, lean: number, k: number }?,
 }
 
 export type Ctx = {
@@ -87,6 +92,8 @@ function SlimeMotion.new(seed: number?): State
 		landed = false,
 		launched = false,
 		walking = false,
+		gait = nil,
+		glide = nil,
 	}
 end
 
@@ -121,7 +128,8 @@ function SlimeMotion.hop(st: State, h: number, snap: boolean?)
 end
 
 local function launch(st: State, h: number)
-	st.vy = math.sqrt(2 * C.Gravity * h)
+	local P = st.gait or C
+	st.vy = math.sqrt(2 * P.Gravity * h)
 	st.y = 1e-4
 	st.sq.v += 2.2
 	st.launched = true
@@ -397,13 +405,25 @@ function SlimeMotion.step(st: State, dt: number, ctx: Ctx?): Pose
 	local driver = drivers[st.motion] or drivers.idle
 	driver(st, dt, ctx or NO_TARGET)
 
-	-- the hop: crouch, launch, fly, land
+	-- a glide: a slide with a bob and a lean forward, on top of the feeling's own motion
+	local glide = st.glide
+	if glide then
+		st.sq.to += glide.bob * math.sin(TAU * glide.hz * st.t) + 0.03 * glide.k
+		st.lf.to += glide.lean * glide.k
+		st.ls.to += 0.02 * glide.k * math.sin(TAU * glide.hz * 0.5 * st.t)
+	end
+
+	-- the hop: crouch, launch, fly, land (with this slime's gait numbers while it walks one)
+	local P = st.gait or C
+	local hopLean = P.HopLean or 0
 	local hop = st.hop
 	if hop then
 		if hop.stage == "crouch" then
 			hop.t += dt
-			st.sq.to = C.CrouchSquash * smooth(hop.t / C.CrouchSeconds)
-			if hop.t >= C.CrouchSeconds then
+			local k = if P.CrouchSeconds > 0 then smooth(hop.t / P.CrouchSeconds) else 1
+			st.sq.to = P.CrouchSquash * k
+			st.lf.to -= hopLean * 0.6 * k
+			if hop.t >= P.CrouchSeconds then
 				hop.stage = "launch"
 			end
 		end
@@ -411,12 +431,13 @@ function SlimeMotion.step(st: State, dt: number, ctx: Ctx?): Pose
 			launch(st, hop.h)
 			hop.stage = "air"
 		elseif hop.stage == "air" then
-			local v0 = math.sqrt(2 * C.Gravity * hop.h)
-			st.sq.to = C.AirStretch * math.min(math.abs(st.vy) / v0, 1)
-			st.vy -= C.Gravity * dt
+			local v0 = math.sqrt(2 * P.Gravity * hop.h)
+			st.sq.to = P.AirStretch * math.min(math.abs(st.vy) / v0, 1)
+			st.lf.to += hopLean
+			st.vy -= P.Gravity * dt
 			st.y += st.vy * dt
 			if st.y <= 0 and st.vy < 0 then
-				st.sq.v -= C.LandKick * -st.vy
+				st.sq.v -= P.LandKick * -st.vy
 				st.pf.v += 0.6 * -st.vy
 				st.y = 0
 				st.vy = 0
@@ -426,16 +447,16 @@ function SlimeMotion.step(st: State, dt: number, ctx: Ctx?): Pose
 		end
 	end
 
-	integrate(st.sq, C.SquashHz, C.SquashDamping, dt)
-	integrate(st.lf, C.LeanHz, C.LeanDamping, dt)
-	integrate(st.ls, C.LeanHz, C.LeanDamping, dt)
+	integrate(st.sq, P.SquashHz, P.SquashDamping, dt)
+	integrate(st.lf, P.LeanHz, P.LeanDamping, dt)
+	integrate(st.ls, P.LeanHz, P.LeanDamping, dt)
 	integrate(st.yw, C.YawHz, C.YawDamping, dt)
 	integrate(st.pf, C.PuffHz, C.PuffDamping, dt)
 
 	local sq = math.clamp(st.sq.x, -0.7, 0.45)
 	return {
 		sy = math.exp(sq),
-		sx = math.exp(-C.VolumeBulge * sq + math.clamp(st.pf.x, -0.2, 0.3)),
+		sx = math.exp(-P.VolumeBulge * sq + math.clamp(st.pf.x, -0.2, 0.3)),
 		leanFwd = math.clamp(st.lf.x, -0.4, 0.4),
 		leanSide = math.clamp(st.ls.x, -0.4, 0.4),
 		yaw = st.yw.x,

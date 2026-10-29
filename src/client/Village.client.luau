@@ -451,7 +451,8 @@ local function animate(village: Village, entry: Entry, now: number)
 	local start = number(entry.config, "LegStart", 0)
 	local finish = number(entry.config, "LegEnd", 0)
 	local moving = finish > start and now >= start and now < finish and (to - from).Magnitude > 0
-	local fraction = VillagePath.progress(start, finish, now)
+	local gait = stringAttr(entry.config, "Gait", "walk")
+	local fraction = VillagePath.progress(start, finish, now, gait)
 	local pos = from:Lerp(to, fraction)
 	local ghost = entry.config:GetAttribute("Ghost") == true
 	local bearing = to - from
@@ -478,7 +479,7 @@ local function animate(village: Village, entry: Entry, now: number)
 		pos += shift
 	end
 	if actor then
-		SlimeActor.setTravel(actor, drawFrom, drawTo, start, finish, ghost)
+		SlimeActor.setTravel(actor, drawFrom, drawTo, start, finish, ghost, gait)
 	else
 		if ghost then
 			pos += Vector3.new(0, C.GhostFloat + C.GhostFloat * math.sin(now * C.GhostFloatHz * math.pi * 2), 0)

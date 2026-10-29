@@ -14,7 +14,9 @@ local VillagePath = require(ReplicatedStorage.Shared.VillagePath)
 local Config = require(ReplicatedStorage.Shared.Config)
 local FarmState = require(ReplicatedStorage.Shared.FarmState)
 local GardenPlots = require(ReplicatedStorage.Shared.GardenPlots)
+local Gaits = require(ReplicatedStorage.Shared.Gaits)
 local Growth = require(ReplicatedStorage.Shared.Growth)
+local Needs = require(ReplicatedStorage.Shared.Needs)
 local Rng = require(ReplicatedStorage.Shared.Rng)
 local Stats = require(ReplicatedStorage.Shared.Stats)
 local Stations = require(ReplicatedStorage.Shared.Stations)
@@ -42,6 +44,8 @@ type Actor = {
 	index: number,
 	legStart: number,
 	legEnd: number,
+	-- The gait of the current leg (a Config.Gaits name), published as the slime's Gait attribute.
+	gait: string?,
 	finishAt: number,
 	babyOnboard: boolean?,
 	pickupId: string?,
@@ -355,6 +359,7 @@ local function show(session: Session, farm: Farm, epoch: number)
 		set(model, "ToZ", to.z)
 		set(model, "LegStart", if actor then actor.legStart else 0)
 		set(model, "LegEnd", if actor then actor.legEnd else 0)
+		set(model, "Gait", if actor and actor.gait then actor.gait else "walk")
 		set(model, "Ghost", slime.ghostUntil ~= nil and slime.ghostUntil > epoch)
 		set(model, "Sleeping", slime.sleeping == true)
 		set(model, "Working", area or "")
@@ -607,12 +612,29 @@ local function route(session: Session, actor: Actor, action: Action, target: Spo
 end
 
 -- The position is runtime-only; the server publishes each interpolation leg, not physical parts.
-local function startLeg(session: Session, actor: Actor, speed: number, when: number)
+-- Which gait the slime walks its legs in (shared Gaits.choose: action kind and feeling, needs, baby).
+local function chooseGait(farm: Farm, slime: any, action: Action, epoch: number): string
+	return Gaits.choose({
+		kind = action.kind,
+		emotion = action.emotion,
+		baby = Growth.isBaby(
+			slime.createdAt,
+			epoch,
+			Stats.level(slime.stats),
+			farm.areas.breeding.level - Config.Village.StartLevel
+		),
+		tired = Needs.isTired(slime.needs),
+		hungry = Needs.isHungry(slime.needs),
+	})
+end
+
+-- `factor` is the slime's speed stat factor (Gaits.factor); the leg's time comes from the actor's gait.
+local function startLeg(session: Session, actor: Actor, factor: number, when: number)
 	local to = actor.route[actor.index]
 	if not to then
 		return
 	end
-	local duration = VillagePath.duration((point(to) - point(actor.current)).Magnitude, speed)
+	local duration = VillagePath.duration((point(to) - point(actor.current)).Magnitude, factor, actor.gait)
 	-- Waypoints are only intent, not physical NPCs. Queue shared corners so two slimes
 	-- do not get the same server-arrival time even if the client is rendering from afar.
 	local depart = when
@@ -878,9 +900,8 @@ local function think(
 		depart = clock + Config.Village.TakeSeconds
 	end
 	if actor.index > 0 then
-		local speed = Config.Village.WalkSpeed
-			* (1 + (slime.stats.speed - Config.Stats.Starter.speed) * Config.Village.WalkPerSpeed)
-		startLeg(session, actor, speed, depart)
+		actor.gait = chooseGait(farm, slime, action, epoch)
+		startLeg(session, actor, Gaits.factor(slime.stats.speed), depart)
 	else
 		-- Already close enough to walk nowhere: it is now AT the action's spot (a worker standing near its work spot
 		-- would otherwise never count as arrived, and its station would never earn).
@@ -959,7 +980,7 @@ local function refreshMoving(
 	if not target then
 		return
 	end
-	local fraction = VillagePath.progress(actor.legStart, actor.legEnd, clock)
+	local fraction = VillagePath.progress(actor.legStart, actor.legEnd, clock, actor.gait)
 	local position = if actor.index == 0
 		then point(actor.current)
 		else point(actor.from):Lerp(point(actor.to), fraction)
@@ -983,9 +1004,8 @@ local function refreshMoving(
 	actor.route = route(session, actor, action, target, scale)
 	actor.index = if #actor.route > 0 then 1 else 0
 	if actor.index > 0 then
-		local speed = Config.Village.WalkSpeed
-			* (1 + (slime.stats.speed - Config.Stats.Starter.speed) * Config.Village.WalkPerSpeed)
-		startLeg(session, actor, speed, clock)
+		actor.gait = chooseGait(farm, slime, action, epoch)
+		startLeg(session, actor, Gaits.factor(slime.stats.speed), clock)
 	end
 end
 
@@ -1193,8 +1213,8 @@ local function tick(player: Player, session: Session)
 			local actor = session.actors[event.slimeId]
 			local worker = FarmState.findSlime(snapshot, event.slimeId)
 			if actor and worker and actor.action and actor.action.kind == "work" and actor.index == 0 then
-				local speed = Config.Village.WalkSpeed
-					* (1 + (worker.stats.speed - Config.Stats.Starter.speed) * Config.Village.WalkPerSpeed)
+				local speed = Gaits.factor(worker.stats.speed)
+				actor.gait = chooseGait(snapshot, worker, actor.action, epoch)
 				actor.workTask, actor.workItem, actor.workPlot = event.phase or "harvest", event.item, event.plot
 				actor.workStart, actor.workEnd = clock, nil
 				if event.area == "garden" and event.plot then
@@ -1229,8 +1249,7 @@ local function tick(player: Player, session: Session)
 	for id, actor in session.actors do
 		local slime = FarmState.findSlime(snapshot, id)
 		if slime then
-			local speed = Config.Village.WalkSpeed
-				* (1 + (slime.stats.speed - Config.Stats.Starter.speed) * Config.Village.WalkPerSpeed)
+			local speed = Gaits.factor(slime.stats.speed)
 			advance(player, session, id, actor, speed, clock, epoch, Stations.speedTimeFactor(slime.stats.speed))
 			if actor.workPhase and actor.index == 0 and actor.workEnd and clock >= actor.workEnd then
 				local action = actor.action

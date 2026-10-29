@@ -22,6 +22,7 @@ local Config = require(ReplicatedStorage.Shared.Config)
 local Expressions = require(ReplicatedStorage.Shared.Expressions)
 local SlimeMotion = require(ReplicatedStorage.Shared.SlimeMotion)
 local VillagePath = require(ReplicatedStorage.Shared.VillagePath)
+local Gaits = require(ReplicatedStorage.Shared.Gaits)
 local SlimeShape = require(ReplicatedStorage.Shared.SlimeShape)
 local SlimeFace = require(script.Parent.SlimeFace)
 
@@ -52,6 +53,8 @@ export type Slime = {
 	travelTo: Vector3?,
 	travelStart: number,
 	travelEnd: number,
+	-- The gait of the leg (a Config.Gaits name, published by the server as the slime's Gait attribute).
+	gait: string,
 	hopIndex: number,
 	ghost: boolean,
 	ground: Vector3,
@@ -152,7 +155,7 @@ local function desired(a: Slime, now: number): Vector3
 	if not from or not to then
 		return a.root.Position
 	end
-	local fraction = VillagePath.progress(a.travelStart, a.travelEnd, now)
+	local fraction = VillagePath.progress(a.travelStart, a.travelEnd, now, a.gait)
 	local pos = from:Lerp(to, fraction)
 	if a.ghost then
 		pos += Vector3.new(0, VC.GhostFloat + VC.GhostFloat * math.sin(now * VC.GhostFloatHz * math.pi * 2), 0)
@@ -165,11 +168,32 @@ local function walk(a: Slime, dt: number, now: number)
 	if not from or not to then
 		return
 	end
-	local fraction, index = VillagePath.progress(a.travelStart, a.travelEnd, now)
+	local fraction, index = VillagePath.progress(a.travelStart, a.travelEnd, now, a.gait)
 	local moving = a.travelEnd > a.travelStart and now >= a.travelStart and now < a.travelEnd
 	a.motion.walking = moving
-	if moving and index ~= a.hopIndex then
-		SlimeMotion.hop(a.motion, VC.HopHeight)
+	-- This slime's own gait numbers, while it walks and until its landing has settled; no global is touched.
+	local motion = a.motion
+	if moving then
+		local g = Gaits.get(a.gait)
+		motion.gait = g
+		if g.GlideSpeed then
+			motion.glide = {
+				bob = g.GlideBob,
+				hz = g.GlideBobHz,
+				lean = g.GlideLean,
+				k = VillagePath.glideSpeedFraction(a.travelStart, a.travelEnd, now, a.gait),
+			}
+		else
+			motion.glide = nil
+			if index ~= a.hopIndex then
+				SlimeMotion.hop(motion, g.HopHeight)
+			end
+		end
+	else
+		motion.glide = nil
+		if motion.hop == nil and motion.y == 0 then
+			motion.gait = nil
+		end
 	end
 	a.hopIndex = index
 	local pos = from:Lerp(to, fraction)
@@ -425,6 +449,7 @@ function Actor.new(model: Model, emotion: string?): Slime?
 		travelTo = nil,
 		travelStart = 0,
 		travelEnd = 0,
+		gait = "walk",
 		hopIndex = -1,
 		ghost = false,
 		ground = root.Position,
@@ -493,10 +518,19 @@ function Actor.setCFrame(self: Slime, cf: CFrame)
 end
 
 -- The server owns the leg clock; the actor interpolates the same hop progress every frame.
-function Actor.setTravel(self: Slime, from: Vector3, to: Vector3, startTime: number, endTime: number, ghost: boolean)
+function Actor.setTravel(
+	self: Slime,
+	from: Vector3,
+	to: Vector3,
+	startTime: number,
+	endTime: number,
+	ghost: boolean,
+	gait: string?
+)
 	if self.travelStart ~= startTime or self.travelEnd ~= endTime then
 		self.hopIndex = -1
 	end
+	self.gait = gait or "walk"
 	self.travelFrom, self.travelTo = from, to
 	self.travelStart, self.travelEnd = startTime, endTime
 	self.ghost = ghost
