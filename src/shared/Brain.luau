@@ -15,7 +15,13 @@ type Slime = typeof(FarmState.newFarm(0).slimes[1])
 type Rng = typeof(Rng.new(0))
 export type Point = { x: number, y: number, z: number }
 export type Spot = { id: string, area: string, x: number, y: number, z: number }
-export type Context = { spots: { [string]: Spot }?, nearby: { string }?, player: Point? }
+export type Context = {
+	spots: { [string]: Spot }?,
+	nearby: { string }?,
+	player: Point?,
+	-- Target claims belong to a server session, never to saved data.
+	reserved: { [string]: string }?,
+}
 export type Action = {
 	kind: string,
 	spot: string,
@@ -28,6 +34,31 @@ export type Action = {
 }
 
 local Brain = {}
+
+-- Claim the pickup batch or counter, plus the incubator for an egg delivery.
+function Brain.reservationKeys(action: Action): { string }
+	if action.kind == "carryBox" and action.source and action.carry then
+		return { "box:" .. action.source .. ":" .. action.carry.item }
+	elseif action.kind == "carryKitchen" then
+		return { "counter" }
+	elseif action.kind == "carryDish" and action.carry then
+		return { "dish:" .. action.carry.item }
+	elseif action.kind == "carryEgg" and action.eggId then
+		return { "egg:" .. action.eggId, action.spot }
+	elseif action.kind == "feedBaby" and action.partner then
+		return { "baby:" .. action.partner }
+	end
+	return {}
+end
+
+local function unclaimed(ctx: Context, slimeId: string, action: Action): boolean
+	for _, key in Brain.reservationKeys(action) do
+		if ctx.reserved and ctx.reserved[key] and ctx.reserved[key] ~= slimeId then
+			return false
+		end
+	end
+	return true
+end
 
 local function adult(farm: Farm, slime: Slime, now: number): boolean
 	return not Growth.isBaby(
@@ -97,7 +128,9 @@ function Brain.choose(farm: Farm, slimeId: string, ctx: Context, now: number, rn
 								local a = make("carryBox", "storehouse", "proud")
 								a.source = area
 								a.carry = { item = item, count = Config.Brain.CarryAmount }
-								return a
+								if unclaimed(ctx, slimeId, a) then
+									return a
+								end
 							end
 						end
 					elseif
@@ -108,7 +141,9 @@ function Brain.choose(farm: Farm, slimeId: string, ctx: Context, now: number, rn
 							if (farm.work.kitchen.box[item] or 0) > 0 then
 								local a = make("carryDish", "fridge", "proud")
 								a.carry = { item = item, count = Config.Brain.CarryAmount }
-								return a
+								if unclaimed(ctx, slimeId, a) then
+									return a
+								end
 							end
 						end
 					end
@@ -122,6 +157,9 @@ function Brain.choose(farm: Farm, slimeId: string, ctx: Context, now: number, rn
 	local best = make("wander", "plaza", "normal")
 	local bestScore = -math.huge
 	local function offer(action: Action, group: string, base: number)
+		if not unclaimed(ctx, slimeId, action) then
+			return
+		end
 		local funUrgency = (Config.Needs.Max - slime.needs.fun) / Config.Needs.Max * Config.Brain.FunScore
 		local urgency = if group == "play" or group == "social" then funUrgency else 0
 		local score = base * (weights[group] or 1) + urgency + rng:next() * Config.Brain.Noise
@@ -171,7 +209,7 @@ function Brain.choose(farm: Farm, slimeId: string, ctx: Context, now: number, rn
 				break
 			end
 		end
-		if not occupied then
+		if not occupied and not (ctx.reserved and ctx.reserved["incubator:" .. slot]) then
 			freeIncubator = slot
 			break
 		end
@@ -182,8 +220,10 @@ function Brain.choose(farm: Farm, slimeId: string, ctx: Context, now: number, rn
 				local a = make("carryEgg", "incubator:" .. tostring(freeIncubator), "curious")
 				a.eggId = egg.id
 				a.source = "nest:" .. tostring(egg.slot)
-				offer(a, "errands", Config.Brain.EggScore)
-				break
+				if unclaimed(ctx, slimeId, a) then
+					offer(a, "errands", Config.Brain.EggScore)
+					break
+				end
 			end
 		end
 	end
