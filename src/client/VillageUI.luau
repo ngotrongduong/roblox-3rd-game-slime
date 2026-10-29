@@ -6,20 +6,17 @@ local HttpService = game:GetService("HttpService")
 local UserInputService = game:GetService("UserInputService")
 
 local Config = require(ReplicatedStorage.Shared.Config)
-local Colours = require(ReplicatedStorage.Shared.Colours)
 local SlimeLook = require(script.Parent.SlimeLook)
 
 local C = Config.VillageClient
 local Icons = Config.Ui.Icons
 local player = Players.LocalPlayer
 local VillageUI = {}
-local screen: ScreenGui? = nil
 local hud: ScrollingFrame? = nil
 local sheet: Frame? = nil
 local toast: TextLabel? = nil
 local own: Folder? = nil
 local prompts: { ProximityPrompt } = {}
-local activeArea: string? = nil
 local activePoint: Vector3? = nil
 local busy = false
 local remembered: { [string]: { [number]: { worker: string?, reserve: string? } } } = {}
@@ -247,7 +244,7 @@ local function frameContent(): ScrollingFrame?
 end
 
 local function close()
-	activeArea, activePoint, pickedFirst = nil, nil, nil
+	activePoint, pickedFirst = nil, nil
 	if sheet then
 		sheet.Visible = false
 	end
@@ -352,13 +349,13 @@ renderArea = function(area: string)
 			text(cell, tostring(slot), UDim2.fromOffset(C.UiButtonSize / 2, C.UiButtonSize), 17)
 			for _, reserve in { false, true } do
 				local position = if reserve then "reserve" else "worker"
-				local selected = saved[position]
+				local selected = (saved :: any)[position]
 				button(cell, labelFor(selected), function()
 					picker(area, function(id)
 						request({ action = "Assign", area = area, slot = slot, slimeId = id, asReserve = reserve }, function()
 							remembered[area] = remembered[area] or {}
 							remembered[area][slot] = remembered[area][slot] or {}
-							remembered[area][slot][position] = id
+							(remembered[area][slot] :: any)[position] = id
 							renderArea(area)
 						end)
 					end, false)
@@ -370,7 +367,7 @@ renderArea = function(area: string)
 					if id then
 						request({ action = "Unassign", slimeId = id }, function()
 							local key = if saved.worker then "worker" else "reserve"
-							saved[key] = nil
+							(saved :: any)[key] = nil
 							renderArea(area)
 						end)
 					end
@@ -400,7 +397,7 @@ local function open(area: string, position: Vector3)
 	if not sheet then
 		return
 	end
-	activeArea, activePoint = area, position
+	activePoint = position
 	sheet.Visible = true
 	local title = sheet:FindFirstChild("Title")
 	if title and title:IsA("TextLabel") then
@@ -474,6 +471,11 @@ local function positionOf(inst: Instance): Vector3?
 	return nil
 end
 
+local modelNames: { [string]: string } = {
+	fishing = "FishingPond", garden = "Garden", kitchen = "Kitchen",
+	pantry = "Pantry", training = "Training", breeding = "Breeding",
+}
+
 local function createPrompts(root: Folder)
 	local plotId = root:GetAttribute("Plot")
 	if type(plotId) ~= "number" or plotId < 1 then
@@ -487,7 +489,7 @@ local function createPrompts(root: Folder)
 	for _, area in Config.Village.Areas do
 		local model: Instance? = nil
 		for _, child in plot:GetChildren() do
-			if string.match(string.lower(child.Name), "^" .. string.lower(area) .. "l") then
+			if string.match(string.lower(child.Name), "^" .. string.lower(modelNames[area]) .. "l") then
 				model = child
 				break
 			end
@@ -527,8 +529,14 @@ local function bind(root: Folder?)
 	own = root
 	close()
 	refreshHud()
-	if not root or root:GetAttribute("Plot") == 0 then
+	if not root or type(root:GetAttribute("Plot")) ~= "number" or (root:GetAttribute("Plot") :: number) < 1 then
+		if hud then
+			hud.Visible = false
+		end
 		return
+	end
+	if hud then
+		hud.Visible = true
 	end
 	for _, attribute in { "Coins", "Storehouse", "Fridge", "Population", "Limit" } do
 		root:GetAttributeChangedSignal(attribute):Connect(function()
@@ -547,7 +555,6 @@ function VillageUI.start()
 	gui.IgnoreGuiInset = false
 	gui.DisplayOrder = 5
 	gui.Parent = player:WaitForChild("PlayerGui")
-	screen = gui
 
 	local strip = Instance.new("ScrollingFrame")
 	strip.Name = "Resources"
