@@ -256,7 +256,7 @@ local function stopShort(origin: Spot, target: Spot): Spot
 		return { id = target.id, area = origin.area, x = origin.x, y = origin.y, z = origin.z }
 	end
 	local position = point(target) - flat.Unit * Config.Brain.StopStuds
-	return { id = target.id, area = target.area, x = position.X, y = position.Y, z = position.Z }
+	return { id = target.id, area = target.area, x = position.X, y = origin.y, z = position.Z }
 end
 
 local function route(session: Session, actor: Actor, action: Action, target: Spot): { Spot }
@@ -459,8 +459,12 @@ local function think(
 	elseif action.spot ~= "player" then
 		local order = 1
 		for otherId, other in session.actors do
-			if otherId ~= slime.id and ((other.action and other.action.spot == action.spot)
-				or other.current.id == target.id) then
+			local otherSpot = if other.action then session.spots[other.action.spot] else nil
+			if otherId ~= slime.id and (
+				(other.action and other.action.spot == action.spot)
+				or (otherSpot and (point(otherSpot) - point(target)).Magnitude <= Config.Brain.StopStuds)
+				or (point(other.current) - point(target)).Magnitude <= Config.Brain.StopStuds
+			) then
 				order += 1
 			end
 		end
