@@ -38,6 +38,9 @@ local function marker(container: Instance?, names: { string }): Vector3?
 			if hit then
 				local position = location(hit)
 				if position then
+					if hit:IsA("Model") then
+						return Vector3.new(position.X, Config.Map.GroundY, position.Z)
+					end
 					return position
 				end
 			end
@@ -61,7 +64,8 @@ local function near(container: Instance?, names: { string }, centre: Vector3): V
 					local distance = Vector3.new(delta.X, 0, delta.Z).Magnitude
 					if distance < closest then
 						closest = distance
-						nearest = position
+						-- Models may pivot above their floor; destinations belong on the ground.
+						nearest = Vector3.new(position.X, Config.Map.GroundY, position.Z)
 					end
 				end
 				break
@@ -74,8 +78,9 @@ end
 local function front(model: Instance?): Vector3?
 	if model and model:IsA("Model") then
 		-- Kit buildings face into the village; put feet on the door side, not at the pivot.
-		return model:GetPivot().Position
+		local position = model:GetPivot().Position
 			+ model:GetPivot().LookVector * (model:GetExtentsSize().Z / 2 + Config.Village.SpotDoorOffset)
+		return Vector3.new(position.X, Config.Map.GroundY, position.Z)
 	end
 	return nil
 end
