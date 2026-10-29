@@ -29,22 +29,28 @@ local function hullColour(col: Color3): Color3
 	return Color3.new(col.R * shade, col.G * shade, col.B * shade)
 end
 
-local function template(map: string, colour: Color3, mirror: boolean, fine: boolean): SurfaceAppearance
-	local key = map .. ":" .. tostring(colour) .. ":" .. tostring(mirror) .. ":" .. tostring(fine)
+-- A game script may not set a SurfaceAppearance's maps (Plugin capability), so the maps come ready made in
+-- ClientKit.Looks (tools/kit/export_client_kit.luau): Plain, PlainFine, Mirror and Skin_<image id>. Only the
+-- tint is set here; a look is cloned for each body (one SurfaceAppearance belongs to one MeshPart).
+local function template(map: string, colour: Color3, mirror: boolean, fine: boolean): SurfaceAppearance?
+	local name = if mirror
+		then "Mirror"
+		elseif map == C.WhiteMap then (if fine then "PlainFine" else "Plain")
+		else "Skin_" .. (string.match(map, "%d+") or "")
+	local key = name .. ":" .. colour:ToHex()
 	local saved = surfaceCache[key]
 	if saved then
 		return saved
 	end
-	local sa = Instance.new("SurfaceAppearance")
-	sa.ColorMap = map
-	sa.NormalMap = C.NormalMap
-	sa.RoughnessMap = if fine then C.RoughMetalMap else C.RoughMap
-	sa.Color = colour
-	if mirror then
-		sa.MetalnessMap = C.WhiteMap
+	local kit = ReplicatedStorage:FindFirstChild("ClientKit")
+	local looks = if kit then kit:FindFirstChild("Looks") else nil
+	local source = if looks then looks:FindFirstChild(name) else nil
+	if not (source and source:IsA("SurfaceAppearance")) then
+		missing("missing ClientKit/Looks/" .. name)
+		return nil
 	end
-	-- A SurfaceAppearance belongs to one MeshPart, so cache the immutable template/texture selection,
-	-- but clone its instance for each independent body.
+	local sa = source:Clone()
+	sa.Color = colour
 	surfaceCache[key] = sa
 	return sa
 end
@@ -161,8 +167,9 @@ function SlimeLook.build(attrs: { [string]: any }): Model
 			old:Destroy()
 		end
 	end
-	if surface then
-		template(map, surfaceColour, mirror, fine):Clone().Parent = body
+	local sa = if surface then template(map, surfaceColour, mirror, fine) else nil
+	if sa then
+		sa:Clone().Parent = body
 	end
 
 	local model = Instance.new("Model")

@@ -45,6 +45,36 @@ take(fish and fish:FindFirstChild("KoiFish"), "fish", items)
 take(crops and crops:FindFirstChild("Carrot4"), "carrot", items)
 take(crops and crops:FindFirstChild("Cabbage4"), "cabbage", items)
 
+-- Looks: a game script may not set a SurfaceAppearance's maps (Plugin capability), only its Color, so every map the
+-- slimes use is made here once: Plain (the white map, tinted per slime), PlainFine (roughness 0.03: Ice, Jelly),
+-- Mirror (the chrome map for Gold and Silver) and Skin_<image id> for each of the 55 Duals. SlimeLook clones them.
+local Config = require("../../src/shared/Config")
+local SkinIds = require("../../src/shared/SkinIds")
+local C = Config.VillageClient
+local looks = Instance.new("Folder")
+looks.Name = "Looks"
+looks.Parent = kit
+local function look(name: string, map: string, rough: string, metal: boolean)
+	local sa = Instance.new("SurfaceAppearance")
+	sa.Name = name
+	sa.ColorMap = map
+	sa.NormalMap = C.NormalMap
+	sa.RoughnessMap = rough
+	if metal then
+		sa.MetalnessMap = C.WhiteMap
+	end
+	sa.Parent = looks
+end
+look("Plain", C.WhiteMap, C.RoughMap, false)
+look("PlainFine", C.WhiteMap, C.RoughMetalMap, false)
+look("Mirror", C.MirrorMap, C.RoughMetalMap, true)
+local skins = 0
+for _, image in SkinIds.ById do
+	look("Skin_" .. tostring(image), "rbxassetid://" .. tostring(image), C.RoughMap, false)
+	skins += 1
+end
+table.insert(lines, "  Looks: Plain, PlainFine, Mirror, " .. skins .. " skins")
+
 local data = roblox.serializeModel({ kit })
 fs.writeFile(OUT, data)
 print(string.format("%s  %.1f KB\n%s", OUT, #data / 1024, table.concat(lines, "\n")))
