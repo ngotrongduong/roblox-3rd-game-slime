@@ -76,7 +76,7 @@ local function doWork(farm: Farm, now: number, seconds: number, rng: Rng, events
 				elseif areaId == "kitchen" then
 					local id = Food.bestDish(farm.counter)
 					if id == nil then break end
-					local dish = Config.Food.Dishes[id]
+					local dish = (Config.Food.Dishes :: any)[id]
 					for item, count in dish.ingredients do
 						Food.take(farm.counter, item, count)
 					end
