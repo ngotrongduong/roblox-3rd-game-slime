@@ -4,6 +4,7 @@ local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
 local PathfindingService = game:GetService("PathfindingService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local ServerStorage = game:GetService("ServerStorage")
 
 local Brain = require(ReplicatedStorage.Shared.Brain)
 local Breeding = require(ReplicatedStorage.Shared.Breeding)
@@ -1108,6 +1109,17 @@ function Village.ownsPlot(player: Player): boolean
 end
 
 function Village.start()
+	local events = ServerStorage:FindFirstChild("VillageEvents")
+	local changed = if events then events:FindFirstChild("AreaLevelChanged") else nil
+	if changed and changed:IsA("BindableEvent") then
+		changed.Event:Connect(function(player: Player)
+			local session = sessions[player]
+			if session then
+				-- An upgraded building may have a different walkable footprint.
+				table.clear(session.pathCache)
+			end
+		end)
+	end
 	PlayerData.onReady(function(player: Player, _data: any)
 		if player.Parent ~= Players or not PlayerData.isReady(player) then
 			return
