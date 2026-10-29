@@ -236,7 +236,7 @@ local function tick(a: Slime, dt: number, write: boolean)
 	if a.attached then
 		-- Carries share this BulkMoveTo, including lift, squash and the jelly's lean.
 		local top = a.root
-			* CFrame.new(-pose.leanSide * s, pose.lift * s + C.BodyHeight * s * pose.sy + C.CarryTopOffset, -pose.leanFwd * s)
+			* CFrame.new(-pose.leanSide * s, pose.lift * s + s * pose.sy + C.CarryTopOffset, -pose.leanFwd * s)
 			* CFrame.Angles(pose.leanFwd, pose.yaw, pose.leanSide)
 			* a.attachOffset
 		for i, part in a.attachedParts do
