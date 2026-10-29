@@ -528,8 +528,7 @@ local function validateSlime(raw: any, index: number, now: number, warnings: { s
 		createdAt = createdAt,
 		breedReadyAt = breedReadyAt,
 		loadout = validateLoadout(raw.loadout, FarmState.SlimeSlots, warnings, id) :: Loadout,
-
-
+	}
 end
 
 local function validateEgg(raw: any, now: number, warnings: { string }): Egg?
@@ -548,7 +547,7 @@ local function validateEgg(raw: any, now: number, warnings: { string }): Egg?
 		and type(parents[1]) == "string"
 		and type(parents[2]) == "string"
 	local createdOk = isNum(raw.createdAt) and raw.createdAt > 0
-local place = if raw.place == "nest" then "nest" else "incubator"
+	local place = if raw.place == "nest" then "nest" else "incubator"
 	local slotOk = isNum(raw.slot) and raw.slot >= 1
 	local hatchOk = place == "nest" or (isNum(raw.hatchAt) and raw.hatchAt > 0)
 	if not (parentsOk and createdOk and slotOk and hatchOk and isText(raw.offspringId)) then
