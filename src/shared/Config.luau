@@ -216,6 +216,8 @@ Config.Village = {
 	SpotDoorOffset = 2,
 	SpotCounterOffsetX = -2,
 	SpotFridgeOffsetX = 4,
+	SpotBoxOffsetX = -4,
+	SpotNapOffset = 5,
 }
 
 -- Slimes choose a destination rather than receiving instantaneous food/energy effects.
