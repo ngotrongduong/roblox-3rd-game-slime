@@ -135,7 +135,14 @@ end
 -- (`avoid`: where other slimes stand or are going; a spread place keeps clear of them)
 local function stand(s: Spot, toward: Vector3?, avoid: { Vector3 }?): Spot
 	local settled = Spots.settle(point(s), toward, Config.Village.SpotMaxDrop, avoid)
-
+	if not settled then
+		-- The point is high above the floor (a step short of a player standing on a roof): look for the floor
+		-- far below and settle there (the owner, 2026-10-29: a slime hung in the air beside a tall store).
+		local floor = Spots.ground(point(s), Config.Village.GroundProbeUp, Config.Village.FloorProbeDown)
+		if floor then
+			settled = Spots.settle(floor, toward, nil, avoid)
+		end
+	end
 	if not settled then
 		return s
 	end
@@ -838,7 +845,9 @@ local function think(
 			or action.kind == "feedBaby"
 		)
 	then
-		target = stopShort(actor.current, partner.to)
+		-- (where the partner will stand, not the end of its current leg: two slimes walking to each other met
+		-- on one point)
+		target = stopShort(actor.current, partner.route[#partner.route] or partner.current)
 	elseif action.spot ~= "player" then
 		local order = 1
 		for otherId, other in session.actors do
@@ -984,7 +993,7 @@ local function refreshMoving(
 	then
 		local other = session.actors[action.partner]
 		if other then
-			target = other.to
+			target = if other.index > 0 then other.route[#other.route] or other.to else other.current
 		end
 	end
 	if not target then
@@ -1631,6 +1640,44 @@ local function setupCarry(player: Player, session: Session)
 	session.characterConnection = player.CharacterAdded:Connect(characterAdded)
 	if player.Character then
 		characterAdded(player.Character)
+	end
+end
+
+-- The owner's rule (2026-10-29): a slime assigned to a work place appears there at once (the clients draw a
+-- pop) and starts working, instead of walking. Called after the Assign request passed its checks.
+function Village.placeAtWork(player: Player, slimeId: string, area: string, slot: number)
+	local session = sessions[player]
+	local actor = if session then session.actors[slimeId] else nil
+	local spot = if session then session.spots["work:" .. area .. ":" .. slot] else nil
+	if not session or not actor or not spot then
+		return
+	end
+	local clock = workspace:GetServerTimeNow()
+	release(session, slimeId, actor.action)
+	local action: Action = {
+		kind = "work",
+		spot = spot.id,
+		seconds = Config.Brain.Duration.work,
+		emotion = "proud",
+	}
+	actor.action = action
+	actor.current = spot
+	actor.from, actor.to = spot, spot
+	actor.route, actor.index = {}, 0
+	actor.legStart, actor.legEnd = clock, clock
+	actor.pickupId, actor.carrying, actor.babyOnboard = nil, false, nil
+	actor.workPhase, actor.workTask, actor.workItem, actor.workPlot = nil, nil, nil, nil
+	actor.workStart, actor.workEnd = nil, nil
+	actor.rod = nil
+	actor.finishAt = clock + action.seconds
+	-- (a fisher has its rod in hand at once: the pop replaces the walk and the take)
+	arrived(session, actor, clock)
+	actor.face = nil
+	startHand(actor, "pop", nil, clock, Config.Village.PopSeconds, nil)
+	print(Config.LogPrefix, "village: assigned", slimeId, "appears at", spot.id)
+	local farm = PlayerData.get(player)
+	if farm then
+		show(session, farm, os.time())
 	end
 end
 

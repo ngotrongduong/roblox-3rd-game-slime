@@ -187,8 +187,9 @@ Config.Village = {
 	WalkPerSpeed = 0.02,
 	HopSeconds = 0.55,
 	HopStuds = 1.5,
-	PathMinRadius = 1.5,
-	PathRadiusPerScale = 1.2,
+	-- (1: the railed dock from level 21 is too narrow for a wider agent; the jelly body squeezes past rails)
+	PathMinRadius = 1,
+	PathRadiusPerScale = 0.8,
 	PathHeightPerScale = 3,
 	PathWaypointStuds = 3,
 	PathWaterCost = 1000000,
@@ -247,6 +248,8 @@ Config.Village = {
 	-- A ray looks for the ground from GroundProbeUp above a point down to GroundProbeDown below it.
 	GroundProbeUp = 3,
 	GroundProbeDown = 8,
+	-- How far below a point in the air (beside a player on a roof) the floor is looked for.
+	FloorProbeDown = 60,
 	-- (a ball, not a thin ray: a ray falls through the gaps between dock planks into the water)
 	GroundProbeRadius = 0.6,
 	-- A path waypoint looks for the floor from this little above itself (never from above a roof).
@@ -261,7 +264,7 @@ Config.Village = {
 	-- A spread or a step short of a partner may be at most this much lower than the spot it spreads from.
 	SpotMaxDrop = 1,
 	-- A spread standing place keeps at least this far from where another slime stands or is going.
-	SpotApartStuds = 3,
+	SpotApartStuds = 4,
 	-- A spot inside a model moves out in rings this far apart, up to this many rings.
 	SpotSettleStep = 1,
 	SpotSettleRings = 14,
@@ -277,6 +280,8 @@ Config.Village = {
 	-- Taking from a bin or a stand, and tossing into a bin (seconds; the item flies in an arc).
 	TakeSeconds = 0.9,
 	TossSeconds = 0.8,
+	-- A slime assigned to a work place pops into it (the owner, 2026-10-29: no walk there).
+	PopSeconds = 0.5,
 	-- An item tossed flies this high above the straight line between the slime and the bin.
 	TossArcStuds = 2.5,
 }
@@ -570,8 +575,10 @@ Config.Slime = {
 	EmoteFadeSeconds = 0.45,
 	ZzzEverySeconds = 0.9,
 	ZzzLifeSeconds = 2.6,
-	HeartsEverySeconds = 0.45,
-	HeartsLifeSeconds = 1.7,
+	-- hearts rise one at a time, slowly (the owner, 2026-10-29)
+	HeartsLifeSeconds = 2.6,
+	-- an emote is this many body heights across, in the world (it scales with the camera's distance like the slime)
+	EmoteSize = 0.55,
 	OrbitStars = 3,
 	OrbitHz = 0.7,
 
@@ -787,7 +794,8 @@ Config.VillageClient = {
 	-- Feet on the ground: the client measures the ground again after the slime moved this far.
 	GroundRecastStuds = 0.25,
 	GroundProbeUp = 2.5,
-	GroundProbeDown = 6,
+	-- (far enough to find the floor under a slime the server placed in the air: it then stands, not hovers)
+	GroundProbeDown = 40,
 	GroundProbeRadius = 0.6,
 	-- A tossed or taken item meets the bin this high above the bin's foot.
 	HandBinHeight = 1.6,
@@ -816,6 +824,9 @@ Config.VillageClient = {
 	-- the jelly's lean into a toss (a take leans the other way) and the squash of the reach
 	TossLeanKick = 2.5,
 	TossSquashKick = 1.2,
+	-- a slime popping into its work place on assignment
+	PopSquashKick = -3,
+	PopHop = 0.35,
 	LineWidth = 0.07,
 	LineColour = "#fff4dd",
 	-- Hoe and watering can, held at a believable size for a 3-stud slime (kit models: 4.4 and about 2 studs).
@@ -1001,6 +1012,13 @@ Config.Ui = {
 	PortraitEye = 0.65,
 	PortraitLook = 0.5,
 	TagHeight = 26,
+	-- World markers of the work positions: size in studs, lift above the marker, how far they show, prompt reach.
+	SpotSize = 2.4,
+	SpotLift = 3,
+	SpotDistance = 45,
+	SpotPromptDistance = 7,
+	PendingSeconds = 4,
+	RefreshSeconds = 0.1,
 	StatCellIcon = 18,
 	BarHeight = 10,
 	SeatSize = 64,

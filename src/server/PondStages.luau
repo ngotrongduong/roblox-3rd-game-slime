@@ -604,9 +604,24 @@ function PondStages.build(level: number, cell: CFrame, showcase: boolean?): Mode
 		end
 		local box, size = rock:GetBoundingBox()
 		if open >= 4 then
-			local top = box.Position + Vector3.new(0, size.Y / 2, 0)
+			-- The rock's real surface under a point (the owner, 2026-10-29: the stand hung in the air above the
+			-- rock: the bounding box's top is higher than the rock's skin at most points).
+			local params = RaycastParams.new()
+			params.FilterType = Enum.RaycastFilterType.Include
+			params.FilterDescendantsInstances = { rock }
+			local function onRock(p: Vector3, missY: number): Vector3
+				local from = Vector3.new(p.X, box.Position.Y + size.Y, p.Z)
+				local hit = workspace:Raycast(from, Vector3.new(0, -size.Y * 2, 0), params)
+				return if hit then hit.Position else Vector3.new(p.X, missY, p.Z)
+			end
+			-- (the stage is not in the world yet while it is built: rays only see the rock while it is)
+			local home = rock.Parent
+			rock.Parent = workspace
+			local top = onRock(box.Position, box.Position.Y + size.Y / 2)
 			mark(4, CFrame.new(top + Vector3.new(0, 0.2, 0)))
-			WorkProps.rodStand(m, CFrame.new(top + area.RightVector * 1.1 + area.LookVector * -0.5) * area.Rotation)
+			local standAt = onRock(top + area.RightVector * 1.1 + area.LookVector * -0.5, top.Y)
+			rock.Parent = home
+			WorkProps.rodStand(m, CFrame.new(standAt) * area.Rotation)
 		end
 	elseif open >= 4 then
 		-- no kit model yet: the place still opens, on the bank

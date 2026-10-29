@@ -22,6 +22,7 @@ export type Card = {
 	slime: Configuration,
 	update: (entry: Entry) -> (),
 	show: () -> (),
+	release: () -> (),
 }
 export type View = {
 	scroller: ScrollingFrame,
@@ -85,27 +86,15 @@ end
 
 -- A live portrait of the slime's own look. Returns the framed box and a function that builds the viewport (cheap
 -- lists build it only when the card scrolls into view).
-function UiSlimes.portrait(
-	parent: Instance?,
-	slime: Configuration,
-	size: number,
-	props: UiKit.Props?
-): (Frame, () -> ())
-	local box, body = UiKit.skin(parent, "Wood", "Portrait", props)
-	box.Size = UDim2.fromOffset(size, size)
-	local built = false
-	local function build()
-		if built or not body.Parent then
-			return
-		end
-		built = true
+local function buildView(slime: Configuration): ViewportFrame
+	do
 		local view = UiKit.make("ViewportFrame", {
 			Name = "Portrait",
 			BackgroundTransparency = 1,
 			Size = UDim2.fromScale(1, 1),
 			Ambient = Color3.new(1, 1, 1),
 			LightColor = Color3.new(1, 1, 1),
-		}, body)
+		}, nil)
 		local world = UiKit.make("WorldModel", nil, view)
 		local model = SlimeLook.build({
 			Colour = slime:GetAttribute("Colour"),
@@ -139,6 +128,96 @@ function UiSlimes.portrait(
 				Size = UDim2.fromScale(sprite.w * unit, sprite.h * unit),
 			}, view)
 		end
+		return view
+	end
+end
+
+-- Portraits are built once per slime look and reused: a viewport sits in one place at a time, and is parked (parent nil)
+-- when its card goes away (releaseAll), so opening a list costs no building. "spot" ones live on world markers.
+local cache: { [string]: ViewportFrame } = {}
+local inUse: { [ViewportFrame]: boolean } = {}
+
+local function lookKey(slime: Configuration, variant: string): string
+	return table.concat({
+		slime.Name,
+		variant,
+		tostring(slime:GetAttribute("Colour")),
+		tostring(slime:GetAttribute("Material")),
+		tostring(slime:GetAttribute("DualId")),
+		tostring(slime:GetAttribute("SecretId")),
+	}, "|")
+end
+
+function UiSlimes.acquire(slime: Configuration, variant: string, parent: Instance): ViewportFrame
+	local key = lookKey(slime, variant)
+	local saved = cache[key]
+	local view: ViewportFrame
+	local reused = false
+	if saved then
+		reused = pcall(function()
+			saved.Parent = parent
+		end)
+	end
+	if reused and saved then
+		view = saved
+	else
+		view = buildView(slime)
+		view.Parent = parent
+		cache[key] = view
+	end
+	if variant == "ui" then
+		inUse[view] = true
+	end
+	return view
+end
+
+-- Parks every list portrait before its card is destroyed, so the cache survives.
+function UiSlimes.releaseAll()
+	for view in inUse do
+		pcall(function()
+			view.Parent = nil
+		end)
+	end
+	table.clear(inUse)
+end
+
+-- Builds the portraits of all slimes in the background, one a frame, so the first list opens ready.
+local warming = false
+function UiSlimes.prewarm(own: Instance?)
+	if warming then
+		return
+	end
+	warming = true
+	task.spawn(function()
+		for _, slime in UiSlimes.slimes(own) do
+			if slime.Parent and not cache[lookKey(slime, "ui")] then
+				local holder = UiKit.make("Folder", nil, nil)
+				local view = buildView(slime)
+				cache[lookKey(slime, "ui")] = view
+				view.Parent = holder
+				view.Parent = nil
+				task.wait()
+			end
+		end
+		warming = false
+	end)
+end
+
+function UiSlimes.portrait(
+	parent: Instance?,
+	slime: Configuration,
+	size: number,
+	props: UiKit.Props?
+): (Frame, () -> ())
+	local box, body = UiKit.skin(parent, "Wood", "Portrait", props)
+	box.Size = UDim2.fromOffset(size, size)
+	local built = false
+	local function build()
+		if built or not body.Parent then
+			return
+		end
+		built = true
+		UiSlimes.acquire(slime, "ui", body)
 	end
 	return box, build
 end
@@ -307,7 +386,16 @@ function UiSlimes.card(parent: Instance?, entry: Entry, onClick: ((Configuration
 			onClick(slime)
 		end
 	end)
-	return { root = root, slime = slime, update = update, show = show }
+	local function release()
+		local view = root:FindFirstChild("Portrait", true)
+		if view and view:IsA("ViewportFrame") then
+			inUse[view] = nil
+			pcall(function()
+				view.Parent = nil
+			end)
+		end
+	end
+	return { root = root, slime = slime, update = update, show = show, release = release }
 end
 
 -- A scrolling grid of cards. Entries decide who is shown and in which order; refresh redraws in place when the same
@@ -395,6 +483,7 @@ function UiSlimes.view(
 		end
 		for id, card in cards do
 			if not fresh[id] then
+				card.release()
 				card.root:Destroy()
 			end
 		end

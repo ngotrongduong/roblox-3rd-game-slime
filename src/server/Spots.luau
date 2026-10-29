@@ -37,13 +37,13 @@ end
 
 -- The walkable surface under (or a little above) a point: nil over water or over nothing. Parts that do
 -- not collide (crops, flowers, markers) are not ground; the slimes stand on what a player would stand on.
-function Spots.ground(position: Vector3, up: number?): Vector3?
+function Spots.ground(position: Vector3, up: number?, depth: number?): Vector3?
 	local params = RaycastParams.new()
 	params.FilterType = Enum.RaycastFilterType.Exclude
 	params.FilterDescendantsInstances = ignored()
 	params.RespectCanCollide = true
 	local lift = up or V.GroundProbeUp
-	local down = Vector3.new(0, -(lift + V.GroundProbeDown), 0)
+	local down = Vector3.new(0, -(lift + (depth or V.GroundProbeDown)), 0)
 	local hit = workspace:Raycast(position + Vector3.new(0, lift, 0), down, params)
 	if not hit or hit.Material == Enum.Material.Water then
 		-- A thin ray falls through the gaps between dock planks: a ball does not (started a little higher,

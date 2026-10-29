@@ -23,7 +23,6 @@ local TAU = math.pi * 2
 
 local EYE_PLATE_W, EYE_PLATE_H = 0.4, 0.62
 local MOUTH_PLATE_W, MOUTH_PLATE_H = 0.5, 0.34
-local EMOTE_PIXELS = 56
 local EMOTE_RIGHT, EMOTE_UP = 0.3, 0.3
 -- The owner (2026-10-29): an emote icon is a short pop-up when the feeling starts, not a sign that stays. Three feelings
 -- keep a living effect instead while they last: sleep and sleepy breathe out rising z's, loved sends up hearts that
@@ -255,7 +254,7 @@ function Face.new(model: Model, scale: number, seed: number?): Face
 	emote.Transparency = 1
 	emote.Size = Vector3.new(0.2, 0.2, 0.2)
 	local gui = Instance.new("BillboardGui")
-	gui.Size = UDim2.fromOffset(EMOTE_PIXELS, EMOTE_PIXELS)
+	gui.Size = UDim2.fromScale(C.EmoteSize * scale, C.EmoteSize * scale)
 	gui.AlwaysOnTop = false
 	gui.LightInfluence = 0
 	gui.MaxDistance = 90
@@ -335,11 +334,13 @@ function Face.setEmotion(self: Face, id: string)
 	if stream and streamSprite then
 		self.emoteMode = stream
 		self.emoteLabel.Visible = false
-		self.emoteGui.Size = UDim2.fromOffset(EMOTE_PIXELS * STREAM_W, EMOTE_PIXELS * STREAM_H)
+		-- sized in studs (a billboard's Scale), so the effect stays the slime's size when the camera zooms
+		local unit = C.EmoteSize * self.scale
+		self.emoteGui.Size = UDim2.fromScale(unit * STREAM_W, unit * STREAM_H)
 		local size = if stream == "orbit" then 0.45 else 0.6
 		for _, bit in self.emoteBits do
 			bit.Image = spriteUrl(STREAM_SPRITE[stream])
-			bit.Size = UDim2.fromOffset(EMOTE_PIXELS * size, EMOTE_PIXELS * size)
+			bit.Size = UDim2.fromScale(size / STREAM_W, size / STREAM_H)
 			bit.Visible = false
 		end
 		self.emoteGui.Enabled = true
@@ -348,7 +349,7 @@ function Face.setEmotion(self: Face, id: string)
 		for _, bit in self.emoteBits do
 			bit.Visible = false
 		end
-		self.emoteGui.Size = UDim2.fromOffset(EMOTE_PIXELS, EMOTE_PIXELS)
+		self.emoteGui.Size = UDim2.fromScale(C.EmoteSize * self.scale, C.EmoteSize * self.scale)
 		self.emoteLabel.Image = spriteUrl(e.icon)
 		self.emoteLabel.ImageTransparency = 0
 		self.emoteLabel.Visible = true
@@ -636,7 +637,10 @@ function Face.update(
 		local mode = self.emoteMode
 		local side = if mode == "pop" or mode == "zzz" then -EMOTE_RIGHT else 0
 		local x, y, z = SlimeShape.deform(side, 0.95, 0, bones)
-		local lift = if mode == "pop" then EMOTE_UP else EMOTE_UP * 0.6
+		-- z's and hearts are born at the top of the head: the billboard's bottom edge sits there; the orbit's ring
+		-- circles just above the head
+		local streamH = C.EmoteSize * STREAM_H
+		local lift = if mode == "pop" then EMOTE_UP elseif mode == "orbit" then 0.08 + 0.12 * streamH else streamH / 2
 		n += 1
 		parts[n] = self.emote
 		cfs[n] = feet * CFrame.new(Vector3.new(x, y + lift, z) * self.scale)
@@ -647,7 +651,7 @@ function Face.update(
 			local pop = math.min(t / 0.3, 1)
 			local back = 1 + 2.7 * (pop - 1) ^ 3 + 1.7 * (pop - 1) ^ 2 -- ease out back
 			self.emoteScale.Scale = back * (1 + 0.05 * math.sin(TAU * 1.6 * self.t))
-			self.emoteLabel.Position = UDim2.new(0.5, 0, 0.5, -3 * math.sin(TAU * 1.1 * self.t))
+			self.emoteLabel.Position = UDim2.fromScale(0.5, 0.5 - 0.05 * math.sin(TAU * 1.1 * self.t))
 			local fadeFrom = C.EmoteShowSeconds - C.EmoteFadeSeconds
 			self.emoteLabel.ImageTransparency = math.clamp((t - fadeFrom) / C.EmoteFadeSeconds, 0, 1)
 			if t >= C.EmoteShowSeconds then
@@ -667,21 +671,26 @@ function Face.update(
 				end
 			end
 		else
-			-- z's or hearts: born one after another at the bottom, rise, sway, grow and fade
-			local every = if mode == "zzz" then C.ZzzEverySeconds else C.HeartsEverySeconds
-			local life = if mode == "zzz" then C.ZzzLifeSeconds else C.HeartsLifeSeconds
+			-- z's or hearts: born at the top of the head, rise, sway, grow and fade. Z's overlap (z Z z); hearts go
+			-- one at a time, slowly, the next born when the last is gone (the owner, 2026-10-29).
+			local hearts = mode == "hearts"
+			local life = if hearts then C.HeartsLifeSeconds else C.ZzzLifeSeconds
+			local every = if hearts then life else C.ZzzEverySeconds
+			local count = if hearts then 1 else #self.emoteBits
 			for i, bit in self.emoteBits do
-				local age = t - (i - 1) * every
-				local cycle = every * #self.emoteBits
+				local age = if i <= count then t - (i - 1) * every else -1
+				local cycle = every * count
 				local f = if age < 0 then -1 else (age % cycle) / life
 				bit.Visible = f >= 0 and f <= 1
 				if bit.Visible then
 					local sway = if mode == "zzz" then 0.18 * f else 0.12 * math.sin(TAU * (f * 1.5 + i * 0.3))
-					bit.Position = UDim2.fromScale(0.35 + sway, 0.92 - 0.8 * f)
+					local x0 = if hearts then 0.5 else 0.35
+					bit.Position = UDim2.fromScale(x0 + sway, 0.9 - 0.75 * f)
 					bit.Rotation = if mode == "zzz" then -12 + 20 * f else 10 * math.sin(TAU * f)
-					-- a z is born small and grows as it drifts away (z Z z); hearts swell a little and shrink
-					local grow = if mode == "zzz" then 0.55 + 0.75 * f else 0.48 + 0.18 * math.sin(math.pi * f)
-					bit.Size = UDim2.fromOffset(EMOTE_PIXELS * grow, EMOTE_PIXELS * grow)
+					-- a z is born small and grows as it drifts away (z Z z); a heart swells a little and shrinks.
+					-- Sizes are shares of the billboard, which is sized in studs, so it scales with the distance.
+					local grow = if mode == "zzz" then 0.55 + 0.75 * f else 0.55 + 0.2 * math.sin(math.pi * f)
+					bit.Size = UDim2.fromScale(grow / STREAM_W, grow / STREAM_H)
 					bit.ImageTransparency = math.clamp((f - 0.55) / 0.45, 0, 1)
 				end
 			end

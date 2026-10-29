@@ -147,6 +147,10 @@ local function request(player: Player, data: any): { ok: boolean, reason: string
 		warn(Config.LogPrefix, "village request failed:", err)
 		return { ok = false, reason = "SERVER_ERROR" }
 	end
+	-- The owner's rule (2026-10-29): an assigned worker appears at its work place at once and starts working.
+	if ok and action == "Assign" and data.asReserve == false then
+		Village.placeAtWork(player, data.slimeId, data.area, data.slot)
+	end
 	if ok and areaId and upgradedLevel then
 		PlayerData.markKeyMoment(player, "village upgrade")
 		local event = areaChanged

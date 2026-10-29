@@ -98,6 +98,7 @@ local function drawDetail(id: string)
 		return
 	end
 	local request = context.request
+	UiSlimes.releaseAll()
 	UiKit.clear(host)
 	UiKit.clear(bar)
 	view = nil
@@ -167,6 +168,7 @@ render = function()
 		drawDetail(detail)
 		return
 	end
+	UiSlimes.releaseAll()
 	UiKit.clear(host)
 	UiKit.clear(bar)
 	detailCard = nil
@@ -258,6 +260,7 @@ function UiBook.open(context: Context)
 		Width = U.BookWidth,
 		Height = U.BookHeight,
 		OnClose = function()
+			UiSlimes.releaseAll()
 			view, detailCard, countLabel, content, header = nil, nil, nil, nil, nil
 			detail = nil
 		end,

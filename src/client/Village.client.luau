@@ -34,6 +34,8 @@ type Entry = {
 	-- the item flying between the slime and a bin during a hand event
 	flight: Model?,
 	flightKey: string,
+	-- the start of the last assignment pop drawn
+	popAt: number,
 }
 type Village = {
 	root: Folder,
@@ -546,6 +548,23 @@ local function animate(village: Village, entry: Entry, now: number)
 	if actor then
 		-- (a catch looks at the water it comes out of; a take, toss or rod hand looks at the bin or the stand)
 		local bodyFace = if inHand and facePoint and hand ~= "catch" then facePoint else (water or facePoint)
+		-- Two-slime actions turn the pair to face each other (the owner, 2026-10-29: courting slimes stood
+		-- side by side facing the same way).
+		if
+			not inHand
+			and (
+				action == "chat"
+				or action == "greet"
+				or action == "argue"
+				or action == "makeup"
+				or action == "tag"
+				or action == "court"
+				or action == "playBaby"
+				or action == "feedBaby"
+			)
+		then
+			bodyFace = partnerPosition(village, entry) or bodyFace
+		end
 		SlimeActor.face(actor, if moving then nil else bodyFace)
 		if moving then
 			SlimeActor.lookAt(actor, to)
@@ -654,6 +673,13 @@ local function animate(village: Village, entry: Entry, now: number)
 	end
 	updateLine(entry, actor, if fishing then water else nil, phase, now)
 
+	-- Popping into a work place on assignment: a squash and a little hop where it appears.
+	if inHand and hand == "pop" and actor and entry.popAt ~= handStart then
+		entry.popAt = handStart
+		SlimeActor.kick(actor, "squash", C.PopSquashKick)
+		SlimeActor.hop(actor, C.PopHop)
+	end
+
 	-- The item in flight between the slime and the bin (or the bobber), drawn only during the hand event.
 	local flying = inHand and (hand == "take" or hand == "toss" or hand == "catch")
 	local key = if flying then hand .. "|" .. tostring(handStart) else ""
@@ -761,6 +787,7 @@ local function addSlime(village: Village, child: Instance)
 		castPoint = nil,
 		flight = nil,
 		flightKey = "",
+		popAt = 0,
 	}
 	village.slimes[child] = entry
 	for _, name in { "Look", "Colour", "Material", "DualId", "SecretId", "Ghost", "Scale" } do
