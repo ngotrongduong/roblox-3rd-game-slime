@@ -306,7 +306,7 @@ function Breeding.setPair(farm: Farm, index: number, idA: string?, idB: string?,
 	local a = FarmState.findSlime(farm, idA)
 	local b = FarmState.findSlime(farm, idB)
 	if not a or not b then return false, "MISSING_PARENT" end
-	local time = now or 0
+	local time = now or farm.lastSimulatedAt
 	if Breeding.isBaby(farm, a, time) or Breeding.isBaby(farm, b, time) then return false, "PARENT_TOO_YOUNG" end
 	if (a.ghostUntil and a.ghostUntil > time) or (b.ghostUntil and b.ghostUntil > time) then return false, "PARENT_FALLEN" end
 	if Stations.isBusy(farm, idA) or Stations.isBusy(farm, idB) then return false, "ALREADY_ASSIGNED" end
