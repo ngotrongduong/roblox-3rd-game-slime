@@ -82,7 +82,8 @@ local function outside(model: Instance?, position: Vector3?, plaza: Vector3): Ve
 	if not model or not model:IsA("Model") or not position then
 		return position
 	end
-	local cf, size = model:GetBoundingBox()
+	-- Use the building pivot's facing, not the world-aligned bounding-box rotation.
+	local cf, size = model:GetPivot(), model:GetExtentsSize()
 	local p = cf:PointToObjectSpace(position)
 	local frontZ = -size.Z / 2 - Config.Village.SpotDoorOffset
 	local x = math.clamp(p.X, -size.X / 2, size.X / 2)
