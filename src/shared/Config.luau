@@ -560,28 +560,133 @@ Config.VillageClient = {
 	Card = "#f5e7c7",
 }
 
--- Image artists fill these placeholders. Every 0 is explicitly logged once by the client.
+-- ===== The screen kit (src/client/Ui*.luau): the owner's art, palette, fonts and sizes =====
+-- Every image is the owner's own art from reference/goo-lineage-web/assets, trimmed to its bounds only and uploaded
+-- (art-pipeline). An id of 0 is a picture that does not exist yet: the client logs it once and shows a stand-in.
 Config.Ui = {
 	Icons = {
-		coins = 0,
+		coins = 127025864156501, -- mat-coins.png
+		food = 128780371839699, -- mat-food.png
+		fullness = 128780371839699, -- mat-food.png (the sack stands for being fed)
+		slimes = 120929268236217, -- slime.base.navy.png (the original's slime-count icon)
+		attack = 85243818608247, -- stat-attack.png (the owner's star)
+		defence = 74089620499791, -- equip-shield.png
+		speed = 96175650939419, -- stat-speed.png (the owner's bolt)
+		hp = 113610467784918, -- stat-hp.png (the owner's heart)
+		fishing = 126305761994889, -- prop.workstation.fishing-pond.png
+		garden = 85177293898894, -- prop.workstation.farm-plot.png
+		kitchen = 138156697526360, -- prop.workstation.cooking-kitchen.png
+		pantry = 128780371839699, -- mat-food.png
+		training = 70679228626362, -- ui.btn.upgrades.png
+		breeding = 92923495054582, -- ui.btn.breeding.png
+		-- Missing pictures (asked of ChatGPT): food kinds, needs and controls.
 		fish = 0,
 		carrot = 0,
 		cabbage = 0,
 		grilledFish = 0,
 		veggieStew = 0,
 		fishVegSoup = 0,
-		slimes = 0,
 		energy = 0,
-		fullness = 0,
-		attack = 0,
-		defence = 0,
-		speed = 0,
-		hp = 0,
-		worker = 0,
-		reserve = 0,
-		breeding = 0,
+		fun = 0,
 		close = 0,
+		back = 0,
+		plus = 0,
+		cross = 0,
 	},
+	-- The round edge buttons are the original's ui.btn.<id> art.
+	Buttons = {
+		slimes = 74629091770984,
+	},
+	-- Nine-slice frames: the owner's ui-frame-gold (panels) and ui-frame-wood (buttons, cards). Slice numbers are
+	-- pixels of the trimmed picture; Scale is how big its border draws on screen.
+	Frames = {
+		Panel = {
+			Id = 109389746503451,
+			MinX = 255,
+			MinY = 260,
+			MaxX = 495,
+			MaxY = 505,
+			Scale = 0.14,
+			Inset = 10,
+		},
+		Wood = {
+			Id = 72424466145847,
+			MinX = 130,
+			MinY = 130,
+			MaxX = 630,
+			MaxY = 640,
+			Scale = 0.075,
+			Inset = 6,
+		},
+	},
+	-- The original's palette (docs/reference/03-shell-ui-world.md): parchment, cream, wood brown, orange-gold.
+	Colours = {
+		Parchment = "#fff4dd",
+		Card = "#fffdf4",
+		CardDeep = "#f5e7c7",
+		Portrait = "#e8f5d8",
+		Brown = "#69472a",
+		BrownSoft = "#9a7650",
+		Wood = "#7a5230",
+		Gold = "#c98a3d",
+		GoldLight = "#e2a94f",
+		Cream = "#fffdf4",
+		Green = "#54b848",
+		GreenDark = "#3a6b2a",
+		Red = "#b04030",
+		Blue = "#2f9fd8",
+		Fullness = "#e8a23a",
+		Energy = "#4f9fd8",
+		Fun = "#e8708f",
+		Track = "#e7d6b0",
+		Backdrop = "#2a1d10",
+		HudText = "#ffe9a8",
+		HudStroke = "#2e4a24",
+	},
+	Font = "FredokaOne",
+	-- Layout. Touch targets are never below Touch; the screen scales up on big monitors only.
+	Touch = 48,
+	Pad = 10,
+	Gap = 6,
+	Edge = 10,
+	IconSmall = 20,
+	IconNormal = 28,
+	ChipHeight = 40,
+	TextTiny = 13,
+	TextSmall = 15,
+	TextNormal = 17,
+	TextHeader = 22,
+	ScaleBaseHeight = 720,
+	ScaleMax = 1.35,
+	SheetWidth = 460,
+	SheetHeight = 340,
+	BookWidth = 760,
+	BookHeight = 560,
+	CardWidth = 250,
+	CardHeight = 124,
+	PortraitSize = 72,
+	PortraitDistance = 1.2,
+	PortraitFov = 70,
+	PortraitFaceZoom = 1.12,
+	PortraitEye = 0.65,
+	PortraitLook = 0.5,
+	TagHeight = 26,
+	StatCellIcon = 18,
+	BarHeight = 10,
+	SeatSize = 64,
+	SeatReserveSize = 48,
+	RowHeight = 76,
+	ToastSeconds = 2.6,
+	OpenSeconds = 0.18,
+	OpenSlide = 28,
+	PressScale = 0.94,
+	BackdropTransparency = 0.55,
+	DisabledTransparency = 0.5,
+	-- The strip: raw foods fold into one Food chip until each kind has its own picture.
+	HudOrder = { "coins", "fish", "carrot", "cabbage", "grilledFish", "veggieStew", "fishVegSoup", "slimes" },
+	-- Slime book.
+	BookSorts = { "level", "speed", "newest" },
+	BookFilters = { "all", "free", "working", "babies" },
 }
 
 return Config

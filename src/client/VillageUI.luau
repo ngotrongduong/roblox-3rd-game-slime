@@ -1,34 +1,51 @@
 --!strict
--- Small, object-opened village controls. Server responses, not client guesses, decide what changes.
+-- The village screen: the Manage sheet of each area (opened with F at its entrance), the slime picker, the resource strip
+-- and the slime book button. Built with UiKit from the owner's art. Server answers, not client guesses, decide what
+-- changes: a seat the server would refuse is greyed in the picker, never hidden logic.
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local HttpService = game:GetService("HttpService")
-local UserInputService = game:GetService("UserInputService")
 
 local Config = require(ReplicatedStorage.Shared.Config)
-local SlimeLook = require(script.Parent.SlimeLook)
+local UiBook = require(script.Parent.UiBook)
+local UiHud = require(script.Parent.UiHud)
+local UiKit = require(script.Parent.UiKit)
+local UiSlimes = require(script.Parent.UiSlimes)
 
 local C = Config.VillageClient
-local Icons = Config.Ui.Icons
+local U = Config.Ui
 local player = Players.LocalPlayer
 local VillageUI = {}
-local hud: ScrollingFrame? = nil
-local sheet: Frame? = nil
-local toast: TextLabel? = nil
+
+type Pick = {
+	area: string,
+	kind: string, -- "work", "train" or "pair"
+	slot: number,
+	current: string?, -- the slime now in that seat
+	stat: string?, -- the chosen training stat
+	exclude: string?, -- a slime already chosen in the first step of a pair
+	partner: string?,
+	choose: (Configuration) -> (),
+}
+
 local own: Folder? = nil
 local prompts: { ProximityPrompt } = {}
 local promptAreas: { [string]: boolean } = {}
 local activePoint: Vector3? = nil
-local busy = false
 local activeArea: string? = nil
-local picking = false
+local sheetHeader: Frame? = nil
+local sheetContent: Frame? = nil
+local pick: Pick? = nil
+local pickView: UiSlimes.View? = nil
+local live: (() -> ())? = nil
+local renderedKey = ""
+local busy = false
 local refreshPending = false
-local pickerState: { area: string, choose: (string) -> (), permitWorking: boolean }? = nil
 local rootConnections: { RBXScriptConnection } = {}
 local slimeConnections: { [Instance]: RBXScriptConnection } = {}
-local pickedFirst: string? = nil
-local errorsLogged: { [string]: boolean } = {}
-local managementAttributes: { [string]: boolean } = {
+
+-- Attributes whose change redraws a slime on screen (movement legs and the like are ignored).
+local watched: { [string]: boolean } = {
 	Name = true,
 	Fullness = true,
 	Energy = true,
@@ -39,104 +56,24 @@ local managementAttributes: { [string]: boolean } = {
 	Speed = true,
 	Hp = true,
 	Baby = true,
+	Ghost = true,
+	Sleeping = true,
+	Trait = true,
 	WorkArea = true,
 	WorkSlot = true,
 	Reserve = true,
 	PairIndex = true,
 	CookedAllowed = true,
 }
-
-local function text(parent: Instance, label: string, size: UDim2, fontSize: number): TextLabel
-	local item = Instance.new("TextLabel")
-	item.Size = size
-	item.BackgroundTransparency = 1
-	item.Text = label
-	item.TextColor3 = Color3.fromHex(C.Brown)
-	item.TextSize = fontSize
-	item.TextWrapped = true
-	item.Font = Enum.Font.GothamBold
-	item.Parent = parent
-	return item
-end
-
-local function rounded(instance: GuiObject, colour: string)
-	instance.BackgroundColor3 = Color3.fromHex(colour)
-	local corner = Instance.new("UICorner")
-	corner.CornerRadius = UDim.new(0, C.UiPadding)
-	corner.Parent = instance
-	local border = Instance.new("UIStroke")
-	border.Color = Color3.fromHex(C.Brown)
-	border.Thickness = 1
-	border.Parent = instance
-end
-
-local function button(parent: Instance, label: string, onClick: () -> (), width: number?): TextButton
-	local item = Instance.new("TextButton")
-	item.Size = UDim2.fromOffset(width or C.UiButtonSize, C.UiButtonSize)
-	item.Text = label
-	item.Font = Enum.Font.GothamBold
-	item.TextScaled = true
-	item.TextColor3 = Color3.fromHex(C.Brown)
-	item.AutoButtonColor = true
-	rounded(item, C.Cream)
-	item.Parent = parent
-	item.MouseButton1Click:Connect(onClick)
-	return item
-end
-
-local function icon(parent: Instance, name: string, size: number): GuiObject
-	local id = (Icons :: any)[name]
-	if type(id) == "number" and id > 0 then
-		local image = Instance.new("ImageLabel")
-		image.BackgroundTransparency = 1
-		image.Image = "rbxassetid://" .. tostring(id)
-		image.Size = UDim2.fromOffset(size, size)
-		image.Parent = parent
-		return image
-	end
-	if not errorsLogged[name] then
-		errorsLogged[name] = true
-		warn(Config.LogPrefix, "missing Config.Ui.Icons." .. name .. " (0 placeholder)")
-	end
-	-- A conspicuous placeholder is temporary, never shipped as a silent final icon.
-	local placeholder = text(parent, "?", UDim2.fromOffset(size, size), size)
-	placeholder.BackgroundTransparency = 0
-	placeholder.BackgroundColor3 = Color3.fromHex(C.Card)
-	return placeholder
-end
-
-local function list(parent: Instance, horizontal: boolean, gap: number): UIListLayout
-	local layout = Instance.new("UIListLayout")
-	layout.FillDirection = if horizontal then Enum.FillDirection.Horizontal else Enum.FillDirection.Vertical
-	layout.Padding = UDim.new(0, gap)
-	layout.SortOrder = Enum.SortOrder.LayoutOrder
-	layout.VerticalAlignment = Enum.VerticalAlignment.Center
-	layout.Parent = parent
-	return layout
-end
-
-local function row(parent: Instance): Frame
-	local frame = Instance.new("Frame")
-	frame.Size = UDim2.new(1, -C.UiPadding, 0, C.UiRowHeight)
-	frame.BackgroundTransparency = 1
-	frame.Parent = parent
-	list(frame, true, C.UiPadding / 2)
-	return frame
-end
-
-local function say(message: string)
-	if not toast then
-		return
-	end
-	toast.Text = message
-	toast.Visible = true
-	local current = toast
-	task.delay(C.ToastSeconds, function()
-		if current == toast and current and current.Text == message then
-			current.Visible = false
-		end
-	end)
-end
+local statAttributes: { [string]: string } = { attack = "Attack", defence = "Defence", speed = "Speed", hp = "Hp" }
+local areaTitles: { [string]: string } = {
+	fishing = "Fishing",
+	garden = "Garden",
+	kitchen = "Kitchen",
+	pantry = "Pantry",
+	training = "Training",
+	breeding = "Breeding",
+}
 
 local reasons: { [string]: string } = {
 	NOT_READY = "Village is loading.",
@@ -148,131 +85,16 @@ local reasons: { [string]: string } = {
 	INVALID_STAT_OR_SLOT = "Choose a valid stat.",
 	SERVER_ERROR = "Please try again.",
 }
+
 local function failure(reason: any): string
 	if type(reason) ~= "string" then
 		return "Action unavailable."
 	end
-	return reasons[reason] or string.gsub(reason, "_", " ")
-end
-
-local function request(data: { [string]: any }, onSuccess: () -> ())
-	local remotes = ReplicatedStorage:FindFirstChild("Remotes")
-	local remote = if remotes then remotes:FindFirstChild("Village") else nil
-	if not remote or not remote:IsA("RemoteFunction") then
-		say("Village is loading.")
-		return
+	if reasons[reason] then
+		return reasons[reason]
 	end
-	if busy then
-		return
-	end
-	busy = true
-	task.spawn(function()
-		local ok, answer = pcall(function()
-			return remote:InvokeServer(data)
-		end)
-		busy = false
-		if not ok or type(answer) ~= "table" then
-			say("Please try again.")
-		elseif answer.ok then
-			onSuccess()
-		else
-			say(failure(answer.reason))
-		end
-	end)
-end
-
-local function ownSlimes(): { Configuration }
-	local available: { Configuration } = {}
-	local folder = if own then own:FindFirstChild("Slimes") else nil
-	if folder then
-		for _, child in folder:GetChildren() do
-			if child:IsA("Configuration") then
-				table.insert(available, child)
-			end
-		end
-	end
-	table.sort(available, function(a, b)
-		return a.Name < b.Name
-	end)
-	return available
-end
-
-local function labelFor(id: string?): string
-	if not id or id == "" then
-		return "Choose"
-	end
-	local folder = if own then own:FindFirstChild("Slimes") else nil
-	local found = if folder then folder:FindFirstChild(id) else nil
-	if not found then
-		return "Choose"
-	end
-	local value = found:GetAttribute("Name")
-	return if type(value) == "string" and value ~= "" then value else id
-end
-
-local function canPick(slime: Configuration, permitWorking: boolean): boolean
-	local working = slime:GetAttribute("WorkArea")
-	local pair = slime:GetAttribute("PairIndex")
-	return slime:GetAttribute("Baby") == false
-		and slime:GetAttribute("Ghost") ~= true
-		and (permitWorking or ((working == nil or working == "") and (type(pair) ~= "number" or pair == 0)))
-end
-
-local function portrait(parent: Instance, slime: Configuration)
-	local view = Instance.new("ViewportFrame")
-	view.Size = UDim2.fromOffset(C.UiButtonSize, C.UiButtonSize)
-	view.BackgroundColor3 = Color3.fromHex(C.Card)
-	view.LightColor = Color3.new(1, 1, 1)
-	view.Ambient = Color3.new(1, 1, 1)
-	view.Parent = parent
-	local world = Instance.new("WorldModel")
-	world.Parent = view
-	local model = SlimeLook.build({
-		Colour = slime:GetAttribute("Colour"),
-		Material = slime:GetAttribute("Material"),
-		DualId = slime:GetAttribute("DualId"),
-		SecretId = slime:GetAttribute("SecretId"),
-		Scale = 1,
-	})
-	model:PivotTo(CFrame.Angles(0, math.pi, 0))
-	model.Parent = world
-	local camera = Instance.new("Camera")
-	camera.CFrame =
-		CFrame.lookAt(Vector3.new(0, C.BodyHeight * 0.65, C.BodyHeight * 2.5), Vector3.new(0, C.BodyHeight * 0.5, 0))
-	camera.Parent = view
-	view.CurrentCamera = camera
-end
-
-local function chosenPortrait(parent: GuiObject, id: string?)
-	if not id then
-		return
-	end
-	local folder = if own then own:FindFirstChild("Slimes") else nil
-	local found = if folder then folder:FindFirstChild(id) else nil
-	if found and found:IsA("Configuration") then
-		portrait(parent, found)
-	end
-end
-
-local function frameContent(): ScrollingFrame?
-	if not sheet then
-		return nil
-	end
-	local current = sheet:FindFirstChild("Content")
-	if current then
-		current:Destroy()
-	end
-	local scroller = Instance.new("ScrollingFrame")
-	scroller.Name = "Content"
-	scroller.Position = UDim2.fromOffset(C.UiPadding, C.UiButtonSize + C.UiPadding)
-	scroller.Size = UDim2.new(1, -2 * C.UiPadding, 1, -C.UiButtonSize - 2 * C.UiPadding)
-	scroller.BackgroundTransparency = 1
-	scroller.ScrollBarThickness = 4
-	scroller.AutomaticCanvasSize = Enum.AutomaticSize.Y
-	scroller.CanvasSize = UDim2.fromScale(0, 0)
-	scroller.Parent = sheet
-	list(scroller, false, C.UiPadding / 2)
-	return scroller
+	local words = string.lower((string.gsub(reason, "_", " ")))
+	return string.upper(string.sub(words, 1, 1)) .. string.sub(words, 2)
 end
 
 local function parse(value: any): { [string]: any }
@@ -285,324 +107,623 @@ local function parse(value: any): { [string]: any }
 	return if ok and type(decoded) == "table" then decoded else {}
 end
 
-local function close()
-	activePoint, pickedFirst, activeArea = nil, nil, nil
-	picking = false
-	pickerState = nil
-	if sheet then
-		sheet.Visible = false
+local function request(data: { [string]: any }, onSuccess: () -> ())
+	local remotes = ReplicatedStorage:FindFirstChild("Remotes")
+	local remote = if remotes then remotes:FindFirstChild("Village") else nil
+	if not remote or not remote:IsA("RemoteFunction") then
+		UiKit.toast("Village is loading.")
+		return
+	end
+	if busy then
+		return
+	end
+	busy = true
+	task.spawn(function()
+		local ok, answer = pcall(function()
+			return remote:InvokeServer(data)
+		end)
+		busy = false
+		if not ok or type(answer) ~= "table" then
+			UiKit.toast("Please try again.")
+		elseif answer.ok then
+			onSuccess()
+		else
+			UiKit.toast(failure(answer.reason))
+		end
+	end)
+end
+
+local function findSlime(id: string?): Configuration?
+	local folder = if own then own:FindFirstChild("Slimes") else nil
+	local found = if folder and id and id ~= "" then folder:FindFirstChild(id) else nil
+	return if found and found:IsA("Configuration") then found else nil
+end
+
+local renderArea: (string) -> ()
+
+-- ===== Picker =====
+
+local function reasonBlocked(slime: Configuration, spec: Pick): string?
+	if UiSlimes.isGhost(slime) then
+		return "Ghost"
+	elseif UiSlimes.isBaby(slime) then
+		return "Baby"
+	elseif spec.kind == "pair" then
+		local index = UiSlimes.pair(slime)
+		if slime.Name == spec.exclude then
+			return "Chosen"
+		elseif index ~= 0 then
+			return "Paired"
+		elseif UiSlimes.job(slime) then
+			return "Working"
+		end
+	elseif UiSlimes.job(slime) then
+		return "Working"
+	elseif UiSlimes.pair(slime) ~= 0 then
+		return "Paired"
+	end
+	return nil
+end
+
+-- Higher is better. Work: the fastest. Training: the weakest in the chosen stat. Pairing: the highest level, fed and rested.
+local function score(slime: Configuration, spec: Pick): number?
+	if spec.kind == "work" then
+		return UiSlimes.number(slime, "Speed")
+	elseif spec.kind == "train" then
+		local attribute = if spec.stat then statAttributes[spec.stat] else nil
+		return if attribute then -UiSlimes.number(slime, attribute) else nil
+	end
+	local fed = UiSlimes.number(slime, "Fullness") >= Config.Needs.PairFullness
+	local rested = UiSlimes.number(slime, "Energy") > Config.Needs.Tired and slime:GetAttribute("Sleeping") ~= true
+	return if fed and rested then UiSlimes.number(slime, "Level") else nil
+end
+
+local function pickEntries(): { UiSlimes.Entry }
+	local spec = pick
+	if not spec then
+		return {}
+	end
+	local free: { UiSlimes.Entry } = {}
+	local busyOnes: { UiSlimes.Entry } = {}
+	local best: UiSlimes.Entry? = nil
+	local bestScore = -math.huge
+	for _, slime in UiSlimes.slimes(own) do
+		local entry: UiSlimes.Entry = { slime = slime, blocked = reasonBlocked(slime, spec) }
+		if entry.blocked then
+			table.insert(busyOnes, entry)
+		else
+			table.insert(free, entry)
+			local value = score(slime, spec)
+			if value and value > bestScore then
+				best, bestScore = entry, value
+			end
+		end
+	end
+	table.sort(free, function(a, b)
+		local left, right = score(a.slime, spec) or -math.huge, score(b.slime, spec) or -math.huge
+		if left ~= right then
+			return left > right
+		end
+		return a.slime.Name < b.slime.Name
+	end)
+	if best then
+		best.suggested = true
+		table.remove(free, table.find(free, best) :: number)
+		table.insert(free, 1, best)
+	end
+	for _, entry in busyOnes do
+		table.insert(free, entry)
+	end
+	return free
+end
+
+local function drawBackHeader(spec: Pick)
+	local bar = sheetHeader
+	if not bar then
+		return
+	end
+	UiKit.clear(bar)
+	UiKit.button(bar, {
+		Name = "Back",
+		Icon = "back",
+		Style = "secondary",
+		Size = UDim2.fromOffset(U.Touch, U.Touch),
+		AnchorPoint = Vector2.new(0, 0.5),
+		Position = UDim2.fromScale(0, 0.5),
+		OnClick = function()
+			renderArea(spec.area)
+		end,
+	})
+	UiKit.icon(bar, spec.area, U.Touch - 12, {
+		AnchorPoint = Vector2.new(0, 0.5),
+		Position = UDim2.new(0, U.Touch + U.Gap, 0.5, 0),
+	})
+	local current = spec.current
+	if current and current ~= "" and spec.kind ~= "pair" then
+		UiKit.button(bar, {
+			Name = "Remove",
+			Text = "Remove",
+			Style = "secondary",
+			Size = UDim2.fromOffset(U.Touch * 2, U.Touch),
+			AnchorPoint = Vector2.new(1, 0.5),
+			Position = UDim2.fromScale(1, 0.5),
+			OnClick = function()
+				request({ action = "Unassign", slimeId = current }, function()
+					renderArea(spec.area)
+				end)
+			end,
+		})
 	end
 end
 
-local renderArea: (string) -> () = function(_area) end
-
-local function picker(area: string, choose: (string) -> (), permitWorking: boolean)
-	picking = true
-	pickerState = { area = area, choose = choose, permitWorking = permitWorking }
-	local scroller = frameContent()
-	if not scroller then
+local function openPicker(spec: Pick)
+	local host = sheetContent
+	if not host then
 		return
 	end
-	local back = row(scroller)
-	button(back, "Back", function()
-		renderArea(area)
-	end, C.UiButtonSize * 2)
-	local count = 0
-	for _, slime in ownSlimes() do
-		if canPick(slime, permitWorking) then
-			count += 1
-			local cell = row(scroller)
-			portrait(cell, slime)
-			local name = labelFor(slime.Name)
-			local chooseButton = button(
-				cell,
-				name
-					.. " Lv "
-					.. tostring(slime:GetAttribute("Level") or 0)
-					.. "  F:"
-					.. tostring(math.floor((slime:GetAttribute("Fullness") :: number?) or 0))
-					.. " E:"
-					.. tostring(math.floor((slime:GetAttribute("Energy") :: number?) or 0)),
-				function()
-					choose(slime.Name)
-				end,
-				math.max(
-					C.UiButtonSize * 2,
-					scroller.AbsoluteSize.X - C.UiButtonSize - C.HudIconSize * 2 - C.UiPadding * 5
-				)
-			)
-			icon(cell, "fullness", C.HudIconSize)
-			icon(cell, "energy", C.HudIconSize)
-			local stats = row(scroller)
-			text(
-				stats,
-				"ATK "
-					.. tostring(slime:GetAttribute("Attack") or 0)
-					.. "  DEF "
-					.. tostring(slime:GetAttribute("Defence") or 0)
-					.. "  SPD "
-					.. tostring(slime:GetAttribute("Speed") or 0)
-					.. "  HP "
-					.. tostring(slime:GetAttribute("Hp") or 0),
-				UDim2.new(1, 0, 0, C.HudHeight),
-				C.FontTiny
-			)
-			chooseButton.TextScaled = false
-			chooseButton.TextSize = C.FontTiny
+	pick = spec
+	live = nil
+	renderedKey = ""
+	UiKit.clear(host)
+	drawBackHeader(spec)
+	local list = UiSlimes.view(host, pickEntries, spec.choose, true)
+	pickView = list
+	list.refresh()
+end
+
+-- ===== Sheet pieces =====
+
+local function seat(parent: Instance, id: string?, size: number, position: UDim2, onClick: () -> ()): TextButton
+	local button = UiKit.make("TextButton", {
+		Name = "Seat",
+		Text = "",
+		AutoButtonColor = false,
+		BackgroundTransparency = 1,
+		Size = UDim2.fromOffset(size, size),
+		Position = position,
+	}, parent)
+	local slime = findSlime(id)
+	if slime then
+		local _, show = UiSlimes.portrait(button, slime, size)
+		show()
+	else
+		local _, body = UiKit.skin(button, "Wood", "CardDeep", { Size = UDim2.fromOffset(size, size) })
+		UiKit.icon(body, "plus", math.floor(size / 2), {
+			AnchorPoint = Vector2.new(0.5, 0.5),
+			Position = UDim2.fromScale(0.5, 0.5),
+		})
+	end
+	button.Activated:Connect(onClick)
+	return button
+end
+
+local function rowCard(parent: Instance, height: number, order: number): Frame
+	local _, body = UiKit.card(parent, { Size = UDim2.new(1, -8, 0, height), LayoutOrder = order })
+	return body
+end
+
+local function stockChips(parent: Instance, stock: { [string]: number }, order: { string }, start: number)
+	local wrap = UiKit.make("Frame", {
+		Name = "Stock",
+		BackgroundTransparency = 1,
+		Size = UDim2.new(1, -8, 0, 0),
+		AutomaticSize = Enum.AutomaticSize.Y,
+		LayoutOrder = start,
+	}, parent)
+	UiKit.make("UIListLayout", {
+		FillDirection = Enum.FillDirection.Horizontal,
+		Wraps = true,
+		Padding = UDim.new(0, U.Gap),
+		SortOrder = Enum.SortOrder.LayoutOrder,
+	}, wrap)
+	for index, item in order do
+		local amount = stock[item] or 0
+		if amount > 0 then
+			UiKit.chip(wrap, item, tostring(amount), index)
 		end
 	end
-	if count == 0 then
-		text(scroller, "No free adults", UDim2.new(1, 0, 0, C.UiRowHeight), C.FontSub)
+	return wrap
+end
+
+local function structureKey(area: string): string
+	local parts: { string } = { area }
+	local levels = if own then parse(own:GetAttribute("Areas")) else {}
+	table.insert(parts, tostring(levels[area]))
+	if table.find(Config.Work.Areas, area) then
+		local work: { [string]: any } = if own then parse(own:GetAttribute("Work")) else {}
+		for slot, saved in work[area] or {} do
+			table.insert(
+				parts,
+				string.format("%d:%s:%s:%s", slot, saved.worker or "", saved.reserve or "", saved.stat or "")
+			)
+		end
+	end
+	if area == "breeding" then
+		local pairs: { any } = if own then parse(own:GetAttribute("Pairs")) :: any else {}
+		for index, pair in pairs do
+			table.insert(parts, string.format("%d:%s:%s", index, pair.a or "", pair.b or ""))
+		end
+	end
+	if area == "kitchen" then
+		for _, slime in UiSlimes.slimes(own) do
+			if not UiSlimes.isBaby(slime) and not UiSlimes.isGhost(slime) then
+				table.insert(parts, slime.Name .. (if slime:GetAttribute("CookedAllowed") == true then "+" else "-"))
+			end
+		end
+	end
+	return table.concat(parts, "|")
+end
+
+local function drawTitle(area: string)
+	local bar = sheetHeader
+	if not bar then
+		return
+	end
+	UiKit.clear(bar)
+	UiKit.icon(bar, area, U.Touch - 4, { AnchorPoint = Vector2.new(0, 0.5), Position = UDim2.fromScale(0, 0.5) })
+	UiKit.label(bar, areaTitles[area] or area, U.TextHeader, "Brown", {
+		Position = UDim2.fromOffset(U.Touch + U.Gap, 0),
+		Size = UDim2.new(1, -U.Touch - U.Gap, 0, U.Touch),
+	})
+end
+
+local function levelOf(area: string): number
+	local levels = if own then parse(own:GetAttribute("Areas")) else {}
+	local value = levels[area]
+	return if type(value) == "number" then value else Config.Village.StartLevel
+end
+
+-- One slot of a work area: the worker's seat, the reserve's seat and the progress.
+local function workRow(scroll: ScrollingFrame, area: string, slot: number, saved: { [string]: any }): (UiKit.Bar, Frame)
+	local training = area == "training"
+	local height = if training then U.RowHeight + U.Touch + U.Gap else U.RowHeight
+	local body = rowCard(scroll, height, slot)
+	local function choose(reserve: boolean)
+		local current = if reserve then saved.reserve else saved.worker
+		openPicker({
+			area = area,
+			kind = if training then "train" else "work",
+			slot = slot,
+			current = current,
+			stat = saved.stat,
+			choose = function(slime)
+				local function assign()
+					request(
+						{ action = "Assign", area = area, slot = slot, slimeId = slime.Name, asReserve = reserve },
+						function()
+							renderArea(area)
+						end
+					)
+				end
+				if type(current) == "string" and current ~= "" then
+					request({ action = "Unassign", slimeId = current }, assign)
+				else
+					assign()
+				end
+			end,
+		})
+	end
+	local main = U.SeatSize
+	seat(body, saved.worker, main, UDim2.fromOffset(0, 0), function()
+		choose(false)
+	end)
+	seat(
+		body,
+		saved.reserve,
+		U.SeatReserveSize,
+		UDim2.fromOffset(main + U.Gap, (main - U.SeatReserveSize) / 2),
+		function()
+			choose(true)
+		end
+	)
+	local lead = main + U.SeatReserveSize + U.Gap * 3
+	local progress = UiKit.bar(body, "", "Gold", {
+		Position = UDim2.fromOffset(lead, main / 2 - 8),
+		Size = UDim2.new(1, -lead, 0, 16),
+	})
+	if training then
+		local list = UiKit.make("Frame", {
+			Name = "Stats",
+			BackgroundTransparency = 1,
+			Position = UDim2.fromOffset(0, main + U.Gap),
+			Size = UDim2.new(1, 0, 0, U.Touch),
+		}, body)
+		UiKit.make("UIListLayout", {
+			FillDirection = Enum.FillDirection.Horizontal,
+			Padding = UDim.new(0, U.Gap),
+			SortOrder = Enum.SortOrder.LayoutOrder,
+		}, list)
+		for index, stat in { "attack", "defence", "speed", "hp" } do
+			UiKit.button(list, {
+				Name = stat,
+				Icon = stat,
+				Style = if saved.stat == stat then "primary" else "secondary",
+				Size = UDim2.fromOffset(U.Touch + 10, U.Touch),
+				LayoutOrder = index,
+				OnClick = function()
+					request({ action = "SetTrainingStat", slot = slot, stat = stat }, function() end)
+				end,
+			})
+		end
+	end
+	return progress, body
+end
+
+local function breedingRow(scroll: ScrollingFrame, area: string, index: number, pair: { [string]: any }): TextLabel
+	local body = rowCard(scroll, U.RowHeight, index)
+	local size = U.SeatSize
+	local function choose(side: string)
+		local partner = if side == "a" then pair.b else pair.a
+		local has = type(pair.a) == "string" and pair.a ~= "" and type(pair.b) == "string" and pair.b ~= ""
+		local function set(a: string, b: string)
+			request({ action = "SetPair", index = index, a = a, b = b }, function()
+				renderArea(area)
+			end)
+		end
+		local spec: Pick = {
+			area = area,
+			kind = "pair",
+			slot = index,
+			current = if side == "a" then pair.a else pair.b,
+			partner = partner,
+			choose = function(slime)
+				if has then
+					set(if side == "a" then slime.Name else pair.a, if side == "a" then pair.b else slime.Name)
+				else
+					-- An empty place takes two slimes: the second step excludes the first.
+					openPicker({
+						area = area,
+						kind = "pair",
+						slot = index,
+						exclude = slime.Name,
+						choose = function(second)
+							set(slime.Name, second.Name)
+						end,
+					})
+				end
+			end,
+		}
+		openPicker(spec)
+	end
+	seat(body, pair.a, size, UDim2.fromOffset(0, 0), function()
+		choose("a")
+	end)
+	UiKit.icon(body, "breeding", U.IconNormal + 8, {
+		AnchorPoint = Vector2.new(0.5, 0.5),
+		Position = UDim2.new(0, size + U.Gap + 24, 0.5, -6),
+	})
+	local courting = UiKit.label(body, "", U.TextTiny, "BrownSoft", {
+		AnchorPoint = Vector2.new(0.5, 0),
+		Position = UDim2.new(0, size + U.Gap + 24, 0.5, 14),
+		Size = UDim2.fromOffset(60, U.TextTiny + 4),
+		TextXAlignment = Enum.TextXAlignment.Center,
+	})
+	seat(body, pair.b, size, UDim2.fromOffset(size + 2 * U.Gap + 48, 0), function()
+		choose("b")
+	end)
+	if type(pair.a) == "string" and pair.a ~= "" then
+		UiKit.button(body, {
+			Name = "Clear",
+			Icon = "cross",
+			Style = "secondary",
+			Size = UDim2.fromOffset(U.Touch, U.Touch),
+			AnchorPoint = Vector2.new(1, 0.5),
+			Position = UDim2.fromScale(1, 0.5),
+			OnClick = function()
+				request({ action = "SetPair", index = index }, function()
+					renderArea(area)
+				end)
+			end,
+		})
+	end
+	return courting
+end
+
+local function cookedList(scroll: ScrollingFrame, start: number)
+	local order = start
+	for _, slime in UiSlimes.slimes(own) do
+		if not UiSlimes.isBaby(slime) and not UiSlimes.isGhost(slime) then
+			order += 1
+			local body = rowCard(scroll, U.SeatReserveSize + 12, order)
+			local _, show = UiSlimes.portrait(body, slime, U.SeatReserveSize, { Position = UDim2.fromOffset(0, 0) })
+			show()
+			UiKit.label(body, UiSlimes.name(slime), U.TextNormal, "Brown", {
+				Position = UDim2.fromOffset(U.SeatReserveSize + U.Gap, 0),
+				Size = UDim2.new(1, -U.SeatReserveSize - U.Gap - 96, 0, U.SeatReserveSize),
+			})
+			local allowed = slime:GetAttribute("CookedAllowed") == true
+			UiKit.button(body, {
+				Name = "Cooked",
+				Icon = "food",
+				Text = if allowed then "Yes" else "No",
+				Style = if allowed then "good" else "secondary",
+				Size = UDim2.fromOffset(90, U.Touch),
+				AnchorPoint = Vector2.new(1, 0.5),
+				Position = UDim2.fromScale(1, 0.5),
+				OnClick = function()
+					request(
+						{ action = "SetCookedAllowed", slimeId = slime.Name, allowed = not allowed },
+						function() end
+					)
+				end,
+			})
+		end
 	end
 end
 
 renderArea = function(area: string)
-	picking = false
-	pickerState = nil
-	local scroller = frameContent()
-	if not scroller then
+	local host = sheetContent
+	if not host then
 		return
 	end
-	local levels = if own then parse(own:GetAttribute("Areas")) else {}
-	local level = levels[area]
-	text(
-		scroller,
-		"Level " .. tostring(if type(level) == "number" then level else Config.Village.StartLevel),
-		UDim2.new(1, 0, 0, C.HudHeight),
-		C.FontSmall
-	)
+	pick, pickView = nil, nil
+	UiKit.clear(host)
+	drawTitle(area)
+	local scroll = UiKit.make("ScrollingFrame", {
+		Name = "Scroll",
+		BackgroundTransparency = 1,
+		BorderSizePixel = 0,
+		Size = UDim2.fromScale(1, 1),
+		ScrollBarThickness = 5,
+		ScrollBarImageColor3 = UiKit.colour("BrownSoft"),
+		AutomaticCanvasSize = Enum.AutomaticSize.Y,
+		CanvasSize = UDim2.new(),
+	}, host)
+	UiKit.make("UIListLayout", {
+		Padding = UDim.new(0, U.Gap),
+		SortOrder = Enum.SortOrder.LayoutOrder,
+	}, scroll)
+	UiKit.make("UIPadding", { PaddingRight = UDim.new(0, 8), PaddingBottom = UDim.new(0, 4) }, scroll)
+	renderedKey = structureKey(area)
+	local bars: { [number]: UiKit.Bar } = {}
+	local courting: { [number]: TextLabel } = {}
+	local boxHost: Frame? = nil
+	local order = 0
+	UiKit.label(scroll, "Lv " .. tostring(levelOf(area)), U.TextNormal, "BrownSoft", { LayoutOrder = order })
+
 	if area == "breeding" then
 		local pairs: { any } = if own then parse(own:GetAttribute("Pairs")) :: any else {}
 		for index = 1, math.max(Config.Breeding.BasePlaces, #pairs) do
-			local pair = pairs[index] or {}
-			local cell = row(scroller)
-			text(cell, tostring(index), UDim2.fromOffset(C.UiButtonSize / 2, C.UiButtonSize), C.FontSub)
-			local courting = type(pair.courtingUntil) == "number" and pair.courtingUntil > os.time()
-			button(
-				cell,
-				labelFor(pair.a) .. " + " .. labelFor(pair.b) .. (if courting then " (Courting)" else ""),
-				function()
-					pickedFirst = nil
-					picker(area, function(first)
-						pickedFirst = first
-						picker(area, function(second)
-							local firstId = pickedFirst
-							if not firstId or firstId == second then
-								say("Choose two different slimes.")
-								return
-							end
-							request({ action = "SetPair", index = index, a = firstId, b = second }, function()
-								pickedFirst = nil
-								renderArea(area)
-							end)
-						end, false)
-					end, false)
-				end,
-				math.max(C.UiButtonSize * 2, scroller.AbsoluteSize.X - C.UiButtonSize * 2 - C.UiPadding * 3)
-			)
-			button(cell, "Clear", function()
-				request({ action = "SetPair", index = index }, function()
-					renderArea(area)
-				end)
-			end, C.UiButtonSize + C.UiPadding)
+			order += 1
+			courting[index] = breedingRow(scroll, area, index, pairs[index] or {})
 		end
-	elseif area == "kitchen" then
-		local choose = row(scroller)
-		text(choose, "Cooked food", UDim2.new(1, -C.UiPadding, 0, C.UiButtonSize), C.FontHeader)
-		for _, slime in ownSlimes() do
-			if canPick(slime, true) then
-				local cell = row(scroller)
-				portrait(cell, slime)
-				text(
-					cell,
-					labelFor(slime.Name),
-					UDim2.fromOffset(
-						math.max(C.UiButtonSize, scroller.AbsoluteSize.X - C.UiButtonSize * 4 - C.UiPadding * 3),
-						C.UiButtonSize
-					),
-					C.FontSmall
-				)
-				local state = slime:GetAttribute("CookedAllowed") == true
-				button(cell, if state == true then "On" else "Allow", function()
-					request({ action = "SetCookedAllowed", slimeId = slime.Name, allowed = true }, function()
-						renderArea(area)
-					end)
-				end, C.UiButtonSize + C.UiPadding)
-				button(cell, if state == false then "Off" else "Raw", function()
-					request({ action = "SetCookedAllowed", slimeId = slime.Name, allowed = false }, function()
-						renderArea(area)
-					end)
-				end, C.UiButtonSize + C.UiPadding)
-			end
-		end
-	end
-
-	if table.find(Config.Work.Areas, area) then
+	elseif table.find(Config.Work.Areas, area) then
 		local work: { [string]: any } = if own then parse(own:GetAttribute("Work")) else {}
 		local stations: { any } = work[area] or {}
 		for slot = 1, math.max(#stations, Config.Work.BaseSlots) do
-			local saved = stations[slot] or {}
-			local cell = row(scroller)
-			text(cell, tostring(slot), UDim2.fromOffset(C.UiButtonSize / 2, C.UiButtonSize), C.FontSub)
-			for _, reserve in { false, true } do
-				local position = if reserve then "reserve" else "worker"
-				local selected = (saved :: any)[position]
-				local slotButton = button(cell, labelFor(selected), function()
-					picker(area, function(id)
-						request(
-							{ action = "Assign", area = area, slot = slot, slimeId = id, asReserve = reserve },
-							function()
-								renderArea(area)
-							end
-						)
-					end, false)
-				end, math.max(C.UiButtonSize, (scroller.AbsoluteSize.X - C.UiButtonSize - C.UiPadding * 4) / 2))
-				if type(selected) == "string" and selected ~= "" then
-					chosenPortrait(slotButton, selected)
-				end
-			end
-			-- Workers and reserves are independent assignments, both removable after a rejoin.
-			for _, role in { "worker", "reserve" } do
-				local id = saved[role]
-				if type(id) == "string" and id ~= "" then
-					local remove = row(scroller)
-					button(remove, "Remove " .. role .. ": " .. labelFor(id), function()
-						request({ action = "Unassign", slimeId = id }, function()
-							renderArea(area)
-						end)
-					end, C.UiButtonSize * 4)
-				end
-			end
-			local progress = if type(saved.progress) == "number"
-				then math.floor(saved.progress * Config.Needs.Max)
-				else 0
-			local detail = row(scroller)
-			text(
-				detail,
-				"Progress "
-					.. tostring(progress)
-					.. "%"
-					.. (
-						if area == "training"
-							then " · " .. (if saved.stat ~= "" then tostring(saved.stat) else "Choose stat")
-							else ""
-					),
-				UDim2.new(1, 0, 0, C.HudHeight),
-				C.FontTiny
-			)
-			if area == "training" then
-				local stats = row(scroller)
-				for _, stat in { "attack", "defence", "speed", "hp" } do
-					local wrap = Instance.new("Frame")
-					wrap.BackgroundTransparency = 1
-					wrap.Size = UDim2.fromOffset(C.UiButtonSize + C.UiPadding, C.UiButtonSize)
-					wrap.Parent = stats
-					local chooseStat = button(wrap, stat:sub(1, 3), function()
-						request({ action = "SetTrainingStat", slot = slot, stat = stat }, function()
-							say("Stat set.")
-						end)
-					end)
-					chooseStat.Position = UDim2.fromOffset(0, 0)
-					chooseStat.TextXAlignment = Enum.TextXAlignment.Right
-					icon(chooseStat, stat, C.HudIconSize)
-				end
-			end
+			order += 1
+			local progress = workRow(scroll, area, slot, stations[slot] or {})
+			bars[slot] = progress
 		end
-		local boxes = if own then parse(own:GetAttribute("Box")) else {}
-		local stock: { [string]: number } = boxes[area] or {}
-		local summary = ""
-		local order: { string } = if area == "kitchen" then Config.Food.DishOrder else Config.Food.RawOrder
-		for _, item in order do
-			if (stock[item] or 0) > 0 then
-				summary ..= (if summary == "" then "" else "  ·  ") .. item .. " " .. tostring(stock[item])
-			end
+		order += 1
+		boxHost = UiKit.make("Frame", {
+			Name = "BoxHost",
+			BackgroundTransparency = 1,
+			Size = UDim2.new(1, -8, 0, 0),
+			AutomaticSize = Enum.AutomaticSize.Y,
+			LayoutOrder = 100,
+		}, scroll)
+		if area == "kitchen" then
+			cookedList(scroll, 100)
 		end
-		text(
-			scroller,
-			"Box: " .. (if summary == "" then "Empty" else summary),
-			UDim2.new(1, 0, 0, C.HudHeight),
-			C.FontSmall
-		)
+	elseif area == "pantry" then
+		boxHost = UiKit.make("Frame", {
+			Name = "BoxHost",
+			BackgroundTransparency = 1,
+			Size = UDim2.new(1, -8, 0, 0),
+			AutomaticSize = Enum.AutomaticSize.Y,
+			LayoutOrder = 1,
+		}, scroll)
 	end
+
+	-- Everything that changes every second: progress, courtship and what the box holds. No portraits are rebuilt.
+	local function update()
+		if own then
+			local work: { [string]: any } = parse(own:GetAttribute("Work"))
+			local stations: { any } = work[area] or {}
+			for slot, bar in bars do
+				local saved = stations[slot] or {}
+				bar.set(if type(saved.progress) == "number" then saved.progress else 0, false)
+			end
+			local pairs: { any } = parse(own:GetAttribute("Pairs")) :: any
+			for index, label in courting do
+				local pair = pairs[index] or {}
+				label.Text = if type(pair.courtingUntil) == "number" and pair.courtingUntil > os.time()
+					then "Courting"
+					else ""
+			end
+			if boxHost then
+				UiKit.clear(boxHost)
+				local stock: { [string]: number }
+				local kinds: { string }
+				if area == "pantry" then
+					stock = {}
+					for key, value in parse(own:GetAttribute("Storehouse")) do
+						stock[key] = value
+					end
+					for key, value in parse(own:GetAttribute("Fridge")) do
+						stock[key] = value
+					end
+					kinds = {}
+					for _, key in Config.Food.RawOrder do
+						table.insert(kinds, key)
+					end
+					for _, key in Config.Food.DishOrder do
+						table.insert(kinds, key)
+					end
+				else
+					stock = (parse(own:GetAttribute("Box"))[area] or {}) :: any
+					kinds = if area == "kitchen" then Config.Food.DishOrder else Config.Food.RawOrder
+				end
+				stockChips(boxHost, stock, kinds, 1)
+			end
+		end
+	end
+	update()
+	live = update
 end
 
-local function open(area: string, position: Vector3)
-	if not sheet then
-		return
-	end
+-- ===== Opening and closing =====
+
+local function onSheetClosed()
+	activePoint, activeArea = nil, nil
+	pick, pickView, live = nil, nil, nil
+	sheetHeader, sheetContent = nil, nil
+	renderedKey = ""
+end
+
+local function openSheet(area: string, position: Vector3)
 	activePoint = position
 	activeArea = area
-	sheet.Visible = true
-	local title = sheet:FindFirstChild("Title")
-	if title and title:IsA("TextLabel") then
-		title.Text = string.upper(string.sub(area, 1, 1)) .. string.sub(area, 2)
-	end
+	local modal = UiKit.openModal("sheet", {
+		Width = U.SheetWidth,
+		Height = U.SheetHeight,
+		Bottom = true,
+		Dim = 0.8,
+		OnClose = onSheetClosed,
+	})
+	-- openModal closed any open modal (its OnClose cleared this state); set it again for the new one.
+	activePoint, activeArea = position, area
+	sheetHeader, sheetContent = modal.header, modal.content
 	renderArea(area)
 end
 
--- Replicated changes are coalesced; keep the scroll position and current picker step.
-local function refreshSheet()
-	if not sheet or not sheet.Visible or not activeArea or refreshPending then
+-- Replicated changes are coalesced; scroll position and the current picker step are kept.
+local function refreshAll()
+	if refreshPending then
 		return
 	end
 	refreshPending = true
 	task.delay(Config.Village.TickSeconds, function()
 		refreshPending = false
-		if not sheet or not sheet.Visible or not activeArea then
+		if UiBook.isOpen() then
+			UiBook.refresh()
+		end
+		if UiKit.modalId() ~= "sheet" or not activeArea then
 			return
 		end
-		local before = sheet:FindFirstChild("Content")
-		local offset = if before and before:IsA("ScrollingFrame") then before.CanvasPosition else Vector2.zero
-		local state = pickerState
-		if picking and state then
-			picker(state.area, state.choose, state.permitWorking)
-		else
+		if pick then
+			if pickView then
+				pickView.refresh()
+			end
+		elseif structureKey(activeArea) ~= renderedKey then
+			local host = sheetContent
+			local before = if host then host:FindFirstChild("Scroll") else nil
+			local offset = if before and before:IsA("ScrollingFrame") then before.CanvasPosition else Vector2.zero
 			renderArea(activeArea)
-		end
-		local after = sheet:FindFirstChild("Content")
-		if after and after:IsA("ScrollingFrame") then
-			after.CanvasPosition = offset
+			local after = if host then host:FindFirstChild("Scroll") else nil
+			if after and after:IsA("ScrollingFrame") then
+				task.defer(function()
+					after.CanvasPosition = offset
+				end)
+			end
+		elseif live then
+			live()
 		end
 	end)
 end
 
-local resources = { "coins", "fish", "carrot", "cabbage", "grilledFish", "veggieStew", "fishVegSoup", "slimes" }
-
-local function refreshHud()
-	if not hud then
-		return
-	end
-	for _, child in hud:GetChildren() do
-		if child:IsA("Frame") then
-			child:Destroy()
-		end
-	end
-	local store = if own then parse(own:GetAttribute("Storehouse")) else {}
-	local fridge = if own then parse(own:GetAttribute("Fridge")) else {}
-	for _, resource in resources do
-		local amount: any = 0
-		if own then
-			if resource == "coins" then
-				amount = own:GetAttribute("Coins")
-			elseif resource == "slimes" then
-				amount = tostring(own:GetAttribute("Population") or 0)
-					.. "/"
-					.. tostring(own:GetAttribute("Limit") or 0)
-			elseif fridge[resource] then
-				amount = fridge[resource]
-			else
-				amount = store[resource] or 0
-			end
-		end
-		local cell = Instance.new("Frame")
-		cell.Size = UDim2.fromOffset(C.UiButtonSize * 2, C.HudHeight)
-		cell.BackgroundTransparency = 1
-		cell.Parent = hud
-		icon(cell, resource, C.HudIconSize)
-		local value = text(cell, tostring(amount), UDim2.new(1, -C.HudIconSize, 1, 0), C.FontSmall)
-		value.Position = UDim2.fromOffset(C.HudIconSize, 0)
-	end
-end
+-- ===== World prompts =====
 
 local function anchor(inst: Instance): Instance?
 	if inst:IsA("Attachment") or inst:IsA("BasePart") then
@@ -660,7 +781,7 @@ local function createPrompts(root: Folder)
 				local prompt = Instance.new("ProximityPrompt")
 				prompt.Name = "VillageManage"
 				prompt.ActionText = "Manage"
-				prompt.ObjectText = area
+				prompt.ObjectText = areaTitles[area]
 				prompt.KeyboardKeyCode = Enum.KeyCode.F
 				prompt.HoldDuration = C.PromptHoldSeconds
 				prompt.MaxActivationDistance = C.PromptDistance
@@ -669,7 +790,7 @@ local function createPrompts(root: Folder)
 				prompt.Triggered:Connect(function()
 					local position = positionOf(target)
 					if position then
-						open(area, position)
+						openSheet(area, position)
 					end
 				end)
 				table.insert(prompts, prompt)
@@ -679,15 +800,16 @@ local function createPrompts(root: Folder)
 	end
 end
 
+-- ===== Binding to the player's village =====
+
 local function watchSlime(inst: Instance)
 	if inst:IsA("Configuration") and not slimeConnections[inst] then
-		-- Movement-leg attributes change often; only management fields redraw the sheet.
 		slimeConnections[inst] = inst.AttributeChanged:Connect(function(name)
-			if managementAttributes[name] then
-				refreshSheet()
+			if watched[name] then
+				refreshAll()
 			end
 		end)
-		refreshSheet()
+		refreshAll()
 	end
 end
 
@@ -708,7 +830,7 @@ local function watchFolder(root: Folder)
 				connection:Disconnect()
 				slimeConnections[inst] = nil
 			end
-			refreshSheet()
+			refreshAll()
 		end)
 	)
 end
@@ -728,12 +850,10 @@ local function bind(root: Folder?)
 	end
 	table.clear(slimeConnections)
 	own = root
-	close()
-	refreshHud()
+	UiKit.closeModal(true)
+	UiHud.refresh(root)
 	if not root then
-		if hud then
-			hud.Visible = false
-		end
+		UiHud.setVisible(false)
 		return
 	end
 	-- The folder can arrive before its Plot attribute and Slimes folder.
@@ -746,26 +866,23 @@ local function bind(root: Folder?)
 		end)
 	)
 	if type(root:GetAttribute("Plot")) ~= "number" or (root:GetAttribute("Plot") :: number) < 1 then
-		if hud then
-			hud.Visible = false
-		end
+		UiHud.setVisible(false)
 		return
 	end
-	if hud then
-		hud.Visible = true
-	end
+	UiHud.setVisible(true)
 	for _, attribute in { "Coins", "Storehouse", "Fridge", "Population", "Limit" } do
 		table.insert(
 			rootConnections,
 			root:GetAttributeChangedSignal(attribute):Connect(function()
 				if own == root then
-					refreshHud()
+					UiHud.refresh(root)
+					refreshAll()
 				end
 			end)
 		)
 	end
 	for _, attribute in { "Work", "Pairs", "Areas", "Box" } do
-		table.insert(rootConnections, root:GetAttributeChangedSignal(attribute):Connect(refreshSheet))
+		table.insert(rootConnections, root:GetAttributeChangedSignal(attribute):Connect(refreshAll))
 	end
 	watchFolder(root)
 	table.insert(
@@ -773,7 +890,7 @@ local function bind(root: Folder?)
 		root.ChildAdded:Connect(function(child)
 			if child.Name == "Slimes" then
 				watchFolder(root)
-				refreshSheet()
+				refreshAll()
 			end
 		end)
 	)
@@ -786,53 +903,19 @@ function VillageUI.start()
 	gui.ResetOnSpawn = false
 	gui.IgnoreGuiInset = false
 	gui.DisplayOrder = 5
+	gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 	gui.Parent = player:WaitForChild("PlayerGui")
+	local root = UiKit.mount(gui)
 
-	local strip = Instance.new("ScrollingFrame")
-	strip.Name = "Resources"
-	strip.Size = UDim2.new(1, -C.UiPadding * 2, 0, C.HudHeight)
-	strip.Position = UDim2.fromOffset(C.UiPadding, C.UiPadding)
-	strip.BackgroundTransparency = 1
-	strip.AutomaticCanvasSize = Enum.AutomaticSize.X
-	strip.ScrollBarThickness = 0
-	strip.ScrollingDirection = Enum.ScrollingDirection.X
-	strip.Parent = gui
-	list(strip, true, C.UiPadding / 2)
-	hud = strip
-
-	local panel = Instance.new("Frame")
-	panel.Name = "AreaSheet"
-	panel.AnchorPoint = Vector2.new(0.5, 1)
-	panel.Position = UDim2.new(0.5, 0, 1, -C.UiPadding)
-	panel.Size = UDim2.new(1, -2 * C.UiPadding, 0, C.UiHeight)
-	local limit = Instance.new("UISizeConstraint")
-	limit.MaxSize = Vector2.new(C.UiWidth, C.UiHeight)
-	limit.Parent = panel
-	panel.SizeConstraint = Enum.SizeConstraint.RelativeXX
-	panel.ClipsDescendants = true
-	panel.Visible = false
-	rounded(panel, C.Parchment)
-	panel.Parent = gui
-	sheet = panel
-	local title = text(panel, "", UDim2.new(1, -C.UiButtonSize - 2 * C.UiPadding, 0, C.UiButtonSize), C.FontHeader)
-	title.Name = "Title"
-	title.Position = UDim2.fromOffset(C.UiPadding, 0)
-	local closeButton = button(panel, "X", close)
-	closeButton.Position = UDim2.new(1, -C.UiButtonSize - C.UiPadding, 0, 0)
-
-	local message = text(gui, "", UDim2.fromOffset(C.UiWidth, C.UiButtonSize), C.FontNormal)
-	message.Name = "VillageToast"
-	message.AnchorPoint = Vector2.new(0.5, 1)
-	message.Position = UDim2.new(0.5, 0, 1, -C.UiHeight - C.UiPadding * 2)
-	message.Visible = false
-	rounded(message, C.Card)
-	toast = message
-
-	UserInputService.InputBegan:Connect(function(input, gameProcessed)
-		if not gameProcessed and input.KeyCode == Enum.KeyCode.Escape then
-			close()
-		end
+	UiHud.start(root, function()
+		UiBook.open({
+			own = function()
+				return own
+			end,
+			request = request,
+		})
 	end)
+
 	local world = workspace:WaitForChild("Villages")
 	local id = tostring(player.UserId)
 	local function changed(child: Instance)
@@ -854,9 +937,9 @@ function VillageUI.start()
 		while gui.Parent do
 			if activePoint then
 				local character = player.Character
-				local root = if character then character:FindFirstChild("HumanoidRootPart") else nil
-				if root and root:IsA("BasePart") and (root.Position - activePoint).Magnitude > C.SheetWalkAwayStuds then
-					close()
+				local part = if character then character:FindFirstChild("HumanoidRootPart") else nil
+				if part and part:IsA("BasePart") and (part.Position - activePoint).Magnitude > C.SheetWalkAwayStuds then
+					UiKit.closeModal()
 				end
 			end
 			if
