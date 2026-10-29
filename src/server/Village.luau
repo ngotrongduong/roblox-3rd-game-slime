@@ -325,6 +325,7 @@ local function pathBetween(session: Session, start: Spot, target: Spot, scale: n
 		AgentHeight = math.max(Config.Village.PathHeightPerScale * scale, radius * 2),
 		AgentCanJump = false,
 		WaypointSpacing = Config.Village.PathWaypointStuds,
+		Costs = { Water = Config.Village.PathWaterCost },
 	})
 	local ok = pcall(function()
 		path:ComputeAsync(point(start), point(target))
