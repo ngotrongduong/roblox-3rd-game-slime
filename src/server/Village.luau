@@ -374,7 +374,21 @@ local function think(
 		farm.areas.breeding.level - Config.Village.StartLevel
 	)
 	if not actor then
-		local first = if baby then session.spots.nursery else session.spots.plaza
+		local centre = if baby then session.spots.nursery else session.spots.plaza
+		local count = 0
+		for _, other in session.actors do
+			if other.current.id == centre.id then
+				count += 1
+			end
+		end
+		-- New slimes need their own standing place before their first action is selected.
+		local angle = count * math.pi * 2 / Config.Brain.SpotSpreadPlaces
+		local first: Spot = {
+			id = centre.id, area = centre.area,
+			x = centre.x + math.cos(angle) * Config.Brain.SpotSpread,
+			y = centre.y,
+			z = centre.z + math.sin(angle) * Config.Brain.SpotSpread,
+		}
 		actor = {
 			current = first,
 			from = first,
