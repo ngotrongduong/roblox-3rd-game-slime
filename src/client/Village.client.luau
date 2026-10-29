@@ -184,20 +184,18 @@ local function actionMotion(action: string, working: string): string?
 	return nil
 end
 
-local function nearestPartner(village: Village, current: Entry): Vector3?
-	local here = if current.actor then current.actor.root.Position else at(current.config, "From")
-	local nearest: Vector3? = nil
-	local best = Config.Brain.NearbyStuds
+-- Face the actual partner selected by the server, not whichever slime is nearest.
+local function partnerPosition(village: Village, current: Entry): Vector3?
+	local partnerId = stringAttr(current.config, "Partner", "")
+	if partnerId == "" then
+		return nil
+	end
 	for _, other in village.slimes do
-		if other ~= current and other.actor and other.model then
-			local distance = (other.actor.root.Position - here).Magnitude
-			if distance < best then
-				best = distance
-				nearest = other.actor.root.Position
-			end
+		if other.config.Name == partnerId and other.actor then
+			return other.actor.root.Position
 		end
 	end
-	return nearest
+	return nil
 end
 
 local function animate(village: Village, entry: Entry, now: number)
@@ -273,7 +271,7 @@ local function animate(village: Village, entry: Entry, now: number)
 			or action == "makeup"
 			or action == "court"
 		then
-			SlimeActor.lookAt(actor, nearestPartner(village, entry))
+			SlimeActor.lookAt(actor, partnerPosition(village, entry))
 		elseif action == "work" and stringAttr(entry.config, "Working", "") == "fishing" then
 			SlimeActor.lookAt(actor, to + (to - from))
 		else
