@@ -337,7 +337,7 @@ local function animate(village: Village, entry: Entry, now: number)
 				carried.Parent = renderFolder
 				if tool == "WateringCan" then
 					local spout = carried:FindFirstChildWhichIsA("BasePart", true)
-					if spout then
+					if spout and spout:IsA("BasePart") then
 						local drop = Instance.new("Attachment")
 						drop.Name = "WaterDrops"
 						drop.Position = Vector3.new(0, -spout.Size.Y / 2, 0)
