@@ -107,12 +107,7 @@ function VillageSim.step(input: Farm, now: number, seconds: number, rng: Rng, op
 		end
 	end
 	for _, slime in farm.slimes do
-		if slime.ghostUntil and slime.ghostUntil <= now then
-			slime.ghostUntil = nil
-			slime.needs.fullness = Config.Needs.Start
-			slime.needs.energy = Config.Needs.Start
-			table.insert(events, { kind = "revived", slimeId = slime.id })
-		end
+		local wasGhost = slime.ghostUntil ~= nil and slime.ghostUntil <= now
 		if slime.ghostUntil == nil then
 			local baby = Growth.isBaby(slime.createdAt, now, Stats.level(slime.stats),
 				farm.areas.breeding.level - Config.Village.StartLevel)
@@ -123,6 +118,12 @@ function VillageSim.step(input: Farm, now: number, seconds: number, rng: Rng, op
 				local item = Food.eat(farm, slime.id, now)
 				if item then table.insert(events, { kind = "ate", item = item, slimeId = slime.id }) end
 			end
+		end
+		if wasGhost then
+			slime.ghostUntil = nil
+			slime.needs.fullness = Config.Needs.Start
+			slime.needs.energy = Config.Needs.Start
+			table.insert(events, { kind = "revived", slimeId = slime.id })
 		end
 	end
 	doWork(farm, now, duration, rng, events)
