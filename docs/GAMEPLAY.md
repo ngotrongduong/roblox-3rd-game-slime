@@ -187,6 +187,18 @@ Slimes that are not working or breeding choose what to do from their needs, pers
 - **Movement**: slimes have a collision box and do not walk through things, people or each other; they find their way
   around obstacles (pathfinding). The hop-walk is slower and natural, a slime's pace, not a dash.
 
+### 10.1 Gaits (the owner chose in the movement lab, 2026-10-29; numbers in `tools/slime/hop_lab_lanes.luau`)
+
+| Gait | Lab lane | Used when |
+|---|---|---|
+| walk | E Big leaps | normal moving: going to work, errands, carrying |
+| stroll | F Slow and soft | strolling and sightseeing with nothing to do (wander, flowers, watch the fish, the fountain, the campfire) and while a pair courts |
+| baby | A Gentle | babies walking |
+| babyQuick | D Quick hops | babies hurrying: following an adult on a walk, playing |
+| glide | G Glide (no hops) | tired or hungry slimes, and sad feelings that fit it (sad, sulking, crying, bored) |
+| (kept, unused) | C Heavy jelly | the owner does not like it much; kept for later |
+| (kept, unused) | B Bouncy | not chosen; kept for later |
+
 ## 11. Build order
 
 1. Rules in `src/shared` with Lune tests (inheritance, luck, needs, food, stations, training, breeding flow, village
