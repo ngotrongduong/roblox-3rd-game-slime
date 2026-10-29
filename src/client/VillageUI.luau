@@ -223,6 +223,17 @@ local function portrait(parent: Instance, slime: Configuration)
 	view.CurrentCamera = camera
 end
 
+local function chosenPortrait(parent: GuiObject, id: string?)
+	if not id then
+		return
+	end
+	local folder = if own then own:FindFirstChild("Slimes") else nil
+	local found = if folder then folder:FindFirstChild(id) else nil
+	if found and found:IsA("Configuration") then
+		portrait(parent, found)
+	end
+end
+
 local function frameContent(): ScrollingFrame?
 	if not sheet then
 		return nil
@@ -273,11 +284,11 @@ local function picker(area: string, choose: (string) -> (), permitWorking: boole
 				choose(slime.Name)
 			end, math.max(C.UiButtonSize * 2, scroller.AbsoluteSize.X - C.UiButtonSize - C.UiPadding * 2))
 			chooseButton.TextScaled = false
-			chooseButton.TextSize = 14
+			chooseButton.TextSize = C.FontTiny
 		end
 	end
 	if count == 0 then
-		text(scroller, "No free adults", UDim2.new(1, 0, 0, C.UiRowHeight), 18)
+		text(scroller, "No free adults", UDim2.new(1, 0, 0, C.UiRowHeight), C.FontSub)
 	end
 	-- Level and needs are intentionally unknown: the server does not replicate them.
 end
@@ -291,7 +302,7 @@ renderArea = function(area: string)
 		for index = 1, Config.Breeding.BasePlaces do
 			local pair = pairs[index] or {}
 			local cell = row(scroller)
-			text(cell, tostring(index), UDim2.fromOffset(C.UiButtonSize / 2, C.UiButtonSize), 18)
+			text(cell, tostring(index), UDim2.fromOffset(C.UiButtonSize / 2, C.UiButtonSize), C.FontSub)
 			button(cell, labelFor(pair.a) .. " + " .. labelFor(pair.b), function()
 				pickedFirst = nil
 				picker(area, function(first)
@@ -319,12 +330,12 @@ renderArea = function(area: string)
 		end
 	elseif area == "kitchen" then
 		local choose = row(scroller)
-		text(choose, "Cooked food", UDim2.new(1, -C.UiPadding, 0, C.UiButtonSize), 19)
+		text(choose, "Cooked food", UDim2.new(1, -C.UiPadding, 0, C.UiButtonSize), C.FontHeader)
 		for _, slime in ownSlimes() do
 			if canPick(slime, true) then
 				local cell = row(scroller)
 				portrait(cell, slime)
-				text(cell, labelFor(slime.Name), UDim2.fromOffset(math.max(C.UiButtonSize, scroller.AbsoluteSize.X - C.UiButtonSize * 4 - C.UiPadding * 3), C.UiButtonSize), 15)
+				text(cell, labelFor(slime.Name), UDim2.fromOffset(math.max(C.UiButtonSize, scroller.AbsoluteSize.X - C.UiButtonSize * 4 - C.UiPadding * 3), C.UiButtonSize), C.FontSmall)
 				local state = allowed[slime.Name]
 				button(cell, if state == true then "On" else "Allow", function()
 					request({ action = "SetCookedAllowed", slimeId = slime.Name, allowed = true }, function()
@@ -347,11 +358,11 @@ renderArea = function(area: string)
 		for slot = 1, #Config.Work.SlotLevels + Config.Work.BaseSlots do
 			local saved = stations[slot] or {}
 			local cell = row(scroller)
-			text(cell, tostring(slot), UDim2.fromOffset(C.UiButtonSize / 2, C.UiButtonSize), 17)
+			text(cell, tostring(slot), UDim2.fromOffset(C.UiButtonSize / 2, C.UiButtonSize), C.FontSub)
 			for _, reserve in { false, true } do
 				local position = if reserve then "reserve" else "worker"
 				local selected = (saved :: any)[position]
-				button(cell, labelFor(selected), function()
+				local slotButton = button(cell, labelFor(selected), function()
 					picker(area, function(id)
 						request({ action = "Assign", area = area, slot = slot, slimeId = id, asReserve = reserve }, function()
 							remembered[area] = remembered[area] or {}
@@ -361,9 +372,13 @@ renderArea = function(area: string)
 						end)
 					end, false)
 				end, math.max(C.UiButtonSize, (scroller.AbsoluteSize.X - C.UiButtonSize - C.UiPadding * 4) / 2))
+				if selected then
+					chosenPortrait(slotButton, selected)
+				end
 			end
 			if saved.worker or saved.reserve then
-				button(cell, "X", function()
+				local remove = row(scroller)
+				button(remove, "Remove " .. labelFor(saved.worker or saved.reserve), function()
 					local id = saved.worker or saved.reserve
 					if id then
 						request({ action = "Unassign", slimeId = id }, function()
@@ -372,7 +387,7 @@ renderArea = function(area: string)
 							renderArea(area)
 						end)
 					end
-				end)
+				end, C.UiButtonSize * 4)
 			end
 			if area == "training" then
 				local stats = row(scroller)
@@ -389,6 +404,23 @@ renderArea = function(area: string)
 					end)
 					chooseStat.Position = UDim2.fromOffset(C.HudIconSize, 0)
 				end
+			end
+		end
+		-- Slot/role are not replicated. The working-area attribute still lets owners remove
+		-- old assignments after a rejoin without pretending to know their exact slot.
+		for _, slime in ownSlimes() do
+			if slime:GetAttribute("Working") == area then
+				local employee = row(scroller)
+				text(employee, labelFor(slime.Name), UDim2.fromOffset(scroller.AbsoluteSize.X - C.UiButtonSize * 3, C.UiButtonSize), C.FontSmall)
+				button(employee, "Remove", function()
+					request({ action = "Unassign", slimeId = slime.Name }, function()
+						for _, slot in remembered[area] or {} do
+							if slot.worker == slime.Name then slot.worker = nil end
+							if slot.reserve == slime.Name then slot.reserve = nil end
+						end
+						renderArea(area)
+					end)
+				end, C.UiButtonSize * 2)
 			end
 		end
 	end
@@ -447,7 +479,7 @@ local function refreshHud()
 		cell.BackgroundTransparency = 1
 		cell.Parent = hud
 		icon(cell, resource, C.HudIconSize)
-		local value = text(cell, tostring(amount), UDim2.new(1, -C.HudIconSize, 1, 0), 15)
+		local value = text(cell, tostring(amount), UDim2.new(1, -C.HudIconSize, 1, 0), C.FontSmall)
 		value.Position = UDim2.fromOffset(C.HudIconSize, 0)
 	end
 end
@@ -585,13 +617,13 @@ function VillageUI.start()
 	rounded(panel, C.Parchment)
 	panel.Parent = gui
 	sheet = panel
-	local title = text(panel, "", UDim2.new(1, -C.UiButtonSize - 2 * C.UiPadding, 0, C.UiButtonSize), 20)
+	local title = text(panel, "", UDim2.new(1, -C.UiButtonSize - 2 * C.UiPadding, 0, C.UiButtonSize), C.FontHeader)
 	title.Name = "Title"
 	title.Position = UDim2.fromOffset(C.UiPadding, 0)
 	local closeButton = button(panel, "X", close)
 	closeButton.Position = UDim2.new(1, -C.UiButtonSize - C.UiPadding, 0, 0)
 
-	local message = text(gui, "", UDim2.fromOffset(C.UiWidth, C.UiButtonSize), 16)
+	local message = text(gui, "", UDim2.fromOffset(C.UiWidth, C.UiButtonSize), C.FontNormal)
 	message.Name = "VillageToast"
 	message.AnchorPoint = Vector2.new(0.5, 1)
 	message.Position = UDim2.new(0.5, 0, 1, -C.UiHeight - C.UiPadding * 2)
