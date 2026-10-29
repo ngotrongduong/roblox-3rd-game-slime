@@ -10,6 +10,7 @@ local Config = if script then require(script.Parent.Config) else require("./Conf
 local Colours = if script then require(script.Parent.Colours) else require("./Colours")
 local Genetics = if script then require(script.Parent.Genetics) else require("./Genetics")
 local Mutations = if script then require(script.Parent.Mutations) else require("./Mutations")
+local Rng = if script then require(script.Parent.Rng) else require("./Rng")
 
 local Save = Config.Save
 
@@ -221,6 +222,73 @@ function ProfileLogic.migrateInheritance(data: any, _now: number): any
 			end
 		end
 	end
+	return out
+end
+
+-- Schema 3 -> 4: preserve the genetics, money, equipment and original egg timers.
+-- Assign incumbent eggs to incubators before using unincubated nests for overflow.
+function ProfileLogic.migrateVillage(data: any, _now: number): any
+	if type(data) ~= "table" then
+		return data
+	end
+	local out = ProfileLogic.deepCopy(data)
+	local areas: any = {}
+	for _, id in Config.Village.Areas do
+		areas[id] = { level = Config.Village.StartLevel }
+	end
+	out.areas = areas
+	local work: any = {}
+	for _, id in Config.Work.Areas do
+		work[id] = { slots = { { progress = 0 } }, box = {} }
+	end
+	out.work = work
+	out.counter = {}
+	out.fridge = {}
+	out.cookedAllowed = {}
+	out.breeding = { pairs = { {}, {} } }
+	local oldFood = if type(out.food) == "table" and type(out.food.basicFood) == "number"
+		then math.max(0, math.floor(out.food.basicFood))
+		else 0
+	out.storehouse = {
+		fish = math.min(oldFood, Config.Food.StorehouseBase),
+	}
+	if type(out.slimes) == "table" then
+		for _, slime in out.slimes do
+			if type(slime) == "table" then
+				local oldNeeds = slime.needs
+				local hunger = if type(oldNeeds) == "table" and type(oldNeeds.hunger) == "number"
+					then oldNeeds.hunger else Config.Needs.Start
+				slime.needs = {
+					fullness = math.clamp(hunger, 0, Config.Needs.Max),
+					energy = Config.Needs.Start,
+					fun = Config.Needs.Start,
+				}
+				local seed = if type(slime.seed) == "number" then slime.seed
+					else Rng.hash(tostring(slime.id))
+				slime.trait = Config.Village.Traits[math.floor(seed % #Config.Village.Traits) + 1]
+				slime.friends = {}
+				slime.buff = nil
+				slime.ghostUntil = nil
+				slime.fallen = nil
+				slime.previousLoadout = nil
+			end
+		end
+	end
+	if type(out.eggs) == "table" then
+		local incubators = Config.Breeding.BasePlaces
+		for i, egg in out.eggs do
+			if type(egg) == "table" then
+				egg.place = if i <= incubators then "incubator" else "nest"
+				egg.slot = if i <= incubators then i else i - incubators
+				if egg.place == "nest" then egg.hatchAt = nil end
+			end
+		end
+	end
+	out.food = nil
+	out.workstations = nil
+	out.unlockedStations = nil
+	out.upgrades = nil
+	out.nest = nil
 	return out
 end
 
