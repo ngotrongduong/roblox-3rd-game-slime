@@ -233,14 +233,18 @@ local function animate(village: Village, entry: Entry, now: number)
 	end
 	local emotion = stringAttr(entry.config, "Emotion", "normal")
 	local action = stringAttr(entry.config, "Action", "idle")
+	local face = if ghost then "sad"
+		else if not moving and action == "eat" then "eating"
+		else if not moving and action == "sleep" then "sleep"
+		else emotion
 	if actor then
-		if entry.lastEmotion ~= emotion or entry.lastAction ~= action then
-			SlimeActor.setEmotion(actor, if ghost then "sad" else emotion)
+		if entry.lastEmotion ~= face or entry.lastAction ~= action then
+			SlimeActor.setEmotion(actor, face)
 			local motion = actionMotion(action, stringAttr(entry.config, "Working", ""))
 			if motion then
 				SlimeActor.playMotion(actor, motion)
 			end
-			entry.lastEmotion, entry.lastAction = emotion, action
+			entry.lastEmotion, entry.lastAction = face, action
 		end
 		if moving then
 			if now - entry.lastHop >= Config.Brain.HopSeconds then
