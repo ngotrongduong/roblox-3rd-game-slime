@@ -1036,6 +1036,24 @@ local function tick(player: Player, session: Session)
 			if actor.workPhase and actor.index == 0 and actor.workEnd and clock >= actor.workEnd then
 				local area = if actor.action then string.match(actor.action.spot, "^work:(%a+):") else nil
 				if area then
+					if area == "garden" and (actor.workPhase == "hoe" or actor.workPhase == "plant"
+						or actor.workPhase == "water" or actor.workPhase == "harvest") then
+						PlayerData.update(player, function(data: any)
+							local index = tonumber(string.match(actor.action.spot, "^work:garden:(%d+)$"))
+							local slot = if index then data.work.garden.slots[index] else nil
+							if slot and slot.task == actor.workPhase and slot.plot == actor.workPlot then
+								local harvested = GardenPlots.apply(
+									data.work.garden.plots, slot.plot, slot.task,
+									session.rng:next() < Config.Work.GardenCarrotChance
+								)
+								if harvested then
+									slot.pending = harvested
+									actor.workItem = harvested
+								end
+								slot.plot, slot.task = nil, nil
+							end
+						end)
+					end
 					if actor.workPhase == "drop" then
 						local deposited = false
 						PlayerData.update(player, function(data: any)
@@ -1051,11 +1069,11 @@ local function tick(player: Player, session: Session)
 							continue
 						end
 					end
-					local nextSpot = if actor.workPhase == "harvest" then "box:" .. area
+					local nextSpot = if actor.workPhase == "harvest" and actor.workItem then "box:" .. area
 						else (if actor.workPhase == "drop" or actor.workPhase == "hoe" or actor.workPhase == "plant"
-							or actor.workPhase == "water" then actor.action.spot else nil)
+							or actor.workPhase == "water" or actor.workPhase == "harvest" then actor.action.spot else nil)
 					if nextSpot then
-						actor.workPhase = if actor.workPhase == "harvest" then "carry" else "return"
+						actor.workPhase = if actor.workPhase == "harvest" and actor.workItem then "carry" else "return"
 						actor.workEnd = nil
 						workTravel(session, actor, session.spots[nextSpot], speed, clock)
 					end

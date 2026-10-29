@@ -60,11 +60,11 @@ function GardenPlots.grow(plots: { Plot }, seconds: number)
 	end
 end
 
-function GardenPlots.choose(plots: { Plot }): (number?, string?)
+function GardenPlots.choose(plots: { Plot }, reserved: { [number]: boolean }?): (number?, string?)
 	-- Harvest first to release a ripe plot; tending thirsty shoots has priority over new planting.
 	for _, stage in { 4, 1, 2, 3, -1, 0 } do
 		for index, plot in plots do
-			if plot.stage == stage then
+			if plot.stage == stage and (not reserved or not reserved[index]) then
 				if stage == 4 then
 					return index, "harvest"
 				elseif stage == -1 then

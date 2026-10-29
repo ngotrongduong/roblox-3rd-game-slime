@@ -73,11 +73,32 @@ local function doWork(
 	if plots then
 		GardenPlots.grow(plots, seconds)
 	end
+	local reservedPlots: { [number]: boolean } = {}
+	for _, slot in farm.work.garden.slots do
+		if slot.plot and slot.task then
+			reservedPlots[slot.plot] = true
+		end
+	end
 	for _, areaId in Config.Work.Areas do
 		local workArea = (farm.work :: any)[areaId]
 		local level = (farm.areas :: any)[areaId].level
 		local cycle = Stations.cycleSeconds(areaId, level)
 		for slotIndex, slot in workArea.slots do
+			if areaId == "garden" and plots and slot.task and slot.plot then
+				if workReady == nil then
+					-- A logged-out worker's saved chore is finished in abstract simulation.
+					local crop = GardenPlots.apply(plots, slot.plot, slot.task, rng:next() < Config.Work.GardenCarrotChance)
+					if crop then
+						if Food.add(workArea.box, crop, 1, Config.Work.BoxCapacity) == 0 then
+							slot.pending = crop
+						end
+						table.insert(events, { kind = "collected", area = "garden", item = crop, plot = slot.plot })
+					end
+					slot.task, slot.plot = nil, nil
+				else
+					continue
+				end
+			end
 			if slot.pending then
 				-- On reconnect/offline the missing actor must never make an earned item vanish.
 				-- Deliver it to the bin as soon as there is room, or keep the pending item saved.
@@ -110,7 +131,7 @@ local function doWork(
 				local iterations = 0
 				while progress >= actionSeconds and iterations < Config.Work.GardenPlotCount do
 					iterations += 1
-					local index, action = GardenPlots.choose(plots)
+					local index, action = GardenPlots.choose(plots, reservedPlots)
 					if not index or not action then
 						progress = 0
 						break
@@ -119,20 +140,22 @@ local function doWork(
 						progress = actionSeconds
 						break
 					end
-					local crop = GardenPlots.apply(plots, index, action, rng:next() < Config.Work.GardenCarrotChance)
-					if crop then
-						if workReady then
-							-- A live gardener physically carries one harvest to its bin before stock appears.
-							slot.pending = crop
-						else
-							Food.add(workArea.box, crop, 1, Config.Work.BoxCapacity)
-						end
-						table.insert(events, { kind = "collected", area = "garden", item = crop, slimeId = worker.id, plot = index })
-					else
+					if workReady then
+						-- A live chore is recorded now but changes the crop only after its visible action.
+						slot.plot, slot.task = index, action
+						reservedPlots[index] = true
 						table.insert(events, { kind = "gardenAction", area = "garden", slimeId = worker.id, plot = index, phase = action })
+					else
+						local crop = GardenPlots.apply(plots, index, action, rng:next() < Config.Work.GardenCarrotChance)
+						if crop then
+							Food.add(workArea.box, crop, 1, Config.Work.BoxCapacity)
+							table.insert(events, { kind = "collected", area = "garden", item = crop, slimeId = worker.id, plot = index })
+						else
+							table.insert(events, { kind = "gardenAction", area = "garden", slimeId = worker.id, plot = index, phase = action })
+						end
 					end
 					progress -= actionSeconds
-					if slot.pending then
+					if slot.task then
 						break
 					end
 				end
