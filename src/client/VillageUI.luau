@@ -20,9 +20,11 @@ local prompts: { ProximityPrompt } = {}
 local promptAreas: { [string]: boolean } = {}
 local activePoint: Vector3? = nil
 local busy = false
-local remembered: { [string]: { [number]: { worker: string?, reserve: string? } } } = {}
-local pairs: { [number]: { a: string?, b: string? } } = {}
-local allowed: { [string]: boolean } = {}
+local activeArea: string? = nil
+local picking = false
+local refreshPending = false
+local rootConnections: { RBXScriptConnection } = {}
+local slimeConnections: { [Instance]: RBXScriptConnection } = {}
 local pickedFirst: string? = nil
 local errorsLogged: { [string]: boolean } = {}
 
@@ -178,7 +180,7 @@ local function ownSlimes(): { Configuration }
 end
 
 local function labelFor(id: string?): string
-	if not id then
+	if not id or id == "" then
 		return "Choose"
 	end
 	local folder = if own then own:FindFirstChild("Slimes") else nil
@@ -191,12 +193,11 @@ local function labelFor(id: string?): string
 end
 
 local function canPick(slime: Configuration, permitWorking: boolean): boolean
-	local scale = slime:GetAttribute("Scale")
-	local working = slime:GetAttribute("Working")
-	return type(scale) == "number"
-		and scale >= 1
+	local working = slime:GetAttribute("WorkArea")
+	local pair = slime:GetAttribute("PairIndex")
+	return slime:GetAttribute("Baby") == false
 		and slime:GetAttribute("Ghost") ~= true
-		and (permitWorking or working == nil or working == "")
+		and (permitWorking or ((working == nil or working == "") and (type(pair) ~= "number" or pair == 0)))
 end
 
 local function portrait(parent: Instance, slime: Configuration)
@@ -256,8 +257,19 @@ local function frameContent(): ScrollingFrame?
 	return scroller
 end
 
+local function parse(value: any): { [string]: any }
+	if type(value) ~= "string" then
+		return {}
+	end
+	local ok, decoded = pcall(function()
+		return HttpService:JSONDecode(value)
+	end)
+	return if ok and type(decoded) == "table" then decoded else {}
+end
+
 local function close()
-	activePoint, pickedFirst = nil, nil
+	activePoint, pickedFirst, activeArea = nil, nil, nil
+	picking = false
 	if sheet then
 		sheet.Visible = false
 	end
@@ -266,6 +278,7 @@ end
 local renderArea: (string) -> () = function(_area) end
 
 local function picker(area: string, choose: (string) -> (), permitWorking: boolean)
+	picking = true
 	local scroller = frameContent()
 	if not scroller then
 		return
@@ -283,7 +296,9 @@ local function picker(area: string, choose: (string) -> (), permitWorking: boole
 			local name = labelFor(slime.Name)
 			local chooseButton = button(
 				cell,
-				name .. "  Lv ?",
+				name .. " Lv " .. tostring(slime:GetAttribute("Level") or 0)
+					.. "  F:" .. tostring(math.floor((slime:GetAttribute("Fullness") :: number?) or 0))
+					.. " E:" .. tostring(math.floor((slime:GetAttribute("Energy") :: number?) or 0)),
 				function()
 					choose(slime.Name)
 				end,
@@ -301,17 +316,22 @@ local function picker(area: string, choose: (string) -> (), permitWorking: boole
 	if count == 0 then
 		text(scroller, "No free adults", UDim2.new(1, 0, 0, C.UiRowHeight), C.FontSub)
 	end
-	-- Level and needs are intentionally unknown: the server does not replicate them.
 end
 
 renderArea = function(area: string)
+	picking = false
 	local scroller = frameContent()
 	if not scroller then
 		return
 	end
+	local levels = if own then parse(own:GetAttribute("Areas")) else {}
+	local level = levels[area]
+	text(scroller, "Level " .. tostring(if type(level) == "number" then level else Config.Village.StartLevel),
+		UDim2.new(1, 0, 0, C.HudHeight), C.FontSmall)
 	if area == "breeding" then
-		for index = 1, Config.Breeding.BasePlaces do
-			local pair: { a: string?, b: string? } = pairs[index] or {}
+		local pairs: { any } = if own then (parse(own:GetAttribute("Pairs")) :: any) else {}
+		for index = 1, math.max(Config.Breeding.BasePlaces, #pairs) do
+			local pair = pairs[index] or {}
 			local cell = row(scroller)
 			text(cell, tostring(index), UDim2.fromOffset(C.UiButtonSize / 2, C.UiButtonSize), C.FontSub)
 			button(cell, labelFor(pair.a) .. " + " .. labelFor(pair.b), function()
@@ -325,7 +345,6 @@ renderArea = function(area: string)
 							return
 						end
 						request({ action = "SetPair", index = index, a = firstId, b = second }, function()
-							pairs[index] = { a = firstId, b = second }
 							pickedFirst = nil
 							renderArea(area)
 						end)
@@ -334,7 +353,6 @@ renderArea = function(area: string)
 			end, math.max(C.UiButtonSize * 2, scroller.AbsoluteSize.X - C.UiButtonSize * 2 - C.UiPadding * 3))
 			button(cell, "Clear", function()
 				request({ action = "SetPair", index = index }, function()
-					pairs[index] = {}
 					renderArea(area)
 				end)
 			end, C.UiButtonSize + C.UiPadding)
@@ -355,16 +373,14 @@ renderArea = function(area: string)
 					),
 					C.FontSmall
 				)
-				local state = allowed[slime.Name]
+				local state = slime:GetAttribute("CookedAllowed") == true
 				button(cell, if state == true then "On" else "Allow", function()
 					request({ action = "SetCookedAllowed", slimeId = slime.Name, allowed = true }, function()
-						allowed[slime.Name] = true
 						renderArea(area)
 					end)
 				end, C.UiButtonSize + C.UiPadding)
 				button(cell, if state == false then "Off" else "Raw", function()
 					request({ action = "SetCookedAllowed", slimeId = slime.Name, allowed = false }, function()
-						allowed[slime.Name] = false
 						renderArea(area)
 					end)
 				end, C.UiButtonSize + C.UiPadding)
@@ -373,8 +389,9 @@ renderArea = function(area: string)
 	end
 
 	if table.find(Config.Work.Areas, area) then
-		local stations = remembered[area] or {}
-		for slot = 1, #Config.Work.SlotLevels + Config.Work.BaseSlots do
+		local work: { [string]: any } = if own then parse(own:GetAttribute("Work")) else {}
+		local stations: { any } = work[area] or {}
+		for slot = 1, math.max(#stations, Config.Work.BaseSlots) do
 			local saved = stations[slot] or {}
 			local cell = row(scroller)
 			text(cell, tostring(slot), UDim2.fromOffset(C.UiButtonSize / 2, C.UiButtonSize), C.FontSub)
@@ -386,9 +403,6 @@ renderArea = function(area: string)
 						request(
 							{ action = "Assign", area = area, slot = slot, slimeId = id, asReserve = reserve },
 							function()
-								remembered[area] = remembered[area] or {}
-								remembered[area][slot] = remembered[area][slot] or {}
-								(remembered[area][slot] :: any)[position] = id
 								renderArea(area)
 							end
 						)
@@ -404,8 +418,6 @@ renderArea = function(area: string)
 					local id = saved.worker or saved.reserve
 					if id then
 						request({ action = "Unassign", slimeId = id }, function()
-							local key = if saved.worker then "worker" else "reserve"
-							(saved :: any)[key] = nil
 							renderArea(area)
 						end)
 					end
@@ -429,32 +441,7 @@ renderArea = function(area: string)
 				end
 			end
 		end
-		-- Slot/role are not replicated. The working-area attribute still lets owners remove
-		-- old assignments after a rejoin without pretending to know their exact slot.
-		for _, slime in ownSlimes() do
-			if slime:GetAttribute("Working") == area then
-				local employee = row(scroller)
-				text(
-					employee,
-					labelFor(slime.Name),
-					UDim2.fromOffset(scroller.AbsoluteSize.X - C.UiButtonSize * 3, C.UiButtonSize),
-					C.FontSmall
-				)
-				button(employee, "Remove", function()
-					request({ action = "Unassign", slimeId = slime.Name }, function()
-						for _, slot in (remembered[area] or {}) :: { { worker: string?, reserve: string? } } do
-							if slot.worker == slime.Name then
-								slot.worker = nil
-							end
-							if slot.reserve == slime.Name then
-								slot.reserve = nil
-							end
-						end
-						renderArea(area)
-					end)
-				end, C.UiButtonSize * 2)
-			end
-		end
+
 	end
 end
 
@@ -463,6 +450,7 @@ local function open(area: string, position: Vector3)
 		return
 	end
 	activePoint = position
+	activeArea = area
 	sheet.Visible = true
 	local title = sheet:FindFirstChild("Title")
 	if title and title:IsA("TextLabel") then
@@ -472,15 +460,6 @@ local function open(area: string, position: Vector3)
 end
 
 local resources = { "coins", "fish", "carrot", "cabbage", "grilledFish", "veggieStew", "fishVegSoup", "slimes" }
-local function parse(value: any): { [string]: any }
-	if type(value) ~= "string" then
-		return {}
-	end
-	local ok, decoded = pcall(function()
-		return HttpService:JSONDecode(value)
-	end)
-	return if ok and type(decoded) == "table" then decoded else {}
-end
 
 local function refreshHud()
 	if not hud then
