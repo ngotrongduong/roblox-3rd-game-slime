@@ -516,7 +516,8 @@ local function advance(
 	actor: Actor,
 	speed: number,
 	clock: number,
-	epoch: number
+	epoch: number,
+	workFactor: number
 )
 	if not actor.action then
 		return
@@ -541,13 +542,13 @@ local function advance(
 			if actor.workPhase == "walk" and actor.workPlot and actor.current.id == "crop:" .. actor.workPlot then
 				actor.workPhase = actor.workTask
 				actor.workStart = clock
-				actor.workEnd = clock + Config.Work.WorkDropSeconds
+				actor.workEnd = clock + Config.Work.WorkDropSeconds * workFactor
 				actor.finishAt = math.huge
 				continue
 			elseif actor.workPhase == "carry" and string.sub(actor.current.id, 1, 4) == "box:" then
 				actor.workPhase = "drop"
 				actor.workStart = clock
-				actor.workEnd = clock + Config.Work.WorkDropSeconds
+				actor.workEnd = clock + Config.Work.WorkDropSeconds * workFactor
 				actor.finishAt = math.huge
 				continue
 			elseif actor.workPhase == "return" then
@@ -828,7 +829,7 @@ end
 
 -- A finished garden action visits the actual plant; a caught fish visits the pond bin.
 -- Every journey uses the normal path planner and keeps work blocked until the slime returns.
-local function workTravel(session: Session, actor: Actor, target: Spot, speed: number, clock: number)
+local function workTravel(session: Session, actor: Actor, target: Spot, speed: number, clock: number, workFactor: number)
 	local action = actor.action
 	if not action then
 		return
@@ -1016,10 +1017,10 @@ local function tick(player: Player, session: Session)
 				actor.workStart, actor.workEnd = clock, nil
 				if event.area == "garden" and event.plot then
 					actor.workPhase = "walk"
-					workTravel(session, actor, session.spots["crop:" .. event.plot] or actor.current, speed, clock)
+					workTravel(session, actor, session.spots["crop:" .. event.plot] or actor.current, speed, clock, Stations.speedTimeFactor(worker.stats.speed))
 				elseif event.area == "fishing" then
 					actor.workPhase = "carry"
-					workTravel(session, actor, session.spots["box:fishing"], speed, clock)
+					workTravel(session, actor, session.spots["box:fishing"], speed, clock, Stations.speedTimeFactor(worker.stats.speed))
 				end
 			end
 		end
@@ -1032,7 +1033,7 @@ local function tick(player: Player, session: Session)
 		if slime then
 			local speed = Config.Village.WalkSpeed
 				* (1 + (slime.stats.speed - Config.Stats.Starter.speed) * Config.Village.WalkPerSpeed)
-			advance(player, session, id, actor, speed, clock, epoch)
+			advance(player, session, id, actor, speed, clock, epoch, Stations.speedTimeFactor(slime.stats.speed))
 			if actor.workPhase and actor.index == 0 and actor.workEnd and clock >= actor.workEnd then
 				local area = if actor.action then string.match(actor.action.spot, "^work:(%a+):") else nil
 				if area then
@@ -1075,7 +1076,7 @@ local function tick(player: Player, session: Session)
 					if nextSpot then
 						actor.workPhase = if actor.workPhase == "harvest" and actor.workItem then "carry" else "return"
 						actor.workEnd = nil
-						workTravel(session, actor, session.spots[nextSpot], speed, clock)
+						workTravel(session, actor, session.spots[nextSpot], speed, clock, Stations.speedTimeFactor(slime.stats.speed))
 					end
 				end
 			end
