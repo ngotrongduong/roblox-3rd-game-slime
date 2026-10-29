@@ -382,12 +382,13 @@ local function think(
 			end
 		end
 		-- New slimes need their own standing place before their first action is selected.
-		local angle = count * math.pi * 2 / Config.Brain.SpotSpreadPlaces
+		local angle = (count % Config.Brain.SpotSpreadPlaces) * math.pi * 2 / Config.Brain.SpotSpreadPlaces
+		local radius = (math.floor(count / Config.Brain.SpotSpreadPlaces) + 1) * Config.Brain.SpotSpread
 		local first: Spot = {
 			id = centre.id, area = centre.area,
-			x = centre.x + math.cos(angle) * Config.Brain.SpotSpread,
+			x = centre.x + math.cos(angle) * radius,
 			y = centre.y,
-			z = centre.z + math.sin(angle) * Config.Brain.SpotSpread,
+			z = centre.z + math.sin(angle) * radius,
 		}
 		actor = {
 			current = first,
@@ -458,17 +459,22 @@ local function think(
 	elseif action.spot ~= "player" then
 		local order = 1
 		for otherId, other in session.actors do
-			if otherId ~= slime.id and other.action and other.action.spot == action.spot then
+			if otherId ~= slime.id and ((other.action and other.action.spot == action.spot)
+				or other.current.id == target.id) then
 				order += 1
 			end
 		end
-		local angle = (order - 1) * math.pi * 2 / Config.Brain.SpotSpreadPlaces
-		target = {
-			id = target.id, area = target.area,
-			x = target.x + math.cos(angle) * Config.Brain.SpotSpread,
-			y = target.y,
-			z = target.z + math.sin(angle) * Config.Brain.SpotSpread,
-		}
+		if order > 1 then
+			local index = order - 2
+			local angle = (index % Config.Brain.SpotSpreadPlaces) * math.pi * 2 / Config.Brain.SpotSpreadPlaces
+			local radius = (math.floor(index / Config.Brain.SpotSpreadPlaces) + 1) * Config.Brain.SpotSpread
+			target = {
+				id = target.id, area = target.area,
+				x = target.x + math.cos(angle) * radius,
+				y = target.y,
+				z = target.z + math.sin(angle) * radius,
+			}
+		end
 	end
 	actor.route = route(session, actor, action, target)
 	actor.index = if #actor.route > 0 then 1 else 0
