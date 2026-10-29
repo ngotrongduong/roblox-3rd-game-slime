@@ -28,7 +28,7 @@ function Food.add(stock: { [string]: number }, item: string, amount: number, cap
 	local amountToAdd = if amount == amount and amount ~= math.huge and amount ~= -math.huge
 		then math.max(0, math.floor(amount)) else 0
 	local moved = math.min(amountToAdd, math.max(0, capacity - Food.total(stock)))
-	if moved > 0 then stock[item] = (stock[item] or 0) + moved end
+	if moved > 0 then stock[item] = math.max(0, stock[item] or 0) + moved end
 	return moved
 end
 
