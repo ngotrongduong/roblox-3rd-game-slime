@@ -114,7 +114,8 @@ end
 function Hatching.nextReadyEgg(farm: Farm, now: number): Egg?
 	local best: Egg? = nil
 	for _, egg in farm.eggs do
-		if now >= egg.hatchAt and (best == nil or egg.createdAt < best.createdAt) then
+		if egg.place == "incubator" and egg.hatchAt ~= nil and now >= egg.hatchAt
+			and (best == nil or egg.createdAt < best.createdAt) then
 			best = egg
 		end
 	end
@@ -137,12 +138,14 @@ function Hatching.babyFromEgg(farm: Farm, egg: Egg, now: number): Slime
 		appearanceMutation = Mutations.copy(embryo.appearanceMutation),
 		isFavourite = false,
 		needs = FarmState.fullNeeds(),
+		trait = FarmState.traitForSeed(Rng.hash(egg.offspringId)),
+		friends = {},
+		buff = nil,
+		ghostUntil = nil,
 		createdAt = now,
 		-- Rested at once; the baby rule still keeps it from breeding until it grows up.
 		breedReadyAt = now,
 		loadout = FarmState.emptyLoadout(),
-		fallen = false,
-		previousLoadout = nil,
 	}
 end
 
@@ -152,7 +155,7 @@ function Hatching.hatch(farm: Farm, eggId: string, now: number): HatchResult
 	if egg == nil or index == nil then
 		return { ok = false, reason = "MISSING_EGG", farm = farm }
 	end
-	if now < egg.hatchAt then
+	if egg.place ~= "incubator" or egg.hatchAt == nil or now < egg.hatchAt then
 		return { ok = false, reason = "NOT_READY", farm = farm }
 	end
 	local slime = Hatching.babyFromEgg(farm, egg, now)
