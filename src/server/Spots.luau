@@ -180,7 +180,7 @@ function Spots.build(plotNumber: number, plot: Instance?): { [string]: Spot }
 	local campfire = result.campfire
 	local centre = Vector3.new(campfire.x, campfire.y, campfire.z)
 	local seat = near(plot, spots.NapModels, centre)
-	if not seat and fire then
+	if not seat then
 		-- Without a bench model, rest beside the fire rather than on its flames.
 		seat = centre + Layout.plotFrame(plotNumber).RightVector * Config.Village.SpotNapOffset
 	end
