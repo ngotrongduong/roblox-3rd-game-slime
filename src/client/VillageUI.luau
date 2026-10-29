@@ -249,7 +249,7 @@ local function frameContent(): ScrollingFrame?
 	scroller.BackgroundTransparency = 1
 	scroller.ScrollBarThickness = 4
 	scroller.AutomaticCanvasSize = Enum.AutomaticSize.Y
-	scroller.CanvasSize = UDim2.new()
+	scroller.CanvasSize = UDim2.fromScale(0, 0)
 	scroller.Parent = sheet
 	list(scroller, false, C.UiPadding / 2)
 	return scroller
@@ -280,9 +280,11 @@ local function picker(area: string, choose: (string) -> (), permitWorking: boole
 			local cell = row(scroller)
 			portrait(cell, slime)
 			local name = labelFor(slime.Name)
-			local chooseButton = button(cell, name .. "  Lv ?  ?/?", function()
+			local chooseButton = button(cell, name .. "  Lv ?", function()
 				choose(slime.Name)
-			end, math.max(C.UiButtonSize * 2, scroller.AbsoluteSize.X - C.UiButtonSize - C.UiPadding * 2))
+			end, math.max(C.UiButtonSize * 2, scroller.AbsoluteSize.X - C.UiButtonSize - C.HudIconSize * 2 - C.UiPadding * 5))
+			icon(cell, "fullness", C.HudIconSize)
+			icon(cell, "energy", C.HudIconSize)
 			chooseButton.TextScaled = false
 			chooseButton.TextSize = C.FontTiny
 		end
@@ -675,7 +677,7 @@ function VillageUI.start()
 					close()
 				end
 			end
-			if own and #prompts < #Config.Village.Areas then
+			if own and type(own:GetAttribute("Plot")) == "number" and (own:GetAttribute("Plot") :: number) > 0 and #prompts < #Config.Village.Areas then
 				createPrompts(own)
 			end
 			task.wait(C.FarUpdateSeconds)
