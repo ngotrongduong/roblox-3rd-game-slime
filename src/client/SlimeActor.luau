@@ -153,7 +153,9 @@ local function walk(a: Slime, dt: number, now: number)
 	end
 	local away = Vector3.zero
 	for _, other in actors do
-		if other ~= a and not other.destroyed then
+		if other ~= a and not other.destroyed
+			and math.abs(pos.X - other.ground.X) < C.SlimeSeparationStuds
+			and math.abs(pos.Z - other.ground.Z) < C.SlimeSeparationStuds then
 			local delta = pos - other.ground
 			local flat = Vector3.new(delta.X, 0, delta.Z)
 			if flat.Magnitude < C.SlimeSeparationStuds then
