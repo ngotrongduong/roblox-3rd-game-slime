@@ -82,7 +82,7 @@ local function eligible(farm: Farm, id: string?, now: number): Slime?
 	if Growth.isBaby(slime.createdAt, now, Stats.level(slime.stats), farm.areas.breeding.level - Config.Village.StartLevel) then
 		return nil
 	end
-	if Needs.isTired(slime.needs) then return nil end
+	if slime.sleeping or Needs.isTired(slime.needs) then return nil end
 	return slime
 end
 
