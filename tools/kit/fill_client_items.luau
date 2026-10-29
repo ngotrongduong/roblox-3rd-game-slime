@@ -27,4 +27,19 @@ for _, key in { "grilledFish", "veggieStew", "fishVegSoup", "Egg", "Hoe", "Water
 	put(key, items)
 end
 put("Egg", kit)
+-- the garden's crop stages (the garden cycle swaps them as a plot grows)
+local crops = game:GetService("ServerStorage"):FindFirstChild("CropKit")
+for _, key in { "Carrot1", "Carrot2", "Carrot3", "Carrot4", "Cabbage1", "Cabbage2", "Cabbage3", "Cabbage4" } do
+	local src = crops and crops:FindFirstChild(key)
+	local old = items:FindFirstChild(key)
+	if old then
+		old:Destroy()
+	end
+	if src then
+		src:Clone().Parent = items
+		table.insert(out, key .. " in Items")
+	else
+		table.insert(out, key .. " MISSING")
+	end
+end
 return table.concat(out, "\n")
