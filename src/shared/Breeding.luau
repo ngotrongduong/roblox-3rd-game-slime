@@ -51,6 +51,7 @@ Breeding.Messages = {
 	PARENT_FALLEN = "A parent is a ghost.",
 	PARENT_TOO_YOUNG = "A parent is still growing up.",
 	PARENT_ON_COOLDOWN = "One parent is still resting.",
+	PARENT_NEEDS = "Both parents need food and energy.",
 	SLIME_CAP_REACHED = "The farm is full — no room for a baby.",
 	EGG_CAP_REACHED = "The nest is full.",
 	ID_UNAVAILABLE = "Something went wrong. Please try again.",
@@ -112,6 +113,12 @@ function Breeding.check(farm: Farm, idA: string, idB: string, now: number): Chec
 		return fail("PARENT_TOO_YOUNG")
 	end
 	if now < a.breedReadyAt or now < b.breedReadyAt then
+		return fail("PARENT_ON_COOLDOWN")
+	end
+	if not Needs.canPair(a.needs) or not Needs.canPair(b.needs) then
+		return fail("PARENT_NEEDS")
+	end
+	if Stations.isBusy(farm, idA) or Stations.isBusy(farm, idB) then
 		return fail("PARENT_ON_COOLDOWN")
 	end
 	-- Each egg holds a slot for its baby.
