@@ -15,6 +15,12 @@ function Stations.slotCount(level: number): number
 	return FarmState.slotCount(level)
 end
 
+-- A faster slime needs less real time for the same amount of work.
+function Stations.speedTimeFactor(speed: number): number
+	local bonus = math.min(math.max(0, speed - Config.Stats.Starter.speed) * Config.Work.SpeedBonusPerSpd, Config.Work.SpeedBonusMax)
+	return 1 / (1 + bonus)
+end
+
 function Stations.cycleSeconds(areaId: string, level: number): number
 	local base = (Config.Work.CycleSeconds :: any)[areaId]
 	return if base then base * Config.Work.CycleLevelFactor ^ (level - Config.Village.StartLevel) else math.huge

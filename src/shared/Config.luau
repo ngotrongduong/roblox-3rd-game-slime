@@ -54,7 +54,7 @@ Config.Breeding = {
 	-- How many fresh ids to ask for before giving up (a counter or GUID never collides).
 	IdAttempts = 32,
 	-- Two places at level 1, one extra at each milestone.
-	SlotLevels = { 11, 21, 31, 41 },
+	SlotLevels = { 21, 41 },
 	BasePlaces = 2,
 	CourtshipSeconds = 60,
 	LayEnergy = 30,
@@ -347,6 +347,31 @@ Config.Work = {
 	FishingYield = 1,
 	GardenYield = 3,
 	GardenCarrotChance = 0.5,
+	SpeedBonusPerSpd = 0.05,
+	SpeedBonusMax = 3,
+	GardenPlotCount = 20,
+	GardenStageSeconds = 75,
+	GardenDryGrowthFactor = 0.15,
+	GardenWaterBoostSeconds = 12,
+	GardenActionSeconds = 18,
+	FishCastSeconds = 3,
+	FishReelSeconds = 3,
+	WorkDropSeconds = 2,
+	GardenCropScaleStart = 0.78,
+	GardenCropGrowSteps = 5,
+	GardenCropGrowStepSeconds = 0.06,
+	GardenCropLift = 0.2,
+	WorkToolOffset = 0.55,
+	WorkRodTiltDegrees = 26,
+	WorkHoeTiltDegrees = 40,
+	WorkWaterTiltDegrees = 70,
+	WorkBobHz = 1.2,
+	WorkBobStuds = 0.12,
+	WorkShakeHz = 2.6,
+	WorkShakeDegrees = 14,
+	WorkDropsPerWater = 3,
+	WorkDropDistance = 0.65,
+	WorkToolScale = 0.55,
 	KitchenYield = 1,
 }
 
@@ -508,7 +533,8 @@ Config.Save = {
 	-- 2: discoveries gained the material bucket (docs/MATERIALS.md).
 	-- 3: appearance determines colour genes; the pattern gene is retired.
 	-- 4: living-village needs, jobs, pantry, pairs and incubators replace legacy farm fields.
-	SchemaVersion = 4,
+	-- 5: plot-by-plot growing vegetables with safe migration from the old timed output.
+	SchemaVersion = 5,
 	-- A stored envelope without a version is this one.
 	FirstSchemaVersion = 1,
 

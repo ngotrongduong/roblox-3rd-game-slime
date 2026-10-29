@@ -9,6 +9,7 @@ local Config = if script then require(script.Parent.Config) else require("./Conf
 
 local Colours = if script then require(script.Parent.Colours) else require("./Colours")
 local Genetics = if script then require(script.Parent.Genetics) else require("./Genetics")
+local GardenPlots = if script then require(script.Parent.GardenPlots) else require("./GardenPlots")
 local Mutations = if script then require(script.Parent.Mutations) else require("./Mutations")
 local Rng = if script then require(script.Parent.Rng) else require("./Rng")
 
@@ -296,6 +297,21 @@ function ProfileLogic.migrateVillage(data: any, _now: number): any
 	out.unlockedStations = nil
 	out.upgrades = nil
 	out.nest = nil
+	return out
+end
+
+-- The old timer has no location or growth history; preserve the food and assignments,
+-- and start the new plot grid empty instead of guessing at crops already harvested.
+function ProfileLogic.migrateGarden(data: any, _now: number): any
+	if type(data) ~= "table" then
+		return data
+	end
+	local out = ProfileLogic.deepCopy(data)
+	if type(out.work) == "table" and type(out.work.garden) == "table" then
+		if type(out.work.garden.plots) ~= "table" then
+			out.work.garden.plots = GardenPlots.new(Config.Work.GardenPlotCount)
+		end
+	end
 	return out
 end
 

@@ -1,11 +1,12 @@
 --!strict
--- The schema-four living village: load-safe slimes, area levels, jobs, food and breeding.
+-- The schema-five living village: load-safe slimes, area levels, jobs, food and breeding.
 -- All clocks are server epoch seconds, and repairs keep valid unrelated progress intact.
 
 local Colours = if script then require(script.Parent.Colours) else require("./Colours")
 local Config = if script then require(script.Parent.Config) else require("./Config")
 local Genetics = if script then require(script.Parent.Genetics) else require("./Genetics")
 local Growth = if script then require(script.Parent.Growth) else require("./Growth")
+local GardenPlots = if script then require(script.Parent.GardenPlots) else require("./GardenPlots")
 local Mutations = if script then require(script.Parent.Mutations) else require("./Mutations")
 local Rng = if script then require(script.Parent.Rng) else require("./Rng")
 local StatsModule = if script then require(script.Parent.Stats) else require("./Stats")
@@ -82,8 +83,8 @@ export type Areas = {
 	training: Area,
 	breeding: Area,
 }
-export type WorkSlot = { worker: string?, reserve: string?, progress: number, stat: string? }
-export type WorkArea = { slots: { WorkSlot }, box: { [string]: number } }
+export type WorkSlot = { worker: string?, reserve: string?, progress: number, stat: string?, plot: number?, task: string? }
+export type WorkArea = { slots: { WorkSlot }, box: { [string]: number }, plots: { GardenPlots.Plot }? }
 export type Work = {
 	fishing: WorkArea,
 	garden: WorkArea,
@@ -223,7 +224,7 @@ function FarmState.newWork(areas: Areas): Work
 		for _ = 1, FarmState.slotCount((areas :: any)[id].level) do
 			table.insert(slots, { progress = 0 })
 		end
-		out[id] = { slots = slots, box = {} }
+		out[id] = { slots = slots, box = {}, plots = if id == "garden" then GardenPlots.new(Config.Work.GardenPlotCount) else nil }
 	end
 	return out :: Work
 end
@@ -684,6 +685,9 @@ local function validateWork(raw: any, areas: Areas, slimes: { Slime }, now: numb
 	for _, id in Config.Work.Areas do
 		local w = if type(raw) == "table" then raw[id] else nil
 		local area = (out :: any)[id] :: WorkArea
+		if id == "garden" then
+			area.plots = GardenPlots.repair(if type(w) == "table" then w.plots else nil, Config.Work.GardenPlotCount)
+		end
 		if type(w) == "table" then
 			area.box = validateStock(w.box, Config.Food.RawOrder, Config.Work.BoxCapacity)
 			if id == "kitchen" then
@@ -695,6 +699,11 @@ local function validateWork(raw: any, areas: Areas, slimes: { Slime }, now: numb
 				local old = if type(w.slots) == "table" then w.slots[i] else nil
 				if type(old) == "table" then
 					slot.progress = if isNum(old.progress) then math.max(0, old.progress) else 0
+					if id == "garden" and type(old.plot) == "number" and old.plot % 1 == 0
+						and old.plot >= 1 and old.plot <= Config.Work.GardenPlotCount
+						and table.find({ "hoe", "plant", "water", "harvest" }, old.task) then
+						slot.plot, slot.task = old.plot, old.task
+					end
 					if id == "training" and table.find(StatsModule.Keys, old.stat) then
 						slot.stat = old.stat
 					end
