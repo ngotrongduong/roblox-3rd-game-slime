@@ -1,3 +1,4 @@
+local Genetics = require("../../src/shared/Genetics")
 local Breeding = require("../../src/shared/Breeding")
 local FarmKit = require("../lib/FarmKit")
 local FarmState = require("../../src/shared/FarmState")
@@ -18,7 +19,8 @@ end
 
 -- An egg with a chosen embryo, ready at NOW.
 local function egg(id: string, appearance: any, colours: { string }?)
-	local c = colours or { "red", "white" }
+	local c = colours or { "red", "red" }
+	local look = appearance or { type = "none" }
 	return {
 		id = id,
 		parentIds = { "slime-1", "slime-2" },
@@ -27,9 +29,8 @@ local function egg(id: string, appearance: any, colours: { string }?)
 		offspringId = "baby-" .. id,
 		embryo = {
 			stats = { attack = 4, defence = 2, speed = 1, hp = 30 },
-			colourGenotype = { alleles = { c[1], c[2] } },
-			patternGenotype = { alleles = { "solid", "duochrome" } },
-			appearanceMutation = appearance or { type = "none" },
+			colourGenotype = Genetics.fromAppearance(look, { alleles = { c[1], c[2] } }),
+			appearanceMutation = look,
 		},
 		status = "ready",
 	}
@@ -56,7 +57,6 @@ return function(T)
 		T.eq(baby.name, "Slime 5")
 		T.same(baby.stats, embryo.stats)
 		T.same(baby.colourGenotype, embryo.colourGenotype)
-		T.same(baby.patternGenotype, embryo.patternGenotype)
 		T.same(baby.appearanceMutation, embryo.appearanceMutation)
 		T.eq(baby.createdAt, e.hatchAt)
 		T.eq(baby.breedReadyAt, e.hatchAt)
@@ -94,15 +94,16 @@ return function(T)
 		}
 		local r1 = Hatching.hatch(farm, "e1", NOW)
 		assert(r1.slime)
-		T.eq(r1.slime.visibleColour, "red", "the base colour stays the phenotype")
+		T.eq(r1.slime.visibleColour, "pink", "Dual bodyColour is visible")
 		T.eq(r1.slime.assetId, "slime.dual.38")
 		local r2 = Hatching.hatch(r1.farm, "e2", NOW)
 		assert(r2.slime)
 		T.eq(r2.slime.assetId, "slime.secret.red-white")
+		T.eq(r2.slime.visibleColour, "white", "Secret first recipe colour is visible")
 		local r3 = Hatching.hatch(r2.farm, "e3", NOW)
 		assert(r3.slime)
-		T.eq(r3.slime.visibleColour, "black")
-		T.eq(r3.slime.assetId, "slime.base.black")
+		T.eq(r3.slime.visibleColour, "white")
+		T.eq(r3.slime.assetId, "slime.base.white")
 		local r4 = Hatching.hatch(r3.farm, "e4", NOW)
 		assert(r4.slime)
 		T.eq(r4.slime.visibleColour, "red", "a material slime keeps its base colour")
@@ -110,20 +111,21 @@ return function(T)
 		T.same(r4.slime.appearanceMutation, { type = "material", definitionId = "gold" })
 	end)
 
-	T.test("discoveries: base always counts, dual/secret register once then count", function()
+	T.test("discoveries: plain babies register visible colour, rare babies register only their appearance", function()
 		local farm = FarmKit.farm(NOW)
 		local dual = { type = "dual", definitionId = "dual-red-pink-38" }
 		farm.eggs = { egg("e1", dual), egg("e2", dual), egg("e3", nil, { "navy", "navy" }) }
 		local r1 = Hatching.hatch(farm, "e1", NOW)
 		T.same(r1.firstDiscovery, dual)
-		T.ok(r1.newColour, "red is new")
+		T.eq(r1.newColour, false, "a Dual does not discover a plain base colour")
 		T.same(r1.farm.discoveries.dual["dual-red-pink-38"], { firstDiscoveredAt = NOW, hatchCount = 1 })
-		T.same(r1.farm.discoveries.base.red, { firstDiscoveredAt = NOW, hatchCount = 1 })
+		T.eq(r1.farm.discoveries.base.red, nil)
+		T.eq(r1.farm.discoveries.base.pink, nil)
 		local r2 = Hatching.hatch(r1.farm, "e2", NOW + 9)
 		T.eq(r2.firstDiscovery, nil)
 		T.ok(not r2.newColour)
 		T.same(r2.farm.discoveries.dual["dual-red-pink-38"], { firstDiscoveredAt = NOW, hatchCount = 2 })
-		T.eq(r2.farm.discoveries.base.red.hatchCount, 2)
+		T.eq(r2.farm.discoveries.base.pink, nil)
 		local r3 = Hatching.hatch(r2.farm, "e3", NOW)
 		T.eq(r3.farm.discoveries.base.navy.hatchCount, 5, "4 starters + 1")
 		T.eq(farm.discoveries.base.navy.hatchCount, 4, "the input discoveries are not changed")
@@ -144,8 +146,8 @@ return function(T)
 		local r3 = Hatching.hatch(r2.farm, "e3", NOW + 6)
 		T.same(r3.firstDiscovery, { type = "material", definitionId = "mud" })
 		T.eq(r3.farm.discoveries.material.mud.hatchCount, 1)
-		-- 4 starters + 3 base hatches + 3 material hatches
-		T.eq(Hatching.totalHatched(r3.farm.discoveries), 10)
+		-- 4 starters + 3 material hatches, counted once each
+		T.eq(Hatching.totalHatched(r3.farm.discoveries), 7)
 		T.eq(farm.discoveries.material.gold, nil, "the input discoveries are not changed")
 	end)
 

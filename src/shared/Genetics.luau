@@ -1,88 +1,101 @@
 --!strict
--- Two-allele genetics (docs/reference/01-core-farm.md §5.2–5.3).
--- Colour locus: each parent passes one of its two colour alleles; the more dominant one shows,
--- the other is carried silently and can come back in a later generation.
--- Pattern locus: "solid" is dominant, "duochrome" recessive; only duochrome/duochrome can show a
--- Dual design by itself, solid/duochrome is a hidden carrier.
+-- Genes describe the visible design's base colours, never hidden alleles (docs/GAMEPLAY.md §1).
 
 local Colours = if script then require(script.Parent.Colours) else require("./Colours")
-local Rng = if script then require(script.Parent.Rng) else require("./Rng")
-
--- Sibling types come through typeof: an exported type cannot be read through the if-require.
-type Rng = typeof(Rng.new(0))
+local DualDesigns = if script then require(script.Parent.DualDesigns) else require("./DualDesigns")
+local SecretRecipes = if script then require(script.Parent.SecretRecipes) else require("./SecretRecipes")
 
 local Genetics = {}
 
 export type ColourGenotype = { alleles: { string } }
-export type PatternGenotype = { alleles: { string } }
-
-Genetics.Solid = "solid"
-Genetics.Duochrome = "duochrome"
+export type Appearance = { type: string, definitionId: string? }
+export type Parent = { colourGenotype: ColourGenotype, appearanceMutation: Appearance }
+type Design = typeof(DualDesigns.List[1])
+type Recipe = typeof(SecretRecipes.List[1])
 
 function Genetics.homozygous(colour: string): ColourGenotype
 	return { alleles = { colour, colour } }
 end
 
-function Genetics.copy(genotype: { alleles: { string } }): { alleles: { string } }
+function Genetics.copy(genotype: ColourGenotype): ColourGenotype
 	return { alleles = { genotype.alleles[1], genotype.alleles[2] } }
 end
 
--- The colour a genotype shows. Same alleles → that colour; else the higher dominance, then the
--- higher tiePriority. Never fails: one valid allele wins, two invalid ones give the fallback.
 function Genetics.phenotype(genotype: ColourGenotype): string
-	local a, b = genotype.alleles[1], genotype.alleles[2]
-	local ca = if type(a) == "string" then Colours.get(a) else nil
-	local cb = if type(b) == "string" then Colours.get(b) else nil
-	if ca and cb then
-		if ca.dominance ~= cb.dominance then
-			return if ca.dominance > cb.dominance then ca.id else cb.id
+	return if Colours.isValid(genotype.alleles[1]) then genotype.alleles[1] else Colours.Fallback
+end
+
+-- Unknown saved designs retain a usable base colour until their definition returns.
+function Genetics.baseColours(parent: Parent): { string }
+	local appearance = parent.appearanceMutation
+	local id = appearance.definitionId
+	local pair: { string }? = nil
+	if id and appearance.type == "dual" then
+		local design = DualDesigns.get(id)
+		pair = if design then design.parentPair else nil
+	elseif id and appearance.type == "secret" then
+		local recipe = SecretRecipes.get(id)
+		pair = if recipe then recipe.parentPair else nil
+	end
+	if pair then
+		return if pair[1] == pair[2] then { pair[1] } else { pair[1], pair[2] }
+	end
+	return { Genetics.phenotype(parent.colourGenotype) }
+end
+
+function Genetics.fromAppearance(appearance: Appearance, genotype: ColourGenotype): ColourGenotype
+	local colours = Genetics.baseColours({ appearanceMutation = appearance, colourGenotype = genotype })
+	return { alleles = { colours[1], colours[2] or colours[1] } }
+end
+
+function Genetics.visibleColour(appearance: Appearance, genotype: ColourGenotype): string
+	if appearance.type == "dual" and appearance.definitionId then
+		local design = DualDesigns.get(appearance.definitionId)
+		if design then
+			return design.bodyColour
 		end
-		return if ca.tiePriority >= cb.tiePriority then ca.id else cb.id
 	end
-	if ca then
-		return ca.id
+	return Genetics.baseColours({ appearanceMutation = appearance, colourGenotype = genotype })[1]
+end
+
+function Genetics.colourSet(a: Parent, b: Parent): { string }
+	local seen: { [string]: boolean } = {}
+	for _, parent in { a, b } do
+		for _, colour in Genetics.baseColours(parent) do
+			seen[colour] = true
+		end
 	end
-	if cb then
-		return cb.id
+	local out = {}
+	for _, id in Colours.Ids do
+		if seen[id] then
+			table.insert(out, id)
+		end
 	end
-	return Colours.Fallback
+	return out
 end
 
--- One allele from each parent, each 50/50 (two rolls, A's first). Parents are not changed.
-local function inherit(a: { alleles: { string } }, b: { alleles: { string } }, rng: Rng): { string }
-	local fromA = a.alleles[if rng:next() < 0.5 then 1 else 2]
-	local fromB = b.alleles[if rng:next() < 0.5 then 1 else 2]
-	return { fromA, fromB }
+function Genetics.dualPool(colours: { string }): { Design }
+	local out = {}
+	for i, a in colours do
+		for j = i + 1, #colours do
+			for _, design in DualDesigns.exact(a, colours[j]) do
+				table.insert(out, design)
+			end
+		end
+	end
+	return out
 end
 
-function Genetics.inheritColour(a: ColourGenotype, b: ColourGenotype, rng: Rng): ColourGenotype
-	return { alleles = inherit(a, b, rng) }
-end
-
-function Genetics.solid(): PatternGenotype
-	return { alleles = { Genetics.Solid, Genetics.Solid } }
-end
-
-function Genetics.duochrome(): PatternGenotype
-	return { alleles = { Genetics.Duochrome, Genetics.Duochrome } }
-end
-
-function Genetics.inheritPattern(a: PatternGenotype, b: PatternGenotype, rng: Rng): PatternGenotype
-	return { alleles = inherit(a, b, rng) }
-end
-
--- Only duochrome/duochrome can express a Dual design.
-function Genetics.isDuochrome(g: PatternGenotype): boolean
-	return g.alleles[1] == Genetics.Duochrome and g.alleles[2] == Genetics.Duochrome
-end
-
--- solid/duochrome: looks plain but can pass the duochrome allele on.
-function Genetics.isCarrier(g: PatternGenotype): boolean
-	return not Genetics.isDuochrome(g) and (g.alleles[1] == Genetics.Duochrome or g.alleles[2] == Genetics.Duochrome)
-end
-
-local function isPatternAllele(v: any): boolean
-	return v == Genetics.Solid or v == Genetics.Duochrome
+function Genetics.secretPool(colours: { string }): { Recipe }
+	local out = {}
+	for i, a in colours do
+		for j = i, #colours do
+			for _, recipe in SecretRecipes.forPair(a, colours[j]) do
+				table.insert(out, recipe)
+			end
+		end
+	end
+	return out
 end
 
 -- Breeding needs exactly two valid colour alleles.
@@ -92,11 +105,6 @@ function Genetics.isUsableColour(raw: any): boolean
 		and #raw.alleles == 2
 		and Colours.isValid(raw.alleles[1])
 		and Colours.isValid(raw.alleles[2])
-end
-
--- Breeding needs two pattern alleles (as the original: it checks the count, repair checks values).
-function Genetics.isUsablePattern(raw: any): boolean
-	return type(raw) == "table" and type(raw.alleles) == "table" and #raw.alleles == 2
 end
 
 -- Field-level repair of a loaded colour genotype. nil when the shape is unusable (the caller
@@ -124,21 +132,6 @@ function Genetics.validateColour(raw: any, warnings: { string }, prefix: string)
 		table.insert(warnings, prefix .. ": invalid colour allele, set to " .. Colours.Fallback)
 	end
 	return { alleles = out }
-end
-
--- Field-level repair of a loaded pattern genotype; anything invalid becomes solid/solid.
-function Genetics.validatePattern(raw: any, warnings: { string }, prefix: string): PatternGenotype
-	if
-		type(raw) == "table"
-		and type(raw.alleles) == "table"
-		and #raw.alleles == 2
-		and isPatternAllele(raw.alleles[1])
-		and isPatternAllele(raw.alleles[2])
-	then
-		return { alleles = { raw.alleles[1], raw.alleles[2] } }
-	end
-	table.insert(warnings, prefix .. ": invalid pattern genotype, set to solid/solid")
-	return Genetics.solid()
 end
 
 return Genetics

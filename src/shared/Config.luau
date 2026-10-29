@@ -56,19 +56,27 @@ Config.Breeding = {
 }
 
 Config.Mutation = {
-	-- Sequential rolls: secret, then material, then dual, then base-colour mutation (see
-	-- Mutations.rollCategory).
-	SecretChance = 0.01,
-	-- docs/MATERIALS.md: any pair can give a material, same colour included.
+	-- A material roll only follows the Plain category (docs/GAMEPLAY.md).
 	MaterialChance = 0.02,
-	DualChance = 0.05,
-	BaseChance = 0.10,
 	-- Luck-multiplied chances (secret, material, dual, stat improvement) never go above this.
 	ChanceCap = 0.95,
 	-- The PityThreshold-th plain egg in a row is forced rare: PitySecretShare secret, else dual.
 	-- Pity never gives a material.
 	PityThreshold = 25,
 	PitySecretShare = 0.10,
+}
+
+-- Categorical inheritance (docs/GAMEPLAY.md §1.2); Plain is the remaining share.
+Config.Inheritance = {
+	plainSame = { secret = 0.01, dual = 0, random = 0.10 },
+	plainOther = { secret = 0.01, dual = 0.04, random = 0.10 },
+	dualPlain = { secret = 0.02, dual = 0.25, random = 0.10 },
+	dualSame = { secret = 0.03, dual = 0.50, random = 0.10 },
+	dualOther = { secret = 0.04, dual = 0.40, random = 0.10 },
+	secretPlain = { secret = 0.03, dual = 0.20, random = 0.10 },
+	secretDual = { secret = 0.05, dual = 0.40, random = 0.10 },
+	secretSame = { secret = 0.10, dual = 0.60, random = 0.10 },
+	secretOther = { secret = 0.07, dual = 0.45, random = 0.10 },
 }
 
 -- Material slimes (docs/MATERIALS.md): a rare appearance next to Dual and Secret. Which material is a
@@ -102,6 +110,10 @@ Config.Luck = {
 	WindowSeconds = 30 * 60,
 	First = 5,
 	Second = 3,
+	ServerBonus = 1,
+	-- Reserved for a future potion; not sold yet.
+	Potion = 2,
+	Vip = 1,
 }
 
 Config.Farm = {
@@ -260,7 +272,8 @@ Config.Save = {
 	KeyPrefix = "Player_",
 	-- The data shape's version. Bump it with each change of shape and add a migration for it.
 	-- 2: discoveries gained the material bucket (docs/MATERIALS.md).
-	SchemaVersion = 2,
+	-- 3: appearance determines colour genes; the pattern gene is retired.
+	SchemaVersion = 3,
 	-- A stored envelope without a version is this one.
 	FirstSchemaVersion = 1,
 

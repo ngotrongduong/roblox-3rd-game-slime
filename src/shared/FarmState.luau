@@ -19,7 +19,6 @@ local FarmState = {}
 -- Modules that need the farm types do the same, e.g. typeof(FarmState.newFarm(0)).
 export type Stats = typeof(StatsModule.starter())
 export type ColourGenotype = typeof(Genetics.homozygous(""))
-export type PatternGenotype = typeof(Genetics.solid())
 export type Appearance = typeof(Mutations.none())
 
 -- hungerState is derived from hunger: "full", "hungry" or "starving".
@@ -36,8 +35,7 @@ export type Slime = {
 	assetId: string,
 	stats: Stats,
 	colourGenotype: ColourGenotype,
-	patternGenotype: PatternGenotype,
-	-- Always the phenotype of colourGenotype; recomputed on load.
+	-- The plain colour, Dual body colour or Secret first colour; recomputed on load.
 	visibleColour: string,
 	appearanceMutation: Appearance,
 	isFavourite: boolean,
@@ -53,7 +51,6 @@ export type Slime = {
 export type Embryo = {
 	stats: Stats,
 	colourGenotype: ColourGenotype,
-	patternGenotype: PatternGenotype,
 	appearanceMutation: Appearance,
 }
 
@@ -171,6 +168,7 @@ export type Farm = {
 	-- nil on legacy saves means the tour is done.
 	tutorialDone: boolean?,
 	tutorialDoneAt: number?,
+	luckPotionUntil: number?,
 	lastSiegeTeam: { string }?,
 	wbKingSlain: boolean?,
 }
@@ -316,7 +314,6 @@ function FarmState.newStarters(now: number): { Slime }
 			assetId = "slime.base." .. colour,
 			stats = StatsModule.starter(),
 			colourGenotype = Genetics.homozygous(colour),
-			patternGenotype = Genetics.solid(),
 			visibleColour = colour,
 			appearanceMutation = Mutations.none(),
 			isFavourite = false,
@@ -370,6 +367,7 @@ function FarmState.newFarm(now: number): Farm
 		avatar = FarmState.newAvatar(now),
 		tutorialDone = false,
 		tutorialDoneAt = nil,
+		luckPotionUntil = nil,
 		lastSiegeTeam = nil,
 		wbKingSlain = nil,
 	}
@@ -462,8 +460,9 @@ local function validateSlime(raw: any, index: number, now: number, warnings: { s
 		genotype = Genetics.homozygous(derived)
 		table.insert(warnings, id .. ": colour genotype unusable, set to " .. derived .. "/" .. derived)
 	end
-	-- The visible colour is always recomputed from the genes.
-	local visibleColour = Genetics.phenotype(genotype)
+	local appearance = Mutations.validate(raw.appearanceMutation)
+	genotype = Genetics.fromAppearance(appearance, genotype)
+	local visibleColour = Genetics.visibleColour(appearance, genotype)
 	if raw.visibleColour ~= nil and raw.visibleColour ~= visibleColour then
 		table.insert(warnings, id .. ": stored colour differs from the genes, recomputed")
 	end
@@ -475,7 +474,6 @@ local function validateSlime(raw: any, index: number, now: number, warnings: { s
 	if breedReadyAt ~= raw.breedReadyAt then
 		table.insert(warnings, id .. ": breedReadyAt invalid, set to ready")
 	end
-	local appearance = Mutations.validate(raw.appearanceMutation)
 	if not Mutations.isKnown(appearance) then
 		table.insert(warnings, id .. ": unknown " .. appearance.type .. " design kept (placeholder art)")
 	end
@@ -486,7 +484,6 @@ local function validateSlime(raw: any, index: number, now: number, warnings: { s
 		assetId = assetId,
 		stats = stats,
 		colourGenotype = genotype,
-		patternGenotype = Genetics.validatePattern(raw.patternGenotype, warnings, id),
 		visibleColour = visibleColour,
 		appearanceMutation = appearance,
 		isFavourite = raw.isFavourite == true,
@@ -532,6 +529,7 @@ local function validateEgg(raw: any, now: number, warnings: { string }): Egg?
 	end
 	-- The embryo was decided when the egg was laid: it is repaired, never rerolled.
 	local appearance = Mutations.validate(embryo.appearanceMutation)
+	genotype = Genetics.fromAppearance(appearance, genotype)
 	if not Mutations.isKnown(appearance) then
 		table.insert(warnings, "egg " .. id .. ": unknown " .. appearance.type .. " design kept (placeholder art)")
 	end
@@ -546,7 +544,6 @@ local function validateEgg(raw: any, now: number, warnings: { string }): Egg?
 		embryo = {
 			stats = StatsModule.validate(embryo.stats, warnings, "egg " .. id .. ".embryo"),
 			colourGenotype = genotype,
-			patternGenotype = Genetics.validatePattern(embryo.patternGenotype, warnings, "egg " .. id),
 			appearanceMutation = appearance,
 		},
 		status = "incubating",
@@ -1007,6 +1004,9 @@ function FarmState.repair(data: any, now: number): (Farm, { string }, boolean)
 		avatar = validateAvatar(data.avatar, now, warnings),
 		tutorialDone = if type(data.tutorialDone) == "boolean" then data.tutorialDone else nil,
 		tutorialDoneAt = if isNum(data.tutorialDoneAt) then data.tutorialDoneAt else nil,
+		luckPotionUntil = if isNum(data.luckPotionUntil) and data.luckPotionUntil >= 0
+			then data.luckPotionUntil
+			else nil,
 		lastSiegeTeam = if type(data.lastSiegeTeam) == "table"
 			then stringList(data.lastSiegeTeam, function(s)
 				return slimeIds[s] == true

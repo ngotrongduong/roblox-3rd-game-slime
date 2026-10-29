@@ -8,6 +8,8 @@
 local Config = if script then require(script.Parent.Config) else require("./Config")
 local FarmState = if script then require(script.Parent.FarmState) else require("./FarmState")
 
+local ProfileLogic = if script then require(script.Parent.ProfileLogic) else require("./ProfileLogic")
+
 local FarmSave = {}
 
 -- The hooks ProfileLogic.Hooks describes (its exported types cannot be read through the dual
@@ -36,6 +38,7 @@ function FarmSave.hooks(log: ((string) -> ())?)
 					return data
 				end,
 			},
+			{ from = 2, to = 3, migrate = ProfileLogic.migrateInheritance },
 		},
 		newData = function(now: number): any
 			return FarmState.newFarm(now)

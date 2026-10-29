@@ -89,14 +89,13 @@ function Hatching.registerDiscovery(
 	return out, bump(bucket, id, now)
 end
 
--- Registers a base colour; every hatch counts.
+-- Registers a plain baby in the base-colour collection.
 function Hatching.registerBase(discoveries: Discoveries, colour: string, now: number): (Discoveries, boolean)
 	local out = copyDiscoveries(discoveries)
 	return out, bump(out.base, colour, now)
 end
 
--- Every hatch ever, over all four books (a dual/secret/material hatch counts twice, the starters
--- count: the original's avatar rule).
+-- Every collection entry counts toward avatar rank, including the starters.
 function Hatching.totalHatched(discoveries: Discoveries): number
 	local n = 0
 	for _, bucket in { discoveries.base, discoveries.dual, discoveries.secret, discoveries.material } do
@@ -125,7 +124,7 @@ end
 -- The baby an egg becomes (does not touch the farm).
 function Hatching.babyFromEgg(farm: Farm, egg: Egg, now: number): Slime
 	local embryo = egg.embryo
-	local colour = Genetics.phenotype(embryo.colourGenotype)
+	local colour = Genetics.visibleColour(embryo.appearanceMutation, embryo.colourGenotype)
 	return {
 		id = egg.offspringId,
 		name = Hatching.nextName(farm),
@@ -133,8 +132,7 @@ function Hatching.babyFromEgg(farm: Farm, egg: Egg, now: number): Slime
 		assetId = Mutations.assetId(embryo.appearanceMutation, colour),
 		stats = Stats.copy(embryo.stats),
 		colourGenotype = Genetics.copy(embryo.colourGenotype),
-		patternGenotype = Genetics.copy(embryo.patternGenotype),
-		-- Always the base colour: the appearance layer never replaces it.
+		-- The design determines which of its base colours is visible.
 		visibleColour = colour,
 		appearanceMutation = Mutations.copy(embryo.appearanceMutation),
 		isFavourite = false,
@@ -161,8 +159,10 @@ function Hatching.hatch(farm: Farm, eggId: string, now: number): HatchResult
 
 	local rankBefore = Hatching.avatarRank(farm.discoveries)
 	local discoveries, firstRare = Hatching.registerDiscovery(farm.discoveries, slime.appearanceMutation, now)
-	local newColour
-	discoveries, newColour = Hatching.registerBase(discoveries, slime.visibleColour, now)
+	local newColour = false
+	if slime.appearanceMutation.type == "none" then
+		discoveries, newColour = Hatching.registerBase(discoveries, slime.visibleColour, now)
+	end
 
 	local improved = {}
 	local parentA = FarmState.findSlime(farm, egg.parentIds[1])

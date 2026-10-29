@@ -83,9 +83,7 @@ end
 -- ===== eligibility =====
 
 local function usableParent(s: Slime): boolean
-	return Stats.isUsable(s.stats)
-		and Genetics.isUsableColour(s.colourGenotype)
-		and Genetics.isUsablePattern(s.patternGenotype)
+	return Stats.isUsable(s.stats) and Genetics.isUsableColour(s.colourGenotype)
 end
 
 function Breeding.isBaby(farm: Farm, slime: Slime, now: number): boolean
@@ -170,7 +168,7 @@ function Breeding.isTutorialFirstEgg(farm: Farm): boolean
 end
 
 -- A colour other than the starters', made homozygous; no rare appearance; TutorialBoostedStats
--- different stats beat the stronger parent; a short hatch. The pattern genes are kept.
+-- different stats beat the stronger parent; a short hatch.
 local function boostFirstEgg(egg: Egg, a: Slime, b: Slime, rng: Rng)
 	local colours = {}
 	for _, id in Colours.Ids do
@@ -218,17 +216,9 @@ function Breeding.createEgg(farm: Farm, idA: string, idB: string, now: number, r
 	local b = FarmState.findSlime(farm, idB) :: Slime
 
 	local luck = Luck.multiplier(farm, now)
-	-- Parents breed with their base (visible) colour: appearances are never inherited.
-	local outcome = Mutations.resolveOffspring({
-		colourA = a.visibleColour,
-		colourB = b.visibleColour,
-		genotypeA = a.colourGenotype,
-		genotypeB = b.colourGenotype,
-		patternA = a.patternGenotype,
-		patternB = b.patternGenotype,
-	}, rng, luck)
+	local outcome = Mutations.resolveOffspring(a, b, rng, luck)
 	if outcome.appearance.type == "none" and farm.breedsSinceMutation + 1 >= Config.Mutation.PityThreshold then
-		outcome = Mutations.applyPity(outcome, a.visibleColour, b.visibleColour, rng)
+		outcome = Mutations.applyPity(outcome, a, b, rng)
 	end
 
 	local taken: { [string]: boolean } = {}
@@ -255,7 +245,6 @@ function Breeding.createEgg(farm: Farm, idA: string, idB: string, now: number, r
 		embryo = {
 			stats = Breeding.inheritStats(a.stats, b.stats, rng, luck),
 			colourGenotype = outcome.colourGenotype,
-			patternGenotype = outcome.patternGenotype,
 			appearanceMutation = outcome.appearance,
 		},
 		status = "incubating",
@@ -305,13 +294,13 @@ function Breeding.previewText(a: Slime, b: Slime, breedsSinceMutation: number?):
 			.. range("hp"),
 		math.round(Config.Breeding.ImproveChance * 100) .. "% chance one stat improves beyond the stronger parent.",
 	}
-	local c = Mutations.chances(a.visibleColour, b.visibleColour, 1)
+	local c = Mutations.chances(a, b, 1)
 	if #c.secrets > 0 or #c.duals > 0 then
 		table.insert(lines, "A rare discovery may be possible.")
 	end
 	-- every pair can give a material, so it is its own line rather than the hint above
 	if c.material > 0 then
-		table.insert(lines, "Material: " .. math.round(c.material * 100) .. "%")
+		table.insert(lines, "Material on a plain baby: " .. math.round(c.material * 100) .. "%")
 	end
 	if breedsSinceMutation ~= nil then
 		local threshold = Config.Mutation.PityThreshold
@@ -321,7 +310,7 @@ function Breeding.previewText(a: Slime, b: Slime, breedsSinceMutation: number?):
 		else
 			table.insert(
 				lines,
-				"✨ Lucky charm: " .. n .. "/" .. threshold .. " — fills with every egg, guarantees a rare baby."
+				"✨ Lucky charm: " .. n .. "/" .. threshold .. " — fills with plain eggs, guarantees a rare baby."
 			)
 		end
 	end

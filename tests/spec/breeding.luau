@@ -1,7 +1,6 @@
 local Breeding = require("../../src/shared/Breeding")
 local FarmKit = require("../lib/FarmKit")
 local FarmState = require("../../src/shared/FarmState")
-local Genetics = require("../../src/shared/Genetics")
 local Rng = require("../../src/shared/Rng")
 local Stats = require("../../src/shared/Stats")
 
@@ -171,7 +170,7 @@ return function(T)
 		T.eq(egg.createdAt, NOW)
 		T.eq(egg.hatchAt, NOW + 60)
 		T.eq(egg.status, "incubating")
-		T.ok(egg.embryo.stats and egg.embryo.colourGenotype and egg.embryo.patternGenotype)
+		T.ok(egg.embryo.stats and egg.embryo.colourGenotype)
 		T.eq(res.parentsReadyAt, NOW + 63)
 		local after = res.farm
 		T.eq(#after.eggs, 1)
@@ -209,8 +208,8 @@ return function(T)
 	end)
 
 	T.test("the same seed lays the same egg", function()
-		local p = { colours = { "red", "white" }, pattern = { "solid", "duochrome" } }
-		local q = { colours = { "blue", "green" }, pattern = { "duochrome", "solid" } }
+		local p = { colours = { "red", "white" } }
+		local q = { colours = { "blue", "green" } }
 		local farm = FarmKit.farm(NOW, { FarmKit.slime("a", p), FarmKit.slime("b", q) })
 		local one = Breeding.createEgg(farm, "a", "b", NOW, Rng.new(31337), FarmKit.ids())
 		local two = Breeding.createEgg(farm, "a", "b", NOW, Rng.new(31337), FarmKit.ids())
@@ -230,7 +229,7 @@ return function(T)
 			-- a material is only ever the egg's own 2% roll (pity never gives one) and also resets the counter
 			T.ok(kind == "dual" or kind == "secret" or kind == "material", "seed " .. seed .. " gave " .. kind)
 			if kind == "dual" then
-				T.ok(Genetics.isDuochrome(res.egg.embryo.patternGenotype))
+				T.same(res.egg.embryo.colourGenotype.alleles, { "red", "pink" })
 			end
 			T.eq(res.farm.breedsSinceMutation, 0)
 		end
@@ -354,9 +353,9 @@ return function(T)
 			end
 			return rare / 3000
 		end
-		-- secret, material, dual in turn: luck 1: 1 - .99 x .98 x .95; luck 5: 1 - .95 x .90 x .75
-		T.near(rareRate(nil), 0.07831, 0.015)
-		T.near(rareRate(NOW - 60), 0.35875, 0.03)
+		-- Secret + Dual + Plain times the conditional material chance.
+		T.near(rareRate(nil), 0.067, 0.015)
+		T.near(rareRate(NOW - 60), 0.315, 0.03)
 	end)
 
 	T.test("preview text", function()

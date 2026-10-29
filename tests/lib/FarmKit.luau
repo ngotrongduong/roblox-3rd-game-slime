@@ -13,21 +13,21 @@ function FarmKit.ids(): (string) -> string
 	end
 end
 
--- An adult, rested slime. colours = { allele1, allele2 }; pattern = { allele1, allele2 }.
+-- An adult, rested slime. colours = { allele1, allele2 }.
 function FarmKit.slime(id: string, opts: { [string]: any }?): any
 	local o = opts or {}
 	local colours = o.colours or { "navy", "navy" }
 	local genotype = { alleles = { colours[1], colours[2] } }
+	local appearance = o.appearance or { type = "none" }
 	return {
 		id = id,
 		name = o.name or id,
 		seed = 1,
-		assetId = "slime.base." .. Genetics.phenotype(genotype),
+		assetId = "slime.base." .. Genetics.visibleColour(appearance, genotype),
 		stats = o.stats or { attack = 1, defence = 1, speed = 1, hp = 10 },
 		colourGenotype = genotype,
-		patternGenotype = { alleles = o.pattern or { "solid", "solid" } },
-		visibleColour = Genetics.phenotype(genotype),
-		appearanceMutation = o.appearance or { type = "none" },
+		visibleColour = Genetics.visibleColour(appearance, genotype),
+		appearanceMutation = appearance,
 		isFavourite = false,
 		needs = FarmState.fullNeeds(),
 		createdAt = o.createdAt or 0,

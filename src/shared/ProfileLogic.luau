@@ -1,11 +1,15 @@
 --!strict
 -- Player profiles, the pure part: the stored envelope, the session lock, migrations, the last-good
--- copy, the size budget and when to write. It never looks inside the data: the farm rules inject
+-- copy, the size budget and when to write. The farm rules inject
 -- newData(now) and repair(data, now). The DataStore calls live in server/ProfileStore.
 -- Every rule here prefers keeping data over writing over it, because lost progress was the owner's
 -- sharpest complaint about the web game (docs/reference/05-owner-history-part1.md §3).
 
 local Config = if script then require(script.Parent.Config) else require("./Config")
+
+local Colours = if script then require(script.Parent.Colours) else require("./Colours")
+local Genetics = if script then require(script.Parent.Genetics) else require("./Genetics")
+local Mutations = if script then require(script.Parent.Mutations) else require("./Mutations")
 
 local Save = Config.Save
 
@@ -171,6 +175,54 @@ function ProfileLogic.touchLock(prev: any, ctx: SaveContext): (Envelope?, string
 end
 
 -- ===== Migrations =====
+
+-- Preserve the old displayed colour for embryos, which had no stored visibleColour.
+local function legacyColour(raw: any): string
+	if Colours.isValid(raw.visibleColour) then
+		return raw.visibleColour
+	end
+	local genes = raw.colourGenotype
+	if type(genes) == "table" and type(genes.alleles) == "table" then
+		-- The legacy dominance order was exactly Colours.Ids, highest first.
+		for _, id in Colours.Ids do
+			if genes.alleles[1] == id or genes.alleles[2] == id then
+				return id
+			end
+		end
+	end
+	return if type(raw.assetId) == "string"
+		then Colours.fromAssetId(raw.assetId) or Colours.Fallback
+		else Colours.Fallback
+end
+
+-- Schema 2 -> 3: keep appearances, timers and unrelated progress; retire hidden genes.
+function ProfileLogic.migrateInheritance(data: any, _now: number): any
+	if type(data) ~= "table" then
+		return data
+	end
+	local out = ProfileLogic.deepCopy(data)
+	local function rewrite(raw: any)
+		if type(raw) ~= "table" then
+			return
+		end
+		raw.patternGenotype = nil
+		local appearance = Mutations.validate(raw.appearanceMutation)
+		raw.colourGenotype = Genetics.fromAppearance(appearance, Genetics.homozygous(legacyColour(raw)))
+	end
+	if type(out.slimes) == "table" then
+		for _, slime in out.slimes do
+			rewrite(slime)
+		end
+	end
+	if type(out.eggs) == "table" then
+		for _, egg in out.eggs do
+			if type(egg) == "table" then
+				rewrite(egg.embryo)
+			end
+		end
+	end
+	return out
+end
 
 -- Runs the steps from `fromVersion` to `toVersion`, each found by its `from`, so the list may be in
 -- any order. Refuses data from a newer version instead of guessing at it.

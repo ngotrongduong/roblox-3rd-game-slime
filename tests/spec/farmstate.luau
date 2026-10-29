@@ -18,7 +18,6 @@ return function(T)
 			T.eq(s.assetId, "slime.base.navy")
 			T.same(s.stats, { attack = 1, defence = 1, speed = 1, hp = 10 })
 			T.same(s.colourGenotype, { alleles = { "navy", "navy" } })
-			T.same(s.patternGenotype, { alleles = { "solid", "solid" } })
 			T.eq(s.visibleColour, "navy")
 			T.same(s.appearanceMutation, { type = "none" })
 			T.eq(s.isFavourite, false)
@@ -121,7 +120,7 @@ return function(T)
 		local fixed = repaired.slimes[2]
 		T.eq(fixed.id, "slime-2")
 		T.same(fixed.stats, { attack = 1, defence = 1, speed = 1, hp = 10 })
-		T.same(fixed.colourGenotype, { alleles = { "navy", "blue" } })
+		T.same(fixed.colourGenotype, { alleles = { "navy", "navy" } })
 		T.eq(fixed.visibleColour, "navy")
 		T.same(fixed.needs, { hunger = 100, hungerState = "full" })
 		T.ok(#warnings >= 5)
@@ -131,7 +130,7 @@ return function(T)
 	T.test("repair recomputes derived values", function()
 		local farm = FarmState.newFarm(NOW)
 		farm.slimes[1].colourGenotype = { alleles = { "white", "black" } }
-		farm.slimes[1].visibleColour = "white"
+		farm.slimes[1].visibleColour = "black"
 		farm.slimes[2].needs = { hunger = 20, hungerState = "full" }
 		farm.slimes[3].needs = { hunger = -5, hungerState = "full" }
 		farm.upgrades.foodStorage = 2
@@ -146,14 +145,13 @@ return function(T)
 				embryo = {
 					stats = { attack = 1, defence = 1, speed = 1, hp = 10 },
 					colourGenotype = { alleles = { "red", "red" } },
-					patternGenotype = { alleles = { "solid", "solid" } },
 					appearanceMutation = { type = "none" },
 				},
 				status = "ready",
 			},
 		}
 		local r = FarmState.repair(farm, NOW)
-		T.eq(r.slimes[1].visibleColour, "black")
+		T.eq(r.slimes[1].visibleColour, "white")
 		T.eq(r.slimes[2].needs.hungerState, "hungry")
 		T.same(r.slimes[3].needs, { hunger = 0, hungerState = "starving" })
 		T.same(r.food, { basicFood = 300, capacity = 300 })
@@ -172,7 +170,6 @@ return function(T)
 			embryo = {
 				stats = { attack = 2.4, defence = 1, speed = 1, hp = 10 },
 				colourGenotype = { alleles = { "pink", "pink" } },
-				patternGenotype = "junk",
 				appearanceMutation = { type = "secret", definitionId = "secret-future" },
 			},
 		}
@@ -189,7 +186,6 @@ return function(T)
 		T.eq(e.id, "ok")
 		T.eq(e.hatchAt, NOW, "hatchAt before createdAt becomes createdAt")
 		T.eq(e.embryo.stats.attack, 2)
-		T.same(e.embryo.patternGenotype, { alleles = { "solid", "solid" } })
 		T.same(e.embryo.appearanceMutation, { type = "secret", definitionId = "secret-future" }, "unknown ids kept")
 		T.eq(#r.slimes, 4)
 	end)
@@ -212,7 +208,6 @@ return function(T)
 					embryo = {
 						stats = { attack = 1, defence = 1, speed = 1, hp = 10 },
 						colourGenotype = { alleles = { "red", "red" } },
-						patternGenotype = { alleles = { "solid", "solid" } },
 						appearanceMutation = { type = "material", definitionId = "jelly" },
 					},
 					status = "incubating",

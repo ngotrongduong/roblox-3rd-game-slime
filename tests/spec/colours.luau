@@ -9,16 +9,6 @@ return function(T)
 		)
 	end)
 
-	T.test("dominance and tie priority run 11 down to 1 and are unique", function()
-		local seen = {}
-		for i, c in Colours.List do
-			T.eq(c.dominance, 12 - i, c.id)
-			T.eq(c.tiePriority, 12 - i, c.id)
-			T.ok(not seen[c.tiePriority], "duplicate tie priority")
-			seen[c.tiePriority] = true
-		end
-	end)
-
 	T.test("names, assets and swatches", function()
 		local navy = Colours.get("navy")
 		T.ok(navy)

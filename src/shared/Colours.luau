@@ -1,43 +1,37 @@
 --!strict
--- The 11 base colours (docs/reference/01-core-farm.md §5.1). Higher dominance wins the phenotype;
--- tiePriority breaks ties (all unique, so the result is always deterministic). The list order is
--- the original BASE_COLOUR_IDS order, which the base-colour mutation pick depends on.
+-- The 11 base colours in stable pool order (docs/GAMEPLAY.md §1).
 
 local Colours = {}
 
 export type Colour = {
 	id: string,
 	name: string,
-	dominance: number,
-	tiePriority: number,
 	assetId: string,
 	swatch: string,
 }
 
-local function colour(id: string, name: string, dominance: number, swatch: string): Colour
+local function colour(id: string, name: string, swatch: string): Colour
 	return {
 		id = id,
 		name = name,
-		dominance = dominance,
-		tiePriority = dominance,
 		assetId = "slime.base." .. id,
 		swatch = swatch,
 	}
 end
 
--- The original marks this dominance order as temporary; it is data, so it can change here alone.
+-- Stable order for deterministic inheritance; there is no colour dominance.
 Colours.List = {
-	colour("black", "Black", 11, "#2b2b33"),
-	colour("gray", "Gray", 10, "#9aa0a8"),
-	colour("navy", "Navy", 9, "#1b4fd8"),
-	colour("purple", "Purple", 8, "#8a4fd0"),
-	colour("red", "Red", 7, "#d8402f"),
-	colour("orange", "Orange", 6, "#f08a24"),
-	colour("yellow", "Yellow", 5, "#f2d13d"),
-	colour("green", "Green", 4, "#54b848"),
-	colour("pink", "Pink", 3, "#f27fb6"),
-	colour("blue", "Blue", 2, "#3f9ff0"),
-	colour("white", "White", 1, "#f5f2ea"),
+	colour("black", "Black", "#2b2b33"),
+	colour("gray", "Gray", "#9aa0a8"),
+	colour("navy", "Navy", "#1b4fd8"),
+	colour("purple", "Purple", "#8a4fd0"),
+	colour("red", "Red", "#d8402f"),
+	colour("orange", "Orange", "#f08a24"),
+	colour("yellow", "Yellow", "#f2d13d"),
+	colour("green", "Green", "#54b848"),
+	colour("pink", "Pink", "#f27fb6"),
+	colour("blue", "Blue", "#3f9ff0"),
+	colour("white", "White", "#f5f2ea"),
 }
 
 -- Ids in list order.

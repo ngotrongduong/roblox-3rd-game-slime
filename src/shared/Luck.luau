@@ -1,19 +1,21 @@
 --!strict
 -- New-player luck (docs/reference/01-core-farm.md §4.7): once the tutorial is finished or
 -- skipped, the first window plays at ×5 luck and the next at ×3, then ×1. Luck multiplies the
--- secret, dual and stat-improvement chances (each capped); never the base-colour mutation or pity.
+-- secret, dual, material and stat-improvement chances; never Random or pity.
+-- Server events, a live potion and VIP multiply this boost (docs/GAMEPLAY.md §2).
 
 local Config = if script then require(script.Parent.Config) else require("./Config")
 
 local Luck = {}
 
--- Only the two fields luck reads, so any farm-shaped table fits.
+-- Only the fields luck reads, so any farm-shaped table fits.
 export type LuckFarm = {
 	tutorialDone: boolean?,
 	tutorialDoneAt: number?,
+	luckPotionUntil: number?,
 }
 
-function Luck.multiplier(farm: LuckFarm, now: number): number
+local function newPlayerMultiplier(farm: LuckFarm, now: number): number
 	local at = farm.tutorialDoneAt
 	if at == nil or at == 0 or farm.tutorialDone ~= true then
 		return 1
@@ -28,6 +30,11 @@ function Luck.multiplier(farm: LuckFarm, now: number): number
 		return Config.Luck.Second
 	end
 	return 1
+end
+
+function Luck.multiplier(farm: LuckFarm, now: number, serverBonus: number?): number
+	local potion = if farm.luckPotionUntil and farm.luckPotionUntil > now then Config.Luck.Potion else 1
+	return newPlayerMultiplier(farm, now) * (serverBonus or Config.Luck.ServerBonus) * potion * Config.Luck.Vip
 end
 
 -- Seconds left in the current boosted window; 0 when there is no boost.
