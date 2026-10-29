@@ -398,13 +398,14 @@ renderArea = function(area: string)
 					wrap.BackgroundTransparency = 1
 					wrap.Size = UDim2.fromOffset(C.UiButtonSize + C.UiPadding, C.UiButtonSize)
 					wrap.Parent = stats
-					icon(wrap, stat, C.HudIconSize)
 					local chooseStat = button(wrap, stat:sub(1, 3), function()
 						request({ action = "SetTrainingStat", slot = slot, stat = stat }, function()
 							say("Stat set.")
 						end)
 					end)
-					chooseStat.Position = UDim2.fromOffset(C.HudIconSize, 0)
+					chooseStat.Position = UDim2.fromOffset(0, 0)
+					chooseStat.TextXAlignment = Enum.TextXAlignment.Right
+					icon(chooseStat, stat, C.HudIconSize)
 				end
 			end
 		end
