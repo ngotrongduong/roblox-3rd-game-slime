@@ -280,6 +280,8 @@ function Breeding.createEgg(farm: Farm, idA: string, idB: string, now: number, r
 		},
 		status = "incubating",
 	}
+	-- The egg starts hatching in the nest at once, at the nest's slower rate (the owner, 2026-10-29).
+	egg.hatchAt = now + Breeding.nestSeconds(egg, farm.areas.breeding.level)
 	local occupied: { [number]: boolean } = {}
 	for _, e in farm.eggs do
 		if e.place == "nest" then
@@ -407,6 +409,29 @@ function Breeding.layEgg(farm: Farm, index: number, now: number, rng: Rng, newId
 	return result
 end
 
+-- An egg hatches in its nest too, but NestSlowFactor times slower than in an incubator (the owner, 2026-10-29):
+-- the whole time it takes in a nest.
+function Breeding.nestSeconds(egg: Egg, breedingLevel: number): number
+	return Breeding.incubationSeconds(Stats.level(egg.embryo.stats), breedingLevel) * Config.Breeding.NestSlowFactor
+end
+
+-- The hatch time of a nest egg moved into an incubator: the progress made is kept, the rest runs at the
+-- incubator's rate (an egg with no clock yet starts a full incubation).
+function Breeding.toIncubator(egg: Egg, now: number, breedingLevel: number): number
+	if egg.hatchAt == nil then
+		return now + Breeding.incubationSeconds(Stats.level(egg.embryo.stats), breedingLevel)
+	end
+	return now + math.max(0, egg.hatchAt - now) / Config.Breeding.NestSlowFactor
+end
+
+-- The hatch time of an incubator egg sent back to a nest (a save that lost incubators): the rest runs slower.
+function Breeding.toNest(egg: Egg, now: number, breedingLevel: number): number
+	if egg.hatchAt == nil then
+		return now + Breeding.nestSeconds(egg, breedingLevel)
+	end
+	return now + math.max(0, egg.hatchAt - now) * Config.Breeding.NestSlowFactor
+end
+
 function Breeding.placeInIncubator(farm: Farm, eggId: string, now: number, requestedSlot: number?): (boolean, string?)
 	local egg = FarmState.findEgg(farm, eggId)
 	if not egg then
@@ -431,7 +456,7 @@ function Breeding.placeInIncubator(farm: Farm, eggId: string, now: number, reque
 	for slot = 1, limit do
 		if not occupied[slot] and (requestedSlot == nil or slot == requestedSlot) then
 			egg.place, egg.slot = "incubator", slot
-			egg.hatchAt = now + Breeding.incubationSeconds(Stats.level(egg.embryo.stats), farm.areas.breeding.level)
+			egg.hatchAt = Breeding.toIncubator(egg, now, farm.areas.breeding.level)
 			egg.status = FarmState.eggStatus(egg, now)
 			return true, nil
 		end

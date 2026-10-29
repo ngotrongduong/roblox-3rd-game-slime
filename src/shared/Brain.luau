@@ -23,6 +23,7 @@ export type Spot = {
 	fx: number?,
 	fy: number?,
 	fz: number?,
+	guessed: boolean?,
 }
 export type Context = {
 	spots: { [string]: Spot }?,
@@ -92,6 +93,26 @@ local function eligible(farm: Farm, slimeId: string, now: number): boolean
 	return s ~= nil and not (s.ghostUntil ~= nil and s.ghostUntil > now)
 end
 
+-- The first free incubator not claimed by a courier (the shared placer fills the first free slot).
+function Brain.freeIncubator(farm: Farm, ctx: Context): number?
+	for slot = 1, FarmState.breedingCount(farm.areas.breeding.level) do
+		local occupied = false
+		for _, egg in farm.eggs do
+			if egg.place == "incubator" and egg.slot == slot then
+				occupied = true
+				break
+			end
+		end
+		if not occupied then
+			if ctx.reserved and ctx.reserved["incubator:" .. slot] then
+				return nil
+			end
+			return slot
+		end
+	end
+	return nil
+end
+
 function Brain.choose(farm: Farm, slimeId: string, ctx: Context, now: number, rng: Rng): Action
 	local slime = FarmState.findSlime(farm, slimeId)
 	if not slime or (slime.ghostUntil and slime.ghostUntil > now) then
@@ -100,6 +121,23 @@ function Brain.choose(farm: Farm, slimeId: string, ctx: Context, now: number, rn
 	-- Babies remain in the nursery; only an accompanying adult can take them outside.
 	if not adult(farm, slime, now) then
 		return make("nursery", "nursery", "curious")
+	end
+	-- A parent takes its pair's new egg to a free incubator at once, before resting (the owner, 2026-10-29).
+	-- The reservation on the egg sends only one of the two.
+	if not slime.sleeping then
+		local slot = Brain.freeIncubator(farm, ctx)
+		if slot then
+			for _, egg in farm.eggs do
+				if egg.place == "nest" and (egg.parentIds[1] == slimeId or egg.parentIds[2] == slimeId) then
+					local a = make("carryEgg", "incubator:" .. tostring(slot), "proud")
+					a.eggId = egg.id
+					a.source = "nest:" .. tostring(egg.slot)
+					if unclaimed(ctx, slimeId, a) then
+						return a
+					end
+				end
+			end
+		end
 	end
 	if slime.sleeping or Needs.isTired(slime.needs) then
 		return make("sleep", "nap", "sleepy")

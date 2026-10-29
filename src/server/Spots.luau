@@ -15,6 +15,8 @@ export type Spot = {
 	fx: number?,
 	fy: number?,
 	fz: number?,
+	-- true when no marker or model was found and the place is only a guess (no carry prompt stands there)
+	guessed: boolean?,
 }
 local Spots = {}
 
@@ -290,6 +292,10 @@ function Spots.build(plotNumber: number, plot: Instance?): { [string]: Spot }
 			position = outside(container, position, frames.plaza)
 		end
 		result[id] = plain(id, area, position :: Vector3)
+		if not marked and not modelPosition then
+			-- (no marker or model: a guess at the area's middle; nothing is built there to carry to)
+			result[id].guessed = true
+		end
 	end
 
 	local models: { [string]: Instance } = {}

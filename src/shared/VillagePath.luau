@@ -12,6 +12,7 @@ export type Point = {
 	fx: number?,
 	fy: number?,
 	fz: number?,
+	guessed: boolean?,
 }
 
 local function distance(a: Point, b: Point): number

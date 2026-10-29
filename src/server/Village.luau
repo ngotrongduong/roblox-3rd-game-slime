@@ -1097,6 +1097,30 @@ local function gardenKit(): Instance?
 	return kit or (if bundle then bundle:FindFirstChild("CropKit") else nil)
 end
 
+-- The top of a bed's soil under a crop marker (nil when nothing is found; the crop then keeps its height).
+local function soilUnder(position: Vector3, crops: Instance): number?
+	local params = RaycastParams.new()
+	params.FilterType = Enum.RaycastFilterType.Exclude
+	params.FilterDescendantsInstances = { crops }
+	params.RespectCanCollide = true
+	local hit = workspace:Raycast(
+		position + Vector3.new(0, Config.Work.GardenSoilProbeUp, 0),
+		Vector3.new(0, -(Config.Work.GardenSoilProbeUp + Config.Work.GardenSoilProbeDown), 0),
+		params
+	)
+	return if hit then hit.Position.Y else nil
+end
+
+-- Stand a crop stage model with its lowest point a hair inside the soil, whatever its size.
+local function seatCrop(model: Model, soil: number?)
+	if not soil then
+		return
+	end
+	local box, size = model:GetBoundingBox()
+	local bottom = box.Position.Y - size.Y / 2
+	model:PivotTo(model:GetPivot() + Vector3.new(0, soil - Config.Work.GardenCropSink - bottom, 0))
+end
+
 local function syncGarden(session: Session, farm: Farm)
 	if session.root:GetAttribute("Plot") ~= Config.Village.DevPlot then
 		return
@@ -1155,7 +1179,10 @@ local function syncGarden(session: Session, farm: Farm)
 				local fullScale = model:GetScale()
 				-- CropPlot markers are built at the original crop pivot, not at soil height.
 				model:PivotTo(CFrame.new(marker.Position + Vector3.new(0, Config.Work.GardenCropLift, 0)))
+				-- The soil under the plant, found once (the owner, 2026-10-29: the vegetables floated over the beds).
+				local soil = soilUnder(marker.Position, crops)
 				model:ScaleTo(fullScale * Config.Work.GardenCropScaleStart)
+				seatCrop(model, soil)
 				model.Parent = crops
 				task.spawn(function()
 					for step = 1, Config.Work.GardenCropGrowSteps do
@@ -1167,6 +1194,7 @@ local function syncGarden(session: Session, farm: Farm)
 							fullScale
 								* (Config.Work.GardenCropScaleStart + (1 - Config.Work.GardenCropScaleStart) * fraction)
 						)
+						seatCrop(model, soil)
 						task.wait(Config.Work.GardenCropGrowStepSeconds)
 					end
 				end)
@@ -1614,6 +1642,11 @@ local LABELS: { [string]: string } = {
 }
 local function setupCarry(player: Player, session: Session)
 	for _, spot in session.spots do
+		-- No prompt at a guessed place (an incubator not built yet stood by the nests) nor at the storehouse
+		-- (the owner, 2026-10-29: "remove the Storehouse Pick up button").
+		if spot.guessed or spot.id == "storehouse" then
+			continue
+		end
 		if VillageCarry.pickupSources(spot.id) or spot.id == "fridge" or string.match(spot.id, "^incubator:%d+$") then
 			local anchor = Instance.new("Part")
 			anchor.Name = "CarrySpot_" .. spot.id

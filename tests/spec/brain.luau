@@ -177,6 +177,22 @@ return function(T)
 		local second = Brain.choose(farm, "slime-4", { nearby = {}, reserved = locked }, NOW, Rng.new(1))
 		T.ok(second.kind ~= "carryEgg")
 	end)
+	T.test("a parent carries its new egg to a free incubator before resting; only one parent goes", function()
+		local farm = FarmKit.farm(NOW)
+		local made = Breeding.createEgg(farm, "slime-1", "slime-2", NOW, Rng.new(1), FarmKit.ids())
+		T.ok(made.ok)
+		local laid = made.farm
+		laid.slimes[1].needs.energy = Config.Needs.Tired -- tired after laying: still carries first
+		local first = Brain.choose(laid, "slime-1", CTX, NOW, Rng.new(1))
+		T.eq(first.kind, "carryEgg")
+		T.eq(first.eggId, laid.eggs[1].id)
+		local reserved = {}
+		for _, key in Brain.reservationKeys(first) do
+			reserved[key] = "slime-1"
+		end
+		local second = Brain.choose(laid, "slime-2", { nearby = {}, reserved = reserved }, NOW, Rng.new(1))
+		T.ok(second.kind ~= "carryEgg", "the other parent does something else")
+	end)
 	T.test("a pair resting after laying hauls, then courts again when ready", function()
 		local farm = FarmKit.farm(NOW)
 		farm.breeding.pairs = { { a = "slime-1", b = "slime-2" } }

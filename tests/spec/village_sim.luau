@@ -101,4 +101,39 @@ return function(T)
 		T.eq(loaded.data.areas.breeding.level, 1)
 		T.eq(loaded.data.work.fishing.slots[1].progress, 0)
 	end)
+	T.test(
+		"an old nest egg without a clock starts at the nest rate; offline, a nest egg hatches in its nest",
+		function()
+			local farm = FarmKit.farm(NOW)
+			local made = Breeding.createEgg(farm, "slime-1", "slime-2", NOW, Rng.new(1), FarmKit.ids())
+			T.ok(made.ok)
+			local old = made.farm
+			old.eggs[1].hatchAt = nil -- saved before the nest rule
+			-- no incubator in reach: the breeding area keeps none free
+			local nestTime = Breeding.nestSeconds(old.eggs[1], old.areas.breeding.level)
+			local started = VillageSim.step(old, NOW + 10, 0, Rng.new(1), { errands = false })
+			T.eq(started.eggs[1].hatchAt, NOW + 10 + nestTime)
+			T.eq(started.eggs[1].place, "nest")
+			local after, events = VillageSim.step(started, NOW + 10 + nestTime, 0, Rng.new(1), { errands = false })
+			T.eq(#after.eggs, 0, "it hatched in the nest")
+			local hatched = false
+			for _, e in events do
+				hatched = hatched or e.kind == "hatched"
+			end
+			T.ok(hatched)
+		end
+	)
+	T.test("offline errands move a nest egg into a free incubator, keeping its progress", function()
+		local farm = FarmKit.farm(NOW)
+		local made = Breeding.createEgg(farm, "slime-1", "slime-2", NOW, Rng.new(1), FarmKit.ids())
+		local egg = made.farm.eggs[1]
+		local full = Breeding.nestSeconds(egg, made.farm.areas.breeding.level) / Config.Breeding.NestSlowFactor
+		local after = VillageSim.catchUp(made.farm, NOW, NOW + Config.Village.StepSeconds, Rng.new(1))
+		local moved = after.eggs[1]
+		if moved then
+			T.eq(moved.place, "incubator")
+			-- faster than staying in the nest, never faster than a full incubation from laying
+			T.ok(moved.hatchAt < NOW + full * Config.Breeding.NestSlowFactor and moved.hatchAt >= NOW + full)
+		end
+	end)
 end

@@ -942,6 +942,12 @@ task.spawn(function()
 				elseif model.Parent ~= renderFolder then
 					model.Parent = renderFolder
 				end
+				-- A nest egg is drawn larger (the owner, 2026-10-29: "too small, make it 3x"); an incubator egg keeps
+				-- the size that fits under the dome.
+				local size = if stringAttr(egg, "Place", "nest") == "nest" then C.NestEggScale else 1
+				if math.abs(model:GetScale() - size) > 1e-3 then
+					model:ScaleTo(size)
+				end
 				local position = restEgg(model, eggPosition(village, egg :: Configuration))
 				if not camera or (camera.CFrame.Position - position).Magnitude <= C.MaxDrawDistance then
 					local hatchAt = number(egg, "HatchAt", 0)

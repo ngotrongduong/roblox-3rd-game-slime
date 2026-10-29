@@ -241,6 +241,14 @@ end
 function VillageSim.step(input: Farm, now: number, seconds: number, rng: Rng, opts: Options): (Farm, { Event })
 	local farm: Farm = (ProfileLogic.deepCopy(input) :: any) :: Farm
 	local events: { Event } = {}
+	-- An egg in a nest hatches there too, slower (the owner, 2026-10-29); one saved before that rule has no
+	-- clock yet and starts now, at the nest's rate.
+	for _, egg in farm.eggs do
+		if egg.place == "nest" and egg.hatchAt == nil then
+			egg.hatchAt = now + Breeding.nestSeconds(egg, farm.areas.breeding.level)
+			egg.status = FarmState.eggStatus(egg, now)
+		end
+	end
 	local duration = math.max(0, seconds)
 	local active: { [string]: boolean } = {}
 	for _, areaId in Config.Work.Areas do

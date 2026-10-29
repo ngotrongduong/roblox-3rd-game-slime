@@ -29,6 +29,8 @@ Config.Stats = {
 Config.Breeding = {
 	-- Incubation: max(Min, Base - min(MaxLevel, upgradeLevel) * Step) → 60 s, 35 s at level 5.
 	IncubationSeconds = 60,
+	-- An egg left in its nest hatches too, this many times slower than in an incubator (the owner, 2026-10-29).
+	NestSlowFactor = 2,
 	IncubationStepSeconds = 5,
 	IncubationMinSeconds = 5,
 	IncubationMaxLevel = 5,
@@ -409,6 +411,11 @@ Config.Work = {
 	GardenCropGrowSteps = 5,
 	GardenCropGrowStepSeconds = 0.06,
 	GardenCropLift = 0.2,
+	-- A crop stands on its bed: the soil is found by a ray from GardenSoilProbeUp above the marker down
+	-- GardenSoilProbeDown below it, and the crop's lowest point goes GardenCropSink into it.
+	GardenSoilProbeUp = 1.5,
+	GardenSoilProbeDown = 4,
+	GardenCropSink = 0.05,
 	WorkToolOffset = 0.55,
 	WorkRodTiltDegrees = 26,
 	WorkHoeTiltDegrees = 40,
@@ -446,12 +453,14 @@ Config.Pads = {
 	CheckSeconds = 0.1,
 	-- where each pad stands: x, z in the area's own frame, beside the path near the entrance
 	Spots = {
-		fishing = { -8.5, -17 },
-		garden = { 8, -13.5 },
-		pantry = { 6.5, -13.5 },
-		kitchen = { 6.5, -12.5 },
-		training = { 6.5, -15.5 },
-		breeding = { 9, -17.5 },
+		-- (moved clear of props and off the paths, the owner 2026-10-29: the garden pad overlapped a bench;
+		-- checked at levels 1, 21 and 41 with tools/map/probe_pads.luau)
+		fishing = { -8.5, -17.5 },
+		garden = { 8, -17.5 },
+		pantry = { 7, -14.5 },
+		kitchen = { 6.5, -13.5 },
+		training = { 6.5, -17.5 },
+		breeding = { 13, -19.5 },
 	},
 }
 
@@ -866,6 +875,8 @@ Config.VillageClient = {
 	EggRestProbeUp = 1.2,
 	EggRestProbeDown = 3,
 	EggRestLift = 0.02,
+	-- a nest egg is drawn this many times its kit size (incubator eggs stay 1: they fit the dome)
+	NestEggScale = 3,
 	CarryHeight = 1.1,
 	CarryScale = 0.42,
 	SleepBillboardPixels = 32,

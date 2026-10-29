@@ -250,12 +250,12 @@ function FarmState.emptyDiscoveries(): Discoveries
 	return { base = {}, dual = {}, secret = {}, material = {} }
 end
 
--- An egg in a nest has no incubation clock.
+-- A nest egg hatches too, at the nest's slower rate (Breeding.nestSeconds); "nest" until it is ready.
 function FarmState.eggStatus(egg: Egg, now: number): string
-	if egg.place ~= "incubator" or egg.hatchAt == nil then
-		return "nest"
+	if egg.hatchAt ~= nil and now >= egg.hatchAt then
+		return "ready"
 	end
-	return if now >= egg.hatchAt then "ready" else "incubating"
+	return if egg.place == "incubator" and egg.hatchAt ~= nil then "incubating" else "nest"
 end
 
 function FarmState.villageLevel(areas: Areas): number
@@ -597,7 +597,9 @@ local function validateEgg(raw: any, now: number, warnings: { string }): Egg?
 		table.insert(warnings, "egg " .. id .. ": unknown " .. appearance.type .. " design kept (placeholder art)")
 	end
 	-- Never restart or extend the timer.
-	local hatchAt = if place == "incubator" then math.max(raw.hatchAt, raw.createdAt) else nil
+	-- (a nest egg keeps its clock too: it hatches in the nest, slower; one without a clock gets one from the
+	-- village simulation, which starts it at the nest rate)
+	local hatchAt = if isNum(raw.hatchAt) and raw.hatchAt > 0 then math.max(raw.hatchAt, raw.createdAt) else nil
 	local egg: Egg = {
 		id = id,
 		parentIds = { parents[1], parents[2] },
@@ -1023,7 +1025,10 @@ function FarmState.repair(data: any, now: number): (Farm, { string }, boolean)
 					egg.slot = free
 				else
 					egg.place = "nest"
-					egg.hatchAt = nil
+					-- (back in a nest, the rest of its time runs at the nest's slower rate)
+					if egg.hatchAt then
+						egg.hatchAt = now + math.max(0, egg.hatchAt - now) * Config.Breeding.NestSlowFactor
+					end
 				end
 			end
 			if egg.place == "incubator" then

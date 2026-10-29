@@ -115,8 +115,8 @@ function Hatching.nextReadyEgg(farm: Farm, now: number): Egg?
 	local best: Egg? = nil
 	for _, egg in farm.eggs do
 		if
-			egg.place == "incubator"
-			and egg.hatchAt ~= nil
+			-- (a nest egg hatches too, later: Breeding.nestSeconds)
+			egg.hatchAt ~= nil
 			and now >= egg.hatchAt
 			and (best == nil or egg.createdAt < best.createdAt)
 		then
@@ -159,7 +159,7 @@ function Hatching.hatch(farm: Farm, eggId: string, now: number): HatchResult
 	if egg == nil or index == nil then
 		return { ok = false, reason = "MISSING_EGG", farm = farm }
 	end
-	if egg.place ~= "incubator" or egg.hatchAt == nil or now < egg.hatchAt then
+	if egg.hatchAt == nil or now < egg.hatchAt then
 		return { ok = false, reason = "NOT_READY", farm = farm }
 	end
 	local slime = Hatching.babyFromEgg(farm, egg, now)

@@ -133,9 +133,12 @@ playing). Nothing dies of hunger and no stat is ever lost to hunger.
    the room (hearts) for `CourtshipSeconds` (60), then go to a nest together and **lay one egg**. The baby is decided
    at that moment (§1, §3).
 4. The egg **looks like a plain egg** until it hatches (the client is never told the embryo).
-5. The egg **waits in the nest unincubated** until an idle slime **carries it to a free incubator**; incubation starts
-   then: `IncubationSeconds + (babyLevel - 4) × IncubationPerLevel` (60 s + 1 s a level), shortened by the breeding
-   area's level.
+5. Incubation takes `IncubationSeconds + (babyLevel - 4) × IncubationPerLevel` (60 s + 1 s a level), shortened by
+   the breeding area's level. The owner's rule (2026-10-29): right after laying, **one of the two parents carries the
+   egg to a free incubator** (before resting). If none is free, the egg **stays in the nest and hatches there too,
+   `NestSlowFactor` (2) times slower**; an idle slime moves it as soon as an incubator frees up. The clock runs from
+   the moment the egg is laid: moved into an incubator, it keeps the progress made and runs the rest at full speed.
+   (A nest egg saved before this rule starts its nest clock when the save is loaded.)
 6. Parents rest after laying (the original's cooldown formula) and lose energy; then come back by themselves.
 7. Hatching (the reveal by rarity comes later) → the baby lives in the **nursery inside the breeding area** and grows
    up (the existing growth formula, ~5 min). Adults bring it food, play with it, and sometimes take it for a walk
