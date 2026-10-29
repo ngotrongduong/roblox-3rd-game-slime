@@ -23,6 +23,7 @@ local busy = false
 local activeArea: string? = nil
 local picking = false
 local refreshPending = false
+local pickerState: { area: string, choose: (string) -> (), permitWorking: boolean }? = nil
 local rootConnections: { RBXScriptConnection } = {}
 local slimeConnections: { [Instance]: RBXScriptConnection } = {}
 local pickedFirst: string? = nil
@@ -270,6 +271,7 @@ end
 local function close()
 	activePoint, pickedFirst, activeArea = nil, nil, nil
 	picking = false
+	pickerState = nil
 	if sheet then
 		sheet.Visible = false
 	end
@@ -279,6 +281,7 @@ local renderArea: (string) -> () = function(_area) end
 
 local function picker(area: string, choose: (string) -> (), permitWorking: boolean)
 	picking = true
+	pickerState = { area = area, choose = choose, permitWorking = permitWorking }
 	local scroller = frameContent()
 	if not scroller then
 		return
@@ -320,6 +323,7 @@ end
 
 renderArea = function(area: string)
 	picking = false
+	pickerState = nil
 	local scroller = frameContent()
 	if not scroller then
 		return
@@ -478,6 +482,32 @@ local function open(area: string, position: Vector3)
 	renderArea(area)
 end
 
+-- Replicated changes are coalesced; keep the scroll position and current picker step.
+local function refreshSheet()
+	if not sheet or not sheet.Visible or not activeArea or refreshPending then
+		return
+	end
+	refreshPending = true
+	task.delay(C.FarUpdateSeconds, function()
+		refreshPending = false
+		if not sheet or not sheet.Visible or not activeArea then
+			return
+		end
+		local before = sheet:FindFirstChild("Content")
+		local offset = if before and before:IsA("ScrollingFrame") then before.CanvasPosition else Vector2.zero
+		local state = pickerState
+		if picking and state then
+			picker(state.area, state.choose, state.permitWorking)
+		else
+			renderArea(activeArea)
+		end
+		local after = sheet:FindFirstChild("Content")
+		if after and after:IsA("ScrollingFrame") then
+			after.CanvasPosition = offset
+		end
+	end)
+end
+
 local resources = { "coins", "fish", "carrot", "cabbage", "grilledFish", "veggieStew", "fishVegSoup", "slimes" }
 
 local function refreshHud()
@@ -591,25 +621,62 @@ local function createPrompts(root: Folder)
 	end
 end
 
+local function watchSlime(inst: Instance)
+	if inst:IsA("Configuration") and not slimeConnections[inst] then
+		slimeConnections[inst] = inst.AttributeChanged:Connect(refreshSheet)
+		refreshSheet()
+	end
+end
+
+local function watchFolder(root: Folder)
+	local folder = root:FindFirstChild("Slimes")
+	if not folder or not folder:IsA("Folder") then
+		return
+	end
+	for _, inst in folder:GetChildren() do
+		watchSlime(inst)
+	end
+	table.insert(rootConnections, folder.ChildAdded:Connect(watchSlime))
+	table.insert(rootConnections, folder.ChildRemoved:Connect(function(inst)
+		local connection = slimeConnections[inst]
+		if connection then
+			connection:Disconnect()
+			slimeConnections[inst] = nil
+		end
+		refreshSheet()
+	end))
+end
+
 local function bind(root: Folder?)
 	for _, prompt in prompts do
 		prompt:Destroy()
 	end
 	table.clear(prompts)
 	table.clear(promptAreas)
-	local previous = own
-	own = root
-	if root and previous ~= root then
-		-- The folder replicates before the Plot attribute on a fresh join.
-		root:GetAttributeChangedSignal("Plot"):Connect(function()
-			if own == root then
-				bind(root)
-			end
-		end)
+	for _, conn in rootConnections do
+		conn:Disconnect()
 	end
+	table.clear(rootConnections)
+	for _, conn in slimeConnections do
+		conn:Disconnect()
+	end
+	table.clear(slimeConnections)
+	own = root
 	close()
 	refreshHud()
-	if not root or type(root:GetAttribute("Plot")) ~= "number" or (root:GetAttribute("Plot") :: number) < 1 then
+	if not root then
+		if hud then
+			hud.Visible = false
+		end
+		return
+	end
+	-- The folder can arrive before its Plot attribute and Slimes folder.
+	table.insert(rootConnections, root:GetAttributeChangedSignal("Plot"):Connect(function()
+		if own == root then
+			bind(root)
+		end
+	end))
+	if type(root:GetAttribute("Plot")) ~= "number" or (root:GetAttribute("Plot") :: number) < 1 then
 		if hud then
 			hud.Visible = false
 		end
@@ -619,12 +686,22 @@ local function bind(root: Folder?)
 		hud.Visible = true
 	end
 	for _, attribute in { "Coins", "Storehouse", "Fridge", "Population", "Limit" } do
-		root:GetAttributeChangedSignal(attribute):Connect(function()
+		table.insert(rootConnections, root:GetAttributeChangedSignal(attribute):Connect(function()
 			if own == root then
 				refreshHud()
 			end
-		end)
+		end))
 	end
+	for _, attribute in { "Work", "Pairs", "Areas", "Box" } do
+		table.insert(rootConnections, root:GetAttributeChangedSignal(attribute):Connect(refreshSheet))
+	end
+	watchFolder(root)
+	table.insert(rootConnections, root.ChildAdded:Connect(function(child)
+		if child.Name == "Slimes" then
+			watchFolder(root)
+			refreshSheet()
+		end
+	end))
 	createPrompts(root)
 end
 
