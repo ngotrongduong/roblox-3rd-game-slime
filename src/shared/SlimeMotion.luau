@@ -36,6 +36,7 @@ export type State = {
 	evT: number, -- countdown a motion uses for its recurring events
 	landed: boolean, -- set on touchdown; the caller clears it
 	launched: boolean,
+	walking: boolean,
 }
 
 export type Ctx = {
@@ -85,6 +86,7 @@ function SlimeMotion.new(seed: number?): State
 		evT = unitFrom(sd, 3) * 2,
 		landed = false,
 		launched = false,
+		walking = false,
 	}
 end
 
@@ -146,7 +148,7 @@ local function every(st: State, dt: number, seconds: number, jitter: number): bo
 end
 
 local function hopLoop(st: State, dt: number, seconds: number, h: number, jitter: number)
-	if st.hop == nil and st.y == 0 and every(st, dt, seconds, jitter) then
+	if not st.walking and st.hop == nil and st.y == 0 and every(st, dt, seconds, jitter) then
 		st.hopCount += 1
 		SlimeMotion.hop(st, h)
 	end
@@ -224,7 +226,7 @@ drivers.angry = function(st, dt)
 	st.pf.to = 0.11 * env
 	st.sq.to = -0.05 * env + 0.012 * math.sin(TAU * 23 * st.t)
 	st.ls.to = 0.02 * env * math.sin(TAU * 19 * st.t)
-	if st.hop == nil and st.y == 0 and every(st, dt, 1.9, 0) then
+	if not st.walking and st.hop == nil and st.y == 0 and every(st, dt, 1.9, 0) then
 		SlimeMotion.hop(st, 0.07, true)
 	end
 end
