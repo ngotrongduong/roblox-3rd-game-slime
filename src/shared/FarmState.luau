@@ -84,8 +84,8 @@ export type Areas = {
 	breeding: Area,
 }
 export type WorkSlot = { worker: string?, reserve: string?, progress: number, stat: string?, plot: number?, task: string?, pending: string? }
-export type WorkArea = { slots: { WorkSlot }, box: { [string]: number }, plots: typeof(GardenPlots.new(1))? }
-export type GardenWorkArea = WorkArea & { plots: typeof(GardenPlots.new(1)) }
+export type WorkArea = { slots: { WorkSlot }, box: { [string]: number } }
+export type GardenWorkArea = { slots: { WorkSlot }, box: { [string]: number }, plots: typeof(GardenPlots.new(1)) }
 export type Work = {
 	fishing: WorkArea,
 	garden: GardenWorkArea,
@@ -685,7 +685,7 @@ local function validateWork(raw: any, areas: Areas, slimes: { Slime }, now: numb
 	end
 	for _, id in Config.Work.Areas do
 		local w = if type(raw) == "table" then raw[id] else nil
-		local area = (out :: any)[id] :: WorkArea
+		local area = (out :: any)[id] :: (WorkArea & { plots: typeof(GardenPlots.new(1))? })
 		if id == "garden" then
 			local rawPlots = if type(w) == "table" then w.plots else nil
 			local count = Config.Work.GardenPlotCount

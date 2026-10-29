@@ -92,7 +92,8 @@ local function doWork(
 						if Food.add(workArea.box, crop, 1, Config.Work.BoxCapacity) == 0 then
 							slot.pending = crop
 						end
-						table.insert(events, { kind = "collected", area = "garden", item = crop, plot = slot.plot })
+						local event: Event = { kind = "collected", area = "garden", item = crop, plot = slot.plot }
+					table.insert(events, event)
 					end
 					slot.task, slot.plot = nil, nil
 				else
@@ -144,14 +145,16 @@ local function doWork(
 						-- A live chore is recorded now but changes the crop only after its visible action.
 						slot.plot, slot.task = index, action
 						reservedPlots[index] = true
-						table.insert(events, { kind = "gardenAction", area = "garden", slimeId = worker.id, plot = index, phase = action })
+						local event: Event = { kind = "gardenAction", area = "garden", slimeId = worker.id, plot = index, phase = action }
+						table.insert(events, event)
 					else
 						local crop = GardenPlots.apply(plots, index, action, rng:next() < Config.Work.GardenCarrotChance)
 						if crop then
 							Food.add(workArea.box, crop, 1, Config.Work.BoxCapacity)
 							table.insert(events, { kind = "collected", area = "garden", item = crop, slimeId = worker.id, plot = index })
 						else
-							table.insert(events, { kind = "gardenAction", area = "garden", slimeId = worker.id, plot = index, phase = action })
+							local event: Event = { kind = "gardenAction", area = "garden", slimeId = worker.id, plot = index, phase = action }
+						table.insert(events, event)
 						end
 					end
 					progress -= actionSeconds

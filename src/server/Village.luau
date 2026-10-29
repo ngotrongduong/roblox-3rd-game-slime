@@ -846,10 +846,10 @@ local function workTravel(session: Session, actor: Actor, target: Spot, speed: n
 		-- A marker directly beneath a worker needs no walking leg, but still starts its work timer.
 		if actor.workPhase == "walk" then
 			actor.workPhase = actor.workTask
-			actor.workStart, actor.workEnd = clock, clock + Config.Work.WorkDropSeconds
+			actor.workStart, actor.workEnd = clock, clock + Config.Work.WorkDropSeconds * workFactor
 		elseif actor.workPhase == "carry" then
 			actor.workPhase = "drop"
-			actor.workStart, actor.workEnd = clock, clock + Config.Work.WorkDropSeconds
+			actor.workStart, actor.workEnd = clock, clock + Config.Work.WorkDropSeconds * workFactor
 		elseif actor.workPhase == "return" then
 			actor.workPhase, actor.workTask, actor.workItem, actor.workPlot = nil, nil, nil, nil
 			actor.workEnd = nil
@@ -872,8 +872,8 @@ local function syncGarden(session: Session, farm: Farm)
 	local plot = if map then map:FindFirstChild("Plot" .. Config.Village.DevPlot) else nil
 	local garden = if plot then plot:FindFirstChild("GardenL1") else nil
 	local stage = if garden then garden:FindFirstChild("AreaStage") else nil
-	local plots = farm.work.garden.plots
-	if not garden or not stage or not plots then
+	local plots: typeof(GardenPlots.new(1)) = farm.work.garden.plots
+	if not garden or not stage then
 		return
 	end
 	-- Farm data is never changed here; any expansion is done inside PlayerData.update.

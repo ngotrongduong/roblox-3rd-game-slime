@@ -117,8 +117,8 @@ return function(T)
 		T.eq(result.isNew, false)
 	end)
 
-	T.test("a version 1 save migrates all steps to version 4 and keeps its collection", function()
-		T.eq(Config.Save.SchemaVersion, 4)
+	T.test("a version 1 save migrates all steps to version 5 and keeps its collection", function()
+		T.eq(Config.Save.SchemaVersion, 5)
 		local farm = FarmState.newFarm(1000)
 		farm.coins = 4321
 		farm.discoveries.dual["dual-green-white-01"] = { firstDiscoveredAt = 5, hatchCount = 3 }
