@@ -153,8 +153,14 @@ local function doWork(
 							Food.add(workArea.box, crop, 1, Config.Work.BoxCapacity)
 							table.insert(events, { kind = "collected", area = "garden", item = crop, slimeId = worker.id, plot = index })
 						else
-							local event: Event = { kind = "gardenAction", area = "garden", slimeId = worker.id, plot = index, phase = action }
-						table.insert(events, event)
+							local event: Event = {
+								kind = "gardenAction",
+								area = "garden",
+								slimeId = worker.id,
+								plot = index,
+								phase = action,
+							}
+							table.insert(events, event)
 						end
 					end
 					progress -= actionSeconds
