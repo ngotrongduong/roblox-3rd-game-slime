@@ -2,7 +2,16 @@
 -- Pure path cleanup and hop clock shared by server routes and client presentation.
 local Config = if script then require(script.Parent.Config) else require("./Config")
 local VillagePath = {}
-export type Point = { id: string, area: string, x: number, y: number, z: number }
+export type Point = {
+	id: string,
+	area: string,
+	x: number,
+	y: number,
+	z: number,
+	fx: number?,
+	fy: number?,
+	fz: number?,
+}
 
 local function distance(a: Point, b: Point): number
 	local dx, dy, dz = b.x - a.x, b.y - a.y, b.z - a.z

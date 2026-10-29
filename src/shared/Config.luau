@@ -231,7 +231,8 @@ Config.Village = {
 		Nap = { "CampfireSeat", "Bench", "Seat" },
 		Fountain = { "Fountain", "VillageFountain", "Well" },
 		Flowers = { "FlowerBed", "Planter", "Flowers" },
-		Pond = { "PondEdge", "WorkSpot1", "Dock" },
+		-- (not a fishing place: a watcher must not stand where the fisher casts)
+		Pond = { "PondEdge", "Dock" },
 		Campfire = { "Campfire", "FirePit" },
 	},
 	SpotSearchStuds = 30,
@@ -242,6 +243,40 @@ Config.Village = {
 	SpotFridgeOffsetX = 4,
 	SpotBoxOffsetX = -4,
 	SpotNapOffset = 5,
+	-- Standing on the ground (the owner, 2026-10-29: "slimes have collision and do not go through objects").
+	-- A ray looks for the ground from GroundProbeUp above a point down to GroundProbeDown below it.
+	GroundProbeUp = 3,
+	GroundProbeDown = 8,
+	-- (a ball, not a thin ray: a ray falls through the gaps between dock planks into the water)
+	GroundProbeRadius = 0.6,
+	-- A path waypoint looks for the floor from this little above itself (never from above a roof).
+	PathGroundProbe = 0.5,
+	-- The box a standing slime needs (a grown slime is about 3 studs high and wide); it starts SpotClearLift
+	-- above the feet so a kerb or a plank edge does not count as a wall.
+	SpotClearWidth = 2.6,
+	SpotClearHeight = 2.2,
+	SpotClearLift = 0.5,
+	-- A standing place may be at most this much higher than the spot it came from (no slime on a log or a lid).
+	SpotMaxRise = 0.6,
+	-- A spread or a step short of a partner may be at most this much lower than the spot it spreads from.
+	SpotMaxDrop = 1,
+	-- A spot inside a model moves out in rings this far apart, up to this many rings.
+	SpotSettleStep = 1,
+	SpotSettleRings = 14,
+	SpotSettleMinAngles = 8,
+	SpotSettleAnglesPerRing = 6,
+	-- A spot moved further than this faces the thing it was moved out of.
+	SpotFacePull = 0.5,
+	-- From the middle of a bin to the slime that tosses fish or vegetables into it (a bin is about 3 studs
+	-- wide, a slime too: this leaves a step of about one and a half studs between them).
+	BinStandStuds = 4.5,
+	-- A gardener stands this far from the middle of the plant it tends.
+	CropStandStuds = 2.2,
+	-- Taking from a bin or a stand, and tossing into a bin (seconds; the item flies in an arc).
+	TakeSeconds = 0.9,
+	TossSeconds = 0.8,
+	-- An item tossed flies this high above the straight line between the slime and the bin.
+	TossArcStuds = 2.5,
 }
 
 -- Slimes choose a destination rather than receiving instantaneous food/energy effects.
@@ -612,6 +647,45 @@ Config.VillageClient = {
 	SeparationMaxStuds = 0.65,
 	SeparationSmoothSeconds = 0.15,
 	CarryTopOffset = 0.1,
+	-- Feet on the ground: the client measures the ground again after the slime moved this far.
+	GroundRecastStuds = 0.25,
+	GroundProbeUp = 2.5,
+	GroundProbeDown = 6,
+	GroundProbeRadius = 0.6,
+	-- A tossed or taken item meets the bin this high above the bin's foot.
+	HandBinHeight = 1.6,
+	-- The fishing rod (the owner, 2026-10-29: "far too small and facing the wrong way"): its size against
+	-- the kit model (5.4 studs, nearly two slime heights), the grip in front of the body (studs for a full-size
+	-- slime: up, forward) and its tilt forward from upright while fishing, walking, at the top of the
+	-- cast's back swing and while reeling in.
+	RodScale = 1,
+	RodGripUp = 1.1,
+	RodGripForward = 1.75,
+	RodFishTilt = 55,
+	RodWalkTilt = 12,
+	RodBackTilt = -25,
+	RodReelTilt = 30,
+	-- The cast: the back swing takes this share of the cast, the bobber flies the rest; it lands this far
+	-- in front of the slime, bobs this much, and dips this much when a fish bites.
+	CastBackShare = 0.35,
+	CastStuds = 7,
+	BobberBobStuds = 0.08,
+	BobberBobHz = 0.8,
+	BobberBiteDip = 0.35,
+	-- the bobber a little larger than the kit rod's, so it reads on the water from the game's camera
+	BobberScale = 1.6,
+	-- the bite takes this share of the reel; the rest pulls the bobber back to the tip
+	BiteShare = 0.3,
+	-- the jelly's lean into a toss (a take leans the other way) and the squash of the reach
+	TossLeanKick = 2.5,
+	TossSquashKick = 1.2,
+	LineWidth = 0.07,
+	LineColour = "#fff4dd",
+	-- Hoe and watering can, held at a believable size for a 3-stud slime (kit models: 4.4 and about 2 studs).
+	HoeScale = 0.85,
+	HoeSwingDegrees = 50,
+	HoeSwingHz = 1.3,
+	CanScale = 0.8,
 	GhostFloat = 0.35,
 	GhostFloatHz = 0.35,
 	EggWobbleWindow = 8,

@@ -53,6 +53,16 @@ type Actor = {
 	workTask: string?,
 	workItem: string?,
 	workPlot: number?,
+	-- A hand event the clients draw (take from a bin, toss into one, catch a fish, take or put back a rod):
+	-- the item flies between the slime and `face` from handStart to handEnd.
+	hand: string?,
+	handItem: string?,
+	handStart: number?,
+	handEnd: number?,
+	-- What the slime turns to while it stands still (the bin, the well, the stand); nil = keep its heading.
+	face: Vector3?,
+	-- The fishing place whose rod this slime holds (the stand shows it gone).
+	rod: number?,
 }
 type Session = {
 	root: Folder,
@@ -107,6 +117,80 @@ end
 
 local function point(s: Spot): Vector3
 	return Vector3.new(s.x, s.y, s.z)
+end
+
+local function facing(s: Spot): Vector3?
+	if s.fx and s.fy and s.fz then
+		return Vector3.new(s.fx, s.fy, s.fz)
+	end
+	return nil
+end
+
+-- A derived standing place (a spread around a busy spot, a step short of a partner) moved onto free ground,
+-- so no slime is ever placed in water, in a model or in the air. It keeps the spot's name and what it faces.
+local function stand(s: Spot, toward: Vector3?): Spot
+	local settled = Spots.settle(point(s), toward, Config.Village.SpotMaxDrop)
+	if not settled then
+		return s
+	end
+	return { id = s.id, area = s.area, x = settled.X, y = settled.Y, z = settled.Z, fx = s.fx, fy = s.fy, fz = s.fz }
+end
+
+local function startHand(actor: Actor, kind: string, item: string?, at: number, seconds: number, face: Vector3?)
+	actor.hand, actor.handItem = kind, item
+	actor.handStart, actor.handEnd = at, at + seconds
+	if face then
+		actor.face = face
+	end
+end
+
+-- The name of what a carrying action holds (the art in ClientKit.Items, or the Egg).
+local function carriedItem(action: Action): string?
+	if action.kind == "carryEgg" then
+		return "Egg"
+	end
+	return if action.carry then action.carry.item else nil
+end
+
+local CARRIES: { [string]: boolean } = {
+	carryBox = true,
+	carryKitchen = true,
+	carryDish = true,
+	carryEgg = true,
+	feedBaby = true,
+}
+
+local function fishingSlot(action: Action?): number?
+	if not action or action.kind ~= "work" then
+		return nil
+	end
+	return tonumber(string.match(action.spot, "^work:fishing:(%d+)$"))
+end
+
+-- Arriving at the end of a route: a courier tosses what it carried into the place, a fisher takes the rod
+-- from its place's stand, anyone faces what the spot faces.
+local function arrived(session: Session, actor: Actor, at: number)
+	local action = actor.action
+	actor.face = facing(actor.current)
+	if not action then
+		return
+	end
+	if CARRIES[action.kind] and actor.pickupId then
+		startHand(actor, "toss", carriedItem(action), at, Config.Village.TossSeconds, nil)
+	end
+	local slot = fishingSlot(action)
+	if slot and actor.rod ~= slot and actor.current.id == action.spot then
+		local rodStand = session.spots["rod:" .. slot]
+		actor.rod = slot
+		startHand(
+			actor,
+			"rodTake",
+			"FishingRod",
+			at,
+			Config.Village.TakeSeconds,
+			if rodStand then point(rodStand) else nil
+		)
+	end
 end
 
 local function working(farm: Farm, id: string): (string?, number, boolean)
@@ -305,6 +389,21 @@ local function show(session: Session, farm: Farm, epoch: number)
 		end
 		set(model, "PairIndex", pairIndex)
 		set(model, "Partner", if actor and actor.action then actor.action.partner or "" else "")
+		-- The hand event and the facing (src/client/Village.client.luau draws the flying item and turns the body).
+		set(model, "Hand", if actor then actor.hand or "" else "")
+		set(model, "HandItem", if actor then actor.handItem or "" else "")
+		set(model, "HandStart", if actor then actor.handStart or 0 else 0)
+		set(model, "HandEnd", if actor then actor.handEnd or 0 else 0)
+		local face = if actor and (actor.index == 0 or (actor.handEnd or 0) > workspace:GetServerTimeNow())
+			then actor.face
+			else nil
+		set(model, "Face", face ~= nil)
+		if face then
+			set(model, "FaceX", face.X)
+			set(model, "FaceY", face.Y)
+			set(model, "FaceZ", face.Z)
+		end
+		set(model, "Rod", if actor then actor.rod or 0 else 0)
 	end
 	for _, inst in slimes:GetChildren() do
 		if not live[inst.Name] then
@@ -348,7 +447,7 @@ local function stopShort(origin: Spot, target: Spot): Spot
 	local flat = Vector3.new(delta.X, 0, delta.Z)
 	local away = if flat.Magnitude > Config.Village.PathPointEpsilon then flat.Unit else Vector3.new(1, 0, 0)
 	local position = point(target) - away * Config.Brain.StopStuds
-	return { id = target.id, area = target.area, x = position.X, y = origin.y, z = position.Z }
+	return stand({ id = target.id, area = target.area, x = position.X, y = target.y, z = position.Z }, point(origin))
 end
 
 -- Path computations use the real plot's navigation mesh; cache only unchanged fixed markers.
@@ -391,11 +490,13 @@ local function pathBetween(session: Session, start: Spot, target: Spot, scale: n
 			return nil
 		end
 		if index > 1 and index < #waypoints then
+			-- Waypoints float on the navigation mesh, up to two studs above the floor: put each on the ground.
+			local ground = Spots.ground(waypoint.Position, Config.Village.PathGroundProbe)
 			table.insert(points, {
 				id = "via",
 				area = start.area,
 				x = waypoint.Position.X,
-				y = waypoint.Position.Y,
+				y = if ground then ground.Y else waypoint.Position.Y,
 				z = waypoint.Position.Z,
 			})
 		end
@@ -424,17 +525,39 @@ local function route(session: Session, actor: Actor, action: Action, target: Spo
 			current = spot
 		end
 	end
+	-- No path: walk the chain of known safe places instead (out through this area's entrance, across the
+	-- plaza, in through the other's), each link planned on its own; never one straight line over water
+	-- or through a building (the owner, 2026-10-29: a fisher flew straight over the pond to the bin).
 	local function fallback(destination: Spot)
-		if current.area ~= destination.area then
-			if current.area ~= "plaza" and current.area ~= "gate" then
-				add(session.spots["entrance:" .. current.area])
-			end
-			add(session.spots.plaza)
-			if destination.area ~= "plaza" and destination.area ~= "gate" then
-				add(session.spots["entrance:" .. destination.area])
+		local chain: { Spot } = {}
+		local function link(spot: Spot?)
+			if spot then
+				table.insert(chain, spot)
 			end
 		end
-		add(destination)
+		local outdoors = current.area == "plaza" or current.area == "gate"
+		if not outdoors then
+			link(session.spots["entrance:" .. current.area])
+		end
+		if current.area ~= destination.area then
+			link(session.spots.plaza)
+			if destination.area ~= "plaza" and destination.area ~= "gate" then
+				link(session.spots["entrance:" .. destination.area])
+			end
+		end
+		link(destination)
+		for _, stop in chain do
+			local waypoints = if (point(current) - point(stop)).Magnitude > Config.Village.PathPointEpsilon
+				then pathBetween(session, current, stop, scale)
+				else nil
+			if waypoints then
+				for _, waypoint in waypoints do
+					add(waypoint)
+				end
+			else
+				add(stop)
+			end
+		end
 	end
 	local function travel(destination: Spot)
 		local start = current
@@ -533,20 +656,25 @@ local function advance(
 	while actor.index > 0 and clock >= actor.legEnd do
 		local reachedAt = actor.legEnd
 		actor.current = actor.to
-		if actor.pickupId and actor.current.id == actor.pickupId then
+		local pause = 0
+		if actor.pickupId and actor.current.id == actor.pickupId and not actor.carrying then
+			-- Stop in front of the bin, reach in and lift the item out before walking on.
 			actor.carrying = true
+			pause = Config.Village.TakeSeconds
+			startHand(actor, "take", carriedItem(actor.action), reachedAt, pause, facing(actor.current))
 		end
 		if actor.action.kind == "walkBaby" and actor.current.id == "nursery" then
 			actor.babyOnboard = true
 		end
 		actor.index += 1
 		if actor.route[actor.index] then
-			startLeg(session, actor, speed, reachedAt)
+			startLeg(session, actor, speed, reachedAt + pause)
 		else
 			actor.index = 0
-			actor.carrying = false
 			actor.from, actor.to = actor.current, actor.current
 			actor.legStart, actor.legEnd = reachedAt, reachedAt
+			arrived(session, actor, reachedAt)
+			actor.carrying = false
 			if actor.workPhase == "walk" and actor.workPlot and actor.current.id == "crop:" .. actor.workPlot then
 				actor.workPhase = actor.workTask
 				actor.workStart = clock
@@ -558,6 +686,7 @@ local function advance(
 				actor.workStart = clock
 				actor.workEnd = clock + Config.Work.WorkDropSeconds * workFactor
 				actor.finishAt = math.huge
+				startHand(actor, "toss", actor.workItem, clock, Config.Village.TossSeconds, nil)
 				continue
 			elseif actor.workPhase == "return" then
 				actor.workPhase, actor.workTask, actor.workItem, actor.workPlot = nil, nil, nil, nil
@@ -604,13 +733,13 @@ local function think(
 		-- New slimes need their own standing place before their first action is selected.
 		local angle = (count % Config.Brain.SpotSpreadPlaces) * math.pi * 2 / Config.Brain.SpotSpreadPlaces
 		local radius = (math.floor(count / Config.Brain.SpotSpreadPlaces) + 1) * Config.Brain.SpotSpread
-		local first: Spot = {
+		local first: Spot = stand({
 			id = centre.id,
 			area = centre.area,
 			x = centre.x + math.cos(angle) * radius,
 			y = centre.y,
 			z = centre.z + math.sin(angle) * radius,
-		}
+		}, point(centre))
 		actor = {
 			current = first,
 			from = first,
@@ -711,13 +840,16 @@ local function think(
 			local index = order - 2
 			local angle = (index % Config.Brain.SpotSpreadPlaces) * math.pi * 2 / Config.Brain.SpotSpreadPlaces
 			local radius = (math.floor(index / Config.Brain.SpotSpreadPlaces) + 1) * Config.Brain.SpotSpread
-			target = {
+			target = stand({
 				id = target.id,
 				area = target.area,
 				x = target.x + math.cos(angle) * radius,
 				y = target.y,
 				z = target.z + math.sin(angle) * radius,
-			}
+				fx = target.fx,
+				fy = target.fy,
+				fz = target.fz,
+			}, point(target))
 		end
 	end
 	local scale = Growth.scale(
@@ -729,10 +861,26 @@ local function think(
 	actor.route = route(session, actor, action, target, scale)
 	actor.lastRefresh = clock
 	actor.index = if #actor.route > 0 then 1 else 0
+	actor.hand, actor.face = nil, nil
+	-- Leaving a fishing place: the rod goes back on its stand first (the stand shows it again).
+	local depart = clock
+	if actor.rod and fishingSlot(action) ~= actor.rod then
+		local rodStand = session.spots["rod:" .. actor.rod]
+		actor.rod = nil
+		startHand(
+			actor,
+			"rodPut",
+			"FishingRod",
+			clock,
+			Config.Village.TakeSeconds,
+			if rodStand then point(rodStand) else nil
+		)
+		depart = clock + Config.Village.TakeSeconds
+	end
 	if actor.index > 0 then
 		local speed = Config.Village.WalkSpeed
 			* (1 + (slime.stats.speed - Config.Stats.Starter.speed) * Config.Village.WalkPerSpeed)
-		startLeg(session, actor, speed, clock)
+		startLeg(session, actor, speed, depart)
 	else
 		-- Already close enough to walk nowhere: it is now AT the action's spot (a worker standing near its work spot
 		-- would otherwise never count as arrived, and its station would never earn).
@@ -742,7 +890,11 @@ local function think(
 			x = actor.current.x,
 			y = actor.current.y,
 			z = actor.current.z,
+			fx = target.fx,
+			fy = target.fy,
+			fz = target.fz,
 		}
+		arrived(session, actor, depart)
 		local did = false
 		PlayerData.update(player, function(data: any)
 			local _, applied = Brain.arrive(data, slime.id, action, epoch)
@@ -860,6 +1012,7 @@ local function workTravel(
 		actor.current = target
 		actor.from, actor.to = target, target
 		actor.legStart, actor.legEnd = clock, clock
+		actor.face = facing(target)
 		-- A marker directly beneath a worker needs no walking leg, but still starts its work timer.
 		if actor.workPhase == "walk" then
 			actor.workPhase = actor.workTask
@@ -867,6 +1020,7 @@ local function workTravel(
 		elseif actor.workPhase == "carry" then
 			actor.workPhase = "drop"
 			actor.workStart, actor.workEnd = clock, clock + Config.Work.WorkDropSeconds * workFactor
+			startHand(actor, "toss", actor.workItem, clock, Config.Village.TossSeconds, nil)
 		elseif actor.workPhase == "return" then
 			actor.workPhase, actor.workTask, actor.workItem, actor.workPlot = nil, nil, nil, nil
 			actor.workEnd = nil
@@ -1054,13 +1208,15 @@ local function tick(player: Player, session: Session)
 						Stations.speedTimeFactor(worker.stats.speed)
 					)
 				elseif event.area == "fishing" then
+					-- The fish comes up on the line and lands on the slime's head before it walks to the bin.
 					actor.workPhase = "carry"
+					startHand(actor, "catch", event.item, clock, Config.Village.TakeSeconds, nil)
 					workTravel(
 						session,
 						actor,
 						session.spots["box:fishing"],
 						speed,
-						clock,
+						clock + Config.Village.TakeSeconds,
 						Stations.speedTimeFactor(worker.stats.speed)
 					)
 				end
@@ -1135,6 +1291,12 @@ local function tick(player: Player, session: Session)
 							then action.spot
 							else nil)
 					if nextSpot then
+						local depart = clock
+						if actor.workPhase == "harvest" and actor.workItem then
+							-- The pulled vegetable swings up onto the head before the walk to the bin.
+							startHand(actor, "take", actor.workItem, clock, Config.Village.TakeSeconds, nil)
+							depart = clock + Config.Village.TakeSeconds
+						end
 						actor.workPhase = if actor.workPhase == "harvest" and actor.workItem then "carry" else "return"
 						actor.workEnd = nil
 						workTravel(
@@ -1142,7 +1304,7 @@ local function tick(player: Player, session: Session)
 							actor,
 							session.spots[nextSpot],
 							speed,
-							clock,
+							depart,
 							Stations.speedTimeFactor(slime.stats.speed)
 						)
 					end

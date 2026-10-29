@@ -60,6 +60,17 @@ export type Slime = {
 	attachedParts: { BasePart },
 	attachedOffsets: { CFrame },
 	attachOffset: CFrame,
+	-- What the slime turns its body to while it stands still (a bin, the well, the water); nil keeps the heading.
+	faceTarget: Vector3?,
+	-- The height of the ground under the slime (raycast), and where it was last measured.
+	groundY: number?,
+	groundAt: Vector3?,
+	-- A tool held in front of the body (a rod, a hoe): its parts and a pose that may change with time,
+	-- relative to the feet frame (front = -Z, up = +Y), in studs.
+	held: Model?,
+	heldParts: { BasePart },
+	heldOffsets: { CFrame },
+	heldPose: ((now: number) -> CFrame)?,
 }
 
 local Actor = {}
@@ -70,6 +81,26 @@ local connection: RBXScriptConnection? = nil
 local parts: { BasePart } = {}
 local cfs: { CFrame } = {}
 local seedCounter = 0
+-- The ground ray skips every drawn slime, the server's village folders and the local character.
+local rayParams = RaycastParams.new()
+rayParams.FilterType = Enum.RaycastFilterType.Exclude
+rayParams.RespectCanCollide = true
+local function refreshRayFilter()
+	local list: { Instance } = {}
+	for _, name in { "VillageClientActors", "Villages" } do
+		local folder = workspace:FindFirstChild(name)
+		if folder then
+			table.insert(list, folder)
+		end
+	end
+	for _, player in game:GetService("Players"):GetPlayers() do
+		if player.Character then
+			table.insert(list, player.Character)
+		end
+	end
+	rayParams.FilterDescendantsInstances = list
+end
+local filterAt = -math.huge
 
 local function bonesOf(part: BasePart): BoneSet?
 	local root = part:FindFirstChild("Root")
@@ -168,9 +199,40 @@ local function walk(a: Slime, dt: number, now: number)
 	end
 	a.separation = a.separation:Lerp(away, 1 - math.exp(-dt / VC.SeparationSmoothSeconds))
 	pos += a.separation
+	-- Feet on the ground below, whatever the server's points say (no hovering over a slope, no sinking into
+	-- paving). Measured again only when the slime has moved; a ghost floats above the ground it measures.
+	local flatPos = Vector3.new(pos.X, 0, pos.Z)
+	if not a.groundAt or (a.groundAt - flatPos).Magnitude > VC.GroundRecastStuds then
+		a.groundAt = flatPos
+		local start = Vector3.new(pos.X, pos.Y + VC.GroundProbeUp, pos.Z)
+		local down = Vector3.new(0, -(VC.GroundProbeUp + VC.GroundProbeDown), 0)
+		local hit = workspace:Raycast(start, down, rayParams)
+		if not hit or hit.Material == Enum.Material.Water then
+			-- (a ball does not fall through the gaps between dock planks)
+			hit = workspace:Spherecast(start, VC.GroundProbeRadius, down, rayParams) or hit
+		end
+		a.groundY = if hit then hit.Position.Y else nil
+	end
+	if a.groundY then
+		local floatBy = if a.ghost
+			then VC.GhostFloat + VC.GhostFloat * math.sin(now * VC.GhostFloatHz * math.pi * 2)
+			else 0
+		pos = Vector3.new(pos.X, a.groundY + floatBy, pos.Z)
+	end
 	local direction = to - from
 	local flat = Vector3.new(direction.X, 0, direction.Z)
-	if flat.Magnitude > VC.FacingThreshold then
+	local still = not moving
+	local face = a.faceTarget
+	if still and face then
+		local toward = Vector3.new(face.X - pos.X, 0, face.Z - pos.Z)
+		if toward.Magnitude > VC.FacingThreshold then
+			local goal = CFrame.lookAt(pos, pos + toward)
+			local alpha = 1 - math.exp(-dt / VC.FacingTurnSeconds)
+			a.root = CFrame.new(pos) * a.root.Rotation:Lerp(goal.Rotation, alpha)
+		else
+			a.root = CFrame.new(pos) * a.root.Rotation
+		end
+	elseif flat.Magnitude > VC.FacingThreshold then
 		local goal = CFrame.lookAt(pos, pos + flat)
 		-- Interpolate rotation only: an old yaw must never pull the feet off the server's path.
 		local alpha = 1 - math.exp(-dt / VC.FacingTurnSeconds)
@@ -244,6 +306,20 @@ local function tick(a: Slime, dt: number, write: boolean)
 			cfs[n] = top * a.attachedOffsets[i]
 		end
 	end
+	local heldPose = a.heldPose
+	if a.held and heldPose then
+		-- A held tool follows the body's hop and lean; its pose is in studs for a full-size slime.
+		local grip = a.root
+			* CFrame.new(-pose.leanSide * s, pose.lift * s, -pose.leanFwd * s)
+			* CFrame.Angles(pose.leanFwd, pose.yaw, pose.leanSide)
+		local held = heldPose(workspace:GetServerTimeNow())
+		local heldCf = grip * CFrame.new(held.Position * s / VC.BodyHeight) * held.Rotation
+		for i, part in a.heldParts do
+			n += 1
+			parts[n] = part
+			cfs[n] = heldCf * a.heldOffsets[i]
+		end
+	end
 	local blinked = SlimeFace.update(a.face, dt, bones, feet, parts, cfs)
 	if blinked then
 		SlimeMotion.kick(a.motion, "squash", C.BlinkBodyKick)
@@ -264,6 +340,10 @@ local function stepAll(dt: number, force: boolean?)
 	table.clear(parts)
 	table.clear(cfs)
 	local now = workspace:GetServerTimeNow()
+	if now - filterAt > 1 then
+		filterAt = now
+		refreshRayFilter()
+	end
 	for _, actor in actors do
 		actor.ground = desired(actor, now)
 	end
@@ -353,6 +433,13 @@ function Actor.new(model: Model, emotion: string?): Slime?
 		attachedParts = {},
 		attachedOffsets = {},
 		attachOffset = CFrame.new(),
+		faceTarget = nil,
+		groundY = nil,
+		groundAt = nil,
+		held = nil,
+		heldParts = {},
+		heldOffsets = {},
+		heldPose = nil,
 	}
 	-- Only the body is a collision surface. The outline and face remain non-collidable.
 	body.CanCollide = true
@@ -433,6 +520,41 @@ function Actor.attach(self: Slime, model: Model, offset: CFrame?)
 	end
 end
 
+-- Hold a tool in front of the body; `pose(now)` places the tool's pivot in the feet frame (studs for a
+-- full-size slime; front = -Z). The model is scaled by the caller.
+function Actor.hold(self: Slime, model: Model, pose: (now: number) -> CFrame)
+	self.held = model
+	self.heldPose = pose
+	table.clear(self.heldParts)
+	table.clear(self.heldOffsets)
+	local pivot = model:GetPivot()
+	for _, inst in model:GetDescendants() do
+		if inst:IsA("BasePart") then
+			inst.Anchored = true
+			inst.CanCollide = false
+			table.insert(self.heldParts, inst)
+			table.insert(self.heldOffsets, pivot:ToObjectSpace(inst.CFrame))
+		end
+	end
+end
+
+function Actor.unhold(self: Slime)
+	self.held = nil
+	self.heldPose = nil
+	table.clear(self.heldParts)
+	table.clear(self.heldOffsets)
+end
+
+-- Turn the body to a point while standing still (nil: keep the heading).
+function Actor.face(self: Slime, point: Vector3?)
+	self.faceTarget = point
+end
+
+-- A small shove into the jelly ("lean" forward for a toss, "squash" for a reach).
+function Actor.kick(self: Slime, what: string, amount: number)
+	SlimeMotion.kick(self.motion, what, amount)
+end
+
 function Actor.detach(self: Slime)
 	self.attached = nil
 	table.clear(self.attachedParts)
@@ -441,6 +563,7 @@ end
 
 function Actor.destroy(self: Slime)
 	Actor.detach(self)
+	Actor.unhold(self)
 	self.destroyed = true
 	SlimeFace.destroy(self.face)
 end

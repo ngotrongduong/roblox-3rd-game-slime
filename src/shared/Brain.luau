@@ -14,7 +14,16 @@ type Farm = typeof(FarmState.newFarm(0))
 type Slime = typeof(FarmState.newFarm(0).slimes[1])
 type Rng = typeof(Rng.new(0))
 export type Point = { x: number, y: number, z: number }
-export type Spot = { id: string, area: string, x: number, y: number, z: number }
+export type Spot = {
+	id: string,
+	area: string,
+	x: number,
+	y: number,
+	z: number,
+	fx: number?,
+	fy: number?,
+	fz: number?,
+}
 export type Context = {
 	spots: { [string]: Spot }?,
 	nearby: { string }?,

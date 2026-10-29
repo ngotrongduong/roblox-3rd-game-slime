@@ -165,6 +165,13 @@ function WorkProps.bin(
 	local fill = part(m, "BinFill", Vector3.new(2.2, 0.2, 2.2), cf * CFrame.new(0, 1.16, 0), WOOD)
 	fill.Transparency = 1
 	m.WorldPivot = cf
+	-- A bin is solid: slimes and players walk round it, never through it (the owner, 2026-10-29).
+	for _, piece in m:GetChildren() do
+		if piece:IsA("BasePart") and (piece.Name == "Base" or piece.Name == "Stave") then
+			piece.CanCollide = true
+			piece.CanQuery = true
+		end
+	end
 	m:SetAttribute("Area", area)
 	m:SetAttribute("Capacity", Config.WorkPlaces.BinCapacity)
 	CollectionService:AddTag(m, "ItemBin")

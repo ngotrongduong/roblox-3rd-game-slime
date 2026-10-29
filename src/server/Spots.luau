@@ -5,8 +5,133 @@ local PathfindingService = game:GetService("PathfindingService")
 local Config = require(ReplicatedStorage.Shared.Config)
 local Layout = require(ReplicatedStorage.Shared.Layout)
 
-export type Spot = { id: string, area: string, x: number, y: number, z: number }
+-- fx/fy/fz: what a slime standing here faces (the well, the bin, the fire) when the spot was moved out of it.
+export type Spot = {
+	id: string,
+	area: string,
+	x: number,
+	y: number,
+	z: number,
+	fx: number?,
+	fy: number?,
+	fz: number?,
+}
 local Spots = {}
+
+local V = Config.Village
+
+-- Everything a slime may not stand in or on: slimes and characters are not the world.
+local function ignored(): { Instance }
+	local list: { Instance } = {}
+	local villages = workspace:FindFirstChild("Villages")
+	if villages then
+		table.insert(list, villages)
+	end
+	for _, player in game:GetService("Players"):GetPlayers() do
+		if player.Character then
+			table.insert(list, player.Character)
+		end
+	end
+	return list
+end
+
+-- The walkable surface under (or a little above) a point: nil over water or over nothing. Parts that do
+-- not collide (crops, flowers, markers) are not ground; the slimes stand on what a player would stand on.
+function Spots.ground(position: Vector3, up: number?): Vector3?
+	local params = RaycastParams.new()
+	params.FilterType = Enum.RaycastFilterType.Exclude
+	params.FilterDescendantsInstances = ignored()
+	params.RespectCanCollide = true
+	local lift = up or V.GroundProbeUp
+	local down = Vector3.new(0, -(lift + V.GroundProbeDown), 0)
+	local hit = workspace:Raycast(position + Vector3.new(0, lift, 0), down, params)
+	if not hit or hit.Material == Enum.Material.Water then
+		-- A thin ray falls through the gaps between dock planks: a ball does not (started a little higher,
+		-- since a ball that begins inside the floor passes through it).
+		local start = position + Vector3.new(0, lift + V.GroundProbeRadius, 0)
+		hit = workspace:Spherecast(start, V.GroundProbeRadius, down, params)
+	end
+	if not hit or hit.Material == Enum.Material.Water then
+		return nil
+	end
+	return hit.Position
+end
+
+-- A slime-sized box standing on `feet` touches nothing solid (exact shapes, not bounding boxes: a tree's
+-- canopy does not block the grass under it).
+local probe = Instance.new("Part")
+probe.Anchored = true
+probe.CanCollide = false
+probe.CanQuery = false
+probe.CanTouch = false
+probe.Size = Vector3.new(V.SpotClearWidth, V.SpotClearHeight, V.SpotClearWidth)
+function Spots.free(feet: Vector3): boolean
+	probe.CFrame = CFrame.new(feet + Vector3.new(0, V.SpotClearLift + V.SpotClearHeight / 2, 0))
+	local params = OverlapParams.new()
+	params.FilterType = Enum.RaycastFilterType.Exclude
+	params.FilterDescendantsInstances = ignored()
+	params.RespectCanCollide = true
+	return #workspace:GetPartsInPart(probe, params) == 0
+end
+
+-- The nearest place to `position` where a slime can stand: on solid ground, out of water, inside no model.
+-- Rings of candidates widen until one fits; among one ring the one nearest `toward` wins (the side of a
+-- well or a bin that faces the path). Nil when nothing within SpotSettleRings fits.
+-- `maxDrop`: a derived place (a spread around a busy spot) also may not step down into a hollow (the pond's dry rim).
+function Spots.settle(position: Vector3, toward: Vector3?, maxDrop: number?): Vector3?
+	for ring = 0, V.SpotSettleRings do
+		local radius = ring * V.SpotSettleStep
+		local count = if ring == 0 then 1 else math.max(V.SpotSettleMinAngles, ring * V.SpotSettleAnglesPerRing)
+		local best: Vector3? = nil
+		local bestScore = math.huge
+		for k = 1, count do
+			local angle = (k - 1) * math.pi * 2 / count
+			local candidate = position + Vector3.new(math.cos(angle) * radius, 0, math.sin(angle) * radius)
+			local feet = Spots.ground(candidate)
+			-- (never on top of a prop: a log of the campfire, a bench, an incubator's lid)
+			local step = if feet then feet.Y - position.Y else 0
+			if feet and step <= V.SpotMaxRise and (not maxDrop or -step <= maxDrop) and Spots.free(feet) then
+				local score = if toward
+					then (Vector3.new(feet.X, 0, feet.Z) - Vector3.new(toward.X, 0, toward.Z)).Magnitude
+					else 0
+				if score < bestScore then
+					best, bestScore = feet, score
+				end
+			end
+		end
+		if best then
+			return best
+		end
+	end
+	return nil
+end
+
+-- Move a spot onto the ground beside whatever it was inside of; it then faces that thing. `gap`: stand at least
+-- this far from the middle of the thing (a bin: a step in front of it, never against it).
+function Spots.place(spot: Spot, toward: Vector3?, gap: number?)
+	local original = Vector3.new(spot.x, spot.y, spot.z)
+	local settled = Spots.settle(original, toward)
+	if not settled then
+		warn(Config.LogPrefix, "village spot has no free ground near it:", spot.id)
+		return
+	end
+	local flat = Vector3.new(settled.X - original.X, 0, settled.Z - original.Z)
+	if gap and gap > 0 then
+		local away = if flat.Magnitude > V.PathPointEpsilon
+			then flat.Unit
+			else (if toward
+				then Vector3.new(toward.X - original.X, 0, toward.Z - original.Z).Unit
+				else Vector3.new(1, 0, 0))
+		-- (measured from the middle of the thing: the bins do not collide, so nothing pushed the spot out)
+		local reach = math.max(gap, flat.Magnitude)
+		settled = Spots.settle(original + away * reach, toward) or settled
+		flat = Vector3.new(settled.X - original.X, 0, settled.Z - original.Z)
+	end
+	if flat.Magnitude > V.SpotFacePull then
+		spot.fx, spot.fy, spot.fz = original.X, original.Y, original.Z
+	end
+	spot.x, spot.y, spot.z = settled.X, settled.Y, settled.Z
+end
 
 local MODELS = {
 	fishing = "FishingPondL1",
@@ -238,6 +363,63 @@ function Spots.build(plotNumber: number, plot: Instance?): { [string]: Spot }
 		seat = centre + Layout.plotFrame(plotNumber).RightVector * Config.Village.SpotNapOffset
 	end
 	add("nap", "hatchery", village, spots.Nap, seat)
+
+	-- Every destination stands on the ground outside the models (the owner, 2026-10-29: a slime stood inside
+	-- the plaza's well and hovered by the campfire). The plaza comes first, on the gate's side of the well;
+	-- the rest settle on the side that faces the plaza, a bin's and an area's things on the side of the
+	-- area's entrance. Bins keep a step between them and the slime, which tosses things in.
+	Spots.place(result.plaza, frames.gate)
+	local plazaPoint = Vector3.new(result.plaza.x, result.plaza.y, result.plaza.z)
+	for id, spot in result do
+		if id ~= "plaza" and string.sub(id, 1, 9) == "entrance:" then
+			Spots.place(spot, plazaPoint)
+		end
+	end
+	for id, spot in result do
+		if id == "plaza" or string.sub(id, 1, 9) == "entrance:" or string.sub(id, 1, 5) == "crop:" then
+			continue
+		end
+		local entrance = result["entrance:" .. spot.area]
+		local toward = if entrance and (string.sub(id, 1, 4) == "box:" or string.sub(id, 1, 5) == "work:")
+			then Vector3.new(entrance.x, entrance.y, entrance.z)
+			else plazaPoint
+		Spots.place(spot, toward, if string.sub(id, 1, 4) == "box:" then V.BinStandStuds else nil)
+	end
+	-- A gardener stands beside the plant, on the side of its own work place, never on the crop.
+	local gardenHome = result["work:garden:1"]
+	for index = 1, cropCount do
+		local spot = result["crop:" .. index]
+		local plant = Vector3.new(spot.x, spot.y, spot.z)
+		local home = Vector3.new(gardenHome.x, plant.Y, gardenHome.z)
+		local away = if (home - plant).Magnitude > V.PathPointEpsilon then (home - plant).Unit else Vector3.new(1, 0, 0)
+		local stand = plant + away * V.CropStandStuds
+		-- (on the garden floor, beside the bed: a bed is too high a step to stand on)
+		spot.x, spot.y, spot.z = stand.X, gardenHome.y, stand.Z
+		Spots.place(spot, home)
+		spot.fx, spot.fy, spot.fz = plant.X, plant.Y, plant.Z
+	end
+	-- Each fishing place's rod stand: the slime turns to it to take the rod and to put it back.
+	local pondStage = if fishing
+		then fishing:FindFirstChild("PondStage") or fishing:FindFirstChild("AreaStage")
+		else nil
+	for slot = 1, #V.SpotNames.Work do
+		local place = if pondStage then pondStage:FindFirstChild("WorkSpot" .. slot) else nil
+		if place and place:IsA("BasePart") then
+			local nearest: Model? = nil
+			local distance = math.huge
+			for _, stand in (pondStage :: Instance):GetChildren() do
+				if stand:IsA("Model") and stand.Name == "RodStand" then
+					local d = (stand:GetPivot().Position - place.Position).Magnitude
+					if d < distance then
+						nearest, distance = stand, d
+					end
+				end
+			end
+			if nearest then
+				result["rod:" .. slot] = plain("rod:" .. slot, "fishing", nearest:GetPivot().Position)
+			end
+		end
+	end
 
 	-- World markers can be added later without changing brain destinations.
 	if plot then
