@@ -32,6 +32,21 @@ for _, f in FILES do
 	counts[f[1]] += 1
 end
 
+-- The emotion stage (tools/slime/emotions.ps1) runs its own copies of SlimeFace and SlimeActor: keep them current.
+local stage = StarterPlayerScripts:FindFirstChild("SlimeFaceStage")
+if stage then
+	for _, name in { "SlimeFace", "SlimeActor" } do
+		local old = stage:FindFirstChild(name)
+		if old then
+			old:Destroy()
+		end
+		local m = Instance.new("ModuleScript")
+		m.Name = name
+		m.Source = (targets.Client:FindFirstChild(name) :: ModuleScript).Source
+		m.Parent = stage
+	end
+end
+
 -- Remotes the project file declares (Rojo makes them in the built game).
 local remotes = folder(ReplicatedStorage, "Remotes")
 for name, class in { Action = "RemoteEvent", Fx = "RemoteEvent", Query = "RemoteFunction" } do

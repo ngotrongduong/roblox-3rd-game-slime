@@ -25,6 +25,14 @@ local EYE_PLATE_W, EYE_PLATE_H = 0.4, 0.62
 local MOUTH_PLATE_W, MOUTH_PLATE_H = 0.5, 0.34
 local EMOTE_PIXELS = 56
 local EMOTE_RIGHT, EMOTE_UP = 0.3, 0.3
+-- The owner (2026-10-29): an emote icon is a short pop-up when the feeling starts, not a sign that stays. Three feelings
+-- keep a living effect instead while they last: sleep and sleepy breathe out rising z's, loved sends up hearts that
+-- fade, dizzy has stars circling the head. Each is drawn from the owner's own emote sprites.
+local STREAM_MODE: { [string]: string } = { sleep = "zzz", sleepy = "zzz", loved = "hearts", dizzy = "orbit" }
+local STREAM_SPRITE: { [string]: string } = { zzz = "icon_zzz", hearts = "icon_heart", orbit = "icon_star" }
+local STREAM_BITS = 4
+-- a stream's billboard is this many emote sizes wide and tall (room to rise or to circle)
+local STREAM_W, STREAM_H = 2, 2.6
 
 type Layer = {
 	label: ImageLabel,
@@ -61,6 +69,9 @@ export type Face = {
 	emoteGui: BillboardGui,
 	emoteLabel: ImageLabel,
 	emoteScale: UIScale,
+	emoteBits: { ImageLabel },
+	-- "pop" (a short pop-up) or a lasting effect: "zzz", "hearts", "orbit"
+	emoteMode: string,
 	expr: Expressions.Expression,
 	t: number,
 	popT: number,
@@ -258,6 +269,17 @@ function Face.new(model: Model, scale: number, seed: number?): Face
 	label.Parent = gui
 	local uiScale = Instance.new("UIScale")
 	uiScale.Parent = label
+	-- the small copies a lasting effect moves (z's, hearts, circling stars)
+	local bits: { ImageLabel } = {}
+	for i = 1, STREAM_BITS do
+		local bit = Instance.new("ImageLabel")
+		bit.Name = "Bit" .. i
+		bit.BackgroundTransparency = 1
+		bit.AnchorPoint = Vector2.new(0.5, 0.5)
+		bit.Visible = false
+		bit.Parent = gui
+		bits[i] = bit
+	end
 	emote.Parent = folder
 	folder.Parent = model
 
@@ -273,6 +295,8 @@ function Face.new(model: Model, scale: number, seed: number?): Face
 		emoteGui = gui,
 		emoteLabel = label,
 		emoteScale = uiScale,
+		emoteBits = bits,
+		emoteMode = "pop",
 		expr = normal,
 		t = 0,
 		popT = 1,
@@ -304,11 +328,31 @@ function Face.setEmotion(self: Face, id: string)
 	self.popT = 0
 	self.yawnT = -1
 	self.yawnAt = self.t + 2
-	-- the emote above the head
-	if e.icon and FaceArt.Sprites[e.icon] then
-		self.emoteLabel.Image = spriteUrl(e.icon)
+	-- the emote above the head: a lasting effect for a few feelings, else a short pop-up of the icon
+	local stream = STREAM_MODE[e.id]
+	local streamSprite = if stream then FaceArt.Sprites[STREAM_SPRITE[stream]] else nil
+	self.emoteT = 0
+	if stream and streamSprite then
+		self.emoteMode = stream
+		self.emoteLabel.Visible = false
+		self.emoteGui.Size = UDim2.fromOffset(EMOTE_PIXELS * STREAM_W, EMOTE_PIXELS * STREAM_H)
+		local size = if stream == "orbit" then 0.45 else 0.6
+		for _, bit in self.emoteBits do
+			bit.Image = spriteUrl(STREAM_SPRITE[stream])
+			bit.Size = UDim2.fromOffset(EMOTE_PIXELS * size, EMOTE_PIXELS * size)
+			bit.Visible = false
+		end
 		self.emoteGui.Enabled = true
-		self.emoteT = 0
+	elseif e.icon and FaceArt.Sprites[e.icon] then
+		self.emoteMode = "pop"
+		for _, bit in self.emoteBits do
+			bit.Visible = false
+		end
+		self.emoteGui.Size = UDim2.fromOffset(EMOTE_PIXELS, EMOTE_PIXELS)
+		self.emoteLabel.Image = spriteUrl(e.icon)
+		self.emoteLabel.ImageTransparency = 0
+		self.emoteLabel.Visible = true
+		self.emoteGui.Enabled = true
 	else
 		self.emoteGui.Enabled = false
 	end
@@ -587,17 +631,61 @@ function Face.update(
 		cfs[n] = frame(plate, bones, self.scale, feet)
 	end
 
-	-- the emote floats above the head, to the viewer's right, with a pop-in and a gentle bob
+	-- the emote: a pop-up beside the head, or a lasting effect over it
 	if self.emoteGui.Enabled then
-		local x, y, z = SlimeShape.deform(-EMOTE_RIGHT, 0.95, 0, bones)
+		local mode = self.emoteMode
+		local side = if mode == "pop" or mode == "zzz" then -EMOTE_RIGHT else 0
+		local x, y, z = SlimeShape.deform(side, 0.95, 0, bones)
+		local lift = if mode == "pop" then EMOTE_UP else EMOTE_UP * 0.6
 		n += 1
 		parts[n] = self.emote
-		cfs[n] = feet * CFrame.new(Vector3.new(x, y + EMOTE_UP, z) * self.scale)
+		cfs[n] = feet * CFrame.new(Vector3.new(x, y + lift, z) * self.scale)
 		self.emoteT += dt
-		local pop = math.min(self.emoteT / 0.3, 1)
-		local back = 1 + 2.7 * (pop - 1) ^ 3 + 1.7 * (pop - 1) ^ 2 -- ease out back
-		self.emoteScale.Scale = back * (1 + 0.05 * math.sin(TAU * 1.6 * self.t))
-		self.emoteLabel.Position = UDim2.new(0.5, 0, 0.5, -3 * math.sin(TAU * 1.1 * self.t))
+		local t = self.emoteT
+		if mode == "pop" then
+			-- pops in, bobs a moment, fades and is gone
+			local pop = math.min(t / 0.3, 1)
+			local back = 1 + 2.7 * (pop - 1) ^ 3 + 1.7 * (pop - 1) ^ 2 -- ease out back
+			self.emoteScale.Scale = back * (1 + 0.05 * math.sin(TAU * 1.6 * self.t))
+			self.emoteLabel.Position = UDim2.new(0.5, 0, 0.5, -3 * math.sin(TAU * 1.1 * self.t))
+			local fadeFrom = C.EmoteShowSeconds - C.EmoteFadeSeconds
+			self.emoteLabel.ImageTransparency = math.clamp((t - fadeFrom) / C.EmoteFadeSeconds, 0, 1)
+			if t >= C.EmoteShowSeconds then
+				self.emoteGui.Enabled = false
+			end
+		elseif mode == "orbit" then
+			-- stars circle the top of the head; the ones behind it are smaller and paler
+			local count = math.min(C.OrbitStars, #self.emoteBits)
+			for i, bit in self.emoteBits do
+				bit.Visible = i <= count
+				if i <= count then
+					local a = TAU * (C.OrbitHz * t + (i - 1) / count)
+					local depth = math.sin(a)
+					bit.Position = UDim2.fromScale(0.5 + 0.36 * math.cos(a), 0.62 + 0.08 * depth)
+					bit.ImageTransparency = 0.35 - 0.35 * depth
+					bit.ZIndex = if depth > 0 then 2 else 1
+				end
+			end
+		else
+			-- z's or hearts: born one after another at the bottom, rise, sway, grow and fade
+			local every = if mode == "zzz" then C.ZzzEverySeconds else C.HeartsEverySeconds
+			local life = if mode == "zzz" then C.ZzzLifeSeconds else C.HeartsLifeSeconds
+			for i, bit in self.emoteBits do
+				local age = t - (i - 1) * every
+				local cycle = every * #self.emoteBits
+				local f = if age < 0 then -1 else (age % cycle) / life
+				bit.Visible = f >= 0 and f <= 1
+				if bit.Visible then
+					local sway = if mode == "zzz" then 0.18 * f else 0.12 * math.sin(TAU * (f * 1.5 + i * 0.3))
+					bit.Position = UDim2.fromScale(0.35 + sway, 0.92 - 0.8 * f)
+					bit.Rotation = if mode == "zzz" then -12 + 20 * f else 10 * math.sin(TAU * f)
+					-- a z is born small and grows as it drifts away (z Z z); hearts swell a little and shrink
+					local grow = if mode == "zzz" then 0.55 + 0.75 * f else 0.48 + 0.18 * math.sin(math.pi * f)
+					bit.Size = UDim2.fromOffset(EMOTE_PIXELS * grow, EMOTE_PIXELS * grow)
+					bit.ImageTransparency = math.clamp((f - 0.55) / 0.45, 0, 1)
+				end
+			end
+		end
 	end
 	return began
 end
