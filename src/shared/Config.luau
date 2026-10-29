@@ -502,6 +502,7 @@ Config.VillageClient = {
 	MaxDrawDistance = 400,
 	NearWorkDistance = 80,
 	StandInSize = 1,
+	BodyHeight = 3,
 	SheetWalkAwayStuds = 22,
 	PromptDistance = 12,
 	PromptHoldSeconds = 0,
