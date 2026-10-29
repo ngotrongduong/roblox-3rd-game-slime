@@ -105,12 +105,20 @@ return function(T: any)
 		T.eq(after.work.fishing.box.fish, nil)
 		T.eq(after.work.fishing.slots[1].pending, "fish")
 		T.eq(events[1].kind, "collected")
-		local offline = VillageSim.step(after, now + 61, 0, Rng.new(3), { errands = false })
+		-- Offline errands may move stock from the bin to the storehouse and onward to the
+		-- kitchen counter. Count all three destinations, not just the first two.
+		local function fishStock(snapshot: any): number
+			return (snapshot.work.fishing.box.fish or 0)
+				+ (snapshot.storehouse.fish or 0)
+				+ (snapshot.counter.fish or 0)
+		end
+		local originalStock = fishStock(after)
+		local offline = VillageSim.step(after, now + 61, 0, Rng.new(3), { errands = true })
 		T.eq(offline.work.fishing.slots[1].pending, nil)
-		T.eq(offline.work.fishing.box.fish, Config.Work.FishingYield, "pending catch reaches the bin exactly once")
+		T.eq(fishStock(offline), originalStock + Config.Work.FishingYield, "recovered fish is neither lost nor doubled")
 		T.eq(after.work.fishing.slots[1].pending, "fish", "the input state remains unchanged")
-		local again = VillageSim.step(offline, now + 62, 0, Rng.new(3), { errands = false })
-		T.eq(again.work.fishing.box.fish, Config.Work.FishingYield, "replaying catch-up does not double-deposit")
+		local again = VillageSim.step(offline, now + 62, 0, Rng.new(3), { errands = true })
+		T.eq(fishStock(again), fishStock(offline), "replaying offline transfer never deposits the same fish twice")
 		T.eq(again.work.fishing.slots[1].pending, nil)
 	end)
 
