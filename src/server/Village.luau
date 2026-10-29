@@ -964,7 +964,7 @@ local function tick(player: Player, session: Session)
 			local stage = if garden then garden:FindFirstChild("AreaStage") else nil
 			local count = if stage then stage:GetAttribute("CropPlots") else nil
 			if type(count) == "number" and count >= 1 and count <= Config.Work.GardenMaxPlotCount
-				and count ~= #data.work.garden.plots then
+				and count > #data.work.garden.plots then
 				data.work.garden.plots = GardenPlots.repair(data.work.garden.plots, count)
 			end
 		end
