@@ -130,7 +130,7 @@ local function request(player: Player, data: any): { ok: boolean, reason: string
 				end
 				ok = true
 			elseif action == "UpgradeArea" then
-				local free = Config.Village.DevFreeUpgrades and RunService:IsStudio()
+				local free = Config.Pads.FreeUpgrades or (Config.Village.DevFreeUpgrades and RunService:IsStudio())
 				ok, why = VillageRules.upgrade(farm, data.areaId, free)
 				if ok then
 					areaId = data.areaId

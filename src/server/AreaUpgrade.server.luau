@@ -1,6 +1,6 @@
 --!strict
--- Upgrading a home plot's areas with the E key (the owner, 2026-10-27: walk up to an area, press E,
--- see it change). Each area has an Upgrade prompt at its entrance; the server keeps its level and
+-- Upgrading a home plot's areas by stepping on a pad (the owner, 2026-10-29; before that an E prompt).
+-- Each area has an upgrade pad beside its entrance (UpgradePads); the server keeps its level and
 -- swaps its stage layer for the next level (PondStages for the fishing pond, AreaStages for the
 -- others), with a burst of sparkles, bigger when a material tier starts. At the pond the original
 -- level-1 dock and its tools are hidden while the stage layer stands in for them.
@@ -13,6 +13,7 @@ local Layout = require(ReplicatedStorage.Shared.Layout)
 local PlayerData = require(script.Parent.PlayerData)
 local Village = require(script.Parent.Village)
 local VillageRemotes = require(script.Parent.VillageRemotes)
+local UpgradePads = require(script.Parent.UpgradePads)
 local AreaStages = require(script.Parent.AreaStages)
 local PantryStages = require(script.Parent.PantryStages)
 local GardenStages = require(script.Parent.GardenStages)
@@ -139,6 +140,9 @@ local function refreshVillage()
 end
 
 local applyLevel: { [string]: (number, boolean) -> () } = {}
+local padsFolder = plot:FindFirstChild("UpgradePads") or Instance.new("Folder")
+padsFolder.Name = "UpgradePads"
+padsFolder.Parent = plot
 
 local function setUp(name: string, col: number, row: number, areaId: string)
 	local area = plot:FindFirstChild(name)
@@ -147,7 +151,6 @@ local function setUp(name: string, col: number, row: number, areaId: string)
 	end
 	local frame = Layout.plotAreaFacing(PLOT, col, row) * CFrame.new(0, GROUND, 0)
 	local isPond = name == "FishingPondL1"
-	local label = if isPond then "Fishing Pond" else AreaStages.Specs[name].label
 	local level = 1
 	local layer: Model? = nil
 
@@ -169,7 +172,7 @@ local function setUp(name: string, col: number, row: number, areaId: string)
 		end
 	end
 
-	-- the prompt: an invisible post at the area's entrance
+	-- the area's entrance: an invisible post (the village brain's "entrance" spot reads it)
 	local spot = if isPond then { DOCK_X, -15 } else AreaStages.Specs[name].prompt
 	local anchor = Instance.new("Part")
 	anchor.Name = "UpgradePoint"
@@ -177,22 +180,14 @@ local function setUp(name: string, col: number, row: number, areaId: string)
 	anchor.Transparency = 1
 	anchor.Anchored = true
 	anchor.CanCollide = false
+	anchor.CanQuery = false
+	anchor.CanTouch = false
 	anchor.CFrame = frame * CFrame.new(spot[1], 2, spot[2])
 	anchor.Parent = area
-	local prompt = Instance.new("ProximityPrompt")
-	prompt.KeyboardKeyCode = Enum.KeyCode.E
-	prompt.HoldDuration = 0
-	prompt.MaxActivationDistance = 10
-	prompt.RequiresLineOfSight = false
-	prompt.Parent = anchor
 
-	local function refreshPrompt()
-		local own = OWN_STAGES[name]
-		local tier = if own then own.tierName(level) else PondStages.tierName(level)
-		prompt.ObjectText = string.format("%s · Level %d · %s", label, level, tier)
-		prompt.ActionText = if level >= PondStages.MaxLevel then "Max level" else "Upgrade"
-		prompt.Enabled = level < PondStages.MaxLevel
-	end
+	-- the upgrade pad beside the path (replaces the E prompt)
+	local padSpot = Config.Pads.Spots[areaId]
+	local setPad = UpgradePads.add(padsFolder, areaId, frame * CFrame.new(padSpot[1], 0, padSpot[2]))
 
 	local function apply(newLevel: number, effects: boolean)
 		if newLevel == level then
@@ -201,30 +196,26 @@ local function setUp(name: string, col: number, row: number, areaId: string)
 		level = newLevel
 		show(level)
 		if effects then
-			burst(anchor.CFrame * CFrame.new(0, 0, 6), level % 5 == 1)
+			burst(frame * CFrame.new(padSpot[1], 2, padSpot[2]), level % 5 == 1)
 		end
-		refreshPrompt()
+		setPad(level)
 		areaLevels[name] = level
 		refreshVillage()
 	end
 	applyLevel[areaId] = apply
 
-	prompt.Triggered:Connect(function(player: Player)
-		-- The same owner check, request limit, coin debit and save as the RemoteFunction.
-		VillageRemotes.upgrade(player, areaId)
-	end)
-
 	if isPond then
 		hidePondLevelOne(area)
 	end
 	show(level)
-	refreshPrompt()
+	setPad(level)
 	areaLevels[name] = level
 end
 
 for _, a in AREAS do
 	setUp(a[1], a[2], a[3], a[4])
 end
+UpgradePads.start(VillageRemotes.upgrade)
 refreshVillage()
 
 -- The plot visuals are not save data: rebuild from the owner's saved levels on every join.

@@ -1,8 +1,9 @@
 -- Builds the client's kit (assets/ClientKit.rbxm, Rojo puts it in ReplicatedStorage.ClientKit) from the work place
 -- saved by Studio (assets/raw/MapWork.rbxlx): the rigged slime body and its outline hull (the models imported on
 -- the owner's account, Workspace.SlimeBody / SlimeBodyOutline), and the food the slimes carry (Items/<item>: the
--- pond's koi, the ripe carrot and cabbage). Dishes and the egg have no model yet; the client draws a stand-in and
--- names it in the log. Run after the work place is saved:
+-- pond's koi, the ripe carrot and cabbage), the dishes, the egg and the work tools (from PropKit; see
+-- docs/kit/README.md). A missing model is named in the output and the client draws a stand-in. Run after the work
+-- place is saved:
 --   lune run tools/kit/export_client_kit.luau
 local fs = require("@lune/fs")
 local roblox = require("@lune/roblox")
@@ -44,6 +45,14 @@ local crops = storage:FindFirstChild("CropKit")
 take(fish and fish:FindFirstChild("KoiFish"), "fish", items)
 take(crops and crops:FindFirstChild("Carrot4"), "carrot", items)
 take(crops and crops:FindFirstChild("Cabbage4"), "cabbage", items)
+-- the cooked dishes and the egg (made with generate_mesh, docs/kit/README.md), and the gardener's and fisher's
+-- tools (tools/kit/make_tools.luau builds the rod and the hoe; the watering can is the garden's): all in PropKit
+local props = storage:FindFirstChild("PropKit")
+for _, key in { "grilledFish", "veggieStew", "fishVegSoup", "Egg", "Hoe", "WateringCan", "FishingRod" } do
+	take(props and props:FindFirstChild(key), key, items)
+end
+-- (the client draws a carried egg from ClientKit.Egg)
+take(props and props:FindFirstChild("Egg"), "Egg", kit)
 
 -- Looks: a game script may not set a SurfaceAppearance's maps (Plugin capability), only its Color, so every map the
 -- slimes use is made here once: Plain (the white map, tinted per slime), PlainFine (roughness 0.03: Ice, Jelly),

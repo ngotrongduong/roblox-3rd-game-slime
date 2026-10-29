@@ -14,8 +14,12 @@
 -- Tiers and helpers are the pantry's (PantryStages): the classic stud look, a tier in its colours;
 -- every prop at its real height (the player is 5 studs). The beds, crops and work spot stay; the
 -- soil floor stays soil. Positions are in the garden's own frame (x across, z from the gate in).
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local Config = require(ReplicatedStorage.Shared.Config)
 local PantryStages = require(script.Parent.PantryStages)
 local PondStages = require(script.Parent.PondStages)
+local WorkProps = require(script.Parent.WorkProps)
 
 local GardenStages = {}
 
@@ -1032,6 +1036,65 @@ function GardenStages.build(area: Instance, frame: CFrame, level: number): Model
 			end
 		end
 	end
+	-- The work places (the owner, 2026-10-29): four, one on each side of the two beds, as invisible markers
+	-- WorkSpot1..4 (front, right, back, left), found from where the beds really are; the vegetable bin
+	-- outside the gate beside the path; and a marker CropPlot1..n at every planting spot of the beds, for
+	-- the crop cycle (numbered along x, then z; the attribute Bed is 1 for the left bed, 2 for the right).
+	local W = Config.WorkPlaces
+	local function marker(name: string, cf: CFrame, size: Vector3): Part
+		local mk = part(m, name, size, cf, Color3.new(1, 1, 1)) :: Part
+		mk.Transparency = 1
+		mk.CanCollide = false
+		mk.CanQuery = false
+		mk.CanTouch = false
+		mk.CastShadow = false
+		return mk
+	end
+	local beds = area:FindFirstChild("Beds")
+	if beds and beds:IsA("Model") then
+		local box, size = beds:GetBoundingBox()
+		local c = frame:PointToObjectSpace(box.Position)
+		local hx, hz = size.X / 2, size.Z / 2
+		local gap, shift = W.GardenGap, W.GardenSideShift
+		local places = {
+			Vector3.new(c.X, 0, c.Z - hz - gap), -- front, on the path from the gate
+			Vector3.new(math.min(c.X + hx + gap, FX - 1.5), 0, c.Z + shift),
+			Vector3.new(c.X, 0, c.Z + hz + gap), -- back
+			Vector3.new(math.max(c.X - hx - gap, -FX + 1.5), 0, c.Z + shift),
+		}
+		for k, p in places do
+			marker("WorkSpot" .. k, frame * CFrame.new(p.X, 0.35, p.Z), Vector3.new(1.6, 0.2, 1.6))
+		end
+	end
+	local plots: { { x: number, z: number, y: number } } = {}
+	for _, d in area:GetChildren() do
+		if d.Name == "Crop" and d:IsA("Model") then
+			local p = frame:PointToObjectSpace(d:GetPivot().Position)
+			table.insert(plots, { x = p.X, z = p.Z, y = p.Y })
+		end
+	end
+	table.sort(plots, function(a, b)
+		if math.abs(a.x - b.x) > 0.5 then
+			return a.x < b.x
+		end
+		return a.z < b.z
+	end)
+	for i, p in plots do
+		local mk = marker("CropPlot" .. i, frame * CFrame.new(p.x, p.y, p.z), Vector3.new(1.2, 0.2, 1.2))
+		mk:SetAttribute("Bed", if p.x < 0 then 1 else 2)
+	end
+	m:SetAttribute("CropPlots", #plots)
+
+	local V = W.VegBin
+	WorkProps.bin(
+		m,
+		frame * CFrame.new(V[1], 0, V[2]) * CFrame.Angles(0, math.rad(V[3]), 0),
+		"VegBin",
+		"garden",
+		WorkProps.Colours.honey,
+		WorkProps.Colours.cream,
+		Color3.fromRGB(226, 190, 100) -- a bed of straw
+	)
 	return m
 end
 

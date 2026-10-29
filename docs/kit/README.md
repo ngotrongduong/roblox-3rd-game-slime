@@ -96,6 +96,24 @@ by slot and era. Kitchen and training ground models (asset ids of the published 
 
 KoiFish 89590294358011, BlueFish 110184517960885 (moved by `src/client/PondFish.client.luau`).
 
+## Food and tools for the slimes' hands (ClientKit.Items, 2026-10-29)
+
+The dishes and the egg were made with `generate_mesh` (the free Creator Store search for food returned only
+unrelated or pack-spam models, so none was taken; these are the owner's own generated objects, no scripts). They sit
+in `PropKit` and `tools/kit/export_client_kit.luau` puts them in `ClientKit.Items` (the egg also at `ClientKit.Egg`).
+
+| Model (ClientKit.Items) | Asset id | Notes |
+|---|---|---|
+| grilledFish | 132026139176704 | a fish with a lemon wedge, about 1 stud; its colour is a little pale, may be redone |
+| veggieStew | 76768389164850 | a wooden bowl of orange stew with carrot and cabbage pieces |
+| fishVegSoup | 92364044048347 | a royal-blue and cream bowl of golden soup |
+| Egg | 140402081795858 | a plain cream egg |
+| FishingRod, Hoe | built from parts | `src/server/WorkProps.luau`; `tools/kit/make_tools.luau` puts them in PropKit; pivot at the foot of the handle |
+| WateringCan | 74900497080556 | the garden's (PropKit) |
+| fish, carrot, cabbage | KoiFish, Carrot4, Cabbage4 | as before |
+
+`tools/kit/fill_client_items.luau` copies the same models into the work place's own ClientKit for a play test.
+
 ## OwnerKit.rbxm (the owner's own library, Mue_you inventory)
 
 | Model | Asset id |

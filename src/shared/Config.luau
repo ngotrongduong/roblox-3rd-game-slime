@@ -195,7 +195,7 @@ Config.Village = {
 		Incubator = { "Incubator1", "Incubator2", "Incubator3", "Incubator4", "Incubator5", "Incubator6" },
 		Storehouse = { "StorehouseDoor", "PantryDoor", "Entrance" },
 		StorehouseModels = { "PantryDoor", "Door" },
-		Box = { "CollectionBox", "FishBucket", "HarvestBox", "DishBox" },
+		Box = { "FishBin", "VegBin", "CollectionBox", "FishBucket", "HarvestBox", "DishBox" },
 		CounterModels = { "KitchenCounter", "Counter", "PrepCounter" },
 		FridgeModels = { "Fridge", "Refrigerator" },
 		NapModels = { "Bench", "Stump", "Log" },
@@ -336,6 +336,41 @@ Config.Training = {
 	ChancePerLevel = 1 / 49,
 	Gain = 1,
 	HpGain = 10,
+}
+
+-- ===== Upgrade pads and work places (the owner, 2026-10-29, docs/GAMEPLAY.md §10) =====
+Config.Pads = {
+	-- The owner: leave every price at $0 for now. Turn this off and the real Village price returns.
+	FreeUpgrades = true,
+	Radius = 2.4, -- studs; the pad's disc
+	StandHeight = 6, -- a player this far above the ground still stands on it
+	CheckSeconds = 0.1,
+	-- where each pad stands: x, z in the area's own frame, beside the path near the entrance
+	Spots = {
+		fishing = { -8.5, -17 },
+		garden = { 8, -13.5 },
+		pantry = { 6.5, -13.5 },
+		kitchen = { 6.5, -12.5 },
+		training = { 6.5, -15.5 },
+		breeding = { 9, -17.5 },
+	},
+}
+
+Config.WorkPlaces = {
+	BinCapacity = 10, -- fish, or vegetables of any kind, a bin shows
+	-- the bins outside the pond and the garden, beside the path: x, z in the area's frame, turn in degrees
+	FishBin = { 9.5, -20.5, 0 },
+	VegBin = { -5.8, -16.5, 0 },
+	-- the fourth fishing place: a blue-grey boulder on the pond's bank (x, z in the pond's frame, its real
+	-- height, the widest it may be); the kit model and its tint
+	FishRock = { x = -19.5, z = 6, height = 3.4, width = 7, model = "WideBoulder", tint = { 112, 148, 200 } },
+	-- the dock's first place stands this many studs in from its far end (the second is mid-dock); the pier's
+	-- place, at its end (pond frame)
+	DockEndInset = 1.0,
+	-- the garden: how far the four places stand off the beds' edges, and the side ones shifted along the beds
+	GardenGap = 2.2,
+	GardenSideShift = 4,
+	PierPlace = { x = 15.2, z = -0.5 },
 }
 
 -- ===== The Goo Valley map (docs/MAP.md) =====

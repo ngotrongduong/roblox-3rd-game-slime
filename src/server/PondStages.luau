@@ -7,9 +7,15 @@
 -- Levels 1-5 add the parts one by one in the first tier (rustic wood). From level 6 on, every five
 -- levels are a new material tier, and each level of the tier moves one part up to it, in the same
 -- order: level 6 the deck, 7 the rails, 8 the lamps, 9 the box, 10 the bollards; and so on to marble
--- and gold at 50. No rods and no side platforms: the slimes carry their own rods and fish from spots
--- on the dock itself (invisible markers WorkSpot1..4 at its open far end, more as the tiers go up).
+-- and gold at 50. The slimes fish from four places (invisible markers WorkSpot1..4, each with a rod in a
+-- stand): the dock's far end, the dock's middle, the side pier (from 21) and the blue rock on the bank
+-- (owner, 2026-10-29), and drop the catch into the fish bin outside the pond.
 -- Used by AreaUpgrade.server.luau (the game) and tools/map/build_pond_showcase.luau (the showcase).
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local Config = require(ReplicatedStorage.Shared.Config)
+local WorkProps = require(script.Parent.WorkProps)
+
 local PondStages = {}
 
 PondStages.MaxLevel = 50
@@ -279,6 +285,8 @@ local CLEAR = {
 	{ -12.6, -12, 2.5, 1 },
 	{ -14, -14.6, 2.5, 41 },
 	{ 0, 30.5, 6, 41 },
+	{ Config.WorkPlaces.FishRock.x, Config.WorkPlaces.FishRock.z, 4, 1 }, -- the blue rock
+	{ Config.WorkPlaces.FishBin[1], Config.WorkPlaces.FishBin[2], 3, 1 }, -- the fish bin
 }
 
 -- Grows the pond to `level` (its lobes from GROW, once each) and clears the scenery standing where
@@ -550,30 +558,72 @@ function PondStages.build(level: number, cell: CFrame, showcase: boolean?): Mode
 		end
 	end
 
-	-- the work spots: invisible markers on the dock's open far end (no side platforms)
-	local SPOTS = {
-		Vector3.new(-1.3, 0, Z1 - 1.2),
-		Vector3.new(1.3, 0, Z1 - 1.2),
-		Vector3.new(-1.6, 0, Z1 - 3.6),
-		Vector3.new(1.6, 0, Z1 - 3.6),
-	}
-	for k = 1, spots(level) do
-		local p = SPOTS[k]
-		local mark = part(
-			m,
-			"WorkSpot" .. k,
-			Vector3.new(1.6, 0.2, 1.6),
-			cell * CFrame.new(p.X, DECK_Y + 0.4, p.Z),
-			Color3.new(1, 1, 1)
-		)
-		mark.Transparency = 1
-		mark.CanCollide = false
-	end
-
 	-- the life round the pond (SHORE), in the area's frame (the dock's cell is DOCK_X along it); the
 	-- kit placer is the pantry's, handed over by PantryStages (which requires this module)
 	local area = cell * CFrame.new(-DOCK_X, 0, 0)
 	local place = PondStages.kitPlace
+
+	-- The fishing places (the owner, 2026-10-29): 1 at the dock's far end close to the water, 2 in the
+	-- middle of the dock, 3 on the side pier (built from 21, when the third slot opens), 4 on the blue
+	-- rock on the bank. A place exists with its slot (spots(level)); a rod stands at each, in a stand beside
+	-- it. The markers keep the names the village brain reads (Config.Village.SpotNames.Work).
+	local W = Config.WorkPlaces
+	local deckTop = DECK_Y + 0.25
+	local function mark(k: number, cf: CFrame)
+		local mk = part(m, "WorkSpot" .. k, Vector3.new(1.6, 0.2, 1.6), cf, Color3.new(1, 1, 1))
+		mk.Transparency = 1
+		mk.CanCollide = false
+		mk.CanQuery = false
+		mk.CanTouch = false
+		mk.CastShadow = false
+	end
+	local open = spots(level)
+	if open >= 1 then
+		mark(1, cell * CFrame.new(0, deckTop + 0.15, Z1 - W.DockEndInset))
+		WorkProps.rodStand(m, cell * CFrame.new(2.1, deckTop, Z1 - 2.6) * CFrame.Angles(0, math.rad(-90), 0))
+	end
+	if open >= 2 then
+		mark(2, cell * CFrame.new(0, deckTop + 0.15, (Z0 + Z1) / 2))
+		WorkProps.rodStand(m, cell * CFrame.new(-2.0, deckTop, (Z0 + Z1) / 2 + 0.2) * CFrame.Angles(0, math.rad(90), 0))
+	end
+	if open >= 3 then
+		local pier = W.PierPlace
+		mark(3, area * CFrame.new(pier.x, JETTY_Y + 0.25 + 0.15, pier.z))
+		WorkProps.rodStand(m, area * CFrame.new(pier.x - 1.0, JETTY_Y + 0.25, pier.z - 1.7))
+	end
+	-- the blue rock stands from level 1 (scenery); the place on it opens with the fourth slot
+	local R = W.FishRock
+	local rock = if place then place(m, area, R.model, R.x, R.z, R.height, R.width) else nil
+	if rock then
+		rock.Name = "FishRock"
+		for _, d in rock:GetDescendants() do
+			if d:IsA("BasePart") then
+				d.Color = Color3.fromRGB(R.tint[1], R.tint[2], R.tint[3])
+				d.CanCollide = true
+			end
+		end
+		local box, size = rock:GetBoundingBox()
+		if open >= 4 then
+			local top = box.Position + Vector3.new(0, size.Y / 2, 0)
+			mark(4, CFrame.new(top + Vector3.new(0, 0.2, 0)))
+			WorkProps.rodStand(m, CFrame.new(top + area.RightVector * 1.1 + area.LookVector * -0.5) * area.Rotation)
+		end
+	elseif open >= 4 then
+		-- no kit model yet: the place still opens, on the bank
+		mark(4, area * CFrame.new(R.x, 0.5, R.z))
+	end
+
+	-- the fish bin outside the pond, beside the path: it holds ten fish (src/client/Bins.client.luau)
+	local B = W.FishBin
+	WorkProps.bin(
+		m,
+		area * CFrame.new(B[1], 0, B[2]) * CFrame.Angles(0, math.rad(B[3]), 0),
+		"FishBin",
+		"fishing",
+		WorkProps.Colours.blue,
+		WorkProps.Colours.cream,
+		Color3.fromRGB(196, 228, 246) -- a bed of ice
+	)
 	for _, s in SHORE do
 		if place and level >= s[7] then
 			local model = place(m, area, s[1], s[2], s[3], s[4], s[5], s[8])
