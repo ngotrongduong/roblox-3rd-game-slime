@@ -17,6 +17,7 @@ local sheet: Frame? = nil
 local toast: TextLabel? = nil
 local own: Folder? = nil
 local prompts: { ProximityPrompt } = {}
+local promptAreas: { [string]: boolean } = {}
 local activePoint: Vector3? = nil
 local busy = false
 local remembered: { [string]: { [number]: { worker: string?, reserve: string? } } } = {}
@@ -270,7 +271,7 @@ local function picker(area: string, choose: (string) -> (), permitWorking: boole
 			local name = labelFor(slime.Name)
 			local chooseButton = button(cell, name .. "  Lv ?  ?/?", function()
 				choose(slime.Name)
-			end, C.UiWidth - C.UiButtonSize * 2 - C.UiPadding * 5)
+			end, math.max(C.UiButtonSize * 2, scroller.AbsoluteSize.X - C.UiButtonSize - C.UiPadding * 2))
 			chooseButton.TextScaled = false
 			chooseButton.TextSize = 14
 		end
@@ -308,7 +309,7 @@ renderArea = function(area: string)
 						end)
 					end, false)
 				end, false)
-			end, C.UiWidth - C.UiButtonSize * 3 - C.UiPadding * 5)
+			end, math.max(C.UiButtonSize * 2, scroller.AbsoluteSize.X - C.UiButtonSize * 2 - C.UiPadding * 3))
 			button(cell, "Clear", function()
 				request({ action = "SetPair", index = index }, function()
 					pairs[index] = {}
@@ -318,12 +319,12 @@ renderArea = function(area: string)
 		end
 	elseif area == "kitchen" then
 		local choose = row(scroller)
-		text(choose, "Cooked food", UDim2.fromOffset(C.UiWidth - C.UiPadding * 3, C.UiButtonSize), 19)
+		text(choose, "Cooked food", UDim2.new(1, -C.UiPadding, 0, C.UiButtonSize), 19)
 		for _, slime in ownSlimes() do
 			if canPick(slime, true) then
 				local cell = row(scroller)
 				portrait(cell, slime)
-				text(cell, labelFor(slime.Name), UDim2.fromOffset(C.UiWidth / 3, C.UiButtonSize), 15)
+				text(cell, labelFor(slime.Name), UDim2.fromOffset(math.max(C.UiButtonSize, scroller.AbsoluteSize.X - C.UiButtonSize * 4 - C.UiPadding * 3), C.UiButtonSize), 15)
 				local state = allowed[slime.Name]
 				button(cell, if state == true then "On" else "Allow", function()
 					request({ action = "SetCookedAllowed", slimeId = slime.Name, allowed = true }, function()
@@ -359,7 +360,7 @@ renderArea = function(area: string)
 							renderArea(area)
 						end)
 					end, false)
-				end, (C.UiWidth - C.UiButtonSize * 2) / 2)
+				end, math.max(C.UiButtonSize, (scroller.AbsoluteSize.X - C.UiButtonSize - C.UiPadding * 4) / 2))
 			end
 			if saved.worker or saved.reserve then
 				button(cell, "X", function()
@@ -494,7 +495,7 @@ local function createPrompts(root: Folder)
 				break
 			end
 		end
-		if model then
+		if model and not promptAreas[area] then
 			local entrance = model:FindFirstChild("UpgradePoint", true)
 				or model:FindFirstChild("Entrance", true)
 				or model:FindFirstChild("Gate", true)
@@ -516,6 +517,7 @@ local function createPrompts(root: Folder)
 					end
 				end)
 				table.insert(prompts, prompt)
+				promptAreas[area] = true
 			end
 		end
 	end
@@ -526,6 +528,7 @@ local function bind(root: Folder?)
 		prompt:Destroy()
 	end
 	table.clear(prompts)
+	table.clear(promptAreas)
 	own = root
 	close()
 	refreshHud()
@@ -573,6 +576,9 @@ function VillageUI.start()
 	panel.AnchorPoint = Vector2.new(0.5, 1)
 	panel.Position = UDim2.new(0.5, 0, 1, -C.UiPadding)
 	panel.Size = UDim2.new(1, -2 * C.UiPadding, 0, C.UiHeight)
+	local limit = Instance.new("UISizeConstraint")
+	limit.MaxSize = Vector2.new(C.UiWidth, C.UiHeight)
+	limit.Parent = panel
 	panel.SizeConstraint = Enum.SizeConstraint.RelativeXX
 	panel.ClipsDescendants = true
 	panel.Visible = false
@@ -624,7 +630,7 @@ function VillageUI.start()
 					close()
 				end
 			end
-			if own and #prompts == 0 then
+			if own and #prompts < #Config.Village.Areas then
 				createPrompts(own)
 			end
 			task.wait(C.FarUpdateSeconds)
