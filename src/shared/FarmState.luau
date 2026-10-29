@@ -21,31 +21,29 @@ export type Stats = typeof(StatsModule.starter())
 export type ColourGenotype = typeof(Genetics.homozygous(""))
 export type Appearance = typeof(Mutations.none())
 
--- hungerState is derived from hunger: "full", "hungry" or "starving".
-export type Needs = { hunger: number, hungerState: string }
+export type Needs = { fullness: number, energy: number, fun: number }
+export type Buff = { stat: string, percent: number, untilTime: number }
 
--- Item ids in each gear slot (battle).
+-- Gear is kept for the future fight phase; the fallen state is replaced by a timed ghost.
 export type Loadout = { head: string?, hand: string?, tail: string? }
-
 export type Slime = {
 	id: string,
 	name: string,
-	-- Per-slime seed for client-side moods and movement.
 	seed: number,
 	assetId: string,
 	stats: Stats,
 	colourGenotype: ColourGenotype,
-	-- The plain colour, Dual body colour or Secret first colour; recomputed on load.
 	visibleColour: string,
 	appearanceMutation: Appearance,
 	isFavourite: boolean,
 	needs: Needs,
+	trait: string,
+	friends: { [string]: number },
+	buff: Buff?,
+	ghostUntil: number?,
 	createdAt: number,
-	-- 0 = ready; else the time the breeding rest ends.
 	breedReadyAt: number,
 	loadout: Loadout,
-	fallen: boolean,
-	previousLoadout: Loadout?,
 }
 
 export type Embryo = {
@@ -53,16 +51,15 @@ export type Embryo = {
 	colourGenotype: ColourGenotype,
 	appearanceMutation: Appearance,
 }
-
 export type Egg = {
 	id: string,
 	parentIds: { string },
 	createdAt: number,
-	hatchAt: number,
+	hatchAt: number?,
+	place: string,
+	slot: number,
 	offspringId: string,
-	-- Fully decided when the egg is laid; never rerolled.
 	embryo: Embryo,
-	-- "incubating" or "ready"; derived from hatchAt, never trusted from a save.
 	status: string,
 	injected: boolean?,
 	statBoosted: boolean?,
@@ -77,42 +74,30 @@ export type Discoveries = {
 	material: DiscoveryBucket,
 }
 
-export type Food = { basicFood: number, capacity: number }
-
-export type Workstation = {
-	id: string,
-	definitionId: string,
-	assignedSlimeIds: { string },
-	progressSeconds: number,
-	pendingOutput: number,
+export type Area = { level: number }
+export type Areas = {
+	fishing: Area,
+	garden: Area,
+	kitchen: Area,
+	pantry: Area,
+	training: Area,
+	breeding: Area,
 }
-
-export type Upgrades = {
-	foodStorage: number,
-	incubationSpeed: number,
-	breedCooldown: number,
-	growthSpeed: number,
-	slimeStorage: number,
-	-- Retired in the original (auto-hatch is free); kept for save compatibility.
-	autoHatch: number,
-	specializedBreeding: number,
+export type WorkSlot = { worker: string?, reserve: string?, progress: number, stat: string? }
+export type WorkArea = { slots: { WorkSlot }, box: { [string]: number } }
+export type Work = {
+	fishing: WorkArea,
+	garden: WorkArea,
+	kitchen: WorkArea,
+	training: WorkArea,
 }
+export type Pair = { a: string?, b: string?, courtingUntil: number? }
+export type Pairing = { pairs: { Pair } }
 
 -- kind: "INVENTORY", "EQUIPPED_TO_SLIME" (with slimeId and slot), "BATTLE_ESCROW", "PENDING_RETURN".
 export type ItemOwnership = { kind: string, slimeId: string?, slot: string? }
 export type Item = { id: string, definitionId: string, ownership: ItemOwnership }
 
-export type NestPair = { ids: { string }, pickedAt: number }
-export type Nest = {
-	nestId: string,
-	enabled: boolean,
-	-- "level", "atk", "def", "hp" or "spd".
-	specialty: string,
-	memberSlimeIds: { string },
-	currentEggId: string?,
-	pausedReason: string?,
-	pendingPair: NestPair?,
-}
 
 export type Lifetime = {
 	coinsEarned: number,
@@ -154,15 +139,18 @@ export type Farm = {
 	eggs: { Egg },
 	breedsSinceMutation: number,
 	discoveries: Discoveries,
-	food: Food,
-	workstations: { Workstation },
-	unlockedStations: { string },
+	areas: Areas,
+	work: Work,
+	storehouse: { [string]: number },
+	counter: { [string]: number },
+	fridge: { [string]: number },
+	cookedAllowed: { string },
+	breeding: Pairing,
 	lastSimulatedAt: number,
 	coins: number,
 	items: { Item },
 	materials: { [string]: number },
-	upgrades: Upgrades,
-	nest: Nest?,
+
 	lifetime: Lifetime,
 	avatar: Avatar,
 	-- nil on legacy saves means the tour is done.
@@ -175,16 +163,6 @@ export type Farm = {
 
 FarmState.SlimeSlots = { "head", "hand", "tail" }
 FarmState.AvatarSlots = { "hand", "head", "tail", "back", "wings", "aura" }
-FarmState.NestSpecialties = { "level", "atk", "def", "hp", "spd" }
-FarmState.UpgradeKeys = {
-	"foodStorage",
-	"incubationSpeed",
-	"breedCooldown",
-	"growthSpeed",
-	"slimeStorage",
-	"autoHatch",
-	"specializedBreeding",
-}
 
 -- ===== small shared helpers =====
 
@@ -194,54 +172,84 @@ function FarmState.dayKey(now: number): string
 	return string.format("%04d-%02d-%02d", t.year, t.month, t.day)
 end
 
-function FarmState.hungerState(hunger: number): string
-	if hunger <= 0 then
-		return "starving"
-	elseif hunger <= Config.Farm.HungryThreshold then
-		return "hungry"
-	end
-	return "full"
+function FarmState.fullNeeds(): Needs
+	local n = Config.Needs.Start
+	return { fullness = n, energy = n, fun = n }
 end
 
-function FarmState.fullNeeds(): Needs
-	local h = Config.Farm.StartingHunger
-	return { hunger = h, hungerState = FarmState.hungerState(h) }
+function FarmState.traitForSeed(seed: number): string
+	local traits = Config.Village.Traits
+	return traits[math.floor(seed % #traits) + 1]
+end
+
+function FarmState.slotCount(level: number): number
+	local count = Config.Work.BaseSlots
+	for _, threshold in Config.Work.SlotLevels do
+		if level >= threshold then
+			count += 1
+		end
+	end
+	return count
+end
+
+function FarmState.breedingCount(level: number): number
+	local count = Config.Breeding.BasePlaces
+	for _, threshold in Config.Breeding.SlotLevels do
+		if level >= threshold then
+			count += 1
+		end
+	end
+	return count
+end
+
+function FarmState.newAreas(): Areas
+	local out: any = {}
+	for _, id in Config.Village.Areas do
+		out[id] = { level = Config.Village.StartLevel }
+	end
+	return out :: Areas
+end
+
+function FarmState.newWork(areas: Areas): Work
+	local out: any = {}
+	for _, id in Config.Work.Areas do
+		local slots: { WorkSlot } = {}
+		for _ = 1, FarmState.slotCount((areas :: any)[id].level) do
+			table.insert(slots, { progress = 0 })
+		end
+		out[id] = { slots = slots, box = {} }
+	end
+	return out :: Work
 end
 
 function FarmState.emptyLoadout(): Loadout
 	return {}
 end
 
-function FarmState.emptyUpgrades(): Upgrades
-	return {
-		foodStorage = 0,
-		incubationSpeed = 0,
-		breedCooldown = 0,
-		growthSpeed = 0,
-		slimeStorage = 0,
-		autoHatch = 0,
-		specializedBreeding = 0,
-	}
-end
 
 function FarmState.emptyDiscoveries(): Discoveries
 	return { base = {}, dual = {}, secret = {}, material = {} }
 end
 
--- Pantry size after the Food Storage upgrade.
-function FarmState.foodCapacity(upgrades: Upgrades): number
-	return Config.Farm.FoodCapacityBase + upgrades.foodStorage * Config.Farm.FoodCapacityPerLevel
-end
-
--- Slime slots after the More Slime Slots upgrade (20 .. 220).
-function FarmState.populationLimit(upgrades: Upgrades): number
-	local b = Config.Breeding
-	return b.PopulationBase + math.min(b.PopulationMaxLevel, upgrades.slimeStorage) * b.PopulationPerLevel
-end
-
--- Egg status is derived, never stored truth.
+-- An egg in a nest has no incubation clock.
 function FarmState.eggStatus(egg: Egg, now: number): string
+	if egg.place ~= "incubator" or egg.hatchAt == nil then
+		return "nest"
+	end
 	return if now >= egg.hatchAt then "ready" else "incubating"
+end
+
+function FarmState.villageLevel(areas: Areas): number
+	local total = 0
+	for _, id in Config.Village.Areas do
+		total += (areas :: any)[id].level
+	end
+	return math.floor(total / #Config.Village.Areas)
+end
+
+function FarmState.populationLimit(areas: Areas): number
+	return Config.Village.PopulationBase
+		+ Config.Village.PopulationPerLevel * (FarmState.villageLevel(areas) - Config.Village.StartLevel)
 end
 
 function FarmState.findSlime(farm: Farm, id: string): (Slime?, number?)
@@ -285,26 +293,13 @@ function FarmState.newAvatar(now: number): Avatar
 	}
 end
 
-function FarmState.newWorkstations(): { Workstation }
-	local out = {}
-	for i, definitionId in Config.Farm.Stations do
-		table.insert(out, {
-			id = "station-" .. i,
-			definitionId = definitionId,
-			assignedSlimeIds = {},
-			progressSeconds = 0,
-			pendingOutput = 0,
-		})
-	end
-	return out
-end
 
 function FarmState.newStarters(now: number): { Slime }
 	local colour = Config.Farm.StarterColour
 	local stats = StatsModule.starter()
 	-- Starters are adults from the first second: born one full grow-up ago. (The original used
 	-- now - 300 s, which left level-4 starters babies for 3 s, against its own "already adult".)
-	local createdAt = now - Growth.growUpSeconds(StatsModule.level(stats), 0)
+	local createdAt = now - Growth.growUpSeconds(StatsModule.level(stats), Config.Village.StartLevel - 1)
 	local out = {}
 	for i = 1, Config.Farm.StarterCount do
 		table.insert(out, {
@@ -318,11 +313,13 @@ function FarmState.newStarters(now: number): { Slime }
 			appearanceMutation = Mutations.none(),
 			isFavourite = false,
 			needs = FarmState.fullNeeds(),
+			trait = FarmState.traitForSeed(starterSeed(i)),
+			friends = {},
+			buff = nil,
+			ghostUntil = nil,
 			createdAt = createdAt,
 			breedReadyAt = 0,
 			loadout = FarmState.emptyLoadout(),
-			fallen = false,
-			previousLoadout = nil,
 		})
 	end
 	return out
@@ -337,22 +334,24 @@ function FarmState.newFarm(now: number): Farm
 	for _, row in f.StarterItems do
 		table.insert(items, { id = row[1], definitionId = row[2], ownership = { kind = "INVENTORY" } })
 	end
-	local upgrades = FarmState.emptyUpgrades()
+	local areas = FarmState.newAreas()
 	local starters = FarmState.newStarters(now)
 	return {
 		slimes = starters,
 		eggs = {},
 		breedsSinceMutation = 0,
 		discoveries = discoveries,
-		food = { basicFood = f.StartingFood, capacity = FarmState.foodCapacity(upgrades) },
-		workstations = FarmState.newWorkstations(),
-		unlockedStations = table.clone(f.StartUnlockedStations),
+		areas = areas,
+		work = FarmState.newWork(areas),
+		storehouse = table.clone(Config.Food.Start),
+		counter = {},
+		fridge = {},
+		cookedAllowed = {},
+		breeding = { pairs = { {}, {} } },
 		lastSimulatedAt = now,
 		coins = f.StartingCoins,
 		items = items,
 		materials = {},
-		upgrades = upgrades,
-		nest = nil,
 		lifetime = {
 			coinsEarned = 0,
 			foodFarmed = 0,
@@ -424,17 +423,51 @@ local function validateLoadout(raw: any, slots: { string }, warnings: { string }
 end
 
 local function validateNeeds(raw: any, warnings: { string }, prefix: string): Needs
-	if type(raw) ~= "table" then
-		table.insert(warnings, prefix .. ": needs missing, full hunger applied")
-		return FarmState.fullNeeds()
+	local out = FarmState.fullNeeds()
+	for _, key in { "fullness", "energy", "fun" } do
+		local value = if type(raw) == "table" then raw[key] else nil
+		if isNum(value) then
+			(out :: any)[key] = math.clamp(value, 0, Config.Needs.Max)
+			if value ~= (out :: any)[key] then
+				table.insert(warnings, prefix .. "." .. key .. ": clamped")
+			end
+		elseif type(raw) ~= "table" or value == nil then
+			table.insert(warnings, prefix .. "." .. key .. ": missing, filled")
+		end
 	end
-	local hunger = if isNum(raw.hunger) then raw.hunger else Config.Farm.StartingHunger
-	local clamped = math.clamp(hunger, 0, Config.Farm.MaxHunger)
-	if clamped ~= raw.hunger and isNum(raw.hunger) then
-		table.insert(warnings, prefix .. ": hunger out of range, clamped")
-	end
-	return { hunger = clamped, hungerState = FarmState.hungerState(clamped) }
+	return out
 end
+
+local function validateFriends(raw: any, selfId: string): { [string]: number }
+	local ranked: { { id: string, score: number } } = {}
+	if type(raw) == "table" then
+		for id, value in raw do
+			if type(id) == "string" and id ~= selfId and isNum(value) then
+				table.insert(ranked, { id = id, score = math.clamp(value, 0, Config.Needs.Max) })
+			end
+		end
+	end
+	table.sort(ranked, function(a, b)
+		if a.score == b.score then
+			return a.id < b.id
+		end
+		return a.score > b.score
+	end)
+	local out: { [string]: number } = {}
+	for i = 1, math.min(#ranked, Config.Village.MaxFriends) do
+		out[ranked[i].id] = ranked[i].score
+	end
+	return out
+end
+
+local function validateBuff(raw: any): Buff?
+	if type(raw) == "table" and table.find(StatsModule.Keys, raw.stat) and isNum(raw.percent)
+		and isNum(raw.untilTime) and raw.untilTime >= 0 then
+		return { stat = raw.stat, percent = math.clamp(raw.percent, 0, Config.Needs.Max), untilTime = raw.untilTime }
+	end
+	return nil
+end
+
 
 local function validateSlime(raw: any, index: number, now: number, warnings: { string }): Slime?
 	if type(raw) ~= "table" then
@@ -488,14 +521,15 @@ local function validateSlime(raw: any, index: number, now: number, warnings: { s
 		appearanceMutation = appearance,
 		isFavourite = raw.isFavourite == true,
 		needs = validateNeeds(raw.needs, warnings, id),
+		trait = if table.find(Config.Village.Traits, raw.trait) then raw.trait else FarmState.traitForSeed(if isNum(raw.seed) then raw.seed else Rng.hash(id)),
+		friends = validateFriends(raw.friends, id),
+		buff = validateBuff(raw.buff),
+		ghostUntil = if isNum(raw.ghostUntil) and raw.ghostUntil > 0 then raw.ghostUntil else nil,
 		createdAt = createdAt,
 		breedReadyAt = breedReadyAt,
 		loadout = validateLoadout(raw.loadout, FarmState.SlimeSlots, warnings, id) :: Loadout,
-		fallen = raw.fallen == true,
-		previousLoadout = if type(raw.previousLoadout) == "table"
-			then validateLoadout(raw.previousLoadout, FarmState.SlimeSlots, warnings, id) :: Loadout
-			else nil,
-	}
+
+
 end
 
 local function validateEgg(raw: any, now: number, warnings: { string }): Egg?
@@ -514,11 +548,14 @@ local function validateEgg(raw: any, now: number, warnings: { string }): Egg?
 		and type(parents[1]) == "string"
 		and type(parents[2]) == "string"
 	local createdOk = isNum(raw.createdAt) and raw.createdAt > 0
-	local hatchOk = isNum(raw.hatchAt) and raw.hatchAt > 0
-	if not (parentsOk and createdOk and hatchOk and isText(raw.offspringId)) then
-		table.insert(warnings, "egg " .. id .. ": invalid parents, times or offspring id, dropped")
+local place = if raw.place == "nest" then "nest" else "incubator"
+	local slotOk = isNum(raw.slot) and raw.slot >= 1
+	local hatchOk = place == "nest" or (isNum(raw.hatchAt) and raw.hatchAt > 0)
+	if not (parentsOk and createdOk and slotOk and hatchOk and isText(raw.offspringId)) then
+		table.insert(warnings, "egg " .. id .. ": invalid parents, times, slot or offspring id, dropped")
 		return nil
 	end
+
 	local embryo = raw.embryo
 	local genotype = if type(embryo) == "table"
 		then Genetics.validateColour(embryo.colourGenotype, warnings, "egg " .. id)
@@ -534,12 +571,14 @@ local function validateEgg(raw: any, now: number, warnings: { string }): Egg?
 		table.insert(warnings, "egg " .. id .. ": unknown " .. appearance.type .. " design kept (placeholder art)")
 	end
 	-- Never restart or extend the timer.
-	local hatchAt = math.max(raw.hatchAt, raw.createdAt)
+	local hatchAt = if place == "incubator" then math.max(raw.hatchAt, raw.createdAt) else nil
 	local egg: Egg = {
 		id = id,
 		parentIds = { parents[1], parents[2] },
 		createdAt = raw.createdAt,
 		hatchAt = hatchAt,
+		place = place,
+		slot = math.floor(raw.slot),
 		offspringId = raw.offspringId,
 		embryo = {
 			stats = StatsModule.validate(embryo.stats, warnings, "egg " .. id .. ".embryo"),
@@ -585,93 +624,120 @@ local function validateDiscoveries(raw: any, warnings: { string }): Discoveries
 	return out
 end
 
-local function validateUpgrades(raw: any, warnings: { string }): Upgrades
-	local out = FarmState.emptyUpgrades()
-	if raw == nil then
-		return out
+local function validCount(v: any): number
+	return if isNum(v) and v > 0 then math.floor(v) else 0
+end
+
+local function validateAreas(raw: any): Areas
+	local areas = FarmState.newAreas()
+	for _, id in Config.Village.Areas do
+		local row = if type(raw) == "table" then raw[id] else nil
+		if type(row) == "table" and isNum(row.level) then
+			(areas :: any)[id].level = math.clamp(math.floor(row.level), Config.Village.StartLevel, Config.Village.MaxLevel)
+		end
 	end
-	if type(raw) ~= "table" then
-		table.insert(warnings, "upgrades invalid, reset")
-		return out
-	end
-	-- Never drop this block: the original once rebuilt farms without it and erased upgrades.
-	for _, key in FarmState.UpgradeKeys do
-		local v = raw[key]
-		if v ~= nil then
-			if isNum(v) and v >= 0 then
-				(out :: any)[key] = math.floor(v)
-			else
-				table.insert(warnings, "upgrades." .. key .. " invalid, reset to 0")
-			end
+	return areas
+end
+
+local function storeCapacity(level: number): number
+	return Config.Food.StorehouseBase + Config.Food.StorehousePerLevel * (level - Config.Village.StartLevel)
+end
+
+local function fridgeCapacity(level: number): number
+	return Config.Food.FridgeBase + Config.Food.FridgePerLevel * (level - Config.Village.StartLevel)
+end
+
+local function validateStock(raw: any, keys: { string }, capacity: number): { [string]: number }
+	local out: { [string]: number } = {}
+	local left = capacity
+	for _, key in keys do
+		local value = if type(raw) == "table" then validCount(raw[key]) else 0
+		local keep = math.min(value, left)
+		if keep > 0 then
+			out[key] = keep
+			left -= keep
 		end
 	end
 	return out
 end
 
-local function validateFood(raw: any, upgrades: Upgrades, warnings: { string }): Food
-	-- The capacity is always re-derived from the upgrade level; food above it is cut.
-	local capacity = FarmState.foodCapacity(upgrades)
-	if type(raw) ~= "table" then
-		table.insert(warnings, "food missing, starting stock applied")
-		return { basicFood = math.min(Config.Farm.StartingFood, capacity), capacity = capacity }
+local function validateWork(raw: any, areas: Areas, slimes: { Slime }, now: number): Work
+	local out = FarmState.newWork(areas)
+	local taken: { [string]: boolean } = {}
+	local known: { [string]: Slime } = {}
+	for _, slime in slimes do
+		known[slime.id] = slime
 	end
-	local food = if isNum(raw.basicFood) then math.floor(raw.basicFood) else Config.Farm.StartingFood
-	if food < 0 then
-		table.insert(warnings, "food below zero, clamped")
-		food = 0
-	elseif food > capacity then
-		table.insert(warnings, "food above capacity, clamped")
-		food = capacity
-	end
-	return { basicFood = food, capacity = capacity }
-end
-
-local function validateWorkstations(raw: any, slimeIds: { [string]: boolean }, warnings: { string }): { Workstation }
-	local known = {}
-	for _, id in Config.Farm.Stations do
-		known[id] = true
-	end
-	local out = {}
-	if raw ~= nil and type(raw) ~= "table" then
-		table.insert(warnings, "workstations invalid, defaults created")
-	end
-	if type(raw) == "table" then
-		local seen = {}
-		for i, w in raw do
-			if type(w) == "table" and type(i) == "number" then
-				local id = if isText(w.id) then w.id else "station-" .. i
-				if not known[w.definitionId] then
-					table.insert(warnings, "workstation " .. id .. ": unknown definition, dropped")
-				elseif seen[id] then
-					table.insert(warnings, "workstation " .. id .. ": duplicate, dropped")
-				else
-					seen[id] = true
-					local workers = stringList(w.assignedSlimeIds, function(s)
-						return slimeIds[s] == true
-					end)
-					while #workers > Config.Farm.StationMaxWorkers do
-						table.remove(workers)
+	for _, id in Config.Work.Areas do
+		local w = if type(raw) == "table" then raw[id] else nil
+		local area = (out :: any)[id] :: WorkArea
+		if type(w) == "table" then
+			area.box = validateStock(w.box, Config.Food.RawOrder, Config.Work.BoxCapacity)
+			if id == "kitchen" then
+				area.box = validateStock(w.box, Config.Food.DishOrder, Config.Work.BoxCapacity)
+			elseif id == "training" then
+				area.box = {}
+			end
+			for i, slot in area.slots do
+				local old = if type(w.slots) == "table" then w.slots[i] else nil
+				if type(old) == "table" then
+					slot.progress = if isNum(old.progress) then math.max(0, old.progress) else 0
+					if id == "training" and table.find(StatsModule.Keys, old.stat) then
+						slot.stat = old.stat
 					end
-					-- Saves written by this port store seconds.
-					local progress = if isNum(w.progressSeconds) and w.progressSeconds >= 0
-						then w.progressSeconds
-						else 0
-					table.insert(out, {
-						id = id,
-						definitionId = w.definitionId,
-						assignedSlimeIds = workers,
-						progressSeconds = progress,
-						pendingOutput = nonNegInt(w.pendingOutput, 0),
-					})
+					for _, role in { "worker", "reserve" } do
+						local sid = old[role]
+						local slime = if type(sid) == "string" then known[sid] else nil
+						if slime and not taken[sid] and (slime.ghostUntil == nil or slime.ghostUntil <= now)
+							and not Growth.isBaby(slime.createdAt, now, StatsModule.level(slime.stats),
+								(areas :: any).breeding.level - Config.Village.StartLevel) then
+							(slot :: any)[role] = sid
+							taken[sid] = true
+						end
+					end
 				end
 			end
 		end
 	end
-	if #out == 0 then
-		return FarmState.newWorkstations()
-	end
 	return out
 end
+
+local function validatePairs(raw: any, areas: Areas, slimes: { Slime }, work: Work, now: number): Pairing
+	local pairs: { Pair } = {}
+	local taken: { [string]: boolean } = {}
+	local known: { [string]: Slime } = {}
+	for _, s in slimes do
+		known[s.id] = s
+	end
+	for _, id in Config.Work.Areas do
+		for _, slot in (work :: any)[id].slots do
+			if slot.worker then taken[slot.worker] = true end
+			if slot.reserve then taken[slot.reserve] = true end
+		end
+	end
+	for i = 1, FarmState.breedingCount(areas.breeding.level) do
+		local p = if type(raw) == "table" and type(raw.pairs) == "table" then raw.pairs[i] else nil
+		local a = if type(p) == "table" then p.a else nil
+		local b = if type(p) == "table" then p.b else nil
+		local sa = if type(a) == "string" then known[a] else nil
+		local sb = if type(b) == "string" then known[b] else nil
+		if sa and sb and a ~= b and not taken[a] and not taken[b]
+			and (sa.ghostUntil == nil or sa.ghostUntil <= now)
+			and (sb.ghostUntil == nil or sb.ghostUntil <= now)
+			and not Growth.isBaby(sa.createdAt, now, StatsModule.level(sa.stats), areas.breeding.level - 1)
+			and not Growth.isBaby(sb.createdAt, now, StatsModule.level(sb.stats), areas.breeding.level - 1) then
+			table.insert(pairs, {
+				a = a, b = b,
+				courtingUntil = if isNum(p.courtingUntil) and p.courtingUntil >= 0 then p.courtingUntil else nil,
+			})
+			taken[a], taken[b] = true, true
+		else
+			table.insert(pairs, {})
+		end
+	end
+	return { pairs = pairs }
+end
+
 
 local function validateItems(raw: any, warnings: { string }): { Item }
 	local out = {}
@@ -719,42 +785,6 @@ local function validateItems(raw: any, warnings: { string }): { Item }
 	return out
 end
 
-local function validateNest(raw: any, slimeIds: { [string]: boolean }, warnings: { string }): Nest?
-	if raw == nil then
-		return nil
-	end
-	if type(raw) ~= "table" or type(raw.nestId) ~= "string" or type(raw.enabled) ~= "boolean" then
-		table.insert(warnings, "nest invalid, removed")
-		return nil
-	end
-	if not table.find(FarmState.NestSpecialties, raw.specialty) then
-		table.insert(warnings, "nest specialty invalid, removed")
-		return nil
-	end
-	local nest: Nest = {
-		nestId = raw.nestId,
-		enabled = raw.enabled,
-		specialty = raw.specialty,
-		memberSlimeIds = stringList(raw.memberSlimeIds, function(s)
-			return slimeIds[s] == true
-		end),
-		currentEggId = if type(raw.currentEggId) == "string" then raw.currentEggId else nil,
-		pausedReason = if raw.pausedReason == "PAUSED" then "PAUSED" else nil,
-		pendingPair = nil,
-	}
-	local pp = raw.pendingPair
-	if type(pp) == "table" then
-		local ids = stringList(pp.ids, function(s)
-			return slimeIds[s] == true
-		end)
-		if #ids == 2 and isNum(pp.pickedAt) then
-			nest.pendingPair = { ids = ids, pickedAt = pp.pickedAt }
-		else
-			table.insert(warnings, "nest.pendingPair invalid, dropped")
-		end
-	end
-	return nest
-end
 
 local function validateAvatar(raw: any, now: number, warnings: { string }): Avatar
 	if type(raw) ~= "table" then
@@ -854,9 +884,10 @@ function FarmState.repair(data: any, now: number): (Farm, { string }, boolean)
 		return FarmState.newFarm(now), warnings, true
 	end
 
-	local upgrades = validateUpgrades(data.upgrades, warnings)
-	-- Only absurd arrays are cut: the gameplay caps apply when breeding, never on load.
-	local slimeCap = math.max(FarmState.populationLimit(upgrades), Config.Farm.RepairSlimeHardCap)
+	local areas = validateAreas(data.areas)
+	-- Only absurd arrays are cut; the population cap limits new births, not recovered saves.
+	local slimeCap = math.max(FarmState.populationLimit(areas), Config.Farm.RepairSlimeHardCap)
+
 	local slimes: { Slime } = {}
 	local slimeIds: { [string]: boolean } = {}
 	for i, raw in data.slimes do
@@ -899,32 +930,35 @@ function FarmState.repair(data: any, now: number): (Farm, { string }, boolean)
 		end
 	end
 
-	local workstations = validateWorkstations(data.workstations, slimeIds, warnings)
-	local knownStations = {}
-	for _, id in Config.Farm.Stations do
-		knownStations[id] = true
-	end
-	-- The first station is always unlocked; a legacy save without the list keeps every station
-	-- that already has workers, so no crew is evicted.
-	local unlocked = table.clone(Config.Farm.StartUnlockedStations)
-	local function unlock(id: string)
-		if knownStations[id] and not table.find(unlocked, id) then
-			table.insert(unlocked, id)
-		end
-	end
-	if type(data.unlockedStations) == "table" then
-		for _, id in stringList(data.unlockedStations) do
-			unlock(id)
-		end
-	else
-		if data.unlockedStations ~= nil then
-			table.insert(warnings, "station unlocks invalid, inferred from crews")
-		end
-		for _, w in workstations do
-			if #w.assignedSlimeIds > 0 then
-				unlock(w.definitionId)
+	-- A slime claimed by multiple slots is kept in the first valid one.
+	local work = validateWork(data.work, areas, slimes, now)
+	local breeding = validatePairs(data.breeding, areas, slimes, work, now)
+
+	-- Duplicate nest/incubator positions are rehomed where possible, never double-booked.
+	local nests = FarmState.breedingCount(areas.breeding.level)
+	local incubators = nests
+	local usedNest: { [number]: boolean } = {}
+	local usedIncubator: { [number]: boolean } = {}
+	for _, egg in eggs do
+		local pool = if egg.place == "nest" then usedNest else usedIncubator
+		local limit = if egg.place == "nest" then nests else incubators
+		if egg.slot > limit or pool[egg.slot] then
+			local free: number? = nil
+			for slot = 1, limit do
+				if not pool[slot] then free = slot; break end
+			end
+			if free == nil then
+				-- Preserve the egg rather than erase a paid or rare embryo; nest overflow may
+				-- occur in a legacy save and will settle when room is available.
+				egg.place = "nest"
+				egg.hatchAt = nil
+				egg.slot = #eggs + Config.Breeding.BasePlaces
+			else
+				egg.slot = free
 			end
 		end
+		if egg.place == "nest" then usedNest[egg.slot] = true else usedIncubator[egg.slot] = true end
+		egg.status = FarmState.eggStatus(egg, now)
 	end
 
 	local coins = nonNegInt(data.coins, 0)
@@ -989,17 +1023,21 @@ function FarmState.repair(data: any, now: number): (Farm, { string }, boolean)
 		eggs = eggs,
 		breedsSinceMutation = nonNegInt(data.breedsSinceMutation, 0),
 		discoveries = validateDiscoveries(data.discoveries, warnings),
-		food = validateFood(data.food, upgrades, warnings),
-		workstations = workstations,
-		unlockedStations = unlocked,
+		areas = areas,
+		work = work,
+		storehouse = validateStock(data.storehouse, Config.Food.RawOrder, storeCapacity(areas.pantry.level)),
+		counter = validateStock(data.counter, Config.Food.RawOrder, Config.Food.CounterCapacity),
+		fridge = validateStock(data.fridge, Config.Food.DishOrder, fridgeCapacity(areas.kitchen.level)),
+		cookedAllowed = stringList(data.cookedAllowed, function(id)
+			return slimeIds[id] == true
+		end),
+		breeding = breeding,
 		lastSimulatedAt = if isNum(data.lastSimulatedAt) and data.lastSimulatedAt > 0
 			then data.lastSimulatedAt
 			else now,
 		coins = coins,
 		items = items,
 		materials = materials,
-		upgrades = upgrades,
-		nest = validateNest(data.nest, slimeIds, warnings),
 		lifetime = lifetime,
 		avatar = validateAvatar(data.avatar, now, warnings),
 		tutorialDone = if type(data.tutorialDone) == "boolean" then data.tutorialDone else nil,
