@@ -81,7 +81,7 @@ return function(T)
 			T.eq(slime.isFavourite, true)
 			T.eq(slime.breedReadyAt, 3000)
 			T.eq(egg.createdAt, 1000)
-			T.eq(egg.hatchAt, 5000)
+			T.eq(egg.hatchAt, if i <= 2 then 5000 else nil)
 			T.same(egg.embryo.appearanceMutation, appearance)
 			T.same(slime.colourGenotype, Genetics.fromAppearance(appearance, slime.colourGenotype))
 		end
@@ -118,9 +118,9 @@ return function(T)
 	end)
 
 	T.test(
-		"a version 1 save (no material bucket) migrates through version 2 to version 3 and keeps everything",
+		"a version 1 save migrates all steps to version 4 and keeps its collection",
 		function()
-			T.eq(Config.Save.SchemaVersion, 3)
+			T.eq(Config.Save.SchemaVersion, 4)
 			local farm = FarmState.newFarm(1000)
 			farm.coins = 4321
 			farm.discoveries.dual["dual-green-white-01"] = { firstDiscoveredAt = 5, hatchCount = 3 }
