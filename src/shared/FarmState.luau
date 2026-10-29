@@ -552,9 +552,12 @@ local function validateEgg(raw: any, now: number, warnings: { string }): Egg?
 		and type(parents[2]) == "string"
 	local createdOk = isNum(raw.createdAt) and raw.createdAt > 0
 	local place = if raw.place == "nest" then "nest" else "incubator"
-	local slotOk = isNum(raw.slot) and raw.slot >= 1
-	local hatchOk = place == "nest" or (isNum(raw.hatchAt) and raw.hatchAt > 0)
-	if not (parentsOk and createdOk and slotOk and hatchOk and isText(raw.offspringId)) then
+	if place == "incubator" and not (isNum(raw.hatchAt) and raw.hatchAt > 0) then
+		-- Recover a valid embryo as a waiting nest egg when its timer is corrupt.
+		place = "nest"
+		table.insert(warnings, "egg " .. id .. ": invalid incubation, returned to nest")
+	end
+	if not (parentsOk and createdOk and isText(raw.offspringId)) then
 		table.insert(warnings, "egg " .. id .. ": invalid parents, times, slot or offspring id, dropped")
 		return nil
 	end
@@ -581,7 +584,7 @@ local function validateEgg(raw: any, now: number, warnings: { string }): Egg?
 		createdAt = raw.createdAt,
 		hatchAt = hatchAt,
 		place = place,
-		slot = math.floor(raw.slot),
+		slot = if isNum(raw.slot) and raw.slot >= 1 then math.floor(raw.slot) else 1,
 		offspringId = raw.offspringId,
 		embryo = {
 			stats = StatsModule.validate(embryo.stats, warnings, "egg " .. id .. ".embryo"),
