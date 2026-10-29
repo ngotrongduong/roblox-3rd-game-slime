@@ -66,16 +66,23 @@ local function doWork(farm: Farm, now: number, seconds: number, rng: Rng, events
 				and Food.total(workArea.box) >= Config.Work.BoxCapacity then continue end
 			local progress = slot.progress + math.max(0, seconds) * Needs.workFactor(worker.needs)
 			while progress >= cycle do
+				-- A batch never partly fits: leave progress waiting until a carrier empties the box.
+				local output = if areaId == "garden" then Config.Work.GardenYield else Config.Work.FishingYield
+				if (areaId == "fishing" or areaId == "garden")
+					and Food.total(workArea.box) + output > Config.Work.BoxCapacity then
+					progress = cycle
+					break
+				end
 				if areaId == "fishing" then
-					if Food.add(workArea.box, "fish", Config.Work.FishingYield,
-						Config.Work.BoxCapacity) == 0 then break end
+					Food.add(workArea.box, "fish", Config.Work.FishingYield, Config.Work.BoxCapacity)
+					table.insert(events, { kind = "collected", item = "fish" })
 				elseif areaId == "garden" then
 					local item = if rng:next() < Config.Work.GardenCarrotChance then "carrot" else "cabbage"
-					if Food.add(workArea.box, item, Config.Work.GardenYield,
-						Config.Work.BoxCapacity) == 0 then break end
+					Food.add(workArea.box, item, Config.Work.GardenYield, Config.Work.BoxCapacity)
+					table.insert(events, { kind = "collected", item = item })
 				elseif areaId == "kitchen" then
 					local id = Food.bestDish(farm.counter)
-					if id == nil then break end
+					if id == nil then progress = 0; break end
 					local dish = (Config.Food.Dishes :: any)[id]
 					for item, count in dish.ingredients do
 						Food.take(farm.counter, item, count)
@@ -129,7 +136,7 @@ function VillageSim.step(input: Farm, now: number, seconds: number, rng: Rng, op
 	doWork(farm, now, duration, rng, events)
 	if opts.errands then errands(farm, now) end
 	-- Automatic courtship and laying use the genetics/pity path shared with manual breeding.
-	local serial = 0
+	local serial = farm.lifetime.breeds * Config.Breeding.IdAttempts
 	local function newId(kind: string): string
 		serial += 1
 		return kind .. "-village-" .. tostring(math.floor(now)) .. "-" .. tostring(serial)
