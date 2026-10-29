@@ -10,6 +10,7 @@ local FarmState = require(ReplicatedStorage.Shared.FarmState)
 local Growth = require(ReplicatedStorage.Shared.Growth)
 local Rng = require(ReplicatedStorage.Shared.Rng)
 local Stats = require(ReplicatedStorage.Shared.Stats)
+local Stations = require(ReplicatedStorage.Shared.Stations)
 local VillageRules = require(ReplicatedStorage.Shared.Village)
 local VillageSim = require(ReplicatedStorage.Shared.VillageSim)
 local PlayerData = require(script.Parent.PlayerData)
@@ -36,6 +37,7 @@ type Session = {
 	eggs: Folder,
 	spots: { [string]: Spot },
 	actors: { [string]: Actor },
+	reserved: { [string]: string },
 	rng: typeof(Rng.new(0)),
 	cursor: number,
 	active: boolean,
@@ -78,15 +80,34 @@ local function point(s: Spot): Vector3
 	return Vector3.new(s.x, s.y, s.z)
 end
 
-local function working(farm: Farm, id: string): string?
+local function working(farm: Farm, id: string): (string?, number, boolean)
 	for _, area in Config.Work.Areas do
-		for _, slot in (farm.work :: any)[area].slots do
-			if slot.worker == id or slot.reserve == id then
-				return area
+		for index, slot in (farm.work :: any)[area].slots do
+			if slot.worker == id then
+				return area, index, false
+			elseif slot.reserve == id then
+				return area, index, true
 			end
 		end
 	end
-	return nil
+	return nil, 0, false
+end
+
+local function release(session: Session, id: string, action: Action?)
+	if not action then
+		return
+	end
+	for _, key in Brain.reservationKeys(action) do
+		if session.reserved[key] == id then
+			session.reserved[key] = nil
+		end
+	end
+end
+
+local function claim(session: Session, id: string, action: Action)
+	for _, key in Brain.reservationKeys(action) do
+		session.reserved[key] = id
+	end
 end
 
 local function show(session: Session, farm: Farm, epoch: number)
@@ -97,6 +118,32 @@ local function show(session: Session, farm: Farm, epoch: number)
 	set(root, "Population", #farm.slimes + #farm.eggs)
 	set(root, "Limit", VillageRules.populationLimit(farm))
 	set(root, "VillageLevel", VillageRules.level(farm))
+	-- Only public management state is replicated; unborn eggs remain secret.
+	local areas: { [string]: number } = {}
+	for _, area in Config.Village.Areas do
+		areas[area] = (farm.areas :: any)[area].level
+	end
+	local work: { [string]: { { [string]: any } } } = {}
+	local boxes: { [string]: { [string]: number } } = {}
+	for _, area in Config.Work.Areas do
+		local areaWork = (farm.work :: any)[area]
+		local slots: { { [string]: any } } = {}
+		local cycle = Stations.cycleSeconds(area, (farm.areas :: any)[area].level)
+		for _, slot in areaWork.slots do
+			table.insert(slots, {
+				worker = slot.worker or "",
+				reserve = slot.reserve or "",
+				stat = slot.stat or "",
+				progress = math.clamp(slot.progress / cycle, 0, 1),
+			})
+		end
+		work[area] = slots
+		boxes[area] = areaWork.box
+	end
+	set(root, "Work", HttpService:JSONEncode(work))
+	set(root, "Pairs", HttpService:JSONEncode(farm.breeding.pairs))
+	set(root, "Areas", HttpService:JSONEncode(areas))
+	set(root, "Box", HttpService:JSONEncode(boxes))
 	local live: { [string]: boolean } = {}
 	for _, slime in farm.slimes do
 		live[slime.id] = true
@@ -148,11 +195,41 @@ local function show(session: Session, farm: Farm, epoch: number)
 		set(model, "LegEnd", if actor then actor.legEnd else 0)
 		set(model, "Ghost", slime.ghostUntil ~= nil and slime.ghostUntil > epoch)
 		set(model, "Sleeping", slime.sleeping == true)
-		set(model, "Working", working(farm, slime.id) or "")
+		local area, slot, isReserve = working(farm, slime.id)
+		set(model, "Working", area or "")
+		set(model, "WorkArea", area or "")
+		set(model, "WorkSlot", slot)
+		set(model, "Reserve", isReserve)
+		set(model, "Fullness", slime.needs.fullness)
+		set(model, "Energy", slime.needs.energy)
+		set(model, "Fun", slime.needs.fun)
+		set(model, "Level", Stats.level(slime.stats))
+		set(model, "Attack", slime.stats.attack)
+		set(model, "Defence", slime.stats.defence)
+		set(model, "Speed", slime.stats.speed)
+		set(model, "Hp", slime.stats.hp)
+		set(model, "Baby", Growth.isBaby(
+			slime.createdAt, epoch, Stats.level(slime.stats),
+			farm.areas.breeding.level - Config.Village.StartLevel
+		))
+		set(model, "CookedAllowed", table.find(farm.cookedAllowed, slime.id) ~= nil)
+		local pairIndex = 0
+		for index, pair in farm.breeding.pairs do
+			if pair.a == slime.id or pair.b == slime.id then
+				pairIndex = index
+				break
+			end
+		end
+		set(model, "PairIndex", pairIndex)
+		set(model, "Partner", if actor and actor.action then actor.action.partner or "" else "")
 	end
 	for _, inst in slimes:GetChildren() do
 		if not live[inst.Name] then
 			inst:Destroy()
+			local departing = session.actors[inst.Name]
+			if departing then
+				release(session, inst.Name, departing.action)
+			end
 			session.actors[inst.Name] = nil
 		end
 	end
@@ -489,6 +566,7 @@ function Village.start()
 			eggs = child(root, "Eggs", "Folder") :: Folder,
 			spots = spots,
 			actors = {},
+			reserved = {},
 			rng = rng,
 			cursor = 0,
 			active = true,
