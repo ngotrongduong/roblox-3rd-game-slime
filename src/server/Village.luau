@@ -222,7 +222,8 @@ local function show(session: Session, farm: Farm, epoch: number)
 				phase = "walk"
 			elseif area == "fishing" then
 				local assigned = farm.work.fishing.slots[slot]
-				if assigned and (if Stations.activeWorker(farm, assigned, epoch) then Stations.activeWorker(farm, assigned, epoch).id == slime.id else false) then
+				local active = if assigned then Stations.activeWorker(farm, assigned, epoch) else nil
+				if active and active.id == slime.id then
 					local factor = Stations.speedTimeFactor(slime.stats.speed)
 					local cycle = Stations.cycleSeconds("fishing", farm.areas.fishing.level) * factor
 					local passed = assigned.progress * factor
@@ -913,10 +914,9 @@ local function syncGarden(session: Session, farm: Farm)
 						part.CastShadow = false
 					end
 				end
-				local _, size = model:GetBoundingBox()
 				local fullScale = model:GetScale()
-				local rise = size.Y / 2 + Config.Work.GardenCropLift
-				model:PivotTo(CFrame.new(marker.Position + Vector3.new(0, rise, 0)))
+				-- CropPlot markers are built at the original crop pivot, not at soil height.
+				model:PivotTo(CFrame.new(marker.Position + Vector3.new(0, Config.Work.GardenCropLift, 0)))
 				model:ScaleTo(fullScale * Config.Work.GardenCropScaleStart)
 				model.Parent = crops
 				task.spawn(function()

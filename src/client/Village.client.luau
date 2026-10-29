@@ -335,6 +335,26 @@ local function animate(village: Village, entry: Entry, now: number)
 			if carried then
 				carried:ScaleTo(if tool ~= "" then Config.Work.WorkToolScale else C.CarryScale)
 				carried.Parent = renderFolder
+				if tool == "WateringCan" then
+					local spout = carried:FindFirstChildWhichIsA("BasePart", true)
+					if spout then
+						local drop = Instance.new("Attachment")
+						drop.Name = "WaterDrops"
+						drop.Position = Vector3.new(0, -spout.Size.Y / 2, 0)
+						drop.Parent = spout
+						local emitter = Instance.new("ParticleEmitter")
+						emitter.Name = "Watering"
+						-- Built-in Roblox particle texture: no invented art or image upload needed.
+						emitter.Texture = "rbxasset://textures/particles/sparkles_main.dds"
+						emitter.Color = ColorSequence.new(Color3.fromRGB(130, 205, 255))
+						emitter.Size = NumberSequence.new(Config.Work.WorkWaterDropSize)
+						emitter.Lifetime = NumberRange.new(Config.Work.WorkWaterDropLifetime)
+						emitter.Speed = NumberRange.new(Config.Work.WorkWaterDropSpeed)
+						emitter.Acceleration = Vector3.new(0, -Config.Work.WorkWaterDropGravity, 0)
+						emitter.Rate = Config.Work.WorkDropsPerWater
+						emitter.Parent = drop
+					end
+				end
 			end
 			entry.carry = carried
 			if actor then
