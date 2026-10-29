@@ -1,9 +1,6 @@
 --!strict
--- The farm save shape (docs/reference/01-core-farm.md §2), a fresh farm, and the load repair.
--- Differences from the original: times are server epoch seconds; the cosmetic fields (x, y,
--- targetX, targetY, selectedId, avatar x/y) are gone; station progress is in seconds.
--- Battle, food and job fields are kept with the original defaults so later phases need no
--- migration, but no logic for them lives here.
+-- The schema-four living village: load-safe slimes, area levels, jobs, food and breeding.
+-- All clocks are server epoch seconds, and repairs keep valid unrelated progress intact.
 
 local Colours = if script then require(script.Parent.Colours) else require("./Colours")
 local Config = if script then require(script.Parent.Config) else require("./Config")
@@ -210,6 +207,14 @@ function FarmState.newAreas(): Areas
 	return out :: Areas
 end
 
+function FarmState.newPairing(level: number): Pairing
+	local pairs: { Pair } = {}
+	for _ = 1, FarmState.breedingCount(level) do
+		table.insert(pairs, {})
+	end
+	return { pairs = pairs }
+end
+
 function FarmState.newWork(areas: Areas): Work
 	local out: any = {}
 	for _, id in Config.Work.Areas do
@@ -347,11 +352,7 @@ function FarmState.newFarm(now: number): Farm
 		counter = {},
 		fridge = {},
 		cookedAllowed = {},
-		breeding = { pairs = (function(): { Pair }
-			local pairs: { Pair } = {}
-			for _ = 1, Config.Breeding.BasePlaces do table.insert(pairs, {}) end
-			return pairs
-		end)() },
+		breeding = FarmState.newPairing(areas.breeding.level),
 		lastSimulatedAt = now,
 		coins = f.StartingCoins,
 		items = items,
@@ -940,30 +941,44 @@ function FarmState.repair(data: any, now: number): (Farm, { string }, boolean)
 	local work = validateWork(data.work, areas, slimes, now)
 	local breeding = validatePairs(data.breeding, areas, slimes, work, now)
 
-	-- Duplicate nest/incubator positions are rehomed where possible, never double-booked.
-	local nests = FarmState.breedingCount(areas.breeding.level)
-	local incubators = nests
-	local usedNest: { [number]: boolean } = {}
-	local usedIncubator: { [number]: boolean } = {}
+	-- Incumbent incubators keep their clocks; extra eggs fall back to nests, then overflow
+	-- places outside the visible slots rather than having their embryos deleted.
+	local limit = FarmState.breedingCount(areas.breeding.level)
+	local occupiedNest: { [number]: boolean } = {}
+	local occupiedIncubator: { [number]: boolean } = {}
+	local overflow = limit
 	for _, egg in eggs do
-		local pool = if egg.place == "nest" then usedNest else usedIncubator
-		local limit = if egg.place == "nest" then nests else incubators
-		if egg.slot > limit or pool[egg.slot] then
-			local free: number? = nil
-			for slot = 1, limit do
-				if not pool[slot] then free = slot; break end
+		if egg.place == "incubator" then
+			local slot = egg.slot
+			if slot > limit or occupiedIncubator[slot] then
+				local free: number? = nil
+				for i = 1, limit do
+					if not occupiedIncubator[i] then free = i; break end
+				end
+				if free then
+					egg.slot = free
+				else
+					egg.place = "nest"
+					egg.hatchAt = nil
+				end
 			end
-			if free == nil then
-				-- Preserve the egg rather than erase a paid or rare embryo; nest overflow may
-				-- occur in a legacy save and will settle when room is available.
-				egg.place = "nest"
-				egg.hatchAt = nil
-				egg.slot = #eggs + Config.Breeding.BasePlaces
-			else
-				egg.slot = free
-			end
+			if egg.place == "incubator" then occupiedIncubator[egg.slot] = true end
 		end
-		if egg.place == "nest" then usedNest[egg.slot] = true else usedIncubator[egg.slot] = true end
+		if egg.place == "nest" then
+			if egg.slot > limit or occupiedNest[egg.slot] then
+				local free: number? = nil
+				for i = 1, limit do
+					if not occupiedNest[i] then free = i; break end
+				end
+				if free then
+					egg.slot = free
+				else
+					overflow += 1
+					egg.slot = overflow
+				end
+			end
+			occupiedNest[egg.slot] = true
+		end
 		egg.status = FarmState.eggStatus(egg, now)
 	end
 
