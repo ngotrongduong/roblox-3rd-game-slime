@@ -28,6 +28,23 @@ local rootConnections: { RBXScriptConnection } = {}
 local slimeConnections: { [Instance]: RBXScriptConnection } = {}
 local pickedFirst: string? = nil
 local errorsLogged: { [string]: boolean } = {}
+local managementAttributes: { [string]: boolean } = {
+	Name = true,
+	Fullness = true,
+	Energy = true,
+	Fun = true,
+	Level = true,
+	Attack = true,
+	Defence = true,
+	Speed = true,
+	Hp = true,
+	Baby = true,
+	WorkArea = true,
+	WorkSlot = true,
+	Reserve = true,
+	PairIndex = true,
+	CookedAllowed = true,
+}
 
 local function text(parent: Instance, label: string, size: UDim2, fontSize: number): TextLabel
 	local item = Instance.new("TextLabel")
@@ -631,10 +648,7 @@ local function watchSlime(inst: Instance)
 	if inst:IsA("Configuration") and not slimeConnections[inst] then
 		-- Movement-leg attributes change often; only management fields redraw the sheet.
 		slimeConnections[inst] = inst.AttributeChanged:Connect(function(name)
-			if table.find({
-				"Name", "Fullness", "Energy", "Fun", "Level", "Attack", "Defence", "Speed", "Hp",
-				"Baby", "WorkArea", "WorkSlot", "Reserve", "PairIndex", "CookedAllowed",
-			}, name) then
+			if managementAttributes[name] then
 				refreshSheet()
 			end
 		end)
