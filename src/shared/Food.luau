@@ -25,14 +25,20 @@ end
 
 function Food.add(stock: { [string]: number }, item: string, amount: number, capacity: number): number
 	if (Config.Food.Raw :: any)[item] == nil and (Config.Food.Dishes :: any)[item] == nil then return 0 end
-	local moved = math.min(math.max(0, math.floor(amount)), math.max(0, capacity - Food.total(stock)))
+	local amountToAdd = if amount == amount and amount ~= math.huge and amount ~= -math.huge
+		then math.max(0, math.floor(amount)) else 0
+	local moved = math.min(amountToAdd, math.max(0, capacity - Food.total(stock)))
 	if moved > 0 then stock[item] = (stock[item] or 0) + moved end
 	return moved
 end
 
 function Food.take(stock: { [string]: number }, item: string, amount: number): number
 	if (Config.Food.Raw :: any)[item] == nil and (Config.Food.Dishes :: any)[item] == nil then return 0 end
-	local moved = math.min(math.max(0, math.floor(amount)), math.max(0, stock[item] or 0))
+	local existing = math.max(0, stock[item] or 0)
+	if existing == 0 then stock[item] = nil end
+	local requested = if amount == amount and amount ~= math.huge and amount ~= -math.huge
+		then math.max(0, math.floor(amount)) else 0
+	local moved = math.min(requested, existing)
 	if moved > 0 then
 		local remaining = (stock[item] or 0) - moved
 		if remaining == 0 then stock[item] = nil else stock[item] = remaining end
