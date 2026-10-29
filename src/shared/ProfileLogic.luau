@@ -245,7 +245,9 @@ function ProfileLogic.migrateVillage(data: any, _now: number): any
 	out.counter = {}
 	out.fridge = {}
 	out.cookedAllowed = {}
-	out.breeding = { pairs = { {}, {} } }
+	local pairs = {}
+	for _ = 1, Config.Breeding.BasePlaces do table.insert(pairs, {}) end
+	out.breeding = { pairs = pairs }
 	local oldFood = if type(out.food) == "table" and type(out.food.basicFood) == "number"
 		then math.max(0, math.floor(out.food.basicFood))
 		else 0
