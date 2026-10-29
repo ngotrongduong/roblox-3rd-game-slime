@@ -55,7 +55,7 @@ local function partFromKit(name: string): MeshPart?
 	if source and source:IsA("MeshPart") then
 		return source
 	elseif source and source:IsA("Model") then
-		return source:FindFirstChildWhichIsA("MeshPart", true)
+		return source:FindFirstChildWhichIsA("MeshPart", true) :: MeshPart?
 	end
 	missing("missing ClientKit/" .. name)
 	return nil
@@ -133,7 +133,10 @@ function SlimeLook.build(attrs: { [string]: any }): Model
 		if image then
 			map = "rbxassetid://" .. tostring(image)
 			surfaceColour = Color3.new(1, 1, 1)
-			drawn = tint((Colours.get(dual.bodyColour) or colourDef :: any).swatch)
+			local dualColour = Colours.get(dual.bodyColour)
+			if dualColour then
+				drawn = tint(dualColour.swatch)
+			end
 		else
 			missing("missing Dual skin " .. dual.id)
 		end
