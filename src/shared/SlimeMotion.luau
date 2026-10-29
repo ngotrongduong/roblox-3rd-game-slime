@@ -163,6 +163,41 @@ end
 
 local drivers: { [string]: Driver } = {}
 
+-- Working motions move the existing jelly springs, never spawn another rig.
+drivers.workCast = function(st)
+	st.lf.to = -math.rad(Config.Work.WorkShakeDegrees)
+	st.sq.to = math.sin(TAU * Config.Work.WorkShakeHz * st.motionT) * Config.Work.WorkBobStuds
+end
+
+drivers.workWait = function(st)
+	breathe(st, Config.Work.WorkBobStuds, Config.Work.WorkBobHz)
+end
+
+drivers.workReel = function(st)
+	st.lf.to = math.rad(Config.Work.WorkShakeDegrees) * math.sin(TAU * Config.Work.WorkShakeHz * st.motionT)
+	st.sq.to = Config.Work.WorkBobStuds * math.sin(TAU * Config.Work.WorkShakeHz * st.motionT)
+end
+
+drivers.workHoe = function(st)
+	st.lf.to = math.rad(Config.Work.WorkShakeDegrees) * math.sin(TAU * Config.Work.WorkShakeHz * st.motionT)
+	st.sq.to = -Config.Work.WorkBobStuds * math.abs(math.sin(TAU * Config.Work.WorkShakeHz * st.motionT))
+end
+
+drivers.workPlant = function(st)
+	st.lf.to = math.rad(Config.Work.WorkShakeDegrees)
+	st.sq.to = -Config.Work.WorkBobStuds
+end
+
+drivers.workWater = function(st)
+	st.ls.to = Config.Work.WorkBobStuds * math.sin(TAU * Config.Work.WorkBobHz * st.motionT)
+	st.lf.to = -math.rad(Config.Work.WorkShakeDegrees)
+end
+
+drivers.workHarvest = function(st)
+	st.lf.to = math.rad(Config.Work.WorkShakeDegrees) * math.sin(TAU * Config.Work.WorkShakeHz * st.motionT)
+	st.sq.to = Config.Work.WorkBobStuds * math.sin(TAU * Config.Work.WorkShakeHz * st.motionT)
+end
+
 drivers.idle = function(st)
 	breathe(st, 0.028, 0.55)
 end

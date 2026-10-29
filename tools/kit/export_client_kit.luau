@@ -45,6 +45,13 @@ local crops = storage:FindFirstChild("CropKit")
 take(fish and fish:FindFirstChild("KoiFish"), "fish", items)
 take(crops and crops:FindFirstChild("Carrot4"), "carrot", items)
 take(crops and crops:FindFirstChild("Cabbage4"), "cabbage", items)
+-- Export all visible growing stages as well as the harvested food icons.
+for _, species in { "Carrot", "Cabbage" } do
+	for stage = 1, 4 do
+		local name = species .. stage
+		take(crops and crops:FindFirstChild(name), name, items)
+	end
+end
 -- the cooked dishes and the egg (made with generate_mesh, docs/kit/README.md), and the gardener's and fisher's
 -- tools (tools/kit/make_tools.luau builds the rod and the hoe; the watering can is the garden's): all in PropKit
 local props = storage:FindFirstChild("PropKit")

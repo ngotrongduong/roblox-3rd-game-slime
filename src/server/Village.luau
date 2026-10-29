@@ -869,6 +869,17 @@ local function syncGarden(session: Session, farm: Farm)
 		farm.work.garden.plots = expanded
 		plots = expanded
 	end
+	-- Source meshes remain in place for the stage builder to locate the bed positions on upgrades.
+	-- Hide their original vegetables, otherwise empty plots still look ripe.
+	for _, decoration in garden:GetChildren() do
+		if decoration:IsA("Model") and decoration.Name == "Crop" then
+			for _, part in decoration:GetDescendants() do
+				if part:IsA("BasePart") then
+					part.Transparency = 1
+				end
+			end
+		end
+	end
 	local crops = child(stage, "GrowingCrops", "Folder")
 	local kit = gardenKit()
 	for index, plotState in plots do
