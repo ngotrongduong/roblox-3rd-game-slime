@@ -1036,6 +1036,21 @@ local function tick(player: Player, session: Session)
 			if actor.workPhase and actor.index == 0 and actor.workEnd and clock >= actor.workEnd then
 				local area = if actor.action then string.match(actor.action.spot, "^work:(%a+):") else nil
 				if area then
+					if actor.workPhase == "drop" then
+						local deposited = false
+						PlayerData.update(player, function(data: any)
+							local index = tonumber(string.match(actor.action.spot, "^work:%a+:(%d+)$"))
+							local slot = if index and data.work[area] then data.work[area].slots[index] else nil
+							if slot and slot.pending
+								and Food.add(data.work[area].box, slot.pending, 1, Config.Work.BoxCapacity) > 0 then
+								slot.pending = nil
+								deposited = true
+							end
+						end)
+						if not deposited then
+							continue
+						end
+					end
 					local nextSpot = if actor.workPhase == "harvest" then "box:" .. area
 						else (if actor.workPhase == "drop" or actor.workPhase == "hoe" or actor.workPhase == "plant"
 							or actor.workPhase == "water" then actor.action.spot else nil)

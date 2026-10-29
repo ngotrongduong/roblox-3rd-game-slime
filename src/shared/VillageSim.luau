@@ -78,6 +78,16 @@ local function doWork(
 		local level = (farm.areas :: any)[areaId].level
 		local cycle = Stations.cycleSeconds(areaId, level)
 		for slotIndex, slot in workArea.slots do
+			if slot.pending then
+				-- On reconnect/offline the missing actor must never make an earned item vanish.
+				-- Deliver it to the bin as soon as there is room, or keep the pending item saved.
+				if workReady == nil and Food.add(workArea.box, slot.pending, 1, Config.Work.BoxCapacity) > 0 then
+					slot.pending = nil
+				end
+				if slot.pending then
+					continue
+				end
+			end
 			local worker = Stations.activeWorker(farm, slot, now)
 			if
 				not worker
@@ -111,12 +121,20 @@ local function doWork(
 					end
 					local crop = GardenPlots.apply(plots, index, action, rng:next() < Config.Work.GardenCarrotChance)
 					if crop then
-						Food.add(workArea.box, crop, 1, Config.Work.BoxCapacity)
+						if workReady then
+							-- A live gardener physically carries one harvest to its bin before stock appears.
+							slot.pending = crop
+						else
+							Food.add(workArea.box, crop, 1, Config.Work.BoxCapacity)
+						end
 						table.insert(events, { kind = "collected", area = "garden", item = crop, slimeId = worker.id, plot = index })
 					else
 						table.insert(events, { kind = "gardenAction", area = "garden", slimeId = worker.id, plot = index, phase = action })
 					end
 					progress -= actionSeconds
+					if slot.pending then
+						break
+					end
 				end
 				slot.progress = progress
 				continue
@@ -132,7 +150,12 @@ local function doWork(
 					break
 				end
 				if areaId == "fishing" then
-					Food.add(workArea.box, "fish", Config.Work.FishingYield, Config.Work.BoxCapacity)
+					if workReady then
+						-- Online the catch is held until the fish reaches the visible bin.
+						slot.pending = "fish"
+					else
+						Food.add(workArea.box, "fish", Config.Work.FishingYield, Config.Work.BoxCapacity)
+					end
 					table.insert(events, { kind = "collected", item = "fish", area = "fishing", slimeId = worker.id })
 
 				elseif areaId == "kitchen" then
@@ -154,6 +177,9 @@ local function doWork(
 					worker.stats = Training.finishSession(worker.stats, statKey, rng, chance)
 				end
 				progress -= cycle
+				if slot.pending then
+					break
+				end
 			end
 			slot.progress = progress
 		end

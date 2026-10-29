@@ -83,7 +83,7 @@ export type Areas = {
 	training: Area,
 	breeding: Area,
 }
-export type WorkSlot = { worker: string?, reserve: string?, progress: number, stat: string?, plot: number?, task: string? }
+export type WorkSlot = { worker: string?, reserve: string?, progress: number, stat: string?, plot: number?, task: string?, pending: string? }
 export type WorkArea = { slots: { WorkSlot }, box: { [string]: number }, plots: typeof(GardenPlots.new(1))? }
 export type GardenWorkArea = WorkArea & { plots: typeof(GardenPlots.new(1)) }
 export type Work = {
@@ -705,6 +705,9 @@ local function validateWork(raw: any, areas: Areas, slimes: { Slime }, now: numb
 				local old = if type(w.slots) == "table" then w.slots[i] else nil
 				if type(old) == "table" then
 					slot.progress = if isNum(old.progress) then math.max(0, old.progress) else 0
+					if (id == "fishing" and old.pending == "fish") or (id == "garden" and (old.pending == "carrot" or old.pending == "cabbage")) then
+						slot.pending = old.pending
+					end
 					if id == "garden" and type(old.plot) == "number" and old.plot % 1 == 0
 						and old.plot >= 1 and old.plot <= Config.Work.GardenPlotCount
 						and table.find({ "hoe", "plant", "water", "harvest" }, old.task) then

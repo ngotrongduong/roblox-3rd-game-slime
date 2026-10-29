@@ -65,6 +65,22 @@ return function(T: any)
 		T.eq(out[3].progress, 0)
 	end)
 
+	T.test("online fish are pending until the bin handoff, then offline reconnect recovers them", function()
+		local now = 1000000
+		local farm = FarmKit.farm(now)
+		T.ok(Stations.assign(farm, "slime-1", "fishing", 1, false, now))
+		local after, events = VillageSim.step(farm, now + 60, 60, Rng.new(2), {
+			errands = false,
+			workReady = { ["slime-1"] = "work:fishing:1" },
+		})
+		T.eq(after.work.fishing.box.fish, nil)
+		T.eq(after.work.fishing.slots[1].pending, "fish")
+		T.eq(events[1].kind, "collected")
+		local offline = VillageSim.step(after, now + 61, 1, Rng.new(3), { errands = true })
+		T.eq(offline.work.fishing.slots[1].pending, nil)
+		T.eq(offline.work.fishing.box.fish, 1)
+	end)
+
 	T.test("offline village grows real plots and collects vegetables", function()
 		local now = 1000000
 		local farm = FarmKit.farm(now)
