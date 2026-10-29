@@ -13,13 +13,9 @@ export type Info = {
 	hungry: boolean, -- Needs.isHungry
 }
 
--- Strolling and sightseeing with nothing to do, and a pair courting.
+-- Only a pair courting in the breeding area strolls (the owner, 2026-10-29: "the strolling pace is only inside the
+-- breeding area, not outside"); everywhere else, sightseeing included, slimes walk at the normal pace.
 local STROLL: { [string]: boolean } = {
-	wander = true,
-	watchFish = true,
-	flowers = true,
-	splash = true,
-	warm = true,
 	court = true,
 }
 -- A baby that hurries: following an adult on a walk, or playing.

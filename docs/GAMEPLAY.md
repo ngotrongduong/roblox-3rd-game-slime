@@ -192,7 +192,7 @@ Slimes that are not working or breeding choose what to do from their needs, pers
 | Gait | Lab lane | Used when |
 |---|---|---|
 | walk | E Big leaps | normal moving: going to work, errands, carrying |
-| stroll | F Slow and soft | strolling and sightseeing with nothing to do (wander, flowers, watch the fish, the fountain, the campfire) and while a pair courts |
+| stroll | F Slow and soft | only inside the breeding area, while a pair courts (the owner corrected it the same day: outside the breeding area every slime moves at the normal walk, sightseeing included) |
 | baby | A Gentle | babies walking |
 | babyQuick | D Quick hops | babies hurrying: following an adult on a walk, playing |
 | glide | G Glide (no hops) | tired or hungry slimes, and sad feelings that fit it (sad, sulking, crying, bored) |
