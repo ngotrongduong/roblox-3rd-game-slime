@@ -1534,8 +1534,14 @@ local function displayCarry(player: Player, hold: Carried)
 		return
 	end
 	local character = player.Character
+	-- The owner (2026-10-30): what the player picks up is held in the hand, so they can see they are carrying food.
+	-- R15 has a RightHand, R6 a Right Arm; the head is only the last resort.
+	local hand = if character
+		then (character:FindFirstChild("RightHand") or character:FindFirstChild("Right Arm"))
+		else nil
 	local head = if character then character:FindFirstChild("Head") else nil
-	if not head or not head:IsA("BasePart") then
+	local anchor = if hand and hand:IsA("BasePart") then hand else head
+	if not anchor or not anchor:IsA("BasePart") then
 		return
 	end
 	local model: Model
@@ -1549,7 +1555,14 @@ local function displayCarry(player: Player, hold: Carried)
 	end
 	model.Name = "VillageCarried"
 	model:ScaleTo(Config.Village.CarryModelScale)
-	model:PivotTo(head.CFrame * CFrame.new(0, Config.Village.CarryHeadOffset, 0))
+	if anchor == head then
+		model:PivotTo(anchor.CFrame * CFrame.new(0, Config.Village.CarryHeadOffset, 0))
+	else
+		-- in the palm: the item's middle a little below the hand's end and a little in front of it
+		local _, size = model:GetBoundingBox()
+		local below = anchor.Size.Y / 2 + size.Y / 2 * Config.Village.CarryHandSink
+		model:PivotTo(anchor.CFrame * CFrame.new(0, -below, -Config.Village.CarryHandForward))
+	end
 	local main = model:FindFirstChildWhichIsA("BasePart", true)
 	if not main then
 		model:Destroy()
@@ -1570,7 +1583,7 @@ local function displayCarry(player: Player, hold: Carried)
 		end
 	end
 	local joint = Instance.new("WeldConstraint")
-	joint.Part0, joint.Part1 = head, main
+	joint.Part0, joint.Part1 = anchor, main
 	joint.Parent = main
 	model.Parent = character
 	hold.model = model

@@ -213,6 +213,10 @@ Config.Village = {
 	CarryReachStuds = 12,
 	CarryModelScale = 0.42,
 	CarryHeadOffset = 0.7,
+	-- held in the player's hand: the item's middle sits this share of its half-height below the hand's end, and
+	-- this many studs in front of it
+	CarryHandSink = 0.6,
+	CarryHandForward = 0.3,
 	DevPlot = 5,
 	DevFreeUpgrades = false,
 	TickSeconds = 1,
