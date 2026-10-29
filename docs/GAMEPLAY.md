@@ -162,7 +162,32 @@ Slimes that are not working or breeding choose what to do from their needs, pers
 - With the player: look at them, hop closer, cheer when they arrive.
 - Each action has its own face and motion (`Expressions`, `SlimeMotion`, `SlimeActor`).
 
-## 10. Build order
+## 10. The owner's notes after the first play (2026-10-29)
+
+- **UI**: the first screens were too plain. A professional UI kit made by the UI agent from the owner's own button and
+  frame art (`reference/goo-lineage-web/` art, `docs/reference/03-shell-ui-world.md`): one screen button that opens
+  the slime info (every slime, its look, stats, needs, job). Every slime list suggests the best slime for the place.
+- **Upgrade pads** replace the E prompts: a small round pad on the ground at every upgradable place, beside the path
+  (never in the middle of it), easy to see. It shows the price of the next level ($0 while prices are 0), green when
+  the owner can pay, red when not. Stepping on it upgrades one level. Only the plot's owner can use it.
+- **SPD also sets work speed** (the original's job speed bonus: `1 + (SPD − 1) × 0.05`, capped), besides walking and
+  dodging; the picker suggests the free slime with the highest SPD for a work place.
+- **Fishing**: up to 4 fishing places, each with its rod: 1 at the dock's end near the water, 2 in the middle of the
+  dock, 3 on the side pier once an upgrade builds it, 4 on the blue rock beside the pond. Press F near a place → the
+  slime list with the suggestion. The fisher casts, waits, reels in and drops each fish into the **fish bin** outside
+  the pond (holds 10). Fish models from the Studio assets (the pond's koi and blue fish).
+- **Garden**: 4 work places around the two garden beds. The gardener hoes empty soil, plants, waters (the watering can
+  held over its head) as the crop grows through its 4 stage models, then pulls the ripe crop and carries it to the
+  **vegetable bin** outside the garden (holds 10 of any vegetables).
+- **Breeding program**: press F at the breeding area → the slime list to put slimes into the program: 4 slimes
+  (2 pairs) at the start, up to 8 (4 pairs) at the top level with 4 nests. Slimes rest after breeding.
+- **The player helps**: when no slime is free, the player can pick up and carry eggs, vegetables, fish and dishes to
+  where they belong (the same places the slimes use).
+- **Carrying**: what a slime carries rides on its head and moves up and down with every hop.
+- **Movement**: slimes have a collision box and do not walk through things, people or each other; they find their way
+  around obstacles (pathfinding). The hop-walk is slower and natural, a slime's pace, not a dash.
+
+## 11. Build order
 
 1. Rules in `src/shared` with Lune tests (inheritance, luck, needs, food, stations, training, breeding flow, village
    sim, save schema 3).
