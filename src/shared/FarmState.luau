@@ -84,7 +84,7 @@ export type Areas = {
 	breeding: Area,
 }
 export type WorkSlot = { worker: string?, reserve: string?, progress: number, stat: string?, plot: number?, task: string? }
-export type WorkArea = { slots: { WorkSlot }, box: { [string]: number }, plots: { GardenPlots.Plot }? }
+export type WorkArea = { slots: { WorkSlot }, box: { [string]: number }, plots: typeof(GardenPlots.new(1))? }
 export type Work = {
 	fishing: WorkArea,
 	garden: WorkArea,

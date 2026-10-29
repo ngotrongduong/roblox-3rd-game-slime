@@ -75,6 +75,23 @@ local function near(container: Instance?, names: { string }, centre: Vector3): V
 	return nearest
 end
 
+-- Service markers may be the *inside* pivot of a counter or a door.
+-- Move them to the path-facing side of the whole building, not the pivot of that prop.
+local function outside(model: Instance?, position: Vector3?): Vector3?
+	if not model or not model:IsA("Model") or not position then
+		return position
+	end
+	local cf, size = model:GetBoundingBox()
+	local p = cf:PointToObjectSpace(position)
+	local frontZ = -size.Z / 2 - Config.Village.SpotDoorOffset
+	local x = math.clamp(p.X, -size.X / 2, size.X / 2)
+	if p.Z > frontZ then
+		local projected = cf:PointToWorldSpace(Vector3.new(x, 0, frontZ))
+		return Vector3.new(projected.X, Config.Map.GroundY, projected.Z)
+	end
+	return position
+end
+
 local function front(model: Instance?): Vector3?
 	if model and model:IsA("Model") then
 		-- Kit buildings face into the village; put feet on the door side, not at the pivot.
@@ -109,6 +126,9 @@ function Spots.build(plotNumber: number, plot: Instance?): { [string]: Spot }
 			fallback += 1
 			table.insert(fallbackNames, id)
 		end
+		if id == "storehouse" or id == "counter" or id == "fridge" then
+			position = outside(container, position)
+		end
 		result[id] = plain(id, area, position :: Vector3)
 	end
 
@@ -132,7 +152,7 @@ function Spots.build(plotNumber: number, plot: Instance?): { [string]: Spot }
 	local fishing = models.fishing
 	local garden = models.garden
 	local spots = Config.Village.SpotNames
-	local pantryDoor = marker(pantry, spots.StorehouseModels) or front(pantry)
+	local pantryDoor = outside(pantry, marker(pantry, spots.StorehouseModels) or front(pantry))
 	add("storehouse", "pantry", pantry, spots.Storehouse, pantryDoor)
 	local counterPosition = near(kitchen, spots.CounterModels, frames.kitchen)
 	if not counterPosition and kitchen and kitchen:IsA("Model") then
@@ -163,6 +183,9 @@ function Spots.build(plotNumber: number, plot: Instance?): { [string]: Spot }
 		add("box:" .. area, area, model, spots.Box, approximate)
 	end
 
+	for index = 1, Config.Work.GardenPlotCount do
+		add("crop:" .. index, "garden", garden, { "CropPlot" .. index }, nil)
+	end
 	add("breeding", "breeding", breeding, { "Entrance", "Nest1" }, front(breeding))
 	add("nursery", "breeding", breeding, spots.Nursery, nil)
 	for index, name in spots.Nest do

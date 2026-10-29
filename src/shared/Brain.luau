@@ -120,19 +120,8 @@ function Brain.choose(farm: Farm, slimeId: string, ctx: Context, now: number, rn
 				-- A full box stops production: the worker must haul it if no idle carrier did.
 				if Food.total((farm.work :: any)[area].box) >= Config.Work.BoxCapacity then
 					if area == "fishing" or area == "garden" then
-						for _, item in Config.Food.RawOrder do
-							if
-								((farm.work :: any)[area].box[item] or 0) > 0
-								and Food.total(farm.storehouse) < Food.storehouseCapacity(farm.areas.pantry.level)
-							then
-								local a = make("carryBox", "storehouse", "proud")
-								a.source = area
-								a.carry = { item = item, count = Config.Brain.CarryAmount }
-								if unclaimed(ctx, slimeId, a) then
-									return a
-								end
-							end
-						end
+						-- A packed bin visibly pauses this shift until a free courier or the player unloads it.
+						return make("work", "box:" .. area, "worried")
 					elseif
 						area == "kitchen"
 						and Food.total(farm.fridge) < Food.fridgeCapacity(farm.areas.kitchen.level)
