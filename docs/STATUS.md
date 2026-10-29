@@ -230,8 +230,10 @@ Done (code by Codex and ChatGPT from briefs in `docs/briefs/`, checked and merge
   emotion stage: move the character to the plaza (slimes far from the camera do not animate).
 
 Open
-- Fixes from the first play test (UI state replication, one slime per errand, standing apart, spot names): brief
-  `docs/briefs/village-polish-1.md`.
+- Play-tested (picture `docs/play/village-first-test.jpg`): fishing and the garden fill their boxes, slimes carry to
+  the storehouse and kitchen, a pair courts and lays, the egg is carried to an incubator and hatches, the baby waits in
+  the nursery. Seen to fix next: a courting pair should go into the breeding house together (one partner courted
+  alone at the plaza); the courtship and nursery spots need real markers.
 - Art: collection boxes, the level-1 fridge, dishes, the egg, Config.Ui.Icons (18 icons), Secret slime 3D art.
 - The hatch reveal by rarity and the nursery (step 4), the slime shop and plot hand-out for 8 players (step 5).
 
