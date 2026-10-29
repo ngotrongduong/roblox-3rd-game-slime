@@ -415,8 +415,12 @@ renderArea = function(area: string)
 				button(employee, "Remove", function()
 					request({ action = "Unassign", slimeId = slime.Name }, function()
 						for _, slot in remembered[area] or {} do
-							if slot.worker == slime.Name then slot.worker = nil end
-							if slot.reserve == slime.Name then slot.reserve = nil end
+							if slot.worker == slime.Name then
+								slot.worker = nil
+							end
+							if slot.reserve == slime.Name then
+								slot.reserve = nil
+							end
 						end
 						renderArea(area)
 					end)
@@ -561,7 +565,16 @@ local function bind(root: Folder?)
 	end
 	table.clear(prompts)
 	table.clear(promptAreas)
+	local previous = own
 	own = root
+	if root and previous ~= root then
+		-- The folder replicates before the Plot attribute on a fresh join.
+		root:GetAttributeChangedSignal("Plot"):Connect(function()
+			if own == root then
+				bind(root)
+			end
+		end)
+	end
 	close()
 	refreshHud()
 	if not root or type(root:GetAttribute("Plot")) ~= "number" or (root:GetAttribute("Plot") :: number) < 1 then
