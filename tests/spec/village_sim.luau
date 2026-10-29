@@ -45,6 +45,44 @@ return function(T)
 		farm = VillageSim.step(farm, NOW + 500, 60, Rng.new(1), { errands = true })
 		T.ok(not Breeding.isBaby(farm, farm.slimes[5], NOW + 500))
 	end)
+	T.test("online no-errands waits for brain arrivals to eat or sleep", function()
+		local farm = FarmKit.farm(NOW)
+		farm.slimes[1].needs.fullness = Config.Needs.WantsFood
+		farm.slimes[1].needs.energy = Config.Needs.Tired
+		local after = VillageSim.step(farm, NOW + 60, 60, Rng.new(2), { errands = false })
+		T.eq(after.slimes[1].sleeping, nil)
+		T.ok(after.slimes[1].needs.fullness < farm.slimes[1].needs.fullness)
+		T.eq(after.storehouse.fish, farm.storehouse.fish)
+		T.ok(after.slimes[1].needs.energy < farm.slimes[1].needs.energy)
+		local offline = VillageSim.step(farm, NOW + 60, 60, Rng.new(2), { errands = true })
+		T.eq(offline.slimes[1].sleeping, true)
+		T.ok(offline.slimes[1].needs.fullness > farm.slimes[1].needs.fullness)
+	end)
+	T.test("online work waits for an actor at its station", function()
+		local farm = FarmKit.farm(NOW)
+		T.ok(Stations.assign(farm, "slime-1", "fishing", 1, false, NOW))
+		local waiting = VillageSim.step(farm, NOW + 60, 60, Rng.new(2), {
+			errands = false,
+			workReady = {},
+		})
+		T.eq(waiting.work.fishing.box.fish, nil)
+		local arrived = VillageSim.step(farm, NOW + 60, 60, Rng.new(2), {
+			errands = false,
+			workReady = { ["slime-1"] = "work:fishing:1" },
+		})
+		T.eq(arrived.work.fishing.box.fish, Config.Work.FishingYield)
+	end)
+	T.test("online pairs wait for both parents at the breeding house", function()
+		local farm = FarmKit.farm(NOW)
+		T.ok(Breeding.setPair(farm, 1, "slime-1", "slime-2", NOW))
+		local waiting = VillageSim.step(farm, NOW, 0, Rng.new(2), { errands = false })
+		T.eq(waiting.breeding.pairs[1].courtingUntil, nil)
+		local arrived = VillageSim.step(farm, NOW, 0, Rng.new(2), {
+			errands = false,
+			courtReady = { [1] = true },
+		})
+		T.eq(arrived.breeding.pairs[1].courtingUntil, NOW + Config.Breeding.CourtshipSeconds)
+	end)
 	T.test("ghost revives and schema three saves migrate", function()
 		local farm = FarmKit.farm(NOW)
 		farm.slimes[1].ghostUntil = NOW + 30

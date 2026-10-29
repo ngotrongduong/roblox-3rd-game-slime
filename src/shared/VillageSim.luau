@@ -17,7 +17,7 @@ local Training = if script then require(script.Parent.Training) else require("./
 type Farm = typeof(FarmState.newFarm(0))
 type Rng = typeof(Rng.new(0))
 export type Event = { kind: string, item: string?, slimeId: string?, eggId: string? }
-export type Options = { errands: boolean }
+export type Options = { errands: boolean, workReady: { [string]: string }?, courtReady: { [number]: boolean }? }
 local VillageSim = {}
 
 local function carry(from: { [string]: number }, to: { [string]: number }, keys: { string }, capacity: number)
@@ -60,14 +60,25 @@ local function errands(farm: Farm, now: number)
 	end
 end
 
-local function doWork(farm: Farm, now: number, seconds: number, rng: Rng, events: { Event })
+local function doWork(
+	farm: Farm,
+	now: number,
+	seconds: number,
+	rng: Rng,
+	events: { Event },
+	workReady: { [string]: string }?
+)
 	for _, areaId in Config.Work.Areas do
 		local workArea = (farm.work :: any)[areaId]
 		local level = (farm.areas :: any)[areaId].level
 		local cycle = Stations.cycleSeconds(areaId, level)
-		for _, slot in workArea.slots do
+		for slotIndex, slot in workArea.slots do
 			local worker = Stations.activeWorker(farm, slot, now)
-			if not worker or (areaId == "training" and not slot.stat) then
+			if
+				not worker
+				or (workReady and workReady[worker.id] ~= "work:" .. areaId .. ":" .. slotIndex)
+				or (areaId == "training" and not slot.stat)
+			then
 				continue
 			end
 			if
@@ -125,9 +136,11 @@ function VillageSim.step(input: Farm, now: number, seconds: number, rng: Rng, op
 	local duration = math.max(0, seconds)
 	local active: { [string]: boolean } = {}
 	for _, areaId in Config.Work.Areas do
-		for _, slot in (farm.work :: any)[areaId].slots do
+		for slotIndex, slot in (farm.work :: any)[areaId].slots do
 			local worker = Stations.activeWorker(farm, slot, now)
-			if worker then
+			if
+				worker and (not opts.workReady or opts.workReady[worker.id] == "work:" .. areaId .. ":" .. slotIndex)
+			then
 				active[worker.id] = true
 			end
 		end
@@ -135,7 +148,7 @@ function VillageSim.step(input: Farm, now: number, seconds: number, rng: Rng, op
 	for _, slime in farm.slimes do
 		local wasGhost = slime.ghostUntil ~= nil and slime.ghostUntil <= now
 		if slime.ghostUntil == nil then
-			if Needs.isTired(slime.needs) then
+			if opts.errands and Needs.isTired(slime.needs) then
 				slime.sleeping = true
 			end
 			local baby = Growth.isBaby(
@@ -149,7 +162,7 @@ function VillageSim.step(input: Farm, now: number, seconds: number, rng: Rng, op
 			if slime.sleeping and Needs.rested(slime.needs) then
 				slime.sleeping = nil
 			end
-			if Needs.wantsFood(slime.needs) then
+			if opts.errands and Needs.wantsFood(slime.needs) then
 				local item = Food.eat(farm, slime.id, now)
 				if item then
 					table.insert(events, { kind = "ate", item = item, slimeId = slime.id })
@@ -164,7 +177,7 @@ function VillageSim.step(input: Farm, now: number, seconds: number, rng: Rng, op
 			table.insert(events, { kind = "revived", slimeId = slime.id })
 		end
 	end
-	doWork(farm, now, duration, rng, events)
+	doWork(farm, now, duration, rng, events, opts.workReady)
 	if opts.errands then
 		errands(farm, now)
 	end
@@ -182,7 +195,11 @@ function VillageSim.step(input: Farm, now: number, seconds: number, rng: Rng, op
 					farm = result.farm
 					table.insert(events, { kind = "laid", eggId = if result.egg then result.egg.id else nil })
 				end
-			elseif not pair.courtingUntil and Breeding.pairReady(farm, index, now).ok then
+			elseif
+				not pair.courtingUntil
+				and (opts.errands or (opts.courtReady ~= nil and opts.courtReady[index]))
+				and Breeding.pairReady(farm, index, now).ok
+			then
 				Breeding.startCourtship(farm, index, now)
 			end
 		end

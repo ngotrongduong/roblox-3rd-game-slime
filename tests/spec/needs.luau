@@ -16,13 +16,14 @@ return function(T)
 		local farm = FarmKit.farm(1000000)
 		farm.slimes[1].needs.energy = 20
 		T.ok(Stations.assign(farm, "slime-1", "fishing", 1, false, 1000000))
+		-- Offline (errands on) the sim itself puts a tired slime to bed; online the brain walks it there.
 		for i = 1, 10 do
-			farm = VillageSim.step(farm, 1000000 + i * 60, 60, Rng.new(i), { errands = false })
+			farm = VillageSim.step(farm, 1000000 + i * 60, 60, Rng.new(i), { errands = true })
 		end
 		T.eq(farm.slimes[1].needs.energy, 70)
 		T.ok(farm.slimes[1].sleeping)
 		for i = 11, 14 do
-			farm = VillageSim.step(farm, 1000000 + i * 60, 60, Rng.new(i), { errands = false })
+			farm = VillageSim.step(farm, 1000000 + i * 60, 60, Rng.new(i), { errands = true })
 		end
 		T.eq(farm.slimes[1].needs.energy, 90)
 		T.eq(farm.slimes[1].sleeping, nil)

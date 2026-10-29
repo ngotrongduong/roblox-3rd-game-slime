@@ -22,7 +22,7 @@ function Village.upgradeCost(level: number): number
 	return math.floor(cost / v.CostRoundTo + 0.5) * v.CostRoundTo
 end
 
-function Village.upgrade(farm: Farm, areaId: string): (boolean, string?)
+function Village.upgrade(farm: Farm, areaId: string, free: boolean?): (boolean, string?)
 	local area = (farm.areas :: any)[areaId]
 	if not table.find(Village.Areas, areaId) or not area then
 		return false, "NO_AREA"
@@ -31,10 +31,12 @@ function Village.upgrade(farm: Farm, areaId: string): (boolean, string?)
 		return false, "MAX_LEVEL"
 	end
 	local price = Village.upgradeCost(area.level)
-	if farm.coins < price then
+	if not free and farm.coins < price then
 		return false, "NO_COINS"
 	end
-	farm.coins -= price
+	if not free then
+		farm.coins -= price
+	end
 	area.level += 1
 	-- Retain all assigned slots and progress; only grow the arrays.
 	local work = (farm.work :: any)[areaId]
