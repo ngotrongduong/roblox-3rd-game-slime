@@ -217,7 +217,14 @@ local function animate(village: Village, entry: Entry, now: number)
 	end
 	local bearing = to - from
 	local flat = Vector3.new(bearing.X, 0, bearing.Z)
-	local cf = if flat.Magnitude > 0.01 then CFrame.lookAt(pos, pos + flat)
+	if moving and stringAttr(entry.config, "Action", "") == "walkBaby" and number(entry.config, "Scale", 1) < 1 and flat.Magnitude > C.FacingThreshold then
+		-- The server gives the child its guardian's leg; follow behind instead of overlapping.
+		pos -= flat.Unit * C.BabyFollowStuds
+	elseif not moving and stringAttr(entry.config, "Action", "") == "work" and stringAttr(entry.config, "Working", "") == "garden" then
+		-- A little local movement between crops is presentation only.
+		pos += Vector3.new(math.sin(now * C.WorkShiftHz) * C.WorkShiftStuds, 0, 0)
+	end
+	local cf = if flat.Magnitude > C.FacingThreshold then CFrame.lookAt(pos, pos + flat)
 		else CFrame.new(pos)
 	if actor then
 		SlimeActor.setCFrame(actor, cf)
