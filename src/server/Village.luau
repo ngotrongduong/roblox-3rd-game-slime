@@ -212,7 +212,7 @@ local function show(session: Session, farm: Farm, epoch: number)
 		set(model, "Name", slime.name)
 		set(model, "Trait", slime.trait)
 		set(model, "Action", if actor and actor.action then actor.action.kind else "idle")
-		local area, slot, isReserve = working(farm, slime.id)
+		local area, slot, _isReserve = working(farm, slime.id)
 		local phase, phaseStart, phaseEnd = "", 0, 0
 		if actor and actor.workPhase then
 			phase = actor.workPhase
@@ -220,9 +220,9 @@ local function show(session: Session, farm: Farm, epoch: number)
 		elseif actor and actor.action and actor.action.kind == "work" then
 			if actor.index > 0 then
 				phase = "walk"
-			elseif area == "fishing" and not isReserve then
+			elseif area == "fishing" then
 				local assigned = farm.work.fishing.slots[slot]
-				if assigned then
+				if assigned and (if Stations.activeWorker(farm, assigned, epoch) then Stations.activeWorker(farm, assigned, epoch).id == slime.id else false) then
 					local factor = Stations.speedTimeFactor(slime.stats.speed)
 					local cycle = Stations.cycleSeconds("fishing", farm.areas.fishing.level) * factor
 					local passed = assigned.progress * factor
@@ -841,6 +841,18 @@ local function workTravel(session: Session, actor: Actor, target: Spot, speed: n
 		actor.current = target
 		actor.from, actor.to = target, target
 		actor.legStart, actor.legEnd = clock, clock
+		-- A marker directly beneath a worker needs no walking leg, but still starts its work timer.
+		if actor.workPhase == "walk" then
+			actor.workPhase = actor.workTask
+			actor.workStart, actor.workEnd = clock, clock + Config.Work.WorkDropSeconds
+		elseif actor.workPhase == "carry" then
+			actor.workPhase = "drop"
+			actor.workStart, actor.workEnd = clock, clock + Config.Work.WorkDropSeconds
+		elseif actor.workPhase == "return" then
+			actor.workPhase, actor.workTask, actor.workItem, actor.workPlot = nil, nil, nil, nil
+			actor.workEnd = nil
+			actor.finishAt = clock
+		end
 	end
 end
 
@@ -888,7 +900,7 @@ local function syncGarden(session: Session, farm: Farm)
 			continue
 		end
 		local name = if plotState.crop == "" then "" else (if plotState.crop == "carrot" then "Carrot" else "Cabbage") .. plotState.stage
-		if marker:GetAttribute("ShownCrop") ~= name then
+		if marker:GetAttribute("ShownCrop") ~= name or (name ~= "" and crops:FindFirstChild("Crop" .. index) == nil) then
 			marker:SetAttribute("ShownCrop", name)
 			local old = crops:FindFirstChild("Crop" .. index)
 			if old then

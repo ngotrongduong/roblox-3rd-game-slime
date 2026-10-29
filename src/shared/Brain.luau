@@ -117,7 +117,7 @@ function Brain.choose(farm: Farm, slimeId: string, ctx: Context, now: number, rn
 		for index, slot in (farm.work :: any)[area].slots do
 			local worker = Stations.activeWorker(farm, slot, now)
 			if worker and worker.id == slimeId then
-				-- A full box stops production: the worker must haul it if no idle carrier did.
+				-- A full box stops production at the bin until a courier or the player frees space.
 				if Food.total((farm.work :: any)[area].box) >= Config.Work.BoxCapacity then
 					if area == "fishing" or area == "garden" then
 						-- A packed bin visibly pauses this shift until a free courier or the player unloads it.

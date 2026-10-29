@@ -22,6 +22,7 @@ type Entry = {
 	lastAction: string,
 	lastEmotion: string,
 	lastPhase: string,
+	rod: Model?,
 }
 type Village = {
 	root: Folder,
@@ -98,6 +99,14 @@ local function clearEntry(entry: Entry)
 	end
 	if entry.actor then
 		SlimeActor.destroy(entry.actor)
+	end
+	if entry.rod then
+		for _, piece in entry.rod:GetDescendants() do
+			if piece:IsA("BasePart") then
+				piece.LocalTransparencyModifier = 0
+			end
+		end
+		entry.rod = nil
 	end
 	if entry.model then
 		entry.model:Destroy()
@@ -346,6 +355,7 @@ local function animate(village: Village, entry: Entry, now: number)
 		entry.carry:PivotTo(CFrame.new(pos) * CFrame.new(0, C.BodyHeight * C.CarryHeight, 0))
 	end
 	-- The place's real rod returns to its stand on departure; only this client hides it in use.
+	local activeRod: Model? = nil
 	if stringAttr(entry.config, "Working", "") == "fishing" then
 		local map = workspace:FindFirstChild("Map")
 		local plot = if map then map:FindFirstChild("Plot" .. Config.Village.DevPlot) else nil
@@ -364,12 +374,25 @@ local function animate(village: Village, entry: Entry, now: number)
 				end
 			end
 			local rod = if nearest then nearest:FindFirstChild("FishingRod") else nil
-			if rod then
-				for _, part in rod:GetDescendants() do
-					if part:IsA("BasePart") then
-						part.LocalTransparencyModifier = if tool == "FishingRod" then 1 else 0
-					end
+			if rod and rod:IsA("Model") then
+				activeRod = rod
+			end
+		end
+	end
+	if entry.rod ~= activeRod then
+		if entry.rod then
+			for _, part in entry.rod:GetDescendants() do
+				if part:IsA("BasePart") then
+					part.LocalTransparencyModifier = 0
 				end
+			end
+		end
+		entry.rod = activeRod
+	end
+	if entry.rod then
+		for _, part in entry.rod:GetDescendants() do
+			if part:IsA("BasePart") then
+				part.LocalTransparencyModifier = if tool == "FishingRod" then 1 else 0
 			end
 		end
 	end
@@ -422,6 +445,7 @@ local function addSlime(village: Village, child: Instance)
 		lastPhase = "",
 		carryName = "",
 		carry = nil,
+		rod = nil,
 	}
 	village.slimes[child] = entry
 	for _, name in { "Look", "Colour", "Material", "DualId", "SecretId", "Ghost", "Scale" } do
