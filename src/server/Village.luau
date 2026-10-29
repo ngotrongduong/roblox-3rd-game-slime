@@ -238,6 +238,49 @@ local function claim(session: Session, id: string, action: Action)
 	end
 end
 
+-- The progress clock over a slime at work (owner, 2026-10-30): which kind, and when it started and ends in server
+-- time, so the clients draw the exact fraction. It runs only while the station really earns progress (the slime
+-- stands at its place and nothing else is going on), which is the same rule the work simulation uses.
+local GARDEN_ACTIONS: { [string]: boolean } = { hoe = true, plant = true, water = true, harvest = true }
+local function workClock(
+	farm: Farm,
+	slime: typeof(FarmState.newFarm(0).slimes[1]),
+	actor: Actor?,
+	area: string?,
+	slotIndex: number,
+	epoch: number,
+	clock: number
+): (string, number, number)
+	if not actor or not area or not actor.action or actor.action.kind ~= "work" or actor.index > 0 then
+		return "", 0, 0
+	end
+	local slot = (farm.work :: any)[area].slots[slotIndex]
+	local active = if slot then Stations.activeWorker(farm, slot, epoch) else nil
+	if not slot or not active or active.id ~= slime.id then
+		return "", 0, 0
+	end
+	if actor.workPhase then
+		-- The visible chore in the garden (hoe, plant, water, pull) is its own short clock.
+		if GARDEN_ACTIONS[actor.workPhase] and actor.workStart and actor.workEnd then
+			return area, actor.workStart, actor.workEnd
+		end
+		return "", 0, 0
+	end
+	if actor.current.id ~= actor.action.spot or (area == "training" and not slot.stat) or slot.pending then
+		return "", 0, 0
+	end
+	local level = (farm.areas :: any)[area].level
+	local total = if area == "garden"
+		then Config.Work.GardenActionSeconds * Config.Work.CycleLevelFactor ^ (level - Config.Village.StartLevel)
+		else Stations.cycleSeconds(area, level)
+	if slot.progress >= total then
+		return "", 0, 0
+	end
+	-- progress units to real seconds: a faster slime needs less time, a hungry one works slower
+	local scale = Stations.speedTimeFactor(slime.stats.speed) / Needs.workFactor(slime.needs)
+	return area, clock - slot.progress * scale, clock + (total - slot.progress) * scale
+end
+
 local function show(session: Session, farm: Farm, epoch: number)
 	local root, slimes, eggs = session.root, session.slimes, session.eggs
 	set(root, "Coins", farm.coins)
@@ -404,6 +447,28 @@ local function show(session: Session, farm: Farm, epoch: number)
 			end
 		end
 		set(model, "PairIndex", pairIndex)
+		-- The progress clock: a work station's cycle, or the courtship until the egg is laid.
+		local clockKind, clockStart, clockEnd =
+			workClock(farm, slime, actor, area, slot, epoch, workspace:GetServerTimeNow())
+		local courting = if pairIndex > 0 then farm.breeding.pairs[pairIndex].courtingUntil else nil
+		if clockKind == "" and courting and courting > epoch then
+			clockKind = "court"
+			clockEnd = courting
+			clockStart = clockEnd - Config.Breeding.CourtshipSeconds
+		end
+		-- the simulation advances once a second: keep the published times while they still agree to a fraction of
+		-- a second, so a running clock does not rewrite its attributes every tick
+		if
+			clockKind ~= ""
+			and model:GetAttribute("ClockKind") == clockKind
+			and math.abs(((model:GetAttribute("ClockEnd") :: any) or 0) - clockEnd)
+				< Config.Village.ClockKeepSeconds
+		then
+			clockStart, clockEnd = model:GetAttribute("ClockStart") :: any, model:GetAttribute("ClockEnd") :: any
+		end
+		set(model, "ClockKind", clockKind)
+		set(model, "ClockStart", clockStart)
+		set(model, "ClockEnd", clockEnd)
 		set(model, "Partner", if actor and actor.action then actor.action.partner or "" else "")
 		-- The hand event and the facing (src/client/Village.client.luau draws the flying item and turns the body).
 		set(model, "Hand", if actor then actor.hand or "" else "")
@@ -438,6 +503,18 @@ local function show(session: Session, farm: Farm, epoch: number)
 		set(model, "Place", egg.place)
 		set(model, "Slot", egg.slot)
 		set(model, "HatchAt", egg.hatchAt or 0)
+		-- The hatch clock: it ends at hatchAt and took the whole time of the place the egg is in now (a nest takes
+		-- NestSlowFactor times longer than an incubator, and a move keeps the progress made).
+		local eggEnd, eggStart = 0, 0
+		if egg.hatchAt then
+			local span = Breeding.incubationSeconds(Stats.level(egg.embryo.stats), farm.areas.breeding.level)
+				* (if egg.place == "nest" then Config.Breeding.NestSlowFactor else 1)
+			-- (hatchAt is unix seconds; the server clock the clients read is unix time too)
+			eggEnd = egg.hatchAt
+			eggStart = eggEnd - math.max(span, egg.hatchAt - epoch)
+		end
+		set(model, "ClockStart", eggStart)
+		set(model, "ClockEnd", eggEnd)
 		local held = session.carried
 		local hidden = held ~= nil and held.eggId == egg.id
 		if not hidden then
@@ -1504,9 +1581,17 @@ local function refreshPrompts(session: Session)
 		if instance:IsA("ProximityPrompt") then
 			local hold = session.carried
 			local destination = instance:GetAttribute("VillageSpot")
-			instance.ActionText = if hold then "Put down" else "Pick up"
-			instance.Enabled = not hold
-				or (type(destination) == "string" and VillageCarry.allowed(hold.item, hold.origin, destination))
+			local fits = hold ~= nil
+				and type(destination) == "string"
+				and VillageCarry.allowed(hold.item, hold.origin, destination)
+			if destination == "storehouse" then
+				-- The storehouse only takes things back (owner, 2026-10-30): no pick-up there.
+				instance.ActionText = "Deposit store"
+				instance.Enabled = fits
+			else
+				instance.ActionText = if hold then "Put down" else "Pick up"
+				instance.Enabled = hold == nil or fits
+			end
 		end
 	end
 end
@@ -1602,7 +1687,7 @@ local function carryPrompt(player: Player, session: Session, spot: string)
 			releaseCarry(player, session, false)
 			PlayerData.markKeyMoment(player, "delivered carried item")
 		end
-	elseif VillageCarry.pickupSources(spot) then
+	elseif spot ~= "storehouse" and VillageCarry.pickupSources(spot) then
 		local picked: Carried? = nil
 		PlayerData.update(player, function(data: any)
 			local selected = selectItem(data, session, spot)
@@ -1642,9 +1727,9 @@ local LABELS: { [string]: string } = {
 }
 local function setupCarry(player: Player, session: Session)
 	for _, spot in session.spots do
-		-- No prompt at a guessed place (an incubator not built yet stood by the nests) nor at the storehouse
-		-- (the owner, 2026-10-29: "remove the Storehouse Pick up button").
-		if spot.guessed or spot.id == "storehouse" then
+		-- No prompt at a guessed place (an incubator not built yet stood by the nests). The storehouse prompt is
+		-- "Deposit store" only (owner, 2026-10-30), enabled while the player carries something it accepts.
+		if spot.guessed then
 			continue
 		end
 		if VillageCarry.pickupSources(spot.id) or spot.id == "fridge" or string.match(spot.id, "^incubator:%d+$") then
@@ -1663,7 +1748,8 @@ local function setupCarry(player: Player, session: Session)
 			anchor.Position = point(spot) + Vector3.new(0, Config.Village.CarryPromptHeight, 0)
 			anchor.Parent = session.root
 			local prompt = Instance.new("ProximityPrompt")
-			prompt.ActionText = "Pick up"
+			prompt.ActionText = if spot.id == "storehouse" then "Deposit store" else "Pick up"
+			prompt.Enabled = spot.id ~= "storehouse"
 			prompt.ObjectText = LABELS[spot.id] or (if string.match(spot.id, "^nest:") then "Nest" else "Incubator")
 			prompt.KeyboardKeyCode = Enum.KeyCode.E
 			prompt.HoldDuration = Config.Village.CarryPromptHoldSeconds

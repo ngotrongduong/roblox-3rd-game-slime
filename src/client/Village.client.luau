@@ -5,6 +5,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Config = require(ReplicatedStorage.Shared.Config)
 local Layout = require(ReplicatedStorage.Shared.Layout)
+local ProgressClock = require(script.Parent.ProgressClock)
 local SlimeActor = require(script.Parent.SlimeActor)
 local SlimeLook = require(script.Parent.SlimeLook)
 local VillagePath = require(ReplicatedStorage.Shared.VillagePath)
@@ -36,11 +37,14 @@ type Entry = {
 	flightKey: string,
 	-- the start of the last assignment pop drawn
 	popAt: number,
+	-- the progress clock over the head while a work cycle or a courtship runs
+	clock: ProgressClock.Clock?,
 }
 type Village = {
 	root: Folder,
 	slimes: { [Instance]: Entry },
 	eggs: { [Instance]: Model },
+	eggClocks: { [Instance]: ProgressClock.Clock },
 	connections: { RBXScriptConnection },
 }
 local villages: { [Folder]: Village } = {}
@@ -138,6 +142,8 @@ local function clearEntry(entry: Entry)
 		end
 	end
 	entry.tool, entry.bobber, entry.flight = nil, nil, nil
+	ProgressClock.drop(entry.clock)
+	entry.clock = nil
 end
 
 local function refreshLook(entry: Entry)
@@ -316,6 +322,15 @@ local function addWaterDrops(carried: Model)
 	emitter.EmissionDirection = Enum.NormalId.Bottom
 	emitter.Parent = drop
 end
+
+-- One spec the progress clocks read at once, reused so no update allocates.
+local clockSpec: ProgressClock.Spec = {
+	kind = "",
+	start = 0,
+	finish = 0,
+	position = Vector3.zero,
+	size = 1,
+}
 
 local function smoothstep(x: number): number
 	local t = math.clamp(x, 0, 1)
@@ -729,6 +744,27 @@ local function animate(village: Village, entry: Entry, now: number)
 			setHidden(standRod, true)
 		end
 	end
+
+	-- The progress clock (work cycle, courtship), beside the head and to the camera's right.
+	local kind = stringAttr(entry.config, "ClockKind", "")
+	if kind ~= "" and not ghost then
+		local scale = if actor then actor.scale else 1
+		local head = if actor
+			then actor.root.Position + Vector3.new(0, actor.body.Size.Y + C.CarryTopOffset, 0)
+			else pos + Vector3.new(0, C.BodyHeight, 0)
+		local camera = workspace.CurrentCamera
+		local right = if camera then camera.CFrame.RightVector else Vector3.xAxis
+		clockSpec.kind = kind
+		clockSpec.start = number(entry.config, "ClockStart", 0)
+		clockSpec.finish = number(entry.config, "ClockEnd", 0)
+		clockSpec.size = C.ClockSize * scale
+		clockSpec.position = head
+			+ Vector3.new(right.X, 0, right.Z) * (C.ClockSideStuds * scale)
+			+ Vector3.new(0, C.ClockLiftStuds * scale + clockSpec.size / 2, 0)
+		entry.clock = ProgressClock.update(entry.clock, clockSpec, now)
+	elseif entry.clock then
+		entry.clock = ProgressClock.update(entry.clock, nil, now)
+	end
 end
 
 local function eggPosition(village: Village, egg: Configuration): Vector3
@@ -788,6 +824,7 @@ local function addSlime(village: Village, child: Instance)
 		flight = nil,
 		flightKey = "",
 		popAt = 0,
+		clock = nil,
 	}
 	village.slimes[child] = entry
 	for _, name in { "Look", "Colour", "Material", "DualId", "SecretId", "Ghost", "Scale" } do
@@ -846,6 +883,8 @@ local function addEgg(village: Village, child: Instance)
 end
 
 local function removeEgg(village: Village, child: Instance)
+	ProgressClock.drop(village.eggClocks[child])
+	village.eggClocks[child] = nil
 	local model = village.eggs[child]
 	if model then
 		model:Destroy()
@@ -857,7 +896,7 @@ local function bindVillage(root: Instance)
 	if not root:IsA("Folder") or villages[root] then
 		return
 	end
-	local village: Village = { root = root, slimes = {}, eggs = {}, connections = {} }
+	local village: Village = { root = root, slimes = {}, eggs = {}, eggClocks = {}, connections = {} }
 	villages[root] = village
 	local function bindFolder(name: string)
 		local folder = root:FindFirstChild(name)
@@ -933,11 +972,16 @@ task.spawn(function()
 						entry.lastUpdate = now
 						animate(village, entry, now)
 					end
+				elseif entry.clock then
+					ProgressClock.drop(entry.clock)
+					entry.clock = nil
 				end
 			end
 			for egg, model in village.eggs do
 				if egg:GetAttribute("Held") == true then
 					model.Parent = nil
+					ProgressClock.drop(village.eggClocks[egg])
+					village.eggClocks[egg] = nil
 					continue
 				elseif model.Parent ~= renderFolder then
 					model.Parent = renderFolder
@@ -956,6 +1000,22 @@ task.spawn(function()
 						then math.rad(C.EggWobbleDegrees) * math.sin(now * C.EggWobbleHz * math.pi * 2)
 						else 0
 					model:PivotTo(CFrame.new(position) * CFrame.Angles(0, 0, wobble))
+					-- the hatch clock floats above the egg's top
+					local finish = number(egg, "ClockEnd", 0)
+					if finish > 0 then
+						clockSpec.kind = "egg"
+						clockSpec.start = number(egg, "ClockStart", 0)
+						clockSpec.finish = finish
+						clockSpec.size = C.EggClockSize
+						clockSpec.position = position
+							+ Vector3.new(0, C.EggHeight * size + C.EggClockGap + C.EggClockSize / 2, 0)
+						village.eggClocks[egg] = ProgressClock.update(village.eggClocks[egg], clockSpec, now) :: any
+					else
+						village.eggClocks[egg] = ProgressClock.update(village.eggClocks[egg], nil, now) :: any
+					end
+				else
+					ProgressClock.drop(village.eggClocks[egg])
+					village.eggClocks[egg] = nil
 				end
 			end
 		end

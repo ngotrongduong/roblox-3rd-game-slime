@@ -175,6 +175,9 @@ Config.Village = {
 	Traits = { "hardworking", "lazy", "playful", "shy", "chatty", "glutton" },
 	MaxFriends = 8,
 	StartLevel = 1,
+	-- A published progress clock keeps its times while a new estimate lies within this many seconds (the
+	-- simulation steps once a second; this stops a running clock from rewriting its attributes every tick).
+	ClockKeepSeconds = 0.6,
 	MaxLevel = 50,
 	PopulationBase = 20,
 	PopulationPerLevel = 4,
@@ -877,6 +880,36 @@ Config.VillageClient = {
 	EggRestLift = 0.02,
 	-- a nest egg is drawn this many times its kit size (incubator eggs stay 1: they fit the dome)
 	NestEggScale = 3,
+	-- The progress clock over a slime at work, a courting pair or an egg (owner, 2026-10-30). Sizes are fractions of
+	-- the slime's own scale (about 3 studs), so the clock scales with the camera like the slime; it sits to the
+	-- camera's right of the head so it never covers the emote above it.
+	ClockSize = 0.62,
+	ClockSideStuds = 0.7,
+	ClockLiftStuds = 0.05,
+	-- an egg's clock: its size, and how far above the egg's top it floats
+	EggClockSize = 2,
+	EggClockGap = 0.9,
+	ClockMaxDistance = 90,
+	-- ring and face (fractions of the clock's size; the ring's pixel thickness)
+	ClockRingInset = 0.1,
+	ClockRingPixels = 6,
+	ClockIconShare = 0.44,
+	-- appear (grows in), complete (a small pop) and leave (shrinks away); a clock never flickers
+	ClockInSeconds = 0.2,
+	ClockPopSeconds = 0.3,
+	ClockPopGrow = 0.3,
+	ClockOutSeconds = 0.2,
+	-- a clock that leaves with at least this much done counts as finished and pops first
+	ClockDoneFraction = 0.97,
+	-- which owner icon (Config.Ui.Icons) sits in the middle of each kind of clock
+	ClockIcons = {
+		fishing = "fishing",
+		garden = "garden",
+		kitchen = "kitchen",
+		training = "training",
+		court = "breeding",
+		egg = "slimes",
+	},
 	CarryHeight = 1.1,
 	CarryScale = 0.42,
 	SleepBillboardPixels = 32,
