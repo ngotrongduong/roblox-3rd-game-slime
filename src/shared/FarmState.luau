@@ -347,7 +347,11 @@ function FarmState.newFarm(now: number): Farm
 		counter = {},
 		fridge = {},
 		cookedAllowed = {},
-		breeding = { pairs = { {}, {} } },
+		breeding = { pairs = (function(): { Pair }
+			local pairs: { Pair } = {}
+			for _ = 1, Config.Breeding.BasePlaces do table.insert(pairs, {}) end
+			return pairs
+		end)() },
 		lastSimulatedAt = now,
 		coins = f.StartingCoins,
 		items = items,
