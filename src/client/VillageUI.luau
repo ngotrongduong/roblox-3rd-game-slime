@@ -441,18 +441,17 @@ renderArea = function(area: string)
 					chosenPortrait(slotButton, selected)
 				end
 			end
-			local assigned = if type(saved.worker) == "string" and saved.worker ~= "" then saved.worker
-				else if type(saved.reserve) == "string" and saved.reserve ~= "" then saved.reserve else nil
-			if assigned then
-				local remove = row(scroller)
-				button(remove, "Remove " .. labelFor(assigned), function()
-					local id = assigned
-					if id then
+			-- Workers and reserves are independent assignments, both removable after a rejoin.
+			for _, role in { "worker", "reserve" } do
+				local id = saved[role]
+				if type(id) == "string" and id ~= "" then
+					local remove = row(scroller)
+					button(remove, "Remove " .. role .. ": " .. labelFor(id), function()
 						request({ action = "Unassign", slimeId = id }, function()
 							renderArea(area)
 						end)
-					end
-				end, C.UiButtonSize * 4)
+					end, C.UiButtonSize * 4)
+				end
 			end
 			local progress = if type(saved.progress) == "number" then math.floor(saved.progress * Config.Needs.Max) else 0
 			local detail = row(scroller)
