@@ -19,7 +19,7 @@ return function(T)
 
 	T.test("each hop advances only after crouching and before landing", function()
 		local speed = Config.Village.WalkSpeed
-		local length = speed * Config.Village.HopSeconds * 3
+		local length = speed * Config.Village.HopSeconds * 3 - Config.Village.PathPointEpsilon
 		local duration = Path.duration(length, speed)
 		T.near(duration, 3 * Config.Village.HopSeconds, 0.0001)
 		local start = 100
