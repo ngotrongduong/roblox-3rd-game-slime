@@ -183,16 +183,16 @@ local function actionMotion(action: string, working: string): string?
 	return nil
 end
 
-local function nearestPartner(village: Village, current: Entry): Model?
+local function nearestPartner(village: Village, current: Entry): Vector3?
 	local here = if current.actor then current.actor.root.Position else at(current.config, "From")
-	local nearest: Model? = nil
+	local nearest: Vector3? = nil
 	local best = Config.Brain.NearbyStuds
 	for _, other in village.slimes do
 		if other ~= current and other.actor and other.model then
 			local distance = (other.actor.root.Position - here).Magnitude
 			if distance < best then
 				best = distance
-				nearest = other.model
+				nearest = other.actor.root.Position
 			end
 		end
 	end
@@ -216,7 +216,8 @@ local function animate(village: Village, entry: Entry, now: number)
 		pos += Vector3.new(0, C.GhostFloat + C.GhostFloat * math.sin(now * C.GhostFloatHz * math.pi * 2), 0)
 	end
 	local bearing = to - from
-	local cf = if bearing.Magnitude > 0.01 then CFrame.lookAt(pos, pos + Vector3.new(bearing.X, 0, bearing.Z))
+	local flat = Vector3.new(bearing.X, 0, bearing.Z)
+	local cf = if flat.Magnitude > 0.01 then CFrame.lookAt(pos, pos + flat)
 		else CFrame.new(pos)
 	if actor then
 		SlimeActor.setCFrame(actor, cf)
@@ -409,7 +410,6 @@ task.spawn(function()
 		local camera = workspace.CurrentCamera
 		for _, village in villages do
 			for _, entry in village.slimes do
-				refreshLook(entry)
 				local origin = if entry.actor then entry.actor.root.Position else at(entry.config, "From")
 				local distance = if camera then (camera.CFrame.Position - origin).Magnitude else 0
 				if distance < C.MaxDrawDistance then
