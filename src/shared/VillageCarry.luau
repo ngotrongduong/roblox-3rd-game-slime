@@ -14,7 +14,7 @@ function Carry.allowed(item: string, source: string, destination: string): boole
 			and source ~= destination
 	end
 	if (Config.Food.Dishes :: any)[item] ~= nil then
-		return (source == "counter" or source == "fridge") and destination == "fridge" and source ~= destination
+		return source == "counter" and destination == "fridge"
 	end
 	return false
 end
