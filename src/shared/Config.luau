@@ -226,8 +226,8 @@ Config.Brain = {
 	NearbyStuds = 25,
 	PlayerStuds = 30,
 	StopStuds = 4,
-	SpotSpread = 2,
-	SpotSpreadPlaces = 8,
+	SpotSpread = 4,
+	SpotSpreadPlaces = 6,
 	IdleSeconds = 6,
 	-- Visual hops are local interpolation, never changes to the server's path clock.
 	HopSeconds = 0.72,
