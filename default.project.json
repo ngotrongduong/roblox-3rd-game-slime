@@ -7,6 +7,9 @@
 			"Shared": {
 				"$path": "src/shared"
 			},
+			"ClientKit": {
+				"$path": "assets/ClientKit.rbxm"
+			},
 			"Remotes": {
 				"$className": "Folder",
 				"Action": {
