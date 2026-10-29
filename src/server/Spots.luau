@@ -1,5 +1,5 @@
 --!strict
--- World markers are optional: a bare work place still has logical village destinations.
+-- Prefer true interaction markers; use existing prop geometry when a stage has no markers.
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Config = require(ReplicatedStorage.Shared.Config)
 local Layout = require(ReplicatedStorage.Shared.Layout)
@@ -16,8 +16,8 @@ local MODELS = {
 	breeding = "BreedingL1",
 }
 
-local function plain(id: string, area: string, point: Vector3): Spot
-	return { id = id, area = area, x = point.X, y = point.Y, z = point.Z }
+local function plain(id: string, area: string, position: Vector3): Spot
+	return { id = id, area = area, x = position.X, y = position.Y, z = position.Z }
 end
 
 local function location(inst: Instance): Vector3?
@@ -27,6 +27,55 @@ local function location(inst: Instance): Vector3?
 		return inst.Position
 	elseif inst:IsA("Model") then
 		return inst:GetPivot().Position
+	end
+	return nil
+end
+
+local function marker(container: Instance?, names: { string }): Vector3?
+	if container then
+		for _, name in names do
+			local hit = container:FindFirstChild(name, true)
+			if hit then
+				local position = location(hit)
+				if position then
+					return position
+				end
+			end
+		end
+	end
+	return nil
+end
+
+local function near(container: Instance?, names: { string }, centre: Vector3): Vector3?
+	if not container then
+		return nil
+	end
+	local nearest: Vector3? = nil
+	local closest = Config.Village.SpotSearchStuds
+	for _, inst in container:GetDescendants() do
+		for _, name in names do
+			if inst.Name == name or string.sub(inst.Name, 1, #name) == name then
+				local position = location(inst)
+				if position then
+					local delta = position - centre
+					local distance = Vector3.new(delta.X, 0, delta.Z).Magnitude
+					if distance < closest then
+						closest = distance
+						nearest = position
+					end
+				end
+				break
+			end
+		end
+	end
+	return nearest
+end
+
+local function front(model: Instance?): Vector3?
+	if model and model:IsA("Model") then
+		-- Kit buildings face into the village; put feet on the door side, not at the pivot.
+		return model:GetPivot().Position
+			+ model:GetPivot().LookVector * (model:GetExtentsSize().Z / 2 + Config.Village.SpotDoorOffset)
 	end
 	return nil
 end
@@ -44,22 +93,12 @@ function Spots.build(plotNumber: number, plot: Instance?): { [string]: Spot }
 	frames.plaza = Layout.plotFrame(plotNumber).Position + Vector3.new(0, Config.Map.GroundY, 0)
 	frames.gate = Layout.plotGate(plotNumber).Position + Vector3.new(0, Config.Map.GroundY, 0)
 
-	local function add(id: string, area: string, container: Instance?, names: { string })
-		local position: Vector3? = nil
-		if container then
-			for _, name in names do
-				local marker = container:FindFirstChild(name, true)
-				if marker then
-					position = location(marker)
-					if position then
-						break
-					end
-				end
-			end
-		end
+	local function add(id: string, area: string, container: Instance?, names: { string }, modelPosition: Vector3?)
+		local marked = marker(container, names)
+		local position = marked or modelPosition
 		if position then
 			found += 1
-			table.insert(foundNames, id)
+			table.insert(foundNames, id .. (if marked then " (marker)" else " (model)"))
 		else
 			position = frames[area] or frames.plaza
 			fallback += 1
@@ -68,44 +107,81 @@ function Spots.build(plotNumber: number, plot: Instance?): { [string]: Spot }
 		result[id] = plain(id, area, position :: Vector3)
 	end
 
+	local models: { [string]: Instance } = {}
 	for area: string, name: string in MODELS :: { [string]: string } do
 		local model = if plot then plot:FindFirstChild(name) else nil
-		add("entrance:" .. area, area, model, { "UpgradePoint", "Entrance", "Gate" })
-		if area == "fishing" or area == "garden" or area == "kitchen" or area == "training" then
-			for slot, marker in Config.Village.SpotNames.Work do
-				add("work:" .. area .. ":" .. slot, area, model, { marker })
-			end
+		if model then
+			models[area] = model
 		end
-		if area == "fishing" or area == "garden" or area == "kitchen" then
-			add("box:" .. area, area, model, { "CollectionBox", "FishBucket", "HarvestBox", "DishBox" })
+		add("entrance:" .. area, area, model, { "UpgradePoint", "Entrance", "Gate" }, front(model))
+		if area == "fishing" or area == "garden" or area == "kitchen" or area == "training" then
+			for slot, spotName in Config.Village.SpotNames.Work do
+				add("work:" .. area .. ":" .. slot, area, model, { spotName }, nil)
+			end
 		end
 	end
 
-	local pantry = if plot then plot:FindFirstChild(MODELS.pantry) else nil
-	local kitchen = if plot then plot:FindFirstChild(MODELS.kitchen) else nil
-	local breeding = if plot then plot:FindFirstChild(MODELS.breeding) else nil
-	local fishing = if plot then plot:FindFirstChild(MODELS.fishing) else nil
-	local garden = if plot then plot:FindFirstChild(MODELS.garden) else nil
+	local pantry = models.pantry
+	local kitchen = models.kitchen
+	local breeding = models.breeding
+	local fishing = models.fishing
+	local garden = models.garden
+	local spots = Config.Village.SpotNames
+	local pantryDoor = marker(pantry, spots.StorehouseModels) or front(pantry)
+	add("storehouse", "pantry", pantry, spots.Storehouse, pantryDoor)
+	local counterPosition = near(kitchen, spots.CounterModels, frames.kitchen)
+	if not counterPosition and kitchen and kitchen:IsA("Model") then
+		counterPosition = front(kitchen)
+		if counterPosition then
+			counterPosition += kitchen:GetPivot().RightVector * Config.Village.SpotCounterOffsetX
+		end
+	end
+	add("counter", "kitchen", kitchen, spots.Counter, counterPosition)
+	local fridgePosition = near(kitchen, spots.FridgeModels, frames.kitchen)
+	if not fridgePosition and kitchen and kitchen:IsA("Model") then
+		local counter = result.counter
+		fridgePosition = Vector3.new(counter.x, counter.y, counter.z)
+			+ kitchen:GetPivot().RightVector * Config.Village.SpotFridgeOffsetX
+	end
+	add("fridge", "kitchen", kitchen, spots.Fridge, fridgePosition)
+	for _, area in { "fishing", "garden", "kitchen" } do
+		local model = models[area]
+		local approximate = front(model)
+		if area == "kitchen" then
+			local counter = result.counter
+			approximate = Vector3.new(counter.x, counter.y, counter.z)
+		elseif area == "garden" then
+			local entrance = result["entrance:garden"]
+			approximate = Vector3.new(entrance.x, entrance.y, entrance.z)
+		end
+		add("box:" .. area, area, model, spots.Box, approximate)
+	end
+
+	add("breeding", "breeding", breeding, { "Entrance", "Nest1" }, front(breeding))
+	add("nursery", "breeding", breeding, spots.Nursery, nil)
+	for index, name in spots.Nest do
+		add("nest:" .. index, "breeding", breeding, { name }, nil)
+	end
+	for index, name in spots.Incubator do
+		add("incubator:" .. index, "breeding", breeding, { name }, nil)
+	end
 	local village = if plot then plot:FindFirstChild("Village") else nil
-	add("storehouse", "pantry", pantry, Config.Village.SpotNames.Storehouse)
-	add("counter", "kitchen", kitchen, Config.Village.SpotNames.Counter)
-	add("fridge", "kitchen", kitchen, Config.Village.SpotNames.Fridge)
-	add("breeding", "breeding", breeding, { "Entrance", "Nest1" })
-	add("nursery", "breeding", breeding, Config.Village.SpotNames.Nursery)
-	for index, marker in Config.Village.SpotNames.Nest do
-		add("nest:" .. index, "breeding", breeding, { marker })
-	end
-	for index, marker in Config.Village.SpotNames.Incubator do
-		add("incubator:" .. index, "breeding", breeding, { marker })
-	end
-	add("nap", "plaza", village, Config.Village.SpotNames.Nap)
-	add("fountain", "plaza", village, Config.Village.SpotNames.Fountain)
-	add("flowers", "garden", garden, Config.Village.SpotNames.Flowers)
-	add("pond", "fishing", fishing, Config.Village.SpotNames.Pond)
-	add("campfire", "hatchery", village, Config.Village.SpotNames.Campfire)
-	add("plaza", "plaza", village, { "Plaza", "PlazaCentre" })
-	add("gate", "gate", village, { "Gate", "FrontGate" })
-	-- Client and brain use only these plain coordinates; a missing map never blocks the service.
+	local plazaPosition = near(plot, spots.Plaza, frames.plaza)
+	add("plaza", "plaza", village, spots.Plaza, plazaPosition)
+	local gatePosition = near(plot, spots.Gate, frames.gate)
+	add("gate", "gate", village, spots.Gate, gatePosition)
+	local well = near(plot, spots.FountainModels, frames.plaza)
+	add("fountain", "plaza", village, spots.Fountain, well)
+	add("flowers", "garden", garden, spots.Flowers, nil)
+	add("pond", "fishing", fishing, spots.Pond, nil)
+	local fire = near(plot, spots.CampfireModels, frames.hatchery)
+	add("campfire", "hatchery", village, spots.Campfire, fire)
+	local campfire = result.campfire
+	local centre = Vector3.new(campfire.x, campfire.y, campfire.z)
+	local seat = near(plot, spots.NapModels, centre)
+	add("nap", "hatchery", village, spots.Nap, seat)
+
+	-- World markers can be added later without changing brain destinations.
 	if plot then
 		print(Config.LogPrefix, "village spots found:", found, table.concat(foundNames, ", "))
 		print(Config.LogPrefix, "village spots fallback:", fallback, table.concat(fallbackNames, ", "))
