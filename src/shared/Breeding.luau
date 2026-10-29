@@ -13,6 +13,8 @@ local Luck = if script then require(script.Parent.Luck) else require("./Luck")
 local Mutations = if script then require(script.Parent.Mutations) else require("./Mutations")
 local Rng = if script then require(script.Parent.Rng) else require("./Rng")
 local Stats = if script then require(script.Parent.Stats) else require("./Stats")
+local Needs = if script then require(script.Parent.Needs) else require("./Needs")
+local Stations = if script then require(script.Parent.Stations) else require("./Stations")
 
 -- Sibling types come through typeof: an exported type cannot be read through the if-require.
 type Farm = typeof(FarmState.newFarm(0))
@@ -46,9 +48,10 @@ Breeding.Messages = {
 	MISSING_PARENT = "Pick two different slimes.",
 	INVALID_PARENT_DATA = "A parent has invalid data.",
 	-- The original had no text for this one (its picker hid fallen slimes).
-	PARENT_FALLEN = "A parent has fallen in battle.",
+	PARENT_FALLEN = "A parent is a ghost.",
 	PARENT_TOO_YOUNG = "A parent is still growing up.",
 	PARENT_ON_COOLDOWN = "One parent is still resting.",
+	PARENT_NEEDS = "Both parents need food and energy.",
 	SLIME_CAP_REACHED = "The farm is full — no room for a baby.",
 	EGG_CAP_REACHED = "The nest is full.",
 	ID_UNAVAILABLE = "Something went wrong. Please try again.",
@@ -65,11 +68,13 @@ local function roundMs(seconds: number): number
 	return math.round(seconds * 1000) / 1000
 end
 
--- 60 s; 5 s less per Faster Incubation level up to level 5 (35 s); never under 5 s.
-function Breeding.incubationSeconds(incubationLevel: number?): number
+-- Incubation begins only after an egg has entered a free incubator.
+function Breeding.incubationSeconds(babyLevel: number, breedingLevel: number?): number
 	local b = Config.Breeding
-	local level = math.min(b.IncubationMaxLevel, incubationLevel or 0)
-	return math.max(b.IncubationMinSeconds, b.IncubationSeconds - level * b.IncubationStepSeconds)
+	local base = b.IncubationSeconds + math.max(0, babyLevel - b.IncubationLevelBase) * b.IncubationPerBabyLevel
+	return math.round(
+		base * b.IncubationAreaFactor ^ ((breedingLevel or Config.Village.StartLevel) - Config.Village.StartLevel)
+	)
 end
 
 -- Both parents rest this long: 63 s for level-4 starters, less with Quicker Breeding.
@@ -87,7 +92,12 @@ local function usableParent(s: Slime): boolean
 end
 
 function Breeding.isBaby(farm: Farm, slime: Slime, now: number): boolean
-	return Growth.isBaby(slime.createdAt, now, Stats.level(slime.stats), farm.upgrades.growthSpeed)
+	return Growth.isBaby(
+		slime.createdAt,
+		now,
+		Stats.level(slime.stats),
+		farm.areas.breeding.level - Config.Village.StartLevel
+	)
 end
 
 -- Checked in the original's order; the first failure wins.
@@ -103,7 +113,7 @@ function Breeding.check(farm: Farm, idA: string, idB: string, now: number): Chec
 	if not usableParent(a) or not usableParent(b) then
 		return fail("INVALID_PARENT_DATA")
 	end
-	if a.fallen or b.fallen then
+	if (a.ghostUntil and a.ghostUntil > now) or (b.ghostUntil and b.ghostUntil > now) then
 		return fail("PARENT_FALLEN")
 	end
 	if Breeding.isBaby(farm, a, now) or Breeding.isBaby(farm, b, now) then
@@ -112,13 +122,33 @@ function Breeding.check(farm: Farm, idA: string, idB: string, now: number): Chec
 	if now < a.breedReadyAt or now < b.breedReadyAt then
 		return fail("PARENT_ON_COOLDOWN")
 	end
+	if not Needs.canPair(a.needs) or not Needs.canPair(b.needs) then
+		return fail("PARENT_NEEDS")
+	end
+	if Stations.isBusy(farm, idA) or Stations.isBusy(farm, idB) then
+		return fail("PARENT_ON_COOLDOWN")
+	end
 	-- Each egg holds a slot for its baby.
-	if #farm.slimes + #farm.eggs + 1 > FarmState.populationLimit(farm.upgrades) then
+	if #farm.slimes + #farm.eggs + 1 > FarmState.populationLimit(farm.areas) then
 		return fail("SLIME_CAP_REACHED")
 	end
-	if #farm.eggs >= Config.Breeding.MaxActiveEggs then
+	local used: { [number]: boolean } = {}
+	for _, egg in farm.eggs do
+		if egg.place == "nest" then
+			used[egg.slot] = true
+		end
+	end
+	local free = false
+	for slot = 1, FarmState.breedingCount(farm.areas.breeding.level) do
+		if not used[slot] then
+			free = true
+			break
+		end
+	end
+	if not free then
 		return fail("EGG_CAP_REACHED")
 	end
+
 	return { ok = true }
 end
 
@@ -184,7 +214,6 @@ local function boostFirstEgg(egg: Egg, a: Slime, b: Slime, rng: Rng)
 		local best = math.max(Stats.get(a.stats, key), Stats.get(b.stats, key))
 		Stats.set(stats, key, Stats.clamp(key, best + bonusFor(key, rng)))
 	end
-	egg.hatchAt = egg.createdAt + Config.Breeding.TutorialHatchSeconds
 	egg.embryo.stats = stats
 	egg.embryo.colourGenotype = Genetics.homozygous(colour)
 	egg.embryo.appearanceMutation = Mutations.none()
@@ -240,7 +269,9 @@ function Breeding.createEgg(farm: Farm, idA: string, idB: string, now: number, r
 		id = eggId,
 		parentIds = { idA, idB },
 		createdAt = now,
-		hatchAt = now + Breeding.incubationSeconds(farm.upgrades.incubationSpeed),
+		hatchAt = nil,
+		place = "nest",
+		slot = 1,
 		offspringId = offspringId,
 		embryo = {
 			stats = Breeding.inheritStats(a.stats, b.stats, rng, luck),
@@ -249,6 +280,18 @@ function Breeding.createEgg(farm: Farm, idA: string, idB: string, now: number, r
 		},
 		status = "incubating",
 	}
+	local occupied: { [number]: boolean } = {}
+	for _, e in farm.eggs do
+		if e.place == "nest" then
+			occupied[e.slot] = true
+		end
+	end
+	for index = 1, FarmState.breedingCount(farm.areas.breeding.level) do
+		if not occupied[index] then
+			egg.slot = index
+			break
+		end
+	end
 	local boosted = Breeding.isTutorialFirstEgg(farm)
 	if boosted then
 		boostFirstEgg(egg, a, b, rng)
@@ -256,7 +299,7 @@ function Breeding.createEgg(farm: Farm, idA: string, idB: string, now: number, r
 	egg.status = FarmState.eggStatus(egg, now)
 
 	local bestLevel = math.max(Stats.level(a.stats), Stats.level(b.stats))
-	local readyAt = now + Breeding.cooldownSeconds(bestLevel, farm.upgrades.breedCooldown)
+	local readyAt = now + Breeding.cooldownSeconds(bestLevel, farm.areas.breeding.level - Config.Village.StartLevel)
 
 	local after = table.clone(farm)
 	after.slimes = table.clone(farm.slimes)
@@ -275,6 +318,118 @@ function Breeding.createEgg(farm: Farm, idA: string, idB: string, now: number, r
 	after.lifetime.breeds += 1
 
 	return { ok = true, farm = after, egg = egg, parentsReadyAt = readyAt, boosted = boosted }
+end
+
+-- One pair per place; a worker, reserve or already paired slime cannot be committed twice.
+function Breeding.setPair(farm: Farm, index: number, idA: string?, idB: string?, now: number?): (boolean, string?)
+	local pair = farm.breeding.pairs[index]
+	if not pair then
+		return false, "NO_PAIR_PLACE"
+	end
+	if idA == nil and idB == nil then
+		farm.breeding.pairs[index] = {}
+		return true, nil
+	end
+	if not idA or not idB or idA == idB then
+		return false, "SAME_PARENT"
+	end
+	local a = FarmState.findSlime(farm, idA)
+	local b = FarmState.findSlime(farm, idB)
+	if not a or not b then
+		return false, "MISSING_PARENT"
+	end
+	local time = now or farm.lastSimulatedAt
+	if Breeding.isBaby(farm, a, time) or Breeding.isBaby(farm, b, time) then
+		return false, "PARENT_TOO_YOUNG"
+	end
+	if (a.ghostUntil and a.ghostUntil > time) or (b.ghostUntil and b.ghostUntil > time) then
+		return false, "PARENT_FALLEN"
+	end
+	if Stations.isBusy(farm, idA) or Stations.isBusy(farm, idB) then
+		return false, "ALREADY_ASSIGNED"
+	end
+	for i, other in farm.breeding.pairs do
+		if i ~= index and (other.a == idA or other.b == idA or other.a == idB or other.b == idB) then
+			return false, "IN_PAIR"
+		end
+	end
+	farm.breeding.pairs[index] = { a = idA, b = idB }
+	return true, nil
+end
+
+function Breeding.pairReady(farm: Farm, index: number, now: number): CheckResult
+	local pair = farm.breeding.pairs[index]
+	if not pair or not pair.a or not pair.b then
+		return fail("MISSING_PARENT")
+	end
+	local check = Breeding.check(farm, pair.a, pair.b, now)
+	if not check.ok then
+		return check
+	end
+	local a = FarmState.findSlime(farm, pair.a) :: Slime
+	local b = FarmState.findSlime(farm, pair.b) :: Slime
+	if Stations.isBusy(farm, pair.a) or Stations.isBusy(farm, pair.b) then
+		return fail("PARENT_ON_COOLDOWN")
+	end
+	if not Needs.canPair(a.needs) or not Needs.canPair(b.needs) then
+		return fail("PARENT_ON_COOLDOWN")
+	end
+	return { ok = true }
+end
+
+function Breeding.startCourtship(farm: Farm, index: number, now: number): CheckResult
+	local ready = Breeding.pairReady(farm, index, now)
+	if ready.ok then
+		farm.breeding.pairs[index].courtingUntil = now + Config.Breeding.CourtshipSeconds
+	end
+	return ready
+end
+
+function Breeding.layEgg(farm: Farm, index: number, now: number, rng: Rng, newId: IdFn): BreedResult
+	local pair = farm.breeding.pairs[index]
+	if not pair or not pair.a or not pair.b or not pair.courtingUntil or now < pair.courtingUntil then
+		return { ok = false, reason = "NOT_COURTED", farm = farm }
+	end
+	local result = Breeding.createEgg(farm, pair.a, pair.b, now, rng, newId)
+	if not result.ok then
+		return result
+	end
+	result.farm.breeding = { pairs = table.clone(farm.breeding.pairs) }
+	result.farm.breeding.pairs[index] = { a = pair.a, b = pair.b }
+	for i, slime in result.farm.slimes do
+		if slime.id == pair.a or slime.id == pair.b then
+			local parent = table.clone(slime)
+			parent.needs = table.clone(slime.needs)
+			parent.needs.energy = math.max(0, slime.needs.energy - Config.Breeding.LayEnergy)
+			result.farm.slimes[i] = parent
+		end
+	end
+	return result
+end
+
+function Breeding.placeInIncubator(farm: Farm, eggId: string, now: number): (boolean, string?)
+	local egg = FarmState.findEgg(farm, eggId)
+	if not egg then
+		return false, "MISSING_EGG"
+	end
+	if egg.place ~= "nest" then
+		return false, "ALREADY_INCUBATING"
+	end
+	local occupied: { [number]: boolean } = {}
+	for _, other in farm.eggs do
+		if other.place == "incubator" then
+			occupied[other.slot] = true
+		end
+	end
+	for slot = 1, FarmState.breedingCount(farm.areas.breeding.level) do
+		if not occupied[slot] then
+			egg.place, egg.slot = "incubator", slot
+			egg.hatchAt = now + Breeding.incubationSeconds(Stats.level(egg.embryo.stats), farm.areas.breeding.level)
+			egg.status = FarmState.eggStatus(egg, now)
+			return true, nil
+		end
+	end
+	return false, "NO_INCUBATOR"
 end
 
 -- Player-facing preview: stat ranges and hints, never the embryo itself.

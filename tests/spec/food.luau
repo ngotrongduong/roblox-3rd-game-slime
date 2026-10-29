@@ -1,0 +1,40 @@
+local Food = require("../../src/shared/Food")
+local FarmKit = require("../lib/FarmKit")
+return function(T)
+	T.test("bounded add and take never go below zero or over capacity", function()
+		local bag = {}
+		T.eq(Food.add(bag, "fish", 1000, 10), 10)
+		T.eq(Food.add(bag, "carrot", 10, 10), 0)
+		T.eq(Food.take(bag, "fish", 1000), 10)
+		T.eq(Food.take(bag, "fish", 1), 0)
+		T.eq(Food.add(bag, "fake", 4, 10), 0)
+		T.eq(Food.total(bag), 0)
+		T.eq(Food.storehouseCapacity(1), 100)
+		T.eq(Food.storehouseCapacity(50), 1080)
+		T.eq(Food.fridgeCapacity(1), 20)
+		T.eq(Food.fridgeCapacity(50), 216)
+	end)
+	T.test("best recipe chooses fullness and ingredient shopping never invents stock", function()
+		local farm = FarmKit.farm(1000)
+		T.eq(Food.bestDish({ fish = 2 }), "grilledFish")
+		T.eq(Food.bestDish({ fish = 1, carrot = 1, cabbage = 1 }), "fishVegSoup")
+		T.eq(Food.bestDish({}), nil)
+		farm.counter = { fish = 1 }
+		farm.storehouse = { carrot = 2, cabbage = 1 }
+		T.same(Food.ingredientsWanted(farm), { carrot = 1, cabbage = 1 })
+	end)
+	T.test("dish permission, fallback, fullness and timed battle buff", function()
+		local farm = FarmKit.farm(1000)
+		farm.fridge = { fishVegSoup = 1 }
+		farm.storehouse = { fish = 2, carrot = 5 }
+		T.eq(Food.chooseMeal(farm, "slime-1"), "carrot")
+		table.insert(farm.cookedAllowed, "slime-1")
+		T.eq(Food.chooseMeal(farm, "slime-1"), "fishVegSoup")
+		farm.slimes[1].needs.fullness = 20
+		T.eq(Food.eat(farm, "slime-1", 1000), "fishVegSoup")
+		T.eq(farm.slimes[1].needs.fullness, 100)
+		T.same(farm.slimes[1].buff, { stat = "hp", percent = 10, untilTime = 2200 })
+		T.eq(Food.eat(farm, "slime-1", 1001), "carrot")
+		T.eq(farm.fridge.fishVegSoup, nil)
+	end)
+end

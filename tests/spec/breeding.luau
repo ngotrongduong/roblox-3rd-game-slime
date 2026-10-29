@@ -7,12 +7,11 @@ local Stats = require("../../src/shared/Stats")
 local NOW = 1000000
 
 return function(T)
-	T.test("incubation: 60 s, 5 s less per level, 35 s at level 5 and beyond", function()
-		T.eq(Breeding.incubationSeconds(0), 60)
-		T.eq(Breeding.incubationSeconds(nil), 60)
-		T.eq(Breeding.incubationSeconds(1), 55)
-		T.eq(Breeding.incubationSeconds(5), 35)
-		T.eq(Breeding.incubationSeconds(9), 35)
+	T.test("incubation waits for the incubator and scales by baby and breeding levels", function()
+		T.eq(Breeding.incubationSeconds(4, 1), 60)
+		T.eq(Breeding.incubationSeconds(5, 1), 61)
+		T.eq(Breeding.incubationSeconds(9, 1), 65)
+		T.eq(Breeding.incubationSeconds(4, 50), math.round(60 * 0.98 ^ 49))
 	end)
 
 	T.test("parent cooldown: 63 s for starters, x0.95 per level, capped at level 20", function()
@@ -26,44 +25,29 @@ return function(T)
 		T.eq(Breeding.cooldownSeconds(4, 25), Breeding.cooldownSeconds(4, 20))
 	end)
 
-	T.test("eligibility: the first failing rule wins, in the original order", function()
-		local function farmWith(slimes)
-			return FarmKit.farm(NOW, slimes)
-		end
-		local good = function(id)
-			return FarmKit.slime(id)
-		end
-		-- 1 same parent beats a missing one
-		T.eq(Breeding.check(farmWith({}), "x", "x", NOW).reason, "SAME_PARENT")
-		-- 2 missing
-		T.eq(Breeding.check(farmWith({ good("a") }), "a", "b", NOW).reason, "MISSING_PARENT")
-		-- 3 invalid data beats fallen
-		local bad = FarmKit.slime("b", { fallen = true })
-		bad.stats.attack = 0
-		T.eq(Breeding.check(farmWith({ good("a"), bad }), "a", "b", NOW).reason, "INVALID_PARENT_DATA")
-		local badGenes = FarmKit.slime("b", { colours = { "navy", "teal" } })
-		T.eq(Breeding.check(farmWith({ good("a"), badGenes }), "a", "b", NOW).reason, "INVALID_PARENT_DATA")
-		-- 4 fallen beats a baby
-		local fallenBaby = FarmKit.slime("b", { fallen = true, createdAt = NOW })
-		T.eq(Breeding.check(farmWith({ good("a"), fallenBaby }), "a", "b", NOW).reason, "PARENT_FALLEN")
-		-- 5 a baby beats a resting parent
-		local restingBaby = FarmKit.slime("b", { createdAt = NOW - 100, breedReadyAt = NOW + 50 })
-		T.eq(Breeding.check(farmWith({ good("a"), restingBaby }), "a", "b", NOW).reason, "PARENT_TOO_YOUNG")
-		-- 6 resting beats a full farm
-		local full = FarmKit.many(20)
-		full[2].breedReadyAt = NOW + 1
-		T.eq(Breeding.check(farmWith(full), "s1", "s2", NOW).reason, "PARENT_ON_COOLDOWN")
-		-- 7 a full farm beats a full nest
-		local f7 = farmWith(FarmKit.many(16))
-		for i = 1, 4 do
-			table.insert(f7.eggs, { id = "e" .. i, hatchAt = NOW + 60, createdAt = NOW, offspringId = "o" .. i })
-		end
-		T.eq(Breeding.check(f7, "s1", "s2", NOW).reason, "SLIME_CAP_REACHED")
-		-- 8 the nest holds 4 eggs
-		f7.upgrades.slimeStorage = 2
-		T.eq(Breeding.check(f7, "s1", "s2", NOW).reason, "EGG_CAP_REACHED")
-		f7.eggs[4] = nil
-		T.ok(Breeding.check(f7, "s1", "s2", NOW).ok)
+	T.test("eligibility validates parents, ghosts, growth, cooldown, nest and population", function()
+		local farm = FarmKit.farm(NOW)
+		T.eq(Breeding.check(farm, "missing", "missing", NOW).reason, "SAME_PARENT")
+		T.eq(Breeding.check(farm, "slime-1", "missing", NOW).reason, "MISSING_PARENT")
+		farm.slimes[1].stats.attack = 0
+		T.eq(Breeding.check(farm, "slime-1", "slime-2", NOW).reason, "INVALID_PARENT_DATA")
+		farm.slimes[1].stats.attack = 1
+		farm.slimes[1].ghostUntil = NOW + 1
+		T.eq(Breeding.check(farm, "slime-1", "slime-2", NOW).reason, "PARENT_FALLEN")
+		farm.slimes[1].ghostUntil = nil
+		farm.slimes[1].createdAt = NOW
+		T.eq(Breeding.check(farm, "slime-1", "slime-2", NOW).reason, "PARENT_TOO_YOUNG")
+		farm.slimes[1].createdAt = NOW - 400
+		farm.slimes[1].breedReadyAt = NOW + 20
+		T.eq(Breeding.check(farm, "slime-1", "slime-2", NOW).reason, "PARENT_ON_COOLDOWN")
+		farm.slimes[1].breedReadyAt = 0
+		local full = FarmKit.farm(NOW, FarmKit.many(20))
+		T.eq(Breeding.check(full, "s1", "s2", NOW).reason, "SLIME_CAP_REACHED")
+		local one = Breeding.createEgg(farm, "slime-1", "slime-2", NOW, Rng.new(2), FarmKit.ids())
+		assert(one.ok)
+		local two = Breeding.createEgg(one.farm, "slime-3", "slime-4", NOW, Rng.new(2), FarmKit.ids())
+		assert(two.ok)
+		T.eq(Breeding.check(two.farm, "slime-1", "slime-3", NOW + 100).reason, "EGG_CAP_REACHED")
 	end)
 
 	T.test("reason codes carry the player texts", function()
@@ -78,19 +62,16 @@ return function(T)
 		T.ok(Breeding.Messages.PARENT_FALLEN ~= nil)
 	end)
 
-	T.test("eggs reserve population slots", function()
-		local farm = FarmKit.farm(NOW, FarmKit.many(17))
-		table.insert(farm.eggs, { id = "e1", hatchAt = NOW + 60, createdAt = NOW, offspringId = "o1" })
-		table.insert(farm.eggs, { id = "e2", hatchAt = NOW + 60, createdAt = NOW, offspringId = "o2" })
-		-- 17 slimes + 2 eggs + this one = 20: fits exactly
-		T.ok(Breeding.check(farm, "s1", "s2", NOW).ok)
-		table.insert(farm.slimes, FarmKit.slime("s18"))
+	T.test("eggs reserve population spaces as village levels grow", function()
+		local farm = FarmKit.farm(NOW, FarmKit.many(19))
+		table.insert(farm.eggs, { id = "e1", place = "incubator", slot = 1 })
 		T.eq(Breeding.check(farm, "s1", "s2", NOW).reason, "SLIME_CAP_REACHED")
-		T.eq(FarmState.populationLimit(farm.upgrades), 20)
-		farm.upgrades.slimeStorage = 40
-		T.eq(FarmState.populationLimit(farm.upgrades), 220)
-		farm.upgrades.slimeStorage = 99
-		T.eq(FarmState.populationLimit(farm.upgrades), 220)
+		T.eq(FarmState.populationLimit(farm.areas), 20)
+		for _, id in { "fishing", "garden", "kitchen", "pantry", "training", "breeding" } do
+			farm.areas[id].level = 2
+		end
+		T.eq(FarmState.populationLimit(farm.areas), 24)
+		T.ok(Breeding.check(farm, "s1", "s2", NOW).ok)
 	end)
 
 	T.test("starters can breed on a fresh farm", function()
@@ -168,8 +149,8 @@ return function(T)
 		T.eq(egg.offspringId, "slime-id2")
 		T.same(egg.parentIds, { "slime-1", "slime-2" })
 		T.eq(egg.createdAt, NOW)
-		T.eq(egg.hatchAt, NOW + 60)
-		T.eq(egg.status, "incubating")
+		T.eq(egg.hatchAt, nil)
+		T.eq(egg.status, "nest")
 		T.ok(egg.embryo.stats and egg.embryo.colourGenotype)
 		T.eq(res.parentsReadyAt, NOW + 63)
 		local after = res.farm
@@ -197,14 +178,14 @@ return function(T)
 		T.eq(clash.reason, "ID_UNAVAILABLE")
 	end)
 
-	T.test("upgrades shorten incubation and cooldown", function()
+	T.test("breeding level shortens cooldown; eggs remain unincubated in nests", function()
 		local farm = FarmKit.farm(NOW)
-		farm.upgrades.incubationSpeed = 5
-		farm.upgrades.breedCooldown = 20
+		farm.areas.breeding.level = 21
 		local res = Breeding.createEgg(farm, "slime-1", "slime-2", NOW, Rng.new(1), FarmKit.ids())
 		assert(res.egg)
-		T.eq(res.egg.hatchAt, NOW + 35)
-		T.near(res.parentsReadyAt :: number, NOW + 22.585, 1e-6)
+		T.eq(res.egg.place, "nest")
+		T.eq(res.egg.hatchAt, nil)
+		T.near(res.parentsReadyAt :: number, NOW + Breeding.cooldownSeconds(4, 20), 1e-6)
 	end)
 
 	T.test("the same seed lays the same egg", function()
@@ -302,7 +283,7 @@ return function(T)
 		T.ok(plain > 150, "most eggs stay plain")
 	end)
 
-	T.test("tutorial first egg: new homozygous colour, two boosted stats, 20 s hatch", function()
+	T.test("tutorial first egg: new homozygous colour and two boosted stats before incubation", function()
 		for seed = 1, 40 do
 			local farm = FarmState.newFarm(NOW)
 			T.ok(Breeding.isTutorialFirstEgg(farm))
@@ -310,7 +291,7 @@ return function(T)
 			assert(res.egg)
 			local embryo = res.egg.embryo
 			T.ok(res.boosted)
-			T.eq(res.egg.hatchAt, NOW + 20)
+			T.eq(res.egg.hatchAt, nil)
 			T.eq(embryo.colourGenotype.alleles[1], embryo.colourGenotype.alleles[2])
 			T.ok(embryo.colourGenotype.alleles[1] ~= "navy")
 			T.same(embryo.appearanceMutation, { type = "none" })
@@ -332,7 +313,7 @@ return function(T)
 		local res = Breeding.createEgg(farm, "slime-1", "slime-2", NOW, Rng.new(1), FarmKit.ids())
 		T.ok(not res.boosted)
 		assert(res.egg)
-		T.eq(res.egg.hatchAt, NOW + 60)
+		T.eq(res.egg.hatchAt, nil)
 	end)
 
 	T.test("new-player luck raises the rare rate of real eggs", function()

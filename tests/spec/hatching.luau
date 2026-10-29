@@ -14,6 +14,7 @@ local function farmWithEgg(seed: number?)
 	local farm = FarmKit.farm(NOW)
 	local res = Breeding.createEgg(farm, "slime-1", "slime-2", NOW, Rng.new(seed or 1), FarmKit.ids())
 	assert(res.ok and res.egg)
+	assert(Breeding.placeInIncubator(res.farm, res.egg.id, NOW))
 	return res.farm, res.egg
 end
 
@@ -26,6 +27,8 @@ local function egg(id: string, appearance: any, colours: { string }?)
 		parentIds = { "slime-1", "slime-2" },
 		createdAt = NOW - 60,
 		hatchAt = NOW,
+		place = "incubator",
+		slot = 1,
 		offspringId = "baby-" .. id,
 		embryo = {
 			stats = { attack = 4, defence = 2, speed = 1, hp = 30 },
@@ -60,7 +63,7 @@ return function(T)
 		T.same(baby.appearanceMutation, embryo.appearanceMutation)
 		T.eq(baby.createdAt, e.hatchAt)
 		T.eq(baby.breedReadyAt, e.hatchAt)
-		T.eq(baby.needs.hunger, 100)
+		T.eq(baby.needs.fullness, 100)
 		T.eq(baby.seed, Rng.hash(baby.id))
 		T.ok(Growth.isBaby(baby.createdAt, e.hatchAt + 1, Stats.level(baby.stats), 0), "a hatchling is a baby")
 		local after = res.farm

@@ -1,111 +1,87 @@
 local Breeding = require("../../src/shared/Breeding")
+local Config = require("../../src/shared/Config")
 local FarmKit = require("../lib/FarmKit")
 local FarmState = require("../../src/shared/FarmState")
 local Rng = require("../../src/shared/Rng")
 
--- 2026-10-27 00:00:00 UTC + 1 hour
 local NOW = 1793059200 + 3600
 
 return function(T)
-	T.test("newFarm: four identical navy starters, adult and rested", function()
+	T.test("four navy starters are adults with fixed traits and complete needs", function()
 		local farm = FarmState.newFarm(NOW)
-		T.eq(#farm.slimes, 4)
 		local seeds = { 2654435769, 467448786, 2514546031, 267659000 }
-		for i, s in farm.slimes do
-			T.eq(s.id, "slime-" .. i)
-			T.eq(s.name, "Slime " .. i)
-			T.eq(s.seed, seeds[i], "seed " .. i)
-			T.eq(s.assetId, "slime.base.navy")
-			T.same(s.stats, { attack = 1, defence = 1, speed = 1, hp = 10 })
-			T.same(s.colourGenotype, { alleles = { "navy", "navy" } })
-			T.eq(s.visibleColour, "navy")
-			T.same(s.appearanceMutation, { type = "none" })
-			T.eq(s.isFavourite, false)
-			T.same(s.needs, { hunger = 100, hungerState = "full" })
-			T.eq(s.breedReadyAt, 0)
-			T.same(s.loadout, {})
-			T.eq(s.fallen, false)
-			T.eq(s.previousLoadout, nil)
-			T.ok(not Breeding.isBaby(farm, s, NOW), "starters are adults at once")
+		T.eq(#farm.slimes, 4)
+		for i, slime in farm.slimes do
+			T.eq(slime.id, "slime-" .. i)
+			T.eq(slime.name, "Slime " .. i)
+			T.eq(slime.seed, seeds[i])
+			T.same(slime.stats, { attack = 1, defence = 1, speed = 1, hp = 10 })
+			T.same(slime.colourGenotype, { alleles = { "navy", "navy" } })
+			T.same(slime.appearanceMutation, { type = "none" })
+			T.eq(slime.visibleColour, "navy")
+			T.same(slime.needs, { fullness = 100, energy = 100, fun = 100 })
+			T.eq(slime.trait, FarmState.traitForSeed(slime.seed))
+			T.same(slime.friends, {})
+			T.eq(slime.ghostUntil, nil)
+			T.eq(slime.buff, nil)
+			T.same(slime.loadout, {})
+			T.ok(not Breeding.isBaby(farm, slime, NOW))
+			T.eq(slime.fallen, nil)
+			T.eq(slime.previousLoadout, nil)
 		end
 	end)
 
-	T.test("newFarm: the rest of the farm matches the original defaults", function()
+	T.test("new village has all areas, work, food, pair places and preserved other state", function()
 		local farm = FarmState.newFarm(NOW)
 		T.same(farm.eggs, {})
-		T.eq(farm.breedsSinceMutation, 0)
 		T.same(farm.discoveries, {
 			base = { navy = { firstDiscoveredAt = NOW, hatchCount = 4 } },
 			dual = {},
 			secret = {},
 			material = {},
 		})
-		T.same(farm.food, { basicFood = 20, capacity = 100 })
-		T.eq(#farm.workstations, 4)
-		T.same(farm.workstations[1], {
-			id = "station-1",
-			definitionId = "ws.berry-bush",
-			assignedSlimeIds = {},
-			progressSeconds = 0,
-			pendingOutput = 0,
-		})
-		T.eq(farm.workstations[4].definitionId, "ws.cooking-kitchen")
-		T.same(farm.unlockedStations, { "ws.berry-bush" })
-		T.eq(farm.lastSimulatedAt, NOW)
+		T.same(farm.storehouse, { fish = 10, carrot = 10 })
+		T.same(farm.counter, {})
+		T.same(farm.fridge, {})
+		T.same(farm.cookedAllowed, {})
+		T.eq(#farm.breeding.pairs, 2)
+		T.same(farm.breeding.pairs[1], {})
+		for _, id in Config.Village.Areas do
+			T.eq(farm.areas[id].level, 1)
+		end
+		for _, id in Config.Work.Areas do
+			T.eq(#farm.work[id].slots, 1)
+			T.same(farm.work[id].slots[1], { progress = 0 })
+			T.same(farm.work[id].box, {})
+		end
+		T.eq(farm.food, nil)
+		T.eq(farm.workstations, nil)
+		T.eq(farm.unlockedStations, nil)
+		T.eq(farm.upgrades, nil)
+		T.eq(farm.nest, nil)
 		T.eq(farm.coins, 0)
 		T.eq(#farm.items, 9)
 		T.same(farm.items[1], { id = "item-sword-1", definitionId = "sword", ownership = { kind = "INVENTORY" } })
-		T.eq(farm.items[9].id, "item-kit-2")
 		T.same(farm.materials, {})
-		T.same(farm.upgrades, {
-			foodStorage = 0,
-			incubationSpeed = 0,
-			breedCooldown = 0,
-			growthSpeed = 0,
-			slimeStorage = 0,
-			autoHatch = 0,
-			specializedBreeding = 0,
-		})
-		T.eq(farm.nest, nil)
-		T.same(farm.lifetime, {
-			coinsEarned = 0,
-			foodFarmed = 0,
-			bestSlimeLevel = 4,
-			daysPlayed = 1,
-			lastPlayedDay = "2026-10-27",
-			mobsKilled = 0,
-			bossesKilled = 0,
-			breeds = 0,
-			bestRaidKillSec = 0,
-		})
-		T.same(farm.avatar, {
-			name = "You",
-			assetId = "slime.base.navy",
-			stats = { attack = 1, defence = 1, speed = 1, hp = 10 },
-			spentPoints = 0,
-			loadout = {},
-			createdAt = NOW,
-			frame = "wood",
-			bg = "meadow",
-			ownedFrames = {},
-			ownedBgs = {},
-		})
+		T.eq(farm.lastSimulatedAt, NOW)
+		T.eq(farm.lifetime.bestSlimeLevel, 4)
+		T.eq(farm.avatar.name, "You")
 		T.eq(farm.tutorialDone, false)
-		T.eq(farm.tutorialDoneAt, nil)
-		T.eq(farm.lastSiegeTeam, nil)
-		T.eq(farm.wbKingSlain, nil)
 	end)
 
-	T.test("repair keeps a healthy farm as it is", function()
+	T.test("healthy farm and nest egg survive repair without warnings", function()
 		local farm = FarmState.newFarm(NOW)
-		local res = Breeding.createEgg(farm, "slime-1", "slime-2", NOW, Rng.new(3), FarmKit.ids())
-		local repaired, warnings = FarmState.repair(res.farm, NOW + 1)
-		T.same(repaired, res.farm)
+		local result = Breeding.createEgg(farm, "slime-1", "slime-2", NOW, Rng.new(3), FarmKit.ids())
+		T.ok(result.ok)
+		local repaired, warnings, replaced = FarmState.repair(result.farm, NOW + 1)
+		T.same(repaired, result.farm)
 		T.same(warnings, {})
+		T.eq(replaced, false)
 	end)
 
-	T.test("repair keeps the good slimes when one is broken", function()
+	T.test("one broken slime is repaired without erasing good slimes, items or coins", function()
 		local farm = FarmState.newFarm(NOW)
+		farm.coins = 1234.7
 		local broken = table.clone(farm.slimes[2])
 		broken.stats = "junk"
 		broken.colourGenotype = { alleles = { "navy", "teal" } }
@@ -114,231 +90,132 @@ return function(T)
 		farm.slimes[5] = { name = "no id" }
 		farm.slimes[6] = "garbage"
 		farm.slimes[7] = table.clone(farm.slimes[1])
-		local repaired, warnings = FarmState.repair(farm, NOW)
-		T.eq(#repaired.slimes, 4, "dropped: no id, not a table, duplicate")
+		local repaired, warnings, replaced = FarmState.repair(farm, NOW)
+		T.eq(#repaired.slimes, 4)
+		T.eq(repaired.coins, 1234)
+		T.eq(replaced, false)
 		T.same(repaired.slimes[1], FarmState.newFarm(NOW).slimes[1])
-		local fixed = repaired.slimes[2]
-		T.eq(fixed.id, "slime-2")
-		T.same(fixed.stats, { attack = 1, defence = 1, speed = 1, hp = 10 })
-		T.same(fixed.colourGenotype, { alleles = { "navy", "navy" } })
-		T.eq(fixed.visibleColour, "navy")
-		T.same(fixed.needs, { hunger = 100, hungerState = "full" })
+		T.same(repaired.slimes[2].stats, { attack = 1, defence = 1, speed = 1, hp = 10 })
+		T.same(repaired.slimes[2].needs, { fullness = 100, energy = 100, fun = 100 })
+		T.same(repaired.slimes[2].colourGenotype.alleles, { "navy", "navy" })
+		T.eq(#repaired.items, 9)
 		T.ok(#warnings >= 5)
-		T.eq(#repaired.items, 9, "unrelated blocks are untouched")
 	end)
 
-	T.test("repair recomputes derived values", function()
+	T.test("needs, friendships, traits, area levels and inventory repair independently", function()
 		local farm = FarmState.newFarm(NOW)
-		farm.slimes[1].colourGenotype = { alleles = { "white", "black" } }
-		farm.slimes[1].visibleColour = "black"
-		farm.slimes[2].needs = { hunger = 20, hungerState = "full" }
-		farm.slimes[3].needs = { hunger = -5, hungerState = "full" }
-		farm.upgrades.foodStorage = 2
-		farm.food = { basicFood = 9999, capacity = 100 }
-		farm.eggs = {
-			{
-				id = "e1",
-				parentIds = { "slime-1", "slime-2" },
-				createdAt = NOW - 10,
-				hatchAt = NOW + 50,
-				offspringId = "b1",
-				embryo = {
-					stats = { attack = 1, defence = 1, speed = 1, hp = 10 },
-					colourGenotype = { alleles = { "red", "red" } },
-					appearanceMutation = { type = "none" },
-				},
-				status = "ready",
-			},
+		farm.slimes[1].needs = { fullness = -5, energy = 999, fun = 45 }
+		farm.slimes[1].trait = "made-up"
+		farm.slimes[1].friends = {
+			a = 100,
+			b = 1,
+			c = 60,
+			d = 70,
+			e = 80,
+			f = 90,
+			g = 99,
+			h = 98,
+			i = 20,
 		}
-		local r = FarmState.repair(farm, NOW)
-		T.eq(r.slimes[1].visibleColour, "white")
-		T.eq(r.slimes[2].needs.hungerState, "hungry")
-		T.same(r.slimes[3].needs, { hunger = 0, hungerState = "starving" })
-		T.same(r.food, { basicFood = 300, capacity = 300 })
-		T.eq(r.eggs[1].status, "incubating", "egg status is never trusted from the save")
-		T.eq(FarmState.repair(farm, NOW + 50).eggs[1].status, "ready")
+		farm.areas.fishing.level = 99
+		farm.areas.garden.level = -10
+		farm.storehouse = { fish = 900, carrot = 500, junk = 5 }
+		farm.counter = { fish = 100, cabbage = 100 }
+		farm.fridge = { grilledFish = 500, fake = 10 }
+		local out = FarmState.repair(farm, NOW)
+		T.same(out.slimes[1].needs, { fullness = 0, energy = 100, fun = 45 })
+		T.eq(out.slimes[1].trait, FarmState.traitForSeed(out.slimes[1].seed))
+		T.eq(out.slimes[1].friends.b, nil)
+		T.eq(out.slimes[1].friends.a, 100)
+		T.eq(out.areas.fishing.level, 50)
+		T.eq(out.areas.garden.level, 1)
+		T.eq(#out.work.fishing.slots, 4)
+		T.eq(out.storehouse.fish, 100)
+		T.eq(out.storehouse.junk, nil)
+		T.eq(out.counter.fish, 10)
+		T.eq(out.fridge.grilledFish, 20)
+		T.eq(out.fridge.fake, nil)
 	end)
 
-	T.test("repair drops only the broken egg and never extends a timer", function()
+	T.test("bad work assignments clear duplicates, missing babies and ghosts", function()
 		local farm = FarmState.newFarm(NOW)
-		local good = {
-			id = "ok",
-			parentIds = { "a", "b" },
-			createdAt = NOW,
-			hatchAt = NOW - 100,
-			offspringId = "kid",
-			embryo = {
-				stats = { attack = 2.4, defence = 1, speed = 1, hp = 10 },
-				colourGenotype = { alleles = { "pink", "pink" } },
-				appearanceMutation = { type = "secret", definitionId = "secret-future" },
-			},
+		farm.areas.fishing.level = 11
+		farm.work.fishing.slots = {
+			{ worker = "slime-1", reserve = "slime-2", progress = 25 },
+			{ worker = "slime-1", reserve = "ghost", progress = -3 },
 		}
-		farm.eggs = {
-			good,
-			{ id = "noembryo", parentIds = { "a", "b" }, createdAt = NOW, hatchAt = NOW, offspringId = "k2" },
-			{ id = "noparents", createdAt = NOW, hatchAt = NOW, offspringId = "k3", embryo = good.embryo },
-			"junk",
-			table.clone(good),
+		farm.work.training.slots[1] = { worker = "slime-3", stat = "hp", progress = 15 }
+		farm.slimes[3].ghostUntil = NOW + 100
+		farm.breeding.pairs = {
+			{ a = "slime-1", b = "slime-4" },
+			{ a = "slime-2", b = "slime-4" },
 		}
-		local r = FarmState.repair(farm, NOW)
-		T.eq(#r.eggs, 1)
-		local e = r.eggs[1]
-		T.eq(e.id, "ok")
-		T.eq(e.hatchAt, NOW, "hatchAt before createdAt becomes createdAt")
-		T.eq(e.embryo.stats.attack, 2)
-		T.same(e.embryo.appearanceMutation, { type = "secret", definitionId = "secret-future" }, "unknown ids kept")
-		T.eq(#r.slimes, 4)
+		local out = FarmState.repair(farm, NOW)
+		T.eq(out.work.fishing.slots[1].worker, "slime-1")
+		T.eq(out.work.fishing.slots[1].reserve, "slime-2")
+		T.eq(out.work.fishing.slots[2].worker, nil)
+		T.eq(out.work.fishing.slots[2].reserve, nil)
+		T.eq(out.work.fishing.slots[2].progress, 0)
+		T.eq(out.work.training.slots[1].worker, nil)
+		T.same(out.breeding.pairs, { {}, {} })
 	end)
 
-	T.test(
-		"repair keeps material appearances (known or not) on slimes and eggs, and old saves get a material bucket",
-		function()
-			local farm = FarmState.newFarm(NOW)
-			farm.slimes[1].appearanceMutation = { type = "material", definitionId = "gold" }
-			farm.slimes[2].appearanceMutation = { type = "material", definitionId = "unobtainium" }
-			farm.slimes[3].appearanceMutation = { type = "dual", definitionId = "dual-green-white-01" }
-			farm.slimes[4].appearanceMutation = { type = "material" }
-			farm.eggs = {
-				{
-					id = "e1",
-					parentIds = { "slime-1", "slime-2" },
-					createdAt = NOW - 10,
-					hatchAt = NOW + 50,
-					offspringId = "b1",
-					embryo = {
-						stats = { attack = 1, defence = 1, speed = 1, hp = 10 },
-						colourGenotype = { alleles = { "red", "red" } },
-						appearanceMutation = { type = "material", definitionId = "jelly" },
-					},
-					status = "incubating",
-				},
-			}
-			farm.discoveries.material = {
-				gold = { firstDiscoveredAt = NOW, hatchCount = 2 },
-				junk = { hatchCount = 0 },
-			}
-			local r, warnings = FarmState.repair(farm, NOW)
-			T.same(r.slimes[1].appearanceMutation, { type = "material", definitionId = "gold" })
-			T.same(r.slimes[2].appearanceMutation, { type = "material", definitionId = "unobtainium" }, "unknown kept")
-			T.same(
-				r.slimes[3].appearanceMutation,
-				{ type = "dual", definitionId = "dual-green-white-01" },
-				"old dual ids kept"
-			)
-			T.same(r.slimes[4].appearanceMutation, { type = "none" }, "a material with no id is malformed")
-			T.same(r.eggs[1].embryo.appearanceMutation, { type = "material", definitionId = "jelly" })
-			T.same(r.discoveries.material, { gold = { firstDiscoveredAt = NOW, hatchCount = 2 } })
-			T.ok(#warnings > 0)
-			-- an old save without the bucket
-			local old = FarmState.newFarm(NOW)
-			old.discoveries.material = nil
-			local fixed = FarmState.repair(old, NOW)
-			T.same(fixed.discoveries.material, {})
-			T.same(fixed.discoveries.base, { navy = { firstDiscoveredAt = NOW, hatchCount = 4 } })
-		end
-	)
-
-	T.test("repair never wipes the farm for one bad block", function()
+	T.test("egg embryos and timers survive repair, but invalid eggs do not", function()
 		local farm = FarmState.newFarm(NOW)
-		farm.coins = 1234.7
-		farm.upgrades = { slimeStorage = 3, incubationSpeed = "x", growthSpeed = -1 }
-		farm.discoveries = {
-			base = { navy = { firstDiscoveredAt = NOW, hatchCount = 4 }, red = { hatchCount = 0 } },
-			dual = "junk",
+		local good = Breeding.createEgg(farm, "slime-1", "slime-2", NOW, Rng.new(1), FarmKit.ids())
+		assert(good.egg)
+		good.farm.eggs[1].place = "incubator"
+		good.farm.eggs[1].slot = 1
+		good.farm.eggs[1].hatchAt = NOW + 50
+		table.insert(good.farm.eggs, { id = "bad", parentIds = { "a", "b" }, createdAt = NOW, hatchAt = NOW })
+		local out = FarmState.repair(good.farm, NOW + 70)
+		T.eq(#out.eggs, 1)
+		T.eq(out.eggs[1].hatchAt, NOW + 50, "incubation is never restarted")
+		T.eq(out.eggs[1].status, "ready")
+		T.same(out.eggs[1].embryo, good.egg.embryo)
+	end)
+
+	T.test("discoveries and equipment are repaired without wiping unrelated fields", function()
+		local farm = FarmState.newFarm(NOW)
+		farm.discoveries.material = {
+			gold = { firstDiscoveredAt = NOW, hatchCount = 2 },
+			junk = { hatchCount = 0 },
 		}
-		farm.eggs = "junk"
-		farm.workstations = "junk"
-		farm.items = 5
-		farm.avatar = "junk"
-		farm.lifetime = nil
-		farm.tutorialDone = nil
-		farm.tutorialDoneAt = NOW - 5
-		local r, warnings = FarmState.repair(farm, NOW)
-		T.eq(#r.slimes, 4)
-		T.eq(r.coins, 1234)
-		T.eq(r.upgrades.slimeStorage, 3)
-		T.eq(r.upgrades.incubationSpeed, 0)
-		T.eq(r.upgrades.growthSpeed, 0)
-		T.same(r.discoveries, {
-			base = { navy = { firstDiscoveredAt = NOW, hatchCount = 4 } },
-			dual = {},
-			secret = {},
-			material = {},
-		})
-		T.same(r.eggs, {})
-		T.eq(#r.workstations, 4)
-		T.same(r.items, {})
-		T.eq(r.avatar.name, "You")
-		T.eq(r.lifetime.bestSlimeLevel, 4)
-		T.eq(r.lifetime.coinsEarned, 1234)
-		T.eq(r.tutorialDone, nil, "a legacy save stays tour-done")
-		T.eq(r.tutorialDoneAt, NOW - 5)
+		farm.slimes[1].appearanceMutation = { type = "material", definitionId = "unobtainium" }
+		farm.slimes[1].loadout = { hand = "item-sword-1", head = "item-missing" }
+		farm.slimes[2].loadout = { hand = "item-sword-1" }
+		farm.items[3].ownership = { kind = "BATTLE_ESCROW" }
+		table.insert(farm.items, { id = "old", definitionId = "sword-2", ownership = { kind = "INVENTORY" } })
+		farm.materials = { crown_shard = 1, bad = -1 }
+		local out, warnings = FarmState.repair(farm, NOW)
+		T.same(out.slimes[1].appearanceMutation, { type = "material", definitionId = "unobtainium" })
+		T.same(out.discoveries.material, { gold = { firstDiscoveredAt = NOW, hatchCount = 2 } })
+		T.same(out.slimes[1].loadout, { hand = "item-sword-1" })
+		T.same(out.slimes[2].loadout, {})
+		T.same(out.items[1].ownership, { kind = "EQUIPPED_TO_SLIME", slimeId = "slime-1", slot = "hand" })
+		T.eq(#out.items, 9)
+		T.same(out.materials, { crown_shard = 1 })
+		T.eq(out.wbKingSlain, true)
 		T.ok(#warnings > 0)
 	end)
 
-	T.test("repair starts over only when no slime is usable", function()
-		local fresh, w1 = FarmState.repair("junk", NOW)
+	T.test("unusable saved farms never silently replace a player's progress", function()
+		local fresh, warnings, replaced = FarmState.repair("junk", NOW)
 		T.same(fresh, FarmState.newFarm(NOW))
-		T.eq(#w1, 1)
-		local empty = FarmState.repair({ slimes = { { name = "no id" } }, coins = 50 }, NOW)
+		T.ok(#warnings > 0)
+		T.eq(replaced, true)
+		local empty, _, replacedEmpty = FarmState.repair({ slimes = { { name = "no id" } }, coins = 50 }, NOW)
 		T.eq(empty.coins, 0)
-		T.eq(#empty.slimes, 4)
+		T.eq(replacedEmpty, true)
 	end)
 
-	T.test("repair: gear, stations, nest and battle fields", function()
-		local farm = FarmState.newFarm(NOW)
-		farm.slimes[1].loadout = { hand = "item-sword-1", head = "item-gone" }
-		farm.slimes[2].loadout = { hand = "item-sword-1" }
-		farm.items[2].ownership = { kind = "EQUIPPED_TO_SLIME", slimeId = "slime-3", slot = "hand" }
-		farm.items[3].ownership = { kind = "BATTLE_ESCROW" }
-		table.insert(farm.items, { id = "old", definitionId = "sword-2", ownership = { kind = "INVENTORY" } })
-		farm.workstations[1].assignedSlimeIds = { "slime-1", "ghost", "slime-1" }
-		farm.workstations[2].definitionId = "ws.unknown"
-		farm.unlockedStations = { "ws.farm-plot", "ws.nope" }
-		farm.nest = { nestId = "main", enabled = true, specialty = "atk", memberSlimeIds = { "slime-2", "ghost" } }
-		farm.lastSiegeTeam = { "slime-1", "ghost" }
-		farm.materials = { crown_shard = 1, bad = -1 }
-		local r = FarmState.repair(farm, NOW)
-		T.same(r.slimes[1].loadout, { hand = "item-sword-1" })
-		T.same(r.slimes[2].loadout, {}, "an item claimed twice stays with the first slime")
-		T.same(r.items[1].ownership, { kind = "EQUIPPED_TO_SLIME", slimeId = "slime-1", slot = "hand" })
-		T.same(r.items[2].ownership, { kind = "INVENTORY" })
-		T.same(r.items[3].ownership, { kind = "INVENTORY" })
-		T.eq(#r.items, 9, "retired gear removed")
-		T.same(r.workstations[1].assignedSlimeIds, { "slime-1" })
-		T.eq(#r.workstations, 3)
-		T.same(r.unlockedStations, { "ws.berry-bush", "ws.farm-plot" })
-		T.same(r.nest, {
-			nestId = "main",
-			enabled = true,
-			specialty = "atk",
-			memberSlimeIds = { "slime-2" },
-		})
-		T.same(r.lastSiegeTeam, { "slime-1" })
-		T.same(r.materials, { crown_shard = 1 })
-		T.eq(r.wbKingSlain, true, "crown shards prove a King kill")
-	end)
-
-	T.test("repair caps only absurd slime arrays", function()
+	T.test("repair only cuts absurd arrays and day keys are UTC", function()
 		local farm = FarmState.newFarm(NOW)
 		farm.slimes = FarmKit.many(600)
-		local r = FarmState.repair(farm, NOW)
-		T.eq(#r.slimes, 500)
-		local small = FarmState.newFarm(NOW)
-		small.slimes = FarmKit.many(60)
-		T.eq(#FarmState.repair(small, NOW).slimes, 60, "slimes beyond the slot limit are never dropped on load")
-	end)
-
-	T.test("derived helpers", function()
-		T.eq(FarmState.hungerState(100), "full")
-		T.eq(FarmState.hungerState(36), "full")
-		T.eq(FarmState.hungerState(35), "hungry")
-		T.eq(FarmState.hungerState(0.1), "hungry")
-		T.eq(FarmState.hungerState(0), "starving")
+		T.eq(#FarmState.repair(farm, NOW).slimes, 500)
+		farm.slimes = FarmKit.many(60)
+		T.eq(#FarmState.repair(farm, NOW).slimes, 60)
 		T.eq(FarmState.dayKey(1793059200), "2026-10-27")
 		T.eq(FarmState.dayKey(1793059200 - 1), "2026-10-26")
-		local u = FarmState.emptyUpgrades()
-		u.foodStorage = 20
-		T.eq(FarmState.foodCapacity(u), 2100)
 	end)
 end
