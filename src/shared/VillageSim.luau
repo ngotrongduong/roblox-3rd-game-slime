@@ -116,11 +116,13 @@ function VillageSim.step(input: Farm, now: number, seconds: number, rng: Rng, op
 	for _, slime in farm.slimes do
 		local wasGhost = slime.ghostUntil ~= nil and slime.ghostUntil <= now
 		if slime.ghostUntil == nil then
+			if Needs.isTired(slime.needs) then slime.sleeping = true end
 			local baby = Growth.isBaby(slime.createdAt, now, Stats.level(slime.stats),
 				farm.areas.breeding.level - Config.Village.StartLevel)
-			local activity = if Needs.isTired(slime.needs) then "sleep"
+			local activity = if slime.sleeping then "sleep"
 				elseif active[slime.id] then "work" else "idle"
 			slime.needs = Needs.tick(slime.needs, activity, duration, baby)
+			if slime.sleeping and Needs.rested(slime.needs) then slime.sleeping = nil end
 			if Needs.wantsFood(slime.needs) then
 				local item = Food.eat(farm, slime.id, now)
 				if item then table.insert(events, { kind = "ate", item = item, slimeId = slime.id }) end
@@ -128,6 +130,7 @@ function VillageSim.step(input: Farm, now: number, seconds: number, rng: Rng, op
 		end
 		if wasGhost then
 			slime.ghostUntil = nil
+			slime.sleeping = nil
 			slime.needs.fullness = Config.Needs.Start
 			slime.needs.energy = Config.Needs.Start
 			table.insert(events, { kind = "revived", slimeId = slime.id })
