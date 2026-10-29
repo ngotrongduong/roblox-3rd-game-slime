@@ -1,5 +1,7 @@
 local Stations = require("../../src/shared/Stations")
 local FarmKit = require("../lib/FarmKit")
+local Rng = require("../../src/shared/Rng")
+local VillageSim = require("../../src/shared/VillageSim")
 return function(T)
 	T.test("work slots grow only at the three milestones", function()
 		for _, row in { {1,1},{10,1},{11,2},{21,3},{31,4},{50,4} } do
@@ -31,5 +33,21 @@ return function(T)
 		T.eq(select(2, Stations.canAssign(farm, "baby", "garden", 1, false, now)), "BABY")
 		farm.slimes[3].ghostUntil = now + 100
 		T.eq(select(2, Stations.canAssign(farm, "slime-3", "garden", 1, false, now)), "GHOST")
+	end)
+	T.test("a full box pauses the producer and a kitchen without ingredients waits", function()
+		local now = 1000000
+		local farm = FarmKit.farm(now)
+		T.ok(Stations.assign(farm, "slime-1", "fishing", 1, false, now))
+		T.ok(Stations.assign(farm, "slime-2", "kitchen", 1, false, now))
+		farm.work.fishing.box = { fish = 10 }
+		local after = VillageSim.step(farm, now + 240, 240, Rng.new(5), { errands = false })
+		T.eq(after.work.fishing.box.fish, 10)
+		T.eq(after.work.fishing.slots[1].progress, 0)
+		T.same(after.work.kitchen.box, {})
+		T.eq(after.work.kitchen.slots[1].progress, 0)
+		after.counter = { fish = 2 }
+		local cooked = VillageSim.step(after, now + 360, 120, Rng.new(5), { errands = false })
+		T.eq(cooked.work.kitchen.box.grilledFish, 1)
+		T.eq(cooked.counter.fish, nil)
 	end)
 end
