@@ -312,6 +312,12 @@ local function picker(area: string, choose: (string) -> (), permitWorking: boole
 			)
 			icon(cell, "fullness", C.HudIconSize)
 			icon(cell, "energy", C.HudIconSize)
+			local stats = row(scroller)
+			text(stats, "ATK " .. tostring(slime:GetAttribute("Attack") or 0)
+				.. "  DEF " .. tostring(slime:GetAttribute("Defence") or 0)
+				.. "  SPD " .. tostring(slime:GetAttribute("Speed") or 0)
+				.. "  HP " .. tostring(slime:GetAttribute("Hp") or 0),
+				UDim2.new(1, 0, 0, C.HudHeight), C.FontTiny)
 			chooseButton.TextScaled = false
 			chooseButton.TextSize = C.FontTiny
 		end
@@ -488,7 +494,7 @@ local function refreshSheet()
 		return
 	end
 	refreshPending = true
-	task.delay(C.FarUpdateSeconds, function()
+	task.delay(Config.Village.TickSeconds, function()
 		refreshPending = false
 		if not sheet or not sheet.Visible or not activeArea then
 			return
@@ -623,7 +629,15 @@ end
 
 local function watchSlime(inst: Instance)
 	if inst:IsA("Configuration") and not slimeConnections[inst] then
-		slimeConnections[inst] = inst.AttributeChanged:Connect(refreshSheet)
+		-- Movement-leg attributes change often; only management fields redraw the sheet.
+		slimeConnections[inst] = inst.AttributeChanged:Connect(function(name)
+			if table.find({
+				"Name", "Fullness", "Energy", "Fun", "Level", "Attack", "Defence", "Speed", "Hp",
+				"Baby", "WorkArea", "WorkSlot", "Reserve", "PairIndex", "CookedAllowed",
+			}, name) then
+				refreshSheet()
+			end
+		end)
 		refreshSheet()
 	end
 end
