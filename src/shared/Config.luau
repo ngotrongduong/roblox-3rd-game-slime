@@ -194,6 +194,15 @@ Config.Village = {
 		Nest = { "Nest1", "Nest2", "Nest3", "Nest4", "Nest5", "Nest6" },
 		Incubator = { "Incubator1", "Incubator2", "Incubator3", "Incubator4", "Incubator5", "Incubator6" },
 		Storehouse = { "StorehouseDoor", "PantryDoor", "Entrance" },
+		StorehouseModels = { "PantryDoor", "Door" },
+		Box = { "CollectionBox", "FishBucket", "HarvestBox", "DishBox" },
+		CounterModels = { "KitchenCounter", "Counter", "PrepCounter" },
+		FridgeModels = { "Fridge", "Refrigerator" },
+		NapModels = { "Bench", "Stump", "Log" },
+		FountainModels = { "Well", "StoneWell", "Fountain" },
+		CampfireModels = { "Campfire", "FirePit", "Fire" },
+		Plaza = { "Plaza", "PlazaCentre" },
+		Gate = { "Gate", "FrontGate" },
 		Counter = { "KitchenCounter", "Counter", "WorkSpot1" },
 		Fridge = { "Fridge", "Refrigerator" },
 		Nursery = { "Nursery", "NurserySpot", "Nest1" },
@@ -203,6 +212,12 @@ Config.Village = {
 		Pond = { "PondEdge", "WorkSpot1", "Dock" },
 		Campfire = { "Campfire", "FirePit" },
 	},
+	SpotSearchStuds = 30,
+	SpotDoorOffset = 2,
+	SpotCounterOffsetX = -2,
+	SpotFridgeOffsetX = 4,
+	SpotBoxOffsetX = -4,
+	SpotNapOffset = 5,
 }
 
 -- Slimes choose a destination rather than receiving instantaneous food/energy effects.
@@ -212,6 +227,9 @@ Config.Brain = {
 	MaxFriends = 3,
 	NearbyStuds = 25,
 	PlayerStuds = 30,
+	StopStuds = 4,
+	SpotSpread = 4,
+	SpotSpreadPlaces = 6,
 	IdleSeconds = 6,
 	-- Visual hops are local interpolation, never changes to the server's path clock.
 	HopSeconds = 0.72,

@@ -10,6 +10,7 @@ local FarmState = require(ReplicatedStorage.Shared.FarmState)
 local Growth = require(ReplicatedStorage.Shared.Growth)
 local Rng = require(ReplicatedStorage.Shared.Rng)
 local Stats = require(ReplicatedStorage.Shared.Stats)
+local Stations = require(ReplicatedStorage.Shared.Stations)
 local VillageRules = require(ReplicatedStorage.Shared.Village)
 local VillageSim = require(ReplicatedStorage.Shared.VillageSim)
 local PlayerData = require(script.Parent.PlayerData)
@@ -36,6 +37,7 @@ type Session = {
 	eggs: Folder,
 	spots: { [string]: Spot },
 	actors: { [string]: Actor },
+	reserved: { [string]: string },
 	rng: typeof(Rng.new(0)),
 	cursor: number,
 	active: boolean,
@@ -78,15 +80,34 @@ local function point(s: Spot): Vector3
 	return Vector3.new(s.x, s.y, s.z)
 end
 
-local function working(farm: Farm, id: string): string?
+local function working(farm: Farm, id: string): (string?, number, boolean)
 	for _, area in Config.Work.Areas do
-		for _, slot in (farm.work :: any)[area].slots do
-			if slot.worker == id or slot.reserve == id then
-				return area
+		for index, slot in (farm.work :: any)[area].slots do
+			if slot.worker == id then
+				return area, index, false
+			elseif slot.reserve == id then
+				return area, index, true
 			end
 		end
 	end
-	return nil
+	return nil, 0, false
+end
+
+local function release(session: Session, id: string, action: Action?)
+	if not action then
+		return
+	end
+	for _, key in Brain.reservationKeys(action) do
+		if session.reserved[key] == id then
+			session.reserved[key] = nil
+		end
+	end
+end
+
+local function claim(session: Session, id: string, action: Action)
+	for _, key in Brain.reservationKeys(action) do
+		session.reserved[key] = id
+	end
 end
 
 local function show(session: Session, farm: Farm, epoch: number)
@@ -97,6 +118,32 @@ local function show(session: Session, farm: Farm, epoch: number)
 	set(root, "Population", #farm.slimes + #farm.eggs)
 	set(root, "Limit", VillageRules.populationLimit(farm))
 	set(root, "VillageLevel", VillageRules.level(farm))
+	-- Only public management state is replicated; unborn eggs remain secret.
+	local areas: { [string]: number } = {}
+	for _, area in Config.Village.Areas do
+		areas[area] = (farm.areas :: any)[area].level
+	end
+	local work: { [string]: { { [string]: any } } } = {}
+	local boxes: { [string]: { [string]: number } } = {}
+	for _, area in Config.Work.Areas do
+		local areaWork = (farm.work :: any)[area]
+		local slots: { { [string]: any } } = {}
+		local cycle = Stations.cycleSeconds(area, (farm.areas :: any)[area].level)
+		for _, slot in areaWork.slots do
+			table.insert(slots, {
+				worker = slot.worker or "",
+				reserve = slot.reserve or "",
+				stat = slot.stat or "",
+				progress = math.clamp(slot.progress / cycle, 0, 1),
+			})
+		end
+		work[area] = slots
+		boxes[area] = areaWork.box
+	end
+	set(root, "Work", HttpService:JSONEncode(work))
+	set(root, "Pairs", HttpService:JSONEncode(farm.breeding.pairs))
+	set(root, "Areas", HttpService:JSONEncode(areas))
+	set(root, "Box", HttpService:JSONEncode(boxes))
 	local live: { [string]: boolean } = {}
 	for _, slime in farm.slimes do
 		live[slime.id] = true
@@ -148,11 +195,47 @@ local function show(session: Session, farm: Farm, epoch: number)
 		set(model, "LegEnd", if actor then actor.legEnd else 0)
 		set(model, "Ghost", slime.ghostUntil ~= nil and slime.ghostUntil > epoch)
 		set(model, "Sleeping", slime.sleeping == true)
-		set(model, "Working", working(farm, slime.id) or "")
+		local area, slot, isReserve = working(farm, slime.id)
+		set(model, "Working", area or "")
+		set(model, "WorkArea", area or "")
+		set(model, "WorkSlot", slot)
+		set(model, "Reserve", isReserve)
+		set(model, "Fullness", slime.needs.fullness)
+		set(model, "Energy", slime.needs.energy)
+		set(model, "Fun", slime.needs.fun)
+		set(model, "Level", Stats.level(slime.stats))
+		set(model, "Attack", slime.stats.attack)
+		set(model, "Defence", slime.stats.defence)
+		set(model, "Speed", slime.stats.speed)
+		set(model, "Hp", slime.stats.hp)
+		set(
+			model,
+			"Baby",
+			Growth.isBaby(
+				slime.createdAt,
+				epoch,
+				Stats.level(slime.stats),
+				farm.areas.breeding.level - Config.Village.StartLevel
+			)
+		)
+		set(model, "CookedAllowed", table.find(farm.cookedAllowed, slime.id) ~= nil)
+		local pairIndex = 0
+		for index, pair in farm.breeding.pairs do
+			if pair.a == slime.id or pair.b == slime.id then
+				pairIndex = index
+				break
+			end
+		end
+		set(model, "PairIndex", pairIndex)
+		set(model, "Partner", if actor and actor.action then actor.action.partner or "" else "")
 	end
 	for _, inst in slimes:GetChildren() do
 		if not live[inst.Name] then
 			inst:Destroy()
+			local departing = session.actors[inst.Name]
+			if departing then
+				release(session, inst.Name, departing.action)
+			end
 			session.actors[inst.Name] = nil
 		end
 	end
@@ -169,6 +252,17 @@ local function show(session: Session, farm: Farm, epoch: number)
 			inst:Destroy()
 		end
 	end
+end
+
+-- Move toward the target but leave personal space; no physics collision is needed.
+local function stopShort(origin: Spot, target: Spot): Spot
+	local delta = point(target) - point(origin)
+	local flat = Vector3.new(delta.X, 0, delta.Z)
+	if flat.Magnitude <= Config.Brain.StopStuds then
+		return { id = target.id, area = origin.area, x = origin.x, y = origin.y, z = origin.z }
+	end
+	local position = point(target) - flat.Unit * Config.Brain.StopStuds
+	return { id = target.id, area = target.area, x = position.X, y = origin.y, z = position.Z }
 end
 
 local function route(session: Session, actor: Actor, action: Action, target: Spot): { Spot }
@@ -232,7 +326,7 @@ end
 
 local function advance(
 	player: Player,
-	_session: Session,
+	session: Session,
 	id: string,
 	actor: Actor,
 	speed: number,
@@ -263,6 +357,7 @@ local function advance(
 					did = applied
 				end)
 			end
+			release(session, id, action)
 			actor.finishAt = clock
 				+ (if action and (did or VISUAL[action.kind]) then action.seconds else Config.Village.TickSeconds)
 		end
@@ -285,7 +380,23 @@ local function think(
 		farm.areas.breeding.level - Config.Village.StartLevel
 	)
 	if not actor then
-		local first = if baby then session.spots.nursery else session.spots.plaza
+		local centre = if baby then session.spots.nursery else session.spots.plaza
+		local count = 0
+		for _, other in session.actors do
+			if other.current.id == centre.id then
+				count += 1
+			end
+		end
+		-- New slimes need their own standing place before their first action is selected.
+		local angle = (count % Config.Brain.SpotSpreadPlaces) * math.pi * 2 / Config.Brain.SpotSpreadPlaces
+		local radius = (math.floor(count / Config.Brain.SpotSpreadPlaces) + 1) * Config.Brain.SpotSpread
+		local first: Spot = {
+			id = centre.id,
+			area = centre.area,
+			x = centre.x + math.cos(angle) * radius,
+			y = centre.y,
+			z = centre.z + math.sin(angle) * radius,
+		}
 		actor = {
 			current = first,
 			from = first,
@@ -302,6 +413,7 @@ local function think(
 		if actor.index > 0 or actor.finishAt > clock then
 			return false
 		end
+		release(session, slime.id, actor.action)
 		actor.action = nil
 	end
 	local nearby: { string } = {}
@@ -326,10 +438,11 @@ local function think(
 	local action = Brain.choose(
 		farm,
 		slime.id,
-		{ spots = session.spots, nearby = nearby, player = playerPoint },
+		{ spots = session.spots, nearby = nearby, player = playerPoint, reserved = session.reserved },
 		epoch,
 		session.rng
 	)
+	claim(session, slime.id, action)
 	actor.action = action
 	actor.babyOnboard = action.kind == "walkBaby" and actor.current.id == "nursery"
 	local target = session.spots[action.spot] or session.spots.plaza
@@ -342,6 +455,51 @@ local function think(
 			z = playerPoint.z,
 		}
 	end
+	-- Moving targets have a four-stud buffer; stationary targets get distinct standing places.
+	local partner = if action.partner then session.actors[action.partner] else nil
+	if action.kind == "player" and playerPoint then
+		target = stopShort(actor.current, target)
+	elseif
+		partner
+		and (
+			action.kind == "chat"
+			or action.kind == "greet"
+			or action.kind == "argue"
+			or action.kind == "makeup"
+			or action.kind == "tag"
+			or action.kind == "playBaby"
+			or action.kind == "feedBaby"
+		)
+	then
+		target = stopShort(actor.current, partner.to)
+	elseif action.spot ~= "player" then
+		local order = 1
+		for otherId, other in session.actors do
+			local otherSpot = if other.action then session.spots[other.action.spot] else nil
+			if
+				otherId ~= slime.id
+				and (
+					(other.action and other.action.spot == action.spot)
+					or (otherSpot and (point(otherSpot) - point(target)).Magnitude <= Config.Brain.StopStuds)
+					or (point(other.current) - point(target)).Magnitude <= Config.Brain.StopStuds
+				)
+			then
+				order += 1
+			end
+		end
+		if order > 1 then
+			local index = order - 2
+			local angle = (index % Config.Brain.SpotSpreadPlaces) * math.pi * 2 / Config.Brain.SpotSpreadPlaces
+			local radius = (math.floor(index / Config.Brain.SpotSpreadPlaces) + 1) * Config.Brain.SpotSpread
+			target = {
+				id = target.id,
+				area = target.area,
+				x = target.x + math.cos(angle) * radius,
+				y = target.y,
+				z = target.z + math.sin(angle) * radius,
+			}
+		end
+	end
 	actor.route = route(session, actor, action, target)
 	actor.index = if #actor.route > 0 then 1 else 0
 	if actor.index > 0 then
@@ -349,11 +507,21 @@ local function think(
 			* (1 + (slime.stats.speed - Config.Stats.Starter.speed) * Config.Village.WalkPerSpeed)
 		startLeg(actor, speed, clock)
 	else
+		-- Already close enough to walk nowhere: it is now AT the action's spot (a worker standing near its work spot
+		-- would otherwise never count as arrived, and its station would never earn).
+		actor.current = {
+			id = target.id,
+			area = target.area,
+			x = actor.current.x,
+			y = actor.current.y,
+			z = actor.current.z,
+		}
 		local did = false
 		PlayerData.update(player, function(data: any)
 			local _, applied = Brain.arrive(data, slime.id, action, epoch)
 			did = applied
 		end)
+		release(session, slime.id, action)
 		actor.finishAt = clock + (if did or VISUAL[action.kind] then action.seconds else Config.Village.TickSeconds)
 		actor.from, actor.to = actor.current, actor.current
 		actor.legStart, actor.legEnd = clock, clock
@@ -489,6 +657,7 @@ function Village.start()
 			eggs = child(root, "Eggs", "Folder") :: Folder,
 			spots = spots,
 			actors = {},
+			reserved = {},
 			rng = rng,
 			cursor = 0,
 			active = true,
