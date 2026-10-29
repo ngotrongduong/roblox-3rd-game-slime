@@ -212,6 +212,29 @@ warm window, and a real slime model; the roof is a little lilac.
   pond_water_l1.
 - The work place must be saved in Studio (Ctrl+S) to keep the build.
 
+## 2026-10-29 — Phase 2 started: the living slime village (gameplay approved, `docs/GAMEPLAY.md`)
+
+Done (code by Codex and ChatGPT from briefs in `docs/briefs/`, checked and merged by the orchestrator)
+- Colours: the pair's colour set and pools (Duals n(n-1)/2, Secrets n(n+1)/2), the 9-row kind table, random = a base
+  colour the parents lack, materials on plain babies; luck sources (new player, server, potion, VIP); save schema 3.
+- Village rules: needs (fullness, energy, fun), traits, friends, food chain (boxes, storehouse, counter, fridge, dishes,
+  cooked-food permission), work slots and reserves, training, saved area levels and upgrade costs, population by
+  village level, breeding pairs with courtship, nests and incubators, `VillageSim` (online, 8 h offline), ghosts;
+  save schema 4.
+- Server: the slime brain (`Brain`), a village per player (dev plot 5), routes through the plaza, spots from the plot's
+  markers, replicated slime and egg state, the `Village` remote, paid saved upgrades.
+- Client: slimes drawn from their look with `SlimeActor`, hopping along the server's legs, action motions, carried food,
+  eggs; Manage sheets (key F) and the HUD strip. Surface looks come ready made in `ClientKit.Looks`
+  (`tools/kit/export_client_kit.luau`): a game script may not set SurfaceAppearance maps.
+- Play tests in MapWork: `tools/map/sync_all.ps1 -StudioId <id>` copies the whole game code in. The player spawns at the
+  emotion stage: move the character to the plaza (slimes far from the camera do not animate).
+
+Open
+- Fixes from the first play test (UI state replication, one slime per errand, standing apart, spot names): brief
+  `docs/briefs/village-polish-1.md`.
+- Art: collection boxes, the level-1 fridge, dishes, the egg, Config.Ui.Icons (18 icons), Secret slime 3D art.
+- The hatch reveal by rarity and the nursery (step 4), the slime shop and plot hand-out for 8 players (step 5).
+
 ## 2026-10-28 — the village and every area's upgrades: done (owner: "the village design is finished")
 
 Done (all checked in Studio at every era, committed, the kit exported into `assets/Kit`)
