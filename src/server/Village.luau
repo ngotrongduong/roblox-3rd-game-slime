@@ -1385,8 +1385,17 @@ function Village.start()
 		changed.Event:Connect(function(player: Player)
 			local session = sessions[player]
 			if session then
-				-- An upgraded building may have a different walkable footprint.
+				-- An upgraded building may have a different walkable footprint or more crop markers.
 				table.clear(session.pathCache)
+				if session.root:GetAttribute("Plot") == Config.Village.DevPlot then
+					task.defer(function()
+						if session.active then
+							local map = workspace:FindFirstChild("Map")
+							local plot = if map then map:FindFirstChild("Plot" .. Config.Village.DevPlot) else nil
+							session.spots = Spots.build(Config.Village.DevPlot, plot)
+						end
+					end)
+				end
 			end
 		end)
 	end

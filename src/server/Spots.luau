@@ -206,7 +206,12 @@ function Spots.build(plotNumber: number, plot: Instance?): { [string]: Spot }
 		add("box:" .. area, area, model, spots.Box, approximate)
 	end
 
-	for index = 1, Config.Work.GardenPlotCount do
+	local gardenStage = if garden then garden:FindFirstChild("AreaStage") else nil
+	local stageCount = if gardenStage then gardenStage:GetAttribute("CropPlots") else nil
+	local cropCount = if type(stageCount) == "number"
+		then math.clamp(math.floor(stageCount), 1, Config.Work.GardenMaxPlotCount)
+		else Config.Work.GardenPlotCount
+	for index = 1, cropCount do
 		add("crop:" .. index, "garden", garden, { "CropPlot" .. index }, nil)
 	end
 	add("breeding", "breeding", breeding, { "Entrance", "Nest1" }, front(breeding))

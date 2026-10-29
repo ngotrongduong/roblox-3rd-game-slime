@@ -709,7 +709,7 @@ local function validateWork(raw: any, areas: Areas, slimes: { Slime }, now: numb
 						slot.pending = old.pending
 					end
 					if id == "garden" and type(old.plot) == "number" and old.plot % 1 == 0
-						and old.plot >= 1 and old.plot <= Config.Work.GardenPlotCount
+						and old.plot >= 1 and old.plot <= (if area.plots then #area.plots else 0)
 						and table.find({ "hoe", "plant", "water", "harvest" }, old.task) then
 						slot.plot, slot.task = old.plot, old.task
 					end
