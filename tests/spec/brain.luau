@@ -130,4 +130,50 @@ return function(T)
 		T.eq(hard.kind, "carryBox")
 		T.ok(play.kind ~= hard.kind)
 	end)
+	T.test("a claimed box batch is offered to only one slime", function()
+		local farm = FarmKit.farm(NOW)
+		farm.storehouse = {}
+		farm.work.fishing.box = { fish = Config.Work.BoxCapacity }
+		farm.slimes[1].trait = "hardworking"
+		farm.slimes[2].trait = "hardworking"
+		local first = Brain.choose(farm, "slime-1", CTX, NOW, Rng.new(2))
+		T.eq(first.kind, "carryBox")
+		local keys = Brain.reservationKeys(first)
+		T.eq(keys[1], "box:fishing:fish")
+		local second = Brain.choose(farm, "slime-2", { nearby = {}, reserved = { [keys[1]] = "slime-1" } }, NOW, Rng.new(2))
+		T.ok(second.kind ~= "carryBox")
+		-- Releasing on arrival makes the remaining batch available again.
+		local again = Brain.choose(farm, "slime-2", CTX, NOW, Rng.new(2))
+		T.eq(again.kind, "carryBox")
+	end)
+	T.test("a claimed counter delivery cannot be chosen twice", function()
+		local farm = FarmKit.farm(NOW)
+		farm.work.fishing.box = {}
+		farm.work.garden.box = {}
+		farm.counter = {}
+		farm.storehouse = { fish = 2 }
+		farm.slimes[1].trait = "hardworking"
+		farm.slimes[2].trait = "hardworking"
+		local first = Brain.choose(farm, "slime-1", CTX, NOW, Rng.new(2))
+		T.eq(first.kind, "carryKitchen")
+		local second = Brain.choose(farm, "slime-2", { nearby = {}, reserved = { counter = "slime-1" } }, NOW, Rng.new(2))
+		T.ok(second.kind ~= "carryKitchen")
+	end)
+	T.test("egg and incubator are both claimed during a carry", function()
+		local farm = FarmKit.farm(NOW)
+		local created = Breeding.createEgg(farm, "slime-1", "slime-2", NOW, Rng.new(4), FarmKit.ids())
+		T.ok(created.ok)
+		farm = created.farm
+		farm.slimes[3].trait = "hardworking"
+		farm.slimes[4].trait = "hardworking"
+		local first = Brain.choose(farm, "slime-3", CTX, NOW, Rng.new(1))
+		T.eq(first.kind, "carryEgg")
+		local keys = Brain.reservationKeys(first)
+		T.eq(keys[1], "egg:" .. farm.eggs[1].id)
+		T.eq(keys[2], first.spot)
+		local locked = { [keys[1]] = "slime-3", [keys[2]] = "slime-3" }
+		local second = Brain.choose(farm, "slime-4", { nearby = {}, reserved = locked }, NOW, Rng.new(1))
+		T.ok(second.kind ~= "carryEgg")
+	end)
+
 end
