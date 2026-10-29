@@ -873,7 +873,7 @@ local function syncGarden(session: Session, farm: Farm)
 	local garden = if plot then plot:FindFirstChild("GardenL1") else nil
 	local stage = if garden then garden:FindFirstChild("AreaStage") else nil
 	local plots = farm.work.garden.plots
-	if not stage or not plots then
+	if not garden or not stage or not plots then
 		return
 	end
 	-- Farm data is never changed here; any expansion is done inside PlayerData.update.
@@ -1035,12 +1035,13 @@ local function tick(player: Player, session: Session)
 				* (1 + (slime.stats.speed - Config.Stats.Starter.speed) * Config.Village.WalkPerSpeed)
 			advance(player, session, id, actor, speed, clock, epoch, Stations.speedTimeFactor(slime.stats.speed))
 			if actor.workPhase and actor.index == 0 and actor.workEnd and clock >= actor.workEnd then
-				local area = if actor.action then string.match(actor.action.spot, "^work:(%a+):") else nil
-				if area then
+				local action = actor.action
+				local area = if action then string.match(action.spot, "^work:(%a+):") else nil
+				if area and action then
 					if area == "garden" and (actor.workPhase == "hoe" or actor.workPhase == "plant"
 						or actor.workPhase == "water" or actor.workPhase == "harvest") then
 						PlayerData.update(player, function(data: any)
-							local index = tonumber(string.match(actor.action.spot, "^work:garden:(%d+)$"))
+							local index = tonumber(string.match(action.spot, "^work:garden:(%d+)$"))
 							local slot = if index then data.work.garden.slots[index] else nil
 							if slot and slot.task == actor.workPhase and slot.plot == actor.workPlot then
 								local harvested = GardenPlots.apply(
@@ -1058,7 +1059,7 @@ local function tick(player: Player, session: Session)
 					if actor.workPhase == "drop" then
 						local deposited = false
 						PlayerData.update(player, function(data: any)
-							local index = tonumber(string.match(actor.action.spot, "^work:%a+:(%d+)$"))
+							local index = tonumber(string.match(action.spot, "^work:%a+:(%d+)$"))
 							local slot = if index and data.work[area] then data.work[area].slots[index] else nil
 							if slot and slot.pending
 								and Food.add(data.work[area].box, slot.pending, 1, Config.Work.BoxCapacity) > 0 then
@@ -1072,7 +1073,7 @@ local function tick(player: Player, session: Session)
 					end
 					local nextSpot = if actor.workPhase == "harvest" and actor.workItem then "box:" .. area
 						else (if actor.workPhase == "drop" or actor.workPhase == "hoe" or actor.workPhase == "plant"
-							or actor.workPhase == "water" or actor.workPhase == "harvest" then actor.action.spot else nil)
+							or actor.workPhase == "water" or actor.workPhase == "harvest" then action.spot else nil)
 					if nextSpot then
 						actor.workPhase = if actor.workPhase == "harvest" and actor.workItem then "carry" else "return"
 						actor.workEnd = nil

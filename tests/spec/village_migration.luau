@@ -8,7 +8,7 @@ return function(T: any)
 	T.test("schema 4 to 5 adds empty garden plots without losing other progress", function()
 		local now = 1000000
 		local old = FarmState.newFarm(now)
-		old.work.garden.plots = nil
+		(old.work.garden :: any).plots = nil
 		old.work.garden.slots[1].progress = 67
 		old.work.garden.box = { carrot = 3 }
 		old.coins = 12345
