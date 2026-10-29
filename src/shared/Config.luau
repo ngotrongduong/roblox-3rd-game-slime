@@ -53,6 +53,14 @@ Config.Breeding = {
 	TutorialHatchSeconds = 20,
 	-- How many fresh ids to ask for before giving up (a counter or GUID never collides).
 	IdAttempts = 32,
+	-- Two places at level 1, one extra at each milestone.
+	SlotLevels = { 11, 21, 31, 41 },
+	BasePlaces = 2,
+	CourtshipSeconds = 60,
+	LayEnergy = 30,
+	IncubationPerBabyLevel = 1,
+	IncubationLevelBase = 4,
+	IncubationAreaFactor = 0.98,
 }
 
 Config.Mutation = {
@@ -157,6 +165,83 @@ Config.Farm = {
 	SecretBodyBoost = 1.2,
 	-- A loaded farm keeps at most max(population limit, this) slimes: only absurd arrays are cut.
 	RepairSlimeHardCap = 500,
+}
+
+-- ===== Living village (docs/GAMEPLAY.md §§3-8) =====
+Config.Village = {
+	Areas = { "fishing", "garden", "kitchen", "pantry", "training", "breeding" },
+	Traits = { "hardworking", "lazy", "playful", "shy", "chatty", "glutton" },
+	MaxFriends = 8,
+	StartLevel = 1,
+	MaxLevel = 50,
+	PopulationBase = 20,
+	PopulationPerLevel = 4,
+	UpgradeBase = 100,
+	UpgradeMaxCost = 20000,
+	UpgradeLastFromLevel = 49,
+	CostRoundTo = 10,
+	OfflineCapSeconds = 8 * 60 * 60,
+	StepSeconds = 60,
+	GhostSeconds = 24 * 60 * 60,
+	WalkSpeed = 8,
+	WalkPerSpeed = 0.02,
+}
+
+Config.Needs = {
+	Max = 100,
+	Start = 100,
+	IdleFullnessPerMinute = 2,
+	WorkFullnessPerMinute = 3,
+	IdleEnergyPerMinute = 0.5,
+	WorkEnergyPerMinute = 2,
+	SleepEnergyPerMinute = 5,
+	FunFallPerMinute = 0.5,
+	BabyFactor = 0.5,
+	WantsFood = 50,
+	PairFullness = 60,
+	Hungry = 25,
+	HungryWorkFactor = 0.5,
+	Tired = 20,
+	Rested = 90,
+}
+
+Config.Food = {
+	Raw = { fish = 20, carrot = 15, cabbage = 15 },
+	RawOrder = { "fish", "carrot", "cabbage" },
+	Dishes = {
+		grilledFish = { ingredients = { fish = 2 }, fullness = 60, stat = "attack", percent = 10 },
+		veggieStew = { ingredients = { carrot = 2, cabbage = 1 }, fullness = 65, stat = "defence", percent = 10 },
+		fishVegSoup = { ingredients = { fish = 1, carrot = 1, cabbage = 1 }, fullness = 90, stat = "hp", percent = 10 },
+	},
+	DishOrder = { "fishVegSoup", "veggieStew", "grilledFish" },
+	BuffSeconds = 1200,
+	Start = { fish = 10, carrot = 10 },
+	StorehouseBase = 100,
+	StorehousePerLevel = 20,
+	FridgeBase = 20,
+	FridgePerLevel = 4,
+	CounterCapacity = 10,
+}
+
+Config.Work = {
+	Areas = { "fishing", "garden", "kitchen", "training" },
+	SlotLevels = { 11, 21, 31 },
+	BaseSlots = 1,
+	BoxCapacity = 10,
+	CycleSeconds = { fishing = 60, garden = 240, kitchen = 120, training = 90 },
+	CycleLevelFactor = 0.99,
+	FishingYield = 1,
+	GardenYield = 3,
+	GardenCarrotChance = 0.5,
+	KitchenYield = 1,
+}
+
+Config.Training = {
+	Base = 0.60,
+	Soft = 10,
+	ChancePerLevel = 1 / 49,
+	Gain = 1,
+	HpGain = 10,
 }
 
 -- ===== The Goo Valley map (docs/MAP.md) =====
@@ -273,7 +358,8 @@ Config.Save = {
 	-- The data shape's version. Bump it with each change of shape and add a migration for it.
 	-- 2: discoveries gained the material bucket (docs/MATERIALS.md).
 	-- 3: appearance determines colour genes; the pattern gene is retired.
-	SchemaVersion = 3,
+	-- 4: living-village needs, jobs, pantry, pairs and incubators replace legacy farm fields.
+	SchemaVersion = 4,
 	-- A stored envelope without a version is this one.
 	FirstSchemaVersion = 1,
 
