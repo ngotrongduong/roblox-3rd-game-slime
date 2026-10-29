@@ -874,13 +874,7 @@ local function syncGarden(session: Session, farm: Farm)
 	if not stage or not plots then
 		return
 	end
-	local count = stage:GetAttribute("CropPlots")
-	if type(count) == "number" and count ~= #plots then
-		-- Newly built stages can grow the physical set of beds without losing existing crops.
-		local expanded = GardenPlots.repair(plots, count)
-		farm.work.garden.plots = expanded
-		plots = expanded
-	end
+	-- Farm data is never changed here; any expansion is done inside PlayerData.update.
 	-- Source meshes remain in place for the stage builder to locate the bed positions on upgrades.
 	-- Hide their original vegetables, otherwise empty plots still look ripe.
 	for _, decoration in garden:GetChildren() do
@@ -962,6 +956,18 @@ local function tick(player: Player, session: Session)
 		end
 	end
 	PlayerData.update(player, function(data: any)
+		-- Stage upgrades may add beds. Grow the saved array before the simulation, never in the renderer.
+		if session.root:GetAttribute("Plot") == Config.Village.DevPlot then
+			local map = workspace:FindFirstChild("Map")
+			local plot = if map then map:FindFirstChild("Plot" .. Config.Village.DevPlot) else nil
+			local garden = if plot then plot:FindFirstChild("GardenL1") else nil
+			local stage = if garden then garden:FindFirstChild("AreaStage") else nil
+			local count = if stage then stage:GetAttribute("CropPlots") else nil
+			if type(count) == "number" and count >= 1 and count <= Config.Work.GardenMaxPlotCount
+				and count ~= #data.work.garden.plots then
+				data.work.garden.plots = GardenPlots.repair(data.work.garden.plots, count)
+			end
+		end
 		local elapsed = math.max(0, epoch - data.lastSimulatedAt)
 		local courtReady: { [number]: boolean } = {}
 		for index, pair in data.breeding.pairs do

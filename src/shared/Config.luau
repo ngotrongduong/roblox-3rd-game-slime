@@ -350,6 +350,7 @@ Config.Work = {
 	SpeedBonusPerSpd = 0.05,
 	SpeedBonusMax = 3,
 	GardenPlotCount = 20,
+	GardenMaxPlotCount = 60,
 	GardenStageSeconds = 75,
 	GardenDryGrowthFactor = 0.15,
 	GardenWaterBoostSeconds = 12,

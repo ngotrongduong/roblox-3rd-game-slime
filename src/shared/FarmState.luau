@@ -85,9 +85,10 @@ export type Areas = {
 }
 export type WorkSlot = { worker: string?, reserve: string?, progress: number, stat: string?, plot: number?, task: string? }
 export type WorkArea = { slots: { WorkSlot }, box: { [string]: number }, plots: typeof(GardenPlots.new(1))? }
+export type GardenWorkArea = WorkArea & { plots: typeof(GardenPlots.new(1)) }
 export type Work = {
 	fishing: WorkArea,
-	garden: WorkArea,
+	garden: GardenWorkArea,
 	kitchen: WorkArea,
 	training: WorkArea,
 }
@@ -686,7 +687,12 @@ local function validateWork(raw: any, areas: Areas, slimes: { Slime }, now: numb
 		local w = if type(raw) == "table" then raw[id] else nil
 		local area = (out :: any)[id] :: WorkArea
 		if id == "garden" then
-			area.plots = GardenPlots.repair(if type(w) == "table" then w.plots else nil, Config.Work.GardenPlotCount)
+			local rawPlots = if type(w) == "table" then w.plots else nil
+			local count = Config.Work.GardenPlotCount
+			if type(rawPlots) == "table" then
+				count = math.clamp(math.max(count, #rawPlots), 1, Config.Work.GardenMaxPlotCount)
+			end
+			area.plots = GardenPlots.repair(rawPlots, count)
 		end
 		if type(w) == "table" then
 			area.box = validateStock(w.box, Config.Food.RawOrder, Config.Work.BoxCapacity)

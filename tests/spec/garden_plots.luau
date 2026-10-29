@@ -56,7 +56,7 @@ return function(T: any)
 		local raw = {
 			{ crop = "cabbage", stage = 3, progress = 12, watered = true },
 			{ crop = "fake", stage = 99, progress = -6, watered = true },
-			{ crop = "carrot", stage = -1, progress = 1 / 0, watered = false },
+			{ crop = "carrot", stage = -1, progress = 0 / 0, watered = false },
 		}
 		local out = GardenPlots.repair(raw, 3)
 		T.same(out[1], raw[1])
