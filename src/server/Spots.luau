@@ -147,9 +147,10 @@ function Spots.build(plotNumber: number, plot: Instance?): { [string]: Spot }
 	for _, area in { "fishing", "garden", "kitchen" } do
 		local model = models[area]
 		local approximate = front(model)
-		if area == "kitchen" then
+		if area == "kitchen" and kitchen and kitchen:IsA("Model") then
 			local counter = result.counter
 			approximate = Vector3.new(counter.x, counter.y, counter.z)
+				+ kitchen:GetPivot().RightVector * Config.Village.SpotBoxOffsetX
 		elseif area == "garden" then
 			local entrance = result["entrance:garden"]
 			approximate = Vector3.new(entrance.x, entrance.y, entrance.z)
@@ -179,6 +180,10 @@ function Spots.build(plotNumber: number, plot: Instance?): { [string]: Spot }
 	local campfire = result.campfire
 	local centre = Vector3.new(campfire.x, campfire.y, campfire.z)
 	local seat = near(plot, spots.NapModels, centre)
+	if not seat and fire then
+		-- Without a bench model, rest beside the fire rather than on its flames.
+		seat = centre + Layout.plotFrame(plotNumber).RightVector * Config.Village.SpotNapOffset
+	end
 	add("nap", "hatchery", village, spots.Nap, seat)
 
 	-- World markers can be added later without changing brain destinations.
