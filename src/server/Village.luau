@@ -431,15 +431,33 @@ local function route(session: Session, actor: Actor, action: Action, target: Spo
 end
 
 -- The position is runtime-only; the server publishes each interpolation leg, not physical parts.
-local function startLeg(actor: Actor, speed: number, when: number)
+local function startLeg(session: Session, actor: Actor, speed: number, when: number)
 	local to = actor.route[actor.index]
 	if not to then
 		return
 	end
+	local duration = VillagePath.duration((point(to) - point(actor.current)).Magnitude, speed)
+	-- Waypoints are only intent, not physical NPCs. Queue shared corners so two slimes
+	-- do not get the same server-arrival time even if the client is rendering from afar.
+	local depart = when
+	for _ = 1, Config.Village.PathConflictPasses do
+		local delayed = false
+		for _, other in session.actors do
+			if other ~= actor and other.index > 0
+				and (point(other.to) - point(to)).Magnitude < Config.Village.PathAvoidStuds
+				and other.legStart < depart + duration and other.legEnd > depart then
+				depart = other.legEnd + Config.Village.PathWaitSeconds
+				delayed = true
+			end
+		end
+		if not delayed then
+			break
+		end
+	end
 	actor.from = actor.current
 	actor.to = to
-	actor.legStart = when
-	actor.legEnd = when + VillagePath.duration((point(to) - point(actor.from)).Magnitude, speed)
+	actor.legStart = depart
+	actor.legEnd = depart + duration
 end
 
 local function advance(
@@ -465,7 +483,7 @@ local function advance(
 		end
 		actor.index += 1
 		if actor.route[actor.index] then
-			startLeg(actor, speed, reachedAt)
+			startLeg(session, actor, speed, reachedAt)
 		else
 			actor.index = 0
 			actor.carrying = false
@@ -636,7 +654,7 @@ local function think(
 	if actor.index > 0 then
 		local speed = Config.Village.WalkSpeed
 			* (1 + (slime.stats.speed - Config.Stats.Starter.speed) * Config.Village.WalkPerSpeed)
-		startLeg(actor, speed, clock)
+		startLeg(session, actor, speed, clock)
 	else
 		-- Already close enough to walk nowhere: it is now AT the action's spot (a worker standing near its work spot
 		-- would otherwise never count as arrived, and its station would never earn).
@@ -720,7 +738,7 @@ local function refreshMoving(
 	if actor.index > 0 then
 		local speed = Config.Village.WalkSpeed
 			* (1 + (slime.stats.speed - Config.Stats.Starter.speed) * Config.Village.WalkPerSpeed)
-		startLeg(actor, speed, clock)
+		startLeg(session, actor, speed, clock)
 	end
 end
 
@@ -1024,6 +1042,13 @@ local function carryPrompt(player: Player, session: Session, spot: string)
 	end
 end
 
+local LABELS: { [string]: string } = {
+	["box:fishing"] = "Fish bin",
+	["box:garden"] = "Vegetable bin",
+	storehouse = "Storehouse",
+	counter = "Kitchen counter",
+	fridge = "Fridge",
+}
 local function setupCarry(player: Player, session: Session)
 	for _, spot in session.spots do
 		if VillageCarry.pickupSources(spot.id)
@@ -1042,7 +1067,8 @@ local function setupCarry(player: Player, session: Session)
 			anchor.Parent = session.root
 			local prompt = Instance.new("ProximityPrompt")
 			prompt.ActionText = "Pick up"
-			prompt.ObjectText = spot.id
+			prompt.ObjectText = LABELS[spot.id]
+				or (if string.match(spot.id, "^nest:") then "Nest" else "Incubator")
 			prompt.KeyboardKeyCode = Enum.KeyCode.E
 			prompt.HoldDuration = Config.Village.CarryPromptHoldSeconds
 			prompt.MaxActivationDistance = Config.Village.CarryPromptDistance
