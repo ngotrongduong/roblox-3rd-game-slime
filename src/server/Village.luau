@@ -248,6 +248,17 @@ local function show(session: Session, farm: Farm, epoch: number)
 	end
 end
 
+-- Move toward the target but leave personal space; no physics collision is needed.
+local function stopShort(origin: Spot, target: Spot): Spot
+	local delta = point(target) - point(origin)
+	local flat = Vector3.new(delta.X, 0, delta.Z)
+	if flat.Magnitude <= Config.Brain.StopStuds then
+		return { id = target.id, area = origin.area, x = origin.x, y = origin.y, z = origin.z }
+	end
+	local position = point(target) - flat.Unit * Config.Brain.StopStuds
+	return { id = target.id, area = target.area, x = position.X, y = position.Y, z = position.Z }
+end
+
 local function route(session: Session, actor: Actor, action: Action, target: Spot): { Spot }
 	local path: { Spot } = {}
 	local current = actor.current
@@ -309,7 +320,7 @@ end
 
 local function advance(
 	player: Player,
-	_session: Session,
+	session: Session,
 	id: string,
 	actor: Actor,
 	speed: number,
@@ -340,6 +351,7 @@ local function advance(
 					did = applied
 				end)
 			end
+			release(session, id, action)
 			actor.finishAt = clock
 				+ (if action and (did or VISUAL[action.kind]) then action.seconds else Config.Village.TickSeconds)
 		end
@@ -379,6 +391,7 @@ local function think(
 		if actor.index > 0 or actor.finishAt > clock then
 			return false
 		end
+		release(session, slime.id, actor.action)
 		actor.action = nil
 	end
 	local nearby: { string } = {}
@@ -403,10 +416,11 @@ local function think(
 	local action = Brain.choose(
 		farm,
 		slime.id,
-		{ spots = session.spots, nearby = nearby, player = playerPoint },
+		{ spots = session.spots, nearby = nearby, player = playerPoint, reserved = session.reserved },
 		epoch,
 		session.rng
 	)
+	claim(session, slime.id, action)
 	actor.action = action
 	actor.babyOnboard = action.kind == "walkBaby" and actor.current.id == "nursery"
 	local target = session.spots[action.spot] or session.spots.plaza
@@ -417,6 +431,29 @@ local function think(
 			x = playerPoint.x,
 			y = playerPoint.y,
 			z = playerPoint.z,
+		}
+	end
+	-- Moving targets have a four-stud buffer; stationary targets get distinct standing places.
+	local partner = if action.partner then session.actors[action.partner] else nil
+	if action.kind == "player" and playerPoint then
+		target = stopShort(actor.current, target)
+	elseif partner and (action.kind == "chat" or action.kind == "greet" or action.kind == "argue"
+		or action.kind == "makeup" or action.kind == "tag" or action.kind == "playBaby"
+		or action.kind == "feedBaby") then
+		target = stopShort(actor.current, partner.to)
+	elseif action.spot ~= "player" then
+		local order = 1
+		for otherId, other in session.actors do
+			if otherId ~= slime.id and other.action and other.action.spot == action.spot then
+				order += 1
+			end
+		end
+		local angle = (order - 1) * math.pi * 2 / Config.Brain.SpotSpreadPlaces
+		target = {
+			id = target.id, area = target.area,
+			x = target.x + math.cos(angle) * Config.Brain.SpotSpread,
+			y = target.y,
+			z = target.z + math.sin(angle) * Config.Brain.SpotSpread,
 		}
 	end
 	actor.route = route(session, actor, action, target)
@@ -431,6 +468,7 @@ local function think(
 			local _, applied = Brain.arrive(data, slime.id, action, epoch)
 			did = applied
 		end)
+		release(session, slime.id, action)
 		actor.finishAt = clock + (if did or VISUAL[action.kind] then action.seconds else Config.Village.TickSeconds)
 		actor.from, actor.to = actor.current, actor.current
 		actor.legStart, actor.legEnd = clock, clock
