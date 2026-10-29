@@ -485,6 +485,18 @@ Config.Slime = {
 	-- An emotion swap swells the face by PopSize for PopSeconds.
 	PopSeconds = 0.15,
 	PopSize = 0.08,
+	-- The emote icon pops up for EmoteShowSeconds when a feeling starts, fading over the last EmoteFadeSeconds (the
+	-- owner, 2026-10-29: a pop-up at the event, not a sign that stays). Lasting effects: a z rises every ZzzEverySeconds
+	-- and lives ZzzLifeSeconds (sleep, sleepy); hearts likewise (loved); OrbitStars stars circle the head at OrbitHz
+	-- turns a second (dizzy).
+	EmoteShowSeconds = 1.8,
+	EmoteFadeSeconds = 0.45,
+	ZzzEverySeconds = 0.9,
+	ZzzLifeSeconds = 2.6,
+	HeartsEverySeconds = 0.45,
+	HeartsLifeSeconds = 1.7,
+	OrbitStars = 3,
+	OrbitHz = 0.7,
 
 	-- Cost: every slime closer than FullStuds is drawn every frame, up to FarStuds at 10 Hz,
 	-- beyond that only its physics runs (and not even that beyond SleepStuds).
