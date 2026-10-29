@@ -38,6 +38,8 @@ export type Slime = {
 	friends: { [string]: number },
 	buff: Buff?,
 	ghostUntil: number?,
+	-- A resting slime stays asleep until rested; its state survives offline steps.
+	sleeping: boolean?,
 	createdAt: number,
 	breedReadyAt: number,
 	loadout: Loadout,
