@@ -345,8 +345,9 @@ local function animate(village: Village, entry: Entry, now: number)
 						local emitter = Instance.new("ParticleEmitter")
 						emitter.Name = "Watering"
 						-- Built-in Roblox particle texture: no invented art or image upload needed.
-						emitter.Texture = "rbxasset://textures/particles/sparkles_main.dds"
-						emitter.Color = ColorSequence.new(Color3.fromRGB(130, 205, 255))
+						emitter.Texture = Config.Work.WorkWaterDropTexture
+						local rgb = Config.Work.WorkWaterDropColour
+						emitter.Color = ColorSequence.new(Color3.fromRGB(rgb[1], rgb[2], rgb[3]))
 						emitter.Size = NumberSequence.new(Config.Work.WorkWaterDropSize)
 						emitter.Lifetime = NumberRange.new(Config.Work.WorkWaterDropLifetime)
 						emitter.Speed = NumberRange.new(Config.Work.WorkWaterDropSpeed)

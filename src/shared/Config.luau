@@ -236,6 +236,8 @@ Config.Village = {
 	},
 	SpotSearchStuds = 30,
 	SpotDoorOffset = 2,
+	-- Near-door candidates before wider/forward detours if the obvious point is blocked.
+	SpotOutsideOffsets = { { 0, 0 }, { 0, 2 }, { -3, 2 }, { 3, 2 }, { -6, 4 }, { 6, 4 } },
 	SpotCounterOffsetX = -2,
 	SpotFridgeOffsetX = 4,
 	SpotBoxOffsetX = -4,
@@ -372,6 +374,8 @@ Config.Work = {
 	WorkShakeHz = 2.6,
 	WorkShakeDegrees = 14,
 	WorkDropsPerWater = 3,
+	WorkWaterDropTexture = "rbxasset://textures/particles/sparkles_main.dds",
+	WorkWaterDropColour = { 130, 205, 255 },
 	WorkWaterDropSize = 0.14,
 	WorkWaterDropLifetime = 0.4,
 	WorkWaterDropSpeed = 1.6,

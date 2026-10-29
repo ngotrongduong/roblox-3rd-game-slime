@@ -1,6 +1,7 @@
 --!strict
 -- Prefer true interaction markers; use existing prop geometry when a stage has no markers.
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local PathfindingService = game:GetService("PathfindingService")
 local Config = require(ReplicatedStorage.Shared.Config)
 local Layout = require(ReplicatedStorage.Shared.Layout)
 
@@ -77,7 +78,7 @@ end
 
 -- Service markers may be the *inside* pivot of a counter or a door.
 -- Move them to the path-facing side of the whole building, not the pivot of that prop.
-local function outside(model: Instance?, position: Vector3?): Vector3?
+local function outside(model: Instance?, position: Vector3?, plaza: Vector3): Vector3?
 	if not model or not model:IsA("Model") or not position then
 		return position
 	end
@@ -85,11 +86,32 @@ local function outside(model: Instance?, position: Vector3?): Vector3?
 	local p = cf:PointToObjectSpace(position)
 	local frontZ = -size.Z / 2 - Config.Village.SpotDoorOffset
 	local x = math.clamp(p.X, -size.X / 2, size.X / 2)
-	if p.Z > frontZ then
-		local projected = cf:PointToWorldSpace(Vector3.new(x, 0, frontZ))
-		return Vector3.new(projected.X, Config.Map.GroundY, projected.Z)
+	local nearest: Vector3? = nil
+	-- Test the nearest door-facing points first; the kitchen counter and fridge used to target
+	-- their interior pivots, making every path from the plaza fail.
+	for _, offset in Config.Village.SpotOutsideOffsets do
+		local candidate = cf:PointToWorldSpace(Vector3.new(
+			math.clamp(x + offset[1], -size.X / 2, size.X / 2),
+			0,
+			frontZ - offset[2]
+		))
+		candidate = Vector3.new(candidate.X, Config.Map.GroundY, candidate.Z)
+		nearest = nearest or candidate
+		local path = PathfindingService:CreatePath({
+			AgentRadius = Config.Village.PathMinRadius,
+			AgentHeight = Config.Village.PathHeightPerScale,
+			AgentCanJump = false,
+			WaypointSpacing = Config.Village.PathWaypointStuds,
+			Costs = { Water = Config.Village.PathWaterCost },
+		})
+		local ok = pcall(function()
+			path:ComputeAsync(plaza, candidate)
+		end)
+		if ok and path.Status == Enum.PathStatus.Success then
+			return candidate
+		end
 	end
-	return position
+	return nearest
 end
 
 local function front(model: Instance?): Vector3?
@@ -127,7 +149,7 @@ function Spots.build(plotNumber: number, plot: Instance?): { [string]: Spot }
 			table.insert(fallbackNames, id)
 		end
 		if id == "storehouse" or id == "counter" or id == "fridge" then
-			position = outside(container, position)
+			position = outside(container, position, frames.plaza)
 		end
 		result[id] = plain(id, area, position :: Vector3)
 	end
@@ -152,7 +174,7 @@ function Spots.build(plotNumber: number, plot: Instance?): { [string]: Spot }
 	local fishing = models.fishing
 	local garden = models.garden
 	local spots = Config.Village.SpotNames
-	local pantryDoor = outside(pantry, marker(pantry, spots.StorehouseModels) or front(pantry))
+	local pantryDoor = marker(pantry, spots.StorehouseModels) or front(pantry)
 	add("storehouse", "pantry", pantry, spots.Storehouse, pantryDoor)
 	local counterPosition = near(kitchen, spots.CounterModels, frames.kitchen)
 	if not counterPosition and kitchen and kitchen:IsA("Model") then
