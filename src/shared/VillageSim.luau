@@ -124,6 +124,10 @@ local function doWork(
 				end
 			end
 			local worker = Stations.activeWorker(farm, slot, now)
+			-- a trainee placed before stats were chosen on assignment starts on its weakest stat
+			if worker and areaId == "training" and not slot.stat then
+				slot.stat = Stations.weakestStat(worker)
+			end
 			if
 				not worker
 				or (workReady and workReady[worker.id] ~= "work:" .. areaId .. ":" .. slotIndex)

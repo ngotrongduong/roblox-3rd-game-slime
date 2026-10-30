@@ -991,6 +991,16 @@ Config.VillageClient = {
 	EggRestProbeUp = 1.2,
 	EggRestProbeDown = 3,
 	EggRestLift = 0.02,
+	-- What the breeding sheet says when a set pair waits (Breeding.pairReady's reason, published on the Pairs attribute).
+	PairWaiting = {
+		PARENT_ON_COOLDOWN = "Resting",
+		PARENT_NEEDS = "Hungry or tired",
+		PARENT_TOO_YOUNG = "Too young",
+		PARENT_FALLEN = "Ghost",
+		EGG_CAP_REACHED = "Nests full",
+		SLIME_CAP_REACHED = "Village full",
+		MISSING_PARENT = "Pick two slimes",
+	},
 	-- an egg is drawn this many times its kit size, the same real size in a nest, an incubator and on a slime's head
 	-- (the owner: 3x in the nest, then 30% smaller, 2026-10-30)
 	EggScale = 2.1,

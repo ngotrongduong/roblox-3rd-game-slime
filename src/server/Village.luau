@@ -330,7 +330,7 @@ local function workClock(
 		end
 		return "", 0, 0
 	end
-	if actor.current.id ~= actor.action.spot or (area == "training" and not slot.stat) or slot.pending then
+	if actor.current.id ~= actor.action.spot or slot.pending then
 		return "", 0, 0
 	end
 	local level = (farm.areas :: any)[area].level
@@ -376,7 +376,18 @@ local function show(session: Session, farm: Farm, epoch: number)
 		boxes[area] = areaWork.box
 	end
 	set(root, "Work", HttpService:JSONEncode(work))
-	set(root, "Pairs", HttpService:JSONEncode(farm.breeding.pairs))
+	-- Each pair carries why it waits ("" when it may court), for the breeding sheet and for finding stuck pairs.
+	local pairList = {}
+	local now = os.time()
+	for index, pair in farm.breeding.pairs do
+		local entry: any = table.clone(pair)
+		if pair.a and pair.b and not pair.courtingUntil then
+			local ready = Breeding.pairReady(farm, index, now)
+			entry.waiting = if ready.ok then "" else (ready.reason or "")
+		end
+		pairList[index] = entry
+	end
+	set(root, "Pairs", HttpService:JSONEncode(pairList))
 	set(root, "Areas", HttpService:JSONEncode(areas))
 	set(root, "Box", HttpService:JSONEncode(boxes))
 	local live: { [string]: boolean } = {}

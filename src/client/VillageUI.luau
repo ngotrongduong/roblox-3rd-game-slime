@@ -677,8 +677,12 @@ renderArea = function(area: string)
 			local pairs: { any } = parse(own:GetAttribute("Pairs")) :: any
 			for index, label in courting do
 				local pair = pairs[index] or {}
+				-- the server says why a set pair waits, so a stuck pair explains itself (the owner saw pairs stop breeding)
 				label.Text = if type(pair.courtingUntil) == "number" and pair.courtingUntil > os.time()
 					then "Courting"
+					elseif type(pair.waiting) == "string" and pair.waiting ~= "" then (
+						C.PairWaiting[pair.waiting] or "Waiting"
+					)
 					else ""
 			end
 			if boxHost then

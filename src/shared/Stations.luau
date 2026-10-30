@@ -108,7 +108,31 @@ function Stations.assign(
 	else
 		slot.worker = slimeId
 	end
+	-- A training place with no stat chosen would never train (the owner saw no gains): it starts on the trainee's
+	-- weakest stat (hp counted per HpPerLevel, as the level formula does); the player can change it any time.
+	if areaId == "training" and not slot.stat then
+		local slime = FarmState.findSlime(farm, slimeId)
+		if slime then
+			slot.stat = Stations.weakestStat(slime)
+			slot.progress = 0
+		end
+	end
 	return true, nil
+end
+
+-- The stat a trainee starts on when none is chosen: its weakest (hp counted per HpPerLevel, as the level formula does).
+function Stations.weakestStat(slime: Slime): string
+	local best, bestValue = Stats.Keys[1], math.huge
+	for _, key in Stats.Keys do
+		local value = Stats.get(slime.stats, key)
+		if key == "hp" then
+			value /= Config.Stats.HpPerLevel
+		end
+		if value < bestValue then
+			best, bestValue = key, value
+		end
+	end
+	return best
 end
 
 function Stations.unassign(farm: Farm, areaId: string, slotIndex: number, asReserve: boolean): boolean

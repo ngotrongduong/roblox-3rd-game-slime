@@ -3,6 +3,19 @@ local FarmKit = require("../lib/FarmKit")
 local Rng = require("../../src/shared/Rng")
 local VillageSim = require("../../src/shared/VillageSim")
 return function(T)
+	T.test("a trainee with no stat chosen trains its weakest stat", function()
+		local now = 1000000
+		local farm = FarmKit.farm(now)
+		farm.slimes[1].stats = { attack = 5, defence = 2, speed = 4, hp = 60 }
+		farm.slimes[1].createdAt = now - 10000 -- grown up at its higher level
+		T.ok(Stations.assign(farm, "slime-1", "training", 1, false, now))
+		T.eq(farm.work.training.slots[1].stat, "defence")
+		-- an old save with a trainee and no stat gets one on the next step
+		farm.work.training.slots[1].stat = nil
+		farm = VillageSim.step(farm, now + 60, 60, Rng.new(1), { errands = true })
+		T.eq(farm.work.training.slots[1].stat, "defence")
+		T.ok(farm.work.training.slots[1].progress > 0, "it trains")
+	end)
 	T.test("work slots grow only at the three milestones", function()
 		for _, row in { { 1, 1 }, { 10, 1 }, { 11, 2 }, { 21, 3 }, { 31, 4 }, { 50, 4 } } do
 			T.eq(Stations.slotCount(row[1]), row[2])
