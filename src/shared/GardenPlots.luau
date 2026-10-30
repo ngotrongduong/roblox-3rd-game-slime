@@ -71,8 +71,10 @@ function GardenPlots.grow(plots: { Plot }, seconds: number)
 end
 
 function GardenPlots.choose(plots: { Plot }, reserved: { [number]: boolean }?): (number?, string?)
-	-- Harvest first to release a ripe plot; tending thirsty shoots has priority over new planting.
-	for _, stage in { 4, 1, 2, 3, -1, 0 } do
+	-- Harvest ripe vegetables first, then finish each new bed (hoe, plant, water).
+	-- A single gardener must seed the available beds before spending its whole shift
+	-- repeatedly watering the oldest crops through stages 2 and 3.
+	for _, stage in { 4, -1, 1, 0, 2, 3 } do
 		for index, plot in plots do
 			if plot.stage == stage and (not reserved or not reserved[index]) then
 				if stage == 4 then

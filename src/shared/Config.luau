@@ -536,6 +536,41 @@ Config.Work = {
 	KitchenYield = 1,
 }
 
+-- Short, client-only construction reveal. The server changes gameplay immediately;
+-- clients fade changed stage pieces into view, with a focused celebration on the upgraded area.
+Config.UpgradeFx = {
+	Tag = "AreaUpgradeReveal",
+	PartAttribute = "UpgradeFxPart",
+	MaxChangedParts = 100,
+	MaxPerPartName = 8,
+	PositionToleranceStuds = 0.03,
+	ClientSettleSeconds = 0.12,
+	ViewDistanceStuds = 175,
+	MaxEventAgeSeconds = 8,
+	JoinGraceSeconds = 0.5,
+	RevealSeconds = 1.35,
+	RevealStaggerSeconds = 0.95,
+	OutlineSeconds = 2.2,
+	MessageSeconds = 2.6,
+	MessageHeightStuds = 5,
+	MessageRiseStuds = 3,
+	MessageWidthPixels = 310,
+	MessageHeightPixels = 100,
+	SparkleCount = 90,
+	SparkleSecondCount = 40,
+	SparkleSecondDelay = 0.55,
+	SparkleLifetimeMin = 0.75,
+	SparkleLifetimeMax = 1.35,
+	SparkleSpeedMin = 8,
+	SparkleSpeedMax = 16,
+	SparkleAccelerationY = -12,
+	SparkleSize = 1.1,
+	FxLifetimeSeconds = 4,
+	Gold = { 255, 211, 105 },
+	Cream = { 255, 247, 220 },
+	Shadow = { 55, 34, 24 },
+}
+
 Config.Training = {
 	Base = 0.60,
 	Soft = 10,
