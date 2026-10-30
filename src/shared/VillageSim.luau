@@ -225,6 +225,11 @@ local function doWork(
 					end
 					table.insert(events, { kind = "collected", item = caught, area = "fishing", slimeId = worker.id })
 				elseif areaId == "kitchen" then
+					if not Food.canPrepare(farm) then
+						-- Never convert edible raw food into dishes that nobody is permitted to eat.
+						progress = 0
+						break
+					end
 					local id = Food.bestDish(farm.counter)
 					if id == nil then
 						progress = 0

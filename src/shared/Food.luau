@@ -104,8 +104,34 @@ function Food.bestDish(stock: { [string]: number }): string?
 	return nil
 end
 
+-- A kitchen must have a worker and willing eaters before taking raw food out
+-- of the shared pantry. Limit prepared meals in the fridge AND the kitchen's output box.
+function Food.canPrepare(farm: Farm): boolean
+	if #farm.cookedAllowed == 0 then
+		return false
+	end
+	local staffed = false
+	for _, slot in farm.work.kitchen.slots do
+		if slot.worker or slot.reserve then
+			staffed = true
+			break
+		end
+	end
+	if not staffed then
+		return false
+	end
+	local limit = math.min(
+		Food.fridgeCapacity(farm.areas.kitchen.level),
+		#farm.cookedAllowed * Config.Food.PreparedMealsPerAllowedSlime
+	)
+	return Food.total(farm.fridge) + Food.total(farm.work.kitchen.box) < limit
+end
+
 -- A kitchen orders only a dish it could complete using the counter and current pantry.
 function Food.ingredientsWanted(farm: Farm): { [string]: number }
+	if not Food.canPrepare(farm) then
+		return {}
+	end
 	for _, id in Config.Food.DishOrder do
 		local recipe = (Config.Food.Dishes :: any)[id]
 		local possible = true

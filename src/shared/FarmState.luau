@@ -267,8 +267,11 @@ function FarmState.villageLevel(areas: Areas): number
 end
 
 function FarmState.populationLimit(areas: Areas): number
-	return Config.Village.PopulationBase
-		+ Config.Village.PopulationPerLevel * (FarmState.villageLevel(areas) - Config.Village.StartLevel)
+	-- Births and eggs occupy whole slots; existing over-cap saves are preserved by repair.
+	return math.floor(
+		Config.Village.PopulationBase
+			+ Config.Village.PopulationPerLevel * (FarmState.villageLevel(areas) - Config.Village.StartLevel)
+	)
 end
 
 function FarmState.findSlime(farm: Farm, id: string): (Slime?, number?)

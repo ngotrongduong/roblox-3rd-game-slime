@@ -179,8 +179,10 @@ Config.Village = {
 	-- simulation steps once a second; this stops a running clock from rewriting its attributes every tick).
 	ClockKeepSeconds = 0.6,
 	MaxLevel = 50,
-	PopulationBase = 20,
-	PopulationPerLevel = 4,
+	-- 12 residents at L1, 70 at L50; population is rounded down to whole slots.
+	-- Workers expand at L11, L21 and L31, so cap growth stays modest between unlocks.
+	PopulationBase = 12,
+	PopulationPerLevel = 1.2,
 	UpgradeBase = 100,
 	UpgradeMaxCost = 20000,
 	UpgradeLastFromLevel = 49,
@@ -392,8 +394,9 @@ Config.Brain = {
 Config.Needs = {
 	Max = 100,
 	Start = 100,
-	IdleFullnessPerMinute = 2,
-	WorkFullnessPerMinute = 3,
+	-- Lower-SPD players must sustain the maximum village at every pre-slot milestone.
+	IdleFullnessPerMinute = 1.25,
+	WorkFullnessPerMinute = 1.9,
 	IdleEnergyPerMinute = 0.5,
 	WorkEnergyPerMinute = 2,
 	SleepEnergyPerMinute = 5,
@@ -484,6 +487,8 @@ Config.Food = {
 	FridgeBase = 20,
 	FridgePerLevel = 4,
 	CounterCapacity = 10,
+	-- Cook only enough meals for the slimes specifically allowed to eat from the fridge.
+	PreparedMealsPerAllowedSlime = 2,
 }
 
 Config.Work = {
