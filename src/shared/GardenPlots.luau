@@ -21,7 +21,8 @@ function GardenPlots.repair(raw: any, count: number): { Plot }
 	for index, plot in plots do
 		local old = raw[index]
 		if type(old) == "table" then
-			local crop = if old.crop == "carrot" or old.crop == "cabbage" then old.crop else ""
+			local known = if type(old.crop) == "string" then (Config.Food.Kinds :: any)[old.crop] else nil
+			local crop = if known and known.group == "veg" then old.crop else ""
 			local stage = if type(old.stage) == "number" and old.stage == old.stage
 				then math.clamp(math.floor(old.stage), -1, 4)
 				else 0
@@ -89,7 +90,8 @@ function GardenPlots.choose(plots: { Plot }, reserved: { [number]: boolean }?): 
 	return nil, nil
 end
 
-function GardenPlots.apply(plots: { Plot }, index: number, action: string, carrot: boolean): string?
+-- `crop` is the vegetable a "plant" action sows (the caller rolls it with Food.roll("veg", rng)); other actions ignore it.
+function GardenPlots.apply(plots: { Plot }, index: number, action: string, crop: string): string?
 	local plot = plots[index]
 	if not plot then
 		return nil
@@ -97,7 +99,11 @@ function GardenPlots.apply(plots: { Plot }, index: number, action: string, carro
 	if action == "hoe" and plot.crop == "" and plot.stage == 0 then
 		plot.stage = -1
 	elseif action == "plant" and plot.crop == "" and plot.stage == -1 then
-		plot.crop = if carrot then "carrot" else "cabbage"
+		local kind = (Config.Food.Kinds :: any)[crop]
+		if not kind or kind.group ~= "veg" then
+			return nil
+		end
+		plot.crop = crop
 		plot.stage = 1
 		plot.progress = 0
 		plot.watered = false

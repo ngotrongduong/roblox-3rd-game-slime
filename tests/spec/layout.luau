@@ -35,6 +35,43 @@ return function(T)
 		T.ok(M.RingRoadRadius - M.RingRoadWidth / 2 > M.WildRadius, "road outside the Wild Garden")
 	end)
 
+	-- The open gap between two footprints (rectangles given by centre, yaw frame and half sizes) along the line
+	-- joining their centres: positive when they are apart (a separating axis).
+	local function gapAlongCentres(fa, ha: { number }, fb, hb: { number }): number
+		local d = (fb.Position - fa.Position) * Vector3.new(1, 0, 1)
+		local axis = d.Unit
+		local function extent(f, h)
+			return h[1] * math.abs(f.RightVector:Dot(axis)) + h[2] * math.abs(f.LookVector:Dot(axis))
+		end
+		return d.Magnitude - extent(fa, ha) - extent(fb, hb)
+	end
+
+	T.test("the village scale: every rim neighbour keeps an open lane", function()
+		local plotHalf = { M.PlotSize / 2, M.PlotSize / 2 }
+		local marketHalf = { M.MarketWidth / 2, M.MarketDepth / 2 }
+		for slot = 1, M.PlotCount do
+			local nextSlot = slot % (M.PlotCount + 1) + 1
+			local nextHalf = if nextSlot == M.PlotCount + 1 then marketHalf else plotHalf
+			local nextFrame = if nextSlot == M.PlotCount + 1 then Layout.slotFrame(0) else Layout.slotFrame(nextSlot)
+			local gap = gapAlongCentres(Layout.slotFrame(slot), plotHalf, nextFrame, nextHalf)
+			T.ok(gap >= M.PlotLane, "slot " .. slot .. " lane " .. gap)
+		end
+		T.ok(gapAlongCentres(Layout.slotFrame(0), marketHalf, Layout.slotFrame(1), plotHalf) >= M.PlotLane, "market")
+		local market = M.RimRadius + M.MarketDepth / 2
+		T.ok(math.sqrt(market * market + (M.MarketWidth / 2) ^ 2) < M.FloorRadius, "market corners on the floor")
+	end)
+
+	T.test("the village scale: about twice the old area, paths sized to the slime", function()
+		T.ok(M.PlotSize * M.PlotSize >= 2 * 160 * 160, "plot area doubled")
+		T.near(Layout.cellSize() * 3, M.PlotSize, 1e-9)
+		T.ok(M.PathWidth >= 3 * M.SlimeWidth + 3, "three slimes side by side with room")
+		T.ok(M.MainPathWidth >= M.PathWidth and M.RingRoadWidth >= M.MainPathWidth)
+		T.ok(M.WorkFront >= 2 * M.SlimeWidth and M.PropGap >= 2 * M.SlimeWidth, "two slimes pass")
+		T.ok(M.HeartRadius < M.DuelRingDistance - M.DuelRingRadius, "duel rings clear of the Heart")
+		T.ok(M.DuelRingDistance + M.DuelRingRadius < M.WildRadius, "duel rings in the Wild Garden")
+		T.ok(M.HillOuterRadius > M.FloorRadius)
+	end)
+
 	T.test("the gate is on the plot side nearest the centre", function()
 		for plot = 1, M.PlotCount do
 			local gate = Layout.plotGate(plot).Position.Magnitude

@@ -407,13 +407,74 @@ Config.Needs = {
 	Rested = 90,
 }
 
+-- Raw food kinds (the owner, 2026-10-30: several kinds of fish and vegetables with rarities, for recipes later).
+-- `group` says where it comes from (fishing or the garden), `weight` is its share of one roll within its group
+-- (a group's weights add up to 100, so a weight is a percent), `fullness` what a slime gains eating it raw, `crop` the
+-- CropKit model prefix of a vegetable (Carrot4 is the ripe carrot). Ids `fish`, `carrot` and `cabbage` are the first
+-- kinds and keep their saves; every other id is new. The model of a kind is ClientKit.Items.<id>.
+local FoodKinds = {
+	fish = { name = "Koi", group = "fish", rarity = "common", fullness = 20, weight = 40 },
+	blueFish = { name = "Blue Fish", group = "fish", rarity = "common", fullness = 12, weight = 30 },
+	trout = { name = "Trout", group = "fish", rarity = "uncommon", fullness = 28, weight = 18 },
+	salmon = { name = "Salmon", group = "fish", rarity = "rare", fullness = 40, weight = 8 },
+	pufferfish = { name = "Pufferfish", group = "fish", rarity = "rare", fullness = 40, weight = 3 },
+	goldenCarp = { name = "Golden Carp", group = "fish", rarity = "epic", fullness = 60, weight = 1 },
+	carrot = { name = "Carrot", group = "veg", rarity = "common", fullness = 15, weight = 30, crop = "Carrot" },
+	cabbage = { name = "Cabbage", group = "veg", rarity = "common", fullness = 15, weight = 30, crop = "Cabbage" },
+	tomato = { name = "Tomato", group = "veg", rarity = "uncommon", fullness = 24, weight = 18, crop = "Tomato" },
+	corn = { name = "Corn", group = "veg", rarity = "uncommon", fullness = 28, weight = 12, crop = "Corn" },
+	pumpkin = { name = "Pumpkin", group = "veg", rarity = "rare", fullness = 40, weight = 8, crop = "Pumpkin" },
+	starfruit = { name = "Starfruit", group = "veg", rarity = "epic", fullness = 60, weight = 2, crop = "Starfruit" },
+}
+local FishOrder = { "fish", "blueFish", "trout", "salmon", "pufferfish", "goldenCarp" }
+local VegOrder = { "carrot", "cabbage", "tomato", "corn", "pumpkin", "starfruit" }
+local FoodRaw: { [string]: number } = {}
+local FoodRawOrder: { string } = {}
+for _, list in { FishOrder, VegOrder } do
+	for _, id in list do
+		FoodRaw[id] = (FoodKinds :: any)[id].fullness
+		table.insert(FoodRawOrder, id)
+	end
+end
+
 Config.Food = {
-	Raw = { fish = 20, carrot = 15, cabbage = 15 },
-	RawOrder = { "fish", "carrot", "cabbage" },
+	Kinds = FoodKinds,
+	FishOrder = FishOrder,
+	VegOrder = VegOrder,
+	Rarities = {
+		common = { name = "Common", colour = "#7d6a55", order = 1 },
+		uncommon = { name = "Uncommon", colour = "#3f9a38", order = 2 },
+		rare = { name = "Rare", colour = "#2f7fd0", order = 3 },
+		epic = { name = "Epic", colour = "#9a45c8", order = 4 },
+	},
+	-- Raw fullness by id and the order every store, bin and picker walks (derived from Kinds above).
+	Raw = FoodRaw,
+	RawOrder = FoodRawOrder,
+	-- A vegetable's seedling, young and growing stages use these CropKit models (<prefix>1..3) when it has none of
+	-- its own; only the ripe stage (<crop>4) is its own model.
+	SproutCrop = "Cabbage",
 	Dishes = {
-		grilledFish = { ingredients = { fish = 2 }, fullness = 60, stat = "attack", percent = 10 },
-		veggieStew = { ingredients = { carrot = 2, cabbage = 1 }, fullness = 65, stat = "defence", percent = 10 },
-		fishVegSoup = { ingredients = { fish = 1, carrot = 1, cabbage = 1 }, fullness = 90, stat = "hp", percent = 10 },
+		grilledFish = {
+			name = "Grilled Fish",
+			ingredients = { fish = 2 },
+			fullness = 60,
+			stat = "attack",
+			percent = 10,
+		},
+		veggieStew = {
+			name = "Veggie Stew",
+			ingredients = { carrot = 2, cabbage = 1 },
+			fullness = 65,
+			stat = "defence",
+			percent = 10,
+		},
+		fishVegSoup = {
+			name = "Fish and Veggie Soup",
+			ingredients = { fish = 1, carrot = 1, cabbage = 1 },
+			fullness = 90,
+			stat = "hp",
+			percent = 10,
+		},
 	},
 	DishOrder = { "fishVegSoup", "veggieStew", "grilledFish" },
 	BuffSeconds = 1200,
@@ -434,7 +495,6 @@ Config.Work = {
 	CycleLevelFactor = 0.99,
 	FishingYield = 1,
 	GardenYield = 3,
-	GardenCarrotChance = 0.5,
 	SpeedBonusPerSpd = 0.05,
 	SpeedBonusMax = 3,
 	GardenPlotCount = 20,
@@ -531,25 +591,38 @@ Config.Map = {
 	GroundY = 2,
 	-- Home plots on the rim; the Market takes one more rim slot (north).
 	PlotCount = 8,
+	-- The village scale (docs/VILLAGE_SCALE.md, the owner 2026-10-30: "double the area, sized to the slime"). The
+	-- standard slime at scale 1, and the clearances every builder keeps from it.
+	SlimeWidth = 3.5,
+	SlimeHeight = 3,
+	-- A path takes three slimes side by side with room; the plaza ring and the gate road are wider.
+	PathWidth = 14,
+	MainPathWidth = 18,
+	-- Free ground in front of a work place, nest, incubator, bin, seat or door; between two props; corner turns.
+	WorkFront = 7,
+	PropGap = 7,
+	TurnRadius = 7,
+	-- The least open lane between two neighbouring plots on the rim.
+	PlotLane = 40,
 	-- Distance from the centre to the middle of each rim slot.
-	RimRadius = 360,
-	-- A home plot is a square this wide (a 3x3 grid of areas).
-	PlotSize = 160,
+	RimRadius = 500,
+	-- A home plot is a square this wide (a 3x3 grid of areas): 2.03x the area of the old 160.
+	PlotSize = 228,
 	-- The Market's footprint (across the rim, along the radius).
 	MarketWidth = 200,
 	MarketDepth = 160,
 	-- The flat valley floor; hills rise beyond it.
-	FloorRadius = 490,
-	HillOuterRadius = 600,
-	HillHeight = 70,
+	FloorRadius = 690,
+	HillOuterRadius = 830,
+	HillHeight = 80,
 	-- The ring road joining every plot and the Market.
-	RingRoadRadius = 258,
-	RingRoadWidth = 18,
+	RingRoadRadius = 356,
+	RingRoadWidth = 24,
 	-- The Wild Garden and its Heart (World Boss clearing) with two Duel Rings at its edge.
-	WildRadius = 240,
-	HeartRadius = 46,
+	WildRadius = 334,
+	HeartRadius = 64,
 	DuelRingRadius = 14,
-	DuelRingDistance = 78,
+	DuelRingDistance = 108,
 	-- No z-fighting (src/server/ZFight.luau): top faces closer than ZFightTolerance that overlap by more than
 	-- ZFightEdge in plan flicker; the smaller part rises by ZFightStep (up to ZFightPasses times). ZFightCell is
 	-- the plan grid of the search.
@@ -1130,8 +1203,12 @@ Config.Ui = {
 	PressScale = 0.94,
 	BackdropTransparency = 0.55,
 	DisabledTransparency = 0.5,
-	-- The strip: raw foods fold into one Food chip until each kind has its own picture.
-	HudOrder = { "coins", "fish", "carrot", "cabbage", "grilledFish", "veggieStew", "fishVegSoup", "slimes" },
+	-- The food panel (UiFood): row height, the model icon size, how wide the count column is.
+	FoodWidth = 420,
+	FoodHeight = 480,
+	FoodRowHeight = 52,
+	FoodIconSize = 44,
+	FoodCountWidth = 56,
 	-- Slime book.
 	BookSorts = { "level", "speed", "newest" },
 	BookFilters = { "all", "free", "working", "babies" },

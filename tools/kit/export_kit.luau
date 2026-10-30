@@ -16,6 +16,7 @@ local ITEMS = {
 	{ { "ServerStorage", "PropKit" }, "PropKit.rbxm" }, -- props, fences, gates, signs (generate_mesh)
 	{ { "ServerStorage", "CropKit" }, "CropKit.rbxm" }, -- carrots and cabbages at four growth stages
 	{ { "ServerStorage", "FishKit" }, "FishKit.rbxm" }, -- the pond's fish
+	{ { "ServerStorage", "FoodKit" }, "FoodKit.rbxm" }, -- the other fish and vegetables (tools/kit/intake_food.luau)
 	{ { "ServerStorage", "OwnerKit" }, "OwnerKit.rbxm" }, -- the owner's library: trees, benches, fire VFX
 	{ { "ServerStorage", "NatureKit" }, "NatureKit.rbxm" }, -- the free "Nature stylized Pack"
 	{ { "Workspace", "Map", "Plot5" }, "HomePlot.rbxm" }, -- the finished level-1 home plot (the village)

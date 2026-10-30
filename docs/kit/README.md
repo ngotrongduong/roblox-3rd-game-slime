@@ -114,6 +114,25 @@ in `PropKit` and `tools/kit/export_client_kit.luau` puts them in `ClientKit.Item
 
 `tools/kit/fill_client_items.luau` copies the same models into the work place's own ClientKit for a play test.
 
+## FoodKit (more fish and vegetables, 2026-10-30)
+
+The owner asked for several kinds of fish and vegetables with rarities (`Config.Food.Kinds`). The free Creator Store
+search (scope creator_store, free) was tried for each kind: it returned unrelated, pack-spam or unvetted models of mixed
+styles, and the owner's inventory has no food, so none was taken (no unknown scripts, one look). Seven were made with
+`generate_mesh` (the owner's generated objects, no scripts, same look as the dishes); the blue fish is the pond's own.
+`tools/kit/intake_food.luau` fits them (scripts removed, anchored, scaled, pivot at the middle, fish side-on facing +X
+like the koi) into `ServerStorage.FoodKit` and copies the ripe vegetables into `CropKit` as `Tomato4`, `Corn4`,
+`Pumpkin4`, `Starfruit4` (the garden shows them when ripe; stages 1-3 of a new vegetable use the cabbage sprouts,
+`Config.Food.SproutCrop`). `tools/kit/export_client_kit.luau` and `fill_client_items.luau` put them in `ClientKit.Items`.
+
+| Model (Items id) | Source |
+|---|---|
+| fish (Koi) | KoiFish 89590294358011 (FishKit) |
+| blueFish (Blue Fish) | BlueFish 110184517960885 (FishKit, the pond's) |
+| trout, salmon, pufferfish, goldenCarp | generate_mesh, 2026-10-30 (the golden carp is a second try; it comes out peach-gold) |
+| carrot, cabbage | Carrot4, Cabbage4 (CropKit) |
+| tomato, corn, pumpkin, starfruit | generate_mesh, 2026-10-30 (the starfruit reads as a pale gold melon: may be redone) |
+
 ## OwnerKit.rbxm (the owner's own library, Mue_you inventory)
 
 | Model | Asset id |

@@ -1323,9 +1323,13 @@ local function syncGarden(session: Session, farm: Farm)
 		if not marker or not marker:IsA("BasePart") then
 			continue
 		end
-		local name = if plotState.crop == ""
+		-- A vegetable's own model shows when ripe; a new kind grows through the generic sprout models first.
+		local kind = if plotState.crop == "" then nil else (Config.Food.Kinds :: any)[plotState.crop]
+		local name = if not kind
 			then ""
-			else (if plotState.crop == "carrot" then "Carrot" else "Cabbage") .. plotState.stage
+			elseif plotState.stage >= 4 or kit and kit:FindFirstChild(kind.crop .. plotState.stage) then kind.crop
+				.. plotState.stage
+			else Config.Food.SproutCrop .. plotState.stage
 		if
 			marker:GetAttribute("ShownCrop") ~= name or (name ~= "" and crops:FindFirstChild("Crop" .. index) == nil)
 		then
@@ -1513,7 +1517,7 @@ local function tick(player: Player, session: Session)
 									data.work.garden.plots,
 									slot.plot,
 									slot.task,
-									session.rng:next() < Config.Work.GardenCarrotChance
+									if slot.task == "plant" then Food.roll("veg", session.rng) else ""
 								)
 								if harvested then
 									slot.pending = harvested

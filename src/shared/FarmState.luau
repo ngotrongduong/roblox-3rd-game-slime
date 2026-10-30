@@ -719,9 +719,15 @@ local function validateWork(raw: any, areas: Areas, slimes: { Slime }, now: numb
 				local old = if type(w.slots) == "table" then w.slots[i] else nil
 				if type(old) == "table" then
 					slot.progress = if isNum(old.progress) then math.max(0, old.progress) else 0
+					local pendingKind = if type(old.pending) == "string"
+						then (Config.Food.Kinds :: any)[old.pending]
+						else nil
 					if
-						(id == "fishing" and old.pending == "fish")
-						or (id == "garden" and (old.pending == "carrot" or old.pending == "cabbage"))
+						pendingKind
+						and (
+							(id == "fishing" and pendingKind.group == "fish")
+							or (id == "garden" and pendingKind.group == "veg")
+						)
 					then
 						slot.pending = old.pending
 					end

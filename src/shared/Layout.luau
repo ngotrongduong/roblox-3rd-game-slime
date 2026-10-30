@@ -77,9 +77,14 @@ function Layout.marketFrame(): CFrame
 	return Layout.slotFrame(0)
 end
 
+-- The side of one cell of a plot's 3x3 grid (one area).
+function Layout.cellSize(): number
+	return M.PlotSize / 3
+end
+
 -- Centre of an area of a plot, in world space. A plot's row 1 lies away from the valley centre.
 function Layout.plotAreaFrame(plot: number, col: number, row: number): CFrame
-	local step = M.PlotSize / 3
+	local step = Layout.cellSize()
 	-- The plot frame faces the centre, so the front (row -1) is local -Z and the back is +Z. Someone
 	-- at the gate looking in faces +Z, so their right (col 1) is local -X.
 	return Layout.plotFrame(plot) * CFrame.new(-col * step, 0, row * step)

@@ -12,8 +12,12 @@ local RunService = game:GetService("RunService")
 local Config = require(ReplicatedStorage.Shared.Config)
 
 local TAG = "ItemBin"
-local LENGTH = { fish = 1.5 } -- the longest side of an item in a bin, in studs
+local FISH_LENGTH = 1.5 -- the longest side of a fish in a bin, in studs
 local DEFAULT_LENGTH = 1.1
+local LENGTH: { [string]: number } = {}
+for _, id in Config.Food.FishOrder do
+	LENGTH[id] = FISH_LENGTH
+end
 -- where the ten sit on the floor (x, y up from it, z, turn): six round the edge, three above, one on top
 local SLOTS = {}
 for i = 0, 5 do

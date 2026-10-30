@@ -27,7 +27,7 @@ return function(T: any)
 		T.eq(a.work.fishing.box.fish, nil)
 		T.eq(b.work.fishing.box.fish, nil, "the faster fish is not deposited until the carrying animation completes")
 		T.eq(a.work.fishing.slots[1].pending, nil)
-		T.eq(b.work.fishing.slots[1].pending, "fish", "higher SPD completes the catch earlier")
+		T.ok(Config.Food.Kinds[b.work.fishing.slots[1].pending or ""] ~= nil, "higher SPD completes the catch earlier")
 	end)
 
 	T.test("faster kitchen and training accumulate more progress", function()

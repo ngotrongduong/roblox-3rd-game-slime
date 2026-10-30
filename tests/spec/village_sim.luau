@@ -71,7 +71,10 @@ return function(T)
 			workReady = { ["slime-1"] = "work:fishing:1" },
 		})
 		T.eq(arrived.work.fishing.box.fish, nil, "online fish cannot enter the bin before the carrier arrives")
-		T.eq(arrived.work.fishing.slots[1].pending, "fish", "arriving worker has caught a fish to carry")
+		T.ok(
+			Config.Food.Kinds[arrived.work.fishing.slots[1].pending or ""] ~= nil,
+			"arriving worker has caught a fish to carry"
+		)
 	end)
 	T.test("online pairs wait for both parents at the breeding house", function()
 		local farm = FarmKit.farm(NOW)

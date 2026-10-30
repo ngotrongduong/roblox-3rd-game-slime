@@ -52,6 +52,11 @@ for _, species in { "Carrot", "Cabbage" } do
 		take(crops and crops:FindFirstChild(name), name, items)
 	end
 end
+-- the other fish and vegetables (2026-10-30; tools/kit/intake_food.luau puts them in FoodKit, docs/kit/README.md)
+local foodKit = storage:FindFirstChild("FoodKit")
+for _, key in { "blueFish", "trout", "salmon", "pufferfish", "goldenCarp", "tomato", "corn", "pumpkin", "starfruit" } do
+	take(foodKit and foodKit:FindFirstChild(key), key, items)
+end
 -- the cooked dishes and the egg (made with generate_mesh, docs/kit/README.md), and the gardener's and fisher's
 -- tools (tools/kit/make_tools.luau builds the rod and the hoe; the watering can is the garden's): all in PropKit
 local props = storage:FindFirstChild("PropKit")

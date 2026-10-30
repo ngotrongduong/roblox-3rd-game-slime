@@ -1,36 +1,21 @@
 --!strict
 -- What stays on the screen: a small resource strip at the top edge and the round slime-book button at the right edge.
--- The middle stays empty. Food shows by kind, as the stores keep it (the owner, 2026-10-30): fish, each vegetable,
--- and the cooked dishes together; their pictures are the 3D items themselves (ClientKit.Items in a ViewportFrame).
+-- The middle stays empty. All food is ONE button (the owner, 2026-10-30): a 3D bowl and the total; tapping it opens the
+-- food panel (UiFood). Its picture is the 3D item itself (ClientKit.Items in a ViewportFrame).
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local HttpService = game:GetService("HttpService")
 
 local Config = require(ReplicatedStorage.Shared.Config)
+local UiFood = require(script.Parent.UiFood)
 local UiKit = require(script.Parent.UiKit)
 
 local U = Config.Ui
+local FOOD_ICON = "veggieStew" -- the Items model on the food button
 
 local UiHud = {}
 local strip: ScrollingFrame? = nil
 local edge: Frame? = nil
 local chips: { [string]: UiKit.Chip } = {}
--- each food chip and the kinds it counts (raw kinds from the storehouse, dishes from the fridge)
-local FOOD_CHIPS: { { key: string, kinds: { string }, model: string } } = {
-	{ key = "fish", kinds = { "fish" }, model = "fish" },
-	{ key = "carrot", kinds = { "carrot" }, model = "carrot" },
-	{ key = "cabbage", kinds = { "cabbage" }, model = "cabbage" },
-	{ key = "dishes", kinds = Config.Food.DishOrder, model = Config.Food.DishOrder[1] },
-}
-
-local function parse(value: any): { [string]: number }
-	if type(value) ~= "string" then
-		return {}
-	end
-	local ok, decoded = pcall(function()
-		return HttpService:JSONDecode(value)
-	end)
-	return if ok and type(decoded) == "table" then decoded else {}
-end
+local lastOwn: Folder? = nil
 
 local function short(amount: number): string
 	if amount >= 1_000_000 then
@@ -78,10 +63,18 @@ function UiHud.start(root: Frame, onBook: () -> ())
 		chips[key] = UiKit.chip(bar, icon, "0", order, model)
 	end
 	add("coins", "coins")
-	for _, food in FOOD_CHIPS do
-		local model = item(food.model)
-		add(food.key, if model then food.key else "food", model)
-	end
+	add("food", "food", item(FOOD_ICON))
+	-- the whole food chip is a button: a transparent press area over it
+	UiKit.make("TextButton", {
+		Name = "Open",
+		BackgroundTransparency = 1,
+		Text = "",
+		Size = UDim2.fromScale(1, 1),
+		ZIndex = 20,
+	}, chips.food.root).Activated
+		:Connect(function()
+			UiFood.open(lastOwn)
+		end)
 	add("slimes", "slimes")
 
 	-- Round buttons hug the right edge, clear of the jump button and the thumbstick.
@@ -107,21 +100,22 @@ function UiHud.setVisible(visible: boolean)
 end
 
 function UiHud.refresh(own: Folder?)
+	lastOwn = own
 	if not strip or not own then
 		return
 	end
-	local store = parse(own:GetAttribute("Storehouse"))
-	local fridge = parse(own:GetAttribute("Fridge"))
+	local store, fridge = UiFood.read(own)
 	local coins = own:GetAttribute("Coins")
 	chips.coins.set(short(if type(coins) == "number" then coins else 0))
-	for _, food in FOOD_CHIPS do
-		local total = 0
-		for _, kind in food.kinds do
-			local source = if (Config.Food.Dishes :: any)[kind] ~= nil then fridge else store
-			total += source[kind] or 0
-		end
-		chips[food.key].set(short(total))
+	local total = 0
+	for _, kind in Config.Food.RawOrder do
+		total += store[kind] or 0
 	end
+	for _, kind in Config.Food.DishOrder do
+		total += fridge[kind] or 0
+	end
+	chips.food.set(short(total))
+	UiFood.refresh(own)
 	chips.slimes.set(tostring(own:GetAttribute("Population") or 0) .. "/" .. tostring(own:GetAttribute("Limit") or 0))
 end
 

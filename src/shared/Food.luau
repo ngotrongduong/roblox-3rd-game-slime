@@ -4,7 +4,10 @@ local Config = if script then require(script.Parent.Config) else require("./Conf
 local FarmState = if script then require(script.Parent.FarmState) else require("./FarmState")
 local Needs = if script then require(script.Parent.Needs) else require("./Needs")
 
+local RngModule = if script then require(script.Parent.Rng) else require("./Rng")
+
 type Farm = typeof(FarmState.newFarm(0))
+type Rng = typeof(RngModule.new(0))
 local Food = {}
 
 function Food.storehouseCapacity(level: number): number
@@ -13,6 +16,25 @@ end
 
 function Food.fridgeCapacity(level: number): number
 	return Config.Food.FridgeBase + Config.Food.FridgePerLevel * (level - Config.Village.StartLevel)
+end
+
+-- Which raw kind a catch or a planting is: one roll over the weights of the group ("fish" or "veg"), in Config order.
+-- Luck is not applied (new-player luck is x5 and would flood the pond with epics); the weights are the chances.
+function Food.roll(group: string, rng: Rng): string
+	local order: { string } = if group == "fish" then Config.Food.FishOrder else Config.Food.VegOrder
+	local kinds = Config.Food.Kinds :: any
+	local sum = 0
+	for _, id in order do
+		sum += kinds[id].weight
+	end
+	local at = rng:next() * sum
+	for _, id in order do
+		at -= kinds[id].weight
+		if at < 0 then
+			return id
+		end
+	end
+	return order[#order]
 end
 
 function Food.total(stock: { [string]: number }): number

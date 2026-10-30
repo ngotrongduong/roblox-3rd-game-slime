@@ -95,8 +95,12 @@ local function doWork(
 			if areaId == "garden" and plots and slot.task and slot.plot then
 				if workReady == nil then
 					-- A logged-out worker's saved chore is finished in abstract simulation.
-					local crop =
-						GardenPlots.apply(plots, slot.plot, slot.task, rng:next() < Config.Work.GardenCarrotChance)
+					local crop = GardenPlots.apply(
+						plots,
+						slot.plot,
+						slot.task,
+						if slot.task == "plant" then Food.roll("veg", rng) else ""
+					)
 					if crop then
 						if Food.add(workArea.box, crop, 1, Config.Work.BoxCapacity) == 0 then
 							slot.pending = crop
@@ -165,8 +169,12 @@ local function doWork(
 						}
 						table.insert(events, event)
 					else
-						local crop =
-							GardenPlots.apply(plots, index, action, rng:next() < Config.Work.GardenCarrotChance)
+						local crop = GardenPlots.apply(
+							plots,
+							index,
+							action,
+							if action == "plant" then Food.roll("veg", rng) else ""
+						)
 						if crop then
 							Food.add(workArea.box, crop, 1, Config.Work.BoxCapacity)
 							table.insert(
@@ -203,13 +211,15 @@ local function doWork(
 					break
 				end
 				if areaId == "fishing" then
+					-- Which fish bites is rolled here, by rarity weight (Config.Food.Kinds).
+					local caught = Food.roll("fish", rng)
 					if workReady then
 						-- Online the catch is held until the fish reaches the visible bin.
-						slot.pending = "fish"
+						slot.pending = caught
 					else
-						Food.add(workArea.box, "fish", Config.Work.FishingYield, Config.Work.BoxCapacity)
+						Food.add(workArea.box, caught, Config.Work.FishingYield, Config.Work.BoxCapacity)
 					end
-					table.insert(events, { kind = "collected", item = "fish", area = "fishing", slimeId = worker.id })
+					table.insert(events, { kind = "collected", item = caught, area = "fishing", slimeId = worker.id })
 				elseif areaId == "kitchen" then
 					local id = Food.bestDish(farm.counter)
 					if id == nil then
