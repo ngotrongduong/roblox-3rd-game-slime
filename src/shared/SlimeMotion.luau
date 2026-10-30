@@ -127,8 +127,14 @@ function SlimeMotion.hop(st: State, h: number, snap: boolean?)
 	st.hop = { stage = if snap then "launch" else "crouch", t = 0, h = h }
 end
 
+-- the hop numbers of a slime's gait; a glide has none, so a hop it began before gliding ends on the defaults (a nil
+-- Gravity here once froze every slime on the screen)
+local function hopNumbers(st: State): any
+	return if st.gait and st.gait.Gravity then st.gait else C
+end
+
 local function launch(st: State, h: number)
-	local P = st.gait or C
+	local P = hopNumbers(st)
 	st.vy = math.sqrt(2 * P.Gravity * h)
 	st.y = 1e-4
 	st.sq.v += 2.2
@@ -414,7 +420,7 @@ function SlimeMotion.step(st: State, dt: number, ctx: Ctx?): Pose
 	end
 
 	-- the hop: crouch, launch, fly, land (with this slime's gait numbers while it walks one)
-	local P = st.gait or C
+	local P = hopNumbers(st)
 	local hopLean = P.HopLean or 0
 	local hop = st.hop
 	if hop then

@@ -365,6 +365,19 @@ local function tick(a: Slime, dt: number, write: boolean)
 end
 
 -- `force` (by hand only): every slime counts as close, wherever the camera is.
+-- One slime's error must never stop the loop for every other slime (a single bad gait once froze the whole village
+-- on the screen): the failing slime is skipped and the error printed once per slime.
+local warned: { [Slime]: boolean } = {}
+local function safeTick(a: Slime, dt: number, write: boolean)
+	local ok, err = pcall(function()
+		tick(a, dt, write)
+	end)
+	if not ok and not warned[a] then
+		warned[a] = true
+		warn(Config.LogPrefix, "slime motion error:", err)
+	end
+end
+
 local function stepAll(dt: number, force: boolean?)
 	local camera = workspace.CurrentCamera
 	local camCf = if camera then camera.CFrame else nil
@@ -398,10 +411,10 @@ local function stepAll(dt: number, force: boolean?)
 				end
 			end
 			if mode == 0 then
-				tick(a, a.acc, true)
+				safeTick(a, a.acc, true)
 				a.acc = 0
 			elseif mode ~= 3 and a.acc >= 1 / C.FarHz then
-				tick(a, a.acc, mode == 1)
+				safeTick(a, a.acc, mode == 1)
 				a.acc = 0
 			elseif mode == 3 then
 				a.acc = 0

@@ -20,6 +20,23 @@ return function(T)
 		end
 	end)
 
+	T.test("a slime that starts gliding mid-hop finishes the hop (the glide gait has no hop numbers)", function()
+		local st = SlimeMotion.new(5)
+		SlimeMotion.set(st, "idle")
+		st.gait = Config.Gaits.walk
+		SlimeMotion.hop(st, 0.5)
+		for _ = 1, 12 do
+			SlimeMotion.step(st, DT)
+		end
+		-- tired now: the actor switches to the glide gait while the body is still in the air
+		st.gait = Config.Gaits.glide
+		for i = 1, 120 do
+			local ok, p = pcall(SlimeMotion.step, st, DT)
+			T.ok(ok, "step " .. i .. " after the switch")
+			T.ok(ok and p.sy == p.sy, "finite")
+		end
+	end)
+
 	T.test("a hop crouches first, flies, and lands squashing and wobbling", function()
 		local st = SlimeMotion.new(3)
 		SlimeMotion.set(st, "idle")
