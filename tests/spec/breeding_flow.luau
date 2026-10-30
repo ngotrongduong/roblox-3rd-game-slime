@@ -72,6 +72,6 @@ return function(T)
 		T.eq(Breeding.check(e2.farm, "slime-1", "slime-3", NOW + 100).reason, "EGG_CAP_REACHED")
 		local big = FarmKit.farm(NOW, FarmKit.many(20))
 		T.eq(Breeding.check(big, "s1", "s2", NOW).reason, "SLIME_CAP_REACHED")
-		T.eq(FarmState.populationLimit(big.areas), 20)
+		T.eq(FarmState.populationLimit(big.areas), 12)
 	end)
 end

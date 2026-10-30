@@ -179,8 +179,9 @@ Config.Village = {
 	-- simulation steps once a second; this stops a running clock from rewriting its attributes every tick).
 	ClockKeepSeconds = 0.6,
 	MaxLevel = 50,
-	PopulationBase = 20,
-	PopulationPerLevel = 4,
+	-- Limit births to the staffing milestones; never delete established slimes on old saves.
+	PopulationMilestones = { 1, 11, 21, 31, 41 },
+	PopulationCaps = { 12, 27, 42, 57, 72 },
 	UpgradeBase = 100,
 	UpgradeMaxCost = 20000,
 	UpgradeLastFromLevel = 49,
@@ -392,8 +393,9 @@ Config.Brain = {
 Config.Needs = {
 	Max = 100,
 	Start = 100,
-	IdleFullnessPerMinute = 2,
-	WorkFullnessPerMinute = 3,
+	-- Balanced for starter SPD, not the fastest possible worker.
+	IdleFullnessPerMinute = 1.5,
+	WorkFullnessPerMinute = 2.25,
 	IdleEnergyPerMinute = 0.5,
 	WorkEnergyPerMinute = 2,
 	SleepEnergyPerMinute = 5,
@@ -413,14 +415,14 @@ Config.Needs = {
 -- CropKit model prefix of a vegetable (Carrot4 is the ripe carrot). Ids `fish`, `carrot` and `cabbage` are the first
 -- kinds and keep their saves; every other id is new. The model of a kind is ClientKit.Items.<id>.
 local FoodKinds = {
-	fish = { name = "Koi", group = "fish", rarity = "common", fullness = 20, weight = 40 },
-	blueFish = { name = "Blue Fish", group = "fish", rarity = "common", fullness = 12, weight = 30 },
+	fish = { name = "Koi", group = "fish", rarity = "common", fullness = 25, weight = 40 },
+	blueFish = { name = "Blue Fish", group = "fish", rarity = "common", fullness = 20, weight = 30 },
 	trout = { name = "Trout", group = "fish", rarity = "uncommon", fullness = 28, weight = 18 },
 	salmon = { name = "Salmon", group = "fish", rarity = "rare", fullness = 40, weight = 8 },
 	pufferfish = { name = "Pufferfish", group = "fish", rarity = "rare", fullness = 40, weight = 3 },
 	goldenCarp = { name = "Golden Carp", group = "fish", rarity = "epic", fullness = 60, weight = 1 },
-	carrot = { name = "Carrot", group = "veg", rarity = "common", fullness = 15, weight = 30, crop = "Carrot" },
-	cabbage = { name = "Cabbage", group = "veg", rarity = "common", fullness = 15, weight = 30, crop = "Cabbage" },
+	carrot = { name = "Carrot", group = "veg", rarity = "common", fullness = 20, weight = 30, crop = "Carrot" },
+	cabbage = { name = "Cabbage", group = "veg", rarity = "common", fullness = 20, weight = 30, crop = "Cabbage" },
 	tomato = { name = "Tomato", group = "veg", rarity = "uncommon", fullness = 24, weight = 18, crop = "Tomato" },
 	corn = { name = "Corn", group = "veg", rarity = "uncommon", fullness = 28, weight = 12, crop = "Corn" },
 	pumpkin = { name = "Pumpkin", group = "veg", rarity = "rare", fullness = 40, weight = 8, crop = "Pumpkin" },
@@ -494,7 +496,7 @@ Config.Work = {
 	CycleSeconds = { fishing = 60, garden = 240, kitchen = 120, training = 90 },
 	CycleLevelFactor = 0.99,
 	FishingYield = 1,
-	GardenYield = 3,
+	GardenYield = 1, -- one vegetable per harvested real plot
 	SpeedBonusPerSpd = 0.05,
 	SpeedBonusMax = 3,
 	GardenPlotCount = 20,
@@ -504,6 +506,7 @@ Config.Work = {
 	GardenWaterBoostSeconds = 12,
 	-- Six tending actions per harvest: 3600 / (6 * 13.5) ~= 44 vegetables/hour, near the old 45.
 	GardenActionSeconds = 13.5,
+	GardenActionsPerHarvest = 6, -- hoe, plant, water at three stages, harvest
 	FishCastSeconds = 3,
 	FishReelSeconds = 3,
 	WorkDropSeconds = 2,
@@ -538,6 +541,11 @@ Config.Work = {
 
 -- Short, client-only construction reveal. The server changes gameplay immediately;
 -- clients fade changed stage pieces into view, with a focused celebration on the upgraded area.
+-- Conservative estimate, not measured: accounts for travel, rest and delivery delays.
+Config.FoodBalance = {
+	ProductiveTimeFraction = 0.55,
+}
+
 Config.UpgradeFx = {
 	Tag = "AreaUpgradeReveal",
 	PartAttribute = "UpgradeFxPart",

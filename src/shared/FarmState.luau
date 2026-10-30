@@ -267,8 +267,14 @@ function FarmState.villageLevel(areas: Areas): number
 end
 
 function FarmState.populationLimit(areas: Areas): number
-	return Config.Village.PopulationBase
-		+ Config.Village.PopulationPerLevel * (FarmState.villageLevel(areas) - Config.Village.StartLevel)
+	local villageLevel = FarmState.villageLevel(areas)
+	local limit = Config.Village.PopulationCaps[1]
+	for index, threshold in Config.Village.PopulationMilestones do
+		if villageLevel >= threshold then
+			limit = Config.Village.PopulationCaps[index]
+		end
+	end
+	return limit
 end
 
 function FarmState.findSlime(farm: Farm, id: string): (Slime?, number?)

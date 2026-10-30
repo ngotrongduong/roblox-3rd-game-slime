@@ -68,9 +68,9 @@ return function(T)
 		T.eq(Breeding.check(farm, "s1", "s2", NOW).reason, "SLIME_CAP_REACHED")
 		T.eq(FarmState.populationLimit(farm.areas), 20)
 		for _, id in { "fishing", "garden", "kitchen", "pantry", "training", "breeding" } do
-			farm.areas[id].level = 2
+			farm.areas[id].level = 11
 		end
-		T.eq(FarmState.populationLimit(farm.areas), 24)
+		T.eq(FarmState.populationLimit(farm.areas), 27)
 		T.ok(Breeding.check(farm, "s1", "s2", NOW).ok)
 	end)
 
