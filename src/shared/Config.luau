@@ -556,9 +556,9 @@ Config.Pads = {
 		-- (moved clear of props and off the paths, the owner 2026-10-29: the garden pad overlapped a bench;
 		-- checked at levels 1, 21 and 41 with tools/map/probe_pads.luau)
 		-- (2026-10-30, the village scale: beside the 14-stud paths; checked at level 1 only, 21 and 41 in phase C)
-		fishing = { -14, -20.5 },
-		garden = { 11, -18.5 },
-		pantry = { 8.5, -14 },
+		fishing = { -14, -26 },
+		garden = { 8, -23 },
+		pantry = { 9.5, -18 },
 		kitchen = { 10.5, -17.5 },
 		training = { 11, -18.5 },
 		breeding = { 15, -24 },
@@ -568,18 +568,18 @@ Config.Pads = {
 Config.WorkPlaces = {
 	BinCapacity = 10, -- fish, or vegetables of any kind, a bin shows
 	-- the bins outside the pond and the garden, beside the path: x, z in the area's frame, turn in degrees
-	FishBin = { 9.5, -20.5, 0 },
-	VegBin = { -5.8, -16.5, 0 },
+	FishBin = { 12.4, -26.7, 0 }, -- (the pond of the village scale, spread by 1.3)
+	VegBin = { -7.5, -17.5, 0 },
 	-- the fourth fishing place: a blue-grey boulder on the pond's bank (x, z in the pond's frame, its real
 	-- height, the widest it may be); the kit model and its tint
-	FishRock = { x = -19.5, z = 6, height = 3.4, width = 7, model = "WideBoulder", tint = { 112, 148, 200 } },
+	FishRock = { x = -25.4, z = 7.8, height = 3.4, width = 7, model = "WideBoulder", tint = { 112, 148, 200 } },
 	-- the dock's first place stands this many studs in from its far end (the second is mid-dock); the pier's
 	-- place, at its end (pond frame)
 	DockEndInset = 1.0,
 	-- the garden: how far the four places stand off the beds' edges, and the side ones shifted along the beds
 	GardenGap = 2.2,
 	GardenSideShift = 4,
-	PierPlace = { x = 15.2, z = -0.5 },
+	PierPlace = { x = 19.8, z = -0.5 },
 }
 
 -- ===== The Goo Valley map (docs/MAP.md) =====

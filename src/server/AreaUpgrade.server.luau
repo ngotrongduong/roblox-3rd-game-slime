@@ -173,7 +173,7 @@ local function setUp(name: string, col: number, row: number, areaId: string)
 	end
 
 	-- the area's entrance: an invisible post (the village brain's "entrance" spot reads it)
-	local spot = if isPond then { DOCK_X, -15 } else AreaStages.Specs[name].prompt
+	local spot = if isPond then { DOCK_X, -20 } else AreaStages.Specs[name].prompt
 	local anchor = Instance.new("Part")
 	anchor.Name = "UpgradePoint"
 	anchor.Size = Vector3.new(1, 4, 1)

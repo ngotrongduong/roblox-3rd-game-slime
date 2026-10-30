@@ -128,9 +128,9 @@ local function path(from: Vector3, to: Vector3, width: number?)
 end
 -- each area's front point in its own (facing) frame, where its entrance is
 local FRONTS = {
-	{ -1, 1, -3, -18 }, -- fishing pond: the shore end of the dock
-	{ 0, 1, 0, -11.5 }, -- pantry
-	{ 1, 1, 0, -10 }, -- garden: the fence opening
+	{ -1, 1, -3, -23 }, -- fishing pond: the shore end of the dock (z -19.5 at the village scale)
+	{ 0, 1, 0, -15.5 }, -- pantry (its yard reaches z -14 at the village scale)
+	{ 1, 1, 0, -13 }, -- garden: the fence opening (z -12 at the village scale)
 	{ -1, 0, 0, -10.5 }, -- kitchen
 	{ 1, 0, 4, -20 }, -- breeding pen: its gate (the pen of the village scale reaches z -19)
 	{ -1, -1, 0, -13.5 }, -- training ground: its opening

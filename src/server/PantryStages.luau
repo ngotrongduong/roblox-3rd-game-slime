@@ -218,8 +218,8 @@ local SURROUND: { { any } } = {
 	{ "HayBale", 2.5, 12.6, 1.6, 2.8, 0, 1 },
 	{ "HayBale", 5.3, 12.6, 1.6, 2.8, 0, 1 },
 	{ "HayBale", 3.9, 12.6, 1.6, 2.8, 90, 1, 1.6 },
-	{ "FlowerShrub", 13.8, -11.6, 2.2, 3, 0, 1 },
-	{ "FlowerShrub", -13.8, -11.6, 2.2, 3, 0, 1 },
+	{ "FlowerShrub", 19, -16, 2.2, 3, 0, 1 },
+	{ "FlowerShrub", -19, -16, 2.2, 3, 0, 1 },
 	{ "Wheelbarrow", 8.5, 12.8, 2.2, 3, 60, 2 },
 	{ "BarrelRack", -4.5, 12.6, 3.4, 4.5, 180, 3 },
 	{ "PlasticCrates", -8.5, 12.8, 3.2, 3, 0, 4 },
@@ -231,6 +231,16 @@ local SURROUND: { { any } } = {
 	{ "SackPallet", -13.3, -5.4, 3, 3, 0, 4 },
 	{ "PlasticCrates", -24.8, -1, 3.2, 3, 0, 4 },
 }
+-- The village scale (2026-10-30): the yard in front of the house grows from x +-12, z -10 to x +-16.8, z -14,
+-- and what stands in the front yard spreads with it (the house, the props against its walls and the service
+-- yard stay); every position above is written for the old yard and passes through `spread`.
+local YARD_X, YARD_FRONT = 16.8, 14
+local function spread(x: number, z: number): (number, number)
+	if z < -1.5 and math.abs(x) <= 12.5 then
+		return x * 1.4, z * 1.4
+	end
+	return x, z
+end
 -- the house: 12 wide (x), 9 deep (z from 0 to 9), its door to the front (-z)
 local W, D, Z0 = 12, 9, 0
 local H1, H2 = 6, 4.6 -- ground storey, upper storeys
@@ -1112,7 +1122,7 @@ function PantryStages.build(area: Instance, frame: CFrame, level: number): Model
 	-- what stands on the yard's paving stands on its top, 0.4 above the lawn
 	local FLOOR = 0.4
 	local function floorAt(x: number, z: number): number
-		local onYard = math.abs(z) <= 10 and (math.abs(x) <= 12 or (wing and x >= -26 and x < 0))
+		local onYard = z <= 10 and z >= -YARD_FRONT and (math.abs(x) <= YARD_X or (wing and x >= -26 and x < 0))
 		return if onYard then FLOOR else 0
 	end
 	-- a model's middle and size along the area's own axes (GetBoundingBox answers in the model's axes,
@@ -1138,7 +1148,8 @@ function PantryStages.build(area: Instance, frame: CFrame, level: number): Model
 	local nowEra = math.clamp(math.ceil(level / 10), 1, 5)
 	for _, s in SURROUND do
 		if nowEra >= s[7] then
-			turn(place(m, frame, s[1], s[2], s[3], s[4], s[5], (s[8] or 0) + floorAt(s[2], s[3])), s[6])
+			local sx, sz = spread(s[2], s[3])
+			turn(place(m, frame, s[1], sx, sz, s[4], s[5], (s[8] or 0) + floorAt(sx, sz)), s[6])
 		end
 	end
 	-- from slime tech a small store hut fills the front of the service yard, built like the house in
@@ -1187,8 +1198,10 @@ function PantryStages.build(area: Instance, frame: CFrame, level: number): Model
 	-- a rope and a hook; a crate hangs while the hand cart waits below (none over the bigger forklift)
 	local hoist = SPOT[3][props[3]]
 	if props[3] > 0 and hoist[6] == "built" then
-		local base = Vector3.new(hoist[1], FLOOR, hoist[2])
-		local over = Vector3.new(8.3, FLOOR, -6.4) -- where the cart waits
+		local hx0, hz0 = spread(hoist[1], hoist[2])
+		local ox, oz = spread(8.3, -6.4)
+		local base = Vector3.new(hx0, FLOOR, hz0)
+		local over = Vector3.new(ox, FLOOR, oz) -- where the cart waits
 		local dir = (over - base).Unit
 		local reach = (over - base).Magnitude
 		local jibTop = FLOOR + hoist[4]
@@ -1250,7 +1263,7 @@ function PantryStages.build(area: Instance, frame: CFrame, level: number): Model
 		local era = props[j]
 		if era > 0 and SPOT[j][era][6] ~= "built" then
 			local spot = SPOT[j][era]
-			local x, z = spot[1], spot[2]
+			local x, z = spread(spot[1], spot[2])
 			local onPallet = spot[6] == "pallet"
 			local floats = PROPS[j][era] == "HoverCart"
 			local lift = floorAt(x, z) + (if onPallet then PALLET elseif floats then 1.3 else 0)

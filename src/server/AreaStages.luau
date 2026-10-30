@@ -49,7 +49,7 @@ AreaStages.Specs = {
 		crate = { -9, 7, 0 },
 		planters = { { 9.2, 7 }, { 5, -8.6 } },
 		trim = { { -12, -10, 12, -10 }, { -12, 10, 12, 10 }, { -12, -10, -12, 10 }, { 12, -10, 12, 10 } },
-		prompt = { 0, -11 },
+		prompt = { 0, -15.4 }, -- (the village scale)
 	},
 	GardenL1 = {
 		label = "Garden",
@@ -60,7 +60,7 @@ AreaStages.Specs = {
 		crate = { 10.4, 12, 0 },
 		planters = { { 10.6, -6.6 }, { 10.6, 4 } },
 		trim = { { -13, -9, -4, -9 }, { 4, -9, 13, -9 }, { -13, 15, 13, 15 }, { -13, -9, -13, 15 }, { 13, -9, 13, 15 } },
-		prompt = { 0, -10 },
+		prompt = { 0, -13.5 }, -- (the village scale: the fence's front at z -12)
 	},
 	BreedingL1 = {
 		label = "Breeding Pen",

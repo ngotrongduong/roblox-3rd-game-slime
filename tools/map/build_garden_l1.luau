@@ -64,7 +64,8 @@ local function post(name: string, cf: CFrame, height: number, diameter: number, 
 end
 
 -- ===== the garden's earth floor (stud), inside the fence =====
-local earth = part("Floor", Vector3.new(26, 0.2, 24), at(0, 0.1, 3), Color3.fromRGB(150, 104, 66), nil, Enum.Material.Plastic)
+-- (the village scale, 2026-10-30: the garden spread by 1.4, fence x +-18, z -12..21; src/server/GardenStages)
+local earth = part("Floor", Vector3.new(36, 0.2, 33), at(0, 0.1, 4.5),Color3.fromRGB(150, 104, 66), nil, Enum.Material.Plastic)
 earth.TopSurface = Enum.SurfaceType.Studs
 earth.CastShadow = false
 
@@ -108,12 +109,12 @@ local function bed(x: number, z: number, crop: string)
 		end
 	end
 end
-bed(-6, 4, "Carrot")
-bed(6, 4, "Cabbage")
+bed(-8.5, 5.7, "Carrot")
+bed(8.5, 5.7, "Cabbage")
 
 -- ===== the work spot (one) =====
 -- A round straw mat on the path between the beds: where a working slime tends the garden.
-local spotCf = at(0, 0.3, 2) -- (on top of the earth floor)
+local spotCf = at(0, 0.3, 2.8) -- (on top of the earth floor)
 local spot = post("GardenSpot1", spotCf, 0.15, 3.6, Color3.fromRGB(232, 200, 120))
 spot.Material = Enum.Material.Fabric
 local mark = Instance.new("Attachment")
@@ -126,7 +127,7 @@ part("CanSpout", Vector3.new(0.25, 0.25, 1.6), at(1.8, 1.1, -1.4) * CFrame.Angle
 
 
 -- ===== low picket fence, open at the front =====
-local FX, FZ0, FZ1 = 13, -9, 15
+local FX, FZ0, FZ1 = 18, -12, 21
 local function fenceRun(x0: number, z0: number, x1: number, z1: number)
 	local from, to = Vector3.new(x0, 0, z0), Vector3.new(x1, 0, z1)
 	local len = (to - from).Magnitude
@@ -149,12 +150,12 @@ fenceRun(-FX, FZ0, -4, FZ0) -- front, left of the opening
 fenceRun(4, FZ0, FX, FZ0) -- front, right of the opening
 
 -- A straight line of three flat stepping stones on the earth, from the opening to the mat.
-for _, z in { -7.6, -4.8, -2 } do
+for _, z in { -10.6, -6.7, -2.8 } do
 	post("SteppingStone", at(0, 0.3, z), 0.2, 2.2, Color3.fromRGB(196, 190, 176)).Material = Enum.Material.Slate
 end
 
 -- ===== the area's signpost (carrot icon) and props =====
-local signCf = at(-6.5, 0, FZ0 - 1.5)
+local signCf = at(-9, 0, FZ0 - 1.5)
 post("SignPost", signCf * CFrame.new(0, 2, 0), 4, 0.6, HONEY_DARK)
 local sign = part("Sign", Vector3.new(3, 2, 0.35), signCf * CFrame.new(0, 3.6, -0.4), HONEY)
 local gui = Instance.new("SurfaceGui")
@@ -170,18 +171,18 @@ icon.Parent = gui
 gui.Parent = sign
 
 -- A water barrel inside the fence corner (the round seed sack was taken out: the owner, no balls).
-post("Barrel", at(-10.5, 1.4, 12.5), 2.8, 2.6, HONEY_DARK).Material = Enum.Material.Wood
-post("BarrelWater", at(-10.5, 2.82, 12.5), 0.05, 2.2, Color3.fromRGB(90, 170, 220))
+post("Barrel", at(-14.7, 1.4, 17.5), 2.8, 2.6, HONEY_DARK).Material = Enum.Material.Wood
+post("BarrelWater", at(-14.7, 2.82, 17.5), 0.05, 2.2, Color3.fromRGB(90, 170, 220))
 for _, y in { 0.5, 2.3 } do
-	post("BarrelHoop", at(-10.5, y, 12.5), 0.25, 2.75, Color3.fromRGB(110, 110, 116))
+	post("BarrelHoop", at(-14.7, y, 17.5), 0.25, 2.75, Color3.fromRGB(110, 110, 116))
 end
 
 -- One flowering bush outside the fence corner.
 for k, o in { { 0, 0, 1 }, { 1.1, 0.4, 0.8 }, { -1, 0.3, 0.75 } } do
-	part("Bush", Vector3.one * 3.4 * o[3], at(16.5 + o[1], 1.6 * o[3], 13 + o[2]), if k == 1 then LEAF else LEAF_LIGHT, Enum.PartType.Ball)
+	part("Bush", Vector3.one * 3.4 * o[3], at(21.5 + o[1], 1.6 * o[3], 18 + o[2]), if k == 1 then LEAF else LEAF_LIGHT, Enum.PartType.Ball)
 end
 for k = 1, 3 do
-	part("Flower", Vector3.one * 0.6, at(16.5 + math.sin(k * 2) * 1.6, 3.1, 13 + math.cos(k * 2) * 1.2), Color3.fromRGB(255, 252, 240), Enum.PartType.Ball)
+	part("Flower", Vector3.one * 0.6, at(21.5 + math.sin(k * 2) * 1.6, 3.1, 18 + math.cos(k * 2) * 1.2), Color3.fromRGB(255, 252, 240), Enum.PartType.Ball)
 end
 
 model.Parent = plotModel or workspace

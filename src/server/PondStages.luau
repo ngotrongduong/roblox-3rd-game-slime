@@ -25,7 +25,9 @@ PondStages.kitPlace = nil :: ((Instance, CFrame, string, number, number, number,
 
 -- the dock, in the pond's frame: along +Z from the shore, the same size as the level-1 dock
 local WIDTH = 6
-local Z0, Z1 = -15, 4
+-- (the village scale, 2026-10-30: the pond and all round it spread by PK = 1.3; the dock runs from the new bank)
+local Z0, Z1 = -19.5, 5.2
+local PK = 1.3
 local DECK_Y = 1.1
 
 export type Tier = {
@@ -260,12 +262,12 @@ end
 -- the lawn round the pond may be used, and the pond may grow"), never smaller again: a lobe on its
 -- left at 21 and one on its right at 41 (area-local x, z, radius, from which level), carved out of the
 -- stud floor and filled with real water like the level-1 pond (tools/map/pond_water_l1).
-local LOBES = { { 0, 5, 16 }, { 9, 11, 11 }, { -9, 2, 11 } }
-local GROW = { { 15, 1, 7.5, 21 }, { -14, -5, 7, 41 } }
+local LOBES = { { 0, 6.5, 20.8 }, { 11.7, 14.3, 14.3 }, { -11.7, 2.6, 14.3 } }
+local GROW = { { 19.5, 1.3, 9.75, 21 }, { -18.2, -6.5, 9.1, 41 } }
 local DOCK_X = -3 -- the dock's line in the area (AreaUpgrade's DOCK_X)
 local WATER_Y = -2.3 -- the water's surface in the area's frame
 local JETTY_Y = -1 -- the small jetty's planks, down on the sand step (the owner: touching the ground)
-local LIGHTHOUSE = Vector3.new(0, 0, 30.5) -- the garden's back corner (the area sits turned: it is behind the pond)
+local LIGHTHOUSE = Vector3.new(0, 0, 39.6) -- the garden's back corner (the area sits turned: it is behind the pond)
 -- Life round the pond, growing each era and never taken away (kit model, x, z, real height, the
 -- widest it may be, turn, from which level, lift): a bench on the bank; a net rack by the bank path;
 -- a cooler by the jetty on the new left lobe; a glowing buoy in the right lobe. (No boat, rods or
@@ -280,12 +282,12 @@ local SHORE: { { any } } = {
 
 -- room kept clear of scenery for what `build` makes from parts (x, z, radius, from which level)
 local CLEAR = {
-	{ 16.2, -19.2, 5.5, 11 },
-	{ 8, -15, 6, 11 },
-	{ 15.5, -12, 2.5, 21 },
-	{ -12.6, -12, 2.5, 1 },
-	{ -14, -14.6, 2.5, 41 },
-	{ 0, 30.5, 6, 41 },
+	{ 21, -25, 5.5, 11 },
+	{ 10.4, -19.5, 6, 11 },
+	{ 20.2, -15.6, 2.5, 21 },
+	{ -16.4, -15.6, 2.5, 1 },
+	{ -18.2, -19, 2.5, 41 },
+	{ 0, 39.6, 6, 41 },
 	{ Config.WorkPlaces.FishRock.x, Config.WorkPlaces.FishRock.z, 4, 1 }, -- the blue rock
 	{ Config.WorkPlaces.FishBin[1], Config.WorkPlaces.FishBin[2], 3, 1 }, -- the fish bin
 }
@@ -348,7 +350,7 @@ function PondStages.grow(pond: Instance, frame: CFrame, level: number)
 				end
 			end
 			for _, s in SHORE do
-				if level >= s[7] and Vector2.new(q.X - s[2], q.Z - s[3]).Magnitude < s[5] / 2 + 2 then
+				if level >= s[7] and Vector2.new(q.X - s[2] * PK, q.Z - s[3] * PK).Magnitude < s[5] / 2 + 2 then
 					clear = true
 				end
 			end
@@ -517,7 +519,9 @@ function PondStages.build(level: number, cell: CFrame, showcase: boolean?): Mode
 	-- 4 a bait box by the shore end of the deck
 	if at[4] > 0 then
 		local b = TIERS[at[4]]
-		local base = cell * CFrame.new(1.4, DECK_Y + 0.25, Z0 + 3)
+		-- (on the lawn beside the dock's shore end, not on the deck: between the rails it left too narrow a
+		-- way for the slimes' path agent, 2026-10-30)
+		local base = cell * CFrame.new(WIDTH / 2 + 1.4, 0, Z0 + 1.6)
 		part(m, "BaitBox", Vector3.new(1.8, 1, 1.2), base * CFrame.new(0, 0.5, 0), b.box, b.boxMat)
 		part(m, "BaitLid", Vector3.new(1.95, 0.2, 1.35), base * CFrame.new(0, 1.1, 0), b.accent, b.accentMat)
 		for _, dx in { -0.6, 0.6 } do
@@ -647,7 +651,7 @@ function PondStages.build(level: number, cell: CFrame, showcase: boolean?): Mode
 	)
 	for _, s in SHORE do
 		if place and level >= s[7] then
-			local model = place(m, area, s[1], s[2], s[3], s[4], s[5], s[8])
+			local model = place(m, area, s[1], s[2] * PK, s[3] * PK, s[4], s[5], s[8])
 			if model and s[6] ~= 0 then
 				local box = model:GetBoundingBox()
 				local centre = CFrame.new(box.Position)
@@ -659,7 +663,7 @@ function PondStages.build(level: number, cell: CFrame, showcase: boolean?): Mode
 	-- a bollard at its end
 	if level >= 21 then
 		local j = TIERS[at[1]]
-		local jx, jz0, jz1 = 15, -8.6, 0.4 -- (8 studs out: a real second fishing spot)
+		local jx, jz0, jz1 = 19.5, -10.5, 0.5 -- (8 studs out: a real second fishing spot)
 		local k = 0
 		local jz = jz0
 		while jz < jz1 do
@@ -692,10 +696,10 @@ function PondStages.build(level: number, cell: CFrame, showcase: boolean?): Mode
 	local dark = Color3.fromRGB(110, 76, 48)
 	local rope = Color3.fromRGB(226, 196, 140)
 	local function at2(px: number, py: number, pz: number): CFrame
-		return area * CFrame.new(px, py, pz)
+		return area * CFrame.new(px * PK, py, pz * PK) -- (written for the old pond, spread)
 	end
 	local function plankRun(name: string, x0: number, z0: number, x1: number, z1: number, w: number)
-		local a, b = Vector3.new(x0, 0, z0), Vector3.new(x1, 0, z1)
+		local a, b = Vector3.new(x0, 0, z0) * PK, Vector3.new(x1, 0, z1) * PK
 		local len = (b - a).Magnitude
 		local dir = (b - a).Unit
 		local n = math.max(1, math.floor(len / 1.1))
@@ -705,7 +709,7 @@ function PondStages.build(level: number, cell: CFrame, showcase: boolean?): Mode
 				m,
 				name,
 				Vector3.new(w, 0.12, 0.95),
-				at2(p.X, 0.06, p.Z) * CFrame.lookAt(Vector3.zero, dir),
+				area * CFrame.new(p.X, 0.06, p.Z) * CFrame.lookAt(Vector3.zero, dir),
 				if k % 2 == 0 then wood else Color3.fromRGB(196, 146, 96),
 				woodMat
 			).CastShadow =
@@ -717,7 +721,7 @@ function PondStages.build(level: number, cell: CFrame, showcase: boolean?): Mode
 		-- the open fishing shed, turned toward the entrance so its open front, counter and net face the
 		-- path and the way in (ChatGPT's 2nd pond review): four posts, a roof sloping to the back, a
 		-- back wall, a bait counter at the front with fish on it, a net hung inside, a rod by a post
-		local shed = area * CFrame.new(16.2, 0, -19.2) * CFrame.Angles(0, math.rad(35), 0) -- its -z: the front
+		local shed = area * CFrame.new(16.2 * PK, 0, -19.2 * PK) * CFrame.Angles(0, math.rad(35), 0) -- its -z: the front
 		local function sh(px: number, py: number, pz: number): CFrame
 			return shed * CFrame.new(px, py, pz)
 		end
@@ -856,7 +860,7 @@ function PondStages.build(level: number, cell: CFrame, showcase: boolean?): Mode
 		part(m, "StoolLeg", Vector3.new(0.25, 1.7, 0.25), base * CFrame.new(o[1], 0.85, o[2]), dark, woodMat)
 	end
 	if place and level < 41 then
-		place(m, area, "FishBucket", fx + face.Z * 2.4, fz - face.X * 2.4, 1.8, 1.5, 0)
+		place(m, area, "FishBucket", fx * PK + face.Z * 2.4, fz * PK - face.X * 2.4, 1.8, 1.5, 0)
 	end
 	-- the back bank, left natural: reeds, round stones at the water's edge, a log half sunk
 	if level >= 31 then

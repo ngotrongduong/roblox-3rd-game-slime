@@ -28,8 +28,11 @@ GardenStages.MaxLevel = 50
 local TIERS = PantryStages.Tiers
 local part, wedge, place = PantryStages.part, PantryStages.wedge, PantryStages.place
 
--- the fence (inside the area's frame): x from -13 to 13, z from -9 (front, gate x -4..4) to 15
-local FX, FZ0, FZ1, GATE = 13, -9, 15, 4
+-- the fence (inside the area's frame): x from -18 to 18, z from -12 (front, gate x -4..4) to 21
+-- (the village scale, 2026-10-30: the layout spread by about 1.4 from x +-13, z -9..15; the beds stand 11 studs
+-- apart, every prop keeps its size; the comments below give the old layout's words, the numbers are the new)
+local FX, FZ0, FZ1, GATE = 18, -12, 21, 4
+local K = 1.4 -- the spread of every position written in the old layout
 
 -- The garden props, each placed for what it DOES (the owner, 2026-10-28: ask of every piece "does it
 -- belong here, is this the right spot, what goes beside it"; inside the fence where it works, outside
@@ -241,7 +244,7 @@ function GardenStages.build(area: Instance, frame: CFrame, level: number): Model
 
 	-- From the shed's era the garden grows 4 studs at the back, so the shed stands clear of the beds
 	-- with a proper walk between (the owner, 2026-10-28): a strip of floor and the fence moved back.
-	local back = if builds[1] then FZ1 + 4 else FZ1
+	local back = if builds[1] then FZ1 + 5 else FZ1
 	-- the two sunflowers of the scenery go back against the fence as soon as the garden grows (the
 	-- owner, 2026-10-28: by the beds they pressed into the greenhouse's corner)
 	local nature: Instance = area:FindFirstChild("Nature") or area
@@ -293,7 +296,7 @@ function GardenStages.build(area: Instance, frame: CFrame, level: number): Model
 		Color3.fromRGB(40, 90, 96), -- slime tech
 		Color3.fromRGB(236, 230, 218), -- marble
 	})[pt]
-	local zFrom, zTo = FZ0 - 0.2, -0.4
+	local zFrom, zTo = FZ0 - 0.2, -0.4 * K
 	part(
 		m,
 		"PathBand",
@@ -314,7 +317,7 @@ function GardenStages.build(area: Instance, frame: CFrame, level: number): Model
 			)
 		end
 	end
-	local slabs: { number } = if pt >= 4 then { -7.6, -5.5, -3.4, -1.3 } else { -7.6, -4.8, -2 }
+	local slabs: { number } = if pt >= 4 then { -10.6, -7.7, -4.8, -1.9 } else { -10.6, -6.7, -2.8 }
 	for k, z in ipairs(slabs) do
 		local w = if pt >= 4 then 2.6 else 1.7 + (k % 2) * 0.3
 		part(
@@ -327,7 +330,7 @@ function GardenStages.build(area: Instance, frame: CFrame, level: number): Model
 		)
 	end
 	if pt >= 6 then
-		for _, z in { FZ0 + 0.6, -4.45 } do
+		for _, z in { FZ0 + 0.6, -4.45 * K } do
 			part(
 				m,
 				"GoldStrip",
@@ -344,7 +347,7 @@ function GardenStages.build(area: Instance, frame: CFrame, level: number): Model
 	-- flower box, tools hung on the wall, battens on timber)
 	if builds[1] then
 		-- (bigger, ChatGPT's reviews; in the back strip, a 4-stud walk from the beds)
-		local sx, sz, w, d, h = -9.8, 16.6, 6, 4.2, 4.8
+		local sx, sz, w, d, h = -9.8 * K, back - 3.2, 6, 4.2, 4.8
 		local at = function(x: number, y: number, z: number): CFrame
 			return frame * CFrame.new(sx + x, y, sz + z)
 		end
@@ -431,7 +434,7 @@ function GardenStages.build(area: Instance, frame: CFrame, level: number): Model
 			)
 		end
 		-- a potting bench by the fence in front of the shed, two pots and a seedling tray on it
-		local bench = frame * CFrame.new(-12.1, 0, 8.6)
+		local bench = frame * CFrame.new(-FX + 0.9, 0, 8.6 * K)
 		part(m, "BenchTop", Vector3.new(0.9, 0.15, 2.2), bench * CFrame.new(0, 1.1, 0), wood, Enum.Material.WoodPlanks)
 		for _, dz in { -0.95, 0.95 } do
 			part(m, "BenchLeg", Vector3.new(0.7, 1.05, 0.15), bench * CFrame.new(0, 0.52, dz), wood, Enum.Material.Wood)
@@ -684,7 +687,8 @@ function GardenStages.build(area: Instance, frame: CFrame, level: number): Model
 	-- a 4.8-wide door with two glass leaves swung open; a knee wall with a light cap; a ridge vent and
 	-- finials; on marble a white frame, stone corner pilasters and gold only on the finials and vent.
 	if builds[3] then
-		local x0, x1, z0, z1, eave, ridge = -9.8, 9.8, -2.8, 10.8, 6.4, 9.6
+		-- (over both beds of the village scale, which stand 1.4 times as far apart)
+		local x0, x1, z0, z1, eave, ridge = -9.8 * K, 9.8 * K, -2.8 * K + 1, 10.8 * K - 1, 6.4, 10.4
 		local zc = (z0 + z1) / 2
 		local glass = Color3.fromRGB(196, 232, 246)
 		local marble = tiers[5] >= 6
@@ -887,13 +891,15 @@ function GardenStages.build(area: Instance, frame: CFrame, level: number): Model
 		-- a pipe from it behind the fence and in at the back to two sprinkler heads over the beds
 		-- (FarmWindmill: a slim lattice tower, a 7-stud rotor, a tank at its foot; ChatGPT's 2nd review:
 		-- the old one read as a barrel on scaffolding)
-		place(m, frame, "FarmWindmill", -19, 15, 18, 11)
+		place(m, frame, "FarmWindmill", -FX - 7, 15 * K, 18, 11)
 		local pipe = Color3.fromRGB(70, 130, 170)
+		-- (the bed ends of the village scale: z 11.7; the pipe runs behind the greenhouse to the windmill)
+		local pz = 10.8 * K + 0.6
 		part(
 			m,
 			"IrrigationPipe",
-			Vector3.new(19, 0.22, 0.22), -- (in front of the shed, behind the greenhouse)
-			frame * CFrame.new(-9.5, 0.35, 12.8),
+			Vector3.new(FX + 7, 0.22, 0.22), -- (in front of the shed, behind the greenhouse)
+			frame * CFrame.new(-(FX + 7) / 2, 0.35, pz + 1.4),
 			pipe,
 			Enum.Material.Metal
 		)
@@ -901,24 +907,24 @@ function GardenStages.build(area: Instance, frame: CFrame, level: number): Model
 			m,
 			"IrrigationPipe",
 			Vector3.new(0.22, 0.22, 1.6),
-			frame * CFrame.new(0, 0.35, 12.1),
+			frame * CFrame.new(0, 0.35, pz + 0.7),
 			pipe,
 			Enum.Material.Metal
 		)
 		part(
 			m,
 			"IrrigationPipe",
-			Vector3.new(9.4, 0.22, 0.22),
-			frame * CFrame.new(0, 0.35, 11.4),
+			Vector3.new(4.6 * K * 2 + 0.2, 0.22, 0.22),
+			frame * CFrame.new(0, 0.35, pz),
 			pipe,
 			Enum.Material.Metal
 		)
-		for _, x in { -4.6, 4.6 } do
+		for _, x in { -4.6 * K, 4.6 * K } do
 			part(
 				m,
 				"PipeRiser",
 				Vector3.new(0.22, 2.1, 0.22),
-				frame * CFrame.new(x, 1.4, 11.4),
+				frame * CFrame.new(x, 1.4, pz),
 				pipe,
 				Enum.Material.Metal
 			)
@@ -926,7 +932,7 @@ function GardenStages.build(area: Instance, frame: CFrame, level: number): Model
 				m,
 				"PipeArm",
 				Vector3.new(0.22, 0.22, 1.4),
-				frame * CFrame.new(x, 2.45, 10.75),
+				frame * CFrame.new(x, 2.45, pz - 0.65),
 				pipe,
 				Enum.Material.Metal
 			)
@@ -934,7 +940,7 @@ function GardenStages.build(area: Instance, frame: CFrame, level: number): Model
 				m,
 				"SprinklerHead",
 				Vector3.new(0.5, 0.18, 0.18),
-				frame * CFrame.new(x, 2.45, 10.05),
+				frame * CFrame.new(x, 2.45, pz - 1.35),
 				Color3.fromRGB(60, 60, 66),
 				Enum.Material.Metal
 			)
@@ -949,7 +955,8 @@ function GardenStages.build(area: Instance, frame: CFrame, level: number): Model
 	local nowEra = math.clamp(math.ceil(level / 10), 1, 5)
 	for _, s in SURROUND do
 		if nowEra >= s[7] then
-			local prop = place(m, frame, s[1], s[2], s[3], s[4], s[5], floorAt(s[2], s[3]))
+			local sx, sz = s[2] * K, s[3] * K
+			local prop = place(m, frame, s[1], sx, sz, s[4], s[5], floorAt(sx, sz))
 			if prop and s[6] ~= 0 then
 				local box = prop:GetBoundingBox()
 				local centre = CFrame.new(box.Position)
@@ -964,13 +971,13 @@ function GardenStages.build(area: Instance, frame: CFrame, level: number): Model
 		if era > 0 then
 			local slot = SPOT[j][era]
 			local name = PROPS[j][era]
-			local x, z, yaw = slot[1], slot[2], slot[3]
+			local x, z, yaw = slot[1] * K, slot[2] * K, slot[3]
 			if builds[3] and j == 4 then
 				-- once the greenhouse stands the side strip is a walk: the bird scarer moves to the
 				-- empty front-right corner, facing the beds (the owner, 2026-10-28)
-				x, z, yaw = -10.4, -6.6, 180
+				x, z, yaw = -10.4 * K, -6.6 * K, 180
 			elseif builds[3] and j == 1 and era == 3 then
-				x, z = -7.4, -4.4 -- (the hand pump makes room for it, the one level they meet)
+				x, z = -7.4 * K, -4.4 * K -- (the hand pump makes room for it, the one level they meet)
 			end
 			local lift = (slot[6] or 0) + floorAt(x, z)
 			-- small parts that say what a prop is for (ChatGPT's 5th garden review)
@@ -1010,7 +1017,7 @@ function GardenStages.build(area: Instance, frame: CFrame, level: number): Model
 				bucket.CFrame *= CFrame.Angles(0, 0, math.pi / 2)
 			elseif name == "WaterDrone" then
 				-- its dock by the shed, where it rests when it is not flying
-				bit("DroneDock", Vector3.new(1.8, 0.15, 1.8), -5, 0.28, 8.8, teal, Enum.Material.SmoothPlastic)
+				bit("DroneDock", Vector3.new(1.8, 0.15, 1.8), -7, 0.28, 12.5, teal, Enum.Material.SmoothPlastic)
 			elseif name == "GardenBot" then
 				-- a charging pad under it and a charging post beside it
 				bit(

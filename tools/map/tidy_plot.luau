@@ -37,9 +37,17 @@ for _, d in plot:GetDescendants() do
 			r = math.max(size.X, size.Z) / 2
 			local edge = math.max(math.abs(p.X), math.abs(p.Z))
 			if edge + r > INSIDE then
+				-- (never below 3/4 of the size it had before the first tidy: each rerun used to shrink the
+				-- same trees again, 2026-10-30)
+				local base = d:GetAttribute("TidyBaseScale")
+				if base == nil then
+					base = d:GetScale()
+					d:SetAttribute("TidyBaseScale", base)
+				end
 				local k = math.max(0.6, (INSIDE - edge) / r)
+				local target = math.max((base :: number) * 0.75, d:GetScale() * k)
 				local foot = box.Position - Vector3.new(0, size.Y / 2, 0)
-				d:ScaleTo(d:GetScale() * k)
+				d:ScaleTo(target)
 				local b2, s2 = d:GetBoundingBox()
 				d:PivotTo(d:GetPivot() + (foot - (b2.Position - Vector3.new(0, s2.Y / 2, 0))))
 				shrunk += 1

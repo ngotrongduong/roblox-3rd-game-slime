@@ -63,8 +63,10 @@ end
 
 -- ===== terrain: the pond =====
 -- Grass back over the old round pond, then a soft three-lobed pond with a sandy rim.
-terrain:FillCylinder(at(0, -4, 0), 8, 26, Enum.Material.Grass)
-local lobes = { { 0, 5, 16 }, { 9, 11, 11 }, { -9, 2, 11 } }
+-- (the village scale, 2026-10-30: the pond and all round it 1.3 times the old; src/server/PondStages LOBES)
+local PK = 1.3
+terrain:FillCylinder(at(0, -4, 0), 8, 34, Enum.Material.Grass)
+local lobes = { { 0, 6.5, 20.8 }, { 11.7, 14.3, 14.3 }, { -11.7, 2.6, 14.3 } }
 for _, l in lobes do
 	terrain:FillCylinder(at(l[1], -2, l[2]), 4, l[3] + 3.5, Enum.Material.Sand)
 end
@@ -75,7 +77,7 @@ end
 
 -- ===== the dock =====
 -- From the front shore straight out over the water: planks across, two tones, small gaps.
-local dockX, dockStart, dockEnd, dockY = -3, -15, 4, 1.1
+local dockX, dockStart, dockEnd, dockY = -3, -19.5, 5.2, 1.1
 local plankDepth = 1.6
 local i = 0
 for z = dockStart, dockEnd, plankDepth + 0.15 do
@@ -170,15 +172,15 @@ local function reeds(x: number, z: number)
 		end
 	end
 end
-reeds(13, 19)
-reeds(-17, 11)
-for _, p in { { 7, 8 }, { 3, 15 }, { -8, 6 } } do
+reeds(13 * PK, 19 * PK)
+reeds(-17 * PK, 11 * PK)
+for _, p in { { 9.1, 10.4 }, { 3.9, 19.5 }, { -10.4, 7.8 } } do
 	post("LilyPad", at(p[1], WATER_Y + 0.05, p[2]), 0.12, 2.8, LEAF)
 end
-part("LilyFlower", Vector3.new(0.8, 0.6, 0.8), at(3, WATER_Y + 0.4, 15), Color3.fromRGB(250, 190, 210), Enum.PartType.Ball)
+part("LilyFlower", Vector3.new(0.8, 0.6, 0.8), at(3.9, WATER_Y + 0.4, 19.5), Color3.fromRGB(250, 190, 210), Enum.PartType.Ball)
 -- Round stones on the shore, two or three together.
 for _, s in { { -19, -6, 2.8 }, { -16.5, -8, 1.8 }, { 18, 6, 2.4 }, { 19.5, 3.5, 1.6 }, { 7, -12, 1.8 } } do
-	part("Stone", Vector3.new(s[3] * 1.3, s[3] * 0.8, s[3]), at(s[1], s[3] * 0.38, s[2]) * CFrame.Angles(0, s[1], 0), STONE, Enum.PartType.Ball, Enum.Material.Slate)
+	part("Stone", Vector3.new(s[3] * 1.3, s[3] * 0.8, s[3]), at(s[1] * PK, s[3] * 0.38, s[2] * PK) * CFrame.Angles(0, s[1], 0), STONE, Enum.PartType.Ball, Enum.Material.Slate)
 end
 -- Two soft bushes framing the pond, with a few white flowers.
 local function bush(x: number, z: number, s: number)
@@ -189,8 +191,8 @@ local function bush(x: number, z: number, s: number)
 		part("Flower", Vector3.one * 0.6, at(x + math.sin(k * 2) * 1.6 * s, 3.1 * s, z + math.cos(k * 2) * 1.2 * s), Color3.fromRGB(255, 252, 240), Enum.PartType.Ball)
 	end
 end
-bush(-15, 17, 1.2)
-bush(17, -4, 1)
+bush(-15 * PK, 17 * PK, 1.2)
+bush(17 * PK, -4 * PK, 1)
 
 model.Parent = plotModel or workspace
 return "fishing pond L1 built: " .. #model:GetChildren() .. " parts"

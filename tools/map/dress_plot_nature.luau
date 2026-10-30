@@ -64,7 +64,10 @@ local function dress(areaName: string, area: CFrame, items: { { any } }): number
 	local folder = Instance.new("Folder")
 	folder.Name = "Nature"
 	for _, it in items do
-		put(folder, area, it[1], it[2], it[3], it[4], it[5], it[6])
+		-- (positions written for the old 160 plot, spread for the village scale, 2026-10-30: the pond by 1.3,
+		-- the garden by 1.4, as src/server/PondStages and GardenStages)
+		local k = if areaName == "FishingPondL1" then 1.3 else 1.4
+		put(folder, area, it[1], it[2] * k, it[3] * k, it[4], it[5], it[6])
 	end
 	folder.Parent = m
 	return #items

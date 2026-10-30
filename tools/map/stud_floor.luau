@@ -19,7 +19,8 @@ local THICK = 2 -- tiles reach down to GROUND - THICK, so the pool shows green w
 local COARSE, FINE = 8, 2
 local GRASS = Color3.fromRGB(104, 178, 62)
 local SAND = Color3.fromRGB(232, 206, 142)
-local LOBES = { { 0, 5, 16 }, { 9, 11, 11 }, { -9, 2, 11 } } -- the pond, fishing-area local x, z, r
+-- the pond, fishing-area local x, z, r (the village scale: 1.3 times the old; src/server/PondStages LOBES)
+local LOBES = { { 0, 6.5, 20.8 }, { 11.7, 14.3, 14.3 }, { -11.7, 2.6, 14.3 } }
 
 local half = Config.Map.PlotSize / 2
 local plotFrame = Layout.plotFrame(PLOT)

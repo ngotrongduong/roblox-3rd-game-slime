@@ -57,14 +57,14 @@ do
 	end
 	local camp = Vector3.new(-Config.Map.PlotSize / 3, 0, -Config.Map.PlotSize / 3)
 	PATHS = {
-		areaFront(0, 1, 0, -11.5), -- pantry
-		areaFront(-1, 1, -3, -18), -- fishing pond
+		areaFront(0, 1, 0, -15.5), -- pantry
+		areaFront(-1, 1, -3, -23), -- fishing pond
 		areaFront(-1, 0, 0, -10.5), -- kitchen
 		areaFront(-1, -1, 0, -13.5), -- training ground
 		{ 180, Config.Map.PlotSize / 2 - 1 }, -- the gate
 		{ math.deg(math.atan2(camp.X, camp.Z)), camp.Magnitude - (CAMP_R - 2) }, -- campfire
 		areaFront(1, 0, 4, -20), -- breeding pen
-		areaFront(1, 1, 0, -10), -- garden
+		areaFront(1, 1, 0, -13), -- garden
 	}
 end
 -- the gaps between the paths, round the plaza (degrees): halfway from each path to the next clockwise

@@ -14,7 +14,8 @@ local TOP = GROUND - 0.3 -- the water's surface, just under the floor (the owner
 local area = Layout.plotAreaFacing(PLOT, -1, 1)
 local pond = workspace.Map["Plot" .. PLOT].FishingPondL1
 -- The pond's lobes as the builder carved them: local x, z, radius.
-local LOBES = { { 0, 5, 16 }, { 9, 11, 11 }, { -9, 2, 11 } }
+-- (the village scale: 1.3 times the old, src/server/PondStages LOBES)
+local LOBES = { { 0, 6.5, 20.8 }, { 11.7, 14.3, 14.3 }, { -11.7, 2.6, 14.3 } }
 
 local terrain = workspace.Terrain
 terrain.WaterColor = Color3.fromRGB(70, 175, 205)
@@ -74,7 +75,7 @@ if fishKit then
 	for i, f in FISH do
 		local m = (fishKit:FindFirstChild(f[1]) :: Model):Clone()
 		m.Name = f[1]
-		local p = (area * CFrame.new(f[2], 0, f[3])).Position
+		local p = (area * CFrame.new(f[2] * 1.3, 0, f[3] * 1.3)).Position -- (the pond of the village scale)
 		-- just under the surface: deeper, the water's tint hides them
 		local centre = Vector3.new(p.X, TOP - 1.25 - (i % 2) * 0.25, p.Z)
 		m:PivotTo(CFrame.new(centre + Vector3.new(f[4], 0, 0)))

@@ -197,8 +197,10 @@ local function buildPlot(plot: number)
 			end
 			anchor = folder:FindFirstChild("Nest") :: BasePart
 		end
-		local text = if area.id == "gate" then "Plot " .. plot else AREA_NAMES[area.id]
-		label(anchor, text, if area.id == "gate" then 5 else 16)
+		-- (no floating names over the plots' areas: they showed at the top of the screen from the home
+		-- plot, 2026-10-30; the anchor is kept for a later real sign)
+		local _ = anchor
+		local _ = AREA_NAMES
 	end
 	folder.Parent = root
 end

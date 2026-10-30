@@ -74,10 +74,11 @@ local function wedge(name: string, size: Vector3, cf: CFrame, colour: Color3)
 end
 
 -- ===== the yard: grey stone studs =====
-local yard = part("Floor", Vector3.new(24, 0.4, 20), at(0, 0.2, 0), STONE, nil, Enum.Material.Plastic)
+-- (the village scale, 2026-10-30: x +-16.8, z -14..10; was x +-12, z -10..10; src/server/PantryStages YARD_X)
+local yard = part("Floor", Vector3.new(33.6, 0.4, 24), at(0, 0.2, -2), STONE, nil, Enum.Material.Plastic)
 yard.TopSurface = Enum.SurfaceType.Studs
 yard.CastShadow = false
-for _, b in { { 0, 10.5, 26, 1 }, { 0, -10.5, 26, 1 }, { 12.5, 0, 1, 20 }, { -12.5, 0, 1, 20 } } do
+for _, b in { { 0, 10.5, 35.6, 1 }, { 0, -14.5, 35.6, 1 }, { 17.3, -2, 1, 24 }, { -17.3, -2, 1, 24 } } do
 	local e = part("FloorEdge", Vector3.new(b[3], 0.6, b[4]), at(b[1], 0.3, b[2]), Color3.fromRGB(150, 146, 138), nil, Enum.Material.Plastic)
 	e.TopSurface = Enum.SurfaceType.Studs
 	e.CastShadow = false
@@ -157,7 +158,7 @@ barrel(at(8.2, 0.4, -4.4))
 -- (the two round grain sacks here were taken out: the owner, 2026-10-27)
 
 -- ===== the area's signpost (box icon) =====
-local signCf = at(-3.5, 0, -11.5)
+local signCf = at(-3.5, 0, -15.5)
 post("SignPost", signCf * CFrame.new(0, 2, 0), 4, 0.6, HONEY_DARK)
 local sign = part("Sign", Vector3.new(3, 2, 0.35), signCf * CFrame.new(0, 3.6, -0.4), HONEY)
 local gui = Instance.new("SurfaceGui")
@@ -189,12 +190,12 @@ if lib then
 		m:PivotTo(m:GetPivot() + (target - box.Position))
 		m.Parent = nature
 	end
-	put("Bush", -15, 10, 0.85, 0)
-	put("FloweringBush", 15.5, 9, 0.8, 40)
-	put("Fern", -14.5, -6, 1.2, 0)
-	put("GrassTuft", 14.5, -7, 1.3, 70)
-	put("FlowerPatch", 3, -12, 1.1, 0)
-	put("FlowerPatch", -10, -12.5, 1.0, 120)
+	put("Bush", -20, 10, 0.85, 0)
+	put("FloweringBush", 20.5, 9, 0.8, 40)
+	put("Fern", -19.5, -6, 1.2, 0)
+	put("GrassTuft", 19.5, -7, 1.3, 70)
+	put("FlowerPatch", 3, -16, 1.1, 0)
+	put("FlowerPatch", -10, -16.5, 1.0, 120)
 	nature.Parent = model
 end
 

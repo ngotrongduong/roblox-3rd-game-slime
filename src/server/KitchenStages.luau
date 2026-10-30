@@ -665,19 +665,19 @@ function KitchenStages.build(area: Instance, frame: CFrame, level: number): Mode
 	end
 	local red, pinkShade, cream =
 		Color3.fromRGB(220, 80, 80), Color3.fromRGB(240, 150, 180), Color3.fromRGB(250, 236, 200)
-	blanket(19, -5, red)
+	blanket(23, -5, red) -- (the village scale: the picnic ground 4 studs farther from the kitchen)
 	if era >= 2 then
-		picnicTable(-15.2, -0.8)
-		blanket(21, -10, Color3.fromRGB(90, 140, 220))
+		picnicTable(-19.2, -0.8)
+		blanket(25, -10, Color3.fromRGB(90, 140, 220))
 	end
 	if era >= 3 then
-		picnicTable(-21, -0.8, pinkShade)
+		picnicTable(-25, -0.8, pinkShade)
 	end
 	if era >= 4 then
-		picnicTable(20, 1.2, cream)
+		picnicTable(24, 1.2, cream)
 		-- string lights over the right-hand tables
 		local corners =
-			{ Vector3.new(-13, 0, -3.8), Vector3.new(-23, 0, -3.8), Vector3.new(-23, 0, 2.6), Vector3.new(-13, 0, 2.6) }
+			{ Vector3.new(-17, 0, -3.8), Vector3.new(-27, 0, -3.8), Vector3.new(-27, 0, 2.6), Vector3.new(-17, 0, 2.6) }
 		for _, c in corners do
 			part(m, "LightPost", Vector3.new(0.3, 6, 0.3), at(c.X, 3, c.Z), tt.frame, tt.frameMat)
 		end
@@ -708,7 +708,7 @@ function KitchenStages.build(area: Instance, frame: CFrame, level: number): Mode
 			m,
 			"PicnicDeck",
 			Vector3.new(10, 0.12, 6.4),
-			at(-18, 0.06, -0.6),
+			at(-22, 0.06, -0.6),
 			Color3.fromRGB(214, 176, 124),
 			Enum.Material.WoodPlanks
 		)
