@@ -69,12 +69,19 @@ type Actor = {
 	face: Vector3?,
 	-- The fishing place whose rod this slime holds (the stand shows it gone).
 	rod: number?,
+	-- The seat place this slime sits on or walks to (Spots.seats; one slime per place, session.seated).
+	seat: string?,
 }
 type Session = {
 	root: Folder,
 	slimes: Folder,
 	eggs: Folder,
 	spots: { [string]: Spot },
+	-- every place to sit in the plot, and who holds each (seat spot id -> slime id)
+	seats: { Spots.Seat },
+	seated: { [string]: string },
+	-- where the storehouse's Deposit store prompt stands (its sign), nil = at the storehouse spot
+	sign: Vector3?,
 	actors: { [string]: Actor },
 	reserved: { [string]: string },
 	rng: typeof(Rng.new(0)),
@@ -123,6 +130,11 @@ end
 
 local function point(s: Spot): Vector3
 	return Vector3.new(s.x, s.y, s.z)
+end
+
+local function campfirePoint(spots: { [string]: Spot }): Vector3?
+	local fire = spots.campfire
+	return if fire and not fire.guessed then Vector3.new(fire.x, fire.y, fire.z) else nil
 end
 
 local function facing(s: Spot): Vector3?
@@ -236,6 +248,58 @@ local function claim(session: Session, id: string, action: Action)
 	for _, key in Brain.reservationKeys(action) do
 		session.reserved[key] = id
 	end
+end
+
+local function freeSeat(session: Session, id: string, actor: Actor?)
+	for seatId, holder in session.seated do
+		if holder == id then
+			session.seated[seatId] = nil
+		end
+	end
+	if actor then
+		actor.seat = nil
+	end
+end
+
+local function seatById(session: Session, id: string): Spots.Seat?
+	for _, seat in session.seats do
+		if seat.spot.id == id then
+			return seat
+		end
+	end
+	return nil
+end
+
+-- A free seat for a resting slime (the owner, 2026-10-30: resting and sleeping slimes sit on the benches): the one
+-- it already sits on, else the nearest; a slime warming itself takes only a seat near the fire, nearest the fire.
+local function pickSeat(session: Session, id: string, actor: Actor, kind: string): Spots.Seat?
+	local fire = session.spots.campfire
+	local best: Spots.Seat? = nil
+	local bestDistance = math.huge
+	for _, seat in session.seats do
+		local holder = session.seated[seat.spot.id]
+		if holder ~= nil and holder ~= id then
+			continue
+		end
+		local distance: number
+		if actor.current.id == seat.spot.id then
+			distance = -1
+		elseif kind == "warm" then
+			if not fire then
+				continue
+			end
+			distance = Vector3.new(seat.spot.x - fire.x, 0, seat.spot.z - fire.z).Magnitude
+			if distance > Config.Village.SeatWarmStuds then
+				continue
+			end
+		else
+			distance = (point(seat.spot) - point(actor.current)).Magnitude
+		end
+		if distance < bestDistance then
+			best, bestDistance = seat, distance
+		end
+	end
+	return best
 end
 
 -- The progress clock over a slime at work (owner, 2026-10-30): which kind, and when it started and ends in server
@@ -485,6 +549,8 @@ local function show(session: Session, farm: Farm, epoch: number)
 			set(model, "FaceZ", face.Z)
 		end
 		set(model, "Rod", if actor then actor.rod or 0 else 0)
+		-- Sitting on a seat (the clients keep the body on the seat's surface, ToY, instead of the ground under it).
+		set(model, "Seated", actor ~= nil and actor.index == 0 and string.sub(actor.current.id, 1, 5) == "seat:")
 	end
 	for _, inst in slimes:GetChildren() do
 		if not live[inst.Name] then
@@ -493,6 +559,7 @@ local function show(session: Session, farm: Farm, epoch: number)
 			if departing then
 				release(session, inst.Name, departing.action)
 			end
+			freeSeat(session, inst.Name, nil)
 			session.actors[inst.Name] = nil
 		end
 	end
@@ -890,6 +957,7 @@ local function think(
 		release(session, slime.id, actor.action)
 		actor.action = nil
 	end
+	freeSeat(session, slime.id, actor)
 	local nearby: { string } = {}
 	for otherId, other in session.actors do
 		if
@@ -917,9 +985,18 @@ local function think(
 		session.rng
 	)
 	claim(session, slime.id, action)
+	-- Resting, sleeping and warming slimes sit on a free seat when there is one (else they keep the old place).
+	local seat = if action.kind == "sleep" or action.kind == "warm"
+		then pickSeat(session, slime.id, actor, action.kind)
+		else nil
+	if seat then
+		session.seated[seat.spot.id] = slime.id
+		actor.seat = seat.spot.id
+		action.spot = seat.spot.id
+	end
 	actor.action = action
 	actor.babyOnboard = action.kind == "walkBaby" and actor.current.id == "nursery"
-	local target = session.spots[action.spot] or session.spots.plaza
+	local target = if seat then seat.spot else session.spots[action.spot] or session.spots.plaza
 	if action.spot == "player" and playerPoint then
 		target = {
 			id = "player",
@@ -948,7 +1025,7 @@ local function think(
 		-- (where the partner will stand, not the end of its current leg: two slimes walking to each other met
 		-- on one point)
 		target = stopShort(actor.current, partner.route[#partner.route] or partner.current)
-	elseif action.spot ~= "player" then
+	elseif action.spot ~= "player" and not seat then
 		local order = 1
 		for otherId, other in session.actors do
 			local otherSpot = if other.action then session.spots[other.action.spot] else nil
@@ -999,7 +1076,24 @@ local function think(
 		Stats.level(slime.stats),
 		farm.areas.breeding.level - Config.Village.StartLevel
 	)
-	actor.route = route(session, actor, action, target, scale)
+	-- Off a seat: hop down to the ground in front of it first, then walk on from there.
+	local sittingOn = if string.sub(actor.current.id, 1, 5) == "seat:" then seatById(session, actor.current.id) else nil
+	if sittingOn and seat and sittingOn.spot.id == seat.spot.id then
+		actor.route = {}
+	else
+		local seated = actor.current
+		if sittingOn then
+			actor.current = sittingOn.foot
+		end
+		actor.route = route(session, actor, action, if seat then seat.foot else target, scale)
+		if seat then
+			table.insert(actor.route, seat.spot)
+		end
+		if sittingOn then
+			actor.current = seated
+			table.insert(actor.route, 1, sittingOn.foot)
+		end
+	end
 	actor.lastRefresh = clock
 	actor.index = if #actor.route > 0 then 1 else 0
 	actor.hand, actor.face = nil, nil
@@ -1674,7 +1768,8 @@ local function carryPrompt(player: Player, session: Session, spot: string)
 	if not root or not root:IsA("BasePart") or not humanoid or humanoid.Health <= 0 then
 		return
 	end
-	if (root.Position - point(target)).Magnitude > Config.Village.CarryReachStuds then
+	local reachFrom = if spot == "storehouse" and session.sign then session.sign else point(target)
+	if (root.Position - reachFrom).Magnitude > Config.Village.CarryReachStuds then
 		return
 	end
 	local hold = session.carried
@@ -1758,7 +1853,10 @@ local function setupCarry(player: Player, session: Session)
 				Config.Village.PathPointEpsilon,
 				Config.Village.PathPointEpsilon
 			)
-			anchor.Position = point(spot) + Vector3.new(0, Config.Village.CarryPromptHeight, 0)
+			-- (the storehouse's prompt stands at its sign, not on the path in front of the door)
+			anchor.Position = if spot.id == "storehouse" and session.sign
+				then session.sign
+				else point(spot) + Vector3.new(0, Config.Village.CarryPromptHeight, 0)
 			anchor.Parent = session.root
 			local prompt = Instance.new("ProximityPrompt")
 			prompt.ActionText = if spot.id == "storehouse" then "Deposit store" else "Pick up"
@@ -1809,6 +1907,7 @@ function Village.placeAtWork(player: Player, slimeId: string, area: string, slot
 	end
 	local clock = workspace:GetServerTimeNow()
 	release(session, slimeId, actor.action)
+	freeSeat(session, slimeId, actor)
 	local action: Action = {
 		kind = "work",
 		spot = spot.id,
@@ -1855,6 +1954,21 @@ function Village.start()
 							local map = workspace:FindFirstChild("Map")
 							local plot = if map then map:FindFirstChild("Plot" .. Config.Village.DevPlot) else nil
 							session.spots = Spots.build(Config.Village.DevPlot, plot)
+							session.seats = Spots.seats(plot, campfirePoint(session.spots), point(session.spots.plaza))
+							table.clear(session.seated)
+							for _, held in session.actors do
+								held.seat = nil
+							end
+							session.sign = Spots.storehouseSign(plot)
+							for _, anchor in session.prompts do
+								if
+									anchor.Name == "CarrySpot_storehouse"
+									and anchor:IsA("BasePart")
+									and session.sign
+								then
+									anchor.Position = session.sign
+								end
+							end
 						end
 					end)
 				end
@@ -1899,6 +2013,9 @@ function Village.start()
 			slimes = child(root, "Slimes", "Folder") :: Folder,
 			eggs = child(root, "Eggs", "Folder") :: Folder,
 			spots = spots,
+			seats = Spots.seats(plot, campfirePoint(spots), point(spots.plaza)),
+			seated = {},
+			sign = Spots.storehouseSign(plot),
 			actors = {},
 			reserved = {},
 			rng = rng,

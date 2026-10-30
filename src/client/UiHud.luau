@@ -1,6 +1,7 @@
 --!strict
 -- What stays on the screen: a small resource strip at the top edge and the round slime-book button at the right edge.
--- The middle stays empty. Foods without their own picture yet fold into one Food chip.
+-- The middle stays empty. Food shows by kind, as the stores keep it (the owner, 2026-10-30): fish, each vegetable,
+-- and the cooked dishes together; their pictures are the 3D items themselves (ClientKit.Items in a ViewportFrame).
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local HttpService = game:GetService("HttpService")
 
@@ -13,9 +14,13 @@ local UiHud = {}
 local strip: ScrollingFrame? = nil
 local edge: Frame? = nil
 local chips: { [string]: UiKit.Chip } = {}
-local dishes: { [string]: boolean } = {}
-local folded: { string } = {}
-local shown: { string } = {}
+-- each food chip and the kinds it counts (raw kinds from the storehouse, dishes from the fridge)
+local FOOD_CHIPS: { { key: string, kinds: { string }, model: string } } = {
+	{ key = "fish", kinds = { "fish" }, model = "fish" },
+	{ key = "carrot", kinds = { "carrot" }, model = "carrot" },
+	{ key = "cabbage", kinds = { "cabbage" }, model = "cabbage" },
+	{ key = "dishes", kinds = Config.Food.DishOrder, model = Config.Food.DishOrder[1] },
+}
 
 local function parse(value: any): { [string]: number }
 	if type(value) ~= "string" then
@@ -34,6 +39,16 @@ local function short(amount: number): string
 		return string.format("%.0fK", amount / 1000)
 	end
 	return tostring(math.floor(amount))
+end
+
+local function item(name: string): Instance?
+	local kit = ReplicatedStorage:FindFirstChild("ClientKit")
+	local items = if kit then kit:FindFirstChild("Items") else nil
+	local found = if items then items:FindFirstChild(name) else nil
+	if not found then
+		warn(Config.LogPrefix, "missing ClientKit/Items/" .. name .. " (resource strip)")
+	end
+	return found
 end
 
 function UiHud.start(root: Frame, onBook: () -> ())
@@ -57,28 +72,15 @@ function UiHud.start(root: Frame, onBook: () -> ())
 		SortOrder = Enum.SortOrder.LayoutOrder,
 	}, bar)
 	strip = bar
-	for _, kind in Config.Food.RawOrder do
-		table.insert(shown, kind)
-	end
-	for _, kind in Config.Food.DishOrder do
-		dishes[kind] = true
-		table.insert(shown, kind)
-	end
 	local order = 0
-	local function add(key: string, icon: string)
+	local function add(key: string, icon: string, model: Instance?)
 		order += 1
-		chips[key] = UiKit.chip(bar, icon, "0", order)
+		chips[key] = UiKit.chip(bar, icon, "0", order, model)
 	end
 	add("coins", "coins")
-	for _, kind in shown do
-		if (U.Icons :: any)[kind] > 0 then
-			add(kind, kind)
-		else
-			table.insert(folded, kind)
-		end
-	end
-	if #folded > 0 then
-		add("food", "food")
+	for _, food in FOOD_CHIPS do
+		local model = item(food.model)
+		add(food.key, if model then food.key else "food", model)
 	end
 	add("slimes", "slimes")
 
@@ -110,23 +112,15 @@ function UiHud.refresh(own: Folder?)
 	end
 	local store = parse(own:GetAttribute("Storehouse"))
 	local fridge = parse(own:GetAttribute("Fridge"))
-	local function amount(kind: string): number
-		local source = if dishes[kind] then fridge else store
-		return source[kind] or 0
-	end
 	local coins = own:GetAttribute("Coins")
 	chips.coins.set(short(if type(coins) == "number" then coins else 0))
-	for _, kind in shown do
-		if chips[kind] then
-			chips[kind].set(short(amount(kind)))
-		end
-	end
-	if chips.food then
+	for _, food in FOOD_CHIPS do
 		local total = 0
-		for _, kind in folded do
-			total += amount(kind)
+		for _, kind in food.kinds do
+			local source = if (Config.Food.Dishes :: any)[kind] ~= nil then fridge else store
+			total += source[kind] or 0
 		end
-		chips.food.set(short(total))
+		chips[food.key].set(short(total))
 	end
 	chips.slimes.set(tostring(own:GetAttribute("Population") or 0) .. "/" .. tostring(own:GetAttribute("Limit") or 0))
 end

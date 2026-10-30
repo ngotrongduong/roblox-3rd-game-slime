@@ -119,33 +119,55 @@ return function(T)
 		T.eq(action.kind, "nursery")
 		T.eq(action.spot, "nursery")
 	end)
-	T.test("trait scores alter a choice with identical seed", function()
+	T.test("every trait hauls while a bin waits; a bored playful slime plays first", function()
+		for _, trait in Config.Village.Traits do
+			for seed = 1, 20 do
+				local farm = FarmKit.farm(NOW)
+				farm.storehouse = {}
+				farm.work.fishing.box.fish = 5
+				farm.slimes[1].trait = trait
+				local action = Brain.choose(farm, "slime-1", CTX, NOW, Rng.new(seed))
+				T.eq(action.kind, "carryBox", trait .. " seed " .. seed)
+			end
+		end
 		local farm = FarmKit.farm(NOW)
 		farm.storehouse = {}
 		farm.work.fishing.box.fish = 5
-		farm.slimes[1].trait = "hardworking"
-		local hard = Brain.choose(farm, "slime-1", CTX, NOW, Rng.new(8))
 		farm.slimes[1].trait = "playful"
-		local play = Brain.choose(farm, "slime-1", CTX, NOW, Rng.new(8))
-		T.eq(hard.kind, "carryBox")
-		T.ok(play.kind ~= hard.kind)
+		farm.slimes[1].needs.fun = 0
+		T.ok(Brain.choose(farm, "slime-1", CTX, NOW, Rng.new(8)).kind ~= "carryBox")
 	end)
-	T.test("a claimed box batch is offered to only one slime", function()
+	T.test("with nothing to carry, free slimes live their lives", function()
+		for _, trait in Config.Village.Traits do
+			local farm = FarmKit.farm(NOW)
+			farm.storehouse = {}
+			farm.work.fishing.box = {}
+			farm.work.garden.box = {}
+			farm.slimes[1].trait = trait
+			local kind = Brain.choose(farm, "slime-1", CTX, NOW, Rng.new(3)).kind
+			T.ok(string.sub(kind, 1, 5) ~= "carry", trait .. " chose " .. kind)
+		end
+	end)
+	T.test("a full bin is shared by several couriers, one load each", function()
 		local farm = FarmKit.farm(NOW)
 		farm.storehouse = {}
 		farm.work.fishing.box = { fish = Config.Work.BoxCapacity }
-		farm.slimes[1].trait = "hardworking"
-		farm.slimes[2].trait = "hardworking"
-		local first = Brain.choose(farm, "slime-1", CTX, NOW, Rng.new(2))
-		T.eq(first.kind, "carryBox")
-		local keys = Brain.reservationKeys(first)
-		T.eq(keys[1], "box:fishing:fish")
-		local second =
-			Brain.choose(farm, "slime-2", { nearby = {}, reserved = { [keys[1]] = "slime-1" } }, NOW, Rng.new(2))
-		T.ok(second.kind ~= "carryBox")
-		-- Releasing on arrival makes the remaining batch available again.
-		local again = Brain.choose(farm, "slime-2", CTX, NOW, Rng.new(2))
-		T.eq(again.kind, "carryBox")
+		local loads = math.ceil(Config.Work.BoxCapacity / Config.Brain.CarryAmount)
+		local reserved = {}
+		for index = 1, loads do
+			local id = "slime-" .. ((index - 1) % #farm.slimes + 1)
+			local action = Brain.choose(farm, id, { nearby = {}, reserved = reserved }, NOW, Rng.new(2))
+			T.eq(action.kind, "carryBox")
+			local keys = Brain.reservationKeys(action)
+			T.eq(keys[1], "box:fishing:fish:" .. index)
+			reserved[keys[1]] = "other-" .. index
+		end
+		-- every load claimed: nobody else is sent to the bin
+		local extra = Brain.choose(farm, "slime-1", { nearby = {}, reserved = reserved }, NOW, Rng.new(2))
+		T.ok(extra.kind ~= "carryBox")
+		-- releasing on arrival makes a load available again
+		reserved["box:fishing:fish:1"] = nil
+		T.eq(Brain.choose(farm, "slime-1", { nearby = {}, reserved = reserved }, NOW, Rng.new(2)).kind, "carryBox")
 	end)
 	T.test("a claimed counter delivery cannot be chosen twice", function()
 		local farm = FarmKit.farm(NOW)
@@ -157,8 +179,9 @@ return function(T)
 		farm.slimes[2].trait = "hardworking"
 		local first = Brain.choose(farm, "slime-1", CTX, NOW, Rng.new(2))
 		T.eq(first.kind, "carryKitchen")
+		local keys = Brain.reservationKeys(first)
 		local second =
-			Brain.choose(farm, "slime-2", { nearby = {}, reserved = { counter = "slime-1" } }, NOW, Rng.new(2))
+			Brain.choose(farm, "slime-2", { nearby = {}, reserved = { [keys[1]] = "slime-1" } }, NOW, Rng.new(2))
 		T.ok(second.kind ~= "carryKitchen")
 	end)
 	T.test("egg and incubator are both claimed during a carry", function()

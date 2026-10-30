@@ -506,6 +506,7 @@ local function animate(village: Village, entry: Entry, now: number)
 	end
 	if actor then
 		SlimeActor.setTravel(actor, drawFrom, drawTo, start, finish, ghost, gait)
+		SlimeActor.setSeated(actor, entry.config:GetAttribute("Seated") == true)
 	else
 		if ghost then
 			pos += Vector3.new(0, C.GhostFloat + C.GhostFloat * math.sin(now * C.GhostFloatHz * math.pi * 2), 0)

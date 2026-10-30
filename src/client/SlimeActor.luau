@@ -68,6 +68,8 @@ export type Slime = {
 	-- The height of the ground under the slime (raycast), and where it was last measured.
 	groundY: number?,
 	groundAt: Vector3?,
+	-- Sitting on a seat: the body rests on the seat's surface (the end of its leg), not on the ground under it.
+	seated: boolean?,
 	-- A tool held in front of the body (a rod, a hoe): its parts and a pose that may change with time,
 	-- relative to the feet frame (front = -Z, up = +Y), in studs.
 	held: Model?,
@@ -242,6 +244,11 @@ local function walk(a: Slime, dt: number, now: number)
 			then VC.GhostFloat + VC.GhostFloat * math.sin(now * VC.GhostFloatHz * math.pi * 2)
 			else 0
 		pos = Vector3.new(pos.X, a.groundY + floatBy, pos.Z)
+	end
+	if a.seated and not moving then
+		-- on the seat place itself: no push from neighbours (the next place is close), feet on the seat's surface
+		a.separation = Vector3.zero
+		pos = to
 	end
 	local direction = to - from
 	local flat = Vector3.new(direction.X, 0, direction.Z)
@@ -461,6 +468,7 @@ function Actor.new(model: Model, emotion: string?): Slime?
 		faceTarget = nil,
 		groundY = nil,
 		groundAt = nil,
+		seated = nil,
 		held = nil,
 		heldParts = {},
 		heldOffsets = {},
@@ -534,6 +542,11 @@ function Actor.setTravel(
 	self.travelFrom, self.travelTo = from, to
 	self.travelStart, self.travelEnd = startTime, endTime
 	self.ghost = ghost
+end
+
+-- Sitting on a seat (the server's Seated attribute): the end of the leg is the seat's surface.
+function Actor.setSeated(self: Slime, seated: boolean)
+	self.seated = seated
 end
 
 function Actor.attach(self: Slime, model: Model, offset: CFrame?)

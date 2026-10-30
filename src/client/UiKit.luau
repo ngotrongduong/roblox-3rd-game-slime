@@ -296,8 +296,45 @@ function UiKit.roundButton(parent: Instance?, key: string, size: number, onClick
 	return button
 end
 
--- A small count chip for the resource strip: picture and number on a wooden plate.
-function UiKit.chip(parent: Instance?, icon: string, text: string, order: number): Chip
+-- A 3D item shown as a picture (the owner's rule: food icons come from the 3D models, not drawings): a copy of the
+-- model in a small ViewportFrame, framed by its own size, rendered once (nothing in it moves).
+function UiKit.modelIcon(parent: Instance?, model: Instance, size: number, props: Props?): GuiObject
+	local view = make(
+		"ViewportFrame",
+		merge({
+			Name = model.Name,
+			BackgroundTransparency = 1,
+			Size = UDim2.fromOffset(size, size),
+			Ambient = Color3.fromRGB(200, 200, 200),
+			LightColor = Color3.new(1, 1, 1),
+			LightDirection = Vector3.new(-1, -2, -1),
+		}, props),
+		parent
+	) :: ViewportFrame
+	local copy = model:Clone()
+	local holder: Model
+	if copy:IsA("Model") then
+		holder = copy
+	else
+		holder = Instance.new("Model")
+		copy.Parent = holder
+	end
+	holder.Parent = view
+	local box, extents = holder:GetBoundingBox()
+	local camera = Instance.new("Camera")
+	camera.FieldOfView = U.ModelIconFov
+	local radius = extents.Magnitude / 2
+	local distance = radius / math.tan(math.rad(U.ModelIconFov / 2)) * U.ModelIconPad
+	local from = box.Position + Vector3.new(1, U.ModelIconLift, 1).Unit * distance
+	camera.CFrame = CFrame.lookAt(from, box.Position)
+	camera.Parent = view
+	view.CurrentCamera = camera
+	return view
+end
+
+-- A small count chip for the resource strip: picture and number on a wooden plate. `model`: show this 3D item
+-- (ClientKit.Items) instead of the icon picture.
+function UiKit.chip(parent: Instance?, icon: string, text: string, order: number, model: Instance?): Chip
 	local box, body = UiKit.skin(parent, "Wood", "Card", {
 		Name = icon,
 		Size = UDim2.fromOffset(0, U.ChipHeight),
@@ -309,7 +346,11 @@ function UiKit.chip(parent: Instance?, icon: string, text: string, order: number
 		Padding = UDim.new(0, 4),
 		SortOrder = Enum.SortOrder.LayoutOrder,
 	}, body)
-	UiKit.icon(body, icon, U.IconNormal, { LayoutOrder = 1 })
+	if model then
+		UiKit.modelIcon(body, model, U.IconNormal, { LayoutOrder = 1 })
+	else
+		UiKit.icon(body, icon, U.IconNormal, { LayoutOrder = 1 })
+	end
 	local value = UiKit.label(body, text, U.TextSmall, "Brown", {
 		Name = "Value",
 		LayoutOrder = 2,

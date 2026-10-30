@@ -227,6 +227,8 @@ Config.Village = {
 		Incubator = { "Incubator1", "Incubator2", "Incubator3", "Incubator4", "Incubator5", "Incubator6" },
 		Storehouse = { "StorehouseDoor", "PantryDoor", "Entrance" },
 		StorehouseModels = { "PantryDoor", "Door" },
+		-- the Deposit store prompt: the pantry's sign board, else its door
+		StorehouseSign = { "SignPantry", "PantryDoor", "Door" },
 		Box = { "FishBin", "VegBin", "CollectionBox", "FishBucket", "HarvestBox", "DishBox" },
 		CounterModels = { "KitchenCounter", "Counter", "PrepCounter" },
 		FridgeModels = { "Fridge", "Refrigerator" },
@@ -295,6 +297,33 @@ Config.Village = {
 	BreedingBoxSeconds = 5,
 	-- An item tossed flies this high above the straight line between the slime and the bin.
 	TossArcStuds = 2.5,
+	-- Seats (the owner, 2026-10-30: resting and sleeping slimes sit on the benches' seats, never on a backrest).
+	-- Models with these exact names anywhere in the plot are seats (every era's bench, logs and stumps), and so are
+	-- the parts named SeatParts (the area stages' plank benches, with their BenchBack beside them).
+	SeatModels = { "LogBench", "ParkBench", "IronBench", "ModernBench", "MarbleBench", "Stump", "Bench" },
+	SeatParts = { "BenchSeat" },
+	-- A part bench's back and legs are the plank's siblings within this many studs.
+	SeatPartReach = 1.6,
+	-- Rays from above on a SeatProbeGrid x SeatProbeGrid grid across the footprint; a seat surface lies between
+	-- SeatMinRise and SeatMaxRise above the ground and faces up (normal Y at least SeatFlatNormal).
+	SeatProbeGrid = 9,
+	SeatMinRise = 0.6,
+	SeatMaxRise = 3.2,
+	SeatFlatNormal = 0.5,
+	-- Hits within SeatBand of each other are one flat surface; hits more than SeatBackRise above the seat are the
+	-- backrest (the slime faces away from it).
+	SeatBand = 0.35,
+	SeatBackRise = 0.6,
+	-- The fewest hits that make a seat, the width one sitting slime needs, and the most slimes on one seat.
+	SeatMinHits = 3,
+	SeatPlaceStuds = 2.4,
+	SeatMaxPlaces = 3,
+	-- A seat without a back faces the campfire within this many studs, else the plaza.
+	SeatCampfireStuds = 16,
+	-- The slime walks to the ground this far in front of its place, then hops up.
+	SeatApproachStuds = 2.2,
+	-- A slime warming itself takes a seat within this distance of the fire; else it stands by the fire.
+	SeatWarmStuds = 14,
 }
 
 -- Slimes choose a destination rather than receiving instantaneous food/energy effects.
@@ -310,6 +339,10 @@ Config.Brain = {
 	IdleSeconds = 6,
 	Noise = 2,
 	ErrandScore = 35,
+	-- Added to every carrying errand whatever the trait (a full bin, a dish to put away, an egg to move): above the
+	-- calm pastimes of any trait, so free slimes haul while things wait; only a bored playful or chatty slime may
+	-- play or chat first (the owner, 2026-10-30: "many idle slimes but they do not take hauling jobs").
+	ErrandUrgency = 70,
 	EggScore = 45,
 	BabyFoodScore = 52,
 	PlayScore = 12,
@@ -1053,6 +1086,11 @@ Config.Ui = {
 	Edge = 10,
 	IconSmall = 20,
 	IconNormal = 28,
+	-- A 3D item drawn as an icon (UiKit.modelIcon): the camera's field of view, how much room it leaves round the
+	-- item (1 = touching the edges) and how far above the item it looks down from.
+	ModelIconFov = 30,
+	ModelIconPad = 1.05,
+	ModelIconLift = 0.8,
 	ChipHeight = 40,
 	TextTiny = 13,
 	TextSmall = 15,

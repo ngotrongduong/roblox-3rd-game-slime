@@ -41,18 +41,23 @@ export type Action = {
 	partner: string?,
 	source: string?,
 	eggId: string?,
+	-- Which load of a waiting pile this courier takes (1 = the first CarryAmount items, 2 = the next...), so several
+	-- free slimes can share one full bin instead of one carrying while the others look on.
+	batch: number?,
 }
 
 local Brain = {}
 
--- Claim the pickup batch or counter, plus the incubator for an egg delivery.
+-- Claim the load (one batch of a bin, of the counter's wants or of the finished dishes), plus the incubator for an egg
+-- delivery.
 function Brain.reservationKeys(action: Action): { string }
+	local batch = ":" .. tostring(action.batch or 1)
 	if action.kind == "carryBox" and action.source and action.carry then
-		return { "box:" .. action.source .. ":" .. action.carry.item }
-	elseif action.kind == "carryKitchen" then
-		return { "counter" }
+		return { "box:" .. action.source .. ":" .. action.carry.item .. batch }
+	elseif action.kind == "carryKitchen" and action.carry then
+		return { "counter:" .. action.carry.item .. batch }
 	elseif action.kind == "carryDish" and action.carry then
-		return { "dish:" .. action.carry.item }
+		return { "dish:" .. action.carry.item .. batch }
 	elseif action.kind == "carryEgg" and action.eggId then
 		return { "egg:" .. action.eggId, action.spot }
 	elseif action.kind == "feedBaby" and action.partner then
@@ -174,9 +179,11 @@ function Brain.choose(farm: Farm, slimeId: string, ctx: Context, now: number, rn
 						and Food.total(farm.fridge) < Food.fridgeCapacity(farm.areas.kitchen.level)
 					then
 						for _, item in Config.Food.DishOrder do
-							if (farm.work.kitchen.box[item] or 0) > 0 then
+							local waiting = farm.work.kitchen.box[item] or 0
+							for batch = 1, math.ceil(waiting / Config.Brain.CarryAmount) do
 								local a = make("carryDish", "fridge", "proud")
 								a.carry = { item = item, count = Config.Brain.CarryAmount }
+								a.batch = batch
 								if unclaimed(ctx, slimeId, a) then
 									return a
 								end
@@ -197,7 +204,11 @@ function Brain.choose(farm: Farm, slimeId: string, ctx: Context, now: number, rn
 			return
 		end
 		local funUrgency = (Config.Needs.Max - slime.needs.fun) / Config.Needs.Max * Config.Brain.FunScore
-		local urgency = if group == "play" or group == "social" then funUrgency else 0
+		-- Something waiting to be carried is a village need, not a taste: every free slime feels it, whatever its
+		-- trait (the owner, 2026-10-30: many idle slimes, none hauling). The trait still decides who goes first.
+		local urgency = if group == "play" or group == "social"
+			then funUrgency
+			else if group == "errands" then Config.Brain.ErrandUrgency else 0
 		local score = base * (weights[group] or 1) + urgency + rng:next() * Config.Brain.Noise
 		if score > bestScore then
 			bestScore = score
@@ -205,35 +216,51 @@ function Brain.choose(farm: Farm, slimeId: string, ctx: Context, now: number, rn
 		end
 	end
 
+	-- The first load of `waiting` items no other courier has claimed (nil when every load is taken).
+	local function freeLoad(a: Action, waiting: number): Action?
+		for batch = 1, math.ceil(waiting / Config.Brain.CarryAmount) do
+			a.batch = batch
+			if unclaimed(ctx, slimeId, a) then
+				return a
+			end
+		end
+		return nil
+	end
 	-- The urgent tasks stay above idle entertainment, but the trait chooses between similar jobs.
 	for _, area in { "fishing", "garden" } do
 		for _, item in Config.Food.RawOrder do
-			if
-				((farm.work :: any)[area].box[item] or 0) > 0
-				and Food.total(farm.storehouse) < Food.storehouseCapacity(farm.areas.pantry.level)
-			then
+			local waiting = (farm.work :: any)[area].box[item] or 0
+			if waiting > 0 and Food.total(farm.storehouse) < Food.storehouseCapacity(farm.areas.pantry.level) then
 				local a = make("carryBox", "storehouse", "proud")
 				a.source = area
 				a.carry = { item = item, count = Config.Brain.CarryAmount }
-				offer(a, "errands", Config.Brain.ErrandScore)
+				local load = freeLoad(a, waiting)
+				if load then
+					offer(load, "errands", Config.Brain.ErrandScore)
+				end
 			end
 		end
 	end
+	local wanted = Food.ingredientsWanted(farm)
 	for _, item in Config.Food.RawOrder do
-		if (Food.ingredientsWanted(farm)[item] or 0) > 0 then
+		if (wanted[item] or 0) > 0 then
 			local a = make("carryKitchen", "counter", "proud")
 			a.carry = { item = item, count = Config.Brain.CarryAmount }
-			offer(a, "errands", Config.Brain.ErrandScore)
+			local load = freeLoad(a, wanted[item])
+			if load then
+				offer(load, "errands", Config.Brain.ErrandScore)
+			end
 		end
 	end
 	for _, item in Config.Food.DishOrder do
-		if
-			(farm.work.kitchen.box[item] or 0) > 0
-			and Food.total(farm.fridge) < Food.fridgeCapacity(farm.areas.kitchen.level)
-		then
+		local waiting = farm.work.kitchen.box[item] or 0
+		if waiting > 0 and Food.total(farm.fridge) < Food.fridgeCapacity(farm.areas.kitchen.level) then
 			local a = make("carryDish", "fridge", "proud")
 			a.carry = { item = item, count = Config.Brain.CarryAmount }
-			offer(a, "errands", Config.Brain.ErrandScore)
+			local load = freeLoad(a, waiting)
+			if load then
+				offer(load, "errands", Config.Brain.ErrandScore)
+			end
 		end
 	end
 	local freeIncubator: number? = nil

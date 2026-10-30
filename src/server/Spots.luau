@@ -4,6 +4,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local PathfindingService = game:GetService("PathfindingService")
 local Config = require(ReplicatedStorage.Shared.Config)
 local Layout = require(ReplicatedStorage.Shared.Layout)
+local SeatShape = require(ReplicatedStorage.Shared.SeatShape)
 
 -- fx/fy/fz: what a slime standing here faces (the well, the bin, the fire) when the spot was moved out of it.
 export type Spot = {
@@ -450,6 +451,178 @@ function Spots.build(plotNumber: number, plot: Instance?): { [string]: Spot }
 		print(Config.LogPrefix, "Plot" .. plotNumber .. " missing; using", fallback, "fallback village spots")
 	end
 	return result
+end
+
+-- One place to sit: `spot` on the seat's surface (facing outward), `foot` the ground in front where the slime hops up
+-- from. `model` names what it sits on (for the probe and the log).
+export type Seat = { spot: Spot, foot: Spot, model: string }
+
+local AREA_OF: { [string]: string } = {}
+for area, name in MODELS :: { [string]: string } do
+	AREA_OF[name] = area
+end
+
+-- Every seat in the plot: each bench, log bench and stump of every era and area (the stages are rebuilt on an
+-- upgrade, so this runs again with the spots). The seat surface comes from rays dropped across the footprint
+-- (SeatShape): a backrest is the tall part and the slime sits on the low flat part in front of it, facing away.
+function Spots.seats(plot: Instance?, campfire: Vector3?, plaza: Vector3): { Seat }
+	local seats: { Seat } = {}
+	if not plot then
+		return seats
+	end
+	type Candidate = { name: string, area: string, parts: { BasePart }, cf: CFrame, size: Vector3 }
+	local candidates: { Candidate } = {}
+	local function areaOf(inst: Instance): string
+		local at: Instance? = inst
+		while at and at ~= plot do
+			if AREA_OF[at.Name] then
+				return AREA_OF[at.Name]
+			end
+			at = at.Parent
+		end
+		return "plaza"
+	end
+	for _, inst in plot:GetDescendants() do
+		if inst:IsA("Model") and table.find(V.SeatModels, inst.Name) then
+			-- (a bench inside a bench model, as the kit nests them, is the same seat)
+			local outer = inst:FindFirstAncestorWhichIsA("Model")
+			if outer and table.find(V.SeatModels, outer.Name) then
+				continue
+			end
+			local parts: { BasePart } = {}
+			for _, d in inst:GetDescendants() do
+				if d:IsA("BasePart") and d.Transparency < 1 then
+					table.insert(parts, d)
+				end
+			end
+			if #parts > 0 then
+				local cf, size = inst:GetBoundingBox()
+				table.insert(candidates, { name = inst.Name, area = areaOf(inst), parts = parts, cf = cf, size = size })
+			end
+		elseif inst:IsA("BasePart") and table.find(V.SeatParts, inst.Name) and inst.Parent then
+			local parts: { BasePart } = { inst }
+			for _, d in inst.Parent:GetChildren() do
+				if
+					d ~= inst
+					and d:IsA("BasePart")
+					and (d.Position - inst.Position).Magnitude <= V.SeatPartReach + inst.Size.Z / 2
+				then
+					table.insert(parts, d)
+				end
+			end
+			local reach = V.SeatPartReach * 2
+			table.insert(candidates, {
+				name = inst.Name,
+				area = areaOf(inst),
+				parts = parts,
+				cf = inst.CFrame,
+				size = Vector3.new(inst.Size.X, inst.Size.Y + reach, inst.Size.Z + reach),
+			})
+		end
+	end
+	local rays = RaycastParams.new()
+	rays.FilterType = Enum.RaycastFilterType.Include
+	rays.RespectCanCollide = false
+	local below = RaycastParams.new()
+	below.FilterType = Enum.RaycastFilterType.Exclude
+	below.RespectCanCollide = true
+	for _, c in candidates do
+		local bottom = c.cf.Position.Y - c.size.Y / 2
+		local skip = ignored()
+		for _, part in c.parts do
+			table.insert(skip, part)
+		end
+		below.FilterDescendantsInstances = skip
+		local floor = workspace:Raycast(
+			Vector3.new(c.cf.Position.X, bottom + V.SeatMinRise, c.cf.Position.Z),
+			Vector3.new(0, -V.GroundProbeDown, 0),
+			below
+		)
+		local groundY = if floor then floor.Position.Y else bottom
+		rays.FilterDescendantsInstances = c.parts :: any
+		local n = V.SeatProbeGrid
+		local sx, sz = c.size.X / n, c.size.Z / n
+		local samples: { SeatShape.Sample } = {}
+		for i = 1, n do
+			for k = 1, n do
+				local x, z = -c.size.X / 2 + (i - 0.5) * sx, -c.size.Z / 2 + (k - 0.5) * sz
+				local top = c.cf:PointToWorldSpace(Vector3.new(x, 0, z))
+				local origin = Vector3.new(top.X, c.cf.Position.Y + c.size.Y / 2 + 1, top.Z)
+				local hit = workspace:Raycast(origin, Vector3.new(0, -(c.size.Y + 4), 0), rays)
+				if hit then
+					table.insert(
+						samples,
+						{ x = x, z = z, h = hit.Position.Y - groundY, flat = hit.Normal.Y >= V.SeatFlatNormal }
+					)
+				end
+			end
+		end
+		local fit = SeatShape.fit(samples, (sx + sz) / 2)
+		if not fit then
+			continue
+		end
+		local centre = c.cf:PointToWorldSpace(Vector3.new(fit.x, 0, fit.z))
+		local face: Vector3
+		if fit.faceX and fit.faceZ then
+			face = c.cf:VectorToWorldSpace(Vector3.new(fit.faceX, 0, fit.faceZ))
+		else
+			-- no backrest: face the campfire when it is close, else the plaza
+			local toward = if campfire
+					and (Vector3.new(campfire.X - centre.X, 0, campfire.Z - centre.Z)).Magnitude
+						<= V.SeatCampfireStuds
+				then campfire
+				else plaza
+			face = Vector3.new(toward.X - centre.X, 0, toward.Z - centre.Z)
+		end
+		face = Vector3.new(face.X, 0, face.Z)
+		face = if face.Magnitude > V.PathPointEpsilon then face.Unit else Vector3.new(0, 0, -1)
+		local seatY = groundY + fit.height
+		for _, place in fit.places do
+			local at = c.cf:PointToWorldSpace(Vector3.new(place.x, 0, place.z))
+			local seatPoint = Vector3.new(at.X, seatY, at.Z)
+			local foot =
+				Spots.settle(Vector3.new(at.X, groundY, at.Z) + face * V.SeatApproachStuds, seatPoint, V.SpotMaxDrop)
+			if not foot then
+				continue
+			end
+			local id = "seat:" .. (#seats + 1)
+			local ahead = seatPoint + face * V.SeatApproachStuds * 2
+			table.insert(seats, {
+				spot = {
+					id = id,
+					area = c.area,
+					x = seatPoint.X,
+					y = seatPoint.Y,
+					z = seatPoint.Z,
+					fx = ahead.X,
+					fy = ahead.Y,
+					fz = ahead.Z,
+				},
+				foot = { id = id .. ":foot", area = c.area, x = foot.X, y = foot.Y, z = foot.Z },
+				model = c.name,
+			})
+		end
+	end
+	print(Config.LogPrefix, "village seats found:", #seats, "places on", #candidates, "seat models")
+	return seats
+end
+
+-- Where the storehouse's Deposit store prompt stands (the owner, 2026-10-30: at the storehouse's sign, not out on
+-- the path): the pantry's sign board at every level (the stages keep it), else its door, else nil.
+function Spots.storehouseSign(plot: Instance?): Vector3?
+	local pantry = if plot then plot:FindFirstChild(MODELS.pantry) else nil
+	if not pantry then
+		return nil
+	end
+	for _, name in V.SpotNames.StorehouseSign do
+		local sign = pantry:FindFirstChild(name, true)
+		if sign and sign:IsA("Model") then
+			return sign:GetBoundingBox().Position
+		elseif sign and sign:IsA("BasePart") then
+			return sign.Position
+		end
+	end
+	return nil
 end
 
 return Spots
