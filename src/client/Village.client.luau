@@ -622,7 +622,7 @@ local function animate(village: Village, entry: Entry, now: number)
 		entry.carry = nil
 		if shown ~= "" then
 			local carried = asset(shown)
-			carried:ScaleTo(C.CarryScale)
+			carried:ScaleTo(if shown == "Egg" then C.EggScale else C.CarryScale)
 			carried.Parent = renderFolder
 			entry.carry = carried
 			if actor then
@@ -708,7 +708,7 @@ local function animate(village: Village, entry: Entry, now: number)
 		local item = stringAttr(entry.config, "HandItem", "")
 		if flying and item ~= "" then
 			local flyer = asset(item)
-			flyer:ScaleTo(C.CarryScale)
+			flyer:ScaleTo(if item == "Egg" then C.EggScale else C.CarryScale)
 			flyer.Parent = renderFolder
 			entry.flight = flyer
 			if actor then
@@ -989,7 +989,9 @@ task.spawn(function()
 				end
 				-- A nest egg is drawn larger (the owner, 2026-10-29: "too small, make it 3x"); an incubator egg keeps
 				-- the size that fits under the dome.
-				local size = if stringAttr(egg, "Place", "nest") == "nest" then C.NestEggScale else 1
+				-- the owner (2026-10-30): the nest egg 30% smaller than the 3x, and the same real size everywhere:
+				-- in the nest, in the incubator and on a slime's head
+				local size = C.EggScale
 				if math.abs(model:GetScale() - size) > 1e-3 then
 					model:ScaleTo(size)
 				end

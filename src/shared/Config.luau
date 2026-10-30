@@ -915,8 +915,9 @@ Config.VillageClient = {
 	EggRestProbeUp = 1.2,
 	EggRestProbeDown = 3,
 	EggRestLift = 0.02,
-	-- a nest egg is drawn this many times its kit size (incubator eggs stay 1: they fit the dome)
-	NestEggScale = 3,
+	-- an egg is drawn this many times its kit size, the same real size in a nest, an incubator and on a slime's head
+	-- (the owner: 3x in the nest, then 30% smaller, 2026-10-30)
+	EggScale = 2.1,
 	-- The progress clock over a slime at work, a courting pair or an egg (owner, 2026-10-30). Sizes are fractions of
 	-- the slime's own scale (about 3 studs), so the clock scales with the camera like the slime; it sits to the
 	-- camera's right of the head so it never covers the emote above it.
