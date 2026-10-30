@@ -212,6 +212,35 @@ warm window, and a real slime model; the roof is a little lilac.
   pond_water_l1.
 - The work place must be saved in Studio (Ctrl+S) to keep the build.
 
+## 2026-10-29..30 — the living village through the owner's play rounds (hand-over)
+
+Done since the first play test (every item checked in MapWork play tests; agents' reports in the commit messages)
+- UI kit from the owner's art (`UiKit`, slime book, HUD with one Food chip opening `UiFood`), work-position markers with a
+  per-place F prompt and one-tap picker (Suggested = highest SPD), a slime assigned to work pops up at its place; the
+  breeding sheet ("Pairs" prompt) optimistic and instant; no area Manage prompts.
+- Movement: PathfindingService routes, ground snapping, solid bins, gaits from the owner's movement lab
+  (`Config.Gaits`: walk = Big leaps, stroll only inside the breeding area, baby gaits, glide when tired/hungry/sad),
+  seats (`SeatShape`: resting and sleeping slimes sit on benches, logs and stumps).
+- Work: fishing with rods, line, bobber and tosses into the fish bin; the garden cycle on saved CropPlots; SPD sets
+  work speed; progress clocks over workers, courting pairs and eggs; hauling for every trait (`ErrandUrgency`, loads).
+- Breeding: 2 -> 4 pairs by level; an egg's clock starts when laid, half speed in a nest, a parent carries it to a free
+  incubator; eggs one real size (`EggScale`).
+- Food: 6 fish and 6 vegetables with rarities (`Config.Food.Kinds`), the player carries in the right hand,
+  Deposit store at the storehouse sign.
+- Emotes: short pop-ups; z's, hearts (one at a time) and dizzy stars as lasting effects, sized in the world.
+- Village scale (`docs/VILLAGE_SCALE.md`): plot 160 -> 228, valley x1.39, paths kept at the owner's 6 studs, every area
+  spread (breeding 42x38, pond x1.3, garden x1.4, kitchen and training x1.3, storehouse yard), probes green at levels
+  1/21/41 (`tools/map/probe_paths|probe_pads|probe_seats|scan_zfight|scan_rocks`), backup of the old place at
+  `assets/raw/MapWork-before-scale-2026-10-30.rbxlx`.
+
+Open
+- The owner presses Ctrl+S in MapWork after the last spread (kitchen, storehouse, training), then
+  `lune run tools/kit/export_kit.luau`.
+- The areas still look small in their bigger cells (lots of lawn); the owner judges in play.
+- Phase D/E of the scale plan: the Market, Wild Garden art pass (an odd straight water line), a 20-slime play test.
+- Art: the clock-face badge (ChatGPT prompt sent), icons for close/back/plus/energy/fun, Secret slime 3D art.
+- Next game steps: the hatch reveal by rarity, the slime shop and plot hand-out for 8 players, recipes for the new food.
+
 ## 2026-10-29 — Phase 2 started: the living slime village (gameplay approved, `docs/GAMEPLAY.md`)
 
 Done (code by Codex and ChatGPT from briefs in `docs/briefs/`, checked and merged by the orchestrator)
