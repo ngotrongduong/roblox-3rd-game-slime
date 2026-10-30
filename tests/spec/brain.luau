@@ -230,4 +230,23 @@ return function(T)
 		local ready = Brain.choose(farm, "slime-1", CTX, NOW + 61, Rng.new(2))
 		T.eq(ready.kind, "court")
 	end)
+
+	T.test("each pair courts at its own nest, not all at one spot", function()
+		local farm = FarmKit.farm(NOW)
+		farm.breeding.pairs = { { a = "slime-1", b = "slime-2" }, { a = "slime-3", b = "slime-4" } }
+		local ctx = table.clone(CTX)
+		local spots = table.clone(CTX.spots or {})
+		spots["nest:1"] = { id = "nest:1", area = "breeding", x = 0, y = 0, z = 0 }
+		spots["nest:2"] = { id = "nest:2", area = "breeding", x = 18, y = 0, z = 0 }
+		ctx.spots = spots
+		local one = Brain.choose(farm, "slime-1", ctx, NOW, Rng.new(4))
+		local two = Brain.choose(farm, "slime-3", ctx, NOW, Rng.new(4))
+		T.eq(one.kind, "court")
+		T.eq(two.kind, "court")
+		T.eq(one.spot, "nest:1")
+		T.eq(two.spot, "nest:2")
+		-- a nest that is only a guess (not built) falls back to the breeding area's spot
+		spots["nest:2"] = { id = "nest:2", area = "breeding", x = 0, y = 0, z = 0, guessed = true }
+		T.eq(Brain.choose(farm, "slime-3", ctx, NOW, Rng.new(4)).spot, "breeding")
+	end)
 end

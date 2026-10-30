@@ -160,7 +160,11 @@ function Brain.choose(farm: Farm, slimeId: string, ctx: Context, now: number, rn
 			(pair.a == slimeId or pair.b == slimeId)
 			and (pair.courtingUntil or Breeding.pairReady(farm, index, now).ok)
 		then
-			local a = make("court", "breeding", "loved")
+			-- Each pair courts at its own nest (pair k at nest k), so two pairs never crowd one spot and get stuck
+			-- (the owner, 2026-10-30); a nest not built yet (a guessed spot) falls back to the breeding area's spot.
+			local nestId = "nest:" .. index
+			local nest = if ctx.spots then (ctx.spots :: any)[nestId] else nil
+			local a = make("court", if nest and not nest.guessed then nestId else "breeding", "loved")
 			a.partner = if pair.a == slimeId then pair.b else pair.a
 			return a
 		end
