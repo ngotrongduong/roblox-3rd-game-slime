@@ -416,7 +416,7 @@ Config.Needs = {
 -- kinds and keep their saves; every other id is new. The model of a kind is ClientKit.Items.<id>.
 local FoodKinds = {
 	fish = { name = "Koi", group = "fish", rarity = "common", fullness = 25, weight = 40 },
-	blueFish = { name = "Blue Fish", group = "fish", rarity = "common", fullness = 20, weight = 30 },
+	blueFish = { name = "Blue Fish", group = "fish", rarity = "common", fullness = 22, weight = 30 },
 	trout = { name = "Trout", group = "fish", rarity = "uncommon", fullness = 28, weight = 18 },
 	salmon = { name = "Salmon", group = "fish", rarity = "rare", fullness = 40, weight = 8 },
 	pufferfish = { name = "Pufferfish", group = "fish", rarity = "rare", fullness = 40, weight = 3 },
