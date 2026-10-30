@@ -24,7 +24,25 @@ return function(T)
 		T.eq(Food.bestDish({}), nil)
 		farm.counter = { fish = 1 }
 		farm.storehouse = { carrot = 2, cabbage = 1 }
+		T.same(Food.ingredientsWanted(farm), {}, "no cook or opted-in eater means no ingredient delivery")
+		farm.work.kitchen.slots[1].worker = "slime-1"
+		T.same(Food.ingredientsWanted(farm), {}, "a staffed kitchen still needs real eaters")
+		table.insert(farm.cookedAllowed, "slime-2")
 		T.same(Food.ingredientsWanted(farm), { carrot = 1, cabbage = 1 })
+	end)
+	T.test("prepared food is bounded by opted-in eaters and work-box stock", function()
+		local farm = FarmKit.farm(1000)
+		farm.work.kitchen.slots[1].worker = "slime-1"
+		table.insert(farm.cookedAllowed, "slime-2")
+		T.ok(Food.canPrepare(farm))
+		farm.fridge.grilledFish = Config.Food.PreparedMealsPerAllowedSlime
+		T.ok(not Food.canPrepare(farm), "one eater needs only two ready meals")
+		T.same(Food.ingredientsWanted(farm), {})
+		farm.fridge.grilledFish = 1
+		farm.work.kitchen.box.veggieStew = 1
+		T.ok(not Food.canPrepare(farm), "dish stock waiting for delivery also counts")
+		table.insert(farm.cookedAllowed, "slime-3")
+		T.ok(Food.canPrepare(farm), "a new eater increases demand")
 	end)
 	T.test("dish permission, fallback, fullness and timed battle buff", function()
 		local farm = FarmKit.farm(1000)

@@ -20,7 +20,7 @@ return function(T: any)
 		T.ok(Stations.assign(slow, "slime-1", "fishing", 1, false, now))
 		T.ok(Stations.assign(fast, "slime-1", "fishing", 1, false, now))
 		fast.slimes[1].stats.speed = 4
-		local seconds = 55
+		local seconds = 46
 		local ready = { ["slime-1"] = "work:fishing:1" }
 		local a = VillageSim.step(slow, now + seconds, seconds, Rng.new(10), { errands = false, workReady = ready })
 		local b = VillageSim.step(fast, now + seconds, seconds, Rng.new(10), { errands = false, workReady = ready })

@@ -496,7 +496,7 @@ Config.Work = {
 	SlotLevels = { 11, 21, 31 },
 	BaseSlots = 1,
 	BoxCapacity = 10,
-	CycleSeconds = { fishing = 60, garden = 240, kitchen = 120, training = 90 },
+	CycleSeconds = { fishing = 50, garden = 240, kitchen = 120, training = 90 },
 	CycleLevelFactor = 0.99,
 	FishingYield = 1,
 	GardenYield = 3,
@@ -507,8 +507,9 @@ Config.Work = {
 	GardenStageSeconds = 75,
 	GardenDryGrowthFactor = 0.15,
 	GardenWaterBoostSeconds = 12,
-	-- Six tending actions per harvest: 3600 / (6 * 13.5) ~= 44 vegetables/hour, near the old 45.
-	GardenActionSeconds = 13.5,
+	-- Six tending actions per harvest: 3600 / (6 * 12.5) = 48 vegetables/hour before travel.
+	-- A slight early-game gain offsets worker rest and transportation time at low SPD.
+	GardenActionSeconds = 12.5,
 	FishCastSeconds = 3,
 	FishReelSeconds = 3,
 	WorkDropSeconds = 2,

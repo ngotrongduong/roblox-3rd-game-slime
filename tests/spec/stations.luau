@@ -59,8 +59,19 @@ return function(T)
 		T.same(after.work.kitchen.box, {})
 		T.eq(after.work.kitchen.slots[1].progress, 0)
 		after.counter = { fish = 2 }
+		table.insert(after.cookedAllowed, "slime-3")
 		local cooked = VillageSim.step(after, now + 360, 120, Rng.new(5), { errands = false })
 		T.eq(cooked.work.kitchen.box.grilledFish, 1)
 		T.eq(cooked.counter.fish, nil)
+	end)
+	T.test("unwanted kitchen dishes never consume the village food supply", function()
+		local now = 1000000
+		local farm = FarmKit.farm(now)
+		T.ok(Stations.assign(farm, "slime-1", "kitchen", 1, false, now))
+		farm.counter = { fish = 2 }
+		local after = VillageSim.step(farm, now + 120, 120, Rng.new(2), { errands = false })
+		T.eq(after.counter.fish, 2)
+		T.same(after.work.kitchen.box, {})
+		T.eq(after.work.kitchen.slots[1].progress, 0)
 	end)
 end

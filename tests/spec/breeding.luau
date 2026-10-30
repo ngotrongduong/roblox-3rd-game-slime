@@ -41,7 +41,7 @@ return function(T)
 		farm.slimes[1].breedReadyAt = NOW + 20
 		T.eq(Breeding.check(farm, "slime-1", "slime-2", NOW).reason, "PARENT_ON_COOLDOWN")
 		farm.slimes[1].breedReadyAt = 0
-		local full = FarmKit.farm(NOW, FarmKit.many(20))
+		local full = FarmKit.farm(NOW, FarmKit.many(FarmState.populationLimit(FarmState.newAreas())))
 		T.eq(Breeding.check(full, "s1", "s2", NOW).reason, "SLIME_CAP_REACHED")
 		local one = Breeding.createEgg(farm, "slime-1", "slime-2", NOW, Rng.new(2), FarmKit.ids())
 		assert(one.ok)
@@ -63,14 +63,14 @@ return function(T)
 	end)
 
 	T.test("eggs reserve population spaces as village levels grow", function()
-		local farm = FarmKit.farm(NOW, FarmKit.many(19))
+		local farm = FarmKit.farm(NOW, FarmKit.many(11))
 		table.insert(farm.eggs, { id = "e1", place = "incubator", slot = 1 })
 		T.eq(Breeding.check(farm, "s1", "s2", NOW).reason, "SLIME_CAP_REACHED")
-		T.eq(FarmState.populationLimit(farm.areas), 20)
+		T.eq(FarmState.populationLimit(farm.areas), 12)
 		for _, id in { "fishing", "garden", "kitchen", "pantry", "training", "breeding" } do
 			farm.areas[id].level = 2
 		end
-		T.eq(FarmState.populationLimit(farm.areas), 24)
+		T.eq(FarmState.populationLimit(farm.areas), 13)
 		T.ok(Breeding.check(farm, "s1", "s2", NOW).ok)
 	end)
 
