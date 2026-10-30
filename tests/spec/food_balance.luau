@@ -26,10 +26,16 @@ return function(T: any)
 		T.ok(FoodBalance.weightedFullness("veg") > 20)
 	end)
 	T.test("existing saves above the lowered population cap retain all slimes", function()
-		local farm = FarmKit.farm(1000000, FarmKit.many(20))
-		local restored = FarmState.repair(farm, 1000000)
+		local now = 1000000
+		local oldSlimes = FarmKit.many(20)
+		for _, slime in oldSlimes do
+			-- Saved adults have positive historical timestamps; 0 is repaired as a newborn.
+			slime.createdAt = now - 1000
+		end
+		local farm = FarmKit.farm(now, oldSlimes)
+		local restored = FarmState.repair(farm, now)
 		T.eq(#restored.slimes, 20)
 		T.eq(FarmState.populationLimit(restored.areas), 12)
-		T.eq(Breeding.check(restored, "s1", "s2", 1000000).reason, "SLIME_CAP_REACHED")
+		T.eq(Breeding.check(restored, "s1", "s2", now).reason, "SLIME_CAP_REACHED")
 	end)
 end

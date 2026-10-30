@@ -63,14 +63,15 @@ return function(T)
 	end)
 
 	T.test("eggs reserve population spaces as village levels grow", function()
-		local farm = FarmKit.farm(NOW, FarmKit.many(19))
+		-- Eleven adult slimes plus a pending egg use all twelve starting places.
+		local farm = FarmKit.farm(NOW, FarmKit.many(11))
 		table.insert(farm.eggs, { id = "e1", place = "incubator", slot = 1 })
 		T.eq(Breeding.check(farm, "s1", "s2", NOW).reason, "SLIME_CAP_REACHED")
-		T.eq(FarmState.populationLimit(farm.areas), 20)
+		T.eq(FarmState.populationLimit(farm.areas), 12)
 		for _, id in { "fishing", "garden", "kitchen", "pantry", "training", "breeding" } do
 			farm.areas[id].level = 11
 		end
-		T.eq(FarmState.populationLimit(farm.areas), 27)
+		T.eq(FarmState.populationLimit(farm.areas), 14)
 		T.ok(Breeding.check(farm, "s1", "s2", NOW).ok)
 	end)
 
