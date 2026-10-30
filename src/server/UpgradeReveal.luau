@@ -46,7 +46,11 @@ function UpgradeReveal.prepare(previous: Model?, stage: Model, areaId: string, l
 			local originals = oldByName[inst.Name]
 			local before = if originals then originals[index] else nil
 			if inst.Transparency < 1 and changed(inst, before) then
-				table.insert(if before then altered else added, inst)
+				if before then
+					table.insert(altered, inst)
+				else
+					table.insert(added, inst)
+				end
 			end
 		end
 	end

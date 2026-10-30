@@ -40,6 +40,8 @@ local function flash(stage: Model, position: Vector3, area: string, level: numbe
 	anchor.Parent = workspace
 	Debris:AddItem(anchor, Fx.FxLifetimeSeconds)
 
+	local newEra = level >= Fx.FirstEraUpgradeLevel
+		and level % Fx.EraStepLevels == 1
 	local sparkle = Instance.new("ParticleEmitter")
 	sparkle.Texture = "rbxasset://textures/particles/sparkles_main.dds"
 	sparkle.Color = ColorSequence.new(rgb(Fx.Gold), rgb(Fx.Cream))
@@ -54,10 +56,10 @@ local function flash(stage: Model, position: Vector3, area: string, level: numbe
 	sparkle.SpreadAngle = Vector2.new(180, 180)
 	sparkle.Acceleration = Vector3.new(0, Fx.SparkleAccelerationY, 0)
 	sparkle.Parent = anchor
-	sparkle:Emit(Fx.SparkleCount)
+	sparkle:Emit(math.floor(Fx.SparkleCount * (if newEra then Fx.EraSparkleMultiplier else 1)))
 	task.delay(Fx.SparkleSecondDelay, function()
 		if sparkle.Parent then
-			sparkle:Emit(Fx.SparkleSecondCount)
+			sparkle:Emit(math.floor(Fx.SparkleSecondCount * (if newEra then Fx.EraSparkleMultiplier else 1)))
 		end
 	end)
 
@@ -107,7 +109,7 @@ local function flash(stage: Model, position: Vector3, area: string, level: numbe
 	subtitle.TextColor3 = rgb(Fx.Gold)
 	subtitle.TextStrokeColor3 = rgb(Fx.Shadow)
 	subtitle.TextStrokeTransparency = 0
-	subtitle.Text = "LEVEL " .. tostring(level) .. " UNLOCKED!"
+	subtitle.Text = if newEra then "NEW ERA! LEVEL " .. tostring(level) else "LEVEL " .. tostring(level) .. " UNLOCKED!"
 	subtitle.Parent = gui
 
 	TweenService:Create(
