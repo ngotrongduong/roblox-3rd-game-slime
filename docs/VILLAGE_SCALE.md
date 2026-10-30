@@ -18,10 +18,14 @@ Design for an adult at scale 1.3 (about 4.5 wide) so big slimes still fit.
 
 ## 2. Clearances (all from the slime width S = 3.5)
 
+(The village props are spread over the bigger plot: path lamps and flowers at fixed fractions of each path,
+the tree ring every half cell along the fence, the campfire corner's seats and trees on a wider ring.)
+
 | rule | studs | why |
 |---|---|---|
-| `PathWidth` (inner plot paths) | 14 | 3 slimes abreast (10.5) + 4 gaps of ~0.9 |
-| `MainPathWidth` (gate road, plaza ring) | 18 | 3 big slimes + the player |
+| `PathWidth` (inner plot paths) | 6 | the owner's own width (2026-10-30: 14 and 8 were too wide); slimes pass on the lawn beside it (design note, not a rule) |
+| `MainPathWidth` (gate road) | 6 | the same |
+| `PlazaRadius` | 16 | the round plaza paving (was 15) |
 | `RingRoadWidth` | 24 (was 18) | valley traffic |
 | `WorkFront` | 7 | free ground (2 S) in front of every work place, nest, incubator, trough, bin, seat, door, upgrade pad |
 | `PropGap` | 7 | least gap between two props, or a prop and the fence: two slimes pass |
@@ -52,9 +56,8 @@ The whole valley grows by about x1.39, so its look and proportions stay; walking
 
 Same arrangement as now (`Layout.PlotAreas`): back row fishing, pantry, garden; middle kitchen, meadow
 (plaza), breeding; front training, gate, hatchery; all areas face the plaza. Inside every cell the usable
-square is 76 minus half a `PathWidth` on each shared side: 62 x 62 (was ~40 x 40 after paths). Paths run on
-the cell borders (14 wide), the gate road and the plaza ring are 18. The plaza (meadow cell) keeps the
-fountain in the middle with an 18 ring round it.
+square is about 62 x 62 (was ~40 x 40). Paths run from the plaza to each area's entrance (6 wide), the
+gate road too. The plaza (meadow cell) is a round paving of radius 16 with the fountain in the middle.
 
 ## 4. Inventory of what changes
 

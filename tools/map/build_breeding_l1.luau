@@ -94,7 +94,8 @@ local function egg(name: string, cf: CFrame, s: number)
 end
 
 -- ===== the pen =====
-local PX, PW, PD = 4, 30, 26 -- centre x, width, depth
+-- centre x, width, depth (the village scale, 2026-10-30: 30 x 26 before; src/server/BreedingStages has the same)
+local PX, PW, PD = 4, 42, 38
 local GATE = 8 -- the opening in the front fence
 -- hay floor with studs
 local floor = part("PenFloor", Vector3.new(PW, 0.4, PD), at(PX, 0.2, 0), HAY, nil, Enum.Material.Plastic)
@@ -216,22 +217,23 @@ local function nest(i: number, x: number, z: number, withEgg: boolean)
 		egg("Egg", base * CFrame.new(0.1, 0.95, 0), 1.25)
 	end
 end
-nest(1, PX - 9.5, -2, false) -- (no eggs or slimes placed: the game lays them)
-nest(2, PX + 9.5, -2, false)
+nest(1, PX - 12, 1.5, false) -- (no eggs or slimes placed: the game lays them)
+nest(2, PX + 12, 1.5, false)
 
 -- a water trough and a little hay bale inside the pen
-part("Trough", Vector3.new(5, 1.2, 1.6), at(PX - 10, 1, 8), HONEY_DARK, nil, Enum.Material.Wood)
-part("TroughWater", Vector3.new(4.4, 0.1, 1.1), at(PX - 10, 1.62, 8), Color3.fromRGB(96, 186, 230))
-part("HayBale", Vector3.new(3, 2, 2.2), at(PX + 10.5, 1.4, 8), HAY, nil, Enum.Material.Plastic).TopSurface = Enum.SurfaceType.Studs
-part("HayBand", Vector3.new(3.05, 2.05, 0.3), at(PX + 10.5, 1.4, 8), STRAW_DARK)
+part("Trough", Vector3.new(5, 1.2, 1.6), at(PX - 14, 1, 14), HONEY_DARK, nil, Enum.Material.Wood)
+part("TroughWater", Vector3.new(4.4, 0.1, 1.1), at(PX - 14, 1.62, 14), Color3.fromRGB(96, 186, 230))
+part("HayBale", Vector3.new(3, 2, 2.2), at(PX + 15.5, 1.4, 14), HAY, nil, Enum.Material.Plastic).TopSurface = Enum.SurfaceType.Studs
+part("HayBand", Vector3.new(3.05, 2.05, 0.3), at(PX + 15.5, 1.4, 14), STRAW_DARK)
 
 -- ===== incubators beside the pen (toward the outer hedge), level 1: two =====
-local pad = part("IncubatorPad", Vector3.new(7, 0.4, 18), at(-17, 0.2, 1), CREAM, nil, Enum.Material.Plastic)
+local INC_X = PX - PW / 2 - 8
+local pad = part("IncubatorPad", Vector3.new(7, 0.4, 26), at(INC_X, 0.2, 1.5), CREAM, nil, Enum.Material.Plastic)
 pad.TopSurface = Enum.SurfaceType.Studs
 pad.CastShadow = false
 local function incubator(i: number, z: number, withEgg: boolean)
 	-- facing the front (the gate side), so the player sees the gauge on the way in
-	local cf = at(-17, 0.4, z)
+	local cf = at(INC_X, 0.4, z)
 	part("IncBase", Vector3.new(4, 2.4, 4), cf * CFrame.new(0, 1.2, 0), CREAM, nil, Enum.Material.Plastic).TopSurface = Enum.SurfaceType.Studs
 	part("IncTrim", Vector3.new(4.2, 0.4, 4.2), cf * CFrame.new(0, 2.5, 0), PINK)
 	-- the straw bed and the egg under a glass dome
@@ -259,8 +261,8 @@ local function incubator(i: number, z: number, withEgg: boolean)
 	mark.Name = "Incubator" .. i
 	mark.Parent = bed
 end
-incubator(1, -3.5, false)
-incubator(2, 5.5, false)
+incubator(1, -4.5, false)
+incubator(2, 7.5, false)
 
 -- ===== the area's signpost (heart icon) at the gate =====
 local signCf = at(PX + GATE / 2 + 3, 0, zf - 2)
@@ -301,8 +303,8 @@ if lib then
 	put("FloweringBush", PX - 6, zb + 2.5, 0.75, 150)
 	put("FloweringBush", PX + 7, zb + 2.5, 0.7, 30)
 	put("FlowerPatch", PX - GATE / 2 - 3, zf - 2, 1.1, 0)
-	put("FlowerPatch", -17, -11, 1.0, 40)
-	put("GrassTuft", -18, 12, 1.3, 0)
+	put("FlowerPatch", INC_X - 5, -12, 1.0, 40)
+	put("GrassTuft", INC_X - 5, 14, 1.3, 0)
 	put("Fern", x1 + 2.5, 2, 1.1, 0)
 	nature.Parent = model
 end

@@ -99,7 +99,7 @@ end
 
 -- the plaza: a round patch of stone, a darker ring at its edge
 -- (docs/VILLAGE_SCALE.md: the plaza grows with the plot, paths are sized to the slime)
-local PLAZA = math.floor(15 * Config.Map.PlotSize / 160 + 0.5)
+local PLAZA = Config.Map.PlazaRadius
 local PATH_W = Config.Map.PathWidth
 local MAIN_W = Config.Map.MainPathWidth
 local PLAZA_CELLS = math.ceil(PLAZA / 2)
@@ -132,7 +132,7 @@ local FRONTS = {
 	{ 0, 1, 0, -11.5 }, -- pantry
 	{ 1, 1, 0, -10 }, -- garden: the fence opening
 	{ -1, 0, 0, -10.5 }, -- kitchen
-	{ 1, 0, 4, -14 }, -- breeding pen: its gate
+	{ 1, 0, 4, -20 }, -- breeding pen: its gate (the pen of the village scale reaches z -19)
 	{ -1, -1, 0, -13.5 }, -- training ground: its opening
 }
 local pathEnds: { Vector3 } = {}
@@ -190,11 +190,14 @@ for k = 0, 3 do
 		part("PlanterFlower", Vector3.one * 0.8, planter * CFrame.new(math.cos(fa) * 0.6, 1.5, math.sin(fa) * 0.6), FLOWERS[f + 1], Enum.PartType.Ball)
 	end
 end
--- a lamp beside each path, two thirds of the way out, and one each side of the gate path
+-- two lamps beside each path, on alternate sides (the paths are longer on the bigger plot), and one each side
+-- of the gate path
 for _, t in pathEnds do
 	local side = Vector3.new(t.Z, 0, -t.X).Unit * (PATH_W / 2 + 2)
-	local p = t * 0.62 + side
-	lamp(p.X, p.Z)
+	for k, f in { 0.4, 0.78 } do
+		local p = t * f + side * (if k == 1 then 1 else -1)
+		lamp(p.X, p.Z)
+	end
 end
 lamp(-(MAIN_W / 2 + 2), -HALF + 14)
 lamp(MAIN_W / 2 + 2, -HALF + 14)
@@ -223,10 +226,14 @@ local CELL = Config.Map.PlotSize / 3
 local ring = {}
 for _, s in { -1, 1 } do
 	-- (the corner areas are turned 45 degrees, so their corners reach in toward the middles)
+	-- (village scale: between the areas and also behind the side cells, so the longer fence is not bare)
 	table.insert(ring, { s * CELL / 2, HALF - 8 })
 	table.insert(ring, { s * (CELL / 2 - 4), -HALF + 8 })
 	table.insert(ring, { HALF - 8, s * CELL * 0.45 })
 	table.insert(ring, { -HALF + 8, s * CELL * 0.45 })
+	table.insert(ring, { s * (HALF - 9), HALF - 9 })
+	table.insert(ring, { HALF - 8, s * 4 })
+	table.insert(ring, { -HALF + 8, s * 4 })
 end
 -- (the trees themselves are the owner's, placed below with `place`)
 for i, p in ring do
@@ -237,10 +244,40 @@ end
 -- flower patches along both sides of each path, and either side of the gate
 for i, t in pathEnds do
 	local side = Vector3.new(t.Z, 0, -t.X).Unit * (PATH_W / 2 + 2.5)
-	local p = t * 0.4 - side
+	local p = t * 0.3 - side
 	put("FlowerPatch", p.X, p.Z, 1.1, i * 40)
-	local q = t * 0.85 - side
+	local r = t * 0.6 + side
+	put("FlowerPatch", r.X, r.Z, 1, i * 55)
+	local q = t * 0.88 - side
 	put("GrassTuft", q.X, q.Z, 1.3, i * 70)
+end
+-- the lawn between two neighbouring paths gets a small group (a bush, flowers, a tuft) halfway out, so the
+-- bigger plot has no bare wedges
+do
+	local dirs = {}
+	for _, t in pathEnds do
+		table.insert(dirs, { a = math.atan2(t.X, t.Z), r = t.Magnitude })
+	end
+	table.insert(dirs, { a = math.pi, r = HALF })
+	table.insert(dirs, { a = math.atan2(-CELL, -CELL), r = CELL * math.sqrt(2) }) -- the campfire's path
+	table.sort(dirs, function(u, v)
+		return u.a < v.a
+	end)
+	for i, d in dirs do
+		local e = dirs[i % #dirs + 1]
+		local span = (e.a - d.a) % (2 * math.pi)
+		if span > math.rad(30) then
+			local a = d.a + span / 2
+			local r = math.min(d.r, e.r) * 0.55
+			local c = Vector3.new(math.sin(a), 0, math.cos(a)) * r
+			-- (not on the campfire's floor, which is laid below)
+			if (c - Vector3.new(-CELL, 0, -CELL)).Magnitude > 16 then
+				put(if i % 2 == 0 then "FloweringBush" else "BerryBush", c.X, c.Z, 0.9, i * 33)
+				put("FlowerPatch", c.X + 3.5, c.Z + 2, 1.1, i * 47)
+				put("GrassTuft", c.X - 3, c.Z - 2.5, 1.3, i * 61)
+			end
+		end
+	end
 end
 for _, s in { -1, 1 } do
 	put("FloweringBush", s * (MAIN_W / 2 + 4), -HALF + 6, 0.9, 0)
@@ -255,11 +292,11 @@ nature.Parent = village
 -- from his inventory with the MCP insert_asset tool, scripts removed).
 local ownerKit = game:GetService("ServerStorage"):FindFirstChild("OwnerKit")
 local camp = Vector3.new(-CELL, 0, -CELL)
-local CAMP_R = 11
+local CAMP_R = 13 -- (11 on the old plot: the seats and trees stand a little farther apart now)
 local EARTH = Color3.fromRGB(176, 128, 84)
 local EARTH_DARK = Color3.fromRGB(150, 104, 66)
-for gx = -6, 5 do
-	for gz = -6, 5 do
+for gx = -7, 6 do
+	for gz = -7, 6 do
 		local x, z = gx * 2 + 1, gz * 2 + 1
 		local r = Vector2.new(x, z).Magnitude
 		if r <= CAMP_R then
@@ -391,7 +428,7 @@ addFire(village, fire * CFrame.new(0, 0.6, 0), 1)
 for k = 0, 5 do
 	local a = math.rad(15) + k * math.pi / 3
 	local dir = Vector3.new(math.sin(a), 0, math.cos(a))
-	local p = camp + dir * 6.8
+	local p = camp + dir * 8.5
 	local tangent = Vector3.new(dir.Z, 0, -dir.X)
 	if k % 2 == 0 then
 		place(ownerKit and ownerKit:FindFirstChild("LogBench"), p.X, p.Z, 2.2, nil, tangent)
@@ -405,7 +442,7 @@ for _, s in { -1, 1 } do
 	local p = camp + Vector3.new(math.sin(a), 0, math.cos(a)) * (CAMP_R + 1.5)
 	lamp(p.X, p.Z) -- (replace_props swaps it for the kit lamp post, as on the plaza)
 end
-local BIG = { { "TallPineLarge", 225, 21, 26 }, { "BroadleafTree", 175, 21, 22 }, { "TallPineDense", 275, 21, 24 }, { "TallPineLarge", 135, 22, 21 } }
+local BIG = { { "TallPineLarge", 225, 25, 26 }, { "BroadleafTree", 175, 25, 22 }, { "TallPineDense", 275, 25, 24 }, { "TallPineLarge", 135, 26, 21 } }
 for i, t in BIG do
 	local a = math.rad(t[2])
 	local p = camp + Vector3.new(math.sin(a), 0, math.cos(a)) * t[3]

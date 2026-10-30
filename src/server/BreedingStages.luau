@@ -26,8 +26,11 @@ BreedingStages.MaxLevel = 50
 local TIERS = PantryStages.Tiers
 local part, wedge, place = PantryStages.part, PantryStages.wedge, PantryStages.place
 
--- the pen: x -11 .. 19, z -13 .. 13, the gate x 0 .. 8 at the front
-local X0, X1, Z0, Z1, GATE0, GATE1 = -11, 19, -13, 13, 0, 8
+-- the pen: x -17 .. 25, z -19 .. 19, the gate x 0 .. 8 at the front (the village scale, 2026-10-30: the pen
+-- was 30 x 26 and slimes got stuck between the nests, the trough and the fence; it is now 42 x 38, about twice
+-- the floor, with 6+ studs (WorkFront) round every nest and between the nests and the fence; models keep their
+-- size, docs/VILLAGE_SCALE.md)
+local X0, X1, Z0, Z1, GATE0, GATE1 = -17, 25, -19, 19, 0, 8
 
 -- The nesting shelter at the back of the pen (the owner, 2026-10-28: the cake house did not fit the
 -- farm's buildings; ChatGPT's layout stays; open, not a closed house): in the era's material tier, a
@@ -43,13 +46,16 @@ local BARN = {
 	{ 12.5, 8.5, 7.2, 1.8, 4.2 },
 	{ 13, 8.5, 7.4, 3, 4.2 },
 }
-local BX, BZ = 4, 2.6 -- the middle of its front face (the gate's middle is x 4)
+local BX, BZ = 4, Z1 - 10.4 -- the middle of its front face (the gate's middle is x 4), its back near the fence
 
 -- nests and incubators: where, and from which level
 -- (in two neat rows either side of the lane from the gate: the area's own two in front of the
 -- shelter, the 3rd and 4th straight in front of them; the owner, 2026-10-28: "put it in order")
-local NESTS = { { -5.5, -2, 1 }, { 13.5, -2, 1 }, { -5.5, -8.5, 11 }, { 13.5, -8.5, 31 } }
-local INCUBATORS = { { -17, -3.5, 1 }, { -17, 5.5, 1 }, { -17, -10.5, 21 }, { -17, 12.5, 41 } }
+-- (the first two of each match tools/map/build_breeding_l1, which lays their markers)
+local NESTS = { { -8, 1.5, 1 }, { 16, 1.5, 1 }, { -8, -10.5, 11 }, { 16, -10.5, 31 } }
+local INC_X = X0 - 8 -- the incubators' line, outside the right fence
+local INCUBATORS = { { INC_X, -4.5, 1 }, { INC_X, 7.5, 1 }, { INC_X, -16.5, 21 }, { INC_X, 19.5, 41 } }
+local INC_PAD_EXT = 10 -- the depth of the pad piece added under the 3rd and 4th
 
 local PROPS = {
 	{ "FeedBucket", "HayFeeder", "GrainFeeder", "AutoFeeder", "GooFeeder" },
@@ -74,13 +80,13 @@ local HEIGHT = {
 --            feeder behind it against the back fence; ChatGPT's 3rd breeding review)
 --   warmth   against the right fence between the two right-hand nests, warming them (a flower box
 --            stands in the same place between the left-hand nests)
-local SLOT_AT = { { 17.6, 9 }, { -8.6, 4.8 }, { 15.2, 5.6 }, { -9.6, -5.2 } }
+local SLOT_AT = { { 23, 13.5 }, { -14, 7.5 }, { 18.5, 10 }, { -14.5, -5.5 } }
 local FOOT = { 2.6, 3, 3.6, 2.2 }
-local HAY = Vector3.new(14.8, 0, 11.4) -- the hay store, against the back fence
+local HAY = Vector3.new(19.5, 0, 17.2) -- the hay store, against the back fence
 local LIFT = { [3] = { [5] = 1 } } -- the cloud bed floats
 local FLOOR = 0.4 -- the pen's floor stands this far above the lawn; what is on it stands on its top
 -- the side gate in the right fence, toward the incubators
-local SIDE0, SIDE1 = -1.2, 2.8
+local SIDE0, SIDE1 = -1.5, 3.5
 
 -- What a level holds: the cottage's era, how many nests and incubators, each prop slot's era (0:
 -- none), each build's tier (fence, floor, nest platforms, incubator pad, gate arch).
@@ -832,8 +838,8 @@ function BreedingStages.build(area: Instance, frame: CFrame, level: number): Mod
 	part(
 		m,
 		"SidePath",
-		Vector3.new(3.2, 0.4, SIDE1 - SIDE0), -- (right across to the pad's edge, no grass between)
-		frame * CFrame.new(X0 - 1.6, 0.2, (SIDE0 + SIDE1) / 2),
+		Vector3.new(X0 - (INC_X + 3.5), 0.4, SIDE1 - SIDE0), -- (right across to the pad's edge, no grass between)
+		frame * CFrame.new((X0 + INC_X + 3.5) / 2, 0.2, (SIDE0 + SIDE1) / 2),
 		tp.base,
 		tp.baseMat
 	)
@@ -892,7 +898,7 @@ function BreedingStages.build(area: Instance, frame: CFrame, level: number): Mod
 			part(
 				m,
 				"IncubatorPadExt",
-				Vector3.new(7, 0.4, 4.6),
+				Vector3.new(7, 0.4, INC_PAD_EXT),
 				frame * CFrame.new(n[1], 0.2, n[2]),
 				if tiers[4] <= 1 then Color3.fromRGB(255, 244, 228) else tp.base,
 				tp.baseMat
@@ -933,15 +939,15 @@ function BreedingStages.build(area: Instance, frame: CFrame, level: number): Mod
 		flat("LaneEdge", x - 0.15, x + 0.15, Z0 + 0.4, BZ - 0.4, tfl.edge, tfl.baseMat)
 	end
 	-- the feed and rest corner on straw, the water and egg corner on stone
-	flat("FeedMat", 11.4, 18.6, 3.4, 12.6, Color3.fromRGB(226, 192, 120), Enum.Material.SmoothPlastic)
-	flat("WaterMat", X0 + 0.4, -3.4, 3.4, 12.6, tfl.base, tfl.baseMat)
+	flat("FeedMat", 14.5, X1 - 0.4, 7, Z1 - 0.4, Color3.fromRGB(226, 192, 120), Enum.Material.SmoothPlastic)
+	flat("WaterMat", X0 + 0.4, -3.6, 6.5, Z1 - 0.4, tfl.base, tfl.baseMat)
 	-- a second bale on the hay store, a water barrel by the trough
 	place(m, frame, "HayBale", HAY.X, HAY.Z, 1.7, 2.4, 2.45)
-	place(m, frame, "WoodBarrel", -9.6, 10.6, 2.4, 1.8, FLOOR)
+	place(m, frame, "WoodBarrel", -15, 16.5, 2.4, 1.8, FLOOR)
 	-- a flower box between the left-hand nests, planters inside the gate, pots at the shelter's front
-	place(m, frame, "Planter", 17.7, -5.2, 1.5, 2.2, FLOOR)
-	for _, x in { -1.3, 9.3 } do
-		place(m, frame, "Planter", x, -11.8, 1.5, 2.2, FLOOR)
+	place(m, frame, "Planter", 22.5, -5.5, 1.5, 2.2, FLOOR)
+	for _, x in { -2, 10 } do
+		place(m, frame, "Planter", x, Z0 + 1.4, 1.5, 2.2, FLOOR)
 	end
 	local half = BARN[era][1] / 2
 	for _, sx in { -1, 1 } do
@@ -963,7 +969,7 @@ function BreedingStages.build(area: Instance, frame: CFrame, level: number): Mod
 		return frame * CFrame.new(x, FLOOR + y, z)
 	end
 	-- the feed corner: loose hay by the store, a scoop by the feeder, a broom against the fence
-	for _, h in { { 12.9, 10.4, 0.4 }, { 13.4, 9.3, 2.2 } } do
+	for _, h in { { HAY.X - 2, HAY.Z - 1.2, 0.4 }, { HAY.X - 1.4, HAY.Z - 2.3, 2.2 } } do
 		wedge(
 			m,
 			"LooseHay",
@@ -973,16 +979,29 @@ function BreedingStages.build(area: Instance, frame: CFrame, level: number): Mod
 			Enum.Material.SmoothPlastic
 		)
 	end
-	bit("ScoopBowl", Vector3.new(0.7, 0.35, 0.5), on(17.8, 0.18, 11.4), if era >= 4 then metal else wood, woodMat)
-	bit("ScoopHandle", Vector3.new(0.15, 0.15, 0.9), on(17.8, 0.25, 12) * CFrame.Angles(0.2, 0, 0), wood, woodMat)
-	bit("BroomStick", Vector3.new(0.15, 3.2, 0.15), on(18.4, 1.55, 6.4) * CFrame.Angles(0, 0, -0.22), wood, woodMat)
-	bit("BroomHead", Vector3.new(0.4, 0.7, 1.1), on(18.0, 0.35, 6.4), hay)
+	local feed = SLOT_AT[1]
+	bit(
+		"ScoopBowl",
+		Vector3.new(0.7, 0.35, 0.5),
+		on(feed[1] + 0.2, 0.18, feed[2] + 2.4),
+		if era >= 4 then metal else wood,
+		woodMat
+	)
+	bit(
+		"ScoopHandle",
+		Vector3.new(0.15, 0.15, 0.9),
+		on(feed[1] + 0.2, 0.25, feed[2] + 3) * CFrame.Angles(0.2, 0, 0),
+		wood,
+		woodMat
+	)
+	bit("BroomStick", Vector3.new(0.15, 3.2, 0.15), on(X1 - 0.6, 1.55, 8) * CFrame.Angles(0, 0, -0.22), wood, woodMat)
+	bit("BroomHead", Vector3.new(0.4, 0.7, 1.1), on(X1 - 1, 0.35, 8), hay)
 	-- the water side: a bucket by the trough, a damp patch before it; the egg side dry, on a slab,
 	-- and a sign with an egg and an arrow by the side gate, pointing out to the incubators
 	local bucket = bit(
 		"Bucket",
 		Vector3.new(1, 0.9, 0.9),
-		on(-4.2, 0.5, 9.8) * CFrame.Angles(0, 0, math.pi / 2),
+		on(-6.5, 0.5, 15.5) * CFrame.Angles(0, 0, math.pi / 2),
 		if era >= 3 then metal else wood,
 		if era >= 3 then Enum.Material.Metal else woodMat
 	) :: Part
@@ -990,13 +1009,13 @@ function BreedingStages.build(area: Instance, frame: CFrame, level: number): Mod
 	local damp = bit(
 		"DampPatch",
 		Vector3.new(0.04, 3, 1.4),
-		on(-6, 0.02, 6.2) * CFrame.Angles(0, 0, math.pi / 2),
+		on(-10, 0.02, 11.8) * CFrame.Angles(0, 0, math.pi / 2),
 		Color3.fromRGB(90, 120, 150)
 	) :: Part
 	damp.Transparency = 0.6
-	bit("EggSlab", Vector3.new(3.4, 0.1, 3.4), on(-8.6, 0.05, 4.8), Color3.fromRGB(240, 226, 196))
-	part(m, "SignPost", Vector3.new(0.25, 3, 0.25), on(-10.3, 1.5, -2.4), wood, woodMat)
-	local board = on(-10.3, 2.7, -2.4) * CFrame.Angles(0, -math.pi / 2, 0) -- its front to the pen
+	bit("EggSlab", Vector3.new(3.4, 0.1, 3.4), on(SLOT_AT[2][1], 0.05, SLOT_AT[2][2]), Color3.fromRGB(240, 226, 196))
+	part(m, "SignPost", Vector3.new(0.25, 3, 0.25), on(X0 + 0.7, 1.5, SIDE0 - 1.2), wood, woodMat)
+	local board = on(X0 + 0.7, 2.7, SIDE0 - 1.2) * CFrame.Angles(0, -math.pi / 2, 0) -- its front to the pen
 	bit(
 		"SignBoard",
 		Vector3.new(1.8, 1.1, 0.15),
@@ -1060,12 +1079,12 @@ function BreedingStages.build(area: Instance, frame: CFrame, level: number): Mod
 	local trail = bit(
 		"SlimeMark",
 		Vector3.new(0.04, 1.3, 0.9),
-		on(-0.8, 0.02, -5.2) * CFrame.Angles(0, 0, math.pi / 2),
+		on(-1, 0.02, -6) * CFrame.Angles(0, 0, math.pi / 2),
 		Color3.fromRGB(150, 230, 200)
 	) :: Part
 	trail.Shape = Enum.PartType.Cylinder
 	trail.Transparency = 0.45
-	for k, o in { { 17.6, -11.2 }, { 18.1, -10.6 }, { 17.2, -10.4 } } do
+	for k, o in { { X1 - 1.4, Z0 + 1.8 }, { X1 - 0.9, Z0 + 2.4 }, { X1 - 1.8, Z0 + 2.6 } } do
 		local stone = bit(
 			"Pebble",
 			Vector3.one * (0.5 + k * 0.08),

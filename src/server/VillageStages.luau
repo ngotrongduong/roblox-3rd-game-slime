@@ -39,23 +39,42 @@ local part, place = PantryStages.part, PantryStages.place
 
 local HALF = Config.Map.PlotSize / 2 -- the fence line
 -- the plaza's radius: paving inside it is the plaza's, beyond it the paths' (as tools/map/build_village lays it)
-local PLAZA = math.floor(15 * Config.Map.PlotSize / 160 + 0.5)
+local PLAZA = Config.Map.PlazaRadius
 local CAMP = Vector3.new(-Config.Map.PlotSize / 3, 0, -Config.Map.PlotSize / 3) -- the campfire's middle; its floor keeps its look
+local CAMP_R = 14 -- the campfire's earth floor (13 in tools/map/build_village) and a stud round it
 
--- The paths out of the plaza as build_village lays them (from Layout's area fronts): angle
--- (degrees, atan2(x, z): 0 to the back, 180 to the gate) and the length from the middle.
-local PATHS = {
-	{ 0, 41.8 }, -- pantry
-	{ 42, 57.5 }, -- fishing pond
-	{ 90, 42.8 }, -- kitchen
-	{ 135, 61.9 }, -- training ground
-	{ 180, 79 }, -- the gate
-	{ -135, 65 }, -- campfire
-	{ -84.2, 39.5 }, -- breeding pen
-	{ -45, 65.4 }, -- garden
-}
--- the gaps between the paths, round the plaza (degrees)
-local GAPS = { 21, 66, 112.5, 157.5, -157.5, -109.6, -64.6, -22.5 }
+-- The paths out of the plaza as build_village lays them (from Layout's area fronts, the same FRONTS): angle
+-- (degrees, atan2(x, z): 0 to the back, 180 to the gate) and the length from the middle, worked out from
+-- Layout so they follow the village scale. Order: pantry, fishing pond, kitchen, training ground, the gate,
+-- campfire, breeding pen, garden (clockwise from the back).
+local Layout = require(game:GetService("ReplicatedStorage").Shared.Layout)
+local PATHS: { { number } } = {}
+do
+	local frame = Layout.plotFrame(1)
+	local function areaFront(col: number, row: number, x: number, z: number): { number }
+		local p = frame:PointToObjectSpace((Layout.plotAreaFacing(1, col, row) * CFrame.new(x, 0, z)).Position)
+		return { math.deg(math.atan2(p.X, p.Z)), Vector3.new(p.X, 0, p.Z).Magnitude }
+	end
+	local camp = Vector3.new(-Config.Map.PlotSize / 3, 0, -Config.Map.PlotSize / 3)
+	PATHS = {
+		areaFront(0, 1, 0, -11.5), -- pantry
+		areaFront(-1, 1, -3, -18), -- fishing pond
+		areaFront(-1, 0, 0, -10.5), -- kitchen
+		areaFront(-1, -1, 0, -13.5), -- training ground
+		{ 180, Config.Map.PlotSize / 2 - 1 }, -- the gate
+		{ math.deg(math.atan2(camp.X, camp.Z)), camp.Magnitude - (CAMP_R - 2) }, -- campfire
+		areaFront(1, 0, 4, -20), -- breeding pen
+		areaFront(1, 1, 0, -10), -- garden
+	}
+end
+-- the gaps between the paths, round the plaza (degrees): halfway from each path to the next clockwise
+local GAPS: { number } = {}
+for i, p in PATHS do
+	local q = PATHS[i % #PATHS + 1]
+	local span = (q[1] - p[1]) % 360
+	local g = p[1] + span / 2
+	table.insert(GAPS, if g > 180 then g - 360 else g)
+end
 
 local CENTRE_FOOT = { 0, 9, 11, 12.5, 13.5 }
 
@@ -288,7 +307,7 @@ function VillageStages.build(village: Instance, frame: CFrame, level: number): M
 			table.insert(taken, { at = Vector3.new(q.X, 0, q.Z), r = 1.2 })
 		end
 	end
-	table.insert(taken, { at = CAMP, r = 12 })
+	table.insert(taken, { at = CAMP, r = CAMP_R })
 	local function free(p: Vector3, r: number): boolean
 		if math.abs(p.X) > HALF - 4 - r or math.abs(p.Z) > HALF - 4 - r or onPaving(p, r * 0.8) then
 			return false
@@ -393,7 +412,7 @@ function VillageStages.build(village: Instance, frame: CFrame, level: number): M
 	for _, d in village:GetChildren() do
 		if d.Name == "Paving" and d:IsA("BasePart") then
 			local q = frame:PointToObjectSpace(d.Position)
-			if (Vector3.new(q.X, 0, q.Z) - CAMP).Magnitude > 12 then
+			if (Vector3.new(q.X, 0, q.Z) - CAMP).Magnitude > CAMP_R then
 				tiles[math.floor(q.X / 2) .. "," .. math.floor(q.Z / 2)] = d
 			end
 		end

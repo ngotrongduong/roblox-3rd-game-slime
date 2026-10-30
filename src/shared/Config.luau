@@ -561,7 +561,7 @@ Config.Pads = {
 		pantry = { 8.5, -14 },
 		kitchen = { 10.5, -17.5 },
 		training = { 11, -18.5 },
-		breeding = { 13, -21 },
+		breeding = { 15, -24 },
 	},
 }
 
@@ -596,9 +596,11 @@ Config.Map = {
 	-- standard slime at scale 1, and the clearances every builder keeps from it.
 	SlimeWidth = 3.5,
 	SlimeHeight = 3,
-	-- A path takes three slimes side by side with room; the plaza ring and the gate road are wider.
-	PathWidth = 14,
-	MainPathWidth = 18,
+	-- The village paths keep the owner's 6 studs (2026-10-30: "narrow the paths back to the size they had
+	-- before"); slimes pass each other on the lawn beside them. The plaza's round paving has this radius.
+	PathWidth = 6,
+	MainPathWidth = 6,
+	PlazaRadius = 16,
 	-- Free ground in front of a work place, nest, incubator, bin, seat or door; between two props; corner turns.
 	WorkFront = 7,
 	PropGap = 7,
