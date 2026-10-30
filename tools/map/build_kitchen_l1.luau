@@ -63,18 +63,20 @@ local function post(name: string, cf: CFrame, height: number, diameter: number, 
 end
 
 -- ===== the floor: a warm brick stud patch, the kitchen's island =====
-local pad = part("Floor", Vector3.new(22, 0.4, 18), at(0, 0.2, 0), BRICK, nil, Enum.Material.Plastic)
+-- (the village scale, 2026-10-30: everything laid out 1.3 times wider about the middle, models at their
+-- own size; was 22 x 18; src/server/KitchenStages XW)
+local pad = part("Floor", Vector3.new(28.6, 0.4, 23.4), at(0, 0.2, 0), BRICK, nil, Enum.Material.Plastic)
 pad.TopSurface = Enum.SurfaceType.Studs
 pad.CastShadow = false
 -- a darker stud border, one stud wide
-for _, b in { { 0, 9.5, 24, 1 }, { 0, -9.5, 24, 1 }, { 11.5, 0, 1, 18 }, { -11.5, 0, 1, 18 } } do
+for _, b in { { 0, 12.2, 30.6, 1 }, { 0, -12.2, 30.6, 1 }, { 14.8, 0, 1, 23.4 }, { -14.8, 0, 1, 23.4 } } do
 	local e = part("FloorEdge", Vector3.new(b[3], 0.6, b[4]), at(b[1], 0.3, b[2]), Color3.fromRGB(176, 122, 80), nil, Enum.Material.Plastic)
 	e.TopSurface = Enum.SurfaceType.Studs
 	e.CastShadow = false
 end
 
 -- ===== the stove (back of the pad, facing the front) =====
-local stoveCf = at(0, 0, 4.5)
+local stoveCf = at(0, 0, 5.85)
 part("StoveBase", Vector3.new(6, 3, 4), stoveCf * CFrame.new(0, 1.9, 0), STONE, nil, Enum.Material.Slate)
 part("StoveTop", Vector3.new(6.6, 0.5, 4.6), stoveCf * CFrame.new(0, 3.6, 0), STONE_DARK, nil, Enum.Material.Slate)
 -- the fire mouth at the front, glowing
@@ -190,14 +192,14 @@ part("Ladle", Vector3.new(0.25, 3, 0.25), potCf * CFrame.new(0.6, 2.6, 0.2) * CF
 
 -- ===== the cooking spot (one) =====
 -- A round straw mat in front of the stove: where the working slime stands to cook.
-local spotCf = at(0, 0.45, -1.2)
+local spotCf = at(0, 0.45, -1.6)
 local spot = post("CookingSpot1", spotCf, 0.12, 3.6, Color3.fromRGB(232, 200, 120), Enum.Material.Fabric)
 local mark = Instance.new("Attachment")
 mark.Name = "WorkSpot1"
 mark.Parent = spot
 
 -- ===== the counter (left of the stove) with today's ingredients =====
-local counterCf = at(-7, 0, 3.5)
+local counterCf = at(-9.1, 0, 4.55)
 part("CounterTop", Vector3.new(4.4, 0.5, 6.4), counterCf * CFrame.new(0, 3, 0), HONEY, nil, Enum.Material.Wood)
 part("CounterBody", Vector3.new(4, 2.6, 6), counterCf * CFrame.new(0, 1.6, 0), HONEY_DARK, nil, Enum.Material.Wood)
 part("Shelf", Vector3.new(4.1, 0.3, 6.1), counterCf * CFrame.new(0, 1.1, 0), WOOD_DARK)
@@ -216,14 +218,14 @@ post("Bowl", counterCf * CFrame.new(1.1, 3.55, -2.4), 0.5, 1.4, Color3.fromRGB(2
 -- logs lie front-to-back so their round ends face the gate: a pyramid of 3 + 2 + 1
 for r, n in { 3, 2, 1 } do
 	for i = 1, n do
-		local x = 6.5 + (i - (n + 1) / 2) * 0.85
+		local x = 8.5 + (i - (n + 1) / 2) * 0.85
 		local colour = if (r + i) % 2 == 0 then HONEY_DARK else Color3.fromRGB(150, 98, 52)
-		part("Firewood", Vector3.new(3, 0.8, 0.8), at(x, 0.4 + (r - 1) * 0.72, 3) * CFrame.Angles(0, math.rad(90), 0), colour, Enum.PartType.Cylinder, Enum.Material.Wood)
+		part("Firewood", Vector3.new(3, 0.8, 0.8), at(x, 0.4 + (r - 1) * 0.72, 3.9) * CFrame.Angles(0, math.rad(90), 0), colour, Enum.PartType.Cylinder, Enum.Material.Wood)
 	end
 end
 
 -- ===== the area's signpost (pot icon) at the front =====
-local signCf = at(-8.5, 0, -10.5)
+local signCf = at(-11, 0, -13.7)
 post("SignPost", signCf * CFrame.new(0, 2, 0), 4, 0.6, HONEY_DARK)
 local sign = part("Sign", Vector3.new(3, 2, 0.35), signCf * CFrame.new(0, 3.6, -0.4), HONEY)
 local gui = Instance.new("SurfaceGui")
@@ -255,14 +257,14 @@ if lib then
 		m:PivotTo(m:GetPivot() + (target - box.Position))
 		m.Parent = nature
 	end
-	put("BerryBush", 15, 8, 0.9, 30)
-	put("FloweringBush", -15, 9, 0.85, 0)
-	put("Fern", 13, -6, 1.3, 60)
-	put("GrassTuft", -14, -4, 1.4, 0)
-	put("FlowerPatch", 14, -12, 1.2, 0)
-	put("FlowerPatch", -4, -12, 1.1, 90)
-	put("MossyBoulder", 17, 15, 0.7, 20)
-	put("Sunflower", -13, 12.5, 1.2, 150)
+	put("BerryBush", 20, 10, 0.9, 30)
+	put("FloweringBush", -18, 21, 0.85, 0)
+	put("Fern", 18.5, -7, 1.3, 60)
+	put("GrassTuft", -18.5, -1.5, 1.4, 0)
+	put("FlowerPatch", 18, -16, 1.2, 0)
+	put("FlowerPatch", -6, -16, 1.1, 90)
+	put("MossyBoulder", 22, 19.5, 0.7, 20)
+	put("Sunflower", -17.5, 16, 1.2, 150)
 	nature.Parent = model
 end
 

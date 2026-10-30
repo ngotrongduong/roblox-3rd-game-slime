@@ -559,8 +559,8 @@ Config.Pads = {
 		fishing = { -14, -26 },
 		garden = { 8, -23 },
 		pantry = { 9.5, -18 },
-		kitchen = { 10.5, -17.5 },
-		training = { 11, -18.5 },
+		kitchen = { 10.5, -20 }, -- (the kitchen and training ground spread inside too, 2026-10-30)
+		training = { 8.5, -24.5 },
 		breeding = { 15, -24 },
 	},
 }

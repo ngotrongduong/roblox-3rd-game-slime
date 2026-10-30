@@ -131,9 +131,9 @@ local FRONTS = {
 	{ -1, 1, -3, -23 }, -- fishing pond: the shore end of the dock (z -19.5 at the village scale)
 	{ 0, 1, 0, -15.5 }, -- pantry (its yard reaches z -14 at the village scale)
 	{ 1, 1, 0, -13 }, -- garden: the fence opening (z -12 at the village scale)
-	{ -1, 0, 0, -10.5 }, -- kitchen
+	{ -1, 0, 0, -13.5 }, -- kitchen (its pad spread to z -12.2 at the village scale)
 	{ 1, 0, 4, -20 }, -- breeding pen: its gate (the pen of the village scale reaches z -19)
-	{ -1, -1, 0, -13.5 }, -- training ground: its opening
+	{ -1, -1, 0, -17.5 }, -- training ground: its opening (the front fence at z -16.4 at the village scale)
 }
 local pathEnds: { Vector3 } = {}
 for _, f in FRONTS do

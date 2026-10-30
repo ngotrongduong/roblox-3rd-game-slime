@@ -72,7 +72,9 @@ local function plate(name: string, cf: CFrame, thick: number, diameter: number, 
 end
 
 -- ===== the yard: packed sand studs, a darker border =====
-local W, D = 36.6, 24 -- (the village scale, 2026-10-30: 26 wide before; src/server/TrainingStages XF)
+-- (the village scale, 2026-10-30: 26 x 24 before, then 36.6 x 24; the inside spread 1.3 deep the same
+-- day; src/server/TrainingStages XF, ZF and DEEP)
+local W, D = 36.6, 32
 local floor = part("Floor", Vector3.new(W, 0.4, D), at(0, 0.2, 0), SAND, nil, Enum.Material.Plastic)
 floor.TopSurface = Enum.SurfaceType.Studs
 floor.CastShadow = false
@@ -101,7 +103,7 @@ fence(-fx, -fz, -fx + 7, -fz) -- front, a wide opening in the middle
 fence(fx - 7, -fz, fx, -fz)
 
 -- ===== the training dummy (back middle), built at 1 and scaled up 1.3 about its foot =====
-local dummy = at(0, 0.4, 6)
+local dummy = at(0, 0.4, 7.8)
 local dummyParts = {
 	part("DummyBase", Vector3.new(3, 0.6, 3), dummy * CFrame.new(0, 0.3, 0), WOOD_DARK, nil, Enum.Material.Wood),
 	pole("DummyPost", dummy * CFrame.new(0, 2.6, 0), 4.6, 0.7, HONEY_DARK, Enum.Material.Wood),
@@ -127,13 +129,13 @@ dummyModel.Parent = model
 dummyModel:ScaleTo(1.3)
 
 -- ===== the training spot (one) facing the dummy =====
-local spot = pole("TrainSpot1", at(0, 0.45, 1), 0.12, 3.6, Color3.fromRGB(232, 200, 120), Enum.Material.Fabric)
+local spot = pole("TrainSpot1", at(0, 0.45, 1.3), 0.12, 3.6, Color3.fromRGB(232, 200, 120), Enum.Material.Fabric)
 local mark = Instance.new("Attachment")
 mark.Name = "WorkSpot1"
 mark.Parent = spot
 
 -- ===== an archery target (outer side) =====
-local target = at(12, 0.4, 4) * CFrame.Angles(0, math.rad(-25), 0)
+local target = at(12, 0.4, 5.2) * CFrame.Angles(0, math.rad(-25), 0)
 for _, dx in { -1, 1 } do
 	part("TargetLeg", Vector3.new(0.4, 4.6, 0.4), target * CFrame.new(dx * 1.1, 2.2, 0.6) * CFrame.Angles(math.rad(-14), 0, 0), HONEY_DARK, nil, Enum.Material.Wood)
 end
@@ -148,7 +150,7 @@ part("Arrow", Vector3.new(0.12, 0.12, 2), face * CFrame.new(0.3, 0.2, -1.1), HON
 part("ArrowFletch", Vector3.new(0.4, 0.4, 0.4), face * CFrame.new(0.3, 0.2, -2.1) * CFrame.Angles(0, 0, math.rad(45)), RED)
 
 -- ===== a weapon rack (gate side, against the fence) =====
-local rack = at(-14.9, 0.4, 4) * CFrame.Angles(0, math.rad(90), 0)
+local rack = at(-14.9, 0.4, 5.2) * CFrame.Angles(0, math.rad(90), 0)
 for _, dx in { -2.4, 2.4 } do
 	part("RackPost", Vector3.new(0.6, 4.4, 0.6), rack * CFrame.new(dx, 2.2, 0), HONEY_DARK, nil, Enum.Material.Wood)
 end
@@ -167,7 +169,7 @@ plate("ShieldRim", shield * CFrame.new(0, 0, 0.02), 0.25, 2.7, STEEL)
 plate("ShieldBoss", shield * CFrame.new(0, 0, -0.18), 0.2, 0.7, Color3.fromRGB(240, 196, 70))
 
 -- ===== the squad's banner pole by the opening: where the squad gathers =====
-local flagCf = at(-6.5, 0.4, -8.5)
+local flagCf = at(-6.5, 0.4, -12) -- (the stage moves it out past the front fence)
 local flagBase = part("FlagBase", Vector3.new(1.6, 0.5, 1.6), flagCf * CFrame.new(0, 0.25, 0), WOOD_DARK, nil, Enum.Material.Wood)
 pole("FlagPole", flagCf * CFrame.new(0, 4.5, 0), 8.5, 0.45, HONEY_DARK, Enum.Material.Wood)
 part("FlagTop", Vector3.new(0.8, 0.8, 0.8), flagCf * CFrame.new(0, 8.9, 0), Color3.fromRGB(240, 196, 70), Enum.PartType.Ball)
@@ -178,7 +180,7 @@ gather.Name = "SquadPoint"
 gather.Parent = flagBase
 
 -- ===== the area's signpost (crossed swords) by the opening =====
-local signCf = at(6.5, 0, -14)
+local signCf = at(6.5, 0, -18)
 pole("SignPost", signCf * CFrame.new(0, 2, 0), 4, 0.6, HONEY_DARK)
 local sign = part("Sign", Vector3.new(3, 2, 0.35), signCf * CFrame.new(0, 3.6, -0.4), HONEY)
 local gui = Instance.new("SurfaceGui")
@@ -214,8 +216,8 @@ if lib then
 	put("BerryBush", 22.4, -6, 0.75, 60)
 	put("SmallRocks", 21.9, 2, 1.0, 0)
 	put("GrassTuft", -21.4, 9, 1.3, 0)
-	put("FlowerPatch", -2, -15.5, 1.0, 0)
-	put("Stump", 21.4, -14, 0.8, 0)
+	put("FlowerPatch", -8, -19.5, 1.0, 0)
+	put("Stump", 21.4, -19, 0.8, 0)
 	nature.Parent = model
 end
 

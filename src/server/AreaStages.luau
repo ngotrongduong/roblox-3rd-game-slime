@@ -38,7 +38,7 @@ AreaStages.Specs = {
 		crate = { 8.5, -6.3, 0 },
 		planters = { { -9, -6.4 }, { 9.4, 0.5 } },
 		trim = { { -11, -9, 11, -9 }, { -11, 9, 11, 9 }, { -11, -9, -11, 9 }, { 11, -9, 11, 9 } },
-		prompt = { 0, -10 },
+		prompt = { 0, -13 }, -- (the village scale: the kitchen's pad spread to z -12.2)
 	},
 	PantryL1 = {
 		label = "Pantry",
@@ -89,7 +89,7 @@ AreaStages.Specs = {
 		crate = { -10.5, -3, 90 },
 		planters = { { 11.4, 10.2 }, { -11.4, 10.2 } },
 		trim = { { -13, -12, 13, -12 }, { -13, 12, 13, 12 }, { -13, -12, -13, 12 }, { 13, -12, 13, 12 } },
-		prompt = { 0, -13 },
+		prompt = { 0, -17 }, -- (the village scale: the front fence at z -16.4)
 	},
 } :: { [string]: Spec }
 

@@ -59,8 +59,8 @@ do
 	PATHS = {
 		areaFront(0, 1, 0, -15.5), -- pantry
 		areaFront(-1, 1, -3, -23), -- fishing pond
-		areaFront(-1, 0, 0, -10.5), -- kitchen
-		areaFront(-1, -1, 0, -13.5), -- training ground
+		areaFront(-1, 0, 0, -13.5), -- kitchen
+		areaFront(-1, -1, 0, -17.5), -- training ground
 		{ 180, Config.Map.PlotSize / 2 - 1 }, -- the gate
 		{ math.deg(math.atan2(camp.X, camp.Z)), camp.Magnitude - (CAMP_R - 2) }, -- campfire
 		areaFront(1, 0, 4, -20), -- breeding pen

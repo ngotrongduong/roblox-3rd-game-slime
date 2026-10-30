@@ -28,14 +28,18 @@ KitchenStages.MaxLevel = 50
 local TIERS = PantryStages.Tiers
 local part, wedge, place = PantryStages.part, PantryStages.wedge, PantryStages.place
 
--- the pad: x -11 .. 11, z -9 .. 9, the entrance at the front middle; the shelter over z -2.5 .. 9.2
-local XW, ZF, ZB = 10.8, -2.5, 9.2
--- (eaves low enough that the camera sees the cooking line under them, still well over a player)
-local EAVE, RISE = 7.6, 4.4 -- eave height, ridge above the eaves
+-- The village scale (the owner, 2026-10-30: "spread the inside of the kitchen too"): the whole kitchen is
+-- laid out 1.3 times wider than before about its middle (pad, walls, roof span, spots, props against the
+-- walls), every model and piece keeping its own size. The positions below are the spread ones.
+-- the pad: x -14.3 .. 14.3, z -11.7 .. 11.7, the entrance at the front middle; the shelter over z -3.2 .. 12
+local XW, ZF, ZB = 14, -3.2, 12
+-- (eaves low enough that the camera sees the cooking line under them, still well over a player; the
+-- rise grows with the span so the roof keeps its pitch)
+local EAVE, RISE = 7.6, 5.7 -- eave height, ridge above the eaves
 local FLOOR = 0.4 -- the pad's floor stands this far above the lawn; props stand on its top
 
 -- cooking spots: where, and from which level (the first is the area's own)
-local SPOTS = { { 0, -1.2, 1 }, { 5.6, 1.4, 21 }, { -6, 0.9, 31 } }
+local SPOTS = { { 0, -1.6, 1 }, { 7.3, 1.8, 21 }, { -7.8, 1.2, 31 } }
 
 local PROPS = {
 	{ "VeggieCrates", "PickleBarrels", "SpiceCabinet", "IceBox", "GooFridge" },
@@ -53,7 +57,7 @@ local HEIGHT = {
 -- where each slot stands and which way it faces (degrees; 0 to the front, 90 to -x, -90 to +x): the
 -- ingredients and the water against the left wall in front of the counter, the dishes against the
 -- right wall, all facing in; the grill out in the front yard, turned to the path
-local SLOT_AT = { { -9.5, 0.7, -90 }, { 7.6, -6.2, 90 }, { -9.5, -2.4, -90 }, { 9.5, -1.4, 90 } }
+local SLOT_AT = { { -12.4, 0.9, -90 }, { 9.9, -8.1, 90 }, { -12.4, -3.1, -90 }, { 12.4, -1.8, 90 } }
 local FOOT = { 2.8, 4.2, 2.6, 2.6 }
 -- kit models whose front came out of generate_mesh sideways: the turn (degrees) that brings it to -Z
 local FRONT_TURN: { [string]: number } = { HandPump = 90, GooTap = -90 }
@@ -147,7 +151,7 @@ function KitchenStages.build(area: Instance, frame: CFrame, level: number): Mode
 		elseif d.Name == "FirewoodPile" and d:IsA("Model") then
 			-- by the stove until the bread oven takes its place, then against the right wall
 			local _, size = d:GetBoundingBox()
-			local x, z = if era >= 3 then 9 else 6.5, if era >= 3 then 1.6 else 3
+			local x, z = if era >= 3 then XW - 1.8 else 8.5, if era >= 3 then 2.1 else 3.9
 			d:PivotTo(d:GetPivot() + (at(x, size.Y / 2, z).Position - d:GetBoundingBox().Position))
 		end
 	end
@@ -160,7 +164,7 @@ function KitchenStages.build(area: Instance, frame: CFrame, level: number): Mode
 	else
 		local h = EAVE
 		part(m, "WallBack", Vector3.new(XW * 2, h, 0.6), at(0, h / 2, ZB), tw.walls, tw.wallMat)
-		for _, wx in { -4.7, 4.4 } do -- either side of the stove, clear of the bread oven
+		for _, wx in { -6.1, 5.7 } do -- either side of the stove, clear of the bread oven
 			part(m, "WindowFrame", Vector3.new(2.6, 2.2, 0.3), at(wx, 6, ZB - 0.35), tw.trim, tw.trimMat)
 			part(m, "Window", Vector3.new(2, 1.6, 0.32), at(wx, 6, ZB - 0.36), tw.glass, Enum.Material.Neon).CastShadow =
 				false
@@ -174,8 +178,8 @@ function KitchenStages.build(area: Instance, frame: CFrame, level: number): Mode
 
 	-- 4 lamps at the front corners (and, from era 2, the roof on its posts)
 	for _, s in { -1, 1 } do
-		part(m, "LampPost", Vector3.new(0.5, 5, 0.5), at(s * 10.4, 2.5, -8.4), tl.frame, tl.frameMat)
-		glow(m, "Lamp", Vector3.new(0.9, 0.9, 0.9), at(s * 10.4, 5.4, -8.4), tl.glass, 10)
+		part(m, "LampPost", Vector3.new(0.5, 5, 0.5), at(s * 13.5, 2.5, -10.9), tl.frame, tl.frameMat)
+		glow(m, "Lamp", Vector3.new(0.9, 0.9, 0.9), at(s * 13.5, 5.4, -10.9), tl.glass, 10)
 	end
 	if era >= 2 then
 		for _, s in { -1, 1 } do
@@ -191,8 +195,8 @@ function KitchenStages.build(area: Instance, frame: CFrame, level: number): Mode
 				tl.frameMat
 			)
 			-- lanterns hanging under the roof
-			part(m, "LanternChain", Vector3.new(0.12, 1.6, 0.12), at(s * 6, EAVE + 0.4, 3.4), tl.frame, tl.frameMat)
-			glow(m, "Lantern", Vector3.new(0.8, 1, 0.8), at(s * 6, EAVE - 0.9, 3.4), tl.glass, 12)
+			part(m, "LanternChain", Vector3.new(0.12, 1.6, 0.12), at(s * 7.8, EAVE + 0.4, 4.4), tl.frame, tl.frameMat)
+			glow(m, "Lantern", Vector3.new(0.8, 1, 0.8), at(s * 7.8, EAVE - 0.9, 4.4), tl.glass, 12)
 		end
 		for _, z in { ZF, ZB } do
 			part(m, "PlateBeam", Vector3.new(XW * 2 + 0.8, 0.6, 0.6), at(0, EAVE - 0.3, z), tl.frame, tl.frameMat)
@@ -241,20 +245,27 @@ function KitchenStages.build(area: Instance, frame: CFrame, level: number): Mode
 
 	-- era 3: the bread oven at the back right
 	if era >= 3 then
-		place(m, frame, "BrickOven", 7.2, 6.2, 6, 4.6, FLOOR)
+		place(m, frame, "BrickOven", 9.4, 8.1, 6, 4.6, FLOOR)
 	end
 	-- era 4: a chimney stack from the stove's own chimney up through the roof, and a pot rack
 	if era >= 4 then
-		part(m, "Chimney", Vector3.new(1.8, 6, 1.8), at(2.3, 10.9, 5.9), tw.walls, tw.wallMat)
-		part(m, "ChimneyTop", Vector3.new(2.3, 0.5, 2.3), at(2.3, 14.1, 5.9), tw.trim, tw.trimMat)
-		part(m, "PotRack", Vector3.new(4.6, 0.3, 0.3), at(-7, EAVE - 1.4, 3.6), tl.frame, tl.frameMat)
+		part(m, "Chimney", Vector3.new(1.8, 7.4, 1.8), at(2.3, 11.6, 7.25), tw.walls, tw.wallMat)
+		part(m, "ChimneyTop", Vector3.new(2.3, 0.5, 2.3), at(2.3, 15.5, 7.25), tw.trim, tw.trimMat)
+		part(m, "PotRack", Vector3.new(4.6, 0.3, 0.3), at(-9.1, EAVE - 1.4, 4.7), tl.frame, tl.frameMat)
 		for k, dx in { -1.6, 0, 1.6 } do
-			part(m, "RackChain", Vector3.new(0.1, 1.9, 0.1), at(-7 + dx * 1.3, EAVE - 0.4, 3.6), tl.frame, tl.frameMat)
+			part(
+				m,
+				"RackChain",
+				Vector3.new(0.1, 1.9, 0.1),
+				at(-9.1 + dx * 1.3, EAVE - 0.4, 4.7),
+				tl.frame,
+				tl.frameMat
+			)
 			local pot = part(
 				m,
 				"HangingPot",
 				Vector3.new(0.9, 0.5 + k * 0.15, 0.9),
-				at(-7 + dx, EAVE - 2, 3.6) * CFrame.Angles(0, 0, math.rad(90)),
+				at(-9.1 + dx, EAVE - 2, 4.7) * CFrame.Angles(0, 0, math.rad(90)),
 				Color3.fromRGB(196, 112, 64),
 				Enum.Material.Metal
 			) :: Part
@@ -291,7 +302,7 @@ function KitchenStages.build(area: Instance, frame: CFrame, level: number): Mode
 	end
 
 	-- 5 the entrance arch (GateArch): warm orange, the chef's hat emblem on top
-	GateArch.build(m, frame, 0, 6, -9.2, tiers[5], Color3.fromRGB(240, 150, 60), "EmblemKitchen")
+	GateArch.build(m, frame, 0, 6, -12, tiers[5], Color3.fromRGB(240, 150, 60), "EmblemKitchen")
 
 	-- the cooking spots beyond the area's own: a straw mat each, with its marker
 	for i = 2, spots do
@@ -324,7 +335,8 @@ function KitchenStages.build(area: Instance, frame: CFrame, level: number): Mode
 	end
 	-- the dining table, out on the lawn beside the kitchen's right as a big outdoor table on its own
 	-- deck (the owner, 2026-10-28: bigger, and outside), the grill on its heatproof slab in the yard
-	local tx, tz, DY = -17.5, -6.6, 0.12
+	-- (the village scale: 7 studs of lawn between the pad and the deck)
+	local tx, tz, DY = -26, -8.6, 0.12
 	part(
 		m,
 		"DiningDeck",
@@ -343,7 +355,7 @@ function KitchenStages.build(area: Instance, frame: CFrame, level: number): Mode
 	)
 	if era >= 4 then
 		-- a warm brick hearth round the old stove, so the steel and slime-tech floors stay cozy there
-		part(m, "Hearth", Vector3.new(8, 0.06, 5.4), at(0, FLOOR + 0.03, -0.5), TIERS[3].walls, TIERS[3].wallMat)
+		part(m, "Hearth", Vector3.new(8, 0.06, 5.4), at(0, FLOOR + 0.03, -0.65), TIERS[3].walls, TIERS[3].wallMat)
 	end
 	if era >= 3 then
 		-- a bread peel against the side wall by the oven, a loaf on its paddle
@@ -351,7 +363,7 @@ function KitchenStages.build(area: Instance, frame: CFrame, level: number): Mode
 			m,
 			"PeelHandle",
 			Vector3.new(0.15, 3.2, 0.15),
-			at(10.2, FLOOR + 2.2, 8.2) * CFrame.Angles(0, 0, 0.18),
+			at(XW - 0.6, FLOOR + 2.2, 10.7) * CFrame.Angles(0, 0, 0.18),
 			Color3.fromRGB(176, 128, 84),
 			Enum.Material.Wood
 		)
@@ -359,7 +371,7 @@ function KitchenStages.build(area: Instance, frame: CFrame, level: number): Mode
 			m,
 			"PeelPaddle",
 			Vector3.new(0.12, 1.1, 1),
-			at(10.4, FLOOR + 0.6, 8.2) * CFrame.Angles(0, 0, 0.18),
+			at(XW - 0.4, FLOOR + 0.6, 10.7) * CFrame.Angles(0, 0, 0.18),
 			Color3.fromRGB(176, 128, 84),
 			Enum.Material.Wood
 		)
@@ -403,7 +415,7 @@ function KitchenStages.build(area: Instance, frame: CFrame, level: number): Mode
 		fruit.Shape = Enum.PartType.Ball
 	end
 	if era >= 2 then
-		for k, hx in { -8.2, -7.3, -6.4 } do
+		for k, hx in { -10.6, -9.7, -8.8 } do
 			bit("HerbString", Vector3.new(0.08, 0.8, 0.08), at(hx, EAVE - 1, ZF + 0.2), Color3.fromRGB(226, 196, 140))
 			bit(
 				"HerbBundle",
@@ -413,18 +425,19 @@ function KitchenStages.build(area: Instance, frame: CFrame, level: number): Mode
 			)
 		end
 	end
-	bit("FlourSack", Vector3.new(0.9, 1.2, 0.8), at(-10, FLOOR + 0.6, 2.7), Color3.fromRGB(240, 232, 210))
-	bit("SackTie", Vector3.new(0.5, 0.2, 0.45), at(-10, FLOOR + 1.25, 2.7), Color3.fromRGB(196, 150, 90))
+	bit("FlourSack", Vector3.new(0.9, 1.2, 0.8), at(-13, FLOOR + 0.6, 3.5), Color3.fromRGB(240, 232, 210))
+	bit("SackTie", Vector3.new(0.5, 0.2, 0.45), at(-13, FLOOR + 1.25, 3.5), Color3.fromRGB(196, 150, 90))
 	local bucket = bit(
 		"Bucket",
 		Vector3.new(0.9, 0.9, 0.9),
-		at(-9.8, FLOOR + 0.45, -4.4) * CFrame.Angles(0, 0, math.pi / 2),
+		at(-12.7, FLOOR + 0.45, -5.7) * CFrame.Angles(0, 0, math.pi / 2),
 		if era >= 3 then Color3.fromRGB(150, 156, 166) else Color3.fromRGB(150, 104, 62),
 		if era >= 3 then Enum.Material.Metal else Enum.Material.Wood
 	) :: Part
 	bucket.Shape = Enum.PartType.Cylinder
-	-- the picture board: a dish and a fork drawn on it, its face to the path
-	local board = at(4.3, FLOOR + 2.2, -8.3) * CFrame.Angles(0, math.rad(-20), 0)
+	-- the picture board: a dish and a fork drawn on it, its face to the path (left of the entrance, the
+	-- grill's slab takes the right at the village scale)
+	local board = at(-6, FLOOR + 2.2, -10.8) * CFrame.Angles(0, math.rad(20), 0)
 	for _, s in { -1, 1 } do
 		part(
 			m,
@@ -450,29 +463,37 @@ function KitchenStages.build(area: Instance, frame: CFrame, level: number): Mode
 	-- basket and a pie on the table; a ladle on the pot rack
 	local loafCol = Color3.fromRGB(206, 146, 80)
 	if era >= 3 then
-		part(m, "BreadShelf", Vector3.new(1.8, 0.2, 1.1), at(3.8, FLOOR + 2.2, 8.2), tt.frame, tt.frameMat)
+		part(m, "BreadShelf", Vector3.new(1.8, 0.2, 1.1), at(4.9, FLOOR + 2.2, 10.7), tt.frame, tt.frameMat)
 		for _, lx in { -0.5, 0.5 } do
-			part(m, "ShelfLeg", Vector3.new(0.2, 2.2, 0.2), at(3.8 + lx * 1.5, FLOOR + 1.1, 8.2), tt.frame, tt.frameMat)
+			part(
+				m,
+				"ShelfLeg",
+				Vector3.new(0.2, 2.2, 0.2),
+				at(4.9 + lx * 1.5, FLOOR + 1.1, 10.7),
+				tt.frame,
+				tt.frameMat
+			)
 		end
 		for k = -1, 1 do
-			local loaf = bit("Loaf", Vector3.new(0.5, 0.45, 0.8), at(3.8 + k * 0.55, FLOOR + 2.5, 8.2), loafCol) :: Part
+			local loaf =
+				bit("Loaf", Vector3.new(0.5, 0.45, 0.8), at(4.9 + k * 0.55, FLOOR + 2.5, 10.7), loafCol) :: Part
 			loaf.Shape = Enum.PartType.Ball
 		end
-		bit("FlourSack", Vector3.new(0.9, 1.2, 0.8), at(3.8, FLOOR + 0.6, 8.2), Color3.fromRGB(240, 232, 210))
+		bit("FlourSack", Vector3.new(0.9, 1.2, 0.8), at(4.9, FLOOR + 0.6, 10.7), Color3.fromRGB(240, 232, 210))
 	end
 	if spots >= 3 then
 		part(
 			m,
 			"Burner",
 			Vector3.new(1.3, 1.5, 1.3),
-			at(-3.6, FLOOR + 0.75, 3.2),
+			at(-4.7, FLOOR + 0.75, 4.2),
 			Color3.fromRGB(60, 60, 66),
 			Enum.Material.Metal
 		)
 		bit(
 			"BurnerFlame",
 			Vector3.new(1, 0.12, 1),
-			at(-3.6, FLOOR + 1.56, 3.2),
+			at(-4.7, FLOOR + 1.56, 4.2),
 			Color3.fromRGB(255, 140, 60),
 			Enum.Material.Neon
 		)
@@ -480,7 +501,7 @@ function KitchenStages.build(area: Instance, frame: CFrame, level: number): Mode
 			m,
 			"BigPot",
 			Vector3.new(1.2, 1.4, 1.4),
-			at(-3.6, FLOOR + 2.2, 3.2) * CFrame.Angles(0, 0, math.pi / 2),
+			at(-4.7, FLOOR + 2.2, 4.2) * CFrame.Angles(0, 0, math.pi / 2),
 			Color3.fromRGB(196, 112, 64),
 			Enum.Material.Metal
 		) :: Part
@@ -488,14 +509,14 @@ function KitchenStages.build(area: Instance, frame: CFrame, level: number): Mode
 		local soup = bit(
 			"Soup",
 			Vector3.new(0.06, 1.2, 1.2),
-			at(-3.6, FLOOR + 2.86, 3.2) * CFrame.Angles(0, 0, math.pi / 2),
+			at(-4.7, FLOOR + 2.86, 4.2) * CFrame.Angles(0, 0, math.pi / 2),
 			Color3.fromRGB(240, 170, 80)
 		) :: Part
 		soup.Shape = Enum.PartType.Cylinder
 		bit(
 			"Ladle",
 			Vector3.new(0.12, 1.6, 0.12),
-			at(-7, EAVE - 2.3, 4.2),
+			at(-9.1, EAVE - 2.3, 5.3),
 			Color3.fromRGB(150, 156, 166),
 			Enum.Material.Metal
 		)
@@ -550,7 +571,7 @@ function KitchenStages.build(area: Instance, frame: CFrame, level: number): Mode
 		for _, sx in { -1, 1 } do
 			local slab = at(sx * reach / 2, EAVE + RISE - reach * math.tan(pitch) / 2 + 0.2, (ZF + ZB) / 2)
 				* CFrame.Angles(0, 0, -sx * pitch)
-			for _, dz in { -4, 0, 4 } do
+			for _, dz in { -5.2, 0, 5.2 } do
 				part(
 					m,
 					"RoofSeam",
@@ -567,20 +588,20 @@ function KitchenStages.build(area: Instance, frame: CFrame, level: number): Mode
 			m,
 			"GooPipe",
 			Vector3.new(0.55, EAVE - 0.8, 0.55),
-			at(-10.1, FLOOR + (EAVE - 0.8) / 2, 8.3),
+			at(-(XW - 0.7), FLOOR + (EAVE - 0.8) / 2, ZB - 0.9),
 			Color3.fromRGB(70, 150, 140),
 			Enum.Material.Metal
 		)
 		part(
 			m,
 			"GooPipe",
-			Vector3.new(10.1, 0.55, 0.55),
-			at(-5.05, EAVE - 0.8, 8.3),
+			Vector3.new(XW - 0.7, 0.55, 0.55),
+			at(-(XW - 0.7) / 2, EAVE - 0.8, ZB - 0.9),
 			Color3.fromRGB(70, 150, 140),
 			Enum.Material.Metal
 		)
 		for _, y in { 1.6, 4.2 } do
-			bit("PipeRing", Vector3.new(0.7, 0.18, 0.7), at(-10.1, FLOOR + y, 8.3), mint, Enum.Material.Neon)
+			bit("PipeRing", Vector3.new(0.7, 0.18, 0.7), at(-(XW - 0.7), FLOOR + y, ZB - 0.9), mint, Enum.Material.Neon)
 		end
 	end
 
@@ -665,19 +686,21 @@ function KitchenStages.build(area: Instance, frame: CFrame, level: number): Mode
 	end
 	local red, pinkShade, cream =
 		Color3.fromRGB(220, 80, 80), Color3.fromRGB(240, 150, 180), Color3.fromRGB(250, 236, 200)
-	blanket(23, -5, red) -- (the village scale: the picnic ground 4 studs farther from the kitchen)
+	-- (the village scale: 7 studs of lawn from the pad; the right-hand tables stand one behind the other
+	-- behind the dining deck instead of side by side, so they keep clear of the fishing shed next door)
+	blanket(25, -5, red)
 	if era >= 2 then
-		picnicTable(-19.2, -0.8)
-		blanket(25, -10, Color3.fromRGB(90, 140, 220))
+		picnicTable(-25, 3.5)
+		blanket(27, -12, Color3.fromRGB(90, 140, 220))
 	end
 	if era >= 3 then
-		picnicTable(-25, -0.8, pinkShade)
+		picnicTable(-25, 14.5, pinkShade)
 	end
 	if era >= 4 then
-		picnicTable(24, 1.2, cream)
+		picnicTable(25.5, 3, cream)
 		-- string lights over the right-hand tables
 		local corners =
-			{ Vector3.new(-17, 0, -3.8), Vector3.new(-27, 0, -3.8), Vector3.new(-27, 0, 2.6), Vector3.new(-17, 0, 2.6) }
+			{ Vector3.new(-21, 0, 0.6), Vector3.new(-29, 0, 0.6), Vector3.new(-29, 0, 17.4), Vector3.new(-21, 0, 17.4) }
 		for _, c in corners do
 			part(m, "LightPost", Vector3.new(0.3, 6, 0.3), at(c.X, 3, c.Z), tt.frame, tt.frameMat)
 		end
@@ -707,8 +730,8 @@ function KitchenStages.build(area: Instance, frame: CFrame, level: number): Mode
 		part(
 			m,
 			"PicnicDeck",
-			Vector3.new(10, 0.12, 6.4),
-			at(-22, 0.06, -0.6),
+			Vector3.new(9, 0.12, 17.6),
+			at(-25, 0.06, 9),
 			Color3.fromRGB(214, 176, 124),
 			Enum.Material.WoodPlanks
 		)

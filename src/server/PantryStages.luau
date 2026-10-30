@@ -234,10 +234,19 @@ local SURROUND: { { any } } = {
 -- The village scale (2026-10-30): the yard in front of the house grows from x +-12, z -10 to x +-16.8, z -14,
 -- and what stands in the front yard spreads with it (the house, the props against its walls and the service
 -- yard stay); every position above is written for the old yard and passes through `spread`.
+-- The owner's "spread the inside too" (the same day): the service yard moves 5 studs farther out and 4 deeper
+-- to the front (x -32.5..-16, z -14..10, paved on from the front yard), what stands in its front half spread
+-- 1.2 deep; what stands behind the house moves 2.5 back. Props against the house's walls stay there.
 local YARD_X, YARD_FRONT = 16.8, 14
+local SERVICE_SHIFT, SERVICE_X0, SERVICE_X1 = -5, -32.5, -16
+local BACK_SHIFT = 2.5
 local function spread(x: number, z: number): (number, number)
-	if z < -1.5 and math.abs(x) <= 12.5 then
+	if x < -12.5 and z > -12 then -- (in the old service yard; the shrubs on the yard's front corners stay)
+		return x + SERVICE_SHIFT, if z < 0 then z * 1.2 else z
+	elseif z < -1.5 and math.abs(x) <= 12.5 then
 		return x * 1.4, z * 1.4
+	elseif z > 9.5 then
+		return x, z + BACK_SHIFT
 	end
 	return x, z
 end
@@ -388,7 +397,7 @@ function PantryStages.build(area: Instance, frame: CFrame, level: number): Model
 			d.Color = ty.edge
 			PondStages.studLook(d, ty.yardMat)
 			-- (the right edge opens into the service yard once it is there)
-			local open = wing and frame:PointToObjectSpace(d.Position).X < -12
+			local open = wing and frame:PointToObjectSpace(d.Position).X < -15
 			d.Transparency = if open then 1 else 0
 			d.CanCollide = not open
 		end
@@ -396,16 +405,25 @@ function PantryStages.build(area: Instance, frame: CFrame, level: number): Model
 	if wing then
 		-- the service yard on the right, as deep as the yard, edged the same; any bush or fern of the
 		-- scenery standing where it is paved goes
-		part(m, "ServiceYard", Vector3.new(14, 0.4, 20), frame * CFrame.new(-19, 0.2, 0), ty.yard, ty.yardMat)
-		for _, z in { -10.5, 10.5 } do
-			part(m, "ServiceEdge", Vector3.new(14, 0.6, 1), frame * CFrame.new(-20, 0.3, z), ty.edge, ty.yardMat)
+		local sw, sx = SERVICE_X1 - SERVICE_X0, (SERVICE_X0 + SERVICE_X1) / 2
+		local sd, sz = 10 + YARD_FRONT, (10 - YARD_FRONT) / 2
+		part(m, "ServiceYard", Vector3.new(sw, 0.4, sd), frame * CFrame.new(sx, 0.2, sz), ty.yard, ty.yardMat)
+		for _, z in { -YARD_FRONT - 0.5, 10.5 } do
+			part(m, "ServiceEdge", Vector3.new(sw, 0.6, 1), frame * CFrame.new(sx, 0.3, z), ty.edge, ty.yardMat)
 		end
-		part(m, "ServiceEdge", Vector3.new(1, 0.6, 20), frame * CFrame.new(-26.5, 0.3, 0), ty.edge, ty.yardMat)
+		part(
+			m,
+			"ServiceEdge",
+			Vector3.new(1, 0.6, sd),
+			frame * CFrame.new(SERVICE_X0 - 0.5, 0.3, sz),
+			ty.edge,
+			ty.yardMat
+		)
 		local plot: Instance = area.Parent or area
 		for _, d in plot:GetDescendants() do
 			if d:IsA("Model") and d.Parent and d.Parent.Name == "Nature" then
 				local p = frame:PointToObjectSpace(d:GetPivot().Position)
-				if p.X > -28 and p.X < -11 and math.abs(p.Z) < 12 then
+				if p.X > SERVICE_X0 - 2 and p.X < -11 and p.Z > -YARD_FRONT - 2 and p.Z < 12 then
 					d.Parent = nil
 				end
 			end
@@ -1122,7 +1140,7 @@ function PantryStages.build(area: Instance, frame: CFrame, level: number): Model
 	-- what stands on the yard's paving stands on its top, 0.4 above the lawn
 	local FLOOR = 0.4
 	local function floorAt(x: number, z: number): number
-		local onYard = z <= 10 and z >= -YARD_FRONT and (math.abs(x) <= YARD_X or (wing and x >= -26 and x < 0))
+		local onYard = z <= 10 and z >= -YARD_FRONT and (math.abs(x) <= YARD_X or (wing and x >= SERVICE_X0 and x < 0))
 		return if onYard then FLOOR else 0
 	end
 	-- a model's middle and size along the area's own axes (GetBoundingBox answers in the model's axes,
@@ -1159,7 +1177,8 @@ function PantryStages.build(area: Instance, frame: CFrame, level: number): Model
 		-- (along the service yard's outer edge, its door turned to the yard, so the container's doors
 		-- and the room before them stay clear; the owner, 2026-10-28)
 		local hx, hz, hw, hd, hh = 0, 0, 7, 4, 6.6 -- (a door a player walks through, 5.5 high)
-		local hut = frame * CFrame.new(-24.1, 0, -6.4) * CFrame.Angles(0, -math.pi / 2, 0) -- its -z: +x
+		local hutX, hutZ = spread(-24.1, -6.4)
+		local hut = frame * CFrame.new(hutX, 0, hutZ) * CFrame.Angles(0, -math.pi / 2, 0) -- its -z: +x
 		local function h(x: number, y: number, z: number): CFrame
 			return hut * CFrame.new(x, y, z)
 		end
@@ -1399,8 +1418,15 @@ function PantryStages.build(area: Instance, frame: CFrame, level: number): Model
 	end
 	-- the forklift's parking bay, two painted lines either side of it
 	if props[1] == 4 then
-		for _, x in { 5.9, 11.3 } do
-			part(m, "BayLine", Vector3.new(0.25, 0.04, 5.8), at(x, FLOOR + 0.02, -6.7), Color3.fromRGB(240, 200, 60))
+		local fx, fz = spread(SPOT[1][4][1], SPOT[1][4][2]) -- (round the spread forklift)
+		for _, s in { -1, 1 } do
+			part(
+				m,
+				"BayLine",
+				Vector3.new(0.25, 0.04, 5.8),
+				at(fx + s * 2.7, FLOOR + 0.02, fz),
+				Color3.fromRGB(240, 200, 60)
+			)
 		end
 	end
 	return m
