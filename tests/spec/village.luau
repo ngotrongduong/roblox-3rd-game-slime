@@ -9,13 +9,40 @@ return function(T)
 		T.eq(Village.level(farm), 2)
 		T.eq(Village.populationLimit(farm), 12)
 	end)
-	T.test("population caps follow food worker unlocks", function()
+	T.test("population rises in single or double increments, never jumping 15 at a milestone", function()
 		local farm = FarmKit.farm(1000)
-		for _, milestone in { { 1, 12 }, { 10, 12 }, { 11, 27 }, { 20, 27 }, { 21, 42 }, { 30, 42 }, { 31, 57 }, { 40, 57 }, { 41, 72 }, { 50, 72 } } do
+		local previous = 12
+		local gainedOne = false
+		local gainedTwo = false
+		for level = 1, 50 do
+			for _, area in farm.areas do
+				area.level = level
+			end
+			local capacity = Village.populationLimit(farm)
+			local added = capacity - previous
+			T.ok(added >= 0 and added <= 2, "village level " .. level .. " must unlock at most two slimes")
+			if added == 1 then
+				gainedOne = true
+			elseif added == 2 then
+				gainedTwo = true
+			end
+			previous = capacity
+		end
+		T.eq(previous, 72)
+		T.ok(gainedOne and gainedTwo, "most upgrades add one slime, some add two")
+	end)
+	T.test("population progression respects food production tier boundaries", function()
+		local farm = FarmKit.farm(1000)
+		for _, milestone in {
+			{ 1, 12 }, { 6, 12 }, { 7, 13 }, { 10, 13 },
+			{ 11, 14 }, { 12, 15 }, { 15, 20 }, { 20, 27 },
+			{ 21, 28 }, { 25, 34 }, { 30, 42 }, { 31, 43 },
+			{ 35, 49 }, { 40, 57 }, { 41, 58 }, { 45, 64 }, { 50, 72 },
+		} do
 			for _, area in farm.areas do
 				area.level = milestone[1]
 			end
-			T.eq(Village.populationLimit(farm), milestone[2])
+			T.eq(Village.populationLimit(farm), milestone[2], "village level " .. milestone[1])
 		end
 	end)
 	T.test("upgrade table endpoints and spending rules", function()

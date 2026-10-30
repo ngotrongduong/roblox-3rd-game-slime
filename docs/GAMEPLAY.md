@@ -119,7 +119,8 @@ playing). Nothing dies of hunger and no stat is ever lost to hunger.
 - `FoodBalance.rawSupplyPerMinute` estimates combined weighted raw fullness after reserving
   45% of ideal production time for walking, resting, hauling and a full collection bin. This
   55% active-time factor is an **assumption, not a measured guarantee**. Meal delivery, start-up
-  plots, transport and player staffing must be tested in Studio with 12 / 27 / 42 / 57 / 72 slimes.
+  plots, transport and player staffing must be tested in Studio with intermediate caps and the
+  level-50 maximum of 72 slimes. The headroom estimate is checked at **every** level, not only tiers.
 - Starter inventory (10 Koi + 10 carrots) covers garden establishment; players must still assign
   slimes to fishing, gardening and hauling. No idle farm can feed a full village without workers.
 
@@ -135,12 +136,15 @@ playing). Nothing dies of hunger and no stat is ever lost to hunger.
 - Each area starts with **1 work slot**; more at levels 11, 21, 31 (max 4). Each slot may also have one **reserve**
   slime who takes the shift when the worker is tired or hungry.
 - A hungry worker works at 50%. Work time shrinks a little with the area level.
-- **Population limit (rebalanced 2026-10-30)**: 12 for village levels 1–10, 27 for 11–20,
-  42 for 21–30, 57 for 31–40, and **72 maximum** for 41–50. The village level is the floored
-  average of all six areas (`VillageStages`). Eggs reserve spaces. Caps rise alongside food-worker
-  unlocks rather than permitting the former 216. Existing saves above the new cap keep every slime;
-  they cannot breed again until capacity increases enough. Max assignments: 4 fishers, 4 gardeners,
-  4 cooks, 4 trainees and 4 breeding pairs (8 slimes).
+- **Population limit (refined 2026-10-31)**: increases gradually with each village level, rather
+  than jumping by 15 when a new workforce tier opens. Checkpoints: level 1 → **12**; level 7 → 13;
+  level 10 → 13; level 20 → 27; level 30 → 42; level 40 → 57; level 50 → **72 maximum**.
+  Between checkpoints, capacity is linearly interpolated and rounded down, so each level adds
+  **0, 1 or 2 slimes** (never 15 at once). Before the second fish/garden work slots unlock at 11,
+  capacity rises slowly to keep starter-SPD food production sustainable. The village level is the
+  floored average of all six area levels (`VillageStages`); eggs reserve spaces. Existing saves
+  above the limit retain all slimes, but cannot breed until space opens. Max assignments: 4 fishers,
+  4 gardeners, 4 cooks, 4 trainees and 4 breeding pairs (8 slimes).
 - Area levels (1..50) are saved; upgrading costs coins (§8).
 
 ## 7. Breeding: nests, pairs, incubators

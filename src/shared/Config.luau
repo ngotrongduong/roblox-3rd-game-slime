@@ -179,9 +179,18 @@ Config.Village = {
 	-- simulation steps once a second; this stops a running clock from rewriting its attributes every tick).
 	ClockKeepSeconds = 0.6,
 	MaxLevel = 50,
-	-- Limit births to the staffing milestones; never delete established slimes on old saves.
-	PopulationMilestones = { 1, 11, 21, 31, 41 },
-	PopulationCaps = { 12, 27, 42, 57, 72 },
+	-- Smooth capacity progression: interpolate between these checkpoints.
+	-- Low levels grow slowly until the second fishing and gardening stations unlock at level 11;
+	-- higher levels add 1 or 2 slimes, never a sudden 15-slime jump. Keep all old-save slimes.
+	PopulationProgression = {
+		{ level = 1, cap = 12 },
+		{ level = 7, cap = 13 },
+		{ level = 10, cap = 13 },
+		{ level = 20, cap = 27 },
+		{ level = 30, cap = 42 },
+		{ level = 40, cap = 57 },
+		{ level = 50, cap = 72 },
+	},
 	UpgradeBase = 100,
 	UpgradeMaxCost = 20000,
 	UpgradeLastFromLevel = 49,

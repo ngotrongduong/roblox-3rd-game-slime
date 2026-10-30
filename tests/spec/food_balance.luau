@@ -7,7 +7,7 @@ local Breeding = require("../../src/shared/Breeding")
 
 return function(T: any)
 	T.test("starter SPD raw supply maintains headroom at every population tier", function()
-		for _, level in { 1, 10, 11, 20, 21, 30, 31, 40, 41, 50 } do
+		for level = 1, Config.Village.MaxLevel do
 			local areas = FarmState.newAreas()
 			for _, area in areas do
 				area.level = level

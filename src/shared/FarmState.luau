@@ -268,13 +268,17 @@ end
 
 function FarmState.populationLimit(areas: Areas): number
 	local villageLevel = FarmState.villageLevel(areas)
-	local limit = Config.Village.PopulationCaps[1]
-	for index, threshold in Config.Village.PopulationMilestones do
-		if villageLevel >= threshold then
-			limit = Config.Village.PopulationCaps[index]
+	local steps = Config.Village.PopulationProgression
+	local previous = steps[1]
+	for _, nextStep in steps do
+		if villageLevel < nextStep.level then
+			-- Whole-slime increments per village level, with no jumps larger than two.
+			local span = nextStep.level - previous.level
+			return previous.cap + math.floor((nextStep.cap - previous.cap) * (villageLevel - previous.level) / span)
 		end
+		previous = nextStep
 	end
-	return limit
+	return previous.cap
 end
 
 function FarmState.findSlime(farm: Farm, id: string): (Slime?, number?)
