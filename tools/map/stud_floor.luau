@@ -81,7 +81,8 @@ end
 
 -- The fishing cell in plot coordinates (col -1 = +x, row 1 = +z): coarse tiles whose centre is
 -- at 28 or more on both axes are replaced by the fine grid over [24, 80].
-local FISH_MIN = 24
+-- (on a coarse tile's edge nearest the cell's inner side: 24 on the old 160 plot, 38 on 228)
+local FISH_MIN = COARSE * math.floor((half + Config.Map.PlotSize / 6) / COARSE + 0.5) - half
 for x = -half + COARSE / 2, half - COARSE / 2, COARSE do
 	for z = -half + COARSE / 2, half - COARSE / 2, COARSE do
 		if not (x > FISH_MIN and z > FISH_MIN) then

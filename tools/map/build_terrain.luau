@@ -131,7 +131,7 @@ local function streams()
 	-- Lava rills in the Ember Garden, kept in basalt channels (no open lava floor).
 	for i = 1, 3 do
 		local base = 135 + (i - 2) * 22
-		for r = 90, 200, 3 do
+		for r = M.WildRadius * 0.375, M.WildRadius * 0.83, 3 do
 			local pos = Layout.polar(base + math.sin(r / 17 + i) * 4, r)
 			terrain:FillBall(pos + Vector3.new(0, -2, 0), 4, Enum.Material.Basalt)
 			terrain:FillBall(pos + Vector3.new(0, -2.6, 0), 2.6, Enum.Material.CrackedLava)
@@ -156,7 +156,7 @@ local function roads()
 		local angle = Layout.slotAngle(slot)
 		local inner = M.RingRoadRadius
 		local outer = M.RimRadius - M.PlotSize / 2 + 6
-		local width = if slot == 0 then 40 else 12
+		local width = if slot == 0 then 40 else M.MainPathWidth
 		local mid = Layout.polar(angle, (inner + outer) / 2)
 		local cf = CFrame.new(mid) * CFrame.Angles(0, -math.rad(angle), 0)
 		paint(cf, Vector3.new(width, 4, outer - inner), Enum.Material.Sandstone)

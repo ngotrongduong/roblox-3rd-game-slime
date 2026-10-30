@@ -27,7 +27,7 @@ local VillageWalls = {}
 local TIERS = PantryStages.Tiers
 local part, wedge, place = PantryStages.part, PantryStages.wedge, PantryStages.place
 
-local HALF = 80 -- the fence line
+local HALF = require(game:GetService("ReplicatedStorage").Shared.Config).Map.PlotSize / 2 -- the fence line
 local GATE_X = 11.5 -- the gate towers' middle, either side
 local FENCE_END = 14.5 -- where the front fence runs stop beside the gate
 

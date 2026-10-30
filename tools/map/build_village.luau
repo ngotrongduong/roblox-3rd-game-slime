@@ -84,6 +84,7 @@ local function at(x: number, y: number, z: number): CFrame
 end
 
 -- ===== stone stud tiles on a 2-stud grid (plaza and paths share it, so they never overlap) =====
+-- (one part per 2-stud cell: VillageStages recolours the paving cell by cell for each era's pattern)
 local laid: { [string]: boolean } = {}
 local function tile(gx: number, gz: number, colour: Color3)
 	local key = gx .. "," .. gz
@@ -97,9 +98,13 @@ local function tile(gx: number, gz: number, colour: Color3)
 end
 
 -- the plaza: a round patch of stone, a darker ring at its edge
-local PLAZA = 15
-for gx = -9, 8 do
-	for gz = -9, 8 do
+-- (docs/VILLAGE_SCALE.md: the plaza grows with the plot, paths are sized to the slime)
+local PLAZA = math.floor(15 * Config.Map.PlotSize / 160 + 0.5)
+local PATH_W = Config.Map.PathWidth
+local MAIN_W = Config.Map.MainPathWidth
+local PLAZA_CELLS = math.ceil(PLAZA / 2)
+for gx = -PLAZA_CELLS, PLAZA_CELLS - 1 do
+	for gz = -PLAZA_CELLS, PLAZA_CELLS - 1 do
 		local r = Vector2.new(gx * 2 + 1, gz * 2 + 1).Magnitude
 		if r <= PLAZA then
 			tile(gx, gz, if r > PLAZA - 2.2 then STONE_DARK else STONE)
@@ -107,14 +112,15 @@ for gx = -9, 8 do
 	end
 end
 
--- paths: from the plaza's edge to a point in front of each area, 6 studs wide
-local function path(from: Vector3, to: Vector3)
+-- paths: from the plaza's edge to a point in front of each area, `width` studs wide
+local function path(from: Vector3, to: Vector3, width: number?)
 	local d = to - from
 	local steps = math.ceil(d.Magnitude / 1)
+	local reach = (width or PATH_W) / 2 - 1
 	for k = 0, steps do
 		local p = from + d * (k / steps)
-		for ox = -2, 2, 2 do
-			for oz = -2, 2, 2 do
+		for ox = -reach, reach, 2 do
+			for oz = -reach, reach, 2 do
 				tile(math.floor((p.X + ox) / 2), math.floor((p.Z + oz) / 2), PATH)
 			end
 		end
@@ -137,7 +143,7 @@ for _, f in FRONTS do
 	path(flat.Unit * (PLAZA - 1), flat)
 	table.insert(pathEnds, flat)
 end
-path(Vector3.new(0, 0, -(PLAZA - 1)), Vector3.new(0, 0, -HALF + 1)) -- to the gate
+path(Vector3.new(0, 0, -(PLAZA - 1)), Vector3.new(0, 0, -HALF + 1), MAIN_W) -- to the gate
 
 -- ===== the well in the middle of the plaza =====
 local well = at(0, 0.3, 0)
@@ -186,12 +192,12 @@ for k = 0, 3 do
 end
 -- a lamp beside each path, two thirds of the way out, and one each side of the gate path
 for _, t in pathEnds do
-	local side = Vector3.new(t.Z, 0, -t.X).Unit * 5
+	local side = Vector3.new(t.Z, 0, -t.X).Unit * (PATH_W / 2 + 2)
 	local p = t * 0.62 + side
 	lamp(p.X, p.Z)
 end
-lamp(-5, -HALF + 14)
-lamp(5, -HALF + 14)
+lamp(-(MAIN_W / 2 + 2), -HALF + 14)
+lamp(MAIN_W / 2 + 2, -HALF + 14)
 
 -- ===== trees, bushes and flowers from the nature kit =====
 -- (ServerStorage.NatureKit: the free Creator Store "Nature stylized Pack", see dress_plot_nature)
@@ -219,8 +225,8 @@ for _, s in { -1, 1 } do
 	-- (the corner areas are turned 45 degrees, so their corners reach in toward the middles)
 	table.insert(ring, { s * CELL / 2, HALF - 8 })
 	table.insert(ring, { s * (CELL / 2 - 4), -HALF + 8 })
-	table.insert(ring, { HALF - 8, s * 24 })
-	table.insert(ring, { -HALF + 8, s * 24 })
+	table.insert(ring, { HALF - 8, s * CELL * 0.45 })
+	table.insert(ring, { -HALF + 8, s * CELL * 0.45 })
 end
 -- (the trees themselves are the owner's, placed below with `place`)
 for i, p in ring do
@@ -230,15 +236,15 @@ end
 -- the campfire in the empty front-right cell (the owner, 2026-10-27): built below
 -- flower patches along both sides of each path, and either side of the gate
 for i, t in pathEnds do
-	local side = Vector3.new(t.Z, 0, -t.X).Unit * 5.5
+	local side = Vector3.new(t.Z, 0, -t.X).Unit * (PATH_W / 2 + 2.5)
 	local p = t * 0.4 - side
 	put("FlowerPatch", p.X, p.Z, 1.1, i * 40)
 	local q = t * 0.85 - side
 	put("GrassTuft", q.X, q.Z, 1.3, i * 70)
 end
 for _, s in { -1, 1 } do
-	put("FloweringBush", s * 9, -HALF + 6, 0.9, 0)
-	put("FlowerPatch", s * 8, -HALF + 20, 1.2, 0)
+	put("FloweringBush", s * (MAIN_W / 2 + 4), -HALF + 6, 0.9, 0)
+	put("FlowerPatch", s * (MAIN_W / 2 + 3), -HALF + 20, 1.2, 0)
 end
 nature.Parent = village
 

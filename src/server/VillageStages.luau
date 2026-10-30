@@ -28,6 +28,7 @@ local PondStages = require(script.Parent.PondStages)
 local VillageWalls = require(script.Parent.VillageWalls)
 local VillageFountain = require(script.Parent.VillageFountain)
 local ServerStorage = game:GetService("ServerStorage")
+local Config = require(game:GetService("ReplicatedStorage").Shared.Config)
 
 local VillageStages = {}
 
@@ -36,9 +37,10 @@ VillageStages.MaxLevel = 50
 local TIERS = PantryStages.Tiers
 local part, place = PantryStages.part, PantryStages.place
 
-local HALF = 80 -- the fence line (Config.Map.PlotSize / 2)
-local PLAZA = 15 -- the plaza's radius: paving inside it is the plaza's, beyond it the paths'
-local CAMP = Vector3.new(-160 / 3, 0, -160 / 3) -- the campfire's middle; its floor keeps its look
+local HALF = Config.Map.PlotSize / 2 -- the fence line
+-- the plaza's radius: paving inside it is the plaza's, beyond it the paths' (as tools/map/build_village lays it)
+local PLAZA = math.floor(15 * Config.Map.PlotSize / 160 + 0.5)
+local CAMP = Vector3.new(-Config.Map.PlotSize / 3, 0, -Config.Map.PlotSize / 3) -- the campfire's middle; its floor keeps its look
 
 -- The paths out of the plaza as build_village lays them (from Layout's area fronts): angle
 -- (degrees, atan2(x, z): 0 to the back, 180 to the gate) and the length from the middle.

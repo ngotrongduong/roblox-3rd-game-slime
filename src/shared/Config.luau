@@ -555,12 +555,13 @@ Config.Pads = {
 	Spots = {
 		-- (moved clear of props and off the paths, the owner 2026-10-29: the garden pad overlapped a bench;
 		-- checked at levels 1, 21 and 41 with tools/map/probe_pads.luau)
-		fishing = { -8.5, -17.5 },
-		garden = { 8, -17.5 },
-		pantry = { 7, -14.5 },
-		kitchen = { 6.5, -13.5 },
-		training = { 6.5, -17.5 },
-		breeding = { 13, -19.5 },
+		-- (2026-10-30, the village scale: beside the 14-stud paths; checked at level 1 only, 21 and 41 in phase C)
+		fishing = { -14, -20.5 },
+		garden = { 11, -18.5 },
+		pantry = { 8.5, -14 },
+		kitchen = { 10.5, -17.5 },
+		training = { 11, -18.5 },
+		breeding = { 13, -21 },
 	},
 }
 

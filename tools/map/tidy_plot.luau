@@ -109,7 +109,7 @@ local function put(kind: Kind, x: number, z: number)
 	m.Parent = skirt
 	placed += 1
 end
-local GATE = 12 -- the gate's half width (and its path), kept clear
+local GATE = Config.Map.MainPathWidth / 2 + 3 -- the gate's half width (and its path), kept clear
 -- each side of the plot: its direction along the fence and its outward direction
 local SIDES = {
 	{ along = Vector3.xAxis, out = Vector3.zAxis },
