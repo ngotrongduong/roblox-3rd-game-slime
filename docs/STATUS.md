@@ -212,6 +212,12 @@ warm window, and a real slime model; the roof is a little lilac.
   pond_water_l1.
 - The work place must be saved in Studio (Ctrl+S) to keep the build.
 
+## 2026-10-30 — end of the day: start here
+
+Read `docs/LESSONS-village.md`; skills `village-playtest` and `chatgpt-code-job` are the repeated steps. The owner will pass the code on to
+ChatGPT next: `docs/briefs/HANDOVER-2026-10-30.md` lists the open items. Fixed last: the frozen screen (a glide gait with no hop numbers stopped the
+render loop), training without a chosen stat, each pair courting at its own nest. The kit in the repo matches the place the owner saved at 3:38 PM.
+
 ## 2026-10-29..30 — the living village through the owner's play rounds (hand-over)
 
 Done since the first play test (every item checked in MapWork play tests; agents' reports in the commit messages)
