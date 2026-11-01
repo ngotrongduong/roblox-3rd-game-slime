@@ -69,6 +69,16 @@ for _, design in DualDesigns.List do
 	end
 end
 
+-- The zombie kinds' skins (art/models/slime_body/skins/z_*.png, made by ChatGPT); in ById so their looks are built too.
+SkinIds.Zombies = {
+	rotten = 73614635851841,
+	toxic = 95175306419387,
+	plague = 109323196465830,
+} :: { [string]: number }
+for kind, image in SkinIds.Zombies do
+	SkinIds.ById["zombie-" .. kind] = image
+end
+
 function SkinIds.get(id: string): number?
 	return SkinIds.ById[id]
 end

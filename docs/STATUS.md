@@ -3,8 +3,9 @@
 ## 2026-11-02 — village bar done, economy researched: start here
 
 The HUD shows the village level and the upgrades to the next one. The owner's zombie slimes are playable in MapWork: camps, squads, fights,
-coins for each death, revive within 15 minutes of play or the slime is lost for good, the shop. Not in yet: prices (upgrades still free), real
-zombie art. `docs/ECONOMY.md` has the rules, the measurements, the price table and what is left.
+coins for each death, revive within 15 minutes of play or the slime is lost for good, the shop, three zombie skins and the missing icons (by
+ChatGPT). Not in yet: prices (upgrades still free). `docs/ECONOMY.md` has the rules, the measurements, the price table and what is left. In
+MapWork the stray flame now stands in the campfire (`Village.CampFlameFull`): the owner presses Ctrl+S to keep it.
 
 ## 2026-11-01 — ChatGPT's branch reviewed and partly redone: start here
 

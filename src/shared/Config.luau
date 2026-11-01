@@ -171,9 +171,9 @@ Config.Zombies = {
 	-- body size (a rarer kind is bigger, so it is seen from afar). A stand-in until the owner's own zombie art exists.
 	Looks = {
 		-- (faces with no emote: a bubble over each of 48 zombies is noise)
-		rotten = { colour = "#7d8f55", outline = "#3f4a28", material = "Fabric", face = "sad", size = 1 },
-		toxic = { colour = "#8fcf2a", outline = "#3f6f10", material = "SmoothPlastic", face = "dare", size = 1.18 },
-		plague = { colour = "#2a1114", outline = "#8a0f1f", material = "CrackedLava", face = "dare", size = 1.4 },
+		rotten = { outline = "#3f4a28", burst = "#9bb053", face = "dare", size = 1 },
+		toxic = { outline = "#2c6600", burst = "#a4ff0a", face = "dare", size = 1.18 },
+		plague = { outline = "#8a0f1f", burst = "#8f0024", face = "dare", size = 1.4 },
 	},
 	View = {
 		-- How often the world checks which groups are near enough to draw, and how much farther one may go before it goes.
@@ -1307,20 +1307,21 @@ Config.Ui = {
 		pantry = 128780371839699, -- mat-food.png
 		training = 70679228626362, -- ui.btn.upgrades.png
 		breeding = 92923495054582, -- ui.btn.breeding.png
-		-- Missing pictures (asked of ChatGPT): food kinds, needs and controls.
-		skull = 0, -- the dead-slimes chip (asked of ChatGPT)
+		-- Made by ChatGPT in the owner's style (art/icons/, tools/chatgpt/prepare_icons.py).
+		skull = 83728682658724, -- the dead-slimes chip
+		energy = 128325483797011,
+		fun = 97285329726071,
+		close = 103131383048931,
+		cross = 103131383048931,
+		back = 110115571347055,
+		plus = 115669941400247,
+		-- (drawn from the 3D items instead: docs/GAMEPLAY.md, the food chip)
 		fish = 0,
 		carrot = 0,
 		cabbage = 0,
 		grilledFish = 0,
 		veggieStew = 0,
 		fishVegSoup = 0,
-		energy = 0,
-		fun = 0,
-		close = 0,
-		back = 0,
-		plus = 0,
-		cross = 0,
 	},
 	-- The round edge buttons are the original's ui.btn.<id> art.
 	Buttons = {

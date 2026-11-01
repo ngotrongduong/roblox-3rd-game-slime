@@ -111,7 +111,11 @@ function SlimeLook.build(attrs: { [string]: any }): Model
 	local robloxMaterial = Enum.Material.SmoothPlastic
 	local hullOn = true
 
-	if secret and secret ~= "" then
+	if type(attrs.SkinImage) == "number" then
+		-- a skin named directly: the zombie kinds
+		map = "rbxassetid://" .. tostring(attrs.SkinImage)
+		surfaceColour = Color3.new(1, 1, 1)
+	elseif secret and secret ~= "" then
 		missing("missing Secret art " .. secret)
 	elseif material then
 		if material.colour then

@@ -501,7 +501,7 @@ local function onFallen(event: { [string]: any })
 		local look = if zombie then ZombieLook.look(zombie.kind) else nil
 		if look then
 			size = size * look.size
-			tint = Color3.fromHex(look.colour)
+			tint = Color3.fromHex(look.burst)
 		end
 		ZombieWorld.kill(id)
 		dropBar(id)

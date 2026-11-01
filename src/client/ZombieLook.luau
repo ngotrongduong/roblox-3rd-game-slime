@@ -1,11 +1,12 @@
 --!strict
--- The three zombie looks (Config.Zombies.Looks): the village's own slime body drawn in a sick colour, a Roblox material
--- and an unpleasant face, bigger the rarer the kind. A stand-in until the owner's zombie art exists.
+-- The three zombie looks: the village's own slime body in its kind's skin (SkinIds.Zombies), with its outline colour and
+-- an unpleasant face from Config.Zombies.Looks, bigger the rarer the kind.
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Config = require(ReplicatedStorage.Shared.Config)
 local Expressions = require(ReplicatedStorage.Shared.Expressions)
 local FaceArt = require(ReplicatedStorage.Shared.FaceArt)
+local SkinIds = require(ReplicatedStorage.Shared.SkinIds)
 local SlimeLook = require(script.Parent.SlimeLook)
 local UiKit = require(script.Parent.UiKit)
 
@@ -15,33 +16,17 @@ local C = Config.VillageClient
 
 local ZombieLook = {}
 
-function ZombieLook.look(
-	kind: string
-): { colour: string, outline: string, material: string, face: string, size: number }
+function ZombieLook.look(kind: string): { outline: string, burst: string, face: string, size: number }
 	return (Z.Looks :: any)[kind] or Z.Looks.rotten
 end
 
 -- A zombie body at its feet, scaled for its kind. Not yet animated.
 function ZombieLook.build(kind: string): Model
 	local look = ZombieLook.look(kind)
-	local model = SlimeLook.build({ Scale = 1 })
-	local body = model:FindFirstChild("SlimeBody")
-	if body and body:IsA("MeshPart") then
-		-- The slime's tinted skin is replaced by a plain Roblox material in the kind's colour.
-		for _, old in body:GetChildren() do
-			if old:IsA("SurfaceAppearance") then
-				old:Destroy()
-			end
-		end
-		body.Color = Color3.fromHex(look.colour)
-		local ok, material = pcall(function()
-			return (Enum.Material :: any)[look.material]
-		end)
-		body.Material = if ok and material then material else Enum.Material.SmoothPlastic
-		local hull = model:FindFirstChild("SlimeBodyOutline")
-		if hull and hull:IsA("MeshPart") then
-			hull.Color = Color3.fromHex(look.outline)
-		end
+	local model = SlimeLook.build({ Scale = 1, SkinImage = SkinIds.Zombies[kind] or SkinIds.Zombies.rotten })
+	local hull = model:FindFirstChild("SlimeBodyOutline")
+	if hull and hull:IsA("MeshPart") then
+		hull.Color = Color3.fromHex(look.outline)
 	end
 	model:ScaleTo(C.BodyHeight * look.size)
 	return model
