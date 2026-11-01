@@ -132,6 +132,27 @@ Config.Zombies = {
 	-- Food to revive: ceil(1 + level / this) items (the original's 20 food x ceil(1 + level / 5); an item is about 20).
 	ReviveLevelsPerFood = 5,
 	LevelOffsets = { 0, 3, 5 },
+	-- Camps on the map (src/server/ZombieFights.luau). Every camp holds GroupsPerCamp groups so four squads can always
+	-- find a fight; a beaten group comes back RespawnSeconds later at the level of that moment.
+	GroupsPerCamp = 4,
+	RespawnSeconds = 30,
+	-- Where: from the plot's gate straight towards the valley centre. The first camp is CampFirstDistance out, each
+	-- next one CampSpacing further; the groups of a camp stand GroupSpacing apart across the way. Change these to move
+	-- the camps (they were set without seeing the map).
+	CampFirstDistance = 90,
+	CampSpacing = 70,
+	GroupSpacing = 45,
+	-- The ground under a group is found by a ray from GroundProbeUp above the map's ground height down GroundProbeDown more.
+	GroundProbeUp = 80,
+	GroundProbeDown = 200,
+	-- A fight runs in steps of this many seconds (at most MaxStepsPerFrame in one frame), and is called a draw after
+	-- FightMaxSeconds.
+	FightStepSeconds = 0.1,
+	MaxStepsPerFrame = 5,
+	FightMaxSeconds = 300,
+	-- The player must stand this close to a group to send a squad at it, and to the Market to sell a slime.
+	SendRangeStuds = 60,
+	ShopRangeStuds = 40,
 	-- A zombie's stats against an even slime of the player's level, per camp. Five levels mean far more at level 4 than
 	-- at level 60, so a camp's risk comes from this and stays the same all game; its level sets the reward.
 	StatFactors = { 0.75, 0.9, 1.03 },

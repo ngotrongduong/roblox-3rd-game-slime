@@ -140,6 +140,37 @@ function Zombies.canSend(farm: Farm, slime: Slime, now: number): boolean
 	return true
 end
 
+-- Whether this squad may go: 1 to TeamSize different slimes of the farm, each able to fight and not already out.
+function Zombies.checkSquad(farm: Farm, ids: { string }, isOut: (string) -> boolean, now: number): (boolean, string?)
+	if #ids < 1 or #ids > Config.Zombies.TeamSize then
+		return false, "BAD_SIZE"
+	end
+	local seen: { [string]: boolean } = {}
+	for _, id in ids do
+		if seen[id] then
+			return false, "DUPLICATE"
+		end
+		seen[id] = true
+		local slime = FarmState.findSlime(farm, id)
+		if not slime then
+			return false, "NO_SLIME"
+		elseif isOut(id) then
+			return false, "OUT"
+		elseif not Zombies.canSend(farm, slime, now) then
+			return false, "CANNOT_SEND"
+		end
+	end
+	return true, nil
+end
+
+-- Where a group stands, as (across, forward) studs from the plot's gate towards the valley centre: camp 1..#LevelOffsets
+-- further out each, the groups of a camp spread across the way and centred on it.
+function Zombies.campOffset(camp: number, index: number): (number, number)
+	local z = Config.Zombies
+	local across = (index - (z.GroupsPerCamp + 1) / 2) * z.GroupSpacing
+	return across, z.CampFirstDistance + (camp - 1) * z.CampSpacing
+end
+
 -- A slime as it fights: hungry at half strength (docs/MAP.md), its dish buff on top.
 function Zombies.fighter(
 	slime: Slime,

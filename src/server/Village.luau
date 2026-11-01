@@ -84,6 +84,8 @@ type Session = {
 	sign: Vector3?,
 	actors: { [string]: Actor },
 	reserved: { [string]: string },
+	-- slimes out on a zombie squad (src/server/ZombieFights.luau): they have no actor and are left alone by the brain
+	out: { [string]: boolean },
 	rng: typeof(Rng.new(0)),
 	cursor: number,
 	active: boolean,
@@ -258,6 +260,26 @@ local function freeSeat(session: Session, id: string, actor: Actor?)
 	end
 	if actor then
 		actor.seat = nil
+	end
+end
+
+-- A slime that is gone from the farm (lost for good, sold): nothing of it is kept by the simulation.
+local function forget(session: Session, id: string)
+	local departing = session.actors[id]
+	if departing then
+		release(session, id, departing.action)
+	end
+	freeSeat(session, id, nil)
+	session.actors[id] = nil
+	session.out[id] = nil
+	for key, holder in session.reserved do
+		if holder == id then
+			session.reserved[key] = nil
+		end
+	end
+	local model = session.slimes:FindFirstChild(id)
+	if model then
+		model:Destroy()
 	end
 end
 
@@ -492,6 +514,8 @@ local function show(session: Session, farm: Farm, epoch: number)
 		set(model, "Gait", if actor and actor.gait then actor.gait else "walk")
 		set(model, "Ghost", slime.ghostUntil ~= nil and slime.ghostUntil > epoch)
 		set(model, "Sleeping", slime.sleeping == true)
+		-- Out on a zombie squad: the clients draw it in the fight, not in the village.
+		set(model, "OutOnSquad", session.out[slime.id] == true)
 		set(model, "Working", area or "")
 		set(model, "WorkArea", area or "")
 		set(model, "WorkSlot", slot)
@@ -566,13 +590,7 @@ local function show(session: Session, farm: Farm, epoch: number)
 	end
 	for _, inst in slimes:GetChildren() do
 		if not live[inst.Name] then
-			inst:Destroy()
-			local departing = session.actors[inst.Name]
-			if departing then
-				release(session, inst.Name, departing.action)
-			end
-			freeSeat(session, inst.Name, nil)
-			session.actors[inst.Name] = nil
+			forget(session, inst.Name)
 		end
 	end
 	local liveEggs: { [string]: boolean } = {}
@@ -925,6 +943,9 @@ local function think(
 	clock: number,
 	epoch: number
 )
+	if session.out[slime.id] then
+		return false
+	end
 	local actor = session.actors[slime.id]
 	local baby = Growth.isBaby(
 		slime.createdAt,
@@ -1502,6 +1523,14 @@ local function tick(player: Player, session: Session)
 		if event.kind == "laid" or event.kind == "hatched" then
 			PlayerData.markKeyMoment(player, event.kind)
 		end
+		-- A dead slime nobody revived in time is gone from the farm: its actor, seat and model go with it.
+		if (event.kind == "lost" or event.kind == "revived") and event.slimeId then
+			if event.kind == "lost" then
+				forget(session, event.slimeId)
+			end
+			print(Config.LogPrefix, "village: slime", event.slimeId, event.kind)
+			PlayerData.markKeyMoment(player, event.kind)
+		end
 	end
 	for id, actor in session.actors do
 		local slime = FarmState.findSlime(snapshot, id)
@@ -1918,7 +1947,7 @@ function Village.placeAtWork(player: Player, slimeId: string, area: string, slot
 	local session = sessions[player]
 	local actor = if session then session.actors[slimeId] else nil
 	local spot = if session then session.spots["work:" .. area .. ":" .. slot] else nil
-	if not session or not actor or not spot then
+	if not session or not actor or not spot or session.out[slimeId] then
 		return
 	end
 	local clock = workspace:GetServerTimeNow()
@@ -1949,6 +1978,41 @@ function Village.placeAtWork(player: Player, slimeId: string, area: string, slot
 	if farm then
 		show(session, farm, os.time())
 	end
+end
+
+function Village.isOut(player: Player, slimeId: string): boolean
+	local session = sessions[player]
+	return session ~= nil and session.out[slimeId] == true
+end
+
+-- A slime goes out on a zombie squad, or comes back. Out, it has no actor, is given no action and is not drawn in the
+-- village (its model's OutOnSquad attribute); back, the brain places it at the plaza again on its next turn.
+function Village.setOut(player: Player, slimeId: string, out: boolean)
+	local session = sessions[player]
+	if not session then
+		return
+	end
+	if out then
+		local actor = session.actors[slimeId]
+		if actor then
+			release(session, slimeId, actor.action)
+		end
+		freeSeat(session, slimeId, nil)
+		session.actors[slimeId] = nil
+		session.out[slimeId] = true
+	else
+		session.out[slimeId] = nil
+	end
+	local model = session.slimes:FindFirstChild(slimeId)
+	if model then
+		set(model, "OutOnSquad", out)
+	end
+end
+
+-- The folder this player's village is published in (workspace.Villages.<id>), nil while it is not up.
+function Village.rootOf(player: Player): Folder?
+	local session = sessions[player]
+	return if session then session.root else nil
 end
 
 function Village.ownsPlot(player: Player): boolean
@@ -2014,6 +2078,10 @@ function Village.start()
 			if event.kind == "laid" or event.kind == "hatched" then
 				PlayerData.markKeyMoment(player, event.kind)
 			end
+			if event.kind == "lost" or event.kind == "revived" then
+				print(Config.LogPrefix, "village: slime", event.slimeId, event.kind, "while away")
+				PlayerData.markKeyMoment(player, event.kind)
+			end
 		end
 		if player.Parent ~= Players or not PlayerData.isReady(player) then
 			return
@@ -2034,6 +2102,7 @@ function Village.start()
 			sign = Spots.storehouseSign(plot),
 			actors = {},
 			reserved = {},
+			out = {},
 			rng = rng,
 			cursor = 0,
 			active = true,

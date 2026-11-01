@@ -8,10 +8,14 @@ local ServerStorage = game:GetService("ServerStorage")
 local Breeding = require(ReplicatedStorage.Shared.Breeding)
 local Config = require(ReplicatedStorage.Shared.Config)
 local FarmState = require(ReplicatedStorage.Shared.FarmState)
+local Layout = require(ReplicatedStorage.Shared.Layout)
+local Shop = require(ReplicatedStorage.Shared.Shop)
 local Stations = require(ReplicatedStorage.Shared.Stations)
 local VillageRules = require(ReplicatedStorage.Shared.Village)
+local Zombies = require(ReplicatedStorage.Shared.Zombies)
 local PlayerData = require(script.Parent.PlayerData)
 local Village = require(script.Parent.Village)
+local ZombieFights = require(script.Parent.ZombieFights)
 
 local VillageRemotes = {}
 local limits: { [Player]: { number } } = {}
@@ -19,6 +23,21 @@ local areaChanged: BindableEvent? = nil
 
 local function integer(n: any): boolean
 	return type(n) == "number" and n == n and n ~= math.huge and n ~= -math.huge and n % 1 == 0
+end
+
+-- A plain list of text ids no longer than a squad.
+local function idList(value: any): boolean
+	if type(value) ~= "table" or #value > Config.Zombies.TeamSize then
+		return false
+	end
+	local count = 0
+	for key, id in value do
+		if type(key) ~= "number" or type(id) ~= "string" then
+			return false
+		end
+		count += 1
+	end
+	return count == #value
 end
 
 local function rateAllowed(player: Player): boolean
@@ -68,7 +87,7 @@ local function request(player: Player, data: any): { ok: boolean, reason: string
 			and integer(data.slot)
 			and type(data.slimeId) == "string"
 			and type(data.asReserve) == "boolean"
-	elseif action == "Unassign" then
+	elseif action == "Unassign" or action == "Revive" or action == "Sell" then
 		valid = type(data.slimeId) == "string"
 	elseif action == "SetTrainingStat" then
 		valid = integer(data.slot) and type(data.stat) == "string"
@@ -78,16 +97,30 @@ local function request(player: Player, data: any): { ok: boolean, reason: string
 		valid = type(data.areaId) == "string"
 			and table.find(Config.Village.Areas, data.areaId) ~= nil
 			and Village.ownsPlot(player)
+	elseif action == "SendSquad" then
+		valid = type(data.groupId) == "string" and idList(data.slimeIds) and Village.ownsPlot(player)
 	end
 	if not valid then
 		return { ok = false, reason = "INVALID_ARGUMENT" }
 	end
 
+	-- The shop is the Market: the player must have walked there.
+	local atMarket = action == "Sell"
+		and ZombieFights.near(player, Layout.marketFrame().Position, Config.Zombies.ShopRangeStuds)
+
 	local success, err = pcall(function()
 		local updated = PlayerData.update(player, function(farm: any)
 			if action == "SetPair" then
+				if (data.a and Village.isOut(player, data.a)) or (data.b and Village.isOut(player, data.b)) then
+					why = "OUT"
+					return
+				end
 				ok, why = Breeding.setPair(farm, data.index, data.a, data.b, now)
 			elseif action == "Assign" then
+				if Village.isOut(player, data.slimeId) then
+					why = "OUT"
+					return
+				end
 				ok, why = Stations.assign(farm, data.slimeId, data.area, data.slot, data.asReserve, now)
 			elseif action == "Unassign" then
 				if not FarmState.findSlime(farm, data.slimeId) then
@@ -136,6 +169,27 @@ local function request(player: Player, data: any): { ok: boolean, reason: string
 					areaId = data.areaId
 					upgradedLevel = (farm.areas :: any)[data.areaId].level
 				end
+			elseif action == "SendSquad" then
+				ok, why = ZombieFights.send(player, farm, data.groupId, data.slimeIds, now)
+			elseif action == "Revive" then
+				if Village.isOut(player, data.slimeId) then
+					why = "OUT"
+					return
+				end
+				ok, why = Zombies.revive(farm, data.slimeId, now)
+			elseif action == "Sell" then
+				if not atMarket then
+					why = "TOO_FAR"
+					return
+				elseif Village.isOut(player, data.slimeId) then
+					why = "OUT"
+					return
+				end
+				local value, reason = Shop.sell(farm, data.slimeId, now)
+				ok, why = value ~= nil, reason
+				if value then
+					print(Config.LogPrefix, "shop: sold", data.slimeId, "for", value)
+				end
 			end
 		end)
 		if not updated then
@@ -150,6 +204,12 @@ local function request(player: Player, data: any): { ok: boolean, reason: string
 	-- The owner's rule (2026-10-29): an assigned worker appears at its work place at once and starts working.
 	if ok and action == "Assign" and data.asReserve == false then
 		Village.placeAtWork(player, data.slimeId, data.area, data.slot)
+	end
+	if ok and (action == "Revive" or action == "Sell") then
+		if action == "Revive" then
+			print(Config.LogPrefix, "zombies: revived", data.slimeId)
+		end
+		PlayerData.markKeyMoment(player, string.lower(action))
 	end
 	if ok and areaId and upgradedLevel then
 		PlayerData.markKeyMoment(player, "village upgrade")

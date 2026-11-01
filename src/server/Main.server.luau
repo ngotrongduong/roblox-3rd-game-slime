@@ -8,10 +8,12 @@ local PlayerData = require(script.Parent.PlayerData)
 local Village = require(script.Parent.Village)
 local VillageRemotes = require(script.Parent.VillageRemotes)
 local ZFight = require(script.Parent.ZFight)
+local ZombieFights = require(script.Parent.ZombieFights)
 
 -- Register callbacks before profiles can finish loading.
 VillageRemotes.start()
 Village.start()
+ZombieFights.start()
 -- Stages built for any level settle their coplanar surfaces (no flicker).
 local map = workspace:FindFirstChild("Map")
 if map then

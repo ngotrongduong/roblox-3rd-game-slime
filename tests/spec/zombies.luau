@@ -148,6 +148,43 @@ return function(T: any)
 		local two = FarmKit.farm(NOW, FarmKit.many(2))
 		T.eq(select(2, Shop.sell(two, "s1", NOW)), "LAST_SLIMES")
 	end)
+	T.test("a squad is 1 to 4 different slimes that can go and are not out", function()
+		local farm = FarmKit.farm(NOW, FarmKit.many(6))
+		local none = function(_: string): boolean
+			return false
+		end
+		T.ok(Zombies.checkSquad(farm, { "s1" }, none, NOW))
+		T.ok(Zombies.checkSquad(farm, { "s1", "s2", "s3", "s4" }, none, NOW))
+		T.eq(select(2, Zombies.checkSquad(farm, {}, none, NOW)), "BAD_SIZE")
+		T.eq(select(2, Zombies.checkSquad(farm, { "s1", "s2", "s3", "s4", "s5" }, none, NOW)), "BAD_SIZE")
+		T.eq(select(2, Zombies.checkSquad(farm, { "s1", "s1" }, none, NOW)), "DUPLICATE")
+		T.eq(select(2, Zombies.checkSquad(farm, { "nope" }, none, NOW)), "NO_SLIME")
+		local out = function(id: string): boolean
+			return id == "s2"
+		end
+		T.eq(select(2, Zombies.checkSquad(farm, { "s1", "s2" }, out, NOW)), "OUT")
+		farm.work.fishing.slots[1].worker = "s3"
+		T.eq(select(2, Zombies.checkSquad(farm, { "s3" }, none, NOW)), "CANNOT_SEND")
+		Zombies.fall(farm, "s4", NOW)
+		T.eq(select(2, Zombies.checkSquad(farm, { "s4" }, none, NOW)), "CANNOT_SEND", "a dead slime cannot go")
+	end)
+	T.test("camps lie further out each, groups spread across the way and centred", function()
+		local n = Config.Zombies.GroupsPerCamp
+		local first, sum = nil, 0
+		for index = 1, n do
+			local across, forward = Zombies.campOffset(1, index)
+			sum += across
+			T.eq(forward, Config.Zombies.CampFirstDistance)
+			if first then
+				T.eq(across - first, Config.Zombies.GroupSpacing)
+			end
+			first = across
+		end
+		T.eq(sum, 0, "centred on the way out")
+		local _, near = Zombies.campOffset(1, 1)
+		local _, far = Zombies.campOffset(#Config.Zombies.LevelOffsets, 1)
+		T.ok(far > near)
+	end)
 	T.test("a hungry slime fights at half strength, a dish buff adds on", function()
 		local slime = FarmKit.slime("a", { stats = { attack = 10, defence = 1, speed = 1, hp = 10 } })
 		T.eq(Zombies.fighter(slime, NOW).attack, 10)
