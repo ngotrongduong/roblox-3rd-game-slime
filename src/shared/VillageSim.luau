@@ -225,7 +225,7 @@ local function doWork(
 					end
 					table.insert(events, { kind = "collected", item = caught, area = "fishing", slimeId = worker.id })
 				elseif areaId == "kitchen" then
-					local id = Food.bestDish(farm.counter)
+					local id = if Food.canCook(farm) then Food.bestDish(farm.counter) else nil
 					if id == nil then
 						progress = 0
 						break

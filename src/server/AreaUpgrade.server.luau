@@ -1,8 +1,8 @@
 --!strict
 -- Upgrading a home plot's areas by stepping on a pad (the owner, 2026-10-29; before that an E prompt).
 -- Each area has an upgrade pad beside its entrance (UpgradePads); the server keeps its level and
--- swaps its stage layer for the next level (PondStages for the fishing pond, AreaStages for the
--- others), with a burst of sparkles, bigger when a material tier starts. At the pond the original
+-- swaps its stage layer for the next level (PondStages for the fishing pond, each area's
+-- own Stages builder for the others). Clients materialise newly changed pieces locally. At the pond the original
 -- level-1 dock and its tools are hidden while the stage layer stands in for them.
 -- Upgrades are saved and paid through VillageRemotes, including the E prompts.
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -14,6 +14,7 @@ local PlayerData = require(script.Parent.PlayerData)
 local Village = require(script.Parent.Village)
 local VillageRemotes = require(script.Parent.VillageRemotes)
 local UpgradePads = require(script.Parent.UpgradePads)
+local UpgradeReveal = require(script.Parent.UpgradeReveal)
 local AreaStages = require(script.Parent.AreaStages)
 local PantryStages = require(script.Parent.PantryStages)
 local GardenStages = require(script.Parent.GardenStages)
@@ -54,47 +55,6 @@ if not plot then
 	return -- (the built game has no map yet: the plots are made in the work place)
 end
 
--- A one-shot burst of sparkles (and dust when a tier starts) at a point.
-local function burst(at: CFrame, remodel: boolean)
-	local p = Instance.new("Part")
-	p.Name = "UpgradeBurst"
-	p.Size = Vector3.one
-	p.Transparency = 1
-	p.Anchored = true
-	p.CanCollide = false
-	p.CanQuery = false
-	p.CFrame = at
-	p.Parent = workspace
-	local sparkle = Instance.new("ParticleEmitter")
-	sparkle.Texture = "rbxasset://textures/particles/sparkles_main.dds"
-	sparkle.Color = ColorSequence.new(Color3.fromRGB(255, 230, 140), Color3.fromRGB(255, 255, 255))
-	sparkle.LightEmission = 1
-	sparkle.Size = NumberSequence.new({ NumberSequenceKeypoint.new(0, 0.8), NumberSequenceKeypoint.new(1, 0) })
-	sparkle.Lifetime = NumberRange.new(0.8, 1.4)
-	sparkle.Speed = NumberRange.new(8, 16)
-	sparkle.SpreadAngle = Vector2.new(70, 70)
-	sparkle.Acceleration = Vector3.new(0, -12, 0)
-	sparkle.Rate = 0
-	sparkle.Parent = p
-	sparkle:Emit(if remodel then 90 else 30)
-	if remodel then
-		local dust = Instance.new("ParticleEmitter")
-		dust.Texture = "rbxasset://textures/particles/smoke_main.dds"
-		dust.Color = ColorSequence.new(Color3.fromRGB(240, 232, 214))
-		dust.Size = NumberSequence.new({ NumberSequenceKeypoint.new(0, 3), NumberSequenceKeypoint.new(1, 8) })
-		dust.Transparency = NumberSequence.new({ NumberSequenceKeypoint.new(0, 0.3), NumberSequenceKeypoint.new(1, 1) })
-		dust.Lifetime = NumberRange.new(1, 1.6)
-		dust.Speed = NumberRange.new(4, 8)
-		dust.SpreadAngle = Vector2.new(180, 30)
-		dust.Rate = 0
-		dust.Parent = p
-		dust:Emit(24)
-	end
-	task.delay(2.5, function()
-		p:Destroy()
-	end)
-end
-
 local function hidePondLevelOne(pond: Instance)
 	for _, name in REPLACED do
 		local inst = pond:FindFirstChild(name)
@@ -117,7 +77,7 @@ local village = plot:FindFirstChild("Village")
 local villageFrame = Layout.plotFrame(PLOT) * CFrame.new(0, GROUND, 0)
 local villageLayer: Model? = nil
 local villageLevel = 0
-local function refreshVillage()
+local function refreshVillage(effects: boolean?)
 	if not village then
 		return
 	end
@@ -131,6 +91,9 @@ local function refreshVillage()
 	end
 	villageLevel = v
 	local stage = VillageStages.build(village, villageFrame, v)
+	if effects and villageLayer then
+		UpgradeReveal.prepare(villageLayer, stage, "village", v)
+	end
 	stage.Parent = village
 	if villageLayer then
 		villageLayer:Destroy()
@@ -154,7 +117,7 @@ local function setUp(name: string, col: number, row: number, areaId: string)
 	local level = 1
 	local layer: Model? = nil
 
-	local function show(newLevel: number)
+	local function show(newLevel: number, effects: boolean)
 		if isPond then
 			-- (the pond itself grows: its new lobes are carved before the layer stands on them)
 			PondStages.grow(area, frame, newLevel)
@@ -165,6 +128,10 @@ local function setUp(name: string, col: number, row: number, areaId: string)
 			then own.build(area, frame, newLevel)
 			elseif isPond then PondStages.build(newLevel, frame * CFrame.new(DOCK_X, 0, 0))
 			else AreaStages.build(name, area, frame, newLevel)
+		if effects and old then
+			-- The change marker rides on the new layer so late-joining clients never replay it.
+			UpgradeReveal.prepare(old, stage, areaId, newLevel)
+		end
 		stage.Parent = area
 		layer = stage
 		if old then
@@ -194,20 +161,17 @@ local function setUp(name: string, col: number, row: number, areaId: string)
 			return
 		end
 		level = newLevel
-		show(level)
-		if effects then
-			burst(frame * CFrame.new(padSpot[1], 2, padSpot[2]), level % 5 == 1)
-		end
+		show(level, effects)
 		setPad(level)
 		areaLevels[name] = level
-		refreshVillage()
+		refreshVillage(effects)
 	end
 	applyLevel[areaId] = apply
 
 	if isPond then
 		hidePondLevelOne(area)
 	end
-	show(level)
+	show(level, false)
 	setPad(level)
 	areaLevels[name] = level
 end

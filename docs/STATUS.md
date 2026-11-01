@@ -1,5 +1,10 @@
 # Status
 
+## 2026-11-01 — ChatGPT's branch reviewed and partly redone: start here
+
+Merged into `main` after a play test in MapWork: the upgrade reveal, the garden order, the population and hunger numbers, and the kitchen
+rule. What was kept, redone, proved in play and still unchecked is in `docs/BUG_TRACKER.md`, "Claude's review of this branch".
+
 ## 2026-10-27 — project started
 
 Done

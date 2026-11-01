@@ -179,8 +179,18 @@ Config.Village = {
 	-- simulation steps once a second; this stops a running clock from rewriting its attributes every tick).
 	ClockKeepSeconds = 0.6,
 	MaxLevel = 50,
-	PopulationBase = 20,
-	PopulationPerLevel = 4,
+	-- Smooth capacity progression: interpolate between these checkpoints.
+	-- Low levels grow slowly until the second fishing and gardening stations unlock at level 11;
+	-- higher levels add 1 or 2 slimes, never a sudden 15-slime jump. Keep all old-save slimes.
+	PopulationProgression = {
+		{ level = 1, cap = 12 },
+		{ level = 7, cap = 13 },
+		{ level = 10, cap = 13 },
+		{ level = 20, cap = 27 },
+		{ level = 30, cap = 42 },
+		{ level = 40, cap = 57 },
+		{ level = 50, cap = 72 },
+	},
 	UpgradeBase = 100,
 	UpgradeMaxCost = 20000,
 	UpgradeLastFromLevel = 49,
@@ -392,8 +402,9 @@ Config.Brain = {
 Config.Needs = {
 	Max = 100,
 	Start = 100,
-	IdleFullnessPerMinute = 2,
-	WorkFullnessPerMinute = 3,
+	-- Balanced for starter SPD, not the fastest possible worker.
+	IdleFullnessPerMinute = 1.5,
+	WorkFullnessPerMinute = 2.25,
 	IdleEnergyPerMinute = 0.5,
 	WorkEnergyPerMinute = 2,
 	SleepEnergyPerMinute = 5,
@@ -413,14 +424,14 @@ Config.Needs = {
 -- CropKit model prefix of a vegetable (Carrot4 is the ripe carrot). Ids `fish`, `carrot` and `cabbage` are the first
 -- kinds and keep their saves; every other id is new. The model of a kind is ClientKit.Items.<id>.
 local FoodKinds = {
-	fish = { name = "Koi", group = "fish", rarity = "common", fullness = 20, weight = 40 },
-	blueFish = { name = "Blue Fish", group = "fish", rarity = "common", fullness = 12, weight = 30 },
+	fish = { name = "Koi", group = "fish", rarity = "common", fullness = 25, weight = 40 },
+	blueFish = { name = "Blue Fish", group = "fish", rarity = "common", fullness = 22, weight = 30 },
 	trout = { name = "Trout", group = "fish", rarity = "uncommon", fullness = 28, weight = 18 },
 	salmon = { name = "Salmon", group = "fish", rarity = "rare", fullness = 40, weight = 8 },
 	pufferfish = { name = "Pufferfish", group = "fish", rarity = "rare", fullness = 40, weight = 3 },
 	goldenCarp = { name = "Golden Carp", group = "fish", rarity = "epic", fullness = 60, weight = 1 },
-	carrot = { name = "Carrot", group = "veg", rarity = "common", fullness = 15, weight = 30, crop = "Carrot" },
-	cabbage = { name = "Cabbage", group = "veg", rarity = "common", fullness = 15, weight = 30, crop = "Cabbage" },
+	carrot = { name = "Carrot", group = "veg", rarity = "common", fullness = 20, weight = 30, crop = "Carrot" },
+	cabbage = { name = "Cabbage", group = "veg", rarity = "common", fullness = 20, weight = 30, crop = "Cabbage" },
 	tomato = { name = "Tomato", group = "veg", rarity = "uncommon", fullness = 24, weight = 18, crop = "Tomato" },
 	corn = { name = "Corn", group = "veg", rarity = "uncommon", fullness = 28, weight = 12, crop = "Corn" },
 	pumpkin = { name = "Pumpkin", group = "veg", rarity = "rare", fullness = 40, weight = 8, crop = "Pumpkin" },
@@ -494,7 +505,6 @@ Config.Work = {
 	CycleSeconds = { fishing = 60, garden = 240, kitchen = 120, training = 90 },
 	CycleLevelFactor = 0.99,
 	FishingYield = 1,
-	GardenYield = 3,
 	SpeedBonusPerSpd = 0.05,
 	SpeedBonusMax = 3,
 	GardenPlotCount = 20,
@@ -534,6 +544,57 @@ Config.Work = {
 	WorkDropDistance = 0.65,
 	WorkToolScale = 0.55,
 	KitchenYield = 1,
+}
+
+-- Short, client-only construction reveal. The server changes gameplay immediately;
+-- clients fade changed stage pieces into view, with a focused celebration on the upgraded area.
+Config.UpgradeFx = {
+	Tag = "AreaUpgradeReveal",
+	PartAttribute = "UpgradeFxPart",
+	-- the biggest changed pieces fade in; anything past this just appears (too small to notice)
+	MaxChangedParts = 150,
+	OutlinedParts = 6,
+	BurstMaxStuds = 24, -- wider and the sparkles thin out to specks at the play camera (seen in play)
+	ClientSettleSeconds = 0.25,
+	ViewDistanceStuds = 175,
+	MaxEventAgeSeconds = 8,
+	JoinGraceSeconds = 0.5,
+	RevealSeconds = 1.35,
+	RevealStaggerSeconds = 0.95,
+	OutlineSeconds = 2.2,
+	MessageSeconds = 2.6,
+	MessageHeightStuds = 5,
+	MessageRiseStuds = 3,
+	MessageWidthPixels = 310,
+	MessageHeightPixels = 100,
+	ScreenBaseY = 900,
+	ScreenMin = 0.7,
+	ScreenMax = 1.3,
+	SparkleCount = 90,
+	SparkleSecondCount = 40,
+	EraStepLevels = 10,
+	FirstEraUpgradeLevel = 11,
+	EraSparkleMultiplier = 1.8,
+	SparkleSecondDelay = 0.55,
+	SparkleLifetimeMin = 0.75,
+	SparkleLifetimeMax = 1.35,
+	SparkleSpeedMin = 8,
+	SparkleSpeedMax = 16,
+	SparkleAccelerationY = -12,
+	SparkleSize = 1.1,
+	DustCount = 24,
+	DustSizeStart = 3,
+	DustSizeEnd = 8,
+	DustTransparency = 0.3,
+	DustLifetimeMin = 1,
+	DustLifetimeMax = 1.6,
+	DustSpeedMin = 4,
+	DustSpeedMax = 8,
+	FxLifetimeSeconds = 4,
+	Dust = { 240, 232, 214 },
+	Gold = { 255, 211, 105 },
+	Cream = { 255, 247, 220 },
+	Shadow = { 55, 34, 24 },
 }
 
 Config.Training = {

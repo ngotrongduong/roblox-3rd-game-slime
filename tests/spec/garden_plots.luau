@@ -56,6 +56,45 @@ return function(T: any)
 		T.ok(developmentWet > developmentDry, "watering advances overall crop maturity despite stage progress reset")
 	end)
 
+	T.test("one slime establishes several beds rather than monopolising the first crop", function()
+		local plots = GardenPlots.new(Config.Work.GardenPlotCount)
+		-- An older stage-two plant should not block a newly available bed.
+		plots[1] = { crop = "carrot", stage = 2, progress = 0, watered = false }
+		for expected = 2, 7 do
+			local index, action = GardenPlots.choose(plots)
+			T.eq(index, expected)
+			T.eq(action, "hoe")
+			GardenPlots.apply(plots, index :: number, action :: string, "")
+			index, action = GardenPlots.choose(plots)
+			T.eq(index, expected)
+			T.eq(action, "plant")
+			GardenPlots.apply(plots, index :: number, action :: string, "cabbage")
+			index, action = GardenPlots.choose(plots)
+			T.eq(index, expected)
+			T.eq(action, "water")
+			GardenPlots.apply(plots, index :: number, action :: string, "")
+		end
+		for index = 2, 7 do
+			T.eq(plots[index].crop, "cabbage")
+			T.ok(plots[index].watered)
+		end
+	end)
+
+	T.test("one offline gardener plants multiple real plots", function()
+		local now = 1000000
+		local farm = FarmKit.farm(now)
+		T.ok(Stations.assign(farm, "slime-1", "garden", 1, false, now))
+		local grown = VillageSim.step(farm, now + 420, 420, Rng.new(8), { errands = false })
+		local sown = 0
+		for _, plot in grown.work.garden.plots do
+			if plot.crop ~= "" then
+				sown += 1
+			end
+		end
+		T.ok(sown >= 4, "one gardener should have several crops in the ground after seven minutes")
+		T.eq(farm.work.garden.plots[1].crop, "", "sim remains pure")
+	end)
+
 	T.test("large time steps consume water only for the first growth stage", function()
 		local plots = GardenPlots.new(1)
 		GardenPlots.apply(plots, 1, "hoe", "")

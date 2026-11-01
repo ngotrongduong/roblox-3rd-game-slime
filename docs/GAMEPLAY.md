@@ -108,20 +108,43 @@ playing). Nothing dies of hunger and no stat is ever lost to hunger.
 - Offline: the village runs up to 8 h (the original's cap), everything made goes straight to the storehouse.
 - Buffs are kept on the slime (`buff = { stat, percent, untilTime }`) for the fights phase.
 
+### Food economy rebalance (2026-10-30)
+
+- Idle hunger falls at **1.5 fullness/minute**, working at **2.25/minute** (baby factor unchanged).
+  Common Koi and Blue Fish replenish 25 and 22; carrot and cabbage replenish 20. Recipes
+  remain optional bonuses, not a source of free fish or vegetables.
+- The baseline assumes one fisherman and one gardener with **SPD 1** at level 1; no speed bonus
+  is assumed. Each harvested garden plot yields ONE vegetable, after hoe, plant, three waterings
+  and harvest. Water boosts growth; crops still need real time to ripen.
+- Measured with the real simulation, `lune run tools/balance/food_sim.luau 24 0.55` (a full village, 24 hours, 45% of
+  work time taken away for walking and hauling, every fishing and garden slot staffed with a worker and a reserve):
+  no slime goes hungry at the 13 levels tried from 1 to 50 and the storehouse ends full, with lowest fullness about 50. The 45% is
+  an assumption; a Studio play test at the 72-slime cap is still to do. `tests/spec/food_balance.luau` keeps this checked.
+- A kitchen takes raw food only with a cook, at least one slime allowed cooked food, and room in the fridge.
+- Starter inventory (10 Koi + 10 carrots) covers garden establishment; players must still assign
+  slimes to fishing, gardening and hauling. No idle farm can feed a full village without workers.
+
 ## 6. Work areas
 
 | Area | Work | Level 1 output |
 |---|---|---|
 | Fishing pond | fish → its box | 1 fish / 60 s |
-| Garden | plant → water → 4 growth stages → harvest → its box | 3 vegetables / 240 s (carrot or cabbage) |
+| Garden | hoe → plant → water each growing stage → harvest → its box | 1 vegetable per six tending actions (stages also grow over time) |
 | Kitchen | cooks from the counter | 1 dish / 120 s |
 | Training ground | trains one stat | 1 session / 90 s |
 
 - Each area starts with **1 work slot**; more at levels 11, 21, 31 (max 4). Each slot may also have one **reserve**
   slime who takes the shift when the worker is tired or hungry.
 - A hungry worker works at 50%. Work time shrinks a little with the area level.
-- **Population limit**: 20, +4 per village level (the village level is the average of the six areas' levels, as
-  `VillageStages` already computes). Eggs hold a place.
+- **Population limit (refined 2026-10-31)**: increases gradually with each village level, rather
+  than jumping by 15 when a new workforce tier opens. Checkpoints: level 1 → **12**; level 7 → 13;
+  level 10 → 13; level 20 → 27; level 30 → 42; level 40 → 57; level 50 → **72 maximum**.
+  Between checkpoints, capacity is linearly interpolated and rounded down, so each level adds
+  **0, 1 or 2 slimes** (never 15 at once). Before the second fish/garden work slots unlock at 11,
+  capacity rises slowly to keep starter-SPD food production sustainable. The village level is the
+  floored average of all six area levels (`VillageStages`); eggs reserve spaces. Existing saves
+  above the limit retain all slimes, but cannot breed until space opens. Max assignments: 4 fishers,
+  4 gardeners, 4 cooks, 4 trainees and 4 breeding pairs (8 slimes).
 - Area levels (1..50) are saved; upgrading costs coins (§8).
 
 ## 7. Breeding: nests, pairs, incubators

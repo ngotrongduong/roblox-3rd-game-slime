@@ -1,0 +1,40 @@
+# Gameplay and visual issues (owner reports)
+
+This file tracks reproducible defects and player-experience improvements. Changes are made on feature branches, never directly on `main`. **Implemented** means committed, not verified in Roblox Studio.
+
+| ID | Owner report (2026-10-30) | Root cause | Change | Status |
+|---|---|---|---|---|
+| UX-001 | Upgrades pop in too quickly; players cannot tell what changed or feel rewarded. | `AreaUpgrade.server.luau` immediately rebuilt/destroyed stage models; the only effect was a brief burst beside the upgrade pad. | `UpgradeReveal` tags changed models/pieces, clients reveal them in waves with a gold outline, sparkles and an area/level announcement at the **actual construction site**; era-start levels use a bigger flourish. A level loaded from saved data never plays it. | Implemented on `chatgpt/garden-upgrade-reveal`; Studio QA pending |
+| GAME-002 | One gardener works a single bed repeatedly while most of the 20 plots are empty. | `GardenPlots.choose` prioritized thirsty stage-2/3 crops ahead of all unsown beds. | Prioritize harvest, finish hoe/plant/water on each new bed, **then** maintain older plants at stages 2/3. Keep the same worker shift speed, one chore at a time, server-side saved crop states. Add coverage tests for multiple beds and one-worker simulation. | Implemented on `chatgpt/garden-upgrade-reveal`; Lune/Studio QA pending |
+
+| BAL-003 | A level-50 village could reach 216 slimes although food workers have only four slots each. Low-level players must be able to feed slimes without SPD upgrades. | Capacity grew every village level, faster than new food-station slots; common food and hunger rates were also relatively unforgiving. | Original tier caps 12 / 27 / 42 / 57 / 72 (refined below); lower idle/work hunger to 1.5 / 2.25 per minute; common fish and vegetables restore more; model raw throughput using starter SPD and only 55% productive time; preserve all old-save slimes; add regression tests. | Code committed to `chatgpt/garden-upgrade-reveal`; Lune and Studio playtesting pending |
+
+| BAL-004 | Population jumping from 12 to 27 on a single village upgrade is too abrupt. | The previous cap used fixed 10-level tiers despite workstations unlocking at levels 11/21/31. | Replace step-function cap with level-by-level interpolation between configurable checkpoints (12 at 1, 13 at 7–10, 27 at 20, 42 at 30, 57 at 40, 72 at 50). Each level adds 0–2, no 15-slime jumps; verify SPD-1 food headroom at all 50 levels. | Implemented on `chatgpt/garden-upgrade-reveal`; tests/Studio QA pending |
+
+## Claude's review of this branch (2026-11-01)
+
+ChatGPT's garden order (GAME-002) and population and hunger numbers (BAL-003, BAL-004) were kept: 24 simulated hours of a full village stay fed at the 13 levels tried, from 1 to 50, including each step where slots open (`tools/balance/food_sim.luau`). Redone:
+- UX-001: pieces were matched by name and build order, so one early new piece marked its later neighbours as changed, a swapped mesh of equal size was missed, and only 8 pieces of a name faded while the rest popped. Now `UpgradeDiff` matches what a piece is and where it stands. The client also hid pieces 0.12 s late (a flicker), left decals and stud textures floating over hidden parts, outlined the whole area instead of what changed, sparkled from one middle point, kept every old stage in memory and stacked titles on quick upgrades. All fixed; the era dust the first version dropped is back.
+- BAL-003: the formula module `FoodBalance` (used only by its own test) is replaced by a test running the real simulation. `GardenYield` and `GardenActionsPerHarvest` went with it.
+- FOOD-005 (new): the kitchen fix was left behind on `chatgpt/food-economy-balance`. A cook with nobody allowed dishes burned raw food into dishes no slime could eat. A kitchen now needs a cook, an allowed eater and room in the fridge.
+
+Play test in MapWork, 2026-11-01 (the owner was also playing in the window):
+- Proved: one gardener worked beds 1 to 11 in order and was hoeing bed 12 (GAME-002). A single upgrade marks 2-11 pieces, an era start 71 of 491; marked pieces are hidden from the first frame and all fade back to shown; nothing stays hidden afterwards; a server swap takes 10-17 ms; no script errors in the log. Quick upgrades replace the running celebration.
+- Numbers only, not by eye: the title (Studio's `screen_capture` leaves out `AlwaysOnTop` billboards; its position, size and fade were read from the client). At a far camera it can sit partly behind the top HUD chips.
+- Not checked in play: the kitchen rule (Lune only), 2-4 gardeners together, rejoining with a saved level (play tests start at level 1 in memory), frame time on a phone or with a focused window (Studio ran throttled at about 15 frames a second: no difference between idle and a reveal), the 72-slime cap.
+- Set after the test, not re-run: `BurstMaxStuds` 40 to 24, as the sparkles thinned out to specks.
+
+## Studio acceptance checks
+
+1. In MapWork sync the feature branch and play at the normal gameplay camera. Step on upgrade pads for garden, pond, pantry, kitchen, breeding, training: confirm each upgrade announces its area/level at the **changed objects** and builds visually in staggered waves; inspect the 11/21/31/41 milestone upgrades, where the reveal should be stronger.
+2. Verify scenery collisions and the level/save state change immediately and correctly even while local visual effects are running. Verify normal loading of a previously saved upgraded area produces **no** celebration.
+3. Upgrade quickly twice, and move far away then return. Effects must expire, not accumulate or replay after streaming. Check weak-device FPS with the particle burst and marked-piece limit.
+4. Assign one slime to the garden. Leave it working for 5–10 minutes: it should hoe/plant/water on **multiple** different beds; save/reconnect, verify occupied beds and growth stages are preserved. Verify 2–4 assigned slime workers reserve different beds; no double-harvest and no vegetables lost when the ten-item bin fills.
+5. Run `tools/check.ps1` and `tools/types.ps1` locally; only mark complete after **CHECK OK**, **TYPES OK**, and the Studio checks pass.
+
+6. Test several village levels and the 72-cap maximum, filling them with starter-SPD slimes. Assign all available fishing/garden workers; confirm the combined food stock and average fullness are stable over several hours with routes and rest. Then repeat with cooks, hungry slimes, and high-SPD workers. Check ordinary/poor-device play at maximum population and verify old saves over the cap retain their slimes but cannot breed until under cap.
+
+## Future refinement
+
+- On low-end devices, adjust `Config.UpgradeFx.MaxChangedParts`, `SparkleCount` and the reveal timings; never make physical gameplay wait on cosmetics.
+- If the pond's land-shaping needs its own visual rise, animate the *client-only water/shore reveal* separately from server terrain changes. Do not hide or move collision geometry on the server to create an effect.

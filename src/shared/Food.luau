@@ -104,8 +104,30 @@ function Food.bestDish(stock: { [string]: number }): string?
 	return nil
 end
 
+-- Dishes are eaten only by slimes allowed cooked food, so cooking for nobody, or for a full fridge, would burn edible
+-- raw food. Living with no cook, the counter would hold the storehouse's food for nothing.
+function Food.canCook(farm: Farm): boolean
+	if #farm.cookedAllowed == 0 then
+		return false
+	end
+	local waiting = Food.total(farm.fridge) + Food.total(farm.work.kitchen.box)
+	return waiting < Food.fridgeCapacity(farm.areas.kitchen.level)
+end
+
+local function hasCook(farm: Farm): boolean
+	for _, slot in farm.work.kitchen.slots do
+		if slot.worker or slot.reserve then
+			return true
+		end
+	end
+	return false
+end
+
 -- A kitchen orders only a dish it could complete using the counter and current pantry.
 function Food.ingredientsWanted(farm: Farm): { [string]: number }
+	if not hasCook(farm) or not Food.canCook(farm) then
+		return {}
+	end
 	for _, id in Config.Food.DishOrder do
 		local recipe = (Config.Food.Dishes :: any)[id]
 		local possible = true
