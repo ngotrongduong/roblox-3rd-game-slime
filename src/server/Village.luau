@@ -513,6 +513,8 @@ local function show(session: Session, farm: Farm, epoch: number)
 		set(model, "LegEnd", if actor then actor.legEnd else 0)
 		set(model, "Gait", if actor and actor.gait then actor.gait else "walk")
 		set(model, "Ghost", slime.ghostUntil ~= nil and slime.ghostUntil > epoch)
+		-- (server unix seconds when a dead slime is lost for good; 0 while it lives, for the dead chip's countdown)
+		set(model, "GhostUntil", if slime.ghostUntil ~= nil and slime.ghostUntil > epoch then slime.ghostUntil else 0)
 		set(model, "Sleeping", slime.sleeping == true)
 		-- Out on a zombie squad: the clients draw it in the fight, not in the village.
 		set(model, "OutOnSquad", session.out[slime.id] == true)

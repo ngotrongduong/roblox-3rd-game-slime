@@ -82,6 +82,7 @@ function UiSlimes.isFree(slime: Instance): boolean
 		and not UiSlimes.isGhost(slime)
 		and UiSlimes.job(slime) == nil
 		and UiSlimes.pair(slime) == 0
+		and slime:GetAttribute("OutOnSquad") ~= true
 end
 
 -- A live portrait of the slime's own look. Returns the framed box and a function that builds the viewport (cheap

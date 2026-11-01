@@ -71,6 +71,13 @@ local function make(className: string, props: Props?, parent: Instance?): any
 	return inst
 end
 
+-- 1234567 -> "1,234,567"
+function UiKit.money(amount: number): string
+	local digits = tostring(math.floor(amount))
+	local grouped = digits:reverse():gsub("(%d%d%d)", "%1,"):reverse()
+	return (grouped:gsub("^,", ""))
+end
+
 function UiKit.colour(name: string): Color3
 	return Color3.fromHex((U.Colours :: any)[name])
 end

@@ -13,6 +13,7 @@ local UiHud = require(script.Parent.UiHud)
 local UiKit = require(script.Parent.UiKit)
 local UiSlimes = require(script.Parent.UiSlimes)
 local UiSpots = require(script.Parent.UiSpots)
+local UiSquad = require(script.Parent.UiSquad)
 
 local C = Config.VillageClient
 local U = Config.Ui
@@ -59,6 +60,7 @@ local watched: { [string]: boolean } = {
 	Hp = true,
 	Baby = true,
 	Ghost = true,
+	OutOnSquad = true,
 	Sleeping = true,
 	Trait = true,
 	WorkArea = true,
@@ -84,6 +86,7 @@ local reasons: { [string]: string } = {
 	INVALID_ARGUMENT = "Not available.",
 	MISSING_SLIME = "Slime not found.",
 	NOT_ASSIGNED = "Not assigned.",
+	OUT = "Out fighting.",
 	INVALID_STAT_OR_SLOT = "Choose a valid stat.",
 	SERVER_ERROR = "Please try again.",
 }
@@ -1022,6 +1025,10 @@ function VillageUI.start()
 			return areaTitles[area]
 		end,
 	})
+
+	UiSquad.start(function()
+		return own
+	end)
 
 	local world = workspace:WaitForChild("Villages")
 	local id = tostring(player.UserId)

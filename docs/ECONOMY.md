@@ -1,8 +1,8 @@
 # Economy: how money is earned and what upgrades cost
 
-The owner's design (2026-11-02), worked out and measured. Built so far: the fight, reward, death, revive and sell rules in
-`src/shared` (`Combat`, `Zombies`, `Shop`, `Config.Combat`, `Config.Zombies`) with Lune tests, and sell values x10. **Not
-in play yet: the zombies on the map, sending squads, the shop's place, the prices.** `Config.Pads.FreeUpgrades = true` still keeps every upgrade at 0, and no
+The owner's design (2026-11-02), worked out and measured. Playable in MapWork: zombies on the map, sending squads, fights,
+coins for each death, revive, loss for good, the shop (rules in `src/shared/Combat`, `Zombies`, `Shop`; `src/server/ZombieFights`;
+`src/client/Zombie*`, `UiSquad`). **Not in yet: the price table, and real art for the three zombies and the skull icon.** `Config.Pads.FreeUpgrades = true` still keeps every upgrade at 0, and no
 coin can be earned yet. Tools: `tools/balance/fight_sim.luau`, `income_sim.luau`, `price_curve.luau`.
 
 ## The owner's road
@@ -102,9 +102,11 @@ Without fights, a level 50 village would earn only about 2.2 times a level 1 vil
 
 ## Build list
 
-1. The zombies on the map: camps around the player's plot, respawning; three looks (`art-pipeline`).
-2. Sending squads: remote and rules on the server, fights run on the server, coins on the receipt of each death.
-3. The squad picker and the fight drawn on the client.
-4. The shop in the Market (the original's rules: not a favourite, not at work, keep 2, rare ones ask first).
-5. The price table in `Config`, then `FreeUpgrades = false` at the owner's word.
-6. A real hour of play, then the numbers again.
+Done and seen in a MapWork play test (2026-11-02): camps, the squad sheet, a won and a lost fight, a revive (2 food), a slime lost
+when its time ran out (the time cut to 40 s for that test only), a sale. The 15-minute length itself ran only in Lune.
+
+1. Real art: one skin per zombie kind (Rotten decayed and patchy, Toxic bubbling acid, Plague near black with a deep red
+   pattern), their own hit and death sprites, a skull icon for the dead chip (it shows the stand-in "SK").
+2. The price table in `Config`, then `FreeUpgrades = false` at the owner's word.
+3. First-discovery rewards, if still wanted.
+4. A real hour of play to measure fights, deaths and slime levels, then the numbers again.

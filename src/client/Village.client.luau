@@ -115,12 +115,11 @@ local function asset(name: string): Model
 	return model
 end
 
-local function clearEntry(entry: Entry)
-	for _, conn in entry.connections do
-		conn:Disconnect()
-	end
+-- Takes the slime's body (and what it holds or carries) off the screen; the entry stays and can draw it again.
+local function dropBody(entry: Entry)
 	if entry.actor then
 		SlimeActor.destroy(entry.actor)
+		entry.actor = nil
 	end
 	if entry.rod then
 		for _, piece in entry.rod:GetDescendants() do
@@ -132,9 +131,12 @@ local function clearEntry(entry: Entry)
 	end
 	if entry.model then
 		entry.model:Destroy()
+		entry.model = nil
 	end
 	if entry.carry then
 		entry.carry:Destroy()
+		entry.carry = nil
+		entry.carryName = ""
 	end
 	for _, extra in { entry.tool, entry.bobber, entry.flight } do
 		if extra then
@@ -142,12 +144,28 @@ local function clearEntry(entry: Entry)
 		end
 	end
 	entry.tool, entry.bobber, entry.flight = nil, nil, nil
+	entry.toolName, entry.flightKey, entry.castKey = "", "", ""
 	ProgressClock.drop(entry.clock)
 	entry.clock = nil
+	entry.signature = ""
+end
+
+local function clearEntry(entry: Entry)
+	for _, conn in entry.connections do
+		conn:Disconnect()
+	end
+	dropBody(entry)
 end
 
 local function refreshLook(entry: Entry)
 	local config = entry.config
+	-- Out on a zombie squad: the fight draws the slime (ZombieFight), the village draws nothing until it is back.
+	if config:GetAttribute("OutOnSquad") == true then
+		if entry.model then
+			dropBody(entry)
+		end
+		return
+	end
 	if type(config:GetAttribute("Look")) ~= "string" or type(config:GetAttribute("Colour")) ~= "string" then
 		return
 	end
@@ -828,7 +846,7 @@ local function addSlime(village: Village, child: Instance)
 		clock = nil,
 	}
 	village.slimes[child] = entry
-	for _, name in { "Look", "Colour", "Material", "DualId", "SecretId", "Ghost", "Scale" } do
+	for _, name in { "Look", "Colour", "Material", "DualId", "SecretId", "Ghost", "Scale", "OutOnSquad" } do
 		table.insert(
 			entry.connections,
 			child:GetAttributeChangedSignal(name):Connect(function()

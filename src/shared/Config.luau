@@ -164,6 +164,89 @@ Config.Zombies = {
 		plague = { name = "Plague Slime", base = 2500, weights = { 1, 5, 15 } },
 	},
 	KindOrder = { "rotten", "toxic", "plague" },
+	-- ===== The client (src/client/ZombieWorld, ZombieFight, ZombieLook, UiSquad) =====
+	-- Zombies are drawn only within DrawDistance of the camera (and at most View.MaxDrawnZombies at once).
+	DrawDistance = 250,
+	-- One look a kind, on the shared slime body: colour, outline colour, Roblox material, face (an Expressions id) and
+	-- body size (a rarer kind is bigger, so it is seen from afar). A stand-in until the owner's own zombie art exists.
+	Looks = {
+		-- (faces with no emote: a bubble over each of 48 zombies is noise)
+		rotten = { colour = "#7d8f55", outline = "#3f4a28", material = "Fabric", face = "sad", size = 1 },
+		toxic = { colour = "#8fcf2a", outline = "#3f6f10", material = "SmoothPlastic", face = "dare", size = 1.18 },
+		plague = { colour = "#2a1114", outline = "#8a0f1f", material = "CrackedLava", face = "dare", size = 1.4 },
+	},
+	View = {
+		-- How often the world checks which groups are near enough to draw, and how much farther one may go before it goes.
+		CheckSeconds = 0.5,
+		HideMargin = 1.15,
+		MaxDrawnZombies = 32,
+		-- Zombies stand on a ring this wide round their group's position, and look at the village.
+		SpreadStuds = 4.5,
+		GroundProbeUp = 8,
+		GroundProbeDown = 40,
+		-- The level marker: lift above the group's anchor, size in screen pixels, how far it shows. Its colour follows how
+		-- much stronger the group is than the player: up to Easy levels above is green, from Hard levels above red.
+		MarkerLift = 4,
+		MarkerWidth = 110,
+		MarkerHeight = 38,
+		MarkerDistance = 160,
+		AnchorLift = 2.5,
+		Danger = { Easy = 1, Hard = 4 },
+		DangerColours = { Easy = "#60e270", Fair = "#ffd23c", Hard = "#f45448" },
+		-- The fight: where the squad stands (towards the village from its group), how it lunges, flinches and leaves.
+		FighterFace = "dare",
+		FighterDistance = 11,
+		FighterSpacing = 4.2,
+		LungeFraction = 0.5,
+		LungeSeconds = 0.28,
+		LungeHop = 0.3,
+		FlinchSide = 2,
+		FlinchSquash = -1.5,
+		DodgeStuds = 2.2,
+		DodgeSeconds = 0.3,
+		PopSquash = -3,
+		PopHop = 0.35,
+		DeathSquash = -3,
+		DeathDelay = 0.14,
+		FadeSeconds = 0.6,
+		FadeWhiten = 0.5,
+		LeaveSeconds = 0.9,
+		LeaveStuds = 14,
+		LeaveHop = 0.35,
+		-- Thin health bars over the fighters (pixels), and the floating numbers (pixels, seconds, studs).
+		BarWidth = 64,
+		BarHeight = 9,
+		BarLift = 0.9,
+		BarDistance = 120,
+		NumberSeconds = 0.8,
+		NumberRise = 4,
+		HitTextSize = 24,
+		CritTextSize = 36,
+		RewardTextSize = 32,
+		MaxNumbers = 20,
+		NumberColours = { Foe = "#fffdf4", Ours = "#ff6a5a", Crit = "#ffb02e", Coins = "#ffd23c" },
+		-- Particles: at most MaxBursts alive at once; counts for one zombie's fall and one slime's pop.
+		MaxBursts = 6,
+		CoinBurst = 6,
+		SparkBurst = 8,
+		PuffBurst = 5,
+		BurstSeconds = 1.6,
+		LeaveHopSeconds = 0.3,
+		-- The fight keeps its bodies and bars in step with the group's distance this often.
+		SyncSeconds = 0.25,
+		-- The textures are Roblox's own particle pictures (as UpgradeReveal) and the owner's coin picture.
+		SparkTexture = "rbxasset://textures/particles/sparkles_main.dds",
+		PuffTexture = "rbxasset://textures/particles/smoke_main.dds",
+		Coin = { size = 1.1, life = 1.1, speedMin = 14, speedMax = 22, gravity = 32 },
+		Spark = { size = 2.2, life = 0.7, speedMin = 6, speedMax = 14, colour = "#ffd23c" },
+		Puff = { size = 4, life = 0.8, speedMin = 4, speedMax = 9, transparency = 0.5 },
+		-- The pick sheet: tile width/height; the dead chip: when its time turns red (seconds left); the shop confirm window.
+		TileWidth = 84,
+		TileHeight = 100,
+		ReviveWarnSeconds = 60,
+		ConfirmSeconds = 3,
+		SheetRefreshSeconds = 0.5,
+	},
 }
 
 Config.Growth = {
@@ -1225,6 +1308,7 @@ Config.Ui = {
 		training = 70679228626362, -- ui.btn.upgrades.png
 		breeding = 92923495054582, -- ui.btn.breeding.png
 		-- Missing pictures (asked of ChatGPT): food kinds, needs and controls.
+		skull = 0, -- the dead-slimes chip (asked of ChatGPT)
 		fish = 0,
 		carrot = 0,
 		cabbage = 0,

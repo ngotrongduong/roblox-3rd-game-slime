@@ -2,9 +2,9 @@
 
 ## 2026-11-02 — village bar done, economy researched: start here
 
-The HUD shows the village level and the upgrades to the next one (seen in play). The owner's zombie slime design: rules and fights in
-`src/shared` with tests; map, squads, shop and prices not in play yet. `docs/ECONOMY.md` has the measurements, the price table and its build
-list. A dead slime has 15 minutes of play to be revived with food, then it is lost for good (the owner).
+The HUD shows the village level and the upgrades to the next one. The owner's zombie slimes are playable in MapWork: camps, squads, fights,
+coins for each death, revive within 15 minutes of play or the slime is lost for good, the shop. Not in yet: prices (upgrades still free), real
+zombie art. `docs/ECONOMY.md` has the rules, the measurements, the price table and what is left.
 
 ## 2026-11-01 — ChatGPT's branch reviewed and partly redone: start here
 
