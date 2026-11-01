@@ -144,6 +144,10 @@ Config.Zombies = {
 	GroupSpreadDegrees = 10,
 	-- A group nobody attacked for this long takes its slice's level again (the owner, 2026-11-02).
 	IdleResetSeconds = 5 * 60,
+	-- The camps of the whole server (src/server/ZombieFights.luau) look at their groups this often (respawn, idle reset),
+	-- and each player's level (the one the slices are filled by, published as PlayerLevel) is worked out this often.
+	CampTickSeconds = 1,
+	PlayerLevelSeconds = 2,
 	-- The ground under a group is found by a ray from GroundProbeUp above the map's ground height down GroundProbeDown more.
 	GroundProbeUp = 80,
 	GroundProbeDown = 200,
@@ -307,6 +311,8 @@ Config.Zombies = {
 		-- Bodies are built within DrawDistance of the camera and checked this often. A long leg is cut into pieces of
 		-- SegmentHops hops, each measured against the ground again (the slime's own ground ray only looks a little way).
 		MarchCheckSeconds = 0.25,
+		-- Other players' teams are drawn too, nearest first, up to this many bodies at once besides the player's own.
+		MaxOtherBodies = 12,
 		SegmentHops = 3,
 		FormationSpacing = 4.2,
 		FormationStagger = 1.4,
@@ -436,7 +442,6 @@ Config.Village = {
 	-- this many studs in front of it
 	CarryHandSink = 0.6,
 	CarryHandForward = 0.3,
-	DevPlot = 5,
 	DevFreeUpgrades = false,
 	TickSeconds = 1,
 	RequestsPerSecond = 4,
@@ -917,6 +922,31 @@ Config.Map = {
 	RockSeatTolerance = 0.05,
 }
 
+-- ===== The plots of a server (src/server/Plots.luau; the owner, 2026-11-02: up to 8 players, a plot each) =====
+Config.Plots = {
+	-- The hand-built village the others are copies of: workspace.Map.Plot5 in the work place. At server start it moves to
+	-- ServerStorage under TemplateName and every plot, this one too, is left empty until a player joins.
+	TemplatePlot = 5,
+	TemplateName = "PlotTemplate",
+	-- A village is copied (and a plot a player left is cleared) in steps: after this many seconds of work the server
+	-- gives the frame back. A container holding more parts than ChunkParts is copied child by child.
+	StepSeconds = 0.006,
+	ChunkParts = 400,
+	-- A player appears this many studs from the plaza towards the gate, this high above the ground.
+	SpawnAhead = 16,
+	SpawnLift = 0.1,
+	-- A plot nobody holds is one stud-lawn part over the sunken ground (its top this far under the village floor's top).
+	EmptyColour = "#68b23e",
+	EmptyDrop = 0.05,
+	EmptyThickness = 2,
+	-- Vector3 attributes in world space that turn with a copied village: tag -> attribute names (the fish loops of the pond).
+	Turned = { PondFish = { "Centre" } },
+	-- How often a player waiting for a plot's copy to be built looks again.
+	WaitSeconds = 0.1,
+	-- Shown to a ninth player (the place should allow 8).
+	FullMessage = "This server is full. Please join another one - your farm is safe.",
+}
+
 -- ===== The slime body, face and motion =====
 -- (owned by SlimeShape, SlimeMotion, Expressions and the client's SlimeFace / SlimeActor). Lengths are in
 -- body heights (one slime is 1.0 high at scale 1); the farm scales the model, the code multiplies by it.
@@ -1310,6 +1340,9 @@ Config.VillageClient = {
 	SocialBillboardPixels = 38,
 	BillboardDistance = 65,
 	MaxDrawDistance = 400,
+	-- A slime's body (and its face rig) exists only while the camera is within MaxDrawDistance of it, and is dropped again
+	-- once it is MaxDrawDistance x BodyDropMargin away: the villages of a server of 8 cost nothing from across the valley.
+	BodyDropMargin = 1.25,
 	NearWorkDistance = 80,
 	StandInSize = 1,
 	BodyHeight = 3,

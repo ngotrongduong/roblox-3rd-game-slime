@@ -309,6 +309,54 @@ return function(T: any)
 		T.ok(not Zombies.shouldRelevel(25, 7, { [2] = 10, [5] = 30 }, NOW, NOW + wait))
 		T.ok(Zombies.shouldRelevel(25, 7, { [2] = 10 }, NOW, NOW + wait))
 	end)
+	T.test("group ids are unique across the server and fit a saved target", function()
+		local seen: { [string]: boolean } = {}
+		local count = 0
+		for slice = 0, Config.Map.PlotCount do
+			for camp = 1, #Config.Zombies.LevelOffsets do
+				for index = 1, Config.Zombies.GroupsPerCamp do
+					local id = Zombies.groupId(slice, camp, index)
+					T.ok(not seen[id], "unique: " .. id)
+					seen[id] = true
+					count += 1
+					T.ok(#id <= Config.Zombies.TargetIdMaxLength, "short enough: " .. id)
+					local s, c, i = Zombies.parseGroupId(id)
+					T.same({ s, c, i }, { slice, camp, index })
+				end
+			end
+		end
+		T.eq(count, (Config.Map.PlotCount + 1) * #Config.Zombies.LevelOffsets * Config.Zombies.GroupsPerCamp)
+		T.eq(Zombies.parseGroupId("c1g1"), nil, "an id of the old camps is not a group")
+		T.eq(Zombies.parseGroupId("s9c1g1"), nil, "no such slice")
+		T.eq(Zombies.parseGroupId("s1c4g1"), nil, "no such camp")
+		T.eq(Zombies.parseGroupId("s1c1g5"), nil, "no such group")
+		T.eq(Zombies.parseGroupId(nil), nil)
+		T.eq(Zombies.parseGroupId(12), nil)
+	end)
+	T.test(
+		"a saved target from another plot or the old camps is dropped, one of the player's own slice stays",
+		function()
+			T.ok(Zombies.targetFits("s5c2g3", 5))
+			T.ok(not Zombies.targetFits("s5c2g3", 6), "the player now holds another plot")
+			T.ok(not Zombies.targetFits("s0c1g1", 5), "the Market's slice is not a plot's")
+			T.ok(not Zombies.targetFits("c2g3", 5), "the old camps")
+			T.ok(not Zombies.targetFits("", 5))
+			T.ok(not Zombies.targetFits(nil, 5))
+			T.ok(not Zombies.targetFits("s5c2g3; drop", 5))
+		end
+	)
+	T.test("a new spawn reads the owner's level of its moment; a fight in progress is never asked about", function()
+		local owners = { [3] = 12 }
+		T.eq(Zombies.sliceLevel(3, owners, Rng.new(1)), 12)
+		owners[3] = 40
+		T.eq(Zombies.sliceLevel(3, owners, Rng.new(1)), 40, "the next spawn takes the new level")
+		owners[3] = nil
+		owners[6] = 20
+		T.eq(Zombies.sliceLevel(3, owners, Rng.new(1)), 20, "the owner left: the server's range, here one player")
+		-- the camps ask shouldRelevel only of waiting groups after IdleResetSeconds; a group just attacked is not due
+		T.ok(not Zombies.shouldRelevel(12, 3, { [3] = 40 }, NOW, NOW + Config.Zombies.IdleResetSeconds - 1))
+		T.ok(Zombies.shouldRelevel(12, 3, { [3] = 40 }, NOW, NOW + Config.Zombies.IdleResetSeconds))
+	end)
 	T.test("a slime's death pays by its level and rarity", function()
 		local plain = FarmKit.slime("a")
 		T.ok(Zombies.deathReward(plain) > 0)

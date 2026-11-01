@@ -6,6 +6,10 @@
 -- hops, each measured against the ground again. While the team fights its bodies stand at the end of the leg (ZombieFight
 -- draws the fight on them) and when it ends they turn round and hop home. Bodies exist only near the camera. It decides
 -- nothing: the village draws the slimes again when the server says they are home.
+-- Every player's teams are drawn, not only the viewer's own: the viewer's first, then those of other players nearest the
+-- camera first, at most View.MaxOtherBodies bodies of other players at once. Another player's team marches and stands at its
+-- group; the fight itself (hits, numbers, bars) is drawn for the viewer's own teams only, the server tells only them.
+local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 
@@ -21,7 +25,10 @@ local Z = Config.Zombies
 local V = Z.View
 
 export type Body = {
+	-- "<village>:<slime id>": slime ids repeat from one player to the next
 	id: string,
+	village: Folder,
+	own: boolean,
 	team: number,
 	-- the place in the team's formation
 	slot: number,
@@ -35,10 +42,12 @@ export type Body = {
 	stand: Vector3,
 	facing: Vector3,
 }
+-- A team that is out, with the village it belongs to and how far it is from the camera.
+type Candidate = { village: Folder, team: ZombieTeams.Team, distance: number }
 
 local ZombieMarch = {}
 local bodies: { [string]: Body } = {}
-local snapshot: { [number]: ZombieTeams.Team } = {}
+local snapshot: { [string]: ZombieTeams.Team } = {}
 local stepConnection: RBXScriptConnection? = nil
 local started = false
 local warned: { [string]: boolean } = {}
@@ -54,9 +63,16 @@ local function safe(label: string, work: () -> ())
 	end
 end
 
-local function slimeNode(id: string): Configuration?
-	local root = ZombieTeams.root()
-	local folder = if root then root:FindFirstChild("Slimes") else nil
+local function keyOf(village: Folder, slimeId: string): string
+	return village.Name .. ":" .. slimeId
+end
+
+local function teamKey(village: Folder, index: number): string
+	return village.Name .. "/" .. tostring(index)
+end
+
+local function slimeNode(village: Folder, id: string): Configuration?
+	local folder = village:FindFirstChild("Slimes")
 	local found = if folder then folder:FindFirstChild(id) else nil
 	return if found and found:IsA("Configuration") then found else nil
 end
@@ -168,7 +184,7 @@ local function step()
 	local now = workspace:GetServerTimeNow()
 	for id, body in bodies do
 		safe("step " .. id, function()
-			local team = snapshot[body.team]
+			local team = snapshot[teamKey(body.village, body.team)]
 			if team and (team.state == "going" or team.state == "returning") then
 				travel(body, team, now)
 			end
@@ -176,8 +192,15 @@ local function step()
 	end
 end
 
-local function build(team: ZombieTeams.Team, slot: number, count: number, id: string): Body?
-	local node = slimeNode(id)
+local function build(
+	village: Folder,
+	own: boolean,
+	team: ZombieTeams.Team,
+	slot: number,
+	count: number,
+	id: string
+): Body?
+	local node = slimeNode(village, id)
 	if not node then
 		return nil
 	end
@@ -188,7 +211,7 @@ local function build(team: ZombieTeams.Team, slot: number, count: number, id: st
 		SecretId = node:GetAttribute("SecretId"),
 		Scale = numberOf(node, "Scale", 1),
 	})
-	model.Name = "March_" .. id
+	model.Name = "March_" .. keyOf(village, id)
 	local facing = lead(team)
 	local start = ground(team.from + offsetOf(team, slot, count))
 	model:PivotTo(CFrame.lookAt(start, start + facing))
@@ -200,7 +223,9 @@ local function build(team: ZombieTeams.Team, slot: number, count: number, id: st
 	end
 	actor.body.CanCollide = false
 	local body: Body = {
-		id = id,
+		id = keyOf(village, id),
+		village = village,
+		own = own,
 		team = team.index,
 		slot = slot,
 		count = count,
@@ -212,7 +237,7 @@ local function build(team: ZombieTeams.Team, slot: number, count: number, id: st
 		stand = start,
 		facing = facing,
 	}
-	bodies[id] = body
+	bodies[body.id] = body
 	if team.state == "fighting" then
 		-- arriving into a fight already on: a pop, as the slime joins it
 		SlimeActor.kick(actor, "squash", V.PopSquash)
@@ -224,7 +249,39 @@ local function build(team: ZombieTeams.Team, slot: number, count: number, id: st
 	return body
 end
 
--- Which teams are out and near the camera, and so which bodies to have.
+-- Draws one team that is out: its members' bodies, made when missing, set to the leg or the stand.
+local function drawTeam(
+	village: Folder,
+	own: boolean,
+	team: ZombieTeams.Team,
+	now: number,
+	wanted: { [string]: boolean }
+)
+	for slot, id in team.marching do
+		local key = keyOf(village, id)
+		wanted[key] = true
+		local body: Body? = bodies[key]
+		if not body then
+			body = build(village, own, team, slot, #team.marching, id)
+		end
+		if body then
+			body.team, body.slot, body.count = team.index, slot, #team.marching
+			apply(body, team, now)
+		end
+	end
+end
+
+-- Whether any body of this team is drawn already (it then stays up a little farther out than it is made).
+local function hasBody(village: Folder, team: ZombieTeams.Team): boolean
+	for _, id in team.marching do
+		if bodies[keyOf(village, id)] then
+			return true
+		end
+	end
+	return false
+end
+
+-- Which teams are out and near the camera, and so which bodies to have: the viewer's own, then other players' nearest first.
 local function check()
 	local camera = workspace.CurrentCamera
 	if not camera then
@@ -234,30 +291,42 @@ local function check()
 	local from = camera.CFrame.Position
 	local wanted: { [string]: boolean } = {}
 	table.clear(snapshot)
-	for index, team in ZombieTeams.all() do
-		snapshot[index] = team
-		local position = ZombieTeams.position(team, now)
-		if position then
-			local has = false
-			for _, id in team.marching do
-				if bodies[id] then
-					has = true
-				end
-			end
-			local limit = if has then Z.DrawDistance * V.HideMargin else Z.DrawDistance
-			if (Vector3.new(position.X, from.Y, position.Z) - from).Magnitude <= limit then
-				for slot, id in team.marching do
-					wanted[id] = true
-					local body: Body? = bodies[id]
-					if not body then
-						body = build(team, slot, #team.marching, id)
-					end
-					if body then
-						body.team, body.slot, body.count = index, slot, #team.marching
-						apply(body, team, now)
+	local ownRoot = ZombieTeams.root()
+	local others: { Candidate } = {}
+	local villages = workspace:FindFirstChild("Villages")
+	for _, village in (if villages then villages:GetChildren() else {}) do
+		if village:IsA("Folder") then
+			local own = village == ownRoot
+			for index, team in ZombieTeams.all(village) do
+				snapshot[teamKey(village, index)] = team
+				local position = ZombieTeams.position(team, now)
+				if position then
+					local has = hasBody(village, team)
+					local limit = if has then Z.DrawDistance * V.HideMargin else Z.DrawDistance
+					local distance = (Vector3.new(position.X, from.Y, position.Z) - from).Magnitude
+					if distance <= limit then
+						if own then
+							drawTeam(village, true, team, now, wanted)
+						else
+							table.insert(others, { village = village, team = team, distance = distance })
+						end
 					end
 				end
 			end
+		end
+	end
+	-- other players' teams: the nearest first, while their bodies fit the budget
+	table.sort(others, function(a: Candidate, b: Candidate): boolean
+		return a.distance < b.distance
+	end)
+	local room = V.MaxOtherBodies
+	for _, item in others do
+		local count = #item.team.marching
+		local has = hasBody(item.village, item.team)
+		-- (a team already drawn is kept while it is near; a new one needs room)
+		if has or count <= room then
+			room -= count
+			drawTeam(item.village, false, item.team, now, wanted)
 		end
 	end
 	local gone: { Body } = {}
@@ -273,14 +342,15 @@ end
 
 -- ===== Who is where, for the fight =====
 
+-- The body of one of the viewer's own slimes (by its slime id), nil when it is not drawn.
 function ZombieMarch.body(id: string): Body?
-	return bodies[id]
+	return bodies[tostring(Players.LocalPlayer.UserId) .. ":" .. id]
 end
 
--- Whether any body of this team is drawn (the team is near the camera).
+-- Whether any body of one of the viewer's own teams is drawn (the team is near the camera).
 function ZombieMarch.drawn(teamIndex: number): boolean
 	for _, body in bodies do
-		if body.team == teamIndex then
+		if body.own and body.team == teamIndex then
 			return true
 		end
 	end

@@ -2,8 +2,8 @@
 -- The screens of the zombie teams (the owner, 2026-11-02): at the village gate a sheet sets up the four teams' line-ups from
 -- the one slime list; at a zombie group a small sheet orders a team to attack it; a chip per team on the left edge shows
 -- where it is; a notice at the right edge says who came back and what it earned. They read what the server publishes (the
--- Teams folder, slime attributes, Camps) and ask through UiSquad's context; the server decides, so a button it would refuse is
--- greyed or answered with a short friendly line.
+-- Teams folder, slime attributes, workspace.ZombieCamps) and ask through UiSquad's context; the server decides, so a button it
+-- would refuse is greyed or answered with a short friendly line. The gate is the one of the viewer's own plot.
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Config = require(ReplicatedStorage.Shared.Config)
@@ -37,6 +37,9 @@ local chips: { [number]: TeamChip } = {}
 local noticeHost: Frame? = nil
 local pending: { Notice } = {}
 local shown = 0
+-- the prompt at the viewer's gate, made once the server has handed them a plot (and moved if the plot ever changes)
+local gateAnchor: Part? = nil
+local gatePlot = 0
 
 local function context(): Context
 	assert(ctx, "UiTeams.start first")
@@ -666,8 +669,50 @@ local function chipFor(index: number): TeamChip
 	return made
 end
 
+-- The "Teams" prompt at the gate of the viewer's own plot: made when the server has handed them one (ZombieTeams.plot).
+-- Only they have it; other players' gates have no prompt for them.
+function UiTeams.placeGate()
+	local plot = ZombieTeams.plot()
+	if not plot or plot == gatePlot then
+		return
+	end
+	gatePlot = plot
+	local gate = Layout.plotGate(plot).Position
+	local at = CFrame.new(gate.X, Config.Map.GroundY + V.AnchorLift, gate.Z)
+	local old = gateAnchor
+	if old then
+		old.CFrame = at
+		return
+	end
+	local anchor = Instance.new("Part")
+	anchor.Name = "TeamsPrompt"
+	anchor.Size = Vector3.one
+	anchor.Transparency = 1
+	anchor.Anchored = true
+	anchor.CanCollide = false
+	anchor.CanTouch = false
+	anchor.CanQuery = false
+	anchor.CastShadow = false
+	anchor.CFrame = at
+	anchor.Parent = workspace
+	gateAnchor = anchor
+	local prompt = Instance.new("ProximityPrompt")
+	prompt.Name = "Teams"
+	prompt.ActionText = "Teams"
+	prompt.ObjectText = ""
+	prompt.KeyboardKeyCode = Enum.KeyCode.F
+	prompt.HoldDuration = 0
+	prompt.MaxActivationDistance = Z.GateRangeStuds
+	prompt.RequiresLineOfSight = false
+	prompt.Parent = anchor
+	prompt.Triggered:Connect(function()
+		openTeams(anchor.Position)
+	end)
+end
+
 -- Called about twice a second: a chip for each team that has members or is out, its state and its march progress.
 function UiTeams.refresh()
+	UiTeams.placeGate()
 	if not chipsHost then
 		return
 	end
@@ -784,31 +829,8 @@ end
 function UiTeams.start(context_: Context)
 	ctx = context_
 
-	-- the gate: one prompt (F, "Teams")
-	local gate = Layout.plotGate(Config.Village.DevPlot).Position
-	local anchor = Instance.new("Part")
-	anchor.Name = "TeamsPrompt"
-	anchor.Size = Vector3.one
-	anchor.Transparency = 1
-	anchor.Anchored = true
-	anchor.CanCollide = false
-	anchor.CanTouch = false
-	anchor.CanQuery = false
-	anchor.CastShadow = false
-	anchor.CFrame = CFrame.new(gate.X, Config.Map.GroundY + V.AnchorLift, gate.Z)
-	anchor.Parent = workspace
-	local prompt = Instance.new("ProximityPrompt")
-	prompt.Name = "Teams"
-	prompt.ActionText = "Teams"
-	prompt.ObjectText = ""
-	prompt.KeyboardKeyCode = Enum.KeyCode.F
-	prompt.HoldDuration = 0
-	prompt.MaxActivationDistance = Z.GateRangeStuds
-	prompt.RequiresLineOfSight = false
-	prompt.Parent = anchor
-	prompt.Triggered:Connect(function()
-		openTeams(anchor.Position)
-	end)
+	-- the gate: one prompt (F, "Teams"), put at the viewer's own gate as soon as their plot is known
+	UiTeams.placeGate()
 
 	-- the group prompt (F, "Attack") opens the attack sheet
 	ZombieWorld.setOpener(openAttack)

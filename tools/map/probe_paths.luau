@@ -6,7 +6,10 @@ local PathfindingService = game:GetService("PathfindingService")
 local Config = require(game:GetService("ReplicatedStorage").Shared.Config)
 local Spots = require(game:GetService("ServerScriptService").Server.Spots)
 local V = Config.Village
-local spots = Spots.build(V.DevPlot, workspace.Map:FindFirstChild("Plot" .. V.DevPlot))
+-- the plot of the first player in the test (the copy of the village they stand in)
+local first = game:GetService("Players"):GetPlayers()[1]
+local PLOT = if first then first:GetAttribute("Plot") else Config.Plots.TemplatePlot
+local spots = Spots.build(PLOT, workspace.Map:FindFirstChild("Plot" .. PLOT))
 local plaza = spots.plaza
 local start = Vector3.new(plaza.x, plaza.y, plaza.z)
 local ids = {}

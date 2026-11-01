@@ -45,15 +45,35 @@ function ZombieTeams.split(list: string): { string }
 	return found
 end
 
--- The player's own village folder, nil while it is not there.
-function ZombieTeams.root(): Folder?
+-- The village folder of a player (by UserId), nil while it is not there.
+function ZombieTeams.rootOf(userId: number): Folder?
 	local villages = workspace:FindFirstChild("Villages")
-	local found = if villages then villages:FindFirstChild(tostring(Players.LocalPlayer.UserId)) else nil
+	local found = if villages then villages:FindFirstChild(tostring(userId)) else nil
 	return if found and found:IsA("Folder") then found else nil
 end
 
-function ZombieTeams.get(index: number): Team?
+-- The player's own village folder, nil while it is not there.
+function ZombieTeams.root(): Folder?
+	return ZombieTeams.rootOf(Players.LocalPlayer.UserId)
+end
+
+-- The plot this player holds (the Plot attribute of their village folder), nil until the server has handed it out.
+function ZombieTeams.plot(): number?
 	local root = ZombieTeams.root()
+	local plot = if root then root:GetAttribute("Plot") else nil
+	return if type(plot) == "number" and plot >= 1 then plot else nil
+end
+
+-- The level this player's slice is filled by (published as PlayerLevel); the group markers are coloured by it.
+function ZombieTeams.level(): number
+	local root = ZombieTeams.root()
+	local level = if root then root:GetAttribute("PlayerLevel") else nil
+	return if type(level) == "number" then level else 0
+end
+
+-- One team of a village: the player's own unless another village folder is given.
+function ZombieTeams.get(index: number, village: Folder?): Team?
+	local root = village or ZombieTeams.root()
 	local folder = if root then root:FindFirstChild("Teams") else nil
 	local node = if folder then folder:FindFirstChild(tostring(index)) else nil
 	if not node or not node:IsA("Configuration") then
@@ -76,10 +96,10 @@ function ZombieTeams.get(index: number): Team?
 end
 
 -- Every team that is published, by its number (a team not published yet leaves a gap: iterate, never count).
-function ZombieTeams.all(): { Team }
+function ZombieTeams.all(village: Folder?): { Team }
 	local found: { Team } = {}
 	for index = 1, Config.Zombies.Teams do
-		found[index] = ZombieTeams.get(index) :: Team
+		found[index] = ZombieTeams.get(index, village) :: Team
 	end
 	return found
 end

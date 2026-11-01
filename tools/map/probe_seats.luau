@@ -6,8 +6,11 @@ local SSS = game:GetService("ServerScriptService")
 local RS = game:GetService("ReplicatedStorage")
 local Config = require(RS.Shared.Config)
 local Spots = require(SSS.Server.Spots)
-local plot = workspace.Map:FindFirstChild("Plot" .. Config.Village.DevPlot)
-local spots = Spots.build(Config.Village.DevPlot, plot)
+-- the plot of the first player in the test (the copy of the village they stand in)
+local first = game:GetService("Players"):GetPlayers()[1]
+local PLOT = if first then first:GetAttribute("Plot") else Config.Plots.TemplatePlot
+local plot = workspace.Map:FindFirstChild("Plot" .. PLOT)
+local spots = Spots.build(PLOT, plot)
 local fire = spots.campfire
 local seats = Spots.seats(
 	plot,

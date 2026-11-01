@@ -14,6 +14,7 @@ local Stations = require(ReplicatedStorage.Shared.Stations)
 local VillageRules = require(ReplicatedStorage.Shared.Village)
 local Zombies = require(ReplicatedStorage.Shared.Zombies)
 local PlayerData = require(script.Parent.PlayerData)
+local Plots = require(script.Parent.Plots)
 local Village = require(script.Parent.Village)
 local ZombieFights = require(script.Parent.ZombieFights)
 
@@ -101,13 +102,16 @@ local function request(player: Player, data: any): { ok: boolean, reason: string
 	elseif action == "UpgradeArea" then
 		valid = type(data.areaId) == "string"
 			and table.find(Config.Village.Areas, data.areaId) ~= nil
-			and Village.ownsPlot(player)
+			and Plots.of(player) ~= nil
 	elseif action == "SetTeam" then
-		valid = teamNumber(data.team) and idList(data.slimeIds) and Village.ownsPlot(player)
+		valid = teamNumber(data.team) and idList(data.slimeIds) and Plots.of(player) ~= nil
 	elseif action == "SetTeamRepeat" then
-		valid = teamNumber(data.team) and type(data.on) == "boolean" and Village.ownsPlot(player)
+		valid = teamNumber(data.team) and type(data.on) == "boolean" and Plots.of(player) ~= nil
 	elseif action == "AttackGroup" then
-		valid = teamNumber(data.team) and type(data.groupId) == "string" and Village.ownsPlot(player)
+		valid = teamNumber(data.team)
+			and type(data.groupId) == "string"
+			and #data.groupId <= Config.Zombies.TargetIdMaxLength
+			and Plots.of(player) ~= nil
 	end
 	if not valid then
 		return { ok = false, reason = "INVALID_ARGUMENT" }

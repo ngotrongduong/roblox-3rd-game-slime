@@ -104,9 +104,24 @@ function Layout.plotAreaFacing(plot: number, col: number, row: number): CFrame
 	return CFrame.new(frame.Position) * CFrame.Angles(0, math.atan2(-d.X, -d.Z), 0)
 end
 
+-- The turn about the valley centre that carries everything of plot `from` onto plot `plot` (a clone of the hand-built village
+-- is turned by it): `turn * Layout.plotFrame(from)` is `Layout.plotFrame(plot)`, and the same for every frame of the plot.
+function Layout.plotTurn(plot: number, from: number): CFrame
+	assert(plot >= 1 and plot <= M.PlotCount and from >= 1 and from <= M.PlotCount, "plot out of range")
+	return CFrame.Angles(0, math.rad(Layout.slotAngle(from) - Layout.slotAngle(plot)), 0)
+end
+
+-- The gate of a rim slice (0 is the Market's, 1..8 the plots'): on its front edge, facing the valley centre. The groups of
+-- zombies of the slice stand out from it (docs/MAP.md 1.4).
+function Layout.sliceGate(slice: number): CFrame
+	assert(slice >= 0 and slice <= M.PlotCount, "slice out of range")
+	return Layout.slotFrame(slice) * CFrame.new(0, 0, -M.PlotSize / 2)
+end
+
 -- The gate of a plot: on its front edge, facing the valley centre.
 function Layout.plotGate(plot: number): CFrame
-	return Layout.plotFrame(plot) * CFrame.new(0, 0, -M.PlotSize / 2)
+	assert(plot >= 1 and plot <= M.PlotCount, "plot out of range")
+	return Layout.sliceGate(plot)
 end
 
 -- Which Wild Garden quarter a point is in, or nil outside the Wild Garden.

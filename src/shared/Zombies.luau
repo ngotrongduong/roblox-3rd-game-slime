@@ -124,6 +124,42 @@ function Zombies.shouldRelevel(
 	return base < low or base > high
 end
 
+-- A group's id is unique across the server and short (a saved team target names one): "s<slice>c<camp>g<index>", the slice
+-- 0 for the Market's and 1..8 for the plots'.
+function Zombies.groupId(slice: number, camp: number, index: number): string
+	return "s" .. slice .. "c" .. camp .. "g" .. index
+end
+
+-- The slice, camp and index an id names, all nil when it is not a group of this server (an id of the old single-village
+-- camps, "c1g1", or any other text).
+function Zombies.parseGroupId(id: any): (number?, number?, number?)
+	if type(id) ~= "string" then
+		return nil, nil, nil
+	end
+	local slice, camp, index = string.match(id, "^s(%d+)c(%d+)g(%d+)$")
+	if not slice then
+		return nil, nil, nil
+	end
+	local s, c, i = tonumber(slice) :: number, tonumber(camp) :: number, tonumber(index) :: number
+	if
+		s > Config.Map.PlotCount
+		or c < 1
+		or c > #Config.Zombies.LevelOffsets
+		or i < 1
+		or i > Config.Zombies.GroupsPerCamp
+	then
+		return nil, nil, nil
+	end
+	return s, c, i
+end
+
+-- Whether a team's saved target still fits a player in this plot: it names a group of that plot's own slice. A target of an
+-- old plot, of the old camps or of nothing known is dropped when the player's camps open.
+function Zombies.targetFits(target: any, plot: number): boolean
+	local slice = Zombies.parseGroupId(target)
+	return slice == plot
+end
+
 -- The level of each camp for a player of this level: the same, a little above, far above.
 function Zombies.campLevels(playerLevel: number): { number }
 	local out: { number } = {}

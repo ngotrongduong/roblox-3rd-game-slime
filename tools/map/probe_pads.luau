@@ -5,7 +5,9 @@
 local RS = game:GetService("ReplicatedStorage")
 local Config = require(RS.Shared.Config)
 local Layout = require(RS.Shared.Layout)
-local PLOT = Config.Village.DevPlot
+-- the plot of the first player in the test (the copy of the village they stand in)
+local first = game:GetService("Players"):GetPlayers()[1]
+local PLOT = if first then first:GetAttribute("Plot") else Config.Plots.TemplatePlot
 local AREAS = {
 	fishing = { -1, 1 },
 	garden = { 1, 1 },

@@ -1,5 +1,6 @@
 --!strict
 -- Server-authoritative village clocks and errands. Only lightweight intent is replicated.
+local CollectionService = game:GetService("CollectionService")
 local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
 local PathfindingService = game:GetService("PathfindingService")
@@ -23,6 +24,7 @@ local Stations = require(ReplicatedStorage.Shared.Stations)
 local VillageRules = require(ReplicatedStorage.Shared.Village)
 local VillageSim = require(ReplicatedStorage.Shared.VillageSim)
 local PlayerData = require(script.Parent.PlayerData)
+local Plots = require(script.Parent.Plots)
 local Spots = require(script.Parent.Spots)
 
 type Farm = typeof(FarmState.newFarm(0))
@@ -74,6 +76,9 @@ type Actor = {
 }
 type Session = {
 	root: Folder,
+	-- the home plot this village stands in (Plots) and, measured every few seconds, the breeding house's footprint
+	plot: number,
+	breedingBox: { cf: CFrame, size: Vector3, at: number }?,
 	slimes: Folder,
 	eggs: Folder,
 	spots: { [string]: Spot },
@@ -113,7 +118,6 @@ local VISUAL: { [string]: boolean } = {
 	player = true,
 }
 local sessions: { [Player]: Session } = {}
-local plotOwner: Player? = nil
 
 local function set(inst: Instance, name: string, value: any)
 	if inst:GetAttribute(name) ~= value then
@@ -820,20 +824,20 @@ end
 
 -- Inside the breeding area's footprint (the BreedingL1 model, at whatever level it is built). Measured again
 -- every few seconds, since an upgrade rebuilds the area.
-local breedingBox: { cf: CFrame, size: Vector3, at: number }? = nil
-local function insideBreeding(p: Vector3): boolean
+local function insideBreeding(session: Session, p: Vector3): boolean
 	local clock = os.clock()
-	if not breedingBox or clock - breedingBox.at > Config.Village.BreedingBoxSeconds then
-		local map = workspace:FindFirstChild("Map")
-		local plot = if map then map:FindFirstChild("Plot" .. Config.Village.DevPlot) else nil
+	local known = session.breedingBox
+	if not known or clock - known.at > Config.Village.BreedingBoxSeconds then
+		local plot = Plots.model(session.plot)
 		local area = if plot then plot:FindFirstChild("BreedingL1") else nil
 		if not area or not area:IsA("Model") then
 			return false
 		end
 		local cf, size = area:GetBoundingBox()
-		breedingBox = { cf = cf, size = size, at = clock }
+		known = { cf = cf, size = size, at = clock }
+		session.breedingBox = known
 	end
-	local box = breedingBox :: { cf: CFrame, size: Vector3, at: number }
+	local box = known :: { cf: CFrame, size: Vector3, at: number }
 	local rel = box.cf:PointToObjectSpace(p)
 	return math.abs(rel.X) <= box.size.X / 2 and math.abs(rel.Z) <= box.size.Z / 2
 end
@@ -844,7 +848,11 @@ local function startLeg(session: Session, actor: Actor, factor: number, when: nu
 	if not to then
 		return
 	end
-	actor.gait = Gaits.forLeg(actor.baseGait or "walk", insideBreeding(point(actor.current)), insideBreeding(point(to)))
+	actor.gait = Gaits.forLeg(
+		actor.baseGait or "walk",
+		insideBreeding(session, point(actor.current)),
+		insideBreeding(session, point(to))
+	)
 	local duration = VillagePath.duration((point(to) - point(actor.current)).Magnitude, factor, actor.gait)
 	-- Waypoints are only intent, not physical NPCs. Queue shared corners so two slimes
 	-- do not get the same server-arrival time even if the client is rendering from afar.
@@ -1333,11 +1341,7 @@ local function seatCrop(model: Model, soil: number?)
 end
 
 local function syncGarden(session: Session, farm: Farm)
-	if session.root:GetAttribute("Plot") ~= Config.Village.DevPlot then
-		return
-	end
-	local map = workspace:FindFirstChild("Map")
-	local plot = if map then map:FindFirstChild("Plot" .. Config.Village.DevPlot) else nil
+	local plot = Plots.model(session.plot)
 	local garden = if plot then plot:FindFirstChild("GardenL1") else nil
 	local stage = if garden then garden:FindFirstChild("AreaStage") else nil
 	local plots: typeof(GardenPlots.new(1)) = farm.work.garden.plots
@@ -1441,9 +1445,8 @@ local function tick(player: Player, session: Session)
 	end
 	PlayerData.update(player, function(data: any)
 		-- Stage upgrades may add beds. Grow the saved array before the simulation, never in the renderer.
-		if session.root:GetAttribute("Plot") == Config.Village.DevPlot then
-			local map = workspace:FindFirstChild("Map")
-			local plot = if map then map:FindFirstChild("Plot" .. Config.Village.DevPlot) else nil
+		do
+			local plot = Plots.model(session.plot)
 			local garden = if plot then plot:FindFirstChild("GardenL1") else nil
 			local stage = if garden then garden:FindFirstChild("AreaStage") else nil
 			local count = if stage then stage:GetAttribute("CropPlots") else nil
@@ -1807,7 +1810,7 @@ local function selectItem(farm: Farm, session: Session, spot: string): Carried?
 end
 
 local function carryPrompt(player: Player, session: Session, spot: string)
-	if player ~= plotOwner or not PlayerData.isReady(player) or sessions[player] ~= session then
+	if Plots.of(player) ~= session.plot or not PlayerData.isReady(player) or sessions[player] ~= session then
 		return
 	end
 	local target = session.spots[spot]
@@ -1919,6 +1922,9 @@ local function setupCarry(player: Player, session: Session)
 			prompt.MaxActivationDistance = Config.Village.CarryPromptDistance
 			prompt.RequiresLineOfSight = false
 			prompt:SetAttribute("VillageSpot", spot.id)
+			-- (every client hides the prompts that are not its own: src/client/OwnPrompts.client.luau)
+			prompt:SetAttribute("OwnerUserId", player.UserId)
+			CollectionService:AddTag(prompt, "OwnedPrompt")
 			prompt.Parent = anchor
 			prompt.Triggered:Connect(function(asker: Player)
 				carryPrompt(asker, session, spot.id)
@@ -2028,10 +2034,6 @@ function Village.rootOf(player: Player): Folder?
 	return if session then session.root else nil
 end
 
-function Village.ownsPlot(player: Player): boolean
-	return plotOwner == player
-end
-
 function Village.start()
 	local events = ServerStorage:FindFirstChild("VillageEvents")
 	local changed = if events then events:FindFirstChild("AreaLevelChanged") else nil
@@ -2041,30 +2043,23 @@ function Village.start()
 			if session then
 				-- An upgraded building may have a different walkable footprint or more crop markers.
 				table.clear(session.pathCache)
-				if session.root:GetAttribute("Plot") == Config.Village.DevPlot then
-					task.defer(function()
-						if session.active then
-							local map = workspace:FindFirstChild("Map")
-							local plot = if map then map:FindFirstChild("Plot" .. Config.Village.DevPlot) else nil
-							session.spots = Spots.build(Config.Village.DevPlot, plot)
-							session.seats = Spots.seats(plot, campfirePoint(session.spots), point(session.spots.plaza))
-							table.clear(session.seated)
-							for _, held in session.actors do
-								held.seat = nil
-							end
-							session.sign = Spots.storehouseSign(plot)
-							for _, anchor in session.prompts do
-								if
-									anchor.Name == "CarrySpot_storehouse"
-									and anchor:IsA("BasePart")
-									and session.sign
-								then
-									anchor.Position = session.sign
-								end
+				task.defer(function()
+					if session.active then
+						local plot = Plots.model(session.plot)
+						session.spots = Spots.build(session.plot, plot)
+						session.seats = Spots.seats(plot, campfirePoint(session.spots), point(session.spots.plaza))
+						table.clear(session.seated)
+						for _, held in session.actors do
+							held.seat = nil
+						end
+						session.sign = Spots.storehouseSign(plot)
+						for _, anchor in session.prompts do
+							if anchor.Name == "CarrySpot_storehouse" and anchor:IsA("BasePart") and session.sign then
+								anchor.Position = session.sign
 							end
 						end
-					end)
-				end
+					end
+				end)
 			end
 		end)
 	end
@@ -2072,9 +2067,11 @@ function Village.start()
 		if player.Parent ~= Players or not PlayerData.isReady(player) then
 			return
 		end
-		-- Claim before catch-up so the visual stage restorer can see the owner on join.
-		if not plotOwner then
-			plotOwner = player
+		-- The plot's copy of the village stands, at this player's saved levels, before the village's places are measured.
+		local plot = Plots.waitReady(player)
+		local plotNumber = Plots.of(player)
+		if not plot or not plotNumber or player.Parent ~= Players or not PlayerData.isReady(player) then
+			return
 		end
 		local epoch = os.time()
 		local rng = Rng.new(player.UserId + epoch)
@@ -2099,14 +2096,14 @@ function Village.start()
 		if player.Parent ~= Players or not PlayerData.isReady(player) then
 			return
 		end
-		local map = workspace:FindFirstChild("Map")
-		local plot = if map and plotOwner == player then map:FindFirstChild("Plot" .. Config.Village.DevPlot) else nil
-		local spots = Spots.build(Config.Village.DevPlot, plot)
+		local spots = Spots.build(plotNumber, plot)
 		local world = child(workspace, "Villages", "Folder")
 		local root = child(world, tostring(player.UserId), "Folder") :: Folder
-		set(root, "Plot", if plotOwner == player then Config.Village.DevPlot else 0)
+		set(root, "Plot", plotNumber)
 		local session: Session = {
 			root = root,
+			plot = plotNumber,
+			breedingBox = nil,
 			slimes = child(root, "Slimes", "Folder") :: Folder,
 			eggs = child(root, "Eggs", "Folder") :: Folder,
 			spots = spots,
@@ -2128,9 +2125,7 @@ function Village.start()
 			deathConnection = nil,
 		}
 		sessions[player] = session
-		if plotOwner == player then
-			setupCarry(player, session)
-		end
+		setupCarry(player, session)
 		local farm = PlayerData.get(player)
 		if farm then
 			show(session, farm, epoch)
@@ -2157,9 +2152,6 @@ function Village.start()
 			end
 			session.root:Destroy()
 			sessions[player] = nil
-		end
-		if plotOwner == player then
-			plotOwner = nil
 		end
 	end)
 end

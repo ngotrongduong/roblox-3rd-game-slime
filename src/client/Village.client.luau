@@ -157,6 +157,16 @@ local function clearEntry(entry: Entry)
 	dropBody(entry)
 end
 
+-- Whether the camera is within `margin` x MaxDrawDistance of the slime (where its body is, else where its leg starts).
+local function withinReach(entry: Entry, margin: number): boolean
+	local camera = workspace.CurrentCamera
+	if not camera then
+		return true
+	end
+	local origin = if entry.actor then entry.actor.root.Position else at(entry.config, "From")
+	return (camera.CFrame.Position - origin).Magnitude < C.MaxDrawDistance * margin
+end
+
 local function refreshLook(entry: Entry)
 	local config = entry.config
 	-- Out on a zombie squad: the fight draws the slime (ZombieFight), the village draws nothing until it is back.
@@ -164,6 +174,11 @@ local function refreshLook(entry: Entry)
 		if entry.model then
 			dropBody(entry)
 		end
+		return
+	end
+	-- Every player's village is drawn, but a body is made only for a slime near the camera (the timer below makes it when
+	-- the camera comes near, and drops it when the camera goes away).
+	if not entry.model and not withinReach(entry, 1) then
 		return
 	end
 	if type(config:GetAttribute("Look")) ~= "string" or type(config:GetAttribute("Colour")) ~= "string" then
@@ -274,23 +289,25 @@ local function partnerPosition(village: Village, current: Entry): Vector3?
 end
 
 -- The pond's stage (PondStages names it "PondStage"; the other areas use "AreaStage").
-local function pondStage(): Instance?
+-- (of the village's own plot: every player's village is drawn here, each by the plot its folder says)
+local function pondStage(village: Village): Instance?
+	local plotNumber = number(village.root, "Plot", 0)
 	local map = workspace:FindFirstChild("Map")
-	local plot = if map then map:FindFirstChild("Plot" .. Config.Village.DevPlot) else nil
+	local plot = if map and plotNumber >= 1 then map:FindFirstChild("Plot" .. plotNumber) else nil
 	local pond = if plot then plot:FindFirstChild("FishingPondL1") else nil
 	return if pond then pond:FindFirstChild("PondStage") or pond:FindFirstChild("AreaStage") else nil
 end
 
-local function pondMarker(slot: number): BasePart?
-	local stage = pondStage()
+local function pondMarker(village: Village, slot: number): BasePart?
+	local stage = pondStage(village)
 	local marker = if stage then stage:FindFirstChild("WorkSpot" .. math.floor(slot)) else nil
 	return if marker and marker:IsA("BasePart") then marker else nil
 end
 
 -- The rod resting in the stand nearest a fishing place.
-local function stageRod(slot: number): Model?
-	local stage = pondStage()
-	local marker = pondMarker(slot)
+local function stageRod(village: Village, slot: number): Model?
+	local stage = pondStage(village)
+	local marker = pondMarker(village, slot)
 	if not stage or not marker then
 		return nil
 	end
@@ -573,7 +590,7 @@ local function animate(village: Village, entry: Entry, now: number)
 		and (phase == "cast" or phase == "wait" or phase == "reel")
 	local water: Vector3? = nil
 	if fishing or (inHand and hand == "catch") then
-		local marker = pondMarker(number(entry.config, "WorkSlot", 1))
+		local marker = pondMarker(village, number(entry.config, "WorkSlot", 1))
 		if marker then
 			-- The dock runs toward its far end, opposite the marker's LookVector: the water is that way.
 			water = marker.Position - marker.CFrame.LookVector * C.CastStuds
@@ -752,7 +769,7 @@ local function animate(village: Village, entry: Entry, now: number)
 	-- The place's own rod disappears from its stand while a slime holds it (this client only).
 	local standRod: Model? = nil
 	if holdingRod and entry.rodSlot > 0 then
-		standRod = stageRod(entry.rodSlot)
+		standRod = stageRod(village, entry.rodSlot)
 	end
 	if entry.rod ~= standRod then
 		if entry.rod then
@@ -787,10 +804,8 @@ local function animate(village: Village, entry: Entry, now: number)
 end
 
 local function eggPosition(village: Village, egg: Configuration): Vector3
-	local plotNumber = number(village.root, "Plot", 0)
-	if plotNumber < 1 then
-		plotNumber = Config.Village.DevPlot
-	end
+	-- (a village whose plot is not published yet draws its eggs at the first plot's nest places until it is)
+	local plotNumber = math.max(1, number(village.root, "Plot", 0))
 	local map = workspace:FindFirstChild("Map")
 	local plot = if map then map:FindFirstChild("Plot" .. plotNumber) else nil
 	local breeding: Instance? = nil
@@ -985,6 +1000,11 @@ task.spawn(function()
 			for _, entry in village.slimes do
 				local origin = if entry.actor then entry.actor.root.Position else at(entry.config, "From")
 				local distance = if camera then (camera.CFrame.Position - origin).Magnitude else 0
+				if not entry.model and distance < C.MaxDrawDistance then
+					refreshLook(entry)
+				elseif entry.model and distance >= C.MaxDrawDistance * C.BodyDropMargin then
+					dropBody(entry)
+				end
 				if distance < C.MaxDrawDistance then
 					local interval = if distance <= C.NearWorkDistance then C.UpdateSeconds else C.FarUpdateSeconds
 					if now - entry.lastUpdate >= interval then

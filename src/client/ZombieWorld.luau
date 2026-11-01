@@ -1,10 +1,13 @@
 --!strict
--- The zombie groups outside the village, drawn from what the server publishes under workspace.Villages.<id>.Camps
--- (src/server/ZombieFights.luau): each waiting or fighting zombie as a real slime body with SlimeActor, a level marker over
--- each group and a prompt to order an attack. Only groups near the camera are drawn (Config.Zombies.DrawDistance, at most
--- View.MaxDrawnZombies bodies). A waiting group's zombies live: each moves freely round the group's place, pauses, shows a
--- feeling or talks to a neighbour (client only, seeded per zombie, staggered, with a budget); a group that is taken or
--- fighting turns to face the team. It decides nothing: the fight (ZombieFight) and the sheets (UiTeams) use its small API.
+-- The zombie groups outside the villages, drawn from what the server publishes under workspace.ZombieCamps/<slice>/<id>
+-- (src/server/ZombieFights.luau; the camps of the whole server, every slice of the valley has its own): each waiting or
+-- fighting zombie as a real slime body with SlimeActor, a level marker over each group (coloured by the viewer's own level,
+-- PlayerLevel on their village folder) and a prompt to order an attack. Only the groups nearest the camera, in any slice,
+-- are drawn (Config.Zombies.DrawDistance, at most View.MaxDrawnZombies bodies), and only the groups near the camera have a
+-- marker and a prompt. A waiting group's zombies live: each moves freely round the group's place, pauses, shows a feeling or
+-- talks to a neighbour (client only, seeded per zombie, staggered, with a budget); a group that is taken or fighting turns to
+-- face the team that attacks it (any player's). It decides nothing: the fight (ZombieFight) and the sheets (UiTeams) use its
+-- small API.
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
@@ -33,6 +36,8 @@ export type Entry = {
 	config: Configuration,
 	kind: string,
 	level: number,
+	-- the slice of the valley its group stands in (its gate is the village it looks at)
+	slice: number,
 	model: Model?,
 	actor: SlimeActor.Slime?,
 	-- where it stands in its group, and the way it faces (towards the village)
@@ -41,20 +46,26 @@ export type Entry = {
 	roam: Roam,
 	connections: { RBXScriptConnection },
 }
-export type Group = {
-	id: string,
-	folder: Configuration,
-	camp: number,
-	level: number,
-	state: string,
-	-- the team that ordered the attack on it (0 when none)
-	team: number,
-	position: Vector3,
+-- The level marker and the attack prompt of a group, made while the group is near the camera.
+type Marker = {
 	anchor: Part,
 	gui: BillboardGui,
 	label: TextLabel,
 	scale: UIScale,
 	prompt: ProximityPrompt,
+}
+export type Group = {
+	id: string,
+	folder: Configuration,
+	slice: number,
+	camp: number,
+	level: number,
+	state: string,
+	-- the team that ordered the attack on it (0 when none) and the UserId of its player (0 when none)
+	team: number,
+	attacker: number,
+	position: Vector3,
+	marker: Marker?,
 	entries: { [Configuration]: Entry },
 	byId: { [string]: Entry },
 	drawn: boolean,
@@ -84,13 +95,14 @@ local function stringAttr(inst: Instance, name: string, default: string): string
 	return if type(value) == "string" then value else default
 end
 
-local function gatePosition(): Vector3
-	return Layout.plotGate(Config.Village.DevPlot).Position
+-- The gate of a slice of the valley (0 is the Market's): the village its groups look at.
+local function gatePosition(slice: number): Vector3
+	return Layout.sliceGate(math.clamp(slice, 0, Config.Map.PlotCount)).Position
 end
 
--- The flat way from a point towards the village's gate.
-function ZombieWorld.towardVillage(from: Vector3): Vector3
-	local flat = gatePosition() - from
+-- The flat way from a point towards a slice's gate.
+function ZombieWorld.towardVillage(from: Vector3, slice: number): Vector3
+	local flat = gatePosition(slice) - from
 	flat = Vector3.new(flat.X, 0, flat.Z)
 	return if flat.Magnitude > 0.01 then flat.Unit else Vector3.zAxis
 end
@@ -157,7 +169,7 @@ local function draw(entry: Entry)
 	if actor then
 		-- (the body collides by default; a zombie is only to be looked at)
 		actor.body.CanCollide = false
-		SlimeActor.lookAt(actor, gatePosition())
+		SlimeActor.lookAt(actor, gatePosition(entry.slice))
 		-- (it stands on its own feet from the start: a standing leg keeps it on the ground and lets it turn on the spot)
 		SlimeActor.setTravel(actor, foot, foot, 0, 0, false, "stroll")
 		local roam = entry.roam
@@ -182,7 +194,7 @@ local function layout(group: Group)
 	table.sort(list, function(a, b)
 		return a.config.Name < b.config.Name
 	end)
-	local facing = ZombieWorld.towardVillage(group.position)
+	local facing = ZombieWorld.towardVillage(group.position, group.slice)
 	for index, entry in list do
 		local angle = (index - 1) / #list * math.pi * 2 + math.pi / 4
 		local offset = if #list == 1
@@ -200,14 +212,11 @@ local function layout(group: Group)
 	end
 end
 
+-- How dangerous a group is for the person looking: by how far its level lies above the viewer's own (PlayerLevel on their
+-- village folder; until it is published the group counts as even).
 local function dangerColour(group: Group): Color3
-	local sum, count = 0, 0
-	for _, other in groups do
-		sum += other.level - (Z.LevelOffsets[other.camp] or 0)
-		count += 1
-	end
-	local reference = if count > 0 then sum / count else group.level
-	local gap = group.level - reference
+	local own = ZombieTeams.level()
+	local gap = if own > 0 then group.level - own else 0
 	local colours = V.DangerColours
 	if gap >= V.Danger.Hard then
 		return Color3.fromHex(colours.Hard)
@@ -218,12 +227,81 @@ local function dangerColour(group: Group): Color3
 end
 
 local function refreshMarker(group: Group)
-	group.label.Text = "Lv " .. tostring(group.level)
-	group.label.TextColor3 = dangerColour(group)
-	group.gui.Enabled = group.state ~= "gone"
-	group.prompt.Enabled = group.state == "waiting"
+	local marker = group.marker
+	if not marker then
+		return
+	end
+	marker.label.Text = "Lv " .. tostring(group.level)
+	marker.label.TextColor3 = dangerColour(group)
+	marker.gui.Enabled = group.state ~= "gone"
+	marker.prompt.Enabled = group.state == "waiting"
 	local camera = workspace.CurrentCamera
-	group.scale.Scale = if camera then math.clamp(camera.ViewportSize.Y / 900, 0.7, 1.3) else 1
+	marker.scale.Scale = if camera then math.clamp(camera.ViewportSize.Y / 900, 0.7, 1.3) else 1
+end
+
+-- The marker and the prompt of a group, made when the camera comes near and dropped when it goes away: a server of 8 has 108
+-- groups, and most are far.
+local function showMarker(group: Group, on: boolean)
+	if not on then
+		local marker = group.marker
+		if marker then
+			marker.anchor:Destroy()
+			group.marker = nil
+		end
+		return
+	end
+	if group.marker then
+		return
+	end
+	local anchor = Instance.new("Part")
+	anchor.Name = "Group_" .. group.id
+	anchor.Size = Vector3.one
+	anchor.Transparency = 1
+	anchor.Anchored = true
+	anchor.CanCollide = false
+	anchor.CanTouch = false
+	anchor.CanQuery = false
+	anchor.CastShadow = false
+	anchor.CFrame = CFrame.new(group.position + Vector3.new(0, V.AnchorLift, 0))
+	anchor.Parent = actorsFolder
+
+	local gui = Instance.new("BillboardGui")
+	gui.Name = "GroupMarker"
+	gui.Adornee = anchor
+	gui.Size = UDim2.fromOffset(V.MarkerWidth, V.MarkerHeight)
+	gui.StudsOffset = Vector3.new(0, V.MarkerLift, 0)
+	gui.AlwaysOnTop = false
+	gui.MaxDistance = V.MarkerDistance
+	gui.LightInfluence = 0
+	gui.Parent = anchor
+	local scale = Instance.new("UIScale")
+	scale.Parent = gui
+	local label = Instance.new("TextLabel")
+	label.BackgroundTransparency = 1
+	label.Size = UDim2.fromScale(1, 1)
+	label.Font = Enum.Font.FredokaOne
+	label.TextScaled = true
+	label.TextStrokeTransparency = 0
+	label.TextStrokeColor3 = Color3.fromRGB(40, 28, 20)
+	label.Parent = gui
+
+	local prompt = Instance.new("ProximityPrompt")
+	prompt.Name = "Attack"
+	prompt.ActionText = "Attack"
+	prompt.ObjectText = ""
+	prompt.KeyboardKeyCode = Enum.KeyCode.F
+	prompt.HoldDuration = 0
+	prompt.MaxActivationDistance = Z.SendRangeStuds
+	prompt.RequiresLineOfSight = false
+	prompt.Parent = anchor
+	prompt.Triggered:Connect(function()
+		local open = opener
+		if open and group.state == "waiting" then
+			open(group.id)
+		end
+	end)
+	group.marker = { anchor = anchor, gui = gui, label = label, scale = scale, prompt = prompt }
+	refreshMarker(group)
 end
 
 local function setDrawn(group: Group, on: boolean)
@@ -276,17 +354,18 @@ end
 -- The face of its own kind and the eyes towards the village again, after a feeling or a chat.
 local function ownFace(entry: Entry, actor: SlimeActor.Slime)
 	SlimeActor.setEmotion(actor, ZombieLook.look(entry.kind).face)
-	SlimeActor.lookAt(actor, gatePosition())
+	SlimeActor.lookAt(actor, gatePosition(entry.slice))
 	SlimeActor.face(actor, nil)
 end
 
--- Where a taken group looks: at its team, else at the village.
+-- Where a taken group looks: at the team that attacks it (any player's), else at its slice's village.
 local function lookPoint(group: Group): Vector3
-	local team = if group.team > 0 then ZombieTeams.get(group.team) else nil
+	local village = if group.attacker > 0 then ZombieTeams.rootOf(group.attacker) else nil
+	local team = if group.team > 0 and village then ZombieTeams.get(group.team, village) else nil
 	if team then
 		return Vector3.new(team.to.X, group.position.Y, team.to.Z)
 	end
-	return gatePosition()
+	return gatePosition(group.slice)
 end
 
 local function nearestNeighbour(group: Group, entry: Entry, actor: SlimeActor.Slime): Entry?
@@ -477,22 +556,25 @@ end
 
 local function readGroup(group: Group)
 	local folder = group.folder
+	group.slice = math.floor(number(folder, "Slice", group.slice))
 	group.camp = math.floor(number(folder, "Camp", group.camp))
 	group.level = math.floor(number(folder, "Level", group.level))
 	group.state = stringAttr(folder, "State", "waiting")
 	group.team = math.floor(number(folder, "Team", 0))
+	group.attacker = math.floor(number(folder, "Attacker", 0))
 	local at = folder:GetAttribute("Position")
 	local moved = typeof(at) == "Vector3" and at ~= group.position
 	if typeof(at) == "Vector3" then
 		group.position = at
-		group.anchor.CFrame = CFrame.new(at + Vector3.new(0, V.AnchorLift, 0))
+		local marker = group.marker
+		if marker then
+			marker.anchor.CFrame = CFrame.new(at + Vector3.new(0, V.AnchorLift, 0))
+		end
 	end
 	if moved then
 		layout(group)
 	end
-	for _, other in groups do
-		refreshMarker(other)
-	end
+	refreshMarker(group)
 	if group.state == "gone" and group.drawn then
 		setDrawn(group, false)
 	end
@@ -506,6 +588,7 @@ local function addEntry(group: Group, child: Instance)
 		config = child,
 		kind = stringAttr(child, "Kind", "rotten"),
 		level = math.floor(number(child, "Level", group.level)),
+		slice = group.slice,
 		model = nil,
 		actor = nil,
 		spot = group.position,
@@ -551,60 +634,17 @@ local function addGroup(child: Instance)
 	if not child:IsA("Configuration") or groups[child] then
 		return
 	end
-	local anchor = Instance.new("Part")
-	anchor.Name = "Group_" .. child.Name
-	anchor.Size = Vector3.one
-	anchor.Transparency = 1
-	anchor.Anchored = true
-	anchor.CanCollide = false
-	anchor.CanTouch = false
-	anchor.CanQuery = false
-	anchor.CastShadow = false
-	anchor.Parent = actorsFolder
-
-	local gui = Instance.new("BillboardGui")
-	gui.Name = "GroupMarker"
-	gui.Adornee = anchor
-	gui.Size = UDim2.fromOffset(V.MarkerWidth, V.MarkerHeight)
-	gui.StudsOffset = Vector3.new(0, V.MarkerLift, 0)
-	gui.AlwaysOnTop = false
-	gui.MaxDistance = V.MarkerDistance
-	gui.LightInfluence = 0
-	gui.Parent = anchor
-	local scale = Instance.new("UIScale")
-	scale.Parent = gui
-	local label = Instance.new("TextLabel")
-	label.BackgroundTransparency = 1
-	label.Size = UDim2.fromScale(1, 1)
-	label.Font = Enum.Font.FredokaOne
-	label.TextScaled = true
-	label.TextStrokeTransparency = 0
-	label.TextStrokeColor3 = Color3.fromRGB(40, 28, 20)
-	label.Parent = gui
-
-	local prompt = Instance.new("ProximityPrompt")
-	prompt.Name = "Attack"
-	prompt.ActionText = "Attack"
-	prompt.ObjectText = ""
-	prompt.KeyboardKeyCode = Enum.KeyCode.F
-	prompt.HoldDuration = 0
-	prompt.MaxActivationDistance = Z.SendRangeStuds
-	prompt.RequiresLineOfSight = false
-	prompt.Parent = anchor
-
 	local group: Group = {
 		id = child.Name,
 		folder = child,
+		slice = 0,
 		camp = 1,
 		level = 1,
 		state = "waiting",
 		team = 0,
+		attacker = 0,
 		position = Vector3.zero,
-		anchor = anchor,
-		gui = gui,
-		label = label,
-		scale = scale,
-		prompt = prompt,
+		marker = nil,
 		entries = {},
 		byId = {},
 		drawn = false,
@@ -612,13 +652,7 @@ local function addGroup(child: Instance)
 	}
 	groups[child] = group
 	byGroupId[group.id] = group
-	prompt.Triggered:Connect(function()
-		local open = opener
-		if open and group.state == "waiting" then
-			open(group.id)
-		end
-	end)
-	for _, name in { "Camp", "Level", "Position", "State", "Team" } do
+	for _, name in { "Slice", "Camp", "Level", "Position", "State", "Team", "Attacker" } do
 		table.insert(
 			group.connections,
 			child:GetAttributeChangedSignal(name):Connect(function()
@@ -655,7 +689,7 @@ local function removeGroup(child: Instance)
 	for node in group.entries do
 		removeEntry(group, node)
 	end
-	group.anchor:Destroy()
+	showMarker(group, false)
 	groups[child :: Configuration] = nil
 	byGroupId[group.id] = nil
 end
@@ -673,6 +707,7 @@ local function check()
 			if group.drawn then
 				setDrawn(group, false)
 			end
+			showMarker(group, false)
 		else
 			table.insert(near, { group = group, distance = (group.position - from).Magnitude })
 		end
@@ -683,6 +718,12 @@ local function check()
 	local budget = V.MaxDrawnZombies
 	for _, item in near do
 		local group = item.group
+		-- (the level marker and the prompt exist only near the camera; the colour follows the viewer's level as it grows)
+		local markerLimit = V.MarkerDistance * V.HideMargin
+		if group.marker or item.distance <= V.MarkerDistance then
+			showMarker(group, item.distance <= markerLimit)
+			refreshMarker(group)
+		end
 		local count = 0
 		for _, entry in group.entries do
 			if not dead[entry.config.Name] then
@@ -709,14 +750,10 @@ function ZombieWorld.group(id: string): Group?
 	return byGroupId[id]
 end
 
+-- (a zombie's id starts with its group's: "s3c2g4-17-2")
 function ZombieWorld.zombie(id: string): Entry?
-	for _, group in groups do
-		local entry = group.byId[id]
-		if entry then
-			return entry
-		end
-	end
-	return nil
+	local group = byGroupId[string.match(id, "^[^-]+") or ""]
+	return if group then group.byId[id] else nil
 end
 
 -- A zombie the fight saw fall: it bursts away (the caller adds the coins and the particles) and is not drawn again.
@@ -741,29 +778,28 @@ function ZombieWorld.start()
 	end
 	started = true
 	task.spawn(function()
-		local villages = workspace:WaitForChild("Villages")
-		local root = villages:WaitForChild(tostring(Players.LocalPlayer.UserId))
-		local function bindCamps(camps: Instance)
-			camps.ChildAdded:Connect(addGroup)
-			camps.ChildRemoved:Connect(removeGroup)
-			for _, child in camps:GetChildren() do
+		-- The camps of the whole server: workspace.ZombieCamps/<slice>/<group> (made by the server when the first player's
+		-- village is up).
+		local camps = workspace:FindFirstChild("ZombieCamps")
+		while not camps do
+			task.wait(V.CheckSeconds)
+			camps = workspace:FindFirstChild("ZombieCamps")
+		end
+		local function bindSlice(slice: Instance)
+			slice.ChildAdded:Connect(addGroup)
+			slice.ChildRemoved:Connect(removeGroup)
+			for _, child in slice:GetChildren() do
 				addGroup(child)
 			end
 		end
-		local camps = root:FindFirstChild("Camps")
-		if camps then
-			bindCamps(camps)
-		else
-			root.ChildAdded:Connect(function(child)
-				if child.Name == "Camps" then
-					bindCamps(child)
-				end
-			end)
+		camps.ChildAdded:Connect(bindSlice)
+		for _, slice in camps:GetChildren() do
+			bindSlice(slice)
 		end
 		-- the zombies' own life, looked at a few times a second
 		task.spawn(function()
 			local roamFailed = false
-			while root.Parent do
+			while camps.Parent do
 				local ok, err = pcall(function(): any
 					roamTick()
 					return nil
@@ -775,7 +811,7 @@ function ZombieWorld.start()
 				task.wait(V.Roam.TickSeconds)
 			end
 		end)
-		while root.Parent do
+		while camps.Parent do
 			local ok, err = pcall(function(): any
 				check()
 				return nil

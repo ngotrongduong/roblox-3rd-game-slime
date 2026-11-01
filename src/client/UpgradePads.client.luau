@@ -15,6 +15,8 @@ local GREY = Color3.fromRGB(200, 200, 200)
 
 local player = Players.LocalPlayer
 local coins = 0
+-- the plot this player holds (0 until the server has handed it out): only the pads of that plot show a price
+local ownPlot = 0
 local labels: { [Instance]: () -> () } = {}
 
 local function money(n: number): string
@@ -62,6 +64,7 @@ local function draw(pad: BasePart): () -> ()
 		local lv: number = if type(rawLevel) == "number" then rawLevel else 1
 		local max: number = if type(rawMax) == "number" then rawMax else Config.Village.MaxLevel
 		scale.Scale = math.clamp(workspace.CurrentCamera.ViewportSize.Y / 900, 0.7, 1.3)
+		gui.Enabled = pad:GetAttribute("Plot") == ownPlot
 		if lv >= max then
 			price.Text = "MAX"
 			price.TextColor3 = GREY
@@ -102,10 +105,13 @@ task.spawn(function()
 	local function read()
 		local value = root:GetAttribute("Coins")
 		coins = if type(value) == "number" then value else 0
+		local plot = root:GetAttribute("Plot")
+		ownPlot = if type(plot) == "number" then plot else 0
 		for _, refresh in labels do
 			refresh()
 		end
 	end
 	root:GetAttributeChangedSignal("Coins"):Connect(read)
+	root:GetAttributeChangedSignal("Plot"):Connect(read)
 	read()
 end)

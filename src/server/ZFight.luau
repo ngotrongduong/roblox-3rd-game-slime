@@ -173,8 +173,9 @@ function ZFight.resolve(root: Instance, others: Instance?): number
 	return moved
 end
 
--- Resolve each stage when it is built or rebuilt (an upgrade replaces it), against the plot it stands in.
-function ZFight.watch(map: Instance)
+-- Resolve each stage when it is built or rebuilt (an upgrade replaces it), against the plot it stands in. `map` is one
+-- plot's container (workspace.Map.Plot<n>); the function returned stops the watching (the plot's player left).
+function ZFight.watch(map: Instance): () -> ()
 	local pending: { [Instance]: boolean } = {}
 	local function settle(stage: Instance)
 		if pending[stage] then
@@ -217,11 +218,14 @@ function ZFight.watch(map: Instance)
 			settle(inst)
 		end
 	end
-	map.DescendantAdded:Connect(function(inst)
+	local connection = map.DescendantAdded:Connect(function(inst)
 		if isStage(inst) then
 			settle(inst)
 		end
 	end)
+	return function()
+		connection:Disconnect()
+	end
 end
 
 return ZFight

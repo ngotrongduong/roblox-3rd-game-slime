@@ -2,17 +2,17 @@
 -- The upgrade pads (the owner, 2026-10-29, docs/GAMEPLAY.md §10): a round pad on the ground beside the path
 -- at every upgradable place, instead of an E prompt. Stepping onto it upgrades the area one level (paid and
 -- saved by VillageRemotes.upgrade); stepping off and on again is the next level. Only the plot's owner is
--- counted. The pad carries its state in attributes (AreaId, Level, MaxLevel, Cost) and the tag "UpgradePad";
--- src/client/UpgradePads.client.luau draws the price over it, green or red for the viewing player.
+-- counted (every plot has its own pads, Plots.ownerOf). The pad carries its state in attributes (AreaId, Plot, Level,
+-- MaxLevel, Cost) and the tag "UpgradePad"; src/client/UpgradePads.client.luau draws the price over the pads of the
+-- viewing player's own plot, green or red.
 -- Standing on the pad is a distance check (no Touched events: they miss a standing player).
 local CollectionService = game:GetService("CollectionService")
-local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 
 local Config = require(ReplicatedStorage.Shared.Config)
 local VillageRules = require(ReplicatedStorage.Shared.Village)
-local Village = require(script.Parent.Village)
+local Plots = require(script.Parent.Plots)
 
 local UpgradePads = {}
 
@@ -23,7 +23,7 @@ local WOOD = Color3.fromRGB(150, 98, 52)
 local CREAM = Color3.fromRGB(250, 240, 214)
 local GOLD = Color3.fromRGB(240, 190, 70)
 
-type Pad = { part: Part, areaId: string, on: boolean }
+type Pad = { part: Part, plot: number, areaId: string, on: boolean }
 local pads: { Pad } = {}
 
 local function disc(parent: Instance, name: string, radius: number, height: number, cf: CFrame, colour: Color3): Part
@@ -43,8 +43,8 @@ local function disc(parent: Instance, name: string, radius: number, height: numb
 	return p
 end
 
--- A pad for one area at `at` (world CFrame on the ground's top, y up). Returns a function that sets its level.
-function UpgradePads.add(parent: Instance, areaId: string, at: CFrame): (number) -> ()
+-- A pad for one area of plot `plot` at `at` (world CFrame on the ground's top, y up). Returns a function that sets its level.
+function UpgradePads.add(parent: Instance, plot: number, areaId: string, at: CFrame): (number) -> ()
 	local m = Instance.new("Model")
 	m.Name = "UpgradePad_" .. areaId
 	-- a honey wood rim, a cream face, a gold ring, and two gold chevrons pointing up (toward the area)
@@ -83,12 +83,13 @@ function UpgradePads.add(parent: Instance, areaId: string, at: CFrame): (number)
 	anchor.Parent = m
 	m.PrimaryPart = pad
 	pad:SetAttribute("AreaId", areaId)
+	pad:SetAttribute("Plot", plot)
 	pad:SetAttribute("MaxLevel", Config.Village.MaxLevel)
 	pad:SetAttribute("Level", 1)
 	pad:SetAttribute("Cost", 0)
 	CollectionService:AddTag(pad, TAG)
 	m.Parent = parent
-	table.insert(pads, { part = pad, areaId = areaId, on = false })
+	table.insert(pads, { part = pad, plot = plot, areaId = areaId, on = false })
 
 	return function(level: number)
 		pad:SetAttribute("Level", level)
@@ -96,7 +97,7 @@ function UpgradePads.add(parent: Instance, areaId: string, at: CFrame): (number)
 	end
 end
 
--- Watches the plot owner's feet; `upgrade` is VillageRemotes.upgrade.
+-- Watches each plot owner's feet on that plot's own pads; `upgrade` is VillageRemotes.upgrade.
 function UpgradePads.start(upgrade: (Player, string) -> { ok: boolean, reason: string? })
 	local clock = 0
 	RunService.Heartbeat:Connect(function(dt: number)
@@ -105,34 +106,33 @@ function UpgradePads.start(upgrade: (Player, string) -> { ok: boolean, reason: s
 			return
 		end
 		clock = 0
-		local feet: { Vector3 } = {}
-		local owner: Player? = nil
-		for _, player in Players:GetPlayers() do
-			if Village.ownsPlot(player) then
-				owner = player
-				local root = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
-				if root and root:IsA("BasePart") then
-					table.insert(feet, root.Position)
-				end
+		-- the feet of every plot's owner (a pad of a plot nobody holds, or of another player, never counts)
+		local feet: { [number]: Vector3 } = {}
+		for plot = 1, Config.Map.PlotCount do
+			local owner = Plots.ownerOf(plot)
+			local character = if owner then owner.Character else nil
+			local root = if character then character:FindFirstChild("HumanoidRootPart") else nil
+			if root and root:IsA("BasePart") then
+				feet[plot] = root.Position
+			end
+		end
+		-- (pads of plots that were cleared are forgotten)
+		for index = #pads, 1, -1 do
+			if not pads[index].part.Parent then
+				table.remove(pads, index)
 			end
 		end
 		for _, pad in pads do
 			local on = false
-			if pad.part.Parent then
+			local f = feet[pad.plot]
+			if f then
 				local c = pad.part.Position
-				for _, f in feet do
-					if
-						Vector3.new(f.X - c.X, 0, f.Z - c.Z).Magnitude < P.Radius
-						and math.abs(f.Y - c.Y) < P.StandHeight
-					then
-						on = true
-					end
-				end
+				on = Vector3.new(f.X - c.X, 0, f.Z - c.Z).Magnitude < P.Radius and math.abs(f.Y - c.Y) < P.StandHeight
 			end
+			local owner = Plots.ownerOf(pad.plot)
 			if on and not pad.on and owner then
-				local who = owner
 				task.spawn(function()
-					local answer = upgrade(who, pad.areaId)
+					local answer = upgrade(owner, pad.areaId)
 					if not answer.ok then
 						print(Config.LogPrefix, "upgrade pad:", pad.areaId, answer.reason)
 					end

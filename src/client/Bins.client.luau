@@ -1,11 +1,11 @@
 --!strict
 -- The fish bin and the vegetable bin fill up in view (docs/GAMEPLAY.md §10): up to ten models of what the work
 -- area's box holds, lying in the bin. The bins are built by src/server/WorkProps.luau (tag "ItemBin", attributes
--- Area and Capacity, an invisible part "BinFill" for the floor); the counts come from the "Box" attribute of
--- workspace.Villages.<UserId> ({ area = { item = count } }); the models are ClientKit.Items.<item>.
+-- Area and Capacity, an invisible part "BinFill" for the floor); the counts come from the "Box" attribute of the
+-- workspace.Villages.<UserId> folder whose "Plot" is the plot the bin stands in ({ area = { item = count } }), so every
+-- bin shows what its own plot's owner has; the models are ClientKit.Items.<item>.
 local CollectionService = game:GetService("CollectionService")
 local HttpService = game:GetService("HttpService")
-local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 
@@ -31,11 +31,25 @@ end
 table.insert(SLOTS, { 0, 0.85, 0, 0.7 })
 
 type Shown = { key: string, model: Model }
-type Bin = { bin: Model, fill: BasePart, folder: Folder, shown: { Shown } }
+type Bin = { bin: Model, plot: number, fill: BasePart, folder: Folder, shown: { Shown } }
 
 local bins: { [Model]: Bin } = {}
-local boxes: { [string]: { [string]: number } } = {}
+-- plot -> area -> item -> count
+local boxes: { [number]: { [string]: { [string]: number } } } = {}
 local warned: { [string]: boolean } = {}
+
+-- The plot a bin stands in (Map.Plot<n>), 0 when it stands in none.
+local function plotOf(inst: Instance): number
+	local at: Instance? = inst.Parent
+	while at do
+		local number = string.match(at.Name, "^Plot(%d+)$")
+		if number then
+			return tonumber(number) :: number
+		end
+		at = at.Parent
+	end
+	return 0
+end
 
 local function item(key: string): Model?
 	local kit = ReplicatedStorage:FindFirstChild("ClientKit")
@@ -75,9 +89,10 @@ local function item(key: string): Model?
 end
 
 -- the list of item keys a box shows, at most `capacity`, in a steady order
-local function listOf(area: string, capacity: number): { string }
+local function listOf(plot: number, area: string, capacity: number): { string }
 	local list: { string } = {}
-	local box = boxes[area]
+	local ofPlot = boxes[plot]
+	local box = if ofPlot then ofPlot[area] else nil
 	if box then
 		for _, key in Config.Food.RawOrder do
 			for _ = 1, math.floor(box[key] or 0) do
@@ -122,7 +137,7 @@ local function put(b: Bin, index: number, model: Model, drop: boolean)
 end
 
 local function refresh(b: Bin, animate: boolean)
-	local want = listOf(b.bin:GetAttribute("Area") :: string, (b.bin:GetAttribute("Capacity") :: number) or 10)
+	local want = listOf(b.plot, b.bin:GetAttribute("Area") :: string, (b.bin:GetAttribute("Capacity") :: number) or 10)
 	-- the part that already matches stays; the rest changes
 	local keep = 0
 	for i, s in b.shown do
@@ -158,7 +173,7 @@ local function add(inst: Instance)
 	local folder = Instance.new("Folder")
 	folder.Name = "Contents"
 	folder.Parent = inst
-	local b: Bin = { bin = inst, fill = fill, folder = folder, shown = {} }
+	local b: Bin = { bin = inst, plot = plotOf(inst), fill = fill, folder = folder, shown = {} }
 	bins[inst] = b
 	inst.Destroying:Once(function()
 		bins[inst] = nil
@@ -173,18 +188,42 @@ for _, inst in CollectionService:GetTagged(TAG) do
 	task.spawn(add, inst)
 end
 
+-- What the village of each plot holds (the bins of a plot show its owner's boxes, whoever looks).
 task.spawn(function()
-	local root = workspace:WaitForChild("Villages"):WaitForChild(tostring(Players.LocalPlayer.UserId))
-	local function read()
+	local villages = workspace:WaitForChild("Villages")
+	local function read(root: Instance)
+		local plot = root:GetAttribute("Plot")
+		if type(plot) ~= "number" then
+			return
+		end
 		local raw = root:GetAttribute("Box")
 		local ok, decoded = pcall(function()
 			return HttpService:JSONDecode(if type(raw) == "string" then raw else "{}")
 		end)
-		boxes = if ok and type(decoded) == "table" then decoded else {}
+		boxes[plot] = if ok and type(decoded) == "table" then decoded else {}
 		for _, b in bins do
-			refresh(b, true)
+			if b.plot == plot then
+				refresh(b, true)
+			end
 		end
 	end
-	root:GetAttributeChangedSignal("Box"):Connect(read)
-	read()
+	local function watch(root: Instance)
+		root:GetAttributeChangedSignal("Box"):Connect(function()
+			read(root)
+		end)
+		root:GetAttributeChangedSignal("Plot"):Connect(function()
+			read(root)
+		end)
+		read(root)
+	end
+	villages.ChildAdded:Connect(watch)
+	villages.ChildRemoved:Connect(function(root)
+		local plot = root:GetAttribute("Plot")
+		if type(plot) == "number" then
+			boxes[plot] = nil
+		end
+	end)
+	for _, root in villages:GetChildren() do
+		watch(root)
+	end
 end)
