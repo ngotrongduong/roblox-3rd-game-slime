@@ -102,6 +102,9 @@ export type Work = {
 }
 export type Pair = { a: string?, b: string?, courtingUntil: number? }
 export type Pairing = { pairs: { Pair } }
+-- A fighting team (Config.Zombies.Teams of them, always): its line-up, whether it attacks again by itself, and the
+-- id of the zombie group it was last ordered at (ZombieFights; a group id is stable, so the order survives a rejoin).
+export type Team = { members: { string }, repeatOn: boolean, target: string? }
 
 -- kind: "INVENTORY", "EQUIPPED_TO_SLIME" (with slimeId and slot), "BATTLE_ESCROW", "PENDING_RETURN".
 export type ItemOwnership = { kind: string, slimeId: string?, slot: string? }
@@ -154,6 +157,7 @@ export type Farm = {
 	fridge: { [string]: number },
 	cookedAllowed: { string },
 	breeding: Pairing,
+	teams: { Team },
 	lastSimulatedAt: number,
 	coins: number,
 	items: { Item },
@@ -224,6 +228,24 @@ function FarmState.newPairing(level: number): Pairing
 		table.insert(pairs, {})
 	end
 	return { pairs = pairs }
+end
+
+function FarmState.newTeams(): { Team }
+	local teams: { Team } = {}
+	for _ = 1, Config.Zombies.Teams do
+		table.insert(teams, { members = {}, repeatOn = false })
+	end
+	return teams
+end
+
+-- The number of the team a slime stands in, nil when it is in none.
+function FarmState.teamOf(farm: Farm, slimeId: string): number?
+	for index, team in farm.teams do
+		if table.find(team.members, slimeId) then
+			return index
+		end
+	end
+	return nil
 end
 
 function FarmState.newWork(areas: Areas): Work
@@ -307,6 +329,12 @@ function FarmState.removeSlime(farm: Farm, id: string): boolean
 	local allowed = table.find(farm.cookedAllowed, id)
 	if allowed then
 		table.remove(farm.cookedAllowed, allowed)
+	end
+	for _, team in farm.teams do
+		local inTeam = table.find(team.members, id)
+		if inTeam then
+			table.remove(team.members, inTeam)
+		end
 	end
 	return true
 end
@@ -421,6 +449,7 @@ function FarmState.newFarm(now: number): Farm
 		fridge = {},
 		cookedAllowed = {},
 		breeding = FarmState.newPairing(areas.breeding.level),
+		teams = FarmState.newTeams(),
 		lastSimulatedAt = now,
 		coins = f.StartingCoins,
 		items = items,
@@ -871,6 +900,62 @@ local function validatePairs(raw: any, areas: Areas, slimes: { Slime }, work: Wo
 	return { pairs = pairs }
 end
 
+-- The teams: exactly Config.Zombies.Teams of them. A member must be a slime of the farm (one lost for good is gone from it),
+-- in one team only and not at a job or in a pair (those won the slime first); the rest of a team survives a bad member.
+local function validateTeams(raw: any, slimes: { Slime }, work: Work, pairing: Pairing, warnings: { string }): { Team }
+	local known: { [string]: boolean } = {}
+	for _, slime in slimes do
+		known[slime.id] = true
+	end
+	local taken: { [string]: boolean } = {}
+	for _, id in Config.Work.Areas do
+		for _, slot in (work :: any)[id].slots do
+			if slot.worker then
+				taken[slot.worker] = true
+			end
+			if slot.reserve then
+				taken[slot.reserve] = true
+			end
+		end
+	end
+	for _, pair in pairing.pairs do
+		if pair.a then
+			taken[pair.a] = true
+		end
+		if pair.b then
+			taken[pair.b] = true
+		end
+	end
+	local teams = FarmState.newTeams()
+	if raw ~= nil and type(raw) ~= "table" then
+		table.insert(warnings, "teams invalid, emptied")
+		return teams
+	end
+	for index, team in teams do
+		local row = if type(raw) == "table" then raw[index] else nil
+		if type(row) == "table" then
+			if type(row.members) == "table" then
+				for _, id in row.members do
+					if #team.members >= Config.Zombies.TeamSize then
+						break
+					end
+					if type(id) == "string" and known[id] and not taken[id] then
+						taken[id] = true
+						table.insert(team.members, id)
+					else
+						table.insert(warnings, "team " .. index .. ": a member dropped")
+					end
+				end
+			end
+			team.repeatOn = row.repeatOn == true
+			if isText(row.target) and #row.target <= Config.Zombies.TargetIdMaxLength then
+				team.target = row.target
+			end
+		end
+	end
+	return teams
+end
+
 local function validateItems(raw: any, warnings: { string }): { Item }
 	local out = {}
 	if raw == nil then
@@ -1188,6 +1273,7 @@ function FarmState.repair(data: any, now: number): (Farm, { string }, boolean)
 			return slimeIds[id] == true
 		end),
 		breeding = breeding,
+		teams = validateTeams(data.teams, slimes, work, breeding, warnings),
 		lastSimulatedAt = if isNum(data.lastSimulatedAt) and data.lastSimulatedAt > 0
 			then data.lastSimulatedAt
 			else now,

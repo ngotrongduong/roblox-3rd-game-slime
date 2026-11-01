@@ -4,12 +4,14 @@
 local Config = if script then require(script.Parent.Config) else require("./Config")
 local FarmState = if script then require(script.Parent.FarmState) else require("./FarmState")
 local Food = if script then require(script.Parent.Food) else require("./Food")
+local Gaits = if script then require(script.Parent.Gaits) else require("./Gaits")
 local Growth = if script then require(script.Parent.Growth) else require("./Growth")
 local Mutations = if script then require(script.Parent.Mutations) else require("./Mutations")
 local Needs = if script then require(script.Parent.Needs) else require("./Needs")
 local Rng = if script then require(script.Parent.Rng) else require("./Rng")
 local Stations = if script then require(script.Parent.Stations) else require("./Stations")
 local Stats = if script then require(script.Parent.Stats) else require("./Stats")
+local VillagePath = if script then require(script.Parent.VillagePath) else require("./VillagePath")
 
 type Farm = typeof(FarmState.newFarm(0))
 type Rng = typeof(Rng.new(0))
@@ -26,16 +28,30 @@ export type Zombie = {
 
 local Zombies = {}
 
-local function canFight(farm: Farm, slime: Slime, now: number): boolean
-	if slime.ghostUntil and slime.ghostUntil > now then
-		return false
-	end
-	return not Growth.isBaby(
+local function isBaby(farm: Farm, slime: Slime, now: number): boolean
+	return Growth.isBaby(
 		slime.createdAt,
 		now,
 		Stats.level(slime.stats),
 		farm.areas.breeding.level - Config.Village.StartLevel
 	)
+end
+
+local function isDead(slime: Slime, now: number): boolean
+	return slime.ghostUntil ~= nil and slime.ghostUntil > now
+end
+
+local function inPair(farm: Farm, slimeId: string): boolean
+	for _, pair in farm.breeding.pairs do
+		if pair.a == slimeId or pair.b == slimeId then
+			return true
+		end
+	end
+	return false
+end
+
+local function canFight(farm: Farm, slime: Slime, now: number): boolean
+	return not isDead(slime, now) and not isBaby(farm, slime, now)
 end
 
 -- The average level of the strongest slimes one trip can send, so keeping weak slimes at home cannot make zombies easier.
@@ -124,25 +140,29 @@ function Zombies.pay(farm: Farm, amount: number)
 	farm.lifetime.coinsEarned += amount
 end
 
--- Whether a slime can join a squad: grown up, alive, awake and not busy at a job or a nest.
+-- Whether a team member can march right now: grown up, alive, awake and not tired. (A slime in a team is never at a job
+-- or in a pair, FarmState.teamOf; a team member is not refused for being in its team.)
 function Zombies.canSend(farm: Farm, slime: Slime, now: number): boolean
 	if not canFight(farm, slime, now) or slime.sleeping or Needs.isTired(slime.needs) then
 		return false
 	end
-	if Stations.isBusy(farm, slime.id) then
-		return false
-	end
-	for _, pair in farm.breeding.pairs do
-		if pair.a == slime.id or pair.b == slime.id then
-			return false
-		end
-	end
-	return true
+	return not Stations.isBusy(farm, slime.id) and not inPair(farm, slime.id)
 end
 
--- Whether this squad may go: 1 to TeamSize different slimes of the farm, each able to fight and not already out.
-function Zombies.checkSquad(farm: Farm, ids: { string }, isOut: (string) -> boolean, now: number): (boolean, string?)
-	if #ids < 1 or #ids > Config.Zombies.TeamSize then
+-- Sets the line-up of team `teamIndex` to these slimes (none empties it). A slime already in another team moves here.
+-- `isOut` says which slimes are away on a march. Returns whether it was set, else why not; nothing changes on a refusal:
+-- BAD_TEAM, BAD_SIZE, DUPLICATE, NO_SLIME, BABY, DEAD, BUSY (at a job or in a pair), OUT.
+function Zombies.setTeam(
+	farm: Farm,
+	teamIndex: number,
+	ids: { string },
+	now: number,
+	isOut: ((string) -> boolean)?
+): (boolean, string?)
+	local team = if teamIndex % 1 == 0 then farm.teams[teamIndex] else nil
+	if not team then
+		return false, "BAD_TEAM"
+	elseif #ids > Config.Zombies.TeamSize then
 		return false, "BAD_SIZE"
 	end
 	local seen: { [string]: boolean } = {}
@@ -154,28 +174,79 @@ function Zombies.checkSquad(farm: Farm, ids: { string }, isOut: (string) -> bool
 		local slime = FarmState.findSlime(farm, id)
 		if not slime then
 			return false, "NO_SLIME"
-		elseif isOut(id) then
+		elseif isOut and isOut(id) then
 			return false, "OUT"
-		elseif not Zombies.canSend(farm, slime, now) then
-			return false, "CANNOT_SEND"
+		elseif isBaby(farm, slime, now) then
+			return false, "BABY"
+		elseif isDead(slime, now) then
+			return false, "DEAD"
+		elseif Stations.isBusy(farm, id) or inPair(farm, id) then
+			return false, "BUSY"
 		end
 	end
+	for _, other in farm.teams do
+		for _, id in ids do
+			local at = table.find(other.members, id)
+			if at then
+				table.remove(other.members, at)
+			end
+		end
+	end
+	team.members = table.clone(ids)
 	return true, nil
+end
+
+-- Whether a slime is fit to go again by itself (the repeat option): full health (`hurt` is the share of its health it
+-- has lost), fed above the line where it asks for food, awake and not tired. Else why not, as the word the screen shows:
+-- "dead" (the caller skips the dead), "health", "hungry" or "tired".
+function Zombies.readyAgain(slime: Slime, now: number, hurt: number): (boolean, string?)
+	if isDead(slime, now) then
+		return false, "dead"
+	elseif hurt > 0 then
+		return false, "health"
+	elseif Needs.wantsFood(slime.needs) then
+		return false, "hungry"
+	elseif slime.sleeping or Needs.isTired(slime.needs) then
+		return false, "tired"
+	end
+	return true, nil
+end
+
+-- A wound after `seconds` at home.
+function Zombies.heal(hurt: number, seconds: number): number
+	return math.max(0, hurt - Config.Zombies.HealPerMinute * seconds / Config.Village.StepSeconds)
+end
+
+-- Seconds a team takes to walk `distance` studs when its members have these speed stats: the slowest sets the pace, in
+-- the village's own walk (VillagePath), so it matches what the village would do over the same ground.
+function Zombies.marchSeconds(distance: number, speeds: { number }): number
+	local slowest = math.huge
+	for _, speed in speeds do
+		slowest = math.min(slowest, Gaits.factor(speed))
+	end
+	if slowest == math.huge then
+		return 0
+	end
+	return VillagePath.duration(distance, slowest, Config.Zombies.MarchGait)
 end
 
 -- Where a group stands, as (across, forward) studs from the plot's gate towards the valley centre: camp 1..#LevelOffsets
 -- further out each, the groups of a camp spread across the way and centred on it.
 function Zombies.campOffset(camp: number, index: number): (number, number)
 	local z = Config.Zombies
-	local across = (index - (z.GroupsPerCamp + 1) / 2) * z.GroupSpacing
-	return across, z.CampFirstDistance + (camp - 1) * z.CampSpacing
+	local forward = z.CampFirstDistance + (camp - 1) * z.CampSpacing
+	-- Groups spread by angle, so a camp stays inside its plot's slice of the valley as the slice narrows to the middle.
+	local radius = Config.Map.RimRadius - Config.Map.PlotSize / 2 - forward
+	return (index - (z.GroupsPerCamp + 1) / 2) * radius * math.rad(z.GroupSpreadDegrees), forward
 end
 
--- A slime as it fights: hungry at half strength (docs/MAP.md), its dish buff on top.
+-- A slime as it fights: hungry at half strength (docs/MAP.md), its dish buff on top, and the health it has left
+-- (`hpShare`, 0 to 1 of its full health; a wound is kept after a fight).
 function Zombies.fighter(
 	slime: Slime,
-	now: number
-): { id: string, attack: number, defence: number, speed: number, hp: number }
+	now: number,
+	hpShare: number
+): { id: string, attack: number, defence: number, speed: number, hp: number, maxHp: number }
 	local factor = if Needs.isHungry(slime.needs) then Config.Needs.HungryWorkFactor else 1
 	local stats =
 		{ attack = slime.stats.attack, defence = slime.stats.defence, speed = slime.stats.speed, hp = slime.stats.hp }
@@ -188,7 +259,8 @@ function Zombies.fighter(
 		attack = stats.attack * factor,
 		defence = stats.defence,
 		speed = stats.speed,
-		hp = stats.hp,
+		hp = stats.hp * math.clamp(hpShare, 0, 1),
+		maxHp = stats.hp,
 	}
 end
 

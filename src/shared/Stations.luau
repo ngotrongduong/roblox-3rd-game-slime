@@ -73,6 +73,9 @@ function Stations.canAssign(
 			return false, "IN_PAIR"
 		end
 	end
+	if FarmState.teamOf(farm, slimeId) then
+		return false, "IN_TEAM"
+	end
 	local area = (farm.work :: any)[areaId]
 	if
 		not area

@@ -355,6 +355,9 @@ function Breeding.setPair(farm: Farm, index: number, idA: string?, idB: string?,
 			return false, "IN_PAIR"
 		end
 	end
+	if FarmState.teamOf(farm, idA) or FarmState.teamOf(farm, idB) then
+		return false, "IN_TEAM"
+	end
 	farm.breeding.pairs[index] = { a = idA, b = idB }
 	return true, nil
 end

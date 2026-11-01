@@ -86,6 +86,8 @@ type Session = {
 	reserved: { [string]: string },
 	-- slimes out on a zombie squad (src/server/ZombieFights.luau): they have no actor and are left alone by the brain
 	out: { [string]: boolean },
+	-- slimes that came home from a march: the brain places each at the village gate instead of the plaza (once)
+	atGate: { [string]: boolean },
 	rng: typeof(Rng.new(0)),
 	cursor: number,
 	active: boolean,
@@ -272,6 +274,7 @@ local function forget(session: Session, id: string)
 	freeSeat(session, id, nil)
 	session.actors[id] = nil
 	session.out[id] = nil
+	session.atGate[id] = nil
 	for key, holder in session.reserved do
 		if holder == id then
 			session.reserved[key] = nil
@@ -956,7 +959,9 @@ local function think(
 		farm.areas.breeding.level - Config.Village.StartLevel
 	)
 	if not actor then
-		local centre = if baby then session.spots.nursery else session.spots.plaza
+		local home = if session.atGate[slime.id] and session.spots.gate then session.spots.gate else session.spots.plaza
+		session.atGate[slime.id] = nil
+		local centre = if baby then session.spots.nursery else home
 		local count = 0
 		for _, other in session.actors do
 			if other.current.id == centre.id then
@@ -1987,9 +1992,10 @@ function Village.isOut(player: Player, slimeId: string): boolean
 	return session ~= nil and session.out[slimeId] == true
 end
 
--- A slime goes out on a zombie squad, or comes back. Out, it has no actor, is given no action and is not drawn in the
--- village (its model's OutOnSquad attribute); back, the brain places it at the plaza again on its next turn.
-function Village.setOut(player: Player, slimeId: string, out: boolean)
+-- A slime goes out on a zombie team's march, or comes back. Out, it has no actor, is given no action and is not drawn in
+-- the village (its model's OutOnSquad attribute); back, the brain places it again on its next turn: at the village gate
+-- when it walked home (`atGate`, the survivors of a march), else at the plaza.
+function Village.setOut(player: Player, slimeId: string, out: boolean, atGate: boolean?)
 	local session = sessions[player]
 	if not session then
 		return
@@ -2004,6 +2010,11 @@ function Village.setOut(player: Player, slimeId: string, out: boolean)
 		session.out[slimeId] = true
 	else
 		session.out[slimeId] = nil
+		if atGate then
+			session.atGate[slimeId] = true
+		else
+			session.atGate[slimeId] = nil
+		end
 	end
 	local model = session.slimes:FindFirstChild(slimeId)
 	if model then
@@ -2105,6 +2116,7 @@ function Village.start()
 			actors = {},
 			reserved = {},
 			out = {},
+			atGate = {},
 			rng = rng,
 			cursor = 0,
 			active = true,

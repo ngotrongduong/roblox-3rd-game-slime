@@ -56,6 +56,17 @@ Monster slimes do not wander everywhere: they bubble up from **goo springs** (pu
 glow softly when a monster is about to appear), a few per quarter, a capped number on the map
 at once, so the Wild Garden is lively without costing phones too much.
 
+### 1.4 The slices (the owner, 2026-11-02; replaces the springs above; reference `art/concept/valley-middle.png`)
+
+Every player owns the slice of the valley right in front of their gate, so whoever joins has zombies they can beat.
+- A straight path runs from each gate to the Heart, down the middle of that gate's slice (slices are 40 degrees wide).
+- Two circular paths make three rings, each harder going inwards: the outer ring, open sunny meadow, holds zombies at the
+  owner's average level; the middle ring, thicker groves, at +3; the inner ring, dark and corrupted, at +5.
+- A ring of a slice has 4 clearings, 2 each side of the path, with a group of zombies roaming round each: radius 296, 226
+  and 156 from the centre, circular paths at about 261 and 191.
+- The four mood quarters of 1.1 stay, blending across the slices; the Heart stays at the centre.
+- Until plots are handed out to 8 players, only the dev plot's slice has zombies.
+
 ### 1.2 Fights
 
 - **Against monsters:** a player walks into the Wild Garden with a **squad** (a few slimes that

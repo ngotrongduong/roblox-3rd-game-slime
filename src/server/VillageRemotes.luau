@@ -25,7 +25,12 @@ local function integer(n: any): boolean
 	return type(n) == "number" and n == n and n ~= math.huge and n ~= -math.huge and n % 1 == 0
 end
 
--- A plain list of text ids no longer than a squad.
+-- A team number: a whole number from 1 to the number of teams.
+local function teamNumber(n: any): boolean
+	return integer(n) and n >= 1 and n <= Config.Zombies.Teams
+end
+
+-- A plain list of text ids no longer than a team.
 local function idList(value: any): boolean
 	if type(value) ~= "table" or #value > Config.Zombies.TeamSize then
 		return false
@@ -97,8 +102,12 @@ local function request(player: Player, data: any): { ok: boolean, reason: string
 		valid = type(data.areaId) == "string"
 			and table.find(Config.Village.Areas, data.areaId) ~= nil
 			and Village.ownsPlot(player)
-	elseif action == "SendSquad" then
-		valid = type(data.groupId) == "string" and idList(data.slimeIds) and Village.ownsPlot(player)
+	elseif action == "SetTeam" then
+		valid = teamNumber(data.team) and idList(data.slimeIds) and Village.ownsPlot(player)
+	elseif action == "SetTeamRepeat" then
+		valid = teamNumber(data.team) and type(data.on) == "boolean" and Village.ownsPlot(player)
+	elseif action == "AttackGroup" then
+		valid = teamNumber(data.team) and type(data.groupId) == "string" and Village.ownsPlot(player)
 	end
 	if not valid then
 		return { ok = false, reason = "INVALID_ARGUMENT" }
@@ -169,14 +178,41 @@ local function request(player: Player, data: any): { ok: boolean, reason: string
 					areaId = data.areaId
 					upgradedLevel = (farm.areas :: any)[data.areaId].level
 				end
-			elseif action == "SendSquad" then
-				ok, why = ZombieFights.send(player, farm, data.groupId, data.slimeIds, now)
+			elseif action == "SetTeam" then
+				-- the line-ups are set at the village gate, never while that team is out
+				if not ZombieFights.nearGate(player) then
+					why = "TOO_FAR"
+					return
+				elseif ZombieFights.teamOut(player, data.team) then
+					why = "TEAM_OUT"
+					return
+				end
+				ok, why = Zombies.setTeam(farm, data.team, data.slimeIds, now, function(id: string): boolean
+					return Village.isOut(player, id)
+				end)
+				if ok then
+					print(Config.LogPrefix, "zombies: team", data.team, "line-up", table.concat(data.slimeIds, ","))
+				end
+			elseif action == "SetTeamRepeat" then
+				local team = farm.teams[data.team]
+				if data.on and #team.members == 0 then
+					why = "NO_MEMBERS"
+					return
+				end
+				team.repeatOn = data.on
+				ok = true
+				print(Config.LogPrefix, "zombies: team", data.team, "repeat", if data.on then "on" else "off")
+			elseif action == "AttackGroup" then
+				ok, why = ZombieFights.attack(player, farm, data.team, data.groupId, now)
 			elseif action == "Revive" then
 				if Village.isOut(player, data.slimeId) then
 					why = "OUT"
 					return
 				end
 				ok, why = Zombies.revive(farm, data.slimeId, now)
+				if ok then
+					ZombieFights.clearWounds(player, data.slimeId)
+				end
 			elseif action == "Sell" then
 				if not atMarket then
 					why = "TOO_FAR"

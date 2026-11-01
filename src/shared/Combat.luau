@@ -18,7 +18,8 @@ export type Unit = {
 }
 export type Fight = { units: { Unit }, rng: Rng, seconds: number, winner: string? }
 export type Event = { kind: string, from: string?, to: string, amount: number?, crit: boolean? }
-export type Fighter = { id: string, attack: number, defence: number, speed: number, hp: number }
+-- `maxHp` is the full health when the fighter starts wounded (hp below it); left out, hp is the full health.
+export type Fighter = { id: string, attack: number, defence: number, speed: number, hp: number, maxHp: number? }
 
 local Combat = {}
 
@@ -42,7 +43,7 @@ local function unit(fighter: Fighter, side: string): Unit
 		defence = fighter.defence,
 		speed = fighter.speed,
 		hp = fighter.hp,
-		maxHp = fighter.hp,
+		maxHp = fighter.maxHp or fighter.hp,
 		cooldown = Config.Combat.OpeningCooldown,
 	}
 end

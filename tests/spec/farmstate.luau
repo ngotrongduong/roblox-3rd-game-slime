@@ -218,4 +218,52 @@ return function(T)
 		T.eq(FarmState.dayKey(1793059200), "2026-10-27")
 		T.eq(FarmState.dayKey(1793059200 - 1), "2026-10-26")
 	end)
+
+	T.test("teams: a fresh farm has empty ones, an old save gets them, a repair keeps the good members only", function()
+		local farm = FarmState.newFarm(NOW)
+		T.eq(#farm.teams, Config.Zombies.Teams)
+		for _, team in farm.teams do
+			T.same(team, { members = {}, repeatOn = false })
+		end
+
+		local old = FarmState.newFarm(NOW)
+		old.teams = nil :: any
+		local fromOld, _, replacedOld = FarmState.repair(old, NOW)
+		T.eq(replacedOld, false, "an old save is not an unreadable one")
+		T.eq(#fromOld.teams, Config.Zombies.Teams)
+		T.same(fromOld.teams[1], { members = {}, repeatOn = false })
+		local junk = FarmState.newFarm(NOW)
+		junk.teams = "junk" :: any
+		T.eq(#FarmState.repair(junk, NOW).teams, Config.Zombies.Teams)
+
+		local messy = FarmState.newFarm(NOW)
+		messy.slimes = FarmKit.many(10)
+		for _, slime in messy.slimes do
+			slime.createdAt = NOW - 100000 -- repair makes a slime with no birth time a baby
+		end
+		messy.work.fishing.slots[1].worker = "s9"
+		messy.breeding.pairs[1] = { a = "s8", b = "s7" }
+		messy.teams = {
+			{ members = { "s1", "ghost-of-a-lost-one", "s1", "s2", "s9", "s3" }, repeatOn = true, target = "c2g3" },
+			{ members = { "s2", "s4", "s7", "s5", "s6", "s10" }, repeatOn = "yes" :: any, target = 5 :: any },
+			{ members = {} },
+		} :: any
+		local out = FarmState.repair(messy, NOW)
+		T.eq(#out.teams, Config.Zombies.Teams)
+		T.same(out.teams[1], { members = { "s1", "s2", "s3" }, repeatOn = true, target = "c2g3" })
+		T.same(out.teams[2], { members = { "s4", "s5", "s6", "s10" }, repeatOn = false }, "full, none twice")
+		T.same(out.teams[3], { members = {}, repeatOn = false })
+		T.same(out.teams[4], { members = {}, repeatOn = false })
+		T.eq(out.work.fishing.slots[1].worker, "s9", "the job kept its worker")
+	end)
+
+	T.test("removeSlime takes the slime out of its team too", function()
+		local farm = FarmKit.farm(NOW, FarmKit.many(5))
+		farm.teams[2].members = { "s1", "s2" }
+		T.eq(FarmState.teamOf(farm, "s2"), 2)
+		T.eq(FarmState.teamOf(farm, "s3"), nil)
+		T.ok(FarmState.removeSlime(farm, "s1"))
+		T.same(farm.teams[2].members, { "s2" })
+		T.eq(FarmState.teamOf(farm, "s1"), nil)
+	end)
 end

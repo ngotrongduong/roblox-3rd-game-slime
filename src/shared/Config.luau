@@ -136,12 +136,12 @@ Config.Zombies = {
 	-- find a fight; a beaten group comes back RespawnSeconds later at the level of that moment.
 	GroupsPerCamp = 4,
 	RespawnSeconds = 30,
-	-- Where: from the plot's gate straight towards the valley centre. The first camp is CampFirstDistance out, each
-	-- next one CampSpacing further; the groups of a camp stand GroupSpacing apart across the way. Change these to move
-	-- the camps (they were set without seeing the map).
+	-- Where (docs/MAP.md, 1.4): every plot owns the slice of the valley in front of its gate. From the gate straight
+	-- towards the centre, the first camp is CampFirstDistance out, each next one CampSpacing further; a camp's groups
+	-- stand GroupSpreadDegrees apart, either side of the path. 9 places on the rim make a slice 40 degrees wide.
 	CampFirstDistance = 90,
 	CampSpacing = 70,
-	GroupSpacing = 45,
+	GroupSpreadDegrees = 10,
 	-- The ground under a group is found by a ray from GroundProbeUp above the map's ground height down GroundProbeDown more.
 	GroundProbeUp = 80,
 	GroundProbeDown = 200,
@@ -150,9 +150,24 @@ Config.Zombies = {
 	FightStepSeconds = 0.1,
 	MaxStepsPerFrame = 5,
 	FightMaxSeconds = 300,
-	-- The player must stand this close to a group to send a squad at it, and to the Market to sell a slime.
+	-- The player must stand this close to a group to order an attack on it, to the village gate to set a team's line-up,
+	-- and to the Market to sell a slime.
 	SendRangeStuds = 60,
+	GateRangeStuds = 40,
+	-- The longest group id a saved team may name as its target (ids look like "c3g4").
+	TargetIdMaxLength = 16,
 	ShopRangeStuds = 40,
+	-- A team marches from the gate to a spot MarchStandOffStuds short of its group (towards the village), in MarchGait,
+	-- and back the same way; the slowest member sets the pace.
+	MarchStandOffStuds = 11,
+	MarchGait = "walk",
+	-- A wound heals this share of a slime's health a minute while it is home (0.5: a full heal in two minutes).
+	HealPerMinute = 0.5,
+	-- Every slime that fought loses this much energy and fullness when the fight ends (the brain rests and feeds it).
+	FightEnergy = 15,
+	FightFullness = 15,
+	-- HpShare on a slime's model is rounded to this step, so a healing wound does not rewrite it every frame.
+	HpShareStep = 0.01,
 	-- A zombie's stats against an even slime of the player's level, per camp. Five levels mean far more at level 4 than
 	-- at level 60, so a camp's risk comes from this and stays the same all game; its level sets the reward.
 	StatFactors = { 0.75, 0.9, 1.03 },
