@@ -1,3 +1,4 @@
+local FarmState = require("../../src/shared/FarmState")
 local Village = require("../../src/shared/Village")
 local FarmKit = require("../lib/FarmKit")
 return function(T)
@@ -59,6 +60,20 @@ return function(T)
 			end
 			T.eq(Village.populationLimit(farm), milestone[2], "village level " .. milestone[1])
 		end
+	end)
+	T.test("village progress counts the upgrades towards the next level", function()
+		local farm = FarmKit.farm(1000)
+		T.same({ FarmState.villageProgress(farm.areas) }, { 0, 6 })
+		farm.areas.fishing.level = 3
+		T.same({ FarmState.villageProgress(farm.areas) }, { 2, 6 })
+		-- the sixth upgrade tips the average over: the village levels up and the bar starts again
+		farm.areas.fishing.level = 7
+		T.eq(Village.level(farm), 2)
+		T.same({ FarmState.villageProgress(farm.areas) }, { 0, 6 })
+		for _, area in farm.areas do
+			area.level = 50
+		end
+		T.same({ FarmState.villageProgress(farm.areas) }, { 6, 6 })
 	end)
 	T.test("upgrade table endpoints and spending rules", function()
 		T.eq(Village.upgradeCost(1), 100)

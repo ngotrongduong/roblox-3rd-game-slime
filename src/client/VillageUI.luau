@@ -955,7 +955,7 @@ local function bind(root: Folder?)
 		return
 	end
 	UiHud.setVisible(true)
-	for _, attribute in { "Coins", "Storehouse", "Fridge", "Population", "Limit" } do
+	for _, attribute in { "Coins", "Storehouse", "Fridge", "Population", "Limit", "VillageLevel", "VillageUpgrades" } do
 		table.insert(
 			rootConnections,
 			root:GetAttributeChangedSignal(attribute):Connect(function()

@@ -14,6 +14,9 @@ local FOOD_ICON = "veggieStew" -- the Items model on the food button
 local UiHud = {}
 local strip: ScrollingFrame? = nil
 local edge: Frame? = nil
+local villageBar: Frame? = nil
+local villageLabel: TextLabel? = nil
+local villageFill: Frame? = nil
 local chips: { [string]: UiKit.Chip } = {}
 local lastOwn: Folder? = nil
 
@@ -88,6 +91,32 @@ function UiHud.start(root: Frame, onBook: () -> ())
 	}, root)
 	UiKit.roundButton(group, "slimes", U.Touch + 16, onBook)
 	edge = group
+
+	-- Under the strip: the village's level and how many upgrades its next level still takes.
+	local box, body = UiKit.skin(root, "Wood", "Card", {
+		Name = "VillageBar",
+		AnchorPoint = Vector2.new(0.5, 0),
+		Position = UDim2.new(0.5, 0, 0, U.Edge + U.ChipHeight + U.Gap),
+		Size = UDim2.fromOffset(U.VillageBarWidth, U.VillageBarHeight),
+		Visible = false,
+	})
+	UiKit.make("UIListLayout", {
+		FillDirection = Enum.FillDirection.Vertical,
+		VerticalAlignment = Enum.VerticalAlignment.Center,
+		Padding = UDim.new(0, 2),
+		SortOrder = Enum.SortOrder.LayoutOrder,
+	}, body)
+	villageLabel = UiKit.label(body, "", U.TextSmall, "Brown", {
+		LayoutOrder = 1,
+		Size = UDim2.new(1, 0, 0, U.TextSmall + 2),
+		TextXAlignment = Enum.TextXAlignment.Center,
+	})
+	local track = UiKit.bar(body, "", "GoldLight", {
+		LayoutOrder = 2,
+		Size = UDim2.new(1, 0, 0, U.BarHeight),
+	})
+	villageFill = track.root:FindFirstChild("Fill", true) :: Frame?
+	villageBar = box
 end
 
 function UiHud.setVisible(visible: boolean)
@@ -96,6 +125,9 @@ function UiHud.setVisible(visible: boolean)
 	end
 	if edge then
 		edge.Visible = visible
+	end
+	if villageBar then
+		villageBar.Visible = visible
 	end
 end
 
@@ -117,6 +149,23 @@ function UiHud.refresh(own: Folder?)
 	chips.food.set(short(total))
 	UiFood.refresh(own)
 	chips.slimes.set(tostring(own:GetAttribute("Population") or 0) .. "/" .. tostring(own:GetAttribute("Limit") or 0))
+
+	local level = own:GetAttribute("VillageLevel")
+	local done = own:GetAttribute("VillageUpgrades")
+	if villageLabel and villageFill and type(level) == "number" and type(done) == "number" then
+		local count = #Config.Village.Areas
+		local left = count - done
+		villageLabel.Text = if level >= Config.Village.MaxLevel
+			then "Village " .. level .. " MAX"
+			else "Village " .. level .. ": " .. left .. (if left == 1 then " upgrade" else " upgrades") .. " to go"
+		-- (a new level starts the bar again: it falls back at once, only a fill slides)
+		local goal = UDim2.fromScale(done / count, 1)
+		if goal.X.Scale < villageFill.Size.X.Scale then
+			villageFill.Size = goal
+		else
+			UiKit.tween(villageFill, U.VillageBarFillSeconds, { Size = goal })
+		end
+	end
 end
 
 return UiHud

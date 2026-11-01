@@ -266,6 +266,21 @@ function FarmState.villageLevel(areas: Areas): number
 	return math.floor(total / #Config.Village.Areas)
 end
 
+-- How far the village is towards its next level: one area upgrade adds one to the sum of the area levels, so every
+-- village level takes as many upgrades as there are areas. Returns upgrades done since this level, and upgrades a level.
+function FarmState.villageProgress(areas: Areas): (number, number)
+	local level = FarmState.villageLevel(areas)
+	local count = #Config.Village.Areas
+	if level >= Config.Village.MaxLevel then
+		return count, count
+	end
+	local total = 0
+	for _, id in Config.Village.Areas do
+		total += (areas :: any)[id].level
+	end
+	return total - level * count, count
+end
+
 function FarmState.populationLimit(areas: Areas): number
 	local villageLevel = FarmState.villageLevel(areas)
 	local steps = Config.Village.PopulationProgression

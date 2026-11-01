@@ -353,6 +353,7 @@ local function show(session: Session, farm: Farm, epoch: number)
 	set(root, "Population", #farm.slimes + #farm.eggs)
 	set(root, "Limit", VillageRules.populationLimit(farm))
 	set(root, "VillageLevel", VillageRules.level(farm))
+	set(root, "VillageUpgrades", (FarmState.villageProgress(farm.areas)))
 	-- Only public management state is replicated; unborn eggs remain secret.
 	local areas: { [string]: number } = {}
 	for _, area in Config.Village.Areas do
