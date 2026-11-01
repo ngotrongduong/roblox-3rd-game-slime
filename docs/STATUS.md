@@ -2,8 +2,8 @@
 
 ## 2026-11-01 — ChatGPT's branch reviewed and partly redone: start here
 
-Branch `chatgpt/garden-upgrade-reveal`, not merged into `main`: it needs a Studio play test first (`docs/BUG_TRACKER.md`, "Studio
-acceptance checks"). Tools pass; nothing has been seen in play. What was kept and redone is in the tracker's review section.
+Merged into `main` after a play test in MapWork: the upgrade reveal, the garden order, the population and hunger numbers, and the kitchen
+rule. What was kept, redone, proved in play and still unchecked is in `docs/BUG_TRACKER.md`, "Claude's review of this branch".
 
 ## 2026-10-27 — project started
 

@@ -554,7 +554,7 @@ Config.UpgradeFx = {
 	-- the biggest changed pieces fade in; anything past this just appears (too small to notice)
 	MaxChangedParts = 150,
 	OutlinedParts = 6,
-	BurstMaxStuds = 40,
+	BurstMaxStuds = 24, -- wider and the sparkles thin out to specks at the play camera (seen in play)
 	ClientSettleSeconds = 0.25,
 	ViewDistanceStuds = 175,
 	MaxEventAgeSeconds = 8,

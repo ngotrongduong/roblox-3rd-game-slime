@@ -18,7 +18,11 @@ ChatGPT's garden order (GAME-002) and population and hunger numbers (BAL-003, BA
 - BAL-003: the formula module `FoodBalance` (used only by its own test) is replaced by a test running the real simulation. `GardenYield` and `GardenActionsPerHarvest` went with it.
 - FOOD-005 (new): the kitchen fix was left behind on `chatgpt/food-economy-balance`. A cook with nobody allowed dishes burned raw food into dishes no slime could eat. A kitchen now needs a cook, an allowed eater and room in the fridge.
 
-None of this has been seen in Studio yet: the checks below are still open.
+Play test in MapWork, 2026-11-01 (the owner was also playing in the window):
+- Proved: one gardener worked beds 1 to 11 in order and was hoeing bed 12 (GAME-002). A single upgrade marks 2-11 pieces, an era start 71 of 491; marked pieces are hidden from the first frame and all fade back to shown; nothing stays hidden afterwards; a server swap takes 10-17 ms; no script errors in the log. Quick upgrades replace the running celebration.
+- Numbers only, not by eye: the title (Studio's `screen_capture` leaves out `AlwaysOnTop` billboards; its position, size and fade were read from the client). At a far camera it can sit partly behind the top HUD chips.
+- Not checked in play: the kitchen rule (Lune only), 2-4 gardeners together, rejoining with a saved level (play tests start at level 1 in memory), frame time on a phone or with a focused window (Studio ran throttled at about 15 frames a second: no difference between idle and a reveal), the 72-slime cap.
+- Set after the test, not re-run: `BurstMaxStuds` 40 to 24, as the sparkles thinned out to specks.
 
 ## Studio acceptance checks
 
