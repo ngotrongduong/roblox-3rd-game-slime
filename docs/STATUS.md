@@ -1,5 +1,10 @@
 # Status
 
+## 2026-11-02 — village bar done, economy researched: start here
+
+The HUD shows the village level and the upgrades to the next one (seen in play). `docs/ECONOMY.md` proposes how coins are earned and a
+price table for the owner's road (village 20 in 2 h, 40 in 12 h, 50 in a week); nothing of it is built, waiting for the owner's word.
+
 ## 2026-11-01 — ChatGPT's branch reviewed and partly redone: start here
 
 Merged into `main` after a play test in MapWork: the upgrade reveal, the garden order, the population and hunger numbers, and the kitchen
