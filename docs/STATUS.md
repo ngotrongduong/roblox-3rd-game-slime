@@ -1,5 +1,10 @@
 # Status
 
+## 2026-11-01 — ChatGPT's branch reviewed and partly redone: start here
+
+Branch `chatgpt/garden-upgrade-reveal`, not merged into `main`: it needs a Studio play test first (`docs/BUG_TRACKER.md`, "Studio
+acceptance checks"). Tools pass; nothing has been seen in play. What was kept and redone is in the tracker's review section.
+
 ## 2026-10-27 — project started
 
 Done

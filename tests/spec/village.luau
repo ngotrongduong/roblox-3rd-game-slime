@@ -33,12 +33,27 @@ return function(T)
 	end)
 	T.test("population progression respects food production tier boundaries", function()
 		local farm = FarmKit.farm(1000)
-		for _, milestone in {
-			{ 1, 12 }, { 6, 12 }, { 7, 13 }, { 10, 13 },
-			{ 11, 14 }, { 12, 15 }, { 15, 20 }, { 20, 27 },
-			{ 21, 28 }, { 25, 34 }, { 30, 42 }, { 31, 43 },
-			{ 35, 49 }, { 40, 57 }, { 41, 58 }, { 45, 64 }, { 50, 72 },
-		} do
+		for _, milestone in
+			{
+				{ 1, 12 },
+				{ 6, 12 },
+				{ 7, 13 },
+				{ 10, 13 },
+				{ 11, 14 },
+				{ 12, 15 },
+				{ 15, 20 },
+				{ 20, 27 },
+				{ 21, 28 },
+				{ 25, 34 },
+				{ 30, 42 },
+				{ 31, 43 },
+				{ 35, 49 },
+				{ 40, 57 },
+				{ 41, 58 },
+				{ 45, 64 },
+				{ 50, 72 },
+			}
+		do
 			for _, area in farm.areas do
 				area.level = milestone[1]
 			end

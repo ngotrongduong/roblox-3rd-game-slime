@@ -11,6 +11,15 @@ This file tracks reproducible defects and player-experience improvements. Change
 
 | BAL-004 | Population jumping from 12 to 27 on a single village upgrade is too abrupt. | The previous cap used fixed 10-level tiers despite workstations unlocking at levels 11/21/31. | Replace step-function cap with level-by-level interpolation between configurable checkpoints (12 at 1, 13 at 7–10, 27 at 20, 42 at 30, 57 at 40, 72 at 50). Each level adds 0–2, no 15-slime jumps; verify SPD-1 food headroom at all 50 levels. | Implemented on `chatgpt/garden-upgrade-reveal`; tests/Studio QA pending |
 
+## Claude's review of this branch (2026-11-01)
+
+ChatGPT's garden order (GAME-002) and population and hunger numbers (BAL-003, BAL-004) were kept: 24 simulated hours of a full village stay fed at the 13 levels tried, from 1 to 50, including each step where slots open (`tools/balance/food_sim.luau`). Redone:
+- UX-001: pieces were matched by name and build order, so one early new piece marked its later neighbours as changed, a swapped mesh of equal size was missed, and only 8 pieces of a name faded while the rest popped. Now `UpgradeDiff` matches what a piece is and where it stands. The client also hid pieces 0.12 s late (a flicker), left decals and stud textures floating over hidden parts, outlined the whole area instead of what changed, sparkled from one middle point, kept every old stage in memory and stacked titles on quick upgrades. All fixed; the era dust the first version dropped is back.
+- BAL-003: the formula module `FoodBalance` (used only by its own test) is replaced by a test running the real simulation. `GardenYield` and `GardenActionsPerHarvest` went with it.
+- FOOD-005 (new): the kitchen fix was left behind on `chatgpt/food-economy-balance`. A cook with nobody allowed dishes burned raw food into dishes no slime could eat. A kitchen now needs a cook, an allowed eater and room in the fridge.
+
+None of this has been seen in Studio yet: the checks below are still open.
+
 ## Studio acceptance checks
 
 1. In MapWork sync the feature branch and play at the normal gameplay camera. Step on upgrade pads for garden, pond, pantry, kitchen, breeding, training: confirm each upgrade announces its area/level at the **changed objects** and builds visually in staggered waves; inspect the 11/21/31/41 milestone upgrades, where the reveal should be stronger.

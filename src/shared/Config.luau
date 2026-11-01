@@ -505,7 +505,6 @@ Config.Work = {
 	CycleSeconds = { fishing = 60, garden = 240, kitchen = 120, training = 90 },
 	CycleLevelFactor = 0.99,
 	FishingYield = 1,
-	GardenYield = 1, -- one vegetable per harvested real plot
 	SpeedBonusPerSpd = 0.05,
 	SpeedBonusMax = 3,
 	GardenPlotCount = 20,
@@ -515,7 +514,6 @@ Config.Work = {
 	GardenWaterBoostSeconds = 12,
 	-- Six tending actions per harvest: 3600 / (6 * 13.5) ~= 44 vegetables/hour, near the old 45.
 	GardenActionSeconds = 13.5,
-	GardenActionsPerHarvest = 6, -- hoe, plant, water at three stages, harvest
 	FishCastSeconds = 3,
 	FishReelSeconds = 3,
 	WorkDropSeconds = 2,
@@ -550,18 +548,14 @@ Config.Work = {
 
 -- Short, client-only construction reveal. The server changes gameplay immediately;
 -- clients fade changed stage pieces into view, with a focused celebration on the upgraded area.
--- Conservative estimate, not measured: accounts for travel, rest and delivery delays.
-Config.FoodBalance = {
-	ProductiveTimeFraction = 0.55,
-}
-
 Config.UpgradeFx = {
 	Tag = "AreaUpgradeReveal",
 	PartAttribute = "UpgradeFxPart",
-	MaxChangedParts = 100,
-	MaxPerPartName = 8,
-	PositionToleranceStuds = 0.03,
-	ClientSettleSeconds = 0.12,
+	-- the biggest changed pieces fade in; anything past this just appears (too small to notice)
+	MaxChangedParts = 150,
+	OutlinedParts = 6,
+	BurstMaxStuds = 40,
+	ClientSettleSeconds = 0.25,
 	ViewDistanceStuds = 175,
 	MaxEventAgeSeconds = 8,
 	JoinGraceSeconds = 0.5,
@@ -573,6 +567,9 @@ Config.UpgradeFx = {
 	MessageRiseStuds = 3,
 	MessageWidthPixels = 310,
 	MessageHeightPixels = 100,
+	ScreenBaseY = 900,
+	ScreenMin = 0.7,
+	ScreenMax = 1.3,
 	SparkleCount = 90,
 	SparkleSecondCount = 40,
 	EraStepLevels = 10,
@@ -585,7 +582,16 @@ Config.UpgradeFx = {
 	SparkleSpeedMax = 16,
 	SparkleAccelerationY = -12,
 	SparkleSize = 1.1,
+	DustCount = 24,
+	DustSizeStart = 3,
+	DustSizeEnd = 8,
+	DustTransparency = 0.3,
+	DustLifetimeMin = 1,
+	DustLifetimeMax = 1.6,
+	DustSpeedMin = 4,
+	DustSpeedMax = 8,
 	FxLifetimeSeconds = 4,
+	Dust = { 240, 232, 214 },
 	Gold = { 255, 211, 105 },
 	Cream = { 255, 247, 220 },
 	Shadow = { 55, 34, 24 },

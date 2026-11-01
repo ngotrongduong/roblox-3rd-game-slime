@@ -175,6 +175,8 @@ return function(T)
 		farm.work.garden.box = {}
 		farm.counter = {}
 		farm.storehouse = { fish = 2 }
+		farm.work.kitchen.slots[1].worker = "slime-3"
+		farm.cookedAllowed = { "slime-4" }
 		farm.slimes[1].trait = "hardworking"
 		farm.slimes[2].trait = "hardworking"
 		local first = Brain.choose(farm, "slime-1", CTX, NOW, Rng.new(2))

@@ -60,4 +60,28 @@ function FarmKit.many(n: number): { any }
 	return out
 end
 
+-- A village at its population limit with every area at `level`; every fishing and garden slot has a starter-SPD worker
+-- and reserve. Returns the farm and how many slimes it staffed.
+function FarmKit.fullVillage(now: number, level: number): (any, number)
+	local Stations = require("../../src/shared/Stations")
+	local farm = FarmKit.farm(now)
+	for _, area in farm.areas do
+		area.level = level
+	end
+	farm.slimes = FarmKit.many(FarmState.populationLimit(farm.areas))
+	local staffed = 0
+	for _, areaId in { "fishing", "garden" } do
+		local work = farm.work[areaId]
+		while #work.slots < FarmState.slotCount(level) do
+			table.insert(work.slots, { progress = 0 })
+		end
+		for slot = 1, #work.slots do
+			assert(Stations.assign(farm, "s" .. (staffed + 1), areaId, slot, false, now))
+			assert(Stations.assign(farm, "s" .. (staffed + 2), areaId, slot, true, now))
+			staffed += 2
+		end
+	end
+	return farm, staffed
+end
+
 return FarmKit

@@ -1,17 +1,21 @@
 --!strict
 -- Short local-only reveal of the ACTUAL changed stage pieces, plus a readable celebration
--- over the upgraded area. Never tween server-owned collision/geometry or saved levels.
+-- over them. Never tween server-owned collision/geometry or saved levels.
 local CollectionService = game:GetService("CollectionService")
 local Debris = game:GetService("Debris")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
 
 local Config = require(ReplicatedStorage.Shared.Config)
 local Fx = Config.UpgradeFx
 local player = Players.LocalPlayer
 local startedAt = workspace:GetServerTimeNow()
-local seen: { [Instance]: boolean } = {}
+-- weak: a destroyed stage must not stay in memory for the whole session
+local seen: { [Instance]: boolean } = setmetatable({}, { __mode = "k" }) :: any
+-- one celebration an area: a second quick upgrade replaces the first instead of stacking titles
+local live: { [string]: BasePart } = {}
 
 local NAMES: { [string]: string } = {
 	fishing = "FISHING POND",
@@ -27,11 +31,28 @@ local function rgb(values: { number }): Color3
 	return Color3.fromRGB(values[1], values[2], values[3])
 end
 
-local function flash(stage: Model, position: Vector3, area: string, level: number)
+local function emitter(texture: string, parent: Instance): ParticleEmitter
+	local particles = Instance.new("ParticleEmitter")
+	particles.Texture = texture
+	particles.Rate = 0
+	particles.Shape = Enum.ParticleEmitterShape.Box
+	particles.SpreadAngle = Vector2.new(180, 180)
+	particles.Parent = parent
+	return particles
+end
+
+-- The anchor covers the changed pieces, so the sparkles rise where the work happened, not at their middle.
+local function flash(parts: { BasePart }, focus: Vector3, area: string, level: number)
+	local low, high = focus, focus
+	for _, part in parts do
+		local half = part.Size / 2
+		low = low:Min(part.Position - half)
+		high = high:Max(part.Position + half)
+	end
 	local anchor = Instance.new("Part")
 	anchor.Name = "UpgradeCelebration"
-	anchor.Size = Vector3.one
-	anchor.CFrame = CFrame.new(position)
+	anchor.Size = (high - low):Max(Vector3.one):Min(Vector3.one * Fx.BurstMaxStuds)
+	anchor.CFrame = CFrame.new((low + high) / 2)
 	anchor.Transparency = 1
 	anchor.CanCollide = false
 	anchor.CanTouch = false
@@ -39,52 +60,72 @@ local function flash(stage: Model, position: Vector3, area: string, level: numbe
 	anchor.Anchored = true
 	anchor.Parent = workspace
 	Debris:AddItem(anchor, Fx.FxLifetimeSeconds)
+	if live[area] then
+		live[area]:Destroy()
+	end
+	live[area] = anchor
 
-	local newEra = level >= Fx.FirstEraUpgradeLevel
-		and level % Fx.EraStepLevels == 1
-	local sparkle = Instance.new("ParticleEmitter")
-	sparkle.Texture = "rbxasset://textures/particles/sparkles_main.dds"
+	local newEra = level >= Fx.FirstEraUpgradeLevel and level % Fx.EraStepLevels == 1
+	local sparkle = emitter("rbxasset://textures/particles/sparkles_main.dds", anchor)
 	sparkle.Color = ColorSequence.new(rgb(Fx.Gold), rgb(Fx.Cream))
 	sparkle.LightEmission = 1
-	sparkle.Rate = 0
 	sparkle.Size = NumberSequence.new({
 		NumberSequenceKeypoint.new(0, Fx.SparkleSize),
 		NumberSequenceKeypoint.new(1, 0),
 	})
 	sparkle.Lifetime = NumberRange.new(Fx.SparkleLifetimeMin, Fx.SparkleLifetimeMax)
 	sparkle.Speed = NumberRange.new(Fx.SparkleSpeedMin, Fx.SparkleSpeedMax)
-	sparkle.SpreadAngle = Vector2.new(180, 180)
 	sparkle.Acceleration = Vector3.new(0, Fx.SparkleAccelerationY, 0)
-	sparkle.Parent = anchor
 	sparkle:Emit(math.floor(Fx.SparkleCount * (if newEra then Fx.EraSparkleMultiplier else 1)))
 	task.delay(Fx.SparkleSecondDelay, function()
 		if sparkle.Parent then
 			sparkle:Emit(math.floor(Fx.SparkleSecondCount * (if newEra then Fx.EraSparkleMultiplier else 1)))
 		end
 	end)
+	if newEra then
+		-- a new era is real building work: a cloud of dust rolls out from it
+		local dust = emitter("rbxasset://textures/particles/smoke_main.dds", anchor)
+		dust.Color = ColorSequence.new(rgb(Fx.Dust))
+		dust.Size = NumberSequence.new({
+			NumberSequenceKeypoint.new(0, Fx.DustSizeStart),
+			NumberSequenceKeypoint.new(1, Fx.DustSizeEnd),
+		})
+		dust.Transparency = NumberSequence.new({
+			NumberSequenceKeypoint.new(0, Fx.DustTransparency),
+			NumberSequenceKeypoint.new(1, 1),
+		})
+		dust.Lifetime = NumberRange.new(Fx.DustLifetimeMin, Fx.DustLifetimeMax)
+		dust.Speed = NumberRange.new(Fx.DustSpeedMin, Fx.DustSpeedMax)
+		dust:Emit(Fx.DustCount)
+	end
 
-	local highlight = Instance.new("Highlight")
-	highlight.Name = "UpgradeOutline"
-	highlight.Adornee = stage
-	highlight.DepthMode = Enum.HighlightDepthMode.Occluded
-	highlight.FillColor = rgb(Fx.Gold)
-	highlight.FillTransparency = 0.75
-	highlight.OutlineColor = rgb(Fx.Cream)
-	highlight.OutlineTransparency = 0.1
-	highlight.Parent = anchor
-	TweenService:Create(
-		highlight,
-		TweenInfo.new(Fx.OutlineSeconds, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
-		{ FillTransparency = 1, OutlineTransparency = 1 }
-	):Play()
+	-- The outline shows what is new: the biggest changed pieces (`parts` comes biggest first), not the whole area.
+	for index = 1, math.min(#parts, Fx.OutlinedParts) do
+		local highlight = Instance.new("Highlight")
+		highlight.Name = "UpgradeOutline"
+		highlight.Adornee = parts[index]
+		highlight.DepthMode = Enum.HighlightDepthMode.Occluded
+		highlight.FillColor = rgb(Fx.Gold)
+		highlight.FillTransparency = 0.75
+		highlight.OutlineColor = rgb(Fx.Cream)
+		highlight.OutlineTransparency = 0.1
+		highlight.Parent = anchor
+		TweenService:Create(
+			highlight,
+			TweenInfo.new(Fx.OutlineSeconds, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+			{ FillTransparency = 1, OutlineTransparency = 1 }
+		):Play()
+	end
 
 	local gui = Instance.new("BillboardGui")
 	gui.Name = "UpgradeTitle"
 	gui.Adornee = anchor
 	gui.AlwaysOnTop = true
 	gui.LightInfluence = 0
-	gui.Size = UDim2.fromOffset(Fx.MessageWidthPixels, Fx.MessageHeightPixels)
-	gui.StudsOffsetWorldSpace = Vector3.new(0, Fx.MessageHeightStuds, 0)
+	local screen = math.clamp(workspace.CurrentCamera.ViewportSize.Y / Fx.ScreenBaseY, Fx.ScreenMin, Fx.ScreenMax)
+	gui.Size = UDim2.fromOffset(Fx.MessageWidthPixels * screen, Fx.MessageHeightPixels * screen)
+	local above = anchor.Size.Y / 2 + Fx.MessageHeightStuds
+	gui.StudsOffsetWorldSpace = Vector3.new(0, above, 0)
 	gui.Parent = anchor
 
 	local title = Instance.new("TextLabel")
@@ -115,7 +156,7 @@ local function flash(stage: Model, position: Vector3, area: string, level: numbe
 	TweenService:Create(
 		gui,
 		TweenInfo.new(Fx.MessageSeconds, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
-		{ StudsOffsetWorldSpace = Vector3.new(0, Fx.MessageHeightStuds + Fx.MessageRiseStuds, 0) }
+		{ StudsOffsetWorldSpace = Vector3.new(0, above + Fx.MessageRiseStuds, 0) }
 	):Play()
 	for _, label in { title, subtitle } do
 		TweenService:Create(
@@ -123,6 +164,14 @@ local function flash(stage: Model, position: Vector3, area: string, level: numbe
 			TweenInfo.new(Fx.MessageSeconds, Enum.EasingStyle.Quad, Enum.EasingDirection.In),
 			{ TextTransparency = 1, TextStrokeTransparency = 1 }
 		):Play()
+	end
+end
+
+-- A part's LocalTransparencyModifier does not reach its decals and textures: the stud look would float on its own.
+local function setFade(part: BasePart, faces: { Decal }, value: number)
+	part.LocalTransparencyModifier = value
+	for _, face in faces do
+		face.LocalTransparencyModifier = value
 	end
 end
 
@@ -137,7 +186,7 @@ local function reveal(inst: Instance)
 	local timestamp = inst:GetAttribute("UpgradeFxAt")
 	local area = inst:GetAttribute("UpgradeFxArea")
 	local level = inst:GetAttribute("UpgradeFxLevel")
-	local focus = inst:GetAttribute("UpgradeFxFocus")
+	local rawFocus = inst:GetAttribute("UpgradeFxFocus")
 	if type(timestamp) ~= "number" or type(area) ~= "string" or type(level) ~= "number" then
 		return
 	end
@@ -145,40 +194,68 @@ local function reveal(inst: Instance)
 	if timestamp < startedAt - Fx.JoinGraceSeconds or now - timestamp > Fx.MaxEventAgeSeconds then
 		return -- never replay an old saved upgrade when joining or streaming distant scenery
 	end
-	if typeof(focus) ~= "Vector3" then
-		focus = inst:GetPivot().Position
-	end
+	local focus: Vector3 = if typeof(rawFocus) == "Vector3" then rawFocus else inst:GetPivot().Position
 	local character = player.Character
 	local root = if character then character:FindFirstChild("HumanoidRootPart") else nil
 	if root and root:IsA("BasePart") and (root.Position - focus).Magnitude > Fx.ViewDistanceStuds then
 		return
 	end
-	-- Marked pieces materialise in staggered waves; their server collision stays intact.
-	-- A brief settle lets replication deliver the children after the model's tag arrives.
-	task.delay(Fx.ClientSettleSeconds, function()
-		if not inst.Parent then
+
+	-- Hide marked pieces the moment they exist (a big stage arrives over several frames, and a piece
+	-- seen for one frame before it fades reads as a flicker). Their server collision stays intact.
+	local parts: { BasePart } = {}
+	local faces: { [BasePart]: { Decal } } = {}
+	local function hide(descendant: Instance)
+		local owner = if descendant:IsA("Decal") then descendant.Parent else descendant
+		if not owner or not owner:IsA("BasePart") or owner:GetAttribute(Fx.PartAttribute) ~= true then
 			return
 		end
-		local parts: { BasePart } = {}
-		for _, descendant in inst:GetDescendants() do
-			if descendant:IsA("BasePart") and descendant:GetAttribute(Fx.PartAttribute) == true then
-				table.insert(parts, descendant)
-				descendant.LocalTransparencyModifier = 1
-			end
+		if not faces[owner] then
+			faces[owner] = {}
+			table.insert(parts, owner)
+			owner.LocalTransparencyModifier = 1
 		end
-		for i, part in parts do
-			local delayTime = (i - 1) / math.max(1, #parts) * Fx.RevealStaggerSeconds
-			task.delay(delayTime, function()
-				if part.Parent then
-					TweenService:Create(
-						part,
-						TweenInfo.new(Fx.RevealSeconds, Enum.EasingStyle.Quart, Enum.EasingDirection.Out),
-						{ LocalTransparencyModifier = 0 }
-					):Play()
-				end
-			end)
+		if descendant:IsA("Decal") then
+			table.insert(faces[owner], descendant)
+			descendant.LocalTransparencyModifier = 1
 		end
-		flash(inst, focus, area, level)
+	end
+	local arriving = inst.DescendantAdded:Connect(hide)
+	for _, descendant in inst:GetDescendants() do
+		hide(descendant)
+	end
+	task.wait(Fx.ClientSettleSeconds)
+	arriving:Disconnect()
+	if not inst.Parent then
+		return
+	end
+
+	-- biggest first for the outlines, ground up for the build: the area rises in waves
+	table.sort(parts, function(a: BasePart, b: BasePart): boolean
+		return a.Size.Magnitude > b.Size.Magnitude
+	end)
+	flash(parts, focus, area, level)
+	local order = table.clone(parts)
+	table.sort(order, function(a: BasePart, b: BasePart): boolean
+		return a.Position.Y < b.Position.Y
+	end)
+	local start = os.clock()
+	local fading: RBXScriptConnection
+	-- One loop for every piece: a hundred tweens on a cheap phone are a hundred needless objects.
+	fading = RunService.Heartbeat:Connect(function()
+		local clock = os.clock() - start
+		for index, part in order do
+			local at = (index - 1) / #order * Fx.RevealStaggerSeconds
+			local alpha = math.clamp((clock - at) / Fx.RevealSeconds, 0, 1)
+			setFade(
+				part,
+				faces[part],
+				1 - TweenService:GetValue(alpha, Enum.EasingStyle.Quart, Enum.EasingDirection.Out)
+			)
+		end
+		if clock >= Fx.RevealStaggerSeconds + Fx.RevealSeconds or not inst.Parent then
+			fading:Disconnect()
+		end
 	end)
 end
 

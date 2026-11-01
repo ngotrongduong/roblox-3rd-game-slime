@@ -116,11 +116,11 @@ playing). Nothing dies of hunger and no stat is ever lost to hunger.
 - The baseline assumes one fisherman and one gardener with **SPD 1** at level 1; no speed bonus
   is assumed. Each harvested garden plot yields ONE vegetable, after hoe, plant, three waterings
   and harvest. Water boosts growth; crops still need real time to ripen.
-- `FoodBalance.rawSupplyPerMinute` estimates combined weighted raw fullness after reserving
-  45% of ideal production time for walking, resting, hauling and a full collection bin. This
-  55% active-time factor is an **assumption, not a measured guarantee**. Meal delivery, start-up
-  plots, transport and player staffing must be tested in Studio with intermediate caps and the
-  level-50 maximum of 72 slimes. The headroom estimate is checked at **every** level, not only tiers.
+- Measured with the real simulation, `lune run tools/balance/food_sim.luau 24 0.55` (a full village, 24 hours, 45% of
+  work time taken away for walking and hauling, every fishing and garden slot staffed with a worker and a reserve):
+  no slime goes hungry at the 13 levels tried from 1 to 50 and the storehouse ends full, with lowest fullness about 50. The 45% is
+  an assumption; a Studio play test at the 72-slime cap is still to do. `tests/spec/food_balance.luau` keeps this checked.
+- A kitchen takes raw food only with a cook, at least one slime allowed cooked food, and room in the fridge.
 - Starter inventory (10 Koi + 10 carrots) covers garden establishment; players must still assign
   slimes to fishing, gardening and hauling. No idle farm can feed a full village without workers.
 

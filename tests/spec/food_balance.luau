@@ -1,29 +1,33 @@
 --!strict
+local Breeding = require("../../src/shared/Breeding")
 local Config = require("../../src/shared/Config")
 local FarmState = require("../../src/shared/FarmState")
-local FoodBalance = require("../../src/shared/FoodBalance")
+local Rng = require("../../src/shared/Rng")
+local VillageSim = require("../../src/shared/VillageSim")
 local FarmKit = require("../lib/FarmKit")
-local Breeding = require("../../src/shared/Breeding")
+
+-- The offline step has no walking, so the work is slowed by the share of time a slime loses walking and hauling.
+local LOST_TO_WALKING = 0.55
 
 return function(T: any)
-	T.test("starter SPD raw supply maintains headroom at every population tier", function()
-		for level = 1, Config.Village.MaxLevel do
-			local areas = FarmState.newAreas()
-			for _, area in areas do
-				area.level = level
+	T.test("a full village of starter-SPD slimes stays fed in the real simulation", function()
+		local fishing, action = Config.Work.CycleSeconds.fishing, Config.Work.GardenActionSeconds
+		Config.Work.CycleSeconds.fishing = fishing / LOST_TO_WALKING
+		Config.Work.GardenActionSeconds = action / LOST_TO_WALKING
+		for _, level in { 1, 10, 11, 50 } do
+			local now = 1000000
+			local farm = FarmKit.fullVillage(now, level)
+			local rng = Rng.new(level)
+			for step = 1, 6 * 3600 / Config.Village.StepSeconds do
+				local at = now + step * Config.Village.StepSeconds
+				farm = VillageSim.step(farm, at, Config.Village.StepSeconds, rng, { errands = true })
 			end
-			local population = FarmState.populationLimit(areas)
-			local workers = 4 * FarmState.slotCount(level)
-			local supply = FoodBalance.rawSupplyPerMinute(level, level)
-			local demand = FoodBalance.demandPerMinute(population, workers)
-			T.ok(supply >= demand * 1.15, "starter SPD food margin at level " .. level)
+			for _, slime in farm.slimes do
+				T.ok(slime.needs.fullness > Config.Needs.Hungry, slime.id .. " is hungry at level " .. level)
+			end
 		end
-	end)
-	T.test("nutrition model counts one vegetable per six tending actions", function()
-		T.eq(Config.Work.GardenYield, 1)
-		T.eq(Config.Work.GardenActionsPerHarvest, 6)
-		T.ok(FoodBalance.weightedFullness("fish") > 20)
-		T.ok(FoodBalance.weightedFullness("veg") > 20)
+		Config.Work.CycleSeconds.fishing = fishing
+		Config.Work.GardenActionSeconds = action
 	end)
 	T.test("existing saves above the lowered population cap retain all slimes", function()
 		local now = 1000000

@@ -24,6 +24,8 @@ return function(T)
 		T.eq(Food.bestDish({}), nil)
 		farm.counter = { fish = 1 }
 		farm.storehouse = { carrot = 2, cabbage = 1 }
+		farm.work.kitchen.slots[1].worker = "slime-1"
+		farm.cookedAllowed = { "slime-2" }
 		T.same(Food.ingredientsWanted(farm), { carrot = 1, cabbage = 1 })
 	end)
 	T.test("dish permission, fallback, fullness and timed battle buff", function()
