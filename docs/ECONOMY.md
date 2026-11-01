@@ -1,8 +1,8 @@
 # Economy: how money is earned and what upgrades cost
 
-The owner's design (2026-11-02), worked out and measured. Built so far: the fight and reward rules in `src/shared`
-(`Combat`, `Zombies`, `Config.Combat`, `Config.Zombies`) with Lune tests, and sell values x10. **Not built: the zombies on
-the map, sending squads, the shop, the prices.** `Config.Pads.FreeUpgrades = true` still keeps every upgrade at 0, and no
+The owner's design (2026-11-02), worked out and measured. Built so far: the fight, reward, death, revive and sell rules in
+`src/shared` (`Combat`, `Zombies`, `Shop`, `Config.Combat`, `Config.Zombies`) with Lune tests, and sell values x10. **Not
+in play yet: the zombies on the map, sending squads, the shop's place, the prices.** `Config.Pads.FreeUpgrades = true` still keeps every upgrade at 0, and no
 coin can be earned yet. Tools: `tools/balance/fight_sim.luau`, `income_sim.luau`, `price_curve.luau`.
 
 ## The owner's road
@@ -37,48 +37,55 @@ Decided while working it out:
 
 | Camp | Wins | Slimes lost a fight | Fight length | Coins a minute at level 4 / 20 / 60 |
 |---|---|---|---|---|
-| Same level | 100% | 0.6-0.9 | 25-29 s | 1,900 / 3,300 / 7,600 |
-| +3 | 88-95% | 1.6-1.9 | 32-37 s | 3,050 / 4,900 / 10,800 |
-| +5 | 23-36% | 3.2-3.6 | 36-41 s | 3,800 / 5,800 / 12,000 |
+| Same level | 100% | 0.1-0.3 | 20-24 s | 2,150 / 3,650 / 8,650 |
+| +3 | 100% | 0.9-1.1 | 27-32 s | 3,550 / 5,850 / 13,000 |
+| +5 | 41-59% | 2.9-3.1 | 37-42 s | 4,450 / 6,500 / 13,600 |
 
 Squads in play will not be this even, and hungry or buffed slimes change it: a play test comes next.
 
-## The open question: how long a dead slime stays dead
+## Death is for good (the owner, 2026-11-02)
 
-`docs/GAMEPLAY.md` §8 and `Config.Village.GhostSeconds` say **1 day**, written before this design. It cannot stand:
-at village level 20, four squads in the middle camp lose about 180 slimes an hour against a population of 27, so every
-slime would be a ghost within minutes and fights would stop for the day.
+- A slime killed in a fight pays its coins and lies dead for **15 minutes**. In that time the player may spend food to
+  revive it (`ceil(1 + level / 5)` raw items from the storehouse, the original's cost). Otherwise it is **lost for good**.
 
-**Recommended: 2 minutes** (about 6 of the 27 out at a time). A longer wait is still a cost, and more deaths need more
-breeding, which keeps the farm feeding the fights. The number is one value in `Config`.
+Decided while working it out:
+- **The 15 minutes run only while the player is online**: a crash or a night away never costs a slime.
+- **A village never dies out**: when only 2 slimes are left, a dead one comes back by itself when its time runs out, as
+  the shop never sells the last 2. Otherwise a player could end the game with no way to breed.
+- A fight dropped by leaving the game simply ends, and nobody dies in it.
 
 ## Income and the price table
 
-Fights are the main income: 52,000 coins an hour at the start, 190,000 at village level 19, 460,000 at the top. Selling
-babies adds about 4,000 at the start, so the shop is the side income the owner described.
+Permanent death makes **slimes what limits income**. A village replaces about 14 slimes an hour through breeding at the
+start (24 from level 21, 32 from level 41) and has food for about 10 revives. Run out and fights stop paying, so the camps
+became a real choice: the easy camp loses 0.2-0.3 slimes a fight, the middle one 1, the hard one 3 with about half the fights lost.
+
+Fights earn about 44,000 coins an hour at the start, 102,000 at village level 19 and 263,000 at the top. Selling a baby
+instead of sending it adds a little: the shop is the side income the owner described.
 
 | Area level | Price | One upgrade takes | Village level reached | At (active hours) |
 |---|---|---|---|---|
-| 1 | 430 | 30 s | 2 | 0.05 |
-| 5 | 620 | 40 s | 6 | 0.3 |
-| 10 | 2,000 | 1 min | 11 | 0.7 |
-| 15 | 4,400 | 1.5 min | 16 | 1.3 |
-| 19 | 6,000 | 2 min | 20 | **2.0** |
-| 25 | 15,000 | 3 min | 26 | 3.5 |
-| 30 | 25,000 | 5 min | 31 | 5.5 |
-| 35 | 42,000 | 7 min | 36 | 8.5 |
-| 39 | 65,000 | 10 min | 40 | **12.0** |
-| 45 | 120,000 | 17 min | 46 | 20 |
-| 49 | 170,000 | 22 min | 50 | **28** |
+| 1 | 360 | 30 s | 2 | 0.05 |
+| 5 | 530 | 40 s | 6 | 0.3 |
+| 10 | 1,000 | 1 min | 11 | 0.7 |
+| 15 | 2,300 | 1.5 min | 16 | 1.3 |
+| 19 | 3,200 | 2 min | 20 | **2.0** |
+| 25 | 7,900 | 3 min | 26 | 3.5 |
+| 30 | 13,000 | 4.5 min | 31 | 5.5 |
+| 35 | 23,000 | 7 min | 36 | 8.5 |
+| 39 | 34,000 | 10 min | 40 | **12.0** |
+| 45 | 67,000 | 16 min | 46 | 20 |
+| 49 | 99,000 | 23 min | 50 | **28** |
 
-One area from 1 to 50 costs about 1.8 million coins; the whole village about 10.7 million.
+One area from 1 to 50 costs about 980,000 coins; the whole village about 5.9 million.
 
 ### What this table rests on (assumed, not measured)
 
-- A squad is out fighting half the time, about 27 fights an hour, while the player also runs the village.
+- A squad is out fighting half the time while the player also runs the village.
 - Squads a village can spare: 1 at first, 2 from village level 6, 3 from 15, 4 from 20.
-- The strongest slimes reach level 8 at village level 10, 12 at 20, 20 at 30, 30 at 40, 40 at 50.
-- Players mostly use the middle camp.
+- The strongest slimes reach level 8 at village level 10, 12 at 20, 20 at 30, 30 at 40, 40 at 50. Dying slimes pull this
+  down and it has not been measured with deaths in it: the largest unknown here.
+- The player picks the best-paying camp the village can afford to lose slimes in.
 
 Real play will move these, and every price scales with them: measure in a play test, then run `price_curve.luau` again.
 

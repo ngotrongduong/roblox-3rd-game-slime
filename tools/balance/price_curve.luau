@@ -6,11 +6,20 @@ local AREAS = 6
 local FIRST_UPGRADE_SECONDS = 30
 -- village level reached -> active hours played
 local TARGETS = { { 20, 2 }, { 40, 12 }, { 50, 28 } }
--- A fight of the middle camp takes 36 s and the squad needs about 30 s to get back and go out again; a player who also
--- runs the village has a squad out about half the time (assumed).
-local FIGHTS_PER_SQUAD_HOUR = 3600 / (36 + 30) * 0.5
--- Measured in fight_sim: slime level -> coins a fight in the middle camp.
-local COINS_PER_FIGHT = { { 4, 1900 }, { 8, 2230 }, { 12, 2350 }, { 20, 2900 }, { 30, 3700 }, { 40, 4280 }, { 60, 5830 } }
+-- The squad needs about 30 s to get back and go out again; a player who also runs the village has a squad out about
+-- half the time (assumed).
+local TURNAROUND_SECONDS = 30
+local BUSY_SHARE = 0.5
+-- Measured in fight_sim, per camp: slimes lost a fight, seconds a fight, slime level -> coins a fight.
+local CAMPS = {
+	{ deaths = 0.25, fight = 23, coins = { { 4, 858 }, { 8, 915 }, { 12, 1063 }, { 20, 1367 }, { 30, 1665 }, { 40, 1966 }, { 60, 2819 } } },
+	{ deaths = 1.05, fight = 30, coins = { { 4, 1874 }, { 8, 2228 }, { 12, 2336 }, { 20, 2895 }, { 30, 3652 }, { 40, 4176 }, { 60, 5750 } } },
+	{ deaths = 3.0, fight = 40, coins = { { 4, 3103 }, { 8, 3267 }, { 12, 3722 }, { 20, 4292 }, { 30, 5883 }, { 40, 6300 }, { 60, 8398 } } },
+}
+-- Dead slimes must be made good or the village runs out: 9 eggs an hour a pair (income_sim), a fifth lost to walking
+-- (assumed), and about 10 revives an hour from the food a staffed village has to spare.
+local EGGS_PER_PAIR_HOUR = 9 * 0.8
+local REVIVES_PER_HOUR = 10
 -- Assumed until a play test measures it: village level -> the average level of the strongest slimes.
 local SLIME_LEVEL = { { 1, 4 }, { 10, 8 }, { 20, 12 }, { 30, 20 }, { 40, 30 }, { 50, 40 } }
 
@@ -29,8 +38,19 @@ local function squads(level: number): number
 	return if level >= 20 then 4 elseif level >= 15 then 3 elseif level >= 6 then 2 else 1
 end
 
+-- The best the player can do at this level: as many fights as the squads have time for and the village can lose slimes
+-- to, in whichever camp pays most.
 local function incomePerHour(level: number): number
-	return squads(level) * FIGHTS_PER_SQUAD_HOUR * lerp(COINS_PER_FIGHT, lerp(SLIME_LEVEL, level))
+	local pairs = if level >= 41 then 4 elseif level >= 21 then 3 else 2
+	local replaced = pairs * EGGS_PER_PAIR_HOUR + REVIVES_PER_HOUR
+	local slimeLevel = lerp(SLIME_LEVEL, level)
+	local best = 0
+	for _, camp in CAMPS do
+		local inTime = squads(level) * 3600 / (camp.fight + TURNAROUND_SECONDS) * BUSY_SHARE
+		local fights = math.min(inTime, replaced / camp.deaths)
+		best = math.max(best, fights * lerp(camp.coins, slimeLevel))
+	end
+	return best
 end
 
 local function geometricSum(first: number, growth: number, count: number): number

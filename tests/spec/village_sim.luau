@@ -87,11 +87,11 @@ return function(T)
 		})
 		T.eq(arrived.breeding.pairs[1].courtingUntil, NOW + Config.Breeding.CourtshipSeconds)
 	end)
-	T.test("ghost revives and schema three saves migrate", function()
+	T.test("a dead slime's time running out loses it, and schema three saves migrate", function()
 		local farm = FarmKit.farm(NOW)
 		farm.slimes[1].ghostUntil = NOW + 30
 		local after, events = VillageSim.step(farm, NOW + 60, 60, Rng.new(3), { errands = false })
-		T.eq(after.slimes[1].ghostUntil, nil)
+		T.eq(#after.slimes, #farm.slimes - 1)
 		T.ok(#events > 0)
 		local legacy = ProfileLogic.deepCopy(farm)
 		legacy.food = { basicFood = 35, capacity = 100 }

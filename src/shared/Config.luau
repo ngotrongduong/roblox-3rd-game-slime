@@ -127,10 +127,14 @@ Config.Combat = {
 Config.Zombies = {
 	Teams = 4,
 	TeamSize = 4,
+	-- A village never dies out: its last slimes come back by themselves when their time runs out.
+	MinSlimes = 2,
+	-- Food to revive: ceil(1 + level / this) items (the original's 20 food x ceil(1 + level / 5); an item is about 20).
+	ReviveLevelsPerFood = 5,
 	LevelOffsets = { 0, 3, 5 },
 	-- A zombie's stats against an even slime of the player's level, per camp. Five levels mean far more at level 4 than
 	-- at level 60, so a camp's risk comes from this and stays the same all game; its level sets the reward.
-	StatFactors = { 0.85, 0.97, 1.05 },
+	StatFactors = { 0.75, 0.9, 1.03 },
 	-- base = coins at level 0, as Config.Economy.SellBase for slimes; weights = its chance in each camp: rarer zombies
 	-- gather where it is more dangerous, which is what makes the harder camps worth the risk.
 	Kinds = {
@@ -233,7 +237,8 @@ Config.Village = {
 	CostRoundTo = 10,
 	OfflineCapSeconds = 8 * 60 * 60,
 	StepSeconds = 60,
-	GhostSeconds = 24 * 60 * 60,
+	-- How long a dead slime waits to be revived with food before it is lost for good (the owner, 2026-11-02).
+	GhostSeconds = 15 * 60,
 	WalkSpeed = 1.5 / 0.55,
 	WalkPerSpeed = 0.02,
 	HopSeconds = 0.55,

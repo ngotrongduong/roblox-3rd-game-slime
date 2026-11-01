@@ -281,6 +281,36 @@ function FarmState.villageProgress(areas: Areas): (number, number)
 	return total - level * count, count
 end
 
+-- Takes a slime out of the farm and out of every place that names it. Returns whether it was there.
+function FarmState.removeSlime(farm: Farm, id: string): boolean
+	local _, at = FarmState.findSlime(farm, id)
+	if not at then
+		return false
+	end
+	table.remove(farm.slimes, at)
+	for _, areaId in Config.Work.Areas do
+		for _, slot in (farm.work :: any)[areaId].slots do
+			if slot.worker == id then
+				slot.worker = nil
+			end
+			if slot.reserve == id then
+				slot.reserve = nil
+			end
+		end
+	end
+	for _, pair in farm.breeding.pairs do
+		if pair.a == id or pair.b == id then
+			pair.a, pair.b = nil, nil
+			pair.courtingUntil = nil
+		end
+	end
+	local allowed = table.find(farm.cookedAllowed, id)
+	if allowed then
+		table.remove(farm.cookedAllowed, allowed)
+	end
+	return true
+end
+
 function FarmState.populationLimit(areas: Areas): number
 	local villageLevel = FarmState.villageLevel(areas)
 	local steps = Config.Village.PopulationProgression

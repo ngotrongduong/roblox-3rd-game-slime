@@ -171,9 +171,9 @@ playing). Nothing dies of hunger and no stat is ever lost to hunger.
 
 - Slimes earn coins by fighting zombie slimes outside the village; coins pay for upgrades. SPD gives dodge; dish buffs
   help. The owner's design of 2026-11-02 is in `docs/ECONOMY.md` (three camps by level, 4 squads of 4, coins for every death).
-- A slime beaten by a monster too strong **dies** and becomes a **ghost** waiting at the village gate; it revives
-  after **1 day** (`Config.Village.GhostSeconds`, server time). A ghost does not eat, work, breed or train. The save
-  has the field from now on (`ghostUntil`).
+- A slime killed in a fight **dies** and becomes a **ghost** waiting at the village gate; the player has **15 minutes
+  of play** to revive it with food, else it is **lost for good** (`Config.Village.GhostSeconds`; the owner, 2026-11-02).
+  A ghost does not eat, work, breed or train. The save has the field (`ghostUntil`).
 - Spare slimes are **sold at the shop** in the Market; the higher the level, the more coins (`Mutations.sellValue`).
 - In this build: selling at the shop and paying coins for area upgrades; fights and ghosts later.
 

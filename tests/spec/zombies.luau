@@ -2,6 +2,8 @@
 local Combat = require("../../src/shared/Combat")
 local Config = require("../../src/shared/Config")
 local Rng = require("../../src/shared/Rng")
+local Shop = require("../../src/shared/Shop")
+local VillageSim = require("../../src/shared/VillageSim")
 local Zombies = require("../../src/shared/Zombies")
 local FarmKit = require("../lib/FarmKit")
 
@@ -90,6 +92,70 @@ return function(T: any)
 			plagues[camp] = seen.plague
 		end
 		T.ok(plagues[3] > plagues[2] and plagues[2] > plagues[1], "harder camps hold more rare zombies")
+	end)
+	T.test("a dead slime has 15 minutes: food brings it back, else it is lost for good", function()
+		local farm = FarmKit.farm(NOW, FarmKit.many(6))
+		farm.work.fishing.slots[1].worker = "s1"
+		local paid = Zombies.fall(farm, "s1", NOW)
+		T.ok(paid > 0)
+		T.eq(farm.coins, paid)
+		T.eq(Zombies.fall(farm, "s1", NOW), 0, "dies once")
+		T.eq(farm.slimes[1].ghostUntil, NOW + Config.Village.GhostSeconds)
+		farm.storehouse = {}
+		T.eq(select(2, Zombies.revive(farm, "s1", NOW + 60)), "NO_FOOD")
+		T.eq(farm.slimes[1].ghostUntil, NOW + Config.Village.GhostSeconds, "a refusal changes nothing")
+		farm.storehouse = { fish = 1, carrot = 2 }
+		T.eq(Zombies.reviveCost(4), 2)
+		T.ok(Zombies.revive(farm, "s1", NOW + 60))
+		T.eq(farm.slimes[1].ghostUntil, nil)
+		T.same(farm.storehouse, { carrot = 1 }, "paid from the biggest stock each time")
+		T.eq(select(2, Zombies.revive(farm, "s1", NOW + 60)), "NOT_DEAD")
+
+		Zombies.fall(farm, "s1", NOW)
+		local after = VillageSim.step(farm, NOW + Config.Village.GhostSeconds, 1, Rng.new(1), { errands = false })
+		T.eq(#after.slimes, 5, "lost for good")
+		T.eq(after.work.fishing.slots[1].worker, nil, "and off its job")
+	end)
+	T.test("the last two slimes come back by themselves, and time away never costs a slime", function()
+		local farm = FarmKit.farm(NOW, FarmKit.many(2))
+		Zombies.fall(farm, "s1", NOW)
+		local after = VillageSim.step(farm, NOW + Config.Village.GhostSeconds, 1, Rng.new(1), { errands = false })
+		T.eq(#after.slimes, 2)
+		T.eq(after.slimes[1].ghostUntil, nil)
+
+		local away = FarmKit.farm(NOW, FarmKit.many(6))
+		Zombies.fall(away, "s1", NOW)
+		away.lastSimulatedAt = NOW + 60
+		local back = NOW + 60 + 8 * 3600
+		local caught = VillageSim.catchUp(away, NOW + 60, back, Rng.new(1))
+		T.eq(#caught.slimes, 6)
+		T.eq(caught.slimes[1].ghostUntil - back, Config.Village.GhostSeconds - 60, "14 minutes are still left")
+	end)
+	T.test("who can go: grown up, free and alive; the shop has its own refusals", function()
+		local farm = FarmKit.farm(NOW, FarmKit.many(6))
+		T.ok(Zombies.canSend(farm, farm.slimes[1], NOW))
+		farm.work.fishing.slots[1].worker = "s1"
+		T.ok(not Zombies.canSend(farm, farm.slimes[1], NOW), "at work")
+		T.eq(select(2, Shop.sell(farm, "s1", NOW)), "AT_WORK")
+		farm.slimes[2].isFavourite = true
+		T.eq(select(2, Shop.sell(farm, "s2", NOW)), "FAVOURITE")
+		Zombies.fall(farm, "s3", NOW)
+		T.eq(select(2, Shop.sell(farm, "s3", NOW)), "DEAD")
+		local coins = farm.coins
+		T.eq(Shop.sell(farm, "s4", NOW), 120)
+		T.eq(farm.coins, coins + 120)
+		T.eq(#farm.slimes, 5)
+		local two = FarmKit.farm(NOW, FarmKit.many(2))
+		T.eq(select(2, Shop.sell(two, "s1", NOW)), "LAST_SLIMES")
+	end)
+	T.test("a hungry slime fights at half strength, a dish buff adds on", function()
+		local slime = FarmKit.slime("a", { stats = { attack = 10, defence = 1, speed = 1, hp = 10 } })
+		T.eq(Zombies.fighter(slime, NOW).attack, 10)
+		slime.buff = { stat = "attack", percent = 10, untilTime = NOW + 1 }
+		T.eq(Zombies.fighter(slime, NOW).attack, 11)
+		slime.buff = nil
+		slime.needs.fullness = 0
+		T.eq(Zombies.fighter(slime, NOW).attack, 5)
 	end)
 	T.test("a slime's death pays by its level and rarity", function()
 		local plain = FarmKit.slime("a")

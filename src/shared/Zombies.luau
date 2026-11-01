@@ -3,9 +3,12 @@
 -- kinds worth more, and coins for every slime killed on either side, by its level and rarity.
 local Config = if script then require(script.Parent.Config) else require("./Config")
 local FarmState = if script then require(script.Parent.FarmState) else require("./FarmState")
+local Food = if script then require(script.Parent.Food) else require("./Food")
 local Growth = if script then require(script.Parent.Growth) else require("./Growth")
 local Mutations = if script then require(script.Parent.Mutations) else require("./Mutations")
+local Needs = if script then require(script.Parent.Needs) else require("./Needs")
 local Rng = if script then require(script.Parent.Rng) else require("./Rng")
+local Stations = if script then require(script.Parent.Stations) else require("./Stations")
 local Stats = if script then require(script.Parent.Stats) else require("./Stats")
 
 type Farm = typeof(FarmState.newFarm(0))
@@ -114,6 +117,95 @@ end
 
 function Zombies.deathReward(slime: Slime): number
 	return Mutations.sellValue(slime.appearanceMutation, Stats.level(slime.stats))
+end
+
+function Zombies.pay(farm: Farm, amount: number)
+	farm.coins += amount
+	farm.lifetime.coinsEarned += amount
+end
+
+-- Whether a slime can join a squad: grown up, alive, awake and not busy at a job or a nest.
+function Zombies.canSend(farm: Farm, slime: Slime, now: number): boolean
+	if not canFight(farm, slime, now) or slime.sleeping or Needs.isTired(slime.needs) then
+		return false
+	end
+	if Stations.isBusy(farm, slime.id) then
+		return false
+	end
+	for _, pair in farm.breeding.pairs do
+		if pair.a == slime.id or pair.b == slime.id then
+			return false
+		end
+	end
+	return true
+end
+
+-- A slime as it fights: hungry at half strength (docs/MAP.md), its dish buff on top.
+function Zombies.fighter(
+	slime: Slime,
+	now: number
+): { id: string, attack: number, defence: number, speed: number, hp: number }
+	local factor = if Needs.isHungry(slime.needs) then Config.Needs.HungryWorkFactor else 1
+	local stats =
+		{ attack = slime.stats.attack, defence = slime.stats.defence, speed = slime.stats.speed, hp = slime.stats.hp }
+	local buff = slime.buff
+	if buff and buff.untilTime > now and (stats :: any)[buff.stat] then
+		(stats :: any)[buff.stat] *= 1 + buff.percent / 100
+	end
+	return {
+		id = slime.id,
+		attack = stats.attack * factor,
+		defence = stats.defence,
+		speed = stats.speed,
+		hp = stats.hp,
+	}
+end
+
+-- A slime falls: it pays by its level and rarity, and its 15 minutes start.
+function Zombies.fall(farm: Farm, slimeId: string, now: number): number
+	local slime = FarmState.findSlime(farm, slimeId)
+	if not slime or (slime.ghostUntil and slime.ghostUntil > now) then
+		return 0
+	end
+	slime.ghostUntil = now + Config.Village.GhostSeconds
+	slime.sleeping = nil
+	local reward = Zombies.deathReward(slime)
+	Zombies.pay(farm, reward)
+	return reward
+end
+
+function Zombies.reviveCost(level: number): number
+	return math.ceil(1 + math.max(0, level) / Config.Zombies.ReviveLevelsPerFood)
+end
+
+-- Pays with the raw food there is most of, all or nothing, and brings the slime back.
+function Zombies.revive(farm: Farm, slimeId: string, now: number): (boolean, string?)
+	local slime = FarmState.findSlime(farm, slimeId)
+	if not slime or not slime.ghostUntil or slime.ghostUntil <= now then
+		return false, "NOT_DEAD"
+	end
+	local cost = Zombies.reviveCost(Stats.level(slime.stats))
+	local have = 0
+	for _, id in Config.Food.RawOrder do
+		have += farm.storehouse[id] or 0
+	end
+	if have < cost then
+		return false, "NO_FOOD"
+	end
+	for _ = 1, cost do
+		local best, most = nil, 0
+		for _, id in Config.Food.RawOrder do
+			local count = farm.storehouse[id] or 0
+			if count > most then
+				best, most = id, count
+			end
+		end
+		Food.take(farm.storehouse, best :: string, 1)
+	end
+	slime.ghostUntil = nil
+	slime.needs.fullness = Config.Needs.Start
+	slime.needs.energy = Config.Needs.Start
+	return true, nil
 end
 
 return Zombies

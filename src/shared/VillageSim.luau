@@ -275,6 +275,7 @@ function VillageSim.step(input: Farm, now: number, seconds: number, rng: Rng, op
 			end
 		end
 	end
+	local expired: { string } = {}
 	for _, slime in farm.slimes do
 		local wasGhost = slime.ghostUntil ~= nil and slime.ghostUntil <= now
 		if slime.ghostUntil == nil then
@@ -300,11 +301,23 @@ function VillageSim.step(input: Farm, now: number, seconds: number, rng: Rng, op
 			end
 		end
 		if wasGhost then
-			slime.ghostUntil = nil
-			slime.sleeping = nil
-			slime.needs.fullness = Config.Needs.Start
-			slime.needs.energy = Config.Needs.Start
-			table.insert(events, { kind = "revived", slimeId = slime.id })
+			table.insert(expired, slime.id)
+		end
+	end
+	-- Nobody revived it in time: it is gone for good (the owner, 2026-11-02), unless the village would die out with it.
+	for _, id in expired do
+		if #farm.slimes > Config.Zombies.MinSlimes then
+			FarmState.removeSlime(farm, id)
+			table.insert(events, { kind = "lost", slimeId = id })
+		else
+			local slime = FarmState.findSlime(farm, id)
+			if slime then
+				slime.ghostUntil = nil
+				slime.sleeping = nil
+				slime.needs.fullness = Config.Needs.Start
+				slime.needs.energy = Config.Needs.Start
+				table.insert(events, { kind = "revived", slimeId = id })
+			end
 		end
 	end
 	doWork(farm, now, duration, rng, events, opts.workReady)
@@ -361,7 +374,14 @@ function VillageSim.catchUp(input: Farm, lastSimulatedAt: number, now: number, r
 	local elapsed = math.clamp(now - lastSimulatedAt, 0, Config.Village.OfflineCapSeconds)
 	local interval = Config.Village.StepSeconds
 	local start = now - elapsed
-	local farm = input
+	local farm: Farm = (ProfileLogic.deepCopy(input) :: any) :: Farm
+	-- A dead slime's time only runs while its owner plays: a crash or a night away never costs a slime.
+	local away = math.max(0, now - lastSimulatedAt)
+	for _, slime in farm.slimes do
+		if slime.ghostUntil then
+			slime.ghostUntil += away
+		end
+	end
 	local events: { Event } = {}
 	local steps = math.floor(elapsed / interval)
 	for i = 1, steps do
@@ -370,9 +390,6 @@ function VillageSim.catchUp(input: Farm, lastSimulatedAt: number, now: number, r
 		for _, event in batch do
 			table.insert(events, event)
 		end
-	end
-	if steps == 0 then
-		farm = (ProfileLogic.deepCopy(input) :: any) :: Farm
 	end
 	farm.lastSimulatedAt = now
 	return farm, events
