@@ -13,20 +13,20 @@ return function(T)
 			T.eq(m.assetId, "slime.material." .. m.id)
 			if m.tier == "common" then
 				T.eq(m.weight, 6)
-				T.eq(m.sellBase, 150)
+				T.eq(m.sellBase, 1500)
 			elseif m.tier == "rare" then
 				T.eq(m.weight, 3)
-				T.eq(m.sellBase, 300)
+				T.eq(m.sellBase, 3000)
 			else
 				T.eq(m.weight, 1)
-				T.eq(m.sellBase, 800)
+				T.eq(m.sellBase, 8000)
 			end
 		end
 		T.eq(tiers.common, 10)
 		T.eq(tiers.rare, 6)
 		T.eq(tiers.precious, 2)
 		T.eq(total, 10 * 6 + 6 * 3 + 2)
-		T.eq(Config.Material.SellBase.common, 150)
+		T.eq(Config.Material.SellBase.common, 1500)
 	end)
 
 	T.test("look data from the doc's table", function()

@@ -169,7 +169,8 @@ playing). Nothing dies of hunger and no stat is ever lost to hunger.
 
 ## 8. Money, selling, death (rules now; fights come in the fights phase)
 
-- Slimes earn coins by fighting monsters in the Wild Garden; coins pay for upgrades. SPD gives dodge; dish buffs help.
+- Slimes earn coins by fighting zombie slimes outside the village; coins pay for upgrades. SPD gives dodge; dish buffs
+  help. The owner's design of 2026-11-02 is in `docs/ECONOMY.md` (three camps by level, 4 squads of 4, coins for every death).
 - A slime beaten by a monster too strong **dies** and becomes a **ghost** waiting at the village gate; it revives
   after **1 day** (`Config.Village.GhostSeconds`, server time). A ghost does not eat, work, breed or train. The save
   has the field from now on (`ghostUntil`).

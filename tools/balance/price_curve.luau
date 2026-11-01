@@ -1,36 +1,36 @@
 --!strict
 -- Works out the upgrade price of every area level from how long the owner wants the road to be and what a village
--- earns then (measured by income_sim.luau), then walks the road again with the rounded prices to check the times.
--- lune run tools/balance/price_curve.luau
+-- earns from zombie fights then (coins per fight measured by fight_sim.luau), then walks the road again with the rounded
+-- prices to check the times. lune run tools/balance/price_curve.luau
 local AREAS = 6
 local FIRST_UPGRADE_SECONDS = 30
 -- village level reached -> active hours played
--- (asked for: 2, 12 and 28; the levels where prices wait for the luck to run out add about 0.4 h, taken off here)
-local TARGETS = { { 20, 1.6 }, { 40, 11.6 }, { 50, 27.6 } }
--- 9 eggs an hour a pair in income_sim; slimes walk online, the simulation's step does not: take a fifth off (assumed).
-local EGGS_PER_PAIR_HOUR = 9 * 0.8
--- What a baby sells for at sell values x10, as the player moves on to better parents (assumed, see docs/ECONOMY.md).
-local COINS_PER_EGG = { { 1, 330 }, { 10, 600 }, { 20, 1000 }, { 30, 1500 }, { 40, 2000 }, { 50, 3000 } }
+local TARGETS = { { 20, 2 }, { 40, 12 }, { 50, 28 } }
+-- A fight of the middle camp takes 36 s and the squad needs about 30 s to get back and go out again; a player who also
+-- runs the village has a squad out about half the time (assumed).
+local FIGHTS_PER_SQUAD_HOUR = 3600 / (36 + 30) * 0.5
+-- Measured in fight_sim: slime level -> coins a fight in the middle camp.
+local COINS_PER_FIGHT = { { 4, 1900 }, { 8, 2230 }, { 12, 2350 }, { 20, 2900 }, { 30, 3700 }, { 40, 4280 }, { 60, 5830 } }
+-- Assumed until a play test measures it: village level -> the average level of the strongest slimes.
+local SLIME_LEVEL = { { 1, 4 }, { 10, 8 }, { 20, 12 }, { 30, 20 }, { 40, 30 }, { 50, 40 } }
 
--- New-player luck multiplies the rare chances (Config.Luck): worked out per egg from Config.Inheritance, luck x5 pays
--- 3.4 times a normal egg for the first half hour, luck x3 pays 2.2 times for the next.
-local function luckFactor(hour: number): number
-	return if hour < 0.5 then 3.4 elseif hour < 1 then 2.2 else 1
-end
-
-local function coinsPerEgg(level: number): number
-	for index = 2, #COINS_PER_EGG do
-		local low, high = COINS_PER_EGG[index - 1], COINS_PER_EGG[index]
-		if level <= high[1] then
-			return low[2] + (high[2] - low[2]) * (level - low[1]) / (high[1] - low[1])
+local function lerp(points: { { number } }, at: number): number
+	for index = 2, #points do
+		local low, high = points[index - 1], points[index]
+		if at <= high[1] then
+			return low[2] + (high[2] - low[2]) * (at - low[1]) / (high[1] - low[1])
 		end
 	end
-	return COINS_PER_EGG[#COINS_PER_EGG][2]
+	return points[#points][2]
+end
+
+-- Squads a village can spare beside its workers, from its population limit.
+local function squads(level: number): number
+	return if level >= 20 then 4 elseif level >= 15 then 3 elseif level >= 6 then 2 else 1
 end
 
 local function incomePerHour(level: number): number
-	local pairs = if level >= 41 then 4 elseif level >= 21 then 3 else 2
-	return pairs * EGGS_PER_PAIR_HOUR * coinsPerEgg(level)
+	return squads(level) * FIGHTS_PER_SQUAD_HOUR * lerp(COINS_PER_FIGHT, lerp(SLIME_LEVEL, level))
 end
 
 local function geometricSum(first: number, growth: number, count: number): number
@@ -78,14 +78,14 @@ end
 print("area level -> price | income/h | one upgrade | village reached at (active hours)")
 local clock, total, last = 0, 0, 0
 for at = 1, 49 do
-	local earning = incomePerHour(at) * luckFactor(clock)
-	-- (a price never falls when the luck runs out: those levels just take a little longer)
+	local earning = incomePerHour(at)
+	-- (a price never falls)
 	local price = math.max(last, nice(earning * seconds[at] / 3600))
 	last = price
 	local spent = price * AREAS / earning
 	clock += spent
 	total += price
-	if at <= 3 or at % 5 == 0 or at == 49 then
+	if at <= 2 or at % 5 == 0 or at == 19 or at == 39 or at == 49 then
 		print(
 			string.format(
 				"%3d -> %8d | %7.0f | %6.0f s | village %2d at %5.2f h",

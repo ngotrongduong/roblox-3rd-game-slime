@@ -2,8 +2,9 @@
 
 ## 2026-11-02 — village bar done, economy researched: start here
 
-The HUD shows the village level and the upgrades to the next one (seen in play). `docs/ECONOMY.md` proposes how coins are earned and a
-price table for the owner's road (village 20 in 2 h, 40 in 12 h, 50 in a week); nothing of it is built, waiting for the owner's word.
+The HUD shows the village level and the upgrades to the next one (seen in play). The owner's zombie slime design: rules and fights in
+`src/shared` with tests; map, squads, shop and prices not built. `docs/ECONOMY.md` has the measurements, the price table and its build list;
+waiting for the owner on how long a dead slime stays dead (the old 1 day cannot stand).
 
 ## 2026-11-01 — ChatGPT's branch reviewed and partly redone: start here
 

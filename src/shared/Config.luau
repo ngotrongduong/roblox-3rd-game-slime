@@ -93,7 +93,7 @@ Config.Inheritance = {
 -- weighted pick; TierWeight is each material's weight by tier, SellBase its sell value by tier.
 Config.Material = {
 	TierWeight = { common = 6, rare = 3, precious = 1 },
-	SellBase = { common = 150, rare = 300, precious = 800 },
+	SellBase = { common = 1500, rare = 3000, precious = 8000 },
 	-- The outline hull of a material slime is its drawn colour times this.
 	HullShade = 0.6,
 }
@@ -101,8 +101,44 @@ Config.Material = {
 -- Selling a slime (docs/reference/01-core-farm.md §8.1): floor(base × (1 + level × SellLevelStep)).
 -- Base by appearance; a material slime uses Config.Material.SellBase by its tier.
 Config.Economy = {
-	SellBase = { none = 10, dual = 100, secret = 1000 },
+	SellBase = { none = 100, dual = 1000, secret = 10000 },
 	SellLevelStep = 0.05,
+}
+
+-- Fights (docs/reference/02-battle.md §8): the original's damage, cooldown and crit numbers; dodge is new.
+Config.Combat = {
+	DefenceK = 50,
+	DefenceCap = 0.75,
+	-- a fight lasts about 25 s to watch at any level
+	DamageScale = 0.3,
+	MinDamage = 0.05,
+	MinCooldown = 0.25,
+	CooldownPerSpeed = 0.04,
+	OpeningCooldown = 0.5,
+	CritBase = 0.10,
+	CritPerSpeed = 0.002,
+	CritCap = 0.30,
+	CritFactor = 1.6,
+	DodgePerSpeed = 0.005,
+	DodgeCap = 0.25,
+}
+
+-- The zombie slimes outside the village (the owner, 2026-11-02, docs/ECONOMY.md).
+Config.Zombies = {
+	Teams = 4,
+	TeamSize = 4,
+	LevelOffsets = { 0, 3, 5 },
+	-- A zombie's stats against an even slime of the player's level, per camp. Five levels mean far more at level 4 than
+	-- at level 60, so a camp's risk comes from this and stays the same all game; its level sets the reward.
+	StatFactors = { 0.85, 0.97, 1.05 },
+	-- base = coins at level 0, as Config.Economy.SellBase for slimes; weights = its chance in each camp: rarer zombies
+	-- gather where it is more dangerous, which is what makes the harder camps worth the risk.
+	Kinds = {
+		rotten = { name = "Rotten Slime", base = 100, weights = { 90, 70, 50 } },
+		toxic = { name = "Toxic Slime", base = 500, weights = { 9, 25, 35 } },
+		plague = { name = "Plague Slime", base = 2500, weights = { 1, 5, 15 } },
+	},
+	KindOrder = { "rotten", "toxic", "plague" },
 }
 
 Config.Growth = {
