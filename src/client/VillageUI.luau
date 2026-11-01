@@ -11,6 +11,7 @@ local FarmState = require(ReplicatedStorage.Shared.FarmState)
 local UiBook = require(script.Parent.UiBook)
 local UiHud = require(script.Parent.UiHud)
 local UiKit = require(script.Parent.UiKit)
+local UiSlimeList = require(script.Parent.UiSlimeList)
 local UiSlimes = require(script.Parent.UiSlimes)
 local UiSpots = require(script.Parent.UiSpots)
 local UiSquad = require(script.Parent.UiSquad)
@@ -39,7 +40,7 @@ local activeArea: string? = nil
 local sheetHeader: Frame? = nil
 local sheetContent: Frame? = nil
 local pick: Pick? = nil
-local pickView: UiSlimes.View? = nil
+local pickView: UiSlimeList.List? = nil
 local live: (() -> ())? = nil
 local renderedKey = ""
 local busy = false
@@ -58,6 +59,7 @@ local watched: { [string]: boolean } = {
 	Defence = true,
 	Speed = true,
 	Hp = true,
+	HpShare = true,
 	Baby = true,
 	Ghost = true,
 	OutOnSquad = true,
@@ -207,13 +209,14 @@ local function score(slime: Configuration, spec: Pick): number?
 	return if fed and rested then UiSlimes.number(slime, "Level") else nil
 end
 
-local function pickEntries(): { UiSlimes.Entry }
+-- The usable slimes for the open seat; the best one for the job is marked (the list sorts the rest as the player chose).
+local function pickEntries(): { UiSlimeList.Entry }
 	local spec = pick
 	if not spec then
 		return {}
 	end
-	local free: { UiSlimes.Entry } = {}
-	local best: UiSlimes.Entry? = nil
+	local free: { UiSlimeList.Entry } = {}
+	local best: UiSlimeList.Entry? = nil
 	local bestScore = -math.huge
 	local claimed = UiSpots.claimed()
 	for id in pendingIds() do
@@ -221,7 +224,7 @@ local function pickEntries(): { UiSlimes.Entry }
 	end
 	for _, slime in UiSlimes.slimes(own) do
 		if available(slime, spec, claimed) then
-			local entry: UiSlimes.Entry = { slime = slime }
+			local entry: UiSlimeList.Entry = { slime = slime }
 			table.insert(free, entry)
 			local value = score(slime, spec)
 			if value and value > bestScore then
@@ -229,17 +232,8 @@ local function pickEntries(): { UiSlimes.Entry }
 			end
 		end
 	end
-	table.sort(free, function(a, b)
-		local left, right = score(a.slime, spec) or -math.huge, score(b.slime, spec) or -math.huge
-		if left ~= right then
-			return left > right
-		end
-		return a.slime.Name < b.slime.Name
-	end)
 	if best then
 		best.suggested = true
-		table.remove(free, table.find(free, best) :: number)
-		table.insert(free, 1, best)
 	end
 	return free
 end
@@ -288,7 +282,7 @@ local function openPicker(spec: Pick)
 	UiSlimes.releaseAll()
 	UiKit.clear(host)
 	drawBackHeader(spec)
-	local list = UiSlimes.view(host, pickEntries, spec.choose, true)
+	local list = UiSlimeList.new(host, { entries = pickEntries, onTap = spec.choose })
 	pickView = list
 	list.refresh()
 end
@@ -401,7 +395,7 @@ local function openWorkPick(area: string, slot: number)
 			Size = UDim2.new(1, 0, 1, -U.Touch - U.Gap),
 		}, modal.content)
 	end
-	local list = UiSlimes.view(listHost, pickEntries, spec.choose, true)
+	local list = UiSlimeList.new(listHost, { entries = pickEntries, onTap = spec.choose })
 	pickView = list
 	list.refresh()
 end
@@ -480,13 +474,6 @@ local function structureKey(area: string): string
 		for index = 1, math.max(breedingPlaces(), #pairs) do
 			local pair = effectivePair(index, pairs[index] or {})
 			table.insert(parts, string.format("%d:%s:%s", index, pair.a or "", pair.b or ""))
-		end
-	end
-	if area == "kitchen" then
-		for _, slime in UiSlimes.slimes(own) do
-			if not UiSlimes.isBaby(slime) and not UiSlimes.isGhost(slime) then
-				table.insert(parts, slime.Name .. (if slime:GetAttribute("CookedAllowed") == true then "+" else "-"))
-			end
 		end
 	end
 	return table.concat(parts, "|")
@@ -583,38 +570,6 @@ local function breedingRow(scroll: ScrollingFrame, area: string, index: number, 
 	return courting
 end
 
-local function cookedList(scroll: ScrollingFrame, start: number)
-	local order = start
-	for _, slime in UiSlimes.slimes(own) do
-		if not UiSlimes.isBaby(slime) and not UiSlimes.isGhost(slime) then
-			order += 1
-			local body = rowCard(scroll, U.SeatReserveSize + 12, order)
-			local _, show = UiSlimes.portrait(body, slime, U.SeatReserveSize, { Position = UDim2.fromOffset(0, 0) })
-			show()
-			UiKit.label(body, UiSlimes.name(slime), U.TextNormal, "Brown", {
-				Position = UDim2.fromOffset(U.SeatReserveSize + U.Gap, 0),
-				Size = UDim2.new(1, -U.SeatReserveSize - U.Gap - 96, 0, U.SeatReserveSize),
-			})
-			local allowed = slime:GetAttribute("CookedAllowed") == true
-			UiKit.button(body, {
-				Name = "Cooked",
-				Icon = "food",
-				Text = if allowed then "Yes" else "No",
-				Style = if allowed then "good" else "secondary",
-				Size = UDim2.fromOffset(90, U.Touch),
-				AnchorPoint = Vector2.new(1, 0.5),
-				Position = UDim2.fromScale(1, 0.5),
-				OnClick = function()
-					request(
-						{ action = "SetCookedAllowed", slimeId = slime.Name, allowed = not allowed },
-						function() end
-					)
-				end,
-			})
-		end
-	end
-end
-
 renderArea = function(area: string)
 	local host = sheetContent
 	if not host then
@@ -661,9 +616,6 @@ renderArea = function(area: string)
 			AutomaticSize = Enum.AutomaticSize.Y,
 			LayoutOrder = 100,
 		}, scroll)
-		if area == "kitchen" then
-			cookedList(scroll, 100)
-		end
 	elseif area == "pantry" then
 		boxHost = UiKit.make("Frame", {
 			Name = "BoxHost",

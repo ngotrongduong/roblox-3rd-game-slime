@@ -142,6 +142,8 @@ Config.Zombies = {
 	CampFirstDistance = 90,
 	CampSpacing = 70,
 	GroupSpreadDegrees = 10,
+	-- A group nobody attacked for this long takes its slice's level again (the owner, 2026-11-02).
+	IdleResetSeconds = 5 * 60,
 	-- The ground under a group is found by a ray from GroundProbeUp above the map's ground height down GroundProbeDown more.
 	GroundProbeUp = 80,
 	GroundProbeDown = 200,
@@ -195,7 +197,7 @@ Config.Zombies = {
 		CheckSeconds = 0.5,
 		HideMargin = 1.15,
 		MaxDrawnZombies = 32,
-		-- Zombies stand on a ring this wide round their group's position, and look at the village.
+		-- Zombies first stand on a ring this wide round their group's position, and look at the village; then they roam.
 		SpreadStuds = 4.5,
 		GroundProbeUp = 8,
 		GroundProbeDown = 40,
@@ -210,8 +212,6 @@ Config.Zombies = {
 		DangerColours = { Easy = "#60e270", Fair = "#ffd23c", Hard = "#f45448" },
 		-- The fight: where the squad stands (towards the village from its group), how it lunges, flinches and leaves.
 		FighterFace = "dare",
-		FighterDistance = 11,
-		FighterSpacing = 4.2,
 		LungeFraction = 0.5,
 		LungeSeconds = 0.28,
 		LungeHop = 0.3,
@@ -225,9 +225,6 @@ Config.Zombies = {
 		DeathDelay = 0.14,
 		FadeSeconds = 0.6,
 		FadeWhiten = 0.5,
-		LeaveSeconds = 0.9,
-		LeaveStuds = 14,
-		LeaveHop = 0.35,
 		-- Thin health bars over the fighters (pixels), and the floating numbers (pixels, seconds, studs).
 		BarWidth = 64,
 		BarHeight = 9,
@@ -246,7 +243,6 @@ Config.Zombies = {
 		SparkBurst = 8,
 		PuffBurst = 5,
 		BurstSeconds = 1.6,
-		LeaveHopSeconds = 0.3,
 		-- The fight keeps its bodies and bars in step with the group's distance this often.
 		SyncSeconds = 0.25,
 		-- The textures are Roblox's own particle pictures (as UpgradeReveal) and the owner's coin picture.
@@ -255,12 +251,65 @@ Config.Zombies = {
 		Coin = { size = 1.1, life = 1.1, speedMin = 14, speedMax = 22, gravity = 32 },
 		Spark = { size = 2.2, life = 0.7, speedMin = 6, speedMax = 14, colour = "#ffd23c" },
 		Puff = { size = 4, life = 0.8, speedMin = 4, speedMax = 9, transparency = 0.5 },
-		-- The pick sheet: tile width/height; the dead chip: when its time turns red (seconds left); the shop confirm window.
-		TileWidth = 84,
-		TileHeight = 100,
+		-- The dead chip: when its time turns red (seconds left); the shop confirm window.
 		ReviveWarnSeconds = 60,
 		ConfirmSeconds = 3,
 		SheetRefreshSeconds = 0.5,
+		-- ===== Zombies that live: they roam round their group, never farther than RoamStuds from its position =====
+		RoamStuds = 12,
+		Roam = {
+			-- How often the roaming looks at the drawn zombies, how many may walk at once, and how many may start something
+			-- new in one look (so they never all act together).
+			TickSeconds = 0.25,
+			MaxMovers = 10,
+			MaxPerTick = 3,
+			-- A zombie that has nothing to do waits this long (seconds, random between), then picks something by chance:
+			-- walk to a new spot, show a feeling, talk to a neighbour; otherwise it hops on the spot.
+			PauseMin = 1.5,
+			PauseMax = 6,
+			MoveChance = 0.55,
+			EmoteChance = 0.15,
+			ChatChance = 0.12,
+			HopHeight = 0.3,
+			-- The way it goes: gait name and weight. A speed factor of 1 is the starter slime's (Gaits.factor).
+			Gaits = { { name = "stroll", weight = 5 }, { name = "walk", weight = 3 }, { name = "bouncy", weight = 2 } },
+			SpeedFactor = 1,
+			MinGoalStuds = 3,
+			-- A feeling shows this long, then the face goes back to the kind's own. The feelings are Expressions ids with a
+			-- short pop-up icon; a chat is the first, a beat later the neighbour's answer.
+			EmoteSeconds = 2.2,
+			Emotions = { "happy", "curious", "wink", "surprise", "angry", "laughing", "bored", "sulking" },
+			ChatAsk = { "curious", "happy", "wink" },
+			ChatAnswer = { "happy", "laughing", "surprise", "angry" },
+			ChatReplySeconds = 0.9,
+			ChatRangeStuds = 9,
+		},
+		-- ===== The teams (UiTeams, ZombieMarch) =====
+		-- The gate sheet and the attack sheet: heights, the slot and the small portrait sizes, the card height.
+		TeamsSheetHeight = 500,
+		AttackSheetHeight = 360,
+		SlotSize = 52,
+		CardPortrait = 24,
+		CardHeight = 60,
+		-- The notice when a team is home (right edge, above the book button): size, seconds, how many show at once.
+		NoticeWidth = 150,
+		NoticeHeight = 58,
+		NoticeSeconds = 4.5,
+		NoticeMax = 3,
+		-- The team chips at the left edge: lift of the column above the middle and the thin progress bar.
+		ChipLift = 34,
+		ChipBarHeight = 4,
+		-- A team's state as one of the owner's pictures, and why a repeating team waits (picture and a short word).
+		StateIcons = { home = "slimes", going = "speed", fighting = "attack", returning = "back" },
+		WaitingIcons = { health = "hp", hungry = "food", tired = "energy", group = "skull" },
+		WaitingText = { health = "Healing", hungry = "Hungry", tired = "Tired", group = "Group busy" },
+		-- ===== The march: real slime bodies hop along the published leg, spread side by side =====
+		-- Bodies are built within DrawDistance of the camera and checked this often. A long leg is cut into pieces of
+		-- SegmentHops hops, each measured against the ground again (the slime's own ground ray only looks a little way).
+		MarchCheckSeconds = 0.25,
+		SegmentHops = 3,
+		FormationSpacing = 4.2,
+		FormationStagger = 1.4,
 	},
 }
 
@@ -1330,6 +1379,8 @@ Config.Ui = {
 		cross = 103131383048931,
 		back = 110115571347055,
 		plus = 115669941400247,
+		-- Not made yet (0 = a short stand-in shows and the client logs it once): the Repeat toggle, two circling arrows.
+		again = 0,
 		-- (drawn from the 3D items instead: docs/GAMEPLAY.md, the food chip)
 		fish = 0,
 		carrot = 0,
@@ -1412,7 +1463,8 @@ Config.Ui = {
 	ScaleBaseHeight = 720,
 	ScaleMax = 1.35,
 	SheetWidth = 460,
-	SheetHeight = 340,
+	-- (tall enough for the slime list under its sort row)
+	SheetHeight = 440,
 	BookWidth = 760,
 	BookHeight = 560,
 	CardWidth = 250,
@@ -1449,8 +1501,13 @@ Config.Ui = {
 	FoodIconSize = 44,
 	FoodCountWidth = 56,
 	-- Slime book.
-	BookSorts = { "level", "speed", "newest" },
 	BookFilters = { "all", "free", "working", "babies" },
+	-- The one slime list (UiSlimeList): its sort buttons in order, the attribute each one sorts by, and the tile: width and
+	-- height, the portrait inside it, the wound bar over the portrait's foot, the little arrow that shows the order and
+	-- the size of the mark in a tile's corner.
+	Sorts = { "level", "attack", "defence", "speed", "hp" },
+	SortAttributes = { level = "Level", attack = "Attack", defence = "Defence", speed = "Speed", hp = "Hp" },
+	Tile = { Width = 84, Height = 112, Portrait = 56, WoundHeight = 5, WoundLow = 0.35, SortArrow = 16, MarkSize = 22 },
 }
 
 return Config

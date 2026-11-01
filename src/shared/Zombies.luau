@@ -76,6 +76,54 @@ function Zombies.playerLevel(farm: Farm, now: number): number
 	return math.floor(sum / count)
 end
 
+-- The base level of a slice of the valley (docs/MAP.md 1.4): its owner's level. A slice with no owner rolls between the
+-- average and the highest level of the players in the server; `owners` maps a plot to its owner's level.
+function Zombies.sliceLevel(plot: number, owners: { [number]: number }, rng: Rng): number
+	local own = owners[plot]
+	if own then
+		return own
+	end
+	local low, high = Zombies.serverRange(owners)
+	return low + math.floor(rng:next() * (high - low + 1))
+end
+
+-- The average (rounded down) and the highest level of the players in the server; the starter level when nobody is in.
+function Zombies.serverRange(owners: { [number]: number }): (number, number)
+	local sum, count, high = 0, 0, 0
+	for _, level in owners do
+		sum += level
+		count += 1
+		high = math.max(high, level)
+	end
+	if count == 0 then
+		local starter = Stats.level(Stats.starter())
+		return starter, starter
+	end
+	return math.floor(sum / count), high
+end
+
+-- Whether a group waiting since `quietSince` should take its slice's level now. A fight is never touched (the caller
+-- only asks of waiting groups), a new spawn always reads the level of its moment, and a group nobody attacked for
+-- IdleResetSeconds goes back to what its slice should hold: a low player who moved in behind a strong one that left
+-- gets zombies to fit. A group in an ownerless slice that is still inside the server's range stays as it rolled.
+function Zombies.shouldRelevel(
+	base: number,
+	plot: number,
+	owners: { [number]: number },
+	quietSince: number,
+	now: number
+): boolean
+	if now - quietSince < Config.Zombies.IdleResetSeconds then
+		return false
+	end
+	local own = owners[plot]
+	if own then
+		return base ~= own
+	end
+	local low, high = Zombies.serverRange(owners)
+	return base < low or base > high
+end
+
 -- The level of each camp for a player of this level: the same, a little above, far above.
 function Zombies.campLevels(playerLevel: number): { number }
 	local out: { number } = {}

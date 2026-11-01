@@ -5,6 +5,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Config = require(ReplicatedStorage.Shared.Config)
 local UiKit = require(script.Parent.UiKit)
+local UiSlimeList = require(script.Parent.UiSlimeList)
 local UiSlimes = require(script.Parent.UiSlimes)
 
 local U = Config.Ui
@@ -16,22 +17,14 @@ export type Context = {
 
 local UiBook = {}
 local ctx: Context? = nil
-local sort = U.BookSorts[1]
 local filter = U.BookFilters[1]
 local detail: string? = nil
-local view: UiSlimes.View? = nil
+local view: UiSlimeList.List? = nil
 local detailCard: UiSlimes.Card? = nil
 local countLabel: TextLabel? = nil
 local content: Frame? = nil
 local header: Frame? = nil
-local firstSeen: { [Instance]: number } = setmetatable({}, { __mode = "k" }) :: any
-local seen = 0
 
-local sortLabels: { [string]: { text: string?, icon: string? } } = {
-	level = { text = "Lv" },
-	speed = { icon = "speed" },
-	newest = { text = "New" },
-}
 local filterLabels: { [string]: string } = { all = "All", free = "Free", working = "Work", babies = "Baby" }
 
 local function passes(slime: Configuration): boolean
@@ -45,38 +38,14 @@ local function passes(slime: Configuration): boolean
 	return true
 end
 
-local function entries(): { UiSlimes.Entry }
-	local list: { UiSlimes.Entry } = {}
+local function entries(): { UiSlimeList.Entry }
+	local list: { UiSlimeList.Entry } = {}
 	local own = if ctx then ctx.own() else nil
 	for _, slime in UiSlimes.slimes(own) do
-		if not firstSeen[slime] then
-			seen += 1
-			firstSeen[slime] = seen
-		end
 		if passes(slime) then
-			table.insert(list, { slime = slime })
+			table.insert(list, { slime = slime, mark = UiSlimeList.stateMark(slime) })
 		end
 	end
-	table.sort(list, function(a, b)
-		local left, right = a.slime, b.slime
-		if sort == "speed" then
-			local x, y = UiSlimes.number(left, "Speed"), UiSlimes.number(right, "Speed")
-			if x ~= y then
-				return x > y
-			end
-		elseif sort == "newest" then
-			local x, y = firstSeen[left] or 0, firstSeen[right] or 0
-			if x ~= y then
-				return x > y
-			end
-		else
-			local x, y = UiSlimes.number(left, "Level"), UiSlimes.number(right, "Level")
-			if x ~= y then
-				return x > y
-			end
-		end
-		return left.Name < right.Name
-	end)
 	return list
 end
 
@@ -178,24 +147,6 @@ render = function()
 		Size = UDim2.fromOffset(56, U.Touch),
 		TextTruncate = Enum.TextTruncate.None,
 	})
-	-- Sort buttons sit between the count and the close button.
-	local sorts = UiKit.make("Frame", {
-		Name = "Sorts",
-		BackgroundTransparency = 1,
-		AnchorPoint = Vector2.new(1, 0.5),
-		Position = UDim2.fromScale(1, 0.5),
-		Size = UDim2.fromOffset(U.Touch * 3 + U.Gap * 2, U.Touch),
-	}, bar)
-	local items = {}
-	for _, id in U.BookSorts do
-		table.insert(items, { id = id, text = sortLabels[id].text, icon = sortLabels[id].icon })
-	end
-	UiKit.segmented(sorts, items, sort, function(id)
-		sort = id
-		if view then
-			view.refresh()
-		end
-	end, { ItemWidth = U.Touch })
 	local filters = {}
 	for _, id in U.BookFilters do
 		table.insert(filters, { id = id, text = filterLabels[id] })
@@ -212,10 +163,13 @@ render = function()
 		Position = UDim2.fromOffset(0, U.Touch + U.Gap),
 		Size = UDim2.new(1, 0, 1, -U.Touch - U.Gap),
 	}, host)
-	local list = UiSlimes.view(area, entries, function(slime)
-		detail = slime.Name
-		render()
-	end)
+	local list = UiSlimeList.new(area, {
+		entries = entries,
+		onTap = function(slime)
+			detail = slime.Name
+			render()
+		end,
+	})
 	view = list
 	list.refresh()
 	UiBook.refresh()

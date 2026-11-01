@@ -285,6 +285,30 @@ return function(T: any)
 		T.eq(fight.units[1].maxHp, 40)
 		T.eq(Zombies.fighter(slime, NOW, 1).hp, 40)
 	end)
+	T.test("a slice holds its owner's level; an empty slice rolls within the server's range", function()
+		local owners = { [2] = 10, [5] = 30 }
+		T.eq(Zombies.sliceLevel(5, owners, Rng.new(1)), 30)
+		T.same({ Zombies.serverRange(owners) }, { 20, 30 })
+		local rng = Rng.new(2)
+		local seen = {}
+		for _ = 1, 200 do
+			local level = Zombies.sliceLevel(7, owners, rng)
+			T.ok(level >= 20 and level <= 30, "inside the range: " .. level)
+			seen[level] = true
+		end
+		T.ok(seen[20] and seen[30], "both ends come up")
+		T.same({ Zombies.serverRange({}) }, { 4, 4 }, "nobody in: the starter level")
+	end)
+	T.test("a group left alone for five minutes goes back to what its slice should hold", function()
+		local wait = Config.Zombies.IdleResetSeconds
+		-- a strong owner left and a new one of level 5 moved in
+		T.ok(not Zombies.shouldRelevel(30, 5, { [5] = 5 }, NOW, NOW + wait - 1), "not before its time")
+		T.ok(Zombies.shouldRelevel(30, 5, { [5] = 5 }, NOW, NOW + wait))
+		T.ok(not Zombies.shouldRelevel(5, 5, { [5] = 5 }, NOW, NOW + wait), "already right")
+		-- an empty slice keeps its roll while it fits the server, and changes when it no longer does
+		T.ok(not Zombies.shouldRelevel(25, 7, { [2] = 10, [5] = 30 }, NOW, NOW + wait))
+		T.ok(Zombies.shouldRelevel(25, 7, { [2] = 10 }, NOW, NOW + wait))
+	end)
 	T.test("a slime's death pays by its level and rarity", function()
 		local plain = FarmKit.slime("a")
 		T.ok(Zombies.deathReward(plain) > 0)

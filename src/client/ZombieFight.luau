@@ -1,33 +1,32 @@
 --!strict
--- The fight drawn. The server runs it (src/server/ZombieFights.luau) and sends Remotes.Fight events; this only draws them:
--- the squad pops in near its group and faces the zombies, fighters lunge as hits land, flinch, dodge, fall with floating
--- coins and leave when it ends. State follows the events even for a fight far from the camera; bodies, bars and particles
--- exist only while the group is near (ZombieWorld says so). One error never stops the drawing: per-fighter work is in pcall.
+-- The fight drawn. The server runs it (src/server/ZombieFights.luau) and sends Remotes.Fight events; this only draws them
+-- on the bodies of the march (ZombieMarch stands the team's slimes at the end of the leg, facing the zombies): fighters
+-- lunge as hits land, flinch, dodge and fall with floating coins; when it ends the team turns round and hops home on the
+-- march, and the "home" event brings the notice. State follows the events even for a fight far from the camera; bodies,
+-- bars and particles exist only while the group or the team is near. One error never stops the drawing: per-fighter work is
+-- in pcall.
 local Debris = game:GetService("Debris")
-local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
 
 local Config = require(ReplicatedStorage.Shared.Config)
 local SlimeActor = require(script.Parent.SlimeActor)
-local SlimeLook = require(script.Parent.SlimeLook)
 local UiKit = require(script.Parent.UiKit)
+local UiTeams = require(script.Parent.UiTeams)
 local ZombieLook = require(script.Parent.ZombieLook)
+local ZombieMarch = require(script.Parent.ZombieMarch)
+local ZombieTeams = require(script.Parent.ZombieTeams)
 local ZombieWorld = require(script.Parent.ZombieWorld)
 
 local V = Config.Zombies.View
 
 type Fighter = {
 	id: string,
-	home: Vector3,
-	facing: Vector3,
-	model: Model?,
-	actor: SlimeActor.Slime?,
 	fallen: boolean,
 }
 type Fight = {
-	id: string,
+	team: number,
 	groupId: string,
 	fighters: { [string]: Fighter },
 	order: { string },
@@ -45,18 +44,14 @@ type Anim = {
 	delta: Vector3,
 	start: number,
 	duration: number,
-	-- "leave" walks the whole way; the others go out and come back
-	leave: boolean,
-	nextHop: number,
 }
 
 local ZombieFight = {}
-local fights: { [string]: Fight } = {}
+local fights: { [number]: Fight } = {}
 local bars: { [string]: Bar } = {}
 local anims: { Anim } = {}
 local animLoop: RBXScriptConnection? = nil
 local syncing = false
-local root: Instance? = nil
 local numbersAlive = 0
 local burstsAlive = 0
 local warned: { [string]: boolean } = {}
@@ -75,12 +70,6 @@ end
 local function number(inst: Instance, name: string, default: number): number
 	local value = inst:GetAttribute(name)
 	return if type(value) == "number" and value == value then value else default
-end
-
-local function slimeNode(id: string): Configuration?
-	local folder = if root then root:FindFirstChild("Slimes") else nil
-	local found = if folder then folder:FindFirstChild(id) else nil
-	return if found and found:IsA("Configuration") then found else nil
 end
 
 -- ===== Floating numbers and bursts =====
@@ -211,6 +200,7 @@ local function stopAnim(actor: SlimeActor.Slime)
 	end
 end
 
+-- The lunge and the dodge: out and back from the standing place, once.
 local function stepAnims()
 	local now = os.clock()
 	for index = #anims, 1, -1 do
@@ -220,12 +210,8 @@ local function stepAnims()
 		else
 			safe("motion", function()
 				local t = math.clamp((now - anim.start) / anim.duration, 0, 1)
-				local k = if anim.leave then t else math.sin(math.pi * t)
+				local k = math.sin(math.pi * t)
 				SlimeActor.setCFrame(anim.actor, CFrame.new(anim.home + anim.delta * k) * anim.actor.root.Rotation)
-				if anim.leave and now >= anim.nextHop then
-					anim.nextHop = now + V.LeaveHopSeconds
-					SlimeActor.hop(anim.actor, V.LeaveHop)
-				end
 			end)
 			if now - anim.start >= anim.duration and anims[index] == anim then
 				table.remove(anims, index)
@@ -238,7 +224,7 @@ local function stepAnims()
 	end
 end
 
-local function play(actor: SlimeActor.Slime, home: Vector3, delta: Vector3, seconds: number, leave: boolean)
+local function play(actor: SlimeActor.Slime, home: Vector3, delta: Vector3, seconds: number)
 	stopAnim(actor)
 	table.insert(anims, {
 		actor = actor,
@@ -246,8 +232,6 @@ local function play(actor: SlimeActor.Slime, home: Vector3, delta: Vector3, seco
 		delta = delta,
 		start = os.clock(),
 		duration = seconds,
-		leave = leave,
-		nextHop = 0,
 	})
 	if not animLoop then
 		animLoop = RunService.RenderStepped:Connect(stepAnims)
@@ -256,12 +240,16 @@ end
 
 -- ===== Who is who =====
 
--- The body and the standing place of a fighter or a zombie by its id (a zombie id never matches a slime of the squad).
+-- The body and the standing place of a fighter (a body of the march) or a zombie by its id; the last is whether it is a
+-- zombie (a zombie id never matches a slime of a team).
 local function find(id: string): (SlimeActor.Slime?, Vector3?, boolean)
 	for _, fight in fights do
-		local fighter = fight.fighters[id]
-		if fighter then
-			return fighter.actor, fighter.home, false
+		if fight.fighters[id] then
+			local body = ZombieMarch.body(id)
+			if body then
+				return body.actor, body.stand, false
+			end
+			return nil, nil, false
 		end
 	end
 	local zombie = ZombieWorld.zombie(id)
@@ -273,50 +261,6 @@ end
 
 local function flat(delta: Vector3): Vector3
 	return Vector3.new(delta.X, 0, delta.Z)
-end
-
-local function destroyFighter(fighter: Fighter)
-	if fighter.actor then
-		stopAnim(fighter.actor)
-		SlimeActor.destroy(fighter.actor)
-		fighter.actor = nil
-	end
-	if fighter.model then
-		fighter.model:Destroy()
-		fighter.model = nil
-	end
-end
-
-local function buildFighter(fighter: Fighter, pop: boolean)
-	if fighter.model or fighter.fallen then
-		return
-	end
-	local node = slimeNode(fighter.id)
-	if not node then
-		return
-	end
-	local model = SlimeLook.build({
-		Colour = node:GetAttribute("Colour"),
-		Material = node:GetAttribute("Material"),
-		DualId = node:GetAttribute("DualId"),
-		SecretId = node:GetAttribute("SecretId"),
-		Scale = number(node, "Scale", 1),
-	})
-	model.Name = "Fighter_" .. fighter.id
-	model:PivotTo(CFrame.lookAt(fighter.home, fighter.home + fighter.facing))
-	model.Parent = workspace:FindFirstChild("ZombieClientActors") or workspace
-	local actor = SlimeActor.new(model, V.FighterFace)
-	if actor then
-		actor.body.CanCollide = false
-		if pop then
-			SlimeActor.kick(actor, "squash", V.PopSquash)
-			SlimeActor.hop(actor, V.PopHop)
-		end
-	end
-	fighter.model, fighter.actor = model, actor
-	if pop then
-		burst(fighter.home, false, Color3.new(1, 1, 1), 0.6)
-	end
 end
 
 -- ===== Health bars =====
@@ -369,31 +313,18 @@ local function showBar(id: string, actor: SlimeActor.Slime, node: Configuration,
 		{ gui = gui, fill = fill, node = node, connection = node:GetAttributeChangedSignal("Hp"):Connect(update) }
 end
 
--- Bodies and bars follow the group: drawn while it is near, gone when it is not (the fight itself goes on).
+-- Bars follow the bodies: drawn while the team or the group is near, gone when it is not (the fight itself goes on).
 local function sync(fight: Fight)
 	local group = ZombieWorld.group(fight.groupId)
-	local near = group ~= nil and group.drawn
-	local squad = if root then root:FindFirstChild("Squads") else nil
-	local squadFolder = if squad then squad:FindFirstChild(fight.id) else nil
+	local team = ZombieTeams.get(fight.team)
 	for _, id in fight.order do
 		local fighter = fight.fighters[id]
 		if fighter then
 			safe("sync " .. id, function()
-				if near and not fight.over then
-					buildFighter(fighter, true)
-				elseif not near then
-					destroyFighter(fighter)
-				end
-				local node = if squadFolder then squadFolder:FindFirstChild(id) else nil
-				if
-					near
-					and not fight.over
-					and not fighter.fallen
-					and fighter.actor
-					and node
-					and node:IsA("Configuration")
-				then
-					showBar(id, fighter.actor, node, true)
+				local body = ZombieMarch.body(id)
+				local node = if team then team.node:FindFirstChild(id) else nil
+				if not fight.over and not fighter.fallen and body and node and node:IsA("Configuration") then
+					showBar(id, body.actor, node, true)
 				else
 					dropBar(id)
 				end
@@ -403,7 +334,7 @@ local function sync(fight: Fight)
 	if group then
 		for id, entry in group.byId do
 			safe("sync " .. id, function()
-				if near and not fight.over and entry.actor and not ZombieWorld.isDead(id) then
+				if group.drawn and not fight.over and entry.actor and not ZombieWorld.isDead(id) then
 					showBar(id, entry.actor, entry.config, false)
 				else
 					dropBar(id)
@@ -431,24 +362,12 @@ end
 
 -- ===== Events =====
 
-local function onStart(squadId: string, event: { [string]: any })
-	local group = ZombieWorld.group(event.group)
+local function onStart(teamIndex: number, event: { [string]: any })
 	local members: { string } = event.members
-	local fight: Fight = { id = squadId, groupId = event.group, fighters = {}, order = {}, over = false }
-	fights[squadId] = fight
-	local facing = Vector3.zAxis
-	local towards = Vector3.zAxis
-	local centre = Vector3.zero
-	if group then
-		towards = ZombieWorld.towardVillage(group.position)
-		facing = -towards
-		centre = group.position
-	end
-	local across = Vector3.new(-towards.Z, 0, towards.X)
-	for index, id in members do
-		local offset = towards * V.FighterDistance + across * ((index - (#members + 1) / 2) * V.FighterSpacing)
-		local home = ZombieWorld.groundAt(centre + offset)
-		fight.fighters[id] = { id = id, home = home, facing = facing, model = nil, actor = nil, fallen = false }
+	local fight: Fight = { team = teamIndex, groupId = event.group, fighters = {}, order = {}, over = false }
+	fights[teamIndex] = fight
+	for _, id in members do
+		fight.fighters[id] = { id = id, fallen = false }
 		table.insert(fight.order, id)
 	end
 	sync(fight)
@@ -460,7 +379,7 @@ local function onHit(event: { [string]: any })
 	local target, to, foe = find(event.to)
 	local crit = event.crit == true
 	if attacker and from and target and to then
-		play(attacker, from, flat(to - from) * V.LungeFraction, V.LungeSeconds, false)
+		play(attacker, from, flat(to - from) * V.LungeFraction, V.LungeSeconds)
 		SlimeActor.hop(attacker, V.LungeHop)
 	end
 	if target then
@@ -485,7 +404,7 @@ local function onDodge(event: { [string]: any })
 	if target and home then
 		local side = if math.random() < 0.5 then -1 else 1
 		local across = Vector3.new(-target.root.LookVector.Z, 0, target.root.LookVector.X)
-		play(target, home, across * side * V.DodgeStuds, V.DodgeSeconds, false)
+		play(target, home, across * side * V.DodgeStuds, V.DodgeSeconds)
 		SlimeActor.hop(target, V.LungeHop)
 	end
 end
@@ -495,8 +414,8 @@ local function onFallen(event: { [string]: any })
 	local coins: number = event.coins or 0
 	local actor, spot, foe = find(id)
 	local size = V.RewardTextSize
-	local tint = Color3.fromRGB(150, 150, 150)
 	if foe then
+		local tint = Color3.fromRGB(150, 150, 150)
 		local zombie = ZombieWorld.zombie(id)
 		local look = if zombie then ZombieLook.look(zombie.kind) else nil
 		if look then
@@ -514,9 +433,10 @@ local function onFallen(event: { [string]: any })
 			if fighter then
 				fighter.fallen = true
 				dropBar(id)
-				if actor and fighter.model then
+				local body = ZombieMarch.body(id)
+				if actor and body then
 					SlimeActor.setEmotion(actor, "sad")
-					for _, part in fighter.model:GetDescendants() do
+					for _, part in body.model:GetDescendants() do
 						if part:IsA("MeshPart") then
 							TweenService
 								:Create(part, TweenInfo.new(V.FadeSeconds), {
@@ -540,8 +460,9 @@ local function onFallen(event: { [string]: any })
 	end
 end
 
-local function onEnd(squadId: string, event: { [string]: any })
-	local fight = fights[squadId]
+-- The fight is over: the bars go; the team's bodies turn round and hop home on the march (the server has set them going).
+local function onEnd(teamIndex: number)
+	local fight = fights[teamIndex]
 	if not fight then
 		return
 	end
@@ -555,34 +476,35 @@ local function onEnd(squadId: string, event: { [string]: any })
 			dropBar(id)
 		end
 	end
-	for _, id in fight.order do
-		local fighter = fight.fighters[id]
-		if fighter and fighter.actor and not fighter.fallen then
-			local towards = ZombieWorld.towardVillage(fighter.home)
-			play(fighter.actor, fighter.home, towards * V.LeaveStuds, V.LeaveSeconds, true)
+	task.delay(V.SyncSeconds * 2, function()
+		if fights[teamIndex] == fight then
+			fights[teamIndex] = nil
 		end
-	end
-	local coins = event.coins
-	if type(coins) == "number" and coins > 0 then
-		pcall(UiKit.toast, "+" .. UiKit.money(coins))
-	end
-	task.delay(V.LeaveSeconds + 0.3, function()
-		for _, fighter in fight.fighters do
-			destroyFighter(fighter)
-		end
-		fights[squadId] = nil
 	end)
 end
 
+-- The team is back at the gate: the small notice says which, how many died and what it earned.
+local function onHome(payload: { [string]: any }, event: { [string]: any })
+	local team = event.team
+	local dead = event.dead
+	local coins = event.coins
+	pcall(
+		UiTeams.notice,
+		if type(team) == "number" then team else payload.team,
+		if type(dead) == "number" then dead else 0,
+		if type(coins) == "number" then coins else 0
+	)
+end
+
 local function onEvents(payload: any)
-	if type(payload) ~= "table" or type(payload.squad) ~= "string" or type(payload.events) ~= "table" then
+	if type(payload) ~= "table" or type(payload.team) ~= "number" or type(payload.events) ~= "table" then
 		return
 	end
 	for _, event in payload.events do
 		safe("event " .. tostring(event.kind), function()
 			local kind = event.kind
 			if kind == "start" then
-				onStart(payload.squad, event)
+				onStart(payload.team, event)
 			elseif kind == "hit" then
 				onHit(event)
 			elseif kind == "dodge" then
@@ -590,7 +512,9 @@ local function onEvents(payload: any)
 			elseif kind == "fallen" then
 				onFallen(event)
 			elseif kind == "end" then
-				onEnd(payload.squad, event)
+				onEnd(payload.team)
+			elseif kind == "home" then
+				onHome(payload, event)
 			end
 		end)
 	end
@@ -598,8 +522,6 @@ end
 
 function ZombieFight.start()
 	task.spawn(function()
-		local villages = workspace:WaitForChild("Villages")
-		root = villages:WaitForChild(tostring(Players.LocalPlayer.UserId))
 		local remotes = ReplicatedStorage:WaitForChild("Remotes")
 		local remote = remotes:WaitForChild("Fight")
 		if remote:IsA("RemoteEvent") then

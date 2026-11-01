@@ -1,7 +1,7 @@
 --!strict
--- Slime cards for the screen: a live portrait (SlimeLook), name, level, the four stats and the three needs, the job or
--- state as a small tag. Shared by the slime book and the picker. Reads the attributes the server publishes; decides
--- nothing.
+-- Slime pictures for the screen: the live portrait (SlimeLook), the detail card (name, level, the four stats and the three
+-- needs, the job or state as a small tag) and the readers of a slime's attributes. The list of slimes is UiSlimeList.
+-- Reads the attributes the server publishes; decides nothing.
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Config = require(ReplicatedStorage.Shared.Config)
@@ -24,11 +24,6 @@ export type Card = {
 	show: () -> (),
 	release: () -> (),
 }
-export type View = {
-	scroller: ScrollingFrame,
-	refresh: () -> (),
-}
-
 local UiSlimes = {}
 
 local statIcons = { { "attack", "Attack" }, { "defence", "Defence" }, { "speed", "Speed" }, { "hp", "Hp" } }
@@ -52,6 +47,12 @@ end
 function UiSlimes.number(slime: Instance, name: string): number
 	local value = slime:GetAttribute(name)
 	return if type(value) == "number" then value else 0
+end
+
+-- The share of health a slime has left, 1 when it is unhurt (HpShare, written by the server on the village's models).
+function UiSlimes.hpShare(slime: Instance): number
+	local value = slime:GetAttribute("HpShare")
+	return if type(value) == "number" then math.clamp(value, 0, 1) else 1
 end
 
 function UiSlimes.name(slime: Instance): string
@@ -166,9 +167,7 @@ function UiSlimes.acquire(slime: Configuration, variant: string, parent: Instanc
 		view.Parent = parent
 		cache[key] = view
 	end
-	if variant == "ui" then
-		inUse[view] = true
-	end
+	inUse[view] = true
 	return view
 end
 
@@ -204,11 +203,14 @@ function UiSlimes.prewarm(own: Instance?)
 	end)
 end
 
+-- `variant`: a viewport sits in one place at a time, so a slime shown twice at once (a team slot and its list tile) asks
+-- for a second one by another name ("ui" is the list's).
 function UiSlimes.portrait(
 	parent: Instance?,
 	slime: Configuration,
 	size: number,
-	props: UiKit.Props?
+	props: UiKit.Props?,
+	variant: string?
 ): (Frame, () -> ())
 	local box, body = UiKit.skin(parent, "Wood", "Portrait", props)
 	box.Size = UDim2.fromOffset(size, size)
@@ -218,7 +220,7 @@ function UiSlimes.portrait(
 			return
 		end
 		built = true
-		UiSlimes.acquire(slime, "ui", body)
+		UiSlimes.acquire(slime, variant or "ui", body)
 	end
 	return box, build
 end
@@ -399,105 +401,15 @@ function UiSlimes.card(parent: Instance?, entry: Entry, onClick: ((Configuration
 	return { root = root, slime = slime, update = update, show = show, release = release }
 end
 
--- A scrolling grid of cards. Entries decide who is shown and in which order; refresh redraws in place when the same
--- slimes are shown (so scroll and portraits stay), and rebuilds only when the list changes.
-function UiSlimes.view(
-	parent: Instance,
-	entries: () -> { Entry },
-	onClick: (Configuration) -> (),
-	single: boolean?
-): View
-	local scroller = UiKit.make("ScrollingFrame", {
-		Name = "Cards",
-		BackgroundTransparency = 1,
-		BorderSizePixel = 0,
-		Size = UDim2.fromScale(1, 1),
-		ScrollBarThickness = 5,
-		ScrollBarImageColor3 = UiKit.colour("BrownSoft"),
-		AutomaticCanvasSize = Enum.AutomaticSize.Y,
-		CanvasSize = UDim2.new(),
-		ScrollingDirection = Enum.ScrollingDirection.Y,
-	}, parent)
-	local grid = UiKit.make("UIGridLayout", {
-		CellPadding = UDim2.fromOffset(U.Gap, U.Gap),
-		CellSize = UDim2.fromOffset(U.CardWidth, U.CardHeight),
-		SortOrder = Enum.SortOrder.LayoutOrder,
-	}, scroller)
-	UiKit.make("UIPadding", { PaddingRight = UDim.new(0, 8), PaddingBottom = UDim.new(0, 4) }, scroller)
-	local cards: { [string]: Card } = {}
-	local order: { string } = {}
-	local signature = ""
-
-	local function fit()
-		local width = UiKit.units(scroller).X - 8 - 5
-		local columns = if single then 1 else math.max(1, math.floor((width + U.Gap) / (U.CardWidth + U.Gap)))
-		local cell = math.floor((width - U.Gap * (columns - 1)) / columns)
-		grid.CellSize = UDim2.fromOffset(math.max(cell, U.CardWidth * 0.8), U.CardHeight)
-	end
-	local function reveal()
-		local top = scroller.AbsolutePosition.Y - U.CardHeight
-		local bottom = scroller.AbsolutePosition.Y + scroller.AbsoluteSize.Y + U.CardHeight
-		for _, id in order do
-			local card = cards[id]
-			if card and card.root.AbsolutePosition.Y >= top and card.root.AbsolutePosition.Y <= bottom then
-				card.show()
-			end
-		end
-	end
-	scroller:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()
-		fit()
-		task.defer(reveal)
-	end)
-	scroller:GetPropertyChangedSignal("CanvasPosition"):Connect(reveal)
-
-	local function refresh()
-		local list = entries()
-		local parts: { string } = {}
-		for _, entry in list do
-			table.insert(parts, entry.slime.Name .. (if entry.suggested then "!" else "") .. (entry.blocked or ""))
-		end
-		local nextSignature = table.concat(parts, "|")
-		if nextSignature == signature then
-			for _, entry in list do
-				local card = cards[entry.slime.Name]
-				if card then
-					card.update(entry)
-				end
-			end
-			return
-		end
-		local keep = scroller.CanvasPosition
-		signature = nextSignature
-		local fresh: { [string]: Card } = {}
-		table.clear(order)
-		for index, entry in list do
-			local id = entry.slime.Name
-			local card = cards[id]
-			if card then
-				card.update(entry)
-			else
-				card = UiSlimes.card(scroller, entry, onClick)
-			end
-			card.root.LayoutOrder = index
-			fresh[id] = card
-			table.insert(order, id)
-		end
-		for id, card in cards do
-			if not fresh[id] then
-				card.release()
-				card.root:Destroy()
-			end
-		end
-		cards = fresh
-		fit()
-		task.defer(function()
-			if scroller.Parent then
-				scroller.CanvasPosition = keep
-				reveal()
-			end
+-- Parks the portrait inside a tile or card before the tile is destroyed, so the cached viewport survives.
+function UiSlimes.park(host: Instance)
+	local view = host:FindFirstChild("Portrait", true)
+	if view and view:IsA("ViewportFrame") then
+		inUse[view] = nil
+		pcall(function()
+			view.Parent = nil
 		end)
 	end
-	return { scroller = scroller, refresh = refresh }
 end
 
 return UiSlimes

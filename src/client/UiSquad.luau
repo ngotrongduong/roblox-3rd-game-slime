@@ -1,8 +1,8 @@
 --!strict
--- The screens of the zombie fights and the shop (docs/ECONOMY.md): the sheet that picks a squad for a group, the chip and
--- sheet for the dead (revive before they are lost for good) and the Market's sell sheet. They read what the server
--- publishes (slime attributes, Camps, Squads, Storehouse, Coins) and ask through Remotes.Village; the server decides, so a
--- button it would refuse is greyed or answered with a short friendly line.
+-- The screens of the zombie fights that are not the teams (UiTeams): the chip and sheet for the dead (revive before they are
+-- lost for good) and the Market's sell sheet, both on the one slime list (UiSlimeList). They read what the server publishes
+-- (slime attributes, Storehouse, Coins) and ask through Remotes.Village; the server decides, so a button it would refuse is
+-- greyed or answered with a short friendly line. This file also owns the one open sheet and the loop that keeps it fresh.
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
@@ -12,9 +12,9 @@ local Mutations = require(ReplicatedStorage.Shared.Mutations)
 local ZombieRules = require(ReplicatedStorage.Shared.Zombies)
 local UiFood = require(script.Parent.UiFood)
 local UiKit = require(script.Parent.UiKit)
+local UiSlimeList = require(script.Parent.UiSlimeList)
 local UiSlimes = require(script.Parent.UiSlimes)
-local ZombieLook = require(script.Parent.ZombieLook)
-local ZombieWorld = require(script.Parent.ZombieWorld)
+local UiTeams = require(script.Parent.UiTeams)
 
 local U = Config.Ui
 local Z = Config.Zombies
@@ -41,20 +41,26 @@ local lostConnection: RBXScriptConnection? = nil
 
 local reasons: { [string]: string } = {
 	TOO_FAR = "Too far away.",
-	TOO_MANY_SQUADS = "All squads are out.",
 	NOT_WAITING = "Already fighting.",
-	CANNOT_SEND = "Not ready to fight.",
 	OUT = "Out fighting.",
+	TEAM_OUT = "That team is out.",
+	IN_TEAM = "In another team.",
+	NO_MEMBERS = "Nobody can go.",
+	BAD_TEAM = "No such team.",
+	NO_GROUP = "Group is gone.",
+	NO_CAMPS = "No camps yet.",
+	BUSY = "One moment.",
 	NO_FOOD = "Not enough food.",
 	NOT_DEAD = "Already back.",
 	FAVOURITE = "A favourite.",
 	DEAD = "Fallen.",
+	BABY = "Too young.",
+	DUPLICATE = "Already there.",
 	AT_WORK = "At work.",
 	IN_PAIR = "In a pair.",
 	LAST_SLIMES = "Keep the last two.",
-	BAD_SIZE = "Pick one to four.",
+	BAD_SIZE = "A team holds four.",
 	NO_SLIME = "Slime not found.",
-	NO_GROUP = "Group is gone.",
 	RATE_LIMIT = "One moment.",
 	NOT_READY = "Village is loading.",
 }
@@ -88,44 +94,9 @@ local function flatDistance(point: Vector3): number?
 	return Vector3.new(root.Position.X - point.X, 0, root.Position.Z - point.Z).Magnitude
 end
 
-local function squadsOut(): number
-	local own = ownOf()
-	local folder = if own then own:FindFirstChild("Squads") else nil
-	return if folder then #folder:GetChildren() else 0
-end
-
 local function clock(seconds: number): string
 	local whole = math.max(0, math.ceil(seconds))
 	return string.format("%d:%02d", whole // 60, whole % 60)
-end
-
-local function list(parent: Instance): ScrollingFrame
-	local scroller = UiKit.make("ScrollingFrame", {
-		Name = "Scroll",
-		BackgroundTransparency = 1,
-		BorderSizePixel = 0,
-		Size = UDim2.fromScale(1, 1),
-		ScrollBarThickness = 5,
-		ScrollBarImageColor3 = UiKit.colour("BrownSoft"),
-		AutomaticCanvasSize = Enum.AutomaticSize.Y,
-		CanvasSize = UDim2.new(),
-		ScrollingDirection = Enum.ScrollingDirection.Y,
-	}, parent)
-	UiKit.make("UIPadding", { PaddingRight = UDim.new(0, 8), PaddingBottom = UDim.new(0, 4) }, scroller)
-	return scroller
-end
-
--- Redraws a list when its members change, keeping the scroll place.
-local function rebuild(scroller: ScrollingFrame, build: () -> ())
-	local keep = scroller.CanvasPosition
-	UiSlimes.releaseAll()
-	UiKit.clear(scroller)
-	build()
-	task.defer(function()
-		if scroller.Parent then
-			scroller.CanvasPosition = keep
-		end
-	end)
 end
 
 local function setLabel(button: GuiButton, text: string)
@@ -135,221 +106,57 @@ local function setLabel(button: GuiButton, text: string)
 	end
 end
 
-local function openSheet(id: string, onClose: (() -> ())?): UiKit.Modal
+-- Opens the one sheet. `tick` runs twice a second while it is open; it closes when the player walks farther than `range`
+-- from `point` (nil: it stays).
+local function openSheet(id: string, height: number, tick: () -> (), point: Vector3?, range: number): UiKit.Modal
 	local modal = UiKit.openModal(id, {
 		Width = U.SheetWidth,
-		Height = U.SheetHeight,
+		Height = height,
 		Bottom = true,
 		Dim = 0.8,
 		OnClose = function()
 			UiSlimes.releaseAll()
 			sheet = nil
-			if onClose then
-				onClose()
-			end
 		end,
 	})
+	sheet = { id = id, tick = tick, point = point, range = range }
 	return modal
 end
 
--- ===== The squad sheet =====
-
--- A slime that can go: grown, alive, awake, not at work or in a pair, not already out.
-local function canGo(slime: Configuration): boolean
-	return UiSlimes.isFree(slime)
-		and slime:GetAttribute("OutOnSquad") ~= true
-		and slime:GetAttribute("Sleeping") ~= true
-		and UiSlimes.number(slime, "Energy") > Config.Needs.Tired
-end
-
-local function candidates(): { Configuration }
-	local found: { Configuration } = {}
-	for _, slime in UiSlimes.slimes(ownOf()) do
-		if canGo(slime) then
-			table.insert(found, slime)
-		end
-	end
-	table.sort(found, function(a, b)
-		local left, right = UiSlimes.number(a, "Level"), UiSlimes.number(b, "Level")
-		if left ~= right then
-			return left > right
-		end
-		return a.Name < b.Name
-	end)
-	return found
-end
-
-local function openGroup(groupId: string)
-	local group = ZombieWorld.group(groupId)
-	if not group or group.state ~= "waiting" then
-		UiKit.toast(reasonText("NOT_WAITING"))
-		return
-	end
-	local modal = openSheet("squad", nil)
-	local selected: { string } = {}
-	local tiles: { [string]: Frame } = {}
-	local order: { string } = {}
-	local signature = ""
-
-	-- the header: what the group holds, its level, and how many squads are out
-	local head = UiKit.make("Frame", { BackgroundTransparency = 1, Size = UDim2.fromScale(1, 1) }, modal.header)
-	UiKit.make("UIListLayout", {
-		FillDirection = Enum.FillDirection.Horizontal,
-		VerticalAlignment = Enum.VerticalAlignment.Center,
-		Padding = UDim.new(0, U.Gap),
-		SortOrder = Enum.SortOrder.LayoutOrder,
-	}, head)
-	local kinds: { Configuration } = {}
-	for config in group.entries do
-		table.insert(kinds, config)
-	end
-	table.sort(kinds, function(a, b)
-		return a.Name < b.Name
-	end)
-	for index, config in kinds do
-		local entry = group.entries[config]
-		ZombieLook.icon(head, entry.kind, U.Touch - 12, { LayoutOrder = index })
-	end
-	UiKit.label(head, "Lv " .. tostring(group.level), U.TextNormal, "Brown", {
-		LayoutOrder = 10,
-		Size = UDim2.fromOffset(58, U.Touch),
-		TextXAlignment = Enum.TextXAlignment.Center,
-	})
-	local squadsLabel = UiKit.label(head, "", U.TextNormal, "BrownSoft", {
-		LayoutOrder = 11,
-		Size = UDim2.fromOffset(46, U.Touch),
-		TextXAlignment = Enum.TextXAlignment.Center,
-	})
-
-	local scroller = list(modal.content)
-	scroller.Size = UDim2.new(1, 0, 1, -U.Touch - U.Gap)
-	UiKit.make("UIGridLayout", {
-		CellPadding = UDim2.fromOffset(U.Gap, U.Gap),
-		CellSize = UDim2.fromOffset(V.TileWidth, V.TileHeight),
-		SortOrder = Enum.SortOrder.LayoutOrder,
-	}, scroller)
-	local bottom = UiKit.make("Frame", {
+-- The bottom bar of a sheet with a list: the list takes the rest. Returns the bar.
+local function bottomBar(modal: UiKit.Modal, list: UiSlimeList.List): Frame
+	list.root.Size = UDim2.new(1, 0, 1, -U.Touch - U.Gap)
+	local bar = UiKit.make("Frame", {
+		Name = "Bar",
 		BackgroundTransparency = 1,
 		AnchorPoint = Vector2.new(0, 1),
 		Position = UDim2.fromScale(0, 1),
 		Size = UDim2.new(1, 0, 0, U.Touch),
+		Visible = false,
 	}, modal.content)
+	return bar
+end
 
-	local go: TextButton
-	local function paint()
-		local chosen: { [string]: boolean } = {}
-		for _, id in selected do
-			chosen[id] = true
-		end
-		for id, fill in tiles do
-			fill.BackgroundColor3 = UiKit.colour(if chosen[id] then "Portrait" else "Card")
-		end
-		UiKit.setEnabled(go, #selected > 0 and squadsOut() < Z.Teams)
-	end
-	UiKit.button(bottom, {
-		Name = "Best",
-		Icon = "attack",
-		Style = "secondary",
-		Size = UDim2.fromOffset(U.Touch + 16, U.Touch),
-		OnClick = function()
-			selected = {}
-			for index = 1, math.min(#order, Z.TeamSize) do
-				table.insert(selected, order[index])
-			end
-			paint()
-		end,
+-- A picture and a number on a bar: the price of a revive or a sale.
+local function priceTag(bar: Frame, icon: string): TextLabel
+	local price = UiKit.make("Frame", {
+		Name = "Price",
+		BackgroundTransparency = 1,
+		Size = UDim2.new(1, -120, 1, 0),
+	}, bar)
+	UiKit.make("UIListLayout", {
+		FillDirection = Enum.FillDirection.Horizontal,
+		VerticalAlignment = Enum.VerticalAlignment.Center,
+		Padding = UDim.new(0, 4),
+		SortOrder = Enum.SortOrder.LayoutOrder,
+	}, price)
+	UiKit.icon(price, icon, U.IconNormal, { LayoutOrder = 1 })
+	local value = UiKit.label(price, "", U.TextHeader, "Brown", {
+		LayoutOrder = 2,
+		Size = UDim2.fromScale(0, 1),
+		AutomaticSize = Enum.AutomaticSize.X,
 	})
-	go = UiKit.button(bottom, {
-		Name = "Go",
-		Text = "Fight",
-		Style = "primary",
-		Size = UDim2.fromOffset(120, U.Touch),
-		AnchorPoint = Vector2.new(1, 0),
-		Position = UDim2.fromScale(1, 0),
-		Enabled = false,
-		OnClick = function()
-			local ids = table.clone(selected)
-			UiKit.setEnabled(go, false)
-			task.spawn(function()
-				local ok, why = ask({ action = "SendSquad", groupId = groupId, slimeIds = ids })
-				if ok then
-					if UiKit.modalId() == "squad" then
-						UiKit.closeModal()
-					end
-				else
-					UiKit.toast(reasonText(why))
-					paint()
-				end
-			end)
-		end,
-	})
-
-	local function build(slimes: { Configuration })
-		table.clear(tiles)
-		table.clear(order)
-		for index, slime in slimes do
-			table.insert(order, slime.Name)
-			local root = UiKit.make("TextButton", {
-				Name = slime.Name,
-				Text = "",
-				AutoButtonColor = false,
-				BackgroundTransparency = 1,
-				LayoutOrder = index,
-			}, scroller)
-			local box, body = UiKit.card(root, { Size = UDim2.fromScale(1, 1) })
-			local size = V.TileWidth - 24
-			local _, show = UiSlimes.portrait(body, slime, size, { Position = UDim2.new(0.5, -size / 2, 0, 0) })
-			show()
-			UiKit.label(body, "Lv " .. tostring(UiSlimes.number(slime, "Level")), U.TextSmall, "Brown", {
-				Position = UDim2.fromOffset(0, size + 2),
-				Size = UDim2.new(1, 0, 0, U.TextSmall + 6),
-				TextXAlignment = Enum.TextXAlignment.Center,
-			})
-			local fill = box:FindFirstChild("Fill")
-			if fill and fill:IsA("Frame") then
-				tiles[slime.Name] = fill
-			end
-			root.Activated:Connect(function()
-				local at = table.find(selected, slime.Name)
-				if at then
-					table.remove(selected, at)
-				elseif #selected < Z.TeamSize then
-					table.insert(selected, slime.Name)
-				end
-				paint()
-			end)
-		end
-	end
-
-	local function tick()
-		local live = ZombieWorld.group(groupId)
-		if not live or live.state ~= "waiting" then
-			UiKit.toast(reasonText("NOT_WAITING"))
-			UiKit.closeModal()
-			return
-		end
-		squadsLabel.Text = tostring(squadsOut()) .. "/" .. tostring(Z.Teams)
-		local slimes = candidates()
-		local names: { string } = {}
-		for _, slime in slimes do
-			table.insert(names, slime.Name)
-		end
-		local now = table.concat(names, "|")
-		if now ~= signature then
-			signature = now
-			for index = #selected, 1, -1 do
-				if not table.find(names, selected[index]) then
-					table.remove(selected, index)
-				end
-			end
-			rebuild(scroller, function()
-				build(slimes)
-			end)
-		end
-		paint()
-	end
-	sheet = { id = "squad", tick = tick, point = group.position, range = Z.SendRangeStuds * 1.25 }
-	tick()
+	return value
 end
 
 -- ===== The dead =====
@@ -385,112 +192,88 @@ local function foodCount(): number
 	return total
 end
 
-local function timeColour(left: number): Color3
-	return UiKit.colour(if left < V.ReviveWarnSeconds then "Red" else "Brown")
+local function timeColour(left: number): string
+	return if left < V.ReviveWarnSeconds then "Red" else "Brown"
 end
 
 local function openRevive()
-	local modal = openSheet("revive", nil)
+	local selected: string? = nil
+	local tick: () -> () = function() end
+	local modal = openSheet("revive", U.SheetHeight, function()
+		tick()
+	end, nil, 0)
 	UiKit.icon(modal.header, "skull", U.Touch - 12, {
 		AnchorPoint = Vector2.new(0, 0.5),
 		Position = UDim2.fromScale(0, 0.5),
 	})
-	local scroller = list(modal.content)
-	UiKit.make("UIListLayout", {
-		Padding = UDim.new(0, U.Gap),
-		SortOrder = Enum.SortOrder.LayoutOrder,
-	}, scroller)
-	local rows: { [string]: { time: TextLabel, button: TextButton, cost: number } } = {}
-	local signature = ""
+	local dead: { Dead } = {}
+	local list = UiSlimeList.new(modal.content, {
+		entries = function()
+			local entries: { UiSlimeList.Entry } = {}
+			for _, item in dead do
+				table.insert(entries, {
+					slime = item.slime,
+					selected = item.slime.Name == selected,
+					caption = clock(item.left),
+					captionColour = timeColour(item.left),
+					mark = { icon = "skull" },
+				})
+			end
+			return entries
+		end,
+		onTap = function(slime)
+			selected = slime.Name
+			tick()
+		end,
+	})
+	local bar = bottomBar(modal, list)
+	local cost = priceTag(bar, "food")
+	local button: TextButton
+	button = UiKit.button(bar, {
+		Name = "Revive",
+		Text = "Revive",
+		Style = "good",
+		Size = UDim2.fromOffset(110, U.Touch),
+		AnchorPoint = Vector2.new(1, 0),
+		Position = UDim2.fromScale(1, 0),
+		OnClick = function()
+			local id = selected
+			if not id then
+				return
+			end
+			UiKit.setEnabled(button, false)
+			task.spawn(function()
+				local ok, why = ask({ action = "Revive", slimeId = id })
+				if not ok then
+					UiKit.toast(reasonText(why))
+				end
+			end)
+		end,
+	})
 
-	local function build(dead: { Dead })
-		table.clear(rows)
-		for index, item in dead do
-			local slime = item.slime
-			local level = UiSlimes.number(slime, "Level")
-			local cost = ZombieRules.reviveCost(level)
-			local _, body = UiKit.card(scroller, { Size = UDim2.new(1, 0, 0, 64), LayoutOrder = index })
-			local _, show = UiSlimes.portrait(body, slime, 48, {
-				AnchorPoint = Vector2.new(0, 0.5),
-				Position = UDim2.fromScale(0, 0.5),
-			})
-			show()
-			UiKit.label(body, "Lv " .. tostring(level), U.TextSmall, "Brown", {
-				Position = UDim2.fromOffset(56, 6),
-				Size = UDim2.fromOffset(80, 20),
-			})
-			local time = UiKit.label(body, clock(item.left), U.TextNormal, "Brown", {
-				Position = UDim2.fromOffset(56, 28),
-				Size = UDim2.fromOffset(80, 24),
-			})
-			local button = UiKit.button(body, {
-				Name = "Revive",
-				Text = "Revive",
-				Style = "good",
-				Size = UDim2.fromOffset(92, 40),
-				AnchorPoint = Vector2.new(1, 0.5),
-				Position = UDim2.fromScale(1, 0.5),
-				OnClick = function()
-					UiKit.setEnabled(rows[slime.Name].button, false)
-					task.spawn(function()
-						local ok, why = ask({ action = "Revive", slimeId = slime.Name })
-						if not ok then
-							UiKit.toast(reasonText(why))
-						end
-					end)
-				end,
-			})
-			local price = UiKit.make("Frame", {
-				BackgroundTransparency = 1,
-				AnchorPoint = Vector2.new(1, 0.5),
-				Position = UDim2.new(1, -100, 0.5, 0),
-				Size = UDim2.fromOffset(64, 28),
-			}, body)
-			UiKit.make("UIListLayout", {
-				FillDirection = Enum.FillDirection.Horizontal,
-				HorizontalAlignment = Enum.HorizontalAlignment.Right,
-				VerticalAlignment = Enum.VerticalAlignment.Center,
-				Padding = UDim.new(0, 3),
-				SortOrder = Enum.SortOrder.LayoutOrder,
-			}, price)
-			UiKit.label(price, tostring(cost), U.TextNormal, "Brown", {
-				LayoutOrder = 1,
-				Size = UDim2.fromScale(0, 1),
-				AutomaticSize = Enum.AutomaticSize.X,
-			})
-			UiKit.icon(price, "food", U.IconNormal, { LayoutOrder = 2 })
-			rows[slime.Name] = { time = time, button = button, cost = cost }
-		end
-	end
-
-	local function tick()
-		local dead = deadSlimes()
+	tick = function()
+		dead = deadSlimes()
 		if #dead == 0 then
 			UiKit.closeModal()
 			return
 		end
-		local names: { string } = {}
+		-- (the one with the least time left is chosen at first)
+		local chosen = dead[1]
+		local found = false
 		for _, item in dead do
-			table.insert(names, item.slime.Name)
-		end
-		local now = table.concat(names, "|")
-		if now ~= signature then
-			signature = now
-			rebuild(scroller, function()
-				build(dead)
-			end)
-		end
-		local food = foodCount()
-		for _, item in dead do
-			local row = rows[item.slime.Name]
-			if row then
-				row.time.Text = clock(item.left)
-				row.time.TextColor3 = timeColour(item.left)
-				UiKit.setEnabled(row.button, food >= row.cost)
+			if item.slime.Name == selected then
+				chosen, found = item, true
 			end
 		end
+		if not found then
+			selected = chosen.slime.Name
+		end
+		local price = ZombieRules.reviveCost(UiSlimes.number(chosen.slime, "Level"))
+		bar.Visible = true
+		cost.Text = tostring(price)
+		UiKit.setEnabled(button, foodCount() >= price)
+		list.refresh()
 	end
-	sheet = { id = "revive", tick = tick, point = nil, range = 0 }
 	tick()
 end
 
@@ -508,7 +291,7 @@ local function refreshChip()
 		item.set(tostring(#dead) .. "  " .. clock(dead[1].left))
 		local value = item.root:FindFirstChild("Value", true)
 		if value and value:IsA("TextLabel") then
-			value.TextColor3 = timeColour(dead[1].left)
+			value.TextColor3 = UiKit.colour(timeColour(dead[1].left))
 		end
 	end
 	local folder = if own then own:FindFirstChild("Slimes") else nil
@@ -564,7 +347,12 @@ local function blockedReason(slime: Configuration, count: number): string?
 end
 
 local function openShop(point: Vector3)
-	local modal = openSheet("shop", nil)
+	local selected: string? = nil
+	local confirmUntil = 0
+	local tick: () -> () = function() end
+	local modal = openSheet("shop", U.SheetHeight, function()
+		tick()
+	end, point, Z.ShopRangeStuds * 1.3)
 	local head = UiKit.make("Frame", { BackgroundTransparency = 1, Size = UDim2.fromScale(1, 1) }, modal.header)
 	UiKit.make("UIListLayout", {
 		FillDirection = Enum.FillDirection.Horizontal,
@@ -575,115 +363,94 @@ local function openShop(point: Vector3)
 	UiKit.icon(head, "coins", U.Touch - 12, { LayoutOrder = 1 })
 	local coins =
 		UiKit.label(head, "", U.TextHeader, "Brown", { LayoutOrder = 2, Size = UDim2.fromOffset(200, U.Touch) })
-	local scroller = list(modal.content)
-	UiKit.make("UIListLayout", { Padding = UDim.new(0, U.Gap), SortOrder = Enum.SortOrder.LayoutOrder }, scroller)
-	type Row = { slime: Configuration, button: TextButton, reason: TextLabel, confirmUntil: number }
-	local rows: { [string]: Row } = {}
-	local signature = ""
 
-	local function build(slimes: { Configuration })
-		table.clear(rows)
-		for index, slime in slimes do
-			local _, body = UiKit.card(scroller, { Size = UDim2.new(1, 0, 0, 64), LayoutOrder = index })
-			local _, show = UiSlimes.portrait(body, slime, 48, {
-				AnchorPoint = Vector2.new(0, 0.5),
-				Position = UDim2.fromScale(0, 0.5),
-			})
-			show()
-			UiKit.label(body, "Lv " .. tostring(UiSlimes.number(slime, "Level")), U.TextSmall, "Brown", {
-				Position = UDim2.fromOffset(56, 6),
-				Size = UDim2.fromOffset(80, 20),
-			})
-			local price = UiKit.make("Frame", {
-				BackgroundTransparency = 1,
-				Position = UDim2.fromOffset(56, 28),
-				Size = UDim2.fromOffset(120, 26),
-			}, body)
-			UiKit.make("UIListLayout", {
-				FillDirection = Enum.FillDirection.Horizontal,
-				VerticalAlignment = Enum.VerticalAlignment.Center,
-				Padding = UDim.new(0, 3),
-				SortOrder = Enum.SortOrder.LayoutOrder,
-			}, price)
-			UiKit.icon(price, "coins", U.IconNormal - 4, { LayoutOrder = 1 })
-			UiKit.label(price, UiKit.money(sellValue(slime)), U.TextNormal, "Brown", {
-				LayoutOrder = 2,
-				Size = UDim2.fromScale(0, 1),
-				AutomaticSize = Enum.AutomaticSize.X,
-			})
-			local reason = UiKit.label(body, "", U.TextSmall, "BrownSoft", {
-				AnchorPoint = Vector2.new(1, 0.5),
-				Position = UDim2.fromScale(1, 0.5),
-				Size = UDim2.fromOffset(112, 40),
-				TextXAlignment = Enum.TextXAlignment.Right,
-			})
-			local row: Row = { slime = slime, button = nil :: any, reason = reason, confirmUntil = 0 }
-			row.button = UiKit.button(body, {
-				Name = "Sell",
-				Text = "Sell",
-				Style = "good",
-				Size = UDim2.fromOffset(92, 40),
-				AnchorPoint = Vector2.new(1, 0.5),
-				Position = UDim2.fromScale(1, 0.5),
-				OnClick = function()
-					-- Dual, Secret and Material slimes ask first: a second press inside the window sells.
-					local appearance = appearanceOf(slime)
-					if Mutations.needsSellConfirm(appearance) and os.clock() > row.confirmUntil then
-						row.confirmUntil = os.clock() + V.ConfirmSeconds
-						return
-					end
-					row.confirmUntil = 0
-					UiKit.setEnabled(row.button, false)
-					local value = sellValue(slime)
-					task.spawn(function()
-						local ok, why = ask({ action = "Sell", slimeId = slime.Name })
-						if ok then
-							UiKit.toast("+" .. UiKit.money(value))
-						else
-							UiKit.toast(reasonText(why))
-						end
-					end)
-				end,
-			})
-			rows[slime.Name] = row
-		end
-	end
-
-	local function tick()
-		local own = ownOf()
-		local value = if own then own:GetAttribute("Coins") else nil
-		coins.Text = UiKit.money(if type(value) == "number" then value else 0)
-		local slimes = UiSlimes.slimes(own)
-		local count = #slimes
-		table.sort(slimes, function(a, b)
-			local left, right = sellValue(a), sellValue(b)
-			if left ~= right then
-				return left > right
+	local slimes: { Configuration } = {}
+	local list = UiSlimeList.new(modal.content, {
+		entries = function()
+			local entries: { UiSlimeList.Entry } = {}
+			for _, slime in slimes do
+				local why = blockedReason(slime, #slimes)
+				table.insert(entries, {
+					slime = slime,
+					blocked = why ~= nil,
+					why = if why then reasonText(why) else nil,
+					selected = slime.Name == selected,
+					mark = UiSlimeList.stateMark(slime),
+				})
 			end
-			return a.Name < b.Name
-		end)
-		local names: { string } = {}
-		for _, slime in slimes do
-			table.insert(names, slime.Name)
-		end
-		local now = table.concat(names, "|")
-		if now ~= signature then
-			signature = now
-			rebuild(scroller, function()
-				build(slimes)
+			return entries
+		end,
+		onTap = function(slime)
+			selected = slime.Name
+			confirmUntil = 0
+			tick()
+		end,
+	})
+	local bar = bottomBar(modal, list)
+	local value = priceTag(bar, "coins")
+	local sell: TextButton
+	sell = UiKit.button(bar, {
+		Name = "Sell",
+		Text = "Sell",
+		Style = "good",
+		Size = UDim2.fromOffset(110, U.Touch),
+		AnchorPoint = Vector2.new(1, 0),
+		Position = UDim2.fromScale(1, 0),
+		OnClick = function()
+			local slime: Configuration? = nil
+			for _, other in slimes do
+				if other.Name == selected then
+					slime = other
+				end
+			end
+			if not slime then
+				return
+			end
+			-- Dual, Secret and Material slimes ask first: a second press inside the window sells.
+			if Mutations.needsSellConfirm(appearanceOf(slime)) and os.clock() > confirmUntil then
+				confirmUntil = os.clock() + V.ConfirmSeconds
+				return
+			end
+			confirmUntil = 0
+			UiKit.setEnabled(sell, false)
+			local amount = sellValue(slime)
+			local sold = slime.Name
+			task.spawn(function()
+				local ok, why = ask({ action = "Sell", slimeId = sold })
+				if ok then
+					UiKit.toast("+" .. UiKit.money(amount))
+				else
+					UiKit.toast(reasonText(why))
+				end
 			end)
+		end,
+	})
+
+	tick = function()
+		local own = ownOf()
+		local money = if own then own:GetAttribute("Coins") else nil
+		coins.Text = UiKit.money(if type(money) == "number" then money else 0)
+		slimes = UiSlimes.slimes(own)
+		local chosen: Configuration? = nil
+		for _, slime in slimes do
+			if slime.Name == selected then
+				chosen = slime
+			end
 		end
-		local clockNow = os.clock()
-		for _, row in rows do
-			local why = blockedReason(row.slime, count)
-			local asking = clockNow <= row.confirmUntil
-			row.button.Visible = why == nil
-			row.reason.Text = if why then reasonText(why) else ""
-			UiKit.setStyle(row.button, if asking then "danger" else "good")
-			setLabel(row.button, if asking then "Sure?" else "Sell")
+		local count = #slimes
+		if chosen and blockedReason(chosen, count) == nil then
+			bar.Visible = true
+			value.Text = UiKit.money(sellValue(chosen))
+			local asking = os.clock() <= confirmUntil
+			UiKit.setStyle(sell, if asking then "danger" else "good")
+			setLabel(sell, if asking then "Sure?" else "Sell")
+			UiKit.setEnabled(sell, true)
+		else
+			selected = nil
+			bar.Visible = false
 		end
+		list.refresh()
 	end
-	sheet = { id = "shop", tick = tick, point = point, range = Z.ShopRangeStuds * 1.3 }
 	tick()
 end
 
@@ -706,7 +473,6 @@ end
 
 function UiSquad.start(own: () -> Folder?)
 	ownOf = own
-	ZombieWorld.setOpener(openGroup)
 
 	-- the chip for the dead, at the left edge, middle of the screen
 	local made = UiKit.chip(UiKit.root(), "skull", "0", 0)
@@ -725,6 +491,9 @@ function UiSquad.start(own: () -> Folder?)
 		end)
 	chip = made
 
+	-- the teams: the gate sheet, the attack sheet, the chips and the notice
+	UiTeams.start({ own = own, ask = ask, reason = reasonText, open = openSheet })
+
 	-- the Market: one prompt where the shop stands
 	local market = Layout.marketFrame().Position
 	local anchor = anchorAt(Vector3.new(market.X, Config.Map.GroundY + V.AnchorLift, market.Z), "MarketPrompt")
@@ -742,10 +511,21 @@ function UiSquad.start(own: () -> Folder?)
 	end)
 
 	task.spawn(function()
-		local warned = false
-		while true do
+		local warned: { [string]: boolean } = {}
+		local function guarded(label: string, work: () -> ())
 			local ok, err = pcall(function(): any
-				refreshChip()
+				work()
+				return nil
+			end)
+			if not ok and not warned[label] then
+				warned[label] = true
+				warn(Config.LogPrefix, "squad screens error (" .. label .. "):", err)
+			end
+		end
+		while true do
+			guarded("chip", refreshChip)
+			guarded("teams", UiTeams.refresh)
+			guarded("sheet", function()
 				local open = sheet
 				if open then
 					local far = if open.point then flatDistance(open.point) else nil
@@ -755,12 +535,7 @@ function UiSquad.start(own: () -> Folder?)
 						open.tick()
 					end
 				end
-				return nil
 			end)
-			if not ok and not warned then
-				warned = true
-				warn(Config.LogPrefix, "squad screens error:", err)
-			end
 			task.wait(V.SheetRefreshSeconds)
 		end
 	end)

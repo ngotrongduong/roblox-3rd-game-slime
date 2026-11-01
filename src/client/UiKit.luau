@@ -49,7 +49,8 @@ local styleText: { [string]: string } = {
 	soft = "Brown",
 }
 -- Short stand-ins for pictures that do not exist yet; never a final look.
-local glyphs: { [string]: string } = { energy = "Zz", fun = "Fun", close = "X", back = "<", plus = "+", cross = "x" }
+local glyphs: { [string]: string } =
+	{ energy = "Zz", fun = "Fun", close = "X", back = "<", plus = "+", cross = "x", again = "R" }
 
 local function merge(base: Props, extra: Props?): Props
 	if extra then
