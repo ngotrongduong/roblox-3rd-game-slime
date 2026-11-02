@@ -11,6 +11,7 @@ local FarmState = require(ReplicatedStorage.Shared.FarmState)
 local UiBook = require(script.Parent.UiBook)
 local UiHud = require(script.Parent.UiHud)
 local UiKit = require(script.Parent.UiKit)
+local UiMarket = require(script.Parent.UiMarket)
 local UiSlimeList = require(script.Parent.UiSlimeList)
 local UiSlimes = require(script.Parent.UiSlimes)
 local UiSpots = require(script.Parent.UiSpots)
@@ -965,6 +966,8 @@ function VillageUI.start()
 			end,
 			request = request,
 		})
+	end, function(place: string)
+		UiMarket.travel(place)
 	end)
 
 	UiSpots.start({

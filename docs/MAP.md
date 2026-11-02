@@ -88,13 +88,20 @@ Every player owns the slice of the valley right in front of their gate, so whoev
 The social hub and the spawn point: a small square town in the owner's market style (honey wood,
 royal-blue and cream awnings, money-bag emblems, gold trims, lanterns).
 
-- **The Shop** (shopkeeper): sell slimes; buy seeds, bait, basic items.
+- **Now built (the owner, 2026-11-02), positions in `Config.Market`, local to the Market's frame (front towards the valley
+  centre, the Landing at the front, the Buyer and the VIP counter either side, the Board at the back):** one **slime buyer**
+  counter (model `SlimeBuyer`, prompt "Sell slimes"), one **VIP counter** (model `VipStall`, prompt "VIP Shop", a sheet of
+  Robux goods that says "Opening soon" until the owner approves a list), one **leaderboard** (model `Leaderboard`, a part
+  `Screen`: the top 10 slimes of the whole game by level), and two round HUD buttons, Market and Home, that move the player
+  (3 s apart). The rest of this list is the earlier plan; the other stalls wait.
+- **The Shop** (shopkeeper): sell slimes; buy seeds, bait, basic items. (Today: the slime buyer sells only.)
 - **The Smithy** (blacksmith, furnace and anvil): craft hand/head/tail gear from drops.
 - **The Travelling Merchant's stop:** his cart rolls in for 5 of every 15 minutes, the same for
   the whole server, with 8 random rare wares (auras, wings, frames, backgrounds).
 - **Trading stalls:** player-to-player trade (slimes, eggs, gear, materials) with a two-sided
   confirm window; a few stalls players can stand at to show what they offer.
-- **The Notice Board:** leaderboards (best slime, raid score, duel rank), the World Boss timer.
+- **The Notice Board:** leaderboards (best slime, raid score, duel rank), the World Boss timer. (Today: the best-slime
+  board only, `Leaderboard`.)
 - **The Fountain:** the spawn point and the place where quick travel lands.
 
 ## 2. A home plot

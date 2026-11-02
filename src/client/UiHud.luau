@@ -1,5 +1,6 @@
 --!strict
--- What stays on the screen: a small resource strip at the top edge and the round slime-book button at the right edge.
+-- What stays on the screen: a small resource strip at the top edge and the round buttons at the right edge (the slime book,
+-- and quick travel to the Market and Home).
 -- The middle stays empty. All food is ONE button (the owner, 2026-10-30): a 3D bowl and the total; tapping it opens the
 -- food panel (UiFood). Its picture is the 3D item itself (ClientKit.Items in a ViewportFrame).
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -39,7 +40,7 @@ local function item(name: string): Instance?
 	return found
 end
 
-function UiHud.start(root: Frame, onBook: () -> ())
+function UiHud.start(root: Frame, onBook: () -> (), onTravel: (place: string) -> ())
 	local bar = UiKit.make("ScrollingFrame", {
 		Name = "Resources",
 		AnchorPoint = Vector2.new(0.5, 0),
@@ -80,16 +81,31 @@ function UiHud.start(root: Frame, onBook: () -> ())
 		end)
 	add("slimes", "slimes")
 
-	-- Round buttons hug the right edge, clear of the jump button and the thumbstick.
+	-- Round buttons hug the right edge, clear of the jump button and the thumbstick: Market and Home (quick travel) beside
+	-- the slime book, in one row with the book against the edge.
 	local group = UiKit.make("Frame", {
 		Name = "EdgeButtons",
 		AnchorPoint = Vector2.new(1, 0.5),
 		Position = UDim2.new(1, -U.Edge, 0.5, 0),
-		Size = UDim2.fromOffset(U.Touch + 16, U.Touch + 16),
+		Size = UDim2.fromOffset(0, U.Touch + 16),
+		AutomaticSize = Enum.AutomaticSize.X,
 		BackgroundTransparency = 1,
 		Visible = false,
 	}, root)
-	UiKit.roundButton(group, "slimes", U.Touch + 16, onBook)
+	UiKit.make("UIListLayout", {
+		FillDirection = Enum.FillDirection.Horizontal,
+		HorizontalAlignment = Enum.HorizontalAlignment.Right,
+		VerticalAlignment = Enum.VerticalAlignment.Center,
+		Padding = UDim.new(0, U.Gap),
+		SortOrder = Enum.SortOrder.LayoutOrder,
+	}, group)
+	UiKit.roundButton(group, "market", U.TravelButton, function()
+		onTravel("Market")
+	end, { LayoutOrder = 1 })
+	UiKit.roundButton(group, "home", U.TravelButton, function()
+		onTravel("Home")
+	end, { LayoutOrder = 2 })
+	UiKit.roundButton(group, "slimes", U.Touch + 16, onBook, { LayoutOrder = 3 })
 	edge = group
 
 	-- Under the strip: the village's level and how many upgrades its next level still takes.

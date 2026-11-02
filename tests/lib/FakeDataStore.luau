@@ -71,6 +71,31 @@ function Fake.new(backing: Backing?)
 		store.writes += 1
 	end
 
+	-- An OrderedDataStore's sorted read: the number values, ordered, `pageSize` of them in the first page.
+	function store.GetSortedAsync(_self: any, ascending: boolean, pageSize: number): any
+		maybeFail()
+		local items: { { key: string, value: number } } = {}
+		for key, value in shared.values do
+			if type(value) == "number" then
+				table.insert(items, { key = key, value = value })
+			end
+		end
+		table.sort(items, function(a, b)
+			if a.value ~= b.value then
+				return if ascending then a.value < b.value else a.value > b.value
+			end
+			return a.key < b.key
+		end)
+		for i = #items, pageSize + 1, -1 do
+			items[i] = nil
+		end
+		return {
+			GetCurrentPage = function(): any
+				return items
+			end,
+		}
+	end
+
 	function store.UpdateAsync(_self: any, key: string, transform: (any, any) -> ...any): any
 		maybeFail()
 		local current = copy(shared.values[key])

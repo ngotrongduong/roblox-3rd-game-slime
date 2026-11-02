@@ -77,6 +77,25 @@ function Layout.marketFrame(): CFrame
 	return Layout.slotFrame(0)
 end
 
+-- A spot of the Market (one of Config.Market's { x, z }, local to the Market's frame) as a world position, on the ground.
+function Layout.marketPoint(spot: { x: number, z: number }): Vector3
+	local at = (Layout.marketFrame() * CFrame.new(spot.x, 0, spot.z)).Position
+	return Vector3.new(at.X, M.GroundY, at.Z)
+end
+
+-- Where quick travel puts a character at the Market: at the landing spot, `lift` studs up, facing the back of the square
+-- (the leaderboard). The Market's frame looks at the valley centre, so a half turn faces the other way.
+function Layout.marketLanding(lift: number): CFrame
+	local spot = Config.Market.Landing
+	return Layout.marketFrame() * CFrame.new(spot.x, M.GroundY + lift, spot.z) * CFrame.Angles(0, math.pi, 0)
+end
+
+-- Where quick travel puts a character at home: in the plot's gate opening, `inside` studs in from its front edge, `lift`
+-- studs up, facing in. The gate looks at the valley centre, so a half turn faces into the plot.
+function Layout.homeLanding(plot: number, lift: number, inside: number): CFrame
+	return Layout.plotGate(plot) * CFrame.Angles(0, math.pi, 0) * CFrame.new(0, M.GroundY + lift, -inside)
+end
+
 -- The side of one cell of a plot's 3x3 grid (one area).
 function Layout.cellSize(): number
 	return M.PlotSize / 3

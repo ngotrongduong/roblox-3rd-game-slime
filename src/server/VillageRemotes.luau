@@ -117,9 +117,9 @@ local function request(player: Player, data: any): { ok: boolean, reason: string
 		return { ok = false, reason = "INVALID_ARGUMENT" }
 	end
 
-	-- The shop is the Market: the player must have walked there.
+	-- The slime buyer's counter in the Market: the player must stand at it (they walked or travelled there).
 	local atMarket = action == "Sell"
-		and ZombieFights.near(player, Layout.marketFrame().Position, Config.Zombies.ShopRangeStuds)
+		and ZombieFights.near(player, Layout.marketPoint(Config.Market.Buyer), Config.Zombies.ShopRangeStuds)
 
 	local success, err = pcall(function()
 		local updated = PlayerData.update(player, function(farm: any)

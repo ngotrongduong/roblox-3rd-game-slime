@@ -12,6 +12,7 @@ local Mutations = require(ReplicatedStorage.Shared.Mutations)
 local ZombieRules = require(ReplicatedStorage.Shared.Zombies)
 local UiFood = require(script.Parent.UiFood)
 local UiKit = require(script.Parent.UiKit)
+local UiMarket = require(script.Parent.UiMarket)
 local UiSlimeList = require(script.Parent.UiSlimeList)
 local UiSlimes = require(script.Parent.UiSlimes)
 local UiTeams = require(script.Parent.UiTeams)
@@ -494,12 +495,13 @@ function UiSquad.start(own: () -> Folder?)
 	-- the teams: the gate sheet, the attack sheet, the chips and the notice
 	UiTeams.start({ own = own, ask = ask, reason = reasonText, open = openSheet })
 
-	-- the Market: one prompt where the shop stands
-	local market = Layout.marketFrame().Position
-	local anchor = anchorAt(Vector3.new(market.X, Config.Map.GroundY + V.AnchorLift, market.Z), "MarketPrompt")
+	-- the Market: the VIP counter's prompt and sheet (UiMarket), and one prompt where the slime buyer stands
+	UiMarket.start({ open = openSheet, anchor = anchorAt })
+	local buyer = Layout.marketPoint(Config.Market.Buyer)
+	local anchor = anchorAt(Vector3.new(buyer.X, Config.Map.GroundY + V.AnchorLift, buyer.Z), "BuyerPrompt")
 	local prompt = Instance.new("ProximityPrompt")
 	prompt.Name = "Shop"
-	prompt.ActionText = "Sell"
+	prompt.ActionText = "Sell slimes"
 	prompt.ObjectText = ""
 	prompt.KeyboardKeyCode = Enum.KeyCode.F
 	prompt.HoldDuration = 0

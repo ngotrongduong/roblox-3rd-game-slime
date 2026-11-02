@@ -934,6 +934,84 @@ Config.Map = {
 	RockSeatTolerance = 0.05,
 }
 
+-- ===== The Market (docs/MAP.md 1.3; the owner, 2026-11-02: one slime buyer, one VIP counter, one leaderboard) =====
+-- Spots are local to Layout.marketFrame() (turn them into world positions with Layout.marketPoint): x across the square,
+-- z along the radius. The frame looks at the valley centre, so -z is the front (the open side towards the valley) and +z the
+-- back (towards the valley's edge); +x is the left of someone walking in from the valley. The prompts and the landing
+-- stand at these spots whether or not the scene artist's models are there yet. The square is Map.MarketWidth x MarketDepth.
+Config.Market = {
+	-- Where quick travel lands: a clear spot at the front of the square, facing the back.
+	Landing = { x = 0, z = -56 },
+	-- The slime buyer's counter (left) and the VIP counter (right), a little in front of the middle.
+	Buyer = { x = 55, z = -8 },
+	Vip = { x = -55, z = -8 },
+	-- The leaderboard, at the back in the middle.
+	Board = { x = 0, z = 62 },
+	-- What the scene artist names things in workspace.Map.Market (the board's picture goes on its part ScreenName).
+	Model = "Market",
+	BuyerModel = "SlimeBuyer",
+	VipModel = "VipStall",
+	BoardModel = "Leaderboard",
+	ScreenName = "Screen",
+	-- How close the VIP counter's prompt shows and its sheet stays open (the buyer's are Zombies.ShopRangeStuds).
+	VipRangeStuds = 40,
+}
+
+-- Quick travel (src/server/QuickTravel.luau): the HUD's Home and Market buttons.
+Config.Travel = {
+	-- One move per player this often.
+	CooldownSeconds = 3,
+	-- A character lands this high above the ground and drops.
+	LiftStuds = 4,
+	-- Home lands this far inside the plot's front edge, in the gate's opening, facing in.
+	HomeInsideStuds = 12,
+}
+
+-- Robux goods of the VIP counter. EMPTY on purpose: the owner approves the list and the prices first (skill
+-- robux-products), and nothing is sold before he has. Later a product is { key, name, icon, price }: a short id for
+-- the code, the name shown, a Config.Ui.Icons name, the price in Robux. No product ids, no purchase code yet.
+Config.Robux = {
+	Products = {} :: { { key: string, name: string, icon: string, price: number } },
+}
+
+-- The leaderboard of the Market (src/server/Leaderboard.luau, LeaderboardStore, shared/Leaderboard, and the client's
+-- LeaderboardScreen): the top Rows slimes of the whole game by level, one per player.
+Config.Leaderboard = {
+	Rows = 10,
+	-- The OrderedDataStore holds each player's best score, the second store the names that go with it (a score is one number).
+	ScoreStore = "GooLineage_Board_v1",
+	NameStore = "GooLineage_BoardNames_v1",
+	-- score = level * TimeScale + (TimeScale - 1 - the second that level was first seen): higher level first, earlier first.
+	TimeScale = 10_000_000_000,
+	-- A player's best is sent when it improved, at most this often, and when they leave.
+	WriteGapSeconds = 60,
+	-- The server looks for bests to send this often, reads the top this often, and re-reads the players here this often.
+	WriteCheckSeconds = 10,
+	ReadSeconds = 60,
+	LiveSeconds = 5,
+	-- Leaving writes may use this long at shutdown.
+	ShutdownSeconds = 15,
+	-- Names longer than this are cut; empty ones become the fallbacks.
+	MaxNameLength = 24,
+	FallbackPlayer = "Player",
+	FallbackSlime = "Slime",
+	-- A Studio play test keeps the board in memory. Switch on only to try the real store from Studio (never commit it on).
+	StudioUsesRealStore = false,
+	-- Published for the clients: ReplicatedStorage.<Folder> with attributes Row1..RowN ("player<TAB>slime<TAB>level").
+	Folder = "Leaderboard",
+	-- The screen: the face of the Screen part it is drawn on, canvas pixels per stud of that face, and its words.
+	Face = "Front",
+	PixelsPerStud = 40,
+	Title = "Top Slimes",
+	Empty = "No slimes yet",
+	-- The title takes this share of the canvas height; the letters grow to fill their row between these sizes; a missing
+	-- screen is looked for this often (seconds).
+	TitleShare = 0.14,
+	TextMin = 8,
+	TextMax = 96,
+	ScreenLookSeconds = 3,
+}
+
 -- ===== The plots of a server (src/server/Plots.luau; the owner, 2026-11-02: up to 8 players, a plot each) =====
 Config.Plots = {
 	-- The hand-built village the others are copies of: workspace.Map.Plot5 in the work place. At server start it moves to
@@ -1427,6 +1505,9 @@ Config.Ui = {
 		again = 87479558872031, -- the Repeat toggle
 		level = 99981918632333, -- the Level sort button
 		order = 105007209294287, -- which way a list sorts (points down)
+		-- The round travel buttons (home, market): not drawn yet, a short word stands in (UiKit glyphs).
+		home = 0,
+		market = 0,
 		-- (drawn from the 3D items instead: docs/GAMEPLAY.md, the food chip)
 		fish = 0,
 		carrot = 0,
@@ -1491,6 +1572,8 @@ Config.Ui = {
 	Pad = 10,
 	Gap = 6,
 	Edge = 10,
+	-- The Home and Market buttons beside the book button.
+	TravelButton = 52,
 	IconSmall = 20,
 	IconNormal = 28,
 	-- A 3D item drawn as an icon (UiKit.modelIcon): the camera's field of view, how much room it leaves round the
@@ -1511,6 +1594,8 @@ Config.Ui = {
 	SheetWidth = 460,
 	-- (tall enough for the slime list under its sort row)
 	SheetHeight = 440,
+	-- The VIP sheet (UiMarket): short while it only says "Opening soon".
+	VipSheetHeight = 260,
 	BookWidth = 760,
 	BookHeight = 560,
 	CardWidth = 250,
