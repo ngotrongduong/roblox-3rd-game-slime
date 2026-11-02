@@ -57,7 +57,7 @@ local COLOURS = {
 	[Mat.Slate] = Color3.fromRGB(158, 146, 112), -- the Heart's floor: Rock's texture reads pink and noisy this close
 	[Mat.Basalt] = Color3.fromRGB(92, 70, 64),
 	[Mat.Sand] = Color3.fromRGB(232, 210, 150),
-	[Mat.Sandstone] = Color3.fromRGB(204, 158, 98), -- the dirt roads: the old tan, warmed so it sits beside the rust instead of patching it
+	[Mat.Sandstone] = Color3.fromRGB(255, 255, 255), -- the dirt roads: the colour is in WildDirt's painted texture
 	[Mat.Ground] = Color3.fromRGB(158, 98, 50), -- worn earth: the rust of the references' trails ((176, 102, 66), build_terrain's own, reads pink)
 	[Mat.LeafyGrass] = Color3.fromRGB(176, 170, 58), -- ember: dry golden grass
 	[Mat.Limestone] = Color3.fromRGB(104, 128, 40), -- meadow: the sunny patches
@@ -1224,6 +1224,14 @@ local function buildTerrain()
 	for material, colour in DEFAULT_COLOURS do
 		terrain:SetMaterialColor(material, colour)
 	end
+	-- Painted dirt for the roads (art/textures/watercolor/DirtPath.png, CC0): the stock Sandstone reads as cracked mud up close.
+	local dirt = MaterialService:FindFirstChild("WildDirt") or Instance.new("MaterialVariant")
+	dirt.Name = "WildDirt"
+	dirt.BaseMaterial = Mat.Sandstone
+	dirt.ColorMap = "rbxassetid://85365331955315"
+	dirt.StudsPerTile = 24
+	dirt.Parent = MaterialService
+	MaterialService:SetBaseMaterialOverride(Mat.Sandstone, "WildDirt")
 	-- The first rebuild's flat-colour variants are gone for good.
 	for _, v in MaterialService:GetChildren() do
 		if v:IsA("MaterialVariant") and string.sub(v.Name, 1, 8) == "WildFlat" then

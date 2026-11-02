@@ -194,6 +194,14 @@ once the owner has pressed Ctrl+S.
 Tried and left out: "Stylized Colorful Tree Pack" 96193157220829 (ceconello, 15-31 meshes a tree), `ServerStorage.AssetTest.StylizedNature_Vexa`
 (plain cones and cubes).
 
+## Waiting for import: `art/models/quaternius/*.glb`
+
+Thirty models from Quaternius' "Stylized Nature MegaKit" standard version (CC0, https://quaternius.com/packs/stylizednaturemegakit.html),
+shrunk for phones by `tools/map/prepare_quaternius.py`. The owner imports them (File > Import 3D); then they join WildKit.
+
+Road texture: `art/textures/watercolor/DirtPath.png`, from Voxel Core Lab's "Hand-Painted Seamless Terrain Textures" (CC0, by Jonas
+Voland, https://voxelcorelab.itch.io/watercolor-terrain-textures), brightened and shifted to tan.
+
 ## HomePlot.rbxm
 
 The finished level-1 home plot (Plot 5, the village) as built by `tools/map/*`. The terrain under it

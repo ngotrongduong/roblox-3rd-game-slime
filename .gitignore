@@ -20,3 +20,8 @@ tools/types/
 # The original web game, downloaded for reference only (its code and art stay out of the repo until
 # a piece is deliberately taken into assets/).
 reference/goo-lineage-web/
+# Other authors' packs: usable inside the game, but this repo is public and they must not be passed on as files
+# (tools/map/prepare_quaternius.py makes the .glb files again from the author's own download).
+art/models/quaternius/
+art/models/GooLineage_Free_Asset_Library_Curated/
+art/models/GooLineage_Free_Asset_Library_Curated.zip
