@@ -17,31 +17,29 @@ return function(T)
 		T.eq(Food.fridgeCapacity(1), 20)
 		T.eq(Food.fridgeCapacity(50), 216)
 	end)
-	T.test("best recipe chooses fullness and ingredient shopping never invents stock", function()
+	T.test("assigned cook orders its default recipe with pantry reserve", function()
 		local farm = FarmKit.farm(1000)
-		T.eq(Food.bestDish({ fish = 2 }), "grilledFish")
-		T.eq(Food.bestDish({ fish = 1, carrot = 1, cabbage = 1 }), "fishVegSoup")
-		T.eq(Food.bestDish({}), nil)
-		farm.counter = { fish = 1 }
-		farm.storehouse = { carrot = 2, cabbage = 1 }
 		farm.work.kitchen.slots[1].worker = "slime-1"
-		farm.cookedAllowed = { "slime-2" }
-		T.same(Food.ingredientsWanted(farm), { carrot = 1, cabbage = 1 })
+		farm.storehouse = { fish = 10 }
+		T.same(Food.ingredientsWanted(farm), { fish = 2 })
+		farm.counter = { fish = 1 }
+		T.same(Food.ingredientsWanted(farm), { fish = 1 })
 	end)
-	T.test("dish permission, fallback, fullness and timed battle buff", function()
+	T.test("auto dish and manual feed use rarity-based buff; raw fallback", function()
 		local farm = FarmKit.farm(1000)
 		farm.fridge = { fishVegSoup = 1 }
 		farm.storehouse = { fish = 2, carrot = 5 }
 		T.eq(Food.chooseMeal(farm, "slime-1"), "carrot")
-		table.insert(farm.cookedAllowed, "slime-1")
+		T.ok(Food.setAutoDish(farm, "slime-1", "fishVegSoup"))
 		T.eq(Food.chooseMeal(farm, "slime-1"), "fishVegSoup")
 		farm.slimes[1].needs.fullness = 20
 		T.eq(Food.eat(farm, "slime-1", 1000), "fishVegSoup")
 		T.eq(farm.slimes[1].needs.fullness, 100)
-		T.same(farm.slimes[1].buff, { stat = "hp", percent = 10, untilTime = 2200 })
+		T.same(farm.slimes[1].buff, { stat = "hp", percent = 8, untilTime = 1600, dish = "fishVegSoup" })
 		T.eq(Food.eat(farm, "slime-1", 1001), "carrot")
 		T.eq(farm.fridge.fishVegSoup, nil)
 	end)
+	
 	T.test("every kind is complete and a group's weights add up to 100", function()
 		local sums = { fish = 0, veg = 0 }
 		for id, kind in Config.Food.Kinds do
@@ -61,7 +59,7 @@ return function(T)
 			local seen = {}
 			local rolls = 100000
 			for _ = 1, rolls do
-				local id = Food.roll(group, rng)
+				local id = Food.roll(group, rng, 1)
 				seen[id] = (seen[id] or 0) + 1
 			end
 			for _, id in order do
@@ -75,8 +73,8 @@ return function(T)
 	end)
 	T.test("a roll at the very top of the range still returns a kind of the group", function()
 		local top = Rng.sequence({ 0.9999999 })
-		T.eq(Food.roll("fish", top), "goldenCarp")
-		T.eq(Food.roll("veg", Rng.sequence({ 0 })), "carrot")
+		T.eq(Food.roll("fish", top, 1), "goldenCarp")
+		T.eq(Food.roll("veg", Rng.sequence({ 0 }), 1), "carrot")
 	end)
 	T.test("a slime eats a new kind for the kind's fullness; stores keep every kind", function()
 		for id, kind in Config.Food.Kinds do
