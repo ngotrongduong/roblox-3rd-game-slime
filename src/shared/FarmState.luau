@@ -254,7 +254,7 @@ function FarmState.newWork(areas: Areas): Work
 	for _, id in Config.Work.Areas do
 		local slots: { WorkSlot } = {}
 		for _ = 1, FarmState.slotCount((areas :: any)[id].level) do
-			table.insert(slots, { progress = 0, recipe = if id == "kitchen" then Config.Food.DefaultRecipe else nil })
+			table.insert(slots, { progress = 0 })
 		end
 		out[id] = {
 			slots = slots,
