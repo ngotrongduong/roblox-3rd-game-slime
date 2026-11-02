@@ -2,6 +2,7 @@
 -- Shared work-slot ownership and shift eligibility. No service or world state is consulted.
 local Config = if script then require(script.Parent.Config) else require("./Config")
 local FarmState = if script then require(script.Parent.FarmState) else require("./FarmState")
+local Food = if script then require(script.Parent.Food) else require("./Food")
 local Growth = if script then require(script.Parent.Growth) else require("./Growth")
 local Needs = if script then require(script.Parent.Needs) else require("./Needs")
 local Stats = if script then require(script.Parent.Stats) else require("./Stats")
@@ -159,6 +160,29 @@ function Stations.setTrainingStat(farm: Farm, slotIndex: number, statKey: string
 	end
 	slot.stat = statKey
 	slot.progress = 0
+	return true
+end
+
+-- Remove ingredients no staffed cook needs after a recipe change, as far as pantry space allows.
+function Stations.setCookRecipe(farm: Farm, slotIndex: number, recipeId: string): boolean
+	local slot = if type(slotIndex) == "number" and slotIndex % 1 == 0 then farm.work.kitchen.slots[slotIndex] else nil
+	local level = farm.areas.kitchen.level
+	if not slot or not Food.recipeUnlocked(recipeId, level) then return false end
+	slot.recipe = recipeId
+	slot.progress = 0
+	local useful: { [string]: boolean } = {}
+	for _, other in farm.work.kitchen.slots do
+		if other.worker or other.reserve then
+			local dish = (Config.Food.Dishes :: any)[Food.slotRecipe(other, level)]
+			for item in dish.ingredients do useful[item] = true end
+		end
+	end
+	for _, item in Config.Food.RawOrder do
+		if not useful[item] then
+			local moved = Food.add(farm.storehouse, item, farm.counter[item] or 0, Food.storehouseCapacity(farm.areas.pantry.level))
+			if moved > 0 then Food.take(farm.counter, item, moved) end
+		end
+	end
 	return true
 end
 
