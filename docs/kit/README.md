@@ -79,6 +79,20 @@ by slot and era. Kitchen and training ground models (asset ids of the published 
 | ClippedTopiary | 118869481227017 | village garden piece, era 2 |
 | PaintedLampPost, SteelStreetLamp | 81425132591063, 135167358158216 | village lamps, eras 2 and 4 |
 
+The shared middle of the valley (`tools/map/build_wild_slices.luau`, 2026-11-02; in the work place's PropKit until the owner's
+Ctrl+S and the export):
+
+| Model | Asset id | Triangles, where it is used |
+|---|---|---|
+| TwistedTree | 120350717564903 | 450, the inner ring (a first try, 84759709497860, came out thin and spiky: unused) |
+| GiantMushroom | 82978024017038 | 300, Mushroom Grove, large and small |
+| CrystalCluster | 89565445204716 | 120, Frost Glade blue; painted amethyst in the inner ring |
+| EmberPlant | 140577747992093 | 160, Ember Garden |
+| RuinArch | 119137243254659 | 600, the Heart |
+| GooBasin | 109097409899804 | 400, the Heart's spring, pressed low |
+
+The ground's colour map: `rbxassetid://138249545071236` (a soft mottled tile made by script, the owner's upload).
+
 ## CropKit.rbxm (four growth stages: 1 seedling, 2 young, 3 growing, 4 ripe)
 
 | Model | Asset id |

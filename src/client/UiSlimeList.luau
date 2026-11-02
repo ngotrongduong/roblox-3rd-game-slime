@@ -371,14 +371,13 @@ function UiSlimeList.new(parent: Instance, options: Options): List
 			UiKit.setStyle(button, if id == sortKey then "primary" else "secondary")
 			local arrow = arrows[id]
 			arrow.Visible = id == sortKey
-			arrow.Rotation = if descending then -90 else 90
+			arrow.Rotation = if descending then 0 else 180
 		end
 	end
 	for index, id in U.Sorts do
 		local button = UiKit.button(row, {
 			Name = id,
-			Text = if id == "level" then "Lv" else nil,
-			Icon = if id == "level" then nil else id,
+			Icon = id,
 			Style = "secondary",
 			Size = UDim2.fromOffset(U.Touch, U.Touch),
 			LayoutOrder = index,
@@ -392,8 +391,8 @@ function UiSlimeList.new(parent: Instance, options: Options): List
 				refresh()
 			end,
 		})
-		-- the way it sorts: an arrow (the owner's back arrow turned) on the chosen button's corner
-		arrows[id] = UiKit.icon(button, "back", T.SortArrow, {
+		-- the way it sorts: an arrow on the chosen button's corner
+		arrows[id] = UiKit.icon(button, "order", T.SortArrow, {
 			Name = "Order",
 			AnchorPoint = Vector2.new(1, 1),
 			Position = UDim2.new(1, -2, 1, -2),

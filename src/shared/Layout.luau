@@ -28,9 +28,9 @@ export type Quarter = {
 -- The four moods of the Wild Garden, by quarter (north-east first, clockwise).
 local quarters: { Quarter } = {
 	{ id = "meadow", name = "Sunny Meadow", angle = 45, family = "greenfield" },
-	{ id = "ember", name = "Ember Garden", angle = 135, family = "volcano" },
-	{ id = "frost", name = "Frost Glade", angle = 225, family = "ice" },
-	{ id = "mushroom", name = "Mushroom Grove", angle = 315, family = "darkforest" },
+	{ id = "mushroom", name = "Mushroom Grove", angle = 135, family = "darkforest" },
+	{ id = "ember", name = "Ember Garden", angle = 225, family = "volcano" },
+	{ id = "frost", name = "Frost Glade", angle = 315, family = "ice" },
 }
 Layout.Quarters = quarters
 

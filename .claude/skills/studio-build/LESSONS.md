@@ -150,6 +150,24 @@ was left there (this game has none); read it there if a cave is ever wanted.
 - 2026-10-26. Studio MINIMISED gives white `screen_capture`s: bring its window up first. When the owner is using the
   screen (a game, Alt+Tab), do not take it: saves and shots wait.
 
+- 2026-11-02 (the valley's middle, `tools/map/build_wild_slices.luau`). Painted ground that matches a picture: a MaterialVariant
+  with NO map draws lime whatever the terrain colour (seen again), but one whose `ColorMap` is a soft mottled near-white tile
+  (256 px, made by a script, `upload_image`, `StudsPerTile` 90) takes `SetMaterialColor` exactly and reads as paint. The
+  biggest single lift of the job; a variant can only be built into the place, so it travels with the owner's save.
+- 2026-11-02. Not every terrain material is flat at the same voxels. Brick (and Cobblestone) drew their surface 2 studs LOWER
+  (0 for 2: only the ground check caught it, as a list of "0.00 Brick"); Slate, Ice and Sandstone have bumps that stand over a
+  thin part, cutting a path into dashes; a variant does not remove them. Flat ones here: LeafyGrass, Mud, Ground, Concrete,
+  Glacier, Asphalt, Snow, Salt, Pavement, Limestone. Probe a new material with a raycast before using it.
+- 2026-11-02. Terrain Grass stands over thin parts too. A 6-stud path cannot be terrain at 4-stud voxels (it blurs or vanishes):
+  use flat non-colliding, non-query slabs 0.2 over a material without blades; where it must cross grass or sand, sand under it
+  and 0.6 over the ground. Round clearings as terrain come out as blurred diamonds: a thin cylinder part reads clean.
+- 2026-11-02. `ReadVoxels` results hold a `.Size` key: loop with `Size.X/Y/Z` or `ipairs`, never `for k, v in mats`.
+- 2026-11-02. Terrain takes a few seconds to mesh after a big write and the first shot shows old stripes: shoot twice before
+  judging. Kit stands (`viewer.luau`, y 300) show as a bar in the sky from low cameras: destroy `KitViewer` when done.
+- 2026-11-02. Keeping march lines free: a tree's crown may reach over a line (it does not collide and clears a slime's head),
+  so test a trunk share of the spread against lines, the whole spread against homes and paths; with the full spread on lines
+  almost no tree found room. Write the check as its own script from the same numbers; it caught what pictures did not.
+
 ## Water and moving things
 
 - 2026-10-21. The owner: a waterfall of parts (a blue block, white rectangles, white balls) "is not water". Falling

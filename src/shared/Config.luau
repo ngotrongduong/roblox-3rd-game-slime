@@ -170,8 +170,10 @@ Config.Zombies = {
 	-- A wound heals this share of a slime's health a minute while it is home (0.5: a full heal in two minutes).
 	HealPerMinute = 0.5,
 	-- Every slime that fought loses this much energy and fullness when the fight ends (the brain rests and feeds it).
-	FightEnergy = 15,
-	FightFullness = 15,
+	-- On repeat a team fights about 25 times an hour: at 5 that is a meal or so more an hour for each slime, which a
+	-- staffed village can still feed; at 15 a team of four ate more than the pond and garden make.
+	FightEnergy = 8,
+	FightFullness = 5,
 	-- HpShare on a slime's model is rounded to this step, so a healing wound does not rewrite it every frame.
 	HpShareStep = 0.01,
 	-- A zombie's stats against an even slime of the player's level, per camp. Five levels mean far more at level 4 than
@@ -1412,8 +1414,9 @@ Config.Ui = {
 		cross = 103131383048931,
 		back = 110115571347055,
 		plus = 115669941400247,
-		-- Not made yet (0 = a short stand-in shows and the client logs it once): the Repeat toggle, two circling arrows.
-		again = 0,
+		again = 87479558872031, -- the Repeat toggle
+		level = 99981918632333, -- the Level sort button
+		order = 105007209294287, -- which way a list sorts (points down)
 		-- (drawn from the 3D items instead: docs/GAMEPLAY.md, the food chip)
 		fish = 0,
 		carrot = 0,

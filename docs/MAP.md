@@ -65,7 +65,10 @@ Every player owns the slice of the valley right in front of their gate, so whoev
 - A ring of a slice has 4 clearings, 2 each side of the path, with a group of zombies roaming round each: radius 296, 226
   and 156 from the centre, circular paths at about 261 and 191.
 - The four mood quarters of 1.1 stay, blending across the slices; the Heart stays at the centre.
-- Until plots are handed out to 8 players, only the dev plot's slice has zombies.
+- A slice's level is its owner's; a slice with no owner rolls between the average and the highest level in the server. A
+  fight is never touched, a new spawn reads the level of its moment, and a group unattacked for 5 minutes returns to its
+  slice's level (`Zombies.sliceLevel`, `shouldRelevel`).
+- A plot with no player is empty: a village appears, at its player's saved levels, when they join (`src/server/Plots.luau`).
 
 ### 1.2 Fights
 

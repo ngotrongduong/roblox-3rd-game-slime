@@ -60,28 +60,29 @@ Permanent death makes **slimes what limits income**. A village replaces about 14
 start (24 from level 21, 32 from level 41) and has food for about 10 revives. Run out and fights stop paying, so the camps
 became a real choice: the easy camp loses 0.2-0.3 slimes a fight, the middle one 1, the hard one 3 with about half the fights lost.
 
-Fights earn about 44,000 coins an hour at the start, 102,000 at village level 19 and 263,000 at the top. Selling a baby
-instead of sending it adds a little: the shop is the side income the owner described.
+A team marches from its gate and back (26, 46 and 66 s each way to the three rings at starter SPD), fights, then waits for
+its wounds. With that, fights earn about 32,000 coins an hour at the start, 84,000 at village level 19 and 206,000 at the
+top. Selling a baby instead of sending it adds a little: the shop is the side income the owner described.
 
 | Area level | Price | One upgrade takes | Village level reached | At (active hours) |
 |---|---|---|---|---|
-| 1 | 360 | 30 s | 2 | 0.05 |
-| 5 | 530 | 40 s | 6 | 0.3 |
-| 10 | 1,000 | 1 min | 11 | 0.7 |
-| 15 | 2,300 | 1.5 min | 16 | 1.3 |
-| 19 | 3,200 | 2 min | 20 | **2.0** |
-| 25 | 7,900 | 3 min | 26 | 3.5 |
-| 30 | 13,000 | 4.5 min | 31 | 5.5 |
-| 35 | 23,000 | 7 min | 36 | 8.5 |
-| 39 | 34,000 | 10 min | 40 | **12.0** |
-| 45 | 67,000 | 16 min | 46 | 20 |
-| 49 | 99,000 | 23 min | 50 | **28** |
+| 1 | 270 | 31 s | 2 | 0.05 |
+| 5 | 390 | 41 s | 6 | 0.3 |
+| 10 | 840 | 1 min | 11 | 0.7 |
+| 15 | 1,900 | 1.5 min | 16 | 1.3 |
+| 19 | 2,600 | 2 min | 20 | **2.0** |
+| 25 | 6,600 | 3 min | 26 | 3.5 |
+| 30 | 11,000 | 4.5 min | 31 | 5.5 |
+| 35 | 19,000 | 7 min | 36 | 8.5 |
+| 39 | 29,000 | 10 min | 40 | **12.0** |
+| 45 | 52,000 | 16 min | 46 | 20 |
+| 49 | 78,000 | 23 min | 50 | **28** |
 
-One area from 1 to 50 costs about 980,000 coins; the whole village about 5.9 million.
+One area from 1 to 50 costs about 790,000 coins; the whole village about 4.8 million.
 
 ### What this table rests on (assumed, not measured)
 
-- A squad is out fighting half the time while the player also runs the village.
+- Teams run on repeat all the time; healing waits of 60, 90 and 120 s by ring. One real trip in play: 78 s out and back at the first ring, 63 s of healing.
 - Squads a village can spare: 1 at first, 2 from village level 6, 3 from 15, 4 from 20.
 - The strongest slimes reach level 8 at village level 10, 12 at 20, 20 at 30, 30 at 40, 40 at 50. Dying slimes pull this
   down and it has not been measured with deaths in it: the largest unknown here.

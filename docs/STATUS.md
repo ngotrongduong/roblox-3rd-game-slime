@@ -2,10 +2,15 @@
 
 ## 2026-11-02 — village bar done, economy researched: start here
 
-The HUD shows the village level and the upgrades to the next one. The owner's zombie slimes are playable in MapWork: camps, squads, fights,
-coins for each death, revive within 15 minutes of play or the slime is lost for good, the shop, three zombie skins and the missing icons (by
-ChatGPT). Not in yet: prices (upgrades still free). `docs/ECONOMY.md` has the rules, the measurements, the price table and what is left. In
-MapWork the stray flame now stands in the campfire (`Village.CampFlameFull`): the owner presses Ctrl+S to keep it.
+Playable in MapWork with one player: a village per player copied at their saved levels to the first free plot (`Plots`), 108 zombie groups shared
+by the server in 9 slices (`docs/MAP.md` 1.4), teams set at the gate, orders given at a group, marches, wounds, repeat, a home notice, one sorted
+slime list everywhere, revive within 15 minutes of play or a slime is lost for good, the shop, the rebuilt middle of the valley
+(`tools/map/build_wild_slices.luau`).
+
+Not done: Studio's multi-player test (nothing with two players has run); prices (upgrades still free; table in `docs/ECONOMY.md`); frame time on a
+phone with the new map and roaming zombies. MapWork holds unsaved work until the owner presses Ctrl+S in Edit mode: the flame in the campfire, the
+terrain of 8 plots, the new middle and 6 new kit models. After that: `lune run tools/kit/export_kit.luau`, then
+`lune run tools/kit/check_kit.luau TwistedTree GiantMushroom CrystalCluster EmberPlant RuinArch GooBasin`, and commit.
 
 ## 2026-11-01 — ChatGPT's branch reviewed and partly redone: start here
 
