@@ -5,6 +5,19 @@ Built by `tools/map/build_village.luau` (paving, well, lamps, planters) and `rep
 `AreaUpgrade.server.luau`. Pictures in `upgrades/`: `village-plaza-l25.jpg`, `village-plaza-l50.jpg`,
 `village-gate-l25.jpg`, `village-gate-l35.jpg`, `village-l50.jpg`.
 
+## Trees, bushes and small plants (2026-11-02, the same assets as the valley's middle)
+
+The old Nature kit's trees, bushes, flower patches, grass and ferns (the village's `Nature`, each area's, and `FenceSkirt` outside the
+fence) were replaced by `WildKit` Quaternius models (`docs/kit/README.md`) by `tools/map/dress_village_trees.luau`, from the list of
+where each stood (`tools/map/village_scenery_plan.txt`) to the nearest spot that no piece of any upgrade level takes. How that is known:
+`tools/map/village_footprints.luau` runs every stage module (pond, garden, pantry, kitchen, breeding, training, village: levels 1-50) on
+a clone and puts every part of every level, the paths, pads, entrances, work spots, the pond's water and the market street into a
+one-stud grid; `tools/map/check_village_trees.luau` tests every tree, bush and small plant against it (`VILLAGE TREES OK`), and also
+reports scenery the stages would remove or move (PantryStages' service yard, PondStages.grow, VillageStages) and village pieces that
+find no room only because of the scenery. Re-run both after changing any stage or the plan. Small plants keep their old names
+(`FlowerPatch`, `GrassTuft`, `Fern`...): VillageStages finds them by name. Triangles of the template: 1,437,000 before, 902,000 after
+(`tools/map/count_village_triangles.luau`).
+
 ## Village level
 
 The village has no prompt of its own: its level is the average of the six areas' levels, rounded

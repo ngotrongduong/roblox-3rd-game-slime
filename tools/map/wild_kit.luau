@@ -205,10 +205,12 @@ local LEAVES = {
 	Twisted_Gold = "rbxassetid://128362824192938",
 	Common_Teal = "rbxassetid://104754989321409",
 	Common_Purple = "rbxassetid://112755273870028",
+	Twisted_Green = "rbxassetid://114563508725763", -- (the bush's red picture in green, for the village's bushes, 2026-11-02)
 }
 local VARIANTS = {
 	{ "Twisted", { "QtTwistedTree_1", "QtTwistedTree_2", "QtTwistedTree_3" }, { "Purple", "Orange", "Gold" } },
 	{ "Common", { "QtCommonTree_1", "QtCommonTree_3", "QtCommonTree_5" }, { "Teal", "Purple" } },
+	{ "Twisted", { "QtBush_Common" }, { "Green" } }, -- QtBush_Common_Green: the bush wears the twisted trees' leaf picture
 }
 local variants = 0
 for _, group in VARIANTS do

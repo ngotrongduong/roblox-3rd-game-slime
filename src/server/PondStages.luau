@@ -292,6 +292,45 @@ local CLEAR = {
 	{ Config.WorkPlaces.FishBin[1], Config.WorkPlaces.FishBin[2], 3, 1 }, -- the fish bin
 }
 
+-- Where the water is and may come (area-local x, z, radius: the level-1 lobes; the grown ones with their level), read by
+-- tools/map/check_village_trees.luau so no scenery tree or bush ever stands in it.
+PondStages.Lobes = LOBES
+PondStages.Grow = GROW
+
+-- Does the scenery model standing at area-local (x, z) go at this level (grow removes it): the water or its sand steps come to it, the
+-- shore life or the parts built here (CLEAR) need its room. Also read by tools/map/check_village_trees.luau (at the top level).
+function PondStages.clears(x: number, z: number, level: number): boolean
+	for _, g in GROW do
+		if level >= g[4] and Vector2.new(x - g[1], z - g[2]).Magnitude < g[3] + 2.5 then
+			return true
+		end
+	end
+	for _, s in SHORE do
+		if level >= s[7] and Vector2.new(x - s[2] * PK, z - s[3] * PK).Magnitude < s[5] / 2 + 2 then
+			return true
+		end
+	end
+	-- (and anything left standing over a lowered sand step or the water: it would float)
+	local best = math.huge
+	for _, l in LOBES do
+		best = math.min(best, Vector2.new(x - l[1], z - l[2]).Magnitude - l[3])
+	end
+	for _, g in GROW do
+		if level >= g[4] then
+			best = math.min(best, Vector2.new(x - g[1], z - g[2]).Magnitude - g[3])
+		end
+	end
+	if best < 2.6 then
+		return true
+	end
+	for _, c in CLEAR do
+		if level >= c[4] and Vector2.new(x - c[1], z - c[2]).Magnitude < c[3] then
+			return true
+		end
+	end
+	return false
+end
+
 -- Grows the pond to `level` (its lobes from GROW, once each) and clears the scenery standing where
 -- the water and the shore life come. `pond` is the area model, `frame` its frame at the ground's top.
 function PondStages.grow(pond: Instance, frame: CFrame, level: number)
@@ -343,36 +382,7 @@ function PondStages.grow(pond: Instance, frame: CFrame, level: number)
 	for _, n in nature:GetChildren() do
 		if n:IsA("Model") and n.Name ~= "WaterLily" then
 			local q = frame:PointToObjectSpace(n:GetPivot().Position)
-			local clear = false
-			for _, g in GROW do
-				if level >= g[4] and Vector2.new(q.X - g[1], q.Z - g[2]).Magnitude < g[3] + 2.5 then
-					clear = true
-				end
-			end
-			for _, s in SHORE do
-				if level >= s[7] and Vector2.new(q.X - s[2] * PK, q.Z - s[3] * PK).Magnitude < s[5] / 2 + 2 then
-					clear = true
-				end
-			end
-			-- (and anything left standing over a lowered sand step or the water: it would float)
-			local best = math.huge
-			for _, l in LOBES do
-				best = math.min(best, Vector2.new(q.X - l[1], q.Z - l[2]).Magnitude - l[3])
-			end
-			for _, g in GROW do
-				if level >= g[4] then
-					best = math.min(best, Vector2.new(q.X - g[1], q.Z - g[2]).Magnitude - g[3])
-				end
-			end
-			if best < 2.6 then
-				clear = true
-			end
-			for _, c in CLEAR do
-				if level >= c[4] and Vector2.new(q.X - c[1], q.Z - c[2]).Magnitude < c[3] then
-					clear = true
-				end
-			end
-			if clear then
+			if PondStages.clears(q.X, q.Z, level) then
 				n.Parent = nil
 			end
 		end

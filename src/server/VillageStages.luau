@@ -105,6 +105,8 @@ local function inMarket(p: Vector3): boolean
 	local along = p:Dot(MARKET)
 	return along > 18 and along < 54 and math.abs(p:Dot(MARKET_ACROSS)) < 10
 end
+-- (read by tools/map/village_footprints.luau: no tree, bush or flower is planted in the market street)
+VillageStages.InMarket = inMarket
 
 -- What a level holds: the era, its step within the era (1-10), each build's tier (plaza, paths,
 -- fence walls, fence pillars, gate).

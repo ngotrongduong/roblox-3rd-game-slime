@@ -219,6 +219,16 @@ Recoloured crowns (a tint only multiplies): `tools/map/recolour_leaves.py` repai
 | `QtTwistedTree_1/2/3_Gold` | 128362824192938 |
 | `QtCommonTree_1/3/5_Teal` | 104754989321409 |
 | `QtCommonTree_1/3/5_Purple` | 112755273870028 |
+| `QtBush_Common_Green` (316 triangles) | 114563508725763 |
+
+`QtBush_Common` wears the twisted trees' red leaf picture; `tools/map/recolour_leaves.py` (job `Twisted_Green`, picture read out of
+`art/models/quaternius/Bush_Common.glb`) makes it green, for the village's bushes (2026-11-02).
+
+The village (the home plot's template) uses these as well (`tools/map/dress_village_trees.luau`): `QtPine_1/5` and
+`QtCommonTree_1/3/5` for the trees, `QtBush_Common_Green` and `QtBush_Common_Flowers` for the bushes, `QtFlower_3/4_Group`,
+`QtGrass_Common_Short/Tall`, `QtFern_1`, `QtPlant_1_Big` for flower patches, grass and ferns, placed so that no upgrade piece of any
+level of any area ever stands where they do (`tools/map/check_village_trees.luau`). They live in the plot's Nature folders and
+FenceSkirt as Models (attribute `VillageTrees`), so `HomePlot.rbxm` carries them: nothing is read from the kit at run time.
 
 Terrain earth: `tools/map/make_dirt.py` makes `art/textures/watercolor/DirtRoad.png` (the earthy tan road, asset 115722630865787, in `WildDirt` over
 Sandstone) and `DirtWorn.png` (a dark rust brown, asset 102870054982158, in `WildWorn` over Asphalt, a terrain material no Part uses; the worn

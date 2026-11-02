@@ -18,10 +18,16 @@ JOBS = {
 	"Twisted_Gold": ("Leaves_TwistedTree_C", (246, 186, 40)),
 	"Common_Teal": ("Leaves_NormalTree_C", (40, 176, 150)),
 	"Common_Purple": ("Leaves_NormalTree_C", (150, 80, 196)),
+	# the village's bushes (2026-11-02): Bush_Common wears the twisted tree's red picture, a sunny village wants green ones
+	# (the picture can also be taken from art/models/quaternius/Bush_Common.glb: its one image, saved as Leaves_TwistedTree_C.png)
+	"Twisted_Green": ("Leaves_TwistedTree_C", (100, 160, 44)),
 }
 SIZE = 512
 
 for name, (picture, target) in JOBS.items():
+	if not os.path.exists(os.path.join(source, picture + ".png")):
+		print("skipped", name, "(no", picture + ".png", "in", source + ")")
+		continue
 	im = Image.open(os.path.join(source, picture + ".png")).convert("RGBA").resize((SIZE, SIZE), Image.LANCZOS)
 	r, g, b, a = im.split()
 	grey = Image.merge("RGB", (r, g, b)).convert("L")

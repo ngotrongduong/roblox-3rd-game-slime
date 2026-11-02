@@ -218,6 +218,35 @@ was left there (this game has none); read it there if a cave is ever wanted.
 - 2026-11-02. A "zip" in a downloads folder can be a saved web page (18 KB, starts with <!DOCTYPE html>): look at the first bytes before
   unpacking, and say so in the report instead of searching for models.
 
+## The village's trees and bushes against its upgrades (2026-11-02, tools/map/dress_village_trees.luau, check_village_trees.luau)
+
+- Before dressing a place that upgrades, find out HOW it changes: here every area and the village are rebuilt from code (`*Stages.build(area,
+  frame, level)`, levels 1-50) and the code itself removes (`PantryStages` service yard, `PondStages.grow`) or moves (`VillageStages`,
+  `GardenStages`) scenery by name and position. The reliable footprint of "everything that ever appears" is to RUN those builders level by
+  level on `template:Clone()` (unparented, in Edit mode: 350 builds take about 8 s) and rasterise every part; reading the code for
+  coordinates would have missed the ivy, towers, lighthouse and the pond's grown lobes.
+- A stage build mutates its area (skins it, takes scenery away): never run it on the template, only on a clone. Terrain-writing calls
+  (`PondStages.grow`) must not run on a clone at all: pull their rule out as a pure function (`PondStages.clears`) and call that.
+- Module state hides in load order: `PondStages.kitPlace` is handed over when `PantryStages` loads, so a build run before it lacks the
+  shore's benches and racks, and a check that "passed" in the first call failed in the next. Require every stage module up front.
+- Rasterising a polygon by "inside" needs its turn: a rectangle from `RightVector`/`LookVector` is clockwise, and the test accepted only
+  its thin rim; large floors and yards were holes in the grid and the first "OK" was false. Always make a deliberate offender test: five
+  trees and bushes put on a yard, a path, a pond, the market street and a pavilion must each come back as a clash.
+- A height-band occupancy from the mesh's real vertices (`EditableMesh:GetVertices`, mapped through the part's size) tells a pine's low skirt
+  and a trunk apart; fill the empty bands between a trunk's foot and its fork with the thinner neighbour.
+- The upgrade code can take a small plant by a circle round a placed model (not by its parts) and slides pieces round trees and bushes
+  (so they lie differently once the scenery stands): plant trees and bushes first, then run the village layer again with them in place
+  and keep the small plants off THAT. Keep the old model names of what the code finds by name (FlowerPatch, GrassTuft, Fern).
+- A kit model's colour can sit in a picture shared with another model: `QtBush_Common` wears the twisted tree's red leaves. Read the .glb's
+  own image (`tools/map/extract_glb_image.py`: the GLB's JSON chunk, bufferViews) and recolour THAT with `recolour_leaves.py`; a green bush then came from one
+  upload. Pick the target at mid brightness, yellower than first thought (the mint one read blue under the lilac ambient).
+- Counting triangles of other creators' meshes: `Stats.SceneTriangleCount` needs a fixed camera, one clone, a 1.1 s wait before each reading
+  and the mean of the empty view before and after (it drifts by 4 a second); moving the camera between readings gave negative numbers.
+  The old Nature pack's bushes cost 790-2,730 triangles each, `QtBush_Common` 316: the village's template fell from 1.44 M to 0.90 M.
+- `studio_mcp.js run <file> <id> Edit NAME=file` hands a file over as the string NAME: a library file shared by two tools is turned into
+  a ModuleScript (`Source = LIB`, parented to ServerStorage, required, destroyed) so rules exist once. Port 8765 of `serve_dir.js` was
+  taken by someone else: pick another.
+
 ## Water and moving things
 
 - 2026-10-21. The owner: a waterfall of parts (a blue block, white rectangles, white balls) "is not water". Falling
