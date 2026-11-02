@@ -15,7 +15,6 @@ local FOOD_ICON = "veggieStew" -- the Items model on the food button
 local UiHud = {}
 local strip: ScrollingFrame? = nil
 local edge: Frame? = nil
-local villageBar: Frame? = nil
 local villageLabel: TextLabel? = nil
 local villageFill: Frame? = nil
 local chips: { [string]: UiKit.Chip } = {}
@@ -43,8 +42,9 @@ end
 function UiHud.start(root: Frame, onBook: () -> (), onTravel: (place: string) -> ())
 	local bar = UiKit.make("ScrollingFrame", {
 		Name = "Resources",
-		Position = UDim2.fromOffset(U.Edge, U.Edge),
-		Size = UDim2.new(1, -2 * U.Edge, 0, U.ChipHeight),
+		-- (as tall as a touch target, or it would clip the food button's press area; the plates sit centred in it)
+		Position = UDim2.fromOffset(U.Edge, U.Edge - (U.Touch - U.ChipHeight) / 2),
+		Size = UDim2.new(1, -2 * U.Edge, 0, U.Touch),
 		BackgroundTransparency = 1,
 		BorderSizePixel = 0,
 		AutomaticCanvasSize = Enum.AutomaticSize.X,
@@ -56,6 +56,7 @@ function UiHud.start(root: Frame, onBook: () -> (), onTravel: (place: string) ->
 	UiKit.make("UIListLayout", {
 		FillDirection = Enum.FillDirection.Horizontal,
 		HorizontalAlignment = Enum.HorizontalAlignment.Left,
+		VerticalAlignment = Enum.VerticalAlignment.Center,
 		Padding = UDim.new(0, U.Gap),
 		SortOrder = Enum.SortOrder.LayoutOrder,
 	}, bar)
@@ -72,7 +73,10 @@ function UiHud.start(root: Frame, onBook: () -> (), onTravel: (place: string) ->
 		Name = "Open",
 		BackgroundTransparency = 1,
 		Text = "",
-		Size = UDim2.fromScale(1, 1),
+		-- (taller than the plate: a touch target is never below U.Touch)
+		AnchorPoint = Vector2.new(0, 0.5),
+		Position = UDim2.fromScale(0, 0.5),
+		Size = UDim2.new(1, 0, 0, U.Touch),
 		ZIndex = 20,
 	}, chips.food.root).Activated
 		:Connect(function()
@@ -80,20 +84,20 @@ function UiHud.start(root: Frame, onBook: () -> (), onTravel: (place: string) ->
 		end)
 	add("slimes", "slimes")
 
-	-- Round buttons hug the right edge, clear of the jump button and the thumbstick: Market and Home (quick travel) beside
-	-- the slime book, in one row with the book against the edge.
+	-- Round buttons hug the right edge above the jump button: Market and Home (quick travel) over the slime book, in one
+	-- column, so the view stays open on a short phone screen.
 	local group = UiKit.make("Frame", {
 		Name = "EdgeButtons",
 		AnchorPoint = Vector2.new(1, 0.5),
 		Position = UDim2.new(1, -U.Edge, 0.5, 0),
-		Size = UDim2.fromOffset(0, U.Touch + 16),
-		AutomaticSize = Enum.AutomaticSize.X,
+		Size = UDim2.fromOffset(U.BookButton, 0),
+		AutomaticSize = Enum.AutomaticSize.Y,
 		BackgroundTransparency = 1,
 		Visible = false,
 	}, root)
 	UiKit.make("UIListLayout", {
-		FillDirection = Enum.FillDirection.Horizontal,
-		HorizontalAlignment = Enum.HorizontalAlignment.Right,
+		FillDirection = Enum.FillDirection.Vertical,
+		HorizontalAlignment = Enum.HorizontalAlignment.Center,
 		VerticalAlignment = Enum.VerticalAlignment.Center,
 		Padding = UDim.new(0, U.Gap),
 		SortOrder = Enum.SortOrder.LayoutOrder,
@@ -104,33 +108,34 @@ function UiHud.start(root: Frame, onBook: () -> (), onTravel: (place: string) ->
 	UiKit.roundButton(group, "home", U.TravelButton, function()
 		onTravel("Home")
 	end, { LayoutOrder = 2 })
-	UiKit.roundButton(group, "slimes", U.Touch + 16, onBook, { LayoutOrder = 3 })
+	UiKit.roundButton(group, "slimes", U.BookButton, onBook, { LayoutOrder = 3 })
 	edge = group
 
-	-- Under the strip: the village's level and how many upgrades its next level still takes.
-	local box, body = UiKit.skin(root, "Wood", "Card", {
+	-- Last in the strip: the village's level over a bar of the upgrades done towards the next one.
+	local _, body = UiKit.skin(bar, "Wood", "Card", {
 		Name = "VillageBar",
-		Position = UDim2.fromOffset(U.Edge, U.Edge + U.ChipHeight + U.Gap),
-		Size = UDim2.fromOffset(U.VillageBarWidth, U.VillageBarHeight),
-		Visible = false,
+		LayoutOrder = order + 1,
+		Size = UDim2.fromOffset(U.VillageBarWidth, U.ChipHeight),
 	})
-	UiKit.make("UIListLayout", {
-		FillDirection = Enum.FillDirection.Vertical,
-		VerticalAlignment = Enum.VerticalAlignment.Center,
-		Padding = UDim.new(0, 2),
-		SortOrder = Enum.SortOrder.LayoutOrder,
+	local track = UiKit.make("Frame", {
+		Name = "Track",
+		BackgroundColor3 = UiKit.colour("Track"),
+		BorderSizePixel = 0,
+		Size = UDim2.fromScale(1, 1),
+		ZIndex = 2,
 	}, body)
-	villageLabel = UiKit.label(body, "", U.TextSmall, "Brown", {
-		LayoutOrder = 1,
-		Size = UDim2.new(1, 0, 0, U.TextSmall + 2),
+	villageFill = UiKit.make("Frame", {
+		Name = "Fill",
+		BackgroundColor3 = UiKit.colour("GoldLight"),
+		BorderSizePixel = 0,
+		Size = UDim2.fromScale(0, 1),
+		ZIndex = 2,
+	}, track) :: Frame
+	villageLabel = UiKit.label(body, "", U.TextTiny, "Brown", {
+		Size = UDim2.fromScale(1, 1),
 		TextXAlignment = Enum.TextXAlignment.Center,
+		ZIndex = 3,
 	})
-	local track = UiKit.bar(body, "", "GoldLight", {
-		LayoutOrder = 2,
-		Size = UDim2.new(1, 0, 0, U.BarHeight),
-	})
-	villageFill = track.root:FindFirstChild("Fill", true) :: Frame?
-	villageBar = box
 end
 
 function UiHud.setVisible(visible: boolean)
@@ -139,9 +144,6 @@ function UiHud.setVisible(visible: boolean)
 	end
 	if edge then
 		edge.Visible = visible
-	end
-	if villageBar then
-		villageBar.Visible = visible
 	end
 end
 
@@ -168,10 +170,7 @@ function UiHud.refresh(own: Folder?)
 	local done = own:GetAttribute("VillageUpgrades")
 	if villageLabel and villageFill and type(level) == "number" and type(done) == "number" then
 		local count = #Config.Village.Areas
-		local left = count - done
-		villageLabel.Text = if level >= Config.Village.MaxLevel
-			then "Village " .. level .. " MAX"
-			else "Village " .. level .. ": " .. left .. (if left == 1 then " upgrade" else " upgrades") .. " to go"
+		villageLabel.Text = "Village " .. level .. (if level >= Config.Village.MaxLevel then " MAX" else "")
 		-- (a new level starts the bar again: it falls back at once, only a fill slides)
 		local goal = UDim2.fromScale(done / count, 1)
 		if goal.X.Scale < villageFill.Size.X.Scale then

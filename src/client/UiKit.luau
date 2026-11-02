@@ -362,18 +362,18 @@ function UiKit.chip(parent: Instance?, icon: string, text: string, order: number
 		SortOrder = Enum.SortOrder.LayoutOrder,
 	}, body)
 	if model then
-		UiKit.modelIcon(body, model, U.IconNormal, { LayoutOrder = 1 })
+		UiKit.modelIcon(body, model, U.IconSmall, { LayoutOrder = 1 })
 	else
-		UiKit.icon(body, icon, U.IconNormal, { LayoutOrder = 1 })
+		UiKit.icon(body, icon, U.IconSmall, { LayoutOrder = 1 })
 	end
 	local value = UiKit.label(body, text, U.TextSmall, "Brown", {
 		Name = "Value",
 		LayoutOrder = 2,
-		Size = UDim2.new(1, -U.IconNormal - 4, 1, 0),
+		Size = UDim2.new(1, -U.IconSmall - 4, 1, 0),
 	})
 	local function set(next: string)
 		value.Text = next
-		box.Size = UDim2.fromOffset(U.IconNormal + 24 + #next * 9, U.ChipHeight)
+		box.Size = UDim2.fromOffset(U.IconSmall + 24 + #next * 9, U.ChipHeight)
 	end
 	set(text)
 	return { root = box, set = set }

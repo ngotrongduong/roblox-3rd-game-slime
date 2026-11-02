@@ -1573,8 +1573,9 @@ Config.Ui = {
 	Pad = 10,
 	Gap = 6,
 	Edge = 10,
-	-- The Home and Market buttons beside the book button.
-	TravelButton = 52,
+	-- The Home and Market buttons over the book button, in a column on the right edge.
+	TravelButton = 48,
+	BookButton = 52,
 	IconSmall = 20,
 	IconNormal = 28,
 	-- A 3D item drawn as an icon (UiKit.modelIcon): the camera's field of view, how much room it leaves round the
@@ -1582,9 +1583,9 @@ Config.Ui = {
 	ModelIconFov = 30,
 	ModelIconPad = 1.05,
 	ModelIconLift = 0.8,
-	ChipHeight = 40,
-	VillageBarWidth = 210,
-	VillageBarHeight = 50,
+	ChipHeight = 32,
+	-- The village's level and progress, one more plate in the resource strip (a phone's screen is short).
+	VillageBarWidth = 104,
 	VillageBarFillSeconds = 0.35,
 	TextTiny = 13,
 	TextSmall = 15,
