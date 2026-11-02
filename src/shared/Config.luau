@@ -1652,6 +1652,129 @@ Config.VillageClient = {
 	Card = "#f5e7c7",
 }
 
+-- ===== The dish buff on a slime (src/client/SlimeBuffs.client.luau) =====
+-- The server publishes BuffStat / BuffPercent / BuffUntil / BuffRarity on each slime; the client draws a small badge
+-- beside the emote and a few particles of the stat's own design while the buff lives. Sizes marked "body" are shares
+-- of the slime's body height (studs); a rate is particles a second before the rarity and effects-tier multipliers.
+Config.SlimeBuffFx = {
+	-- master switch for the particles (the badge is a plain GUI and stays)
+	Enabled = true,
+	-- how often the live buffs are looked at (seconds); expiry, streaming and distance are checked here, never per frame
+	PollSeconds = 0.5,
+	-- Budget: particles only for the nearest MaxFx buffed slimes within FxStuds of the camera, badges within
+	-- BadgeStuds (at most MaxBadges), at most MaxBursts start bursts alive at once. A slime keeps its place until it is
+	-- ReleaseMargin x the distance away (no flapping at the edge).
+	FxStuds = 60,
+	MaxFx = 6,
+	BadgeStuds = 65,
+	MaxBadges = 16,
+	MaxBursts = 4,
+	ReleaseMargin = 1.2,
+	-- Effects setting: the graphics quality level (1..21) at or below which particles are off, and at or below which
+	-- they are the light version (rates and bursts times LightShare). Phones sit low, so the particles stay few.
+	LowQualityMax = 2,
+	LightQualityMax = 5,
+	LightShare = 0.5,
+	-- a buff that shows up within this long of the slime appearing is its first state, not a dish eaten: no burst
+	AnnounceAfterSeconds = 2,
+	-- a burst that could not be drawn (no body yet) is forgotten after this long
+	BurstStaleSeconds = 3,
+	BurstLifeSeconds = 1.6,
+	-- The badge (pixels at a 900 px high screen, scaled with the screen between the two limits). It sits where the emote
+	-- sits (1.25 body heights up) but on the other side: SideBody body heights toward the viewer's left.
+	Badge = {
+		Width = 62,
+		Height = 22,
+		TextSize = 14,
+		StrokePixels = 2,
+		ScaleReference = 900,
+		ScaleMin = 0.8,
+		ScaleMax = 1.3,
+		LiftBody = 0.75,
+		SideBody = 0.5,
+		PopSeconds = 0.22,
+		IconPixels = 16,
+	},
+	-- Rarity: rate / size multipliers, the faintest the particle gets at its peak (0 = solid; lower = brighter) and the
+	-- burst multiplier. The badge frame takes the colour from Config.Food.Rarities.
+	Rarity = {
+		common = { rate = 1, size = 1, alpha = 0.3, burst = 1 },
+		uncommon = { rate = 1.4, size = 1.1, alpha = 0.2, burst = 1.4 },
+		rare = { rate = 1.9, size = 1.2, alpha = 0.1, burst = 1.9 },
+		epic = { rate = 2.6, size = 1.35, alpha = 0, burst = 2.6 },
+	},
+	-- Roblox's own particle pictures. The sparkle is the attack's; the soft smoke puff, squashed long and aimed along its
+	-- flight, is the speed's streak (no picture of a wind streak exists yet). Shield and heart are the owner's icons
+	-- (Config.Ui.Icons.defence / .hp), untinted.
+	SparkTexture = "rbxasset://textures/particles/sparkles_main.dds",
+	StreakTexture = "rbxasset://textures/particles/smoke_main.dds",
+	-- ---- attack: sparks rising from the body, fast and bright (additive) ----
+	Attack = {
+		Rate = 3.5,
+		Size = 0.17,
+		LifeMin = 0.7,
+		LifeMax = 1.1,
+		SpeedMin = 0.9,
+		SpeedMax = 1.6,
+		Rise = 1.2,
+		Spread = 14,
+		ColourA = "#ff8a3c",
+		ColourB = "#ffd96a",
+		BurstCount = 7,
+		BurstSize = 0.24,
+		BurstSpeedMin = 2.2,
+		BurstSpeedMax = 3.6,
+		BurstLife = 0.55,
+	},
+	-- ---- defence: a few of the owner's shields breathing in and out on the body's skin ----
+	Defence = {
+		Rate = 1.3,
+		Size = 0.45,
+		Life = 1.7,
+		Drift = 0.25,
+		Peak = 0.45,
+		BurstCount = 3,
+		BurstSize = 0.85,
+		BurstSpeed = 1.1,
+		BurstLife = 0.7,
+	},
+	-- ---- speed: long soft streaks thrown back behind the body; fewer while it stands still ----
+	Speed = {
+		Rate = 5,
+		IdleShare = 0.3,
+		Size = 0.55,
+		LifeMin = 0.35,
+		LifeMax = 0.5,
+		SpeedMin = 2.2,
+		SpeedMax = 3.6,
+		-- Emitter.Squash: how long the soft puff is stretched along its flight (positive = longer; flip the sign if the
+		-- streaks look flat when seen in play)
+		Squash = 0.85,
+		Colour = "#e4f6ff",
+		Alpha = 0.45,
+		BurstCount = 7,
+		BurstSize = 0.5,
+		BurstSpeed = 5,
+		BurstLife = 0.4,
+	},
+	-- ---- hp: small hearts that float up slowly and fade ----
+	Hp = {
+		Rate = 1.5,
+		Size = 0.2,
+		LifeMin = 1.3,
+		LifeMax = 1.9,
+		SpeedMin = 0.5,
+		SpeedMax = 0.9,
+		Spread = 28,
+		BurstCount = 5,
+		BurstSize = 0.24,
+		BurstSpeedMin = 1.2,
+		BurstSpeedMax = 2,
+		BurstFall = 1.6,
+		BurstLife = 1.1,
+	},
+}
+
 -- ===== The screen kit (src/client/Ui*.luau): the owner's art, palette, fonts and sizes =====
 -- Every image is the owner's own art from reference/goo-lineage-web/assets, trimmed to its bounds only and uploaded
 -- (art-pipeline). An id of 0 is a picture that does not exist yet: the client logs it once and shows a stand-in.
