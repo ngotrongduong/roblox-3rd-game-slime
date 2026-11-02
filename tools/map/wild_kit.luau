@@ -127,6 +127,48 @@ for name, id in OWN do
 		task.wait()
 	end
 end
+-- The Quaternius trees with whole trunks (the owner re-imported them 2026-11-02): each import lands in the Workspace as a Model named
+-- "Scene" holding one or two Models (the crown, "X", and the trunk, "X.001"). They are flattened into QtX with a Skin (the crown, a
+-- textured MeshPart) and a Bark part (the trunk, a SurfaceAppearance part), anchored, the pivot at the foot, and the Scenes destroyed.
+local flattened = {}
+for _, scene in workspace:GetChildren() do
+	if scene.Name == "Scene" and scene:IsA("Model") then
+		local first = scene:FindFirstChildWhichIsA("Model")
+		if first then
+			local name = string.gsub(first.Name, "%.%d+$", "")
+			local model = Instance.new("Model")
+			model.Name = "Qt" .. name
+			for _, d in scene:GetDescendants() do
+				if d:IsA("MeshPart") then
+					local part = d:Clone()
+					part.Name = if d.TextureID ~= "" then "Skin" else "Bark"
+					part.Anchored = true
+					part.CanTouch = false
+					part.CanQuery = false
+					part.CanCollide = false
+					part.Parent = model
+				end
+			end
+			local box, size = model:GetBoundingBox()
+			model.PrimaryPart = nil
+			model.WorldPivot = CFrame.new(box.Position - Vector3.new(0, size.Y / 2, 0))
+			model:PivotTo(CFrame.new())
+			local old = kit:FindFirstChild(model.Name)
+			if old then
+				old:Destroy()
+			end
+			model.Parent = kit
+			table.insert(flattened, string.format("%s %.1fx%.1fx%.1f", model.Name, size.X, size.Y, size.Z))
+			scene:Destroy()
+		end
+	end
+end
+for _, model in kit:GetChildren() do
+	if string.sub(model.Name, 1, 3) == "Mix" then
+		model:Destroy() -- (the Mix trees of the first round: a crown on a Yasu trunk, retired now the Qt trees are whole)
+	end
+end
+
 -- The Qt* pieces came in with the leaves' picture as MeshPart.TextureID, whose alpha Roblox ignores: every card drew as a dark
 -- opaque sheet (seen 2026-11-02). The same picture as a SurfaceAppearance ColorMap with AlphaMode Transparency cuts the leaves out and
 -- takes a tint through SurfaceAppearance.Color. Rocks, pebbles and mushrooms have no cut-out and keep their TextureID.
@@ -154,49 +196,39 @@ for _, model in kit:GetChildren() do
 		end
 	end
 end
--- The Qt trees' Bark meshes came out shredded (the phone-size decimation tore them at the texture seams: scattered triangles instead of
--- a trunk), so the trees are made as Mix* models: the Qt crown (Skin) on a Yasu trunk. { name, crown, trunk's tree, trunk's share of
--- the crown model's height, width factor }. Their crowns keep their own colour (a tint only darkens): common green, twisted red.
-local MIX = {
-	{ "MixCommon1", "QtCommonTree_1", "YasuTree13", 0.75, 1.7 },
-	{ "MixCommon3", "QtCommonTree_3", "YasuTree01", 0.7, 1.7 },
-	{ "MixCommon5", "QtCommonTree_5", "YasuTree15", 0.72, 1.5 },
-	{ "MixTwisted1", "QtTwistedTree_1", "YasuTree06", 0.55, 1.2 },
-	{ "MixTwisted2", "QtTwistedTree_2", "YasuTree05", 0.6, 1.3 },
-	{ "MixTwisted3", "QtTwistedTree_3", "YasuTree19", 0.6, 1.2 },
-	{ "MixPine1", "QtPine_1", "YasuTree13", 0.55, 1.1 },
-	{ "MixPine5", "QtPine_5", "YasuTree01", 0.5, 1.0 },
+-- Crowns in other colours: a tint only multiplies (red never turns purple), so tools/map/recolour_leaves.py paints the leaf pictures in
+-- other colours (kept out of git: art/models/quaternius/recolour/) and they were uploaded with the Studio upload_image tool. A variant is
+-- the Qt tree with that picture as its crown's ColorMap: QtTwistedTree_1_Purple and so on.
+local LEAVES = {
+	Twisted_Purple = "rbxassetid://122236132244225",
+	Twisted_Orange = "rbxassetid://100102769739429",
+	Twisted_Gold = "rbxassetid://128362824192938",
+	Common_Teal = "rbxassetid://104754989321409",
+	Common_Purple = "rbxassetid://112755273870028",
 }
-local mixed = {}
-for _, spec in MIX do
-	local crown, trunkTree = kit:FindFirstChild(spec[2]), kit:FindFirstChild(spec[3])
-	if crown and trunkTree then
-		local model = crown:Clone()
-		model.Name = spec[1]
-		local _, size = model:GetBoundingBox()
-		local bark = model:FindFirstChild("Bark", true)
-		if bark then
-			bark:Destroy()
-		end
-		local trunk
-		for _, d in trunkTree:GetDescendants() do
-			if d:IsA("MeshPart") and string.find(d.Name, "Trunk") then
-				trunk = d
+local VARIANTS = {
+	{ "Twisted", { "QtTwistedTree_1", "QtTwistedTree_2", "QtTwistedTree_3" }, { "Purple", "Orange", "Gold" } },
+	{ "Common", { "QtCommonTree_1", "QtCommonTree_3", "QtCommonTree_5" }, { "Teal", "Purple" } },
+}
+local variants = 0
+for _, group in VARIANTS do
+	for _, baseName in group[2] do
+		local base = kit:FindFirstChild(baseName)
+		for _, colour in group[3] do
+			if base then
+				local copy = base:Clone()
+				copy.Name = baseName .. "_" .. colour
+				local sa = copy.Skin:FindFirstChildOfClass("SurfaceAppearance")
+				sa.ColorMap = LEAVES[group[1] .. "_" .. colour]
+				sa.Color = Color3.new(1, 1, 1)
+				local old = kit:FindFirstChild(copy.Name)
+				if old then
+					old:Destroy()
+				end
+				copy.Parent = kit
+				variants += 1
 			end
 		end
-		local t = trunk:Clone()
-		local k = size.Y * spec[4] / t.Size.Y
-		t.Size = Vector3.new(t.Size.X * k * spec[5], t.Size.Y * k, t.Size.Z * k * spec[5])
-		local foot = model:GetPivot().Position
-		t.CFrame = CFrame.new(foot.X, foot.Y + t.Size.Y / 2 - 0.05, foot.Z)
-		t.Anchored = true
-		t.Parent = model
-		local old = kit:FindFirstChild(spec[1])
-		if old then
-			old:Destroy()
-		end
-		model.Parent = kit
-		table.insert(mixed, spec[1])
 	end
 end
-return table.concat(out, ", ") .. " | own: " .. table.concat(loaded, ", ") .. " | cut-out converted: " .. converted .. " | mixed: " .. table.concat(mixed, ", ")
+return table.concat(out, ", ") .. " | variants: " .. variants .. " | own: " .. table.concat(loaded, ", ") .. " | cut-out converted: " .. converted .. " | trees: " .. table.concat(flattened, ", ")

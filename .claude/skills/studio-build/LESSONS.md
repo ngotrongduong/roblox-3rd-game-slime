@@ -203,6 +203,20 @@ was left there (this game has none); read it there if a cave is ever wanted.
 - 2026-11-02. Count cheap and dear pieces apart: the owner's hand-made pieces are 1,500-5,200 triangles, so a drift of three is 10,000.
   Sprinkle them by count (a `SPRINKLES` list with a cap), use the 100-500 triangle pieces for everything scattered.
 - 2026-11-02. A camera sitting on a trail finds a mushroom in its face: shoot from a point a few studs off the trail's centre.
+- 2026-11-02 (second round). A tint multiplies, so crowns of other colours need real recoloured textures: PIL with the leaf picture's alpha
+  kept, a target colour at mid brightness times the original's light and dark with a soft blotch noise (so a crown is not one flat sheet);
+  served on the local file server, uploaded with `upload_image`, set as the crown's SurfaceAppearance ColorMap in a kit variant. Result:
+  purple, orange, gold and teal crowns read right.
+- 2026-11-02. A terrain material can be given its own painted texture only if no Part uses it (`MaterialService` overrides every Part too):
+  count Part materials first (here Asphalt was free), use that material for the earth, leave the common one (Ground) alone. Re-run the
+  scrap list so old voxels of the material are cleared, and give the material colour white when the texture carries the colour.
+- 2026-11-02. Flat painted-earth textures read orange-pink when saturated: make two ramps (a tan road, a dark brown earth) from the picture's
+  light and dark, blend only 10-18 % of its own colour back. A large brown plaza still reads as a car park: break it with moss and grass.
+- 2026-11-02. Budget: a recipe edit that changes one random draw changes every later tree (a 1,790-triangle twisted tree or a 5,000 one
+  swings the total by 10 %). Count after every edit, cut the cheap lever (a tree fewer per cluster, spacing) rather than tune plants.
+  The Quaternius trees cost 1,500-3,300 each against 400-2,000 for the first picks: spacing x1.3 and one tree fewer per cluster paid for it.
+- 2026-11-02. A "zip" in a downloads folder can be a saved web page (18 KB, starts with <!DOCTYPE html>): look at the first bytes before
+  unpacking, and say so in the report instead of searching for models.
 
 ## Water and moving things
 

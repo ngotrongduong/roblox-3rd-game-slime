@@ -17,6 +17,9 @@ local M = Config.Map
 local terrain = workspace.Terrain
 local rng = Random.new(20261103)
 local Mat = Enum.Material
+-- Worn earth is Asphalt, a terrain material no Part in the place uses, with its own painted texture (WildWorn): Ground stays what the
+-- village soil Parts use, and its chips look like wood chips.
+local WORN = Mat.Asphalt
 
 -- ===== the plan =====
 -- What must stay free (the zombies' roam, a team's stand and march; the slime is 3.5 wide).
@@ -58,7 +61,7 @@ local COLOURS = {
 	[Mat.Basalt] = Color3.fromRGB(92, 70, 64),
 	[Mat.Sand] = Color3.fromRGB(232, 210, 150),
 	[Mat.Sandstone] = Color3.fromRGB(255, 255, 255), -- the dirt roads: the colour is in WildDirt's painted texture
-	[Mat.Ground] = Color3.fromRGB(158, 98, 50), -- worn earth: the rust of the references' trails ((176, 102, 66), build_terrain's own, reads pink)
+	[WORN] = Color3.fromRGB(255, 255, 255), -- worn earth: the colour is in WildWorn's painted texture (tools/map/make_dirt.py)
 	[Mat.LeafyGrass] = Color3.fromRGB(176, 170, 58), -- ember: dry golden grass
 	[Mat.Limestone] = Color3.fromRGB(104, 128, 40), -- meadow: the sunny patches
 	[Mat.Mud] = Color3.fromRGB(96, 98, 26), -- moss under the trees, the wood's floor
@@ -69,7 +72,6 @@ local COLOURS = {
 -- Materials this map does not use go back to Roblox's defaults (an earlier run tinted them).
 local DEFAULT_COLOURS = {
 	[Mat.Concrete] = Color3.fromRGB(127, 102, 63),
-	[Mat.Asphalt] = Color3.fromRGB(115, 123, 107),
 	[Mat.Salt] = Color3.fromRGB(198, 189, 181),
 	[Mat.Pavement] = Color3.fromRGB(148, 148, 140),
 	[Mat.Brick] = Color3.fromRGB(138, 86, 62),
@@ -83,11 +85,11 @@ local GROUND = {
 	meadow_middle = { { Mat.Grass, 0.55 }, { Mat.Mud, 0.3 }, { Mat.Limestone, 0.15 } },
 	mushroom_outer = { { Mat.Grass, 0.55 }, { Mat.Limestone, 0.2 }, { Mat.Mud, 0.25 } },
 	mushroom_middle = { { Mat.Mud, 0.45 }, { Mat.Grass, 0.4 }, { Mat.Limestone, 0.15 } },
-	ember_outer = { { Mat.LeafyGrass, 0.8 }, { Mat.Ground, 0.2 } },
-	ember_middle = { { Mat.LeafyGrass, 0.68 }, { Mat.Ground, 0.32 } },
+	ember_outer = { { Mat.LeafyGrass, 0.8 }, { WORN, 0.2 } },
+	ember_middle = { { Mat.LeafyGrass, 0.68 }, { WORN, 0.32 } },
 	frost_outer = { { Mat.Snow, 0.74 }, { Mat.Glacier, 0.2 }, { Mat.Mud, 0.06 } },
 	frost_middle = { { Mat.Snow, 0.5 }, { Mat.Mud, 0.28 }, { Mat.Glacier, 0.22 } },
-	inner = { { Mat.Mud, 0.78 }, { Mat.Grass, 0.1 }, { Mat.Ground, 0.12 } },
+	inner = { { Mat.Mud, 0.78 }, { Mat.Grass, 0.1 }, { WORN, 0.12 } },
 }
 -- The worn earth and moss laid under a cluster of trees.
 local UNDER_TREES = {
@@ -95,14 +97,15 @@ local UNDER_TREES = {
 	meadow_middle = Mat.Mud,
 	mushroom_outer = Mat.Mud,
 	mushroom_middle = Mat.Mud,
-	ember_outer = Mat.Ground,
-	ember_middle = Mat.Ground,
+	ember_outer = WORN,
+	ember_middle = WORN,
 	frost_outer = Mat.Snow,
 	frost_middle = Mat.Mud,
 	inner = Mat.Mud,
 }
 local UNDER_RADIUS = 13
-local HERO_SHARE = 0.5 -- how many clusters are led by one of the owner's big trees
+local SPACING_SCALE = 1.12 -- clusters this much further apart than the recipes say: the Quaternius trees cost 1,500-3,300 triangles each
+local HERO_SHARE = 0.3 -- how many clusters are led by one of the owner's big trees
 local WORN_NOISE = 0.46 -- broad noise over this wears the ground to earth anywhere (never on snow)
 
 -- Clockwise from north, as in the reference.
@@ -441,9 +444,9 @@ end
 local function nature(name: string, low: number, high: number)
 	return { kit = "NatureKit", name = name, low = low, high = high, trunk = 0.07, foot = 0.6 } -- (their boughs reach the ground)
 end
--- A Quaternius crown on a Yasu trunk (tools/map/wild_kit.luau). A crown keeps its own hue (a tint only darkens or yellows it).
-local function mix(name: string, low: number, high: number, tints)
-	return { kit = "WildKit", name = name, low = low, high = high, tints = tints, trunk = 0.05, foot = 0.08, roots = true }
+-- A Quaternius tree with its own trunk (tools/map/wild_kit.luau); the recoloured crowns are variants named _Purple, _Orange, _Gold, _Teal.
+local function qtTree(name: string, low: number, high: number, tints)
+	return { kit = "WildKit", name = "Qt" .. name, low = low, high = high, tints = tints, trunk = 0.055, foot = 0.12 }
 end
 
 local ROUND_TREES = { 1, 3, 5, 6, 13, 15, 17, 18 }
@@ -508,12 +511,14 @@ local BUSH_TEAL = { Color3.fromRGB(50, 150, 110) }
 local BUSH_DUSK = { Color3.fromRGB(150, 70, 150), Color3.fromRGB(110, 70, 160), Color3.fromRGB(70, 110, 70) }
 local MUSHROOM_TINT = { Color3.fromRGB(140, 255, 215), Color3.fromRGB(170, 255, 225) }
 local AMETHYST = { Color3.fromRGB(176, 110, 240) }
+local QT_WHITE = { Color3.fromRGB(255, 255, 255), Color3.fromRGB(240, 240, 240) }
 local QT_GREEN = { WHITE, Color3.fromRGB(240, 255, 200), Color3.fromRGB(225, 250, 190) }
 local QT_TEAL = { Color3.fromRGB(200, 255, 235), Color3.fromRGB(185, 240, 225) }
 local QT_RED = { WHITE, Color3.fromRGB(255, 215, 200), Color3.fromRGB(255, 185, 160) }
 local QT_PINE = { WHITE, Color3.fromRGB(210, 235, 225) }
 local FERN_GOLD = { Color3.fromRGB(255, 235, 150), Color3.fromRGB(240, 220, 130) }
-local FROST_BERRY = { Color3.fromRGB(215, 175, 175), Color3.fromRGB(235, 200, 200) } -- (the red bush at its darkest: winterberries)
+local FROST_BERRY = { Color3.fromRGB(165, 135, 135), Color3.fromRGB(185, 150, 150) } -- (the red bush at its darkest: winterberries)
+local AMBER = { Color3.fromRGB(255, 205, 120), Color3.fromRGB(255, 190, 90) }
 local FERN_ICE = { Color3.fromRGB(190, 225, 215), Color3.fromRGB(175, 215, 210) }
 local FERN_DUSK ={ Color3.fromRGB(170, 200, 160), Color3.fromRGB(150, 190, 150) }
 
@@ -535,22 +540,25 @@ local function tufts(tints, scale: number?, dry: boolean?)
 	}
 end
 local function spikes(tints)
-	return { plant("WildKit", "DokiFlower3", 4.4, 6.4, tints), plant("WildKit", "DokiFlower4", 4.4, 7, tints) }
+	local a = plant("WildKit", "DokiFlower4", 4.4, 7, tints)
+	a.group = true -- (a lone spike reads as a dot: they stand in fives and more, in few groups)
+	return { a }
 end
 
 -- The references' signature is a round grey boulder capped with moss: the Quaternius rocks (244-522 triangles) with a clover tuft
 -- laid on top for the moss. The owner's mossy rock stack (2,300) stands in as the rare big one. (NatureKit's MossyBoulder, 1,466,
 -- tan with green goo, is gone; KitCache's rock_boulder_mossy is a flat pancake.)
+local ROCK_WARM = { Color3.fromRGB(255, 232, 196), Color3.fromRGB(255, 240, 210), Color3.fromRGB(250, 226, 190) }
 local QTROCKS = {
-	qtRock("Rock_Medium_1", 3.2, 5.2),
-	qtRock("Rock_Medium_2", 2.8, 4.6),
-	qtRock("Rock_Medium_3", 3.2, 5.2),
-	qtRock("Rock_Medium_1", 2.1, 3.4),
-	qtRock("Rock_Medium_2", 2.2, 3.6),
-	qtRock("Rock_Medium_2", 2.2, 3.4),
+	qtRock("Rock_Medium_1", 3.2, 5.2, ROCK_WARM),
+	qtRock("Rock_Medium_2", 2.8, 4.6, ROCK_WARM),
+	qtRock("Rock_Medium_3", 3.2, 5.2, ROCK_WARM),
+	qtRock("Rock_Medium_1", 2.1, 3.4, ROCK_WARM),
+	qtRock("Rock_Medium_2", 2.2, 3.6, ROCK_WARM),
+	qtRock("Rock_Medium_2", 2.2, 3.4, ROCK_WARM),
 }
 local ROCKS = QTROCKS
-local GROVE_ROCKS = join(QTROCKS, { ownRock("JungleStoneShelf", 4, 6, nil, true) })
+local GROVE_ROCKS = QTROCKS
 local EMBER_ROCKS = join(QTROCKS, { ownRock("StackedBasalt", 3.4, 5), ownRock("MoltenPlateau", 7, 10, nil, true), rock("OwnerKit", "JaggedRocks", 3.2, 5) })
 local SNOW_ROCKS = join(QTROCKS, { rock("NatureKit", "SnowyBoulder", 2.5, 5), ownRock("FrozenRockSpire", 4.5, 7) })
 local PEBBLES = {
@@ -588,7 +596,7 @@ local RECIPES = {
 		trees = join(
 			rounds(30, 46, LIME, 4),
 			{ owner("BroadleafTree", 30, 42) },
-			{ mix("MixCommon1", 36, 50, QT_GREEN), mix("MixCommon5", 36, 50, QT_GREEN) }
+			{ qtTree("CommonTree_1", 36, 50, QT_GREEN), qtTree("CommonTree_5", 36, 50, QT_GREEN) }
 		),
 		count = { 1, 2 },
 		under = 7,
@@ -605,7 +613,7 @@ local RECIPES = {
 		trees = join(
 			rounds(26, 44, LEAF, 5),
 			{ owner("BroadleafTree", 28, 42), owner("BanyanTree", 28, 40) },
-			{ mix("MixCommon1", 34, 48, QT_GREEN), mix("MixCommon5", 34, 48, QT_GREEN) }
+			{ qtTree("CommonTree_1", 34, 48, QT_GREEN), qtTree("CommonTree_5", 34, 48, QT_GREEN) }
 		),
 		count = { 2, 4 },
 		under = 7,
@@ -620,18 +628,16 @@ local RECIPES = {
 		hero = { ownTree("AncientJungleTree", 30, 40), owner("BanyanTree", 44, 58), owner("VineTree", 44, 58) },
 		spacing = 52,
 		trees = join(
-			{ ownTree("AncientJungleTree", 26, 34), owner("BanyanTree", 32, 44) },
+			{ ownTree("AncientJungleTree", 26, 34) },
 			rounds(28, 42, TEAL, 4),
-			{ mix("MixCommon1", 34, 46, QT_TEAL), mix("MixCommon5", 34, 46, QT_TEAL) }
+			{ qtTree("CommonTree_1_Teal", 34, 46, QT_WHITE), qtTree("CommonTree_5_Teal", 34, 46, QT_WHITE) }
 		),
 		count = { 1, 3 },
 		under = 7,
 		plants = join(
 			{
 				plant("PropKit", "GlowMushrooms", 5, 12, MUSHROOM_TINT),
-				plant("PropKit", "GlowMushrooms", 3.5, 6, MUSHROOM_TINT),
 				ownPlant("MushBlue", 4.5, 9, MUSHROOM_TINT),
-				ownPlant("MushBlue", 3, 5, MUSHROOM_TINT),
 				qt("Fern_1", 4.5, 7, nil, true),
 				qt("Plant_1_Big", 3.6, 5.4, nil, true),
 				qt("Mushroom_Common", 2.2, 3.4, nil, true),
@@ -649,18 +655,16 @@ local RECIPES = {
 		hero = { ownTree("AncientJungleTree", 32, 44), owner("BanyanTree", 46, 60), owner("VineTree", 46, 60), owner("BroadleafTree", 44, 56) },
 		spacing = 38,
 		trees = join(
-			{ ownTree("AncientJungleTree", 28, 38), owner("BanyanTree", 34, 48), owner("BroadleafTree", 30, 44) },
+			{ ownTree("AncientJungleTree", 28, 38), owner("BroadleafTree", 30, 44) },
 			rounds(30, 46, TEAL, 4),
-			{ mix("MixCommon1", 36, 48, QT_TEAL), mix("MixCommon5", 36, 48, QT_TEAL) }
+			{ qtTree("CommonTree_1_Teal", 36, 48, QT_WHITE), qtTree("CommonTree_5_Teal", 36, 48, QT_WHITE) }
 		),
 		count = { 3, 4 },
 		under = 7,
 		plants = join(
 			{
 				plant("PropKit", "GlowMushrooms", 6, 14, MUSHROOM_TINT),
-				plant("PropKit", "GlowMushrooms", 3.5, 6, MUSHROOM_TINT),
 				ownPlant("MushBlue", 5, 11, MUSHROOM_TINT),
-				ownPlant("MushBlue", 3, 5, MUSHROOM_TINT),
 				ownPlant("MushPurple", 3.5, 6, MUSHROOM_TINT),
 				qt("Fern_1", 4.5, 7.5, nil, true),
 				qt("Fern_1", 4, 6, nil, true),
@@ -678,11 +682,9 @@ local RECIPES = {
 	ember_outer = {
 		spacing = 56,
 		trees = join(rounds(28, 44, AUTUMN), {
-			mix("MixTwisted1", 28, 42, QT_RED),
-			mix("MixTwisted2", 28, 42, QT_RED),
-			mix("MixTwisted3", 28, 42, QT_RED),
-			mix("MixTwisted1", 30, 44, QT_RED),
-			mix("MixTwisted2", 30, 44, QT_RED),
+			qtTree("TwistedTree_1", 28, 42, QT_WHITE),
+			qtTree("TwistedTree_2_Orange", 28, 42, QT_WHITE),
+			qtTree("TwistedTree_3_Gold", 28, 42, QT_WHITE),
 		}),
 		count = { 1, 3 },
 		under = 7,
@@ -706,11 +708,9 @@ local RECIPES = {
 	ember_middle = {
 		spacing = 40,
 		trees = join(rounds(28, 46, AUTUMN), {
-			mix("MixTwisted1", 30, 46, QT_RED),
-			mix("MixTwisted2", 30, 46, QT_RED),
-			mix("MixTwisted3", 30, 46, QT_RED),
-			mix("MixTwisted2", 30, 46, QT_RED),
-			mix("MixTwisted3", 30, 44, QT_RED),
+			qtTree("TwistedTree_3_Orange", 30, 46, QT_WHITE),
+			qtTree("TwistedTree_1_Gold", 30, 46, QT_WHITE),
+			qtTree("TwistedTree_1", 30, 46, QT_WHITE),
 		}),
 		count = { 2, 4 },
 		under = 7,
@@ -732,9 +732,9 @@ local RECIPES = {
 	frost_outer = {
 		spacing = 48,
 		trees = {
-			mix("MixPine1", 26, 40, QT_PINE),
-			mix("MixPine5", 24, 36, QT_PINE),
-			mix("MixPine1", 22, 32, QT_PINE),
+			qtTree("Pine_1", 26, 40, QT_PINE),
+			qtTree("Pine_5", 24, 36, QT_PINE),
+			qtTree("Pine_1", 22, 32, QT_PINE),
 			nature("SnowCoveredPine", 22, 38),
 			nature("SnowyPine", 20, 32),
 			owner("FrozenDeadTree", 24, 34, 0.04, 0.25),
@@ -760,10 +760,10 @@ local RECIPES = {
 			owner("TallPineLarge", 30, 44, 0.05, 0.2),
 			owner("TallPineSparse", 28, 40, 0.04, 0.15),
 			owner("TallPineSlender", 28, 40, 0.04, 0.15),
-			mix("MixPine1", 28, 42, QT_PINE),
-			mix("MixPine5", 26, 38, QT_PINE),
-			mix("MixPine1", 24, 34, QT_PINE),
-			mix("MixPine5", 22, 32, QT_PINE),
+			qtTree("Pine_1", 28, 42, QT_PINE),
+			qtTree("Pine_5", 26, 38, QT_PINE),
+			qtTree("Pine_1", 24, 34, QT_PINE),
+			qtTree("Pine_5", 22, 32, QT_PINE),
 			nature("SnowCoveredPine", 24, 36),
 			yasu(10, 36, 48, PINEGREEN),
 		},
@@ -783,15 +783,17 @@ local RECIPES = {
 	},
 	inner = {
 		spacing = 30,
-		trees = join({
-			yasu(9, 30, 44, nil, true),
-			yasu(19, 34, 48, nil, true),
+		trees = {
+			qtTree("DeadTree_1", 30, 44, nil),
+			qtTree("DeadTree_3", 32, 46, nil),
 			yasu(13, 28, 40, nil, true),
 			yasu(17, 28, 40, nil, true),
+			qtTree("TwistedTree_1_Purple", 28, 42, QT_WHITE),
+			qtTree("TwistedTree_2_Purple", 30, 44, QT_WHITE),
+			qtTree("TwistedTree_3_Purple", 28, 42, QT_WHITE),
 			yasu(9, 32, 46, DUSK),
 			yasu(19, 36, 50, DUSK),
-			yasu(14, 28, 40, DUSK),
-		}, { yasu(1, 30, 44, DUSK), yasu(5, 30, 42, DUSK), yasu(13, 30, 42, DUSK), yasu(17, 30, 44, DUSK), yasu(6, 30, 44, nil, true), yasu(3, 28, 40, nil, true) }),
+		},
 		count = { 2, 4 },
 		under = 7,
 		plants = join({
@@ -800,7 +802,6 @@ local RECIPES = {
 			qt("Fern_1", 4.5, 7, FERN_DUSK, true),
 			qt("Plant_1_Big", 3.6, 5.4, FERN_DUSK, true),
 			qt("Plant_7_Big", 4, 6, nil, true),
-			sunk(plant("PropKit", "AmethystRocks", 4.4, 8), 1.1),
 			ownPlant("MushPurple", 4, 7),
 			ownPlant("MushPurpleSpotted", 3.5, 6),
 		}, tufts(TUFT_MOSS), spikes(SPIKE_VIOLET)),
@@ -936,7 +937,7 @@ local function place(kit: string, name: string, at: Vector3, height: number, yaw
 			d.CanCollide = options.collide == true
 			d.CastShadow = options.shadow == true
 			local lower = string.lower(d.Name)
-			local woody = string.find(lower, "trunk") or string.find(lower, "branch") or string.find(lower, "root")
+			local woody = string.find(lower, "trunk") or string.find(lower, "branch") or string.find(lower, "root") or string.find(lower, "bark")
 			if woody and options.bark then
 				setTint(d, options.bark)
 			elseif not woody and options.canopy then
@@ -1167,10 +1168,14 @@ end
 -- A drift: several of one kind close together with tufts among them, never one flower alone on a lawn.
 local function drift(list, tufts, centre: Vector3, zone: string)
 	local entry = pickOf(list)
-	for _ = 1, rng:NextInteger(2, 4) do
-		tryPlant(entry, centre + Vector3.new(rng:NextNumber(-4, 4), 0, rng:NextNumber(-4, 4)), zone)
+	local grouped = entry.group or (entry.wide and entry.high < 4)
+	local reach = if grouped then 5.5 else 4
+	for _ = 1, if entry.group then rng:NextInteger(5, 6) else rng:NextInteger(2, if grouped then 3 else 2) do
+		tryPlant(entry, centre + Vector3.new(rng:NextNumber(-reach, reach), 0, rng:NextNumber(-reach, reach)), zone)
 	end
-	tryPlant(pickOf(tufts), centre + Vector3.new(rng:NextNumber(-5, 5), 0, rng:NextNumber(-5, 5)), zone)
+	for _ = 1, rng:NextInteger(0, 1) do
+		tryPlant(pickOf(tufts), centre + Vector3.new(rng:NextNumber(-6, 6), 0, rng:NextNumber(-6, 6)), zone)
+	end
 end
 
 local function ringPoint(centre: Vector3, from: number, to: number): Vector3
@@ -1192,7 +1197,7 @@ local function planClusters()
 		local recipe = RECIPE_BY_NAME[zone]
 		-- A broad noise leaves whole stretches of open meadow and thickens others, so nothing is evenly spaced.
 		local thick = math.noise(p.X / 70, p.Z / 70, 41.3)
-		local spacing = recipe.spacing * (1 - thick * 0.55)
+		local spacing = recipe.spacing * SPACING_SCALE * (1 - thick * 0.55)
 		if homeDistance(p) > HOME_CLEAR + 8 and lineDistance(p) > 3 and trailGap(p) > 2 then
 			local ok = thick > -0.38
 			if ok then
@@ -1254,7 +1259,7 @@ local function planLava()
 		for r = lava[2], lava[3], 2 do
 			local a = lava[1] + math.sin(r / 13 + lava[2]) * LAVA_WANDER
 			local p = polar(a, r)
-			stampLava(p, LAVA_BANK, Mat.Ground)
+			stampLava(p, LAVA_BANK, WORN)
 			table.insert(lavaLine, p)
 		end
 	end
@@ -1296,7 +1301,7 @@ local function surface(x: number, z: number, was: Enum.Material): (Enum.Material
 	if trail then
 		onTrail = trail + edgeNoise < 0 or trailCore[key] < TRAIL_MIN_CELL
 	end
-	local dirt = if math.noise(x / 19, z / 19, 27.1) > RUT_NOISE then Mat.Ground else Mat.Sandstone
+	local dirt = if math.noise(x / 19, z / 19, 27.1) > RUT_NOISE then WORN else Mat.Sandstone
 	-- The ring road: a circle, with an uneven worn edge and grass creeping in at it.
 	local a = math.atan2(x, z)
 	local roadEdge = ROAD_HALF
@@ -1319,7 +1324,7 @@ local function surface(x: number, z: number, was: Enum.Material): (Enum.Material
 	end
 	if onTrail then
 		-- (the pale road earth reads as a yellow stripe on snow)
-		return if string.find(zoneAt(x, z), "frost") then Mat.Ground else dirt, true
+		return if string.find(zoneAt(x, z), "frost") then WORN else dirt, true
 	end
 	if r < heartEdge(x, z) then
 		local v = math.noise(x / 15, z / 15, 31.3) + math.noise(x / 6, z / 6, 8.3) * 0.25
@@ -1327,7 +1332,7 @@ local function surface(x: number, z: number, was: Enum.Material): (Enum.Material
 			return Mat.Mud, false
 		end
 		-- (worn earth with moss and paler patches: grey stone islands and cracked yellow read as a car park)
-		return if v > 0.38 then Mat.Mud elseif v < -0.38 then Mat.Sandstone else Mat.Ground, false
+		return if v > 0.38 or v < -0.5 then Mat.Mud else WORN, false
 	end
 	if lavaField[key] then
 		return lavaField[key], false
@@ -1338,7 +1343,7 @@ local function surface(x: number, z: number, was: Enum.Material): (Enum.Material
 	end
 	local worn = math.noise(x / 24, z / 24, 51.9)
 	if worn > WORN_NOISE and zone ~= "frost_outer" and zone ~= "frost_middle" then
-		return Mat.Ground, false
+		return WORN, false
 	end
 	return pickGround(zone, x, z), false
 end
@@ -1378,10 +1383,17 @@ local function buildTerrain()
 	local dirt = MaterialService:FindFirstChild("WildDirt") or Instance.new("MaterialVariant")
 	dirt.Name = "WildDirt"
 	dirt.BaseMaterial = Mat.Sandstone
-	dirt.ColorMap = "rbxassetid://85365331955315"
+	dirt.ColorMap = "rbxassetid://115722630865787" -- DirtRoad: the earthy tan of tools/map/make_dirt.py
 	dirt.StudsPerTile = 24
 	dirt.Parent = MaterialService
 	MaterialService:SetBaseMaterialOverride(Mat.Sandstone, "WildDirt")
+	local worn = MaterialService:FindFirstChild("WildWorn") or Instance.new("MaterialVariant")
+	worn.Name = "WildWorn"
+	worn.BaseMaterial = WORN
+	worn.ColorMap = "rbxassetid://102870054982158" -- DirtWorn: a darker rust brown
+	worn.StudsPerTile = 20
+	worn.Parent = MaterialService
+	MaterialService:SetBaseMaterialOverride(WORN, "WildWorn")
 	-- The first rebuild's flat-colour variants are gone for good.
 	for _, v in MaterialService:GetChildren() do
 		if v:IsA("MaterialVariant") and string.sub(v.Name, 1, 8) == "WildFlat" then
@@ -1479,7 +1491,7 @@ end
 local function dressClusters()
 	for index, c in clusters do
 		local recipe = c.recipe
-		local wanted = rng:NextInteger(recipe.count[1], recipe.count[2])
+		local wanted = rng:NextInteger(recipe.count[1], math.max(recipe.count[1], recipe.count[2] - 1)) -- (one fewer than the recipe's most: the Quaternius trees are dear)
 		local placed = {}
 		for n = 1, wanted do
 			for _ = 1, 8 do
@@ -1562,15 +1574,15 @@ local function dressTrails()
 					local roll = rng:NextNumber()
 					if roll < 0.3 then
 						tryRock(pickOf(if recipe.rocks == SNOW_ROCKS then SNOW_PEBBLES else PEBBLES), where, false)
-					elseif roll < 0.5 then
+					elseif roll < 0.55 then
 						tryPlant(pickOf(recipe.tufts), where, "")
 					else
 						-- flowers or leafy plants, a drift of them hugging the trail
-						drift(if roll < 0.75 then recipe.bank else recipe.plants, recipe.tufts, where + side * 3, "")
+						drift(if roll < 0.78 then recipe.bank else recipe.plants, recipe.tufts, where + side * 3, "")
 					end
 				end
 			end
-			i += rng:NextInteger(5, 13)
+			i += rng:NextInteger(4, 9)
 		end
 		task.wait()
 	end
@@ -1601,15 +1613,16 @@ local function zones(...: string)
 	return set
 end
 local SPRINKLES = {
-	{ zones = zones("meadow_outer", "meadow_middle"), entry = ownPlant("FlowerBush", 4.2, 5.4, nil, true), count = 5 },
-	{ zones = zones("meadow_outer", "meadow_middle", "mushroom_outer", "mushroom_middle", "inner"), entry = ownRock("MossyRockStack", 3.8, 5.4), count = 12, rock = true },
-	{ zones = zones("ember_outer", "ember_middle"), entry = ownPlant("EmberCrystalPatch", 4.5, 6.5, nil, true), count = 8 },
-	{ zones = zones("ember_outer", "ember_middle"), entry = sunk(ownPlant("CrystalRed", 4.5, 7.5), 0.6), count = 14 },
+	{ zones = zones("meadow_outer", "meadow_middle"), entry = ownPlant("FlowerBush", 4.2, 5.4, nil, true), count = 3 },
+	{ zones = zones("mushroom_outer", "mushroom_middle"), entry = ownRock("JungleStoneShelf", 4, 6, nil, true), count = 2, rock = true },
+	{ zones = zones("meadow_outer", "meadow_middle", "mushroom_outer", "mushroom_middle", "inner"), entry = ownRock("MossyRockStack", 3.8, 5.4), count = 6, rock = true },
+	{ zones = zones("ember_outer", "ember_middle"), entry = ownPlant("EmberCrystalPatch", 4.5, 6.5, AMBER, true), count = 4 },
+	{ zones = zones("ember_outer", "ember_middle"), entry = sunk(ownPlant("CrystalRed", 4.5, 7.5, AMBER), 0.6), count = 5 },
 	{ zones = zones("ember_outer", "ember_middle"), entry = ownRock("MagmaCrystalCluster", 5, 7, nil, true), count = 4, rock = true },
-	{ zones = zones("ember_outer", "ember_middle"), entry = ownPlant("Firegrass", 3.2, 4.4, nil, true), count = 4 },
-	{ zones = zones("frost_outer", "frost_middle"), entry = ownRock("IceCrystalSpire", 6, 9, nil, true), count = 5, rock = true },
-	{ zones = zones("frost_outer", "frost_middle"), entry = sunk(ownPlant("IceCrystalCluster", 4, 6, nil, true), 0.4), count = 6 },
-	{ zones = zones("frost_outer", "frost_middle"), entry = ownPlant("SnowberryBush", 3.6, 5, nil, true), count = 6 },
+	{ zones = zones("ember_outer", "ember_middle"), entry = ownPlant("Firegrass", 3.2, 4.4, nil, true), count = 3 },
+	{ zones = zones("frost_outer", "frost_middle"), entry = ownRock("IceCrystalSpire", 6, 9, nil, true), count = 3, rock = true },
+	{ zones = zones("frost_outer", "frost_middle"), entry = sunk(ownPlant("IceCrystalCluster", 4, 6, nil, true), 0.4), count = 4 },
+	{ zones = zones("frost_outer", "frost_middle"), entry = ownPlant("SnowberryBush", 3.6, 5, nil, true), count = 2 },
 }
 local function sprinkle()
 	for _, s in SPRINKLES do

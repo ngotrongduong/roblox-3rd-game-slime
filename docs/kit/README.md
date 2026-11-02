@@ -203,8 +203,26 @@ for phones by `tools/map/prepare_quaternius.py`, imported by the owner. Measured
 `tools/map/wild_kit.luau` turns each leaf piece's `TextureID` into a `SurfaceAppearance` (ColorMap, AlphaMode Transparency): as a
 TextureID Roblox ignores the alpha and every leaf card draws as a dark opaque sheet. A tint (`SurfaceAppearance.Color`) only multiplies:
 the red twisted crowns stay red, the common crowns green (the wisp grass is naturally golden, `Bush_Common` naturally red).
-**The `Bark` meshes of the trees are shredded** (the decimation tore them at the texture seams), so the trees are `Mix*` models:
-a Qt crown on a Yasu trunk (`MixCommon1/3/5`, `MixTwisted1/2/3`, `MixPine1/5`). `QtDeadTree_*` is not used (all trunk, shredded).
+The first import's `Bark` meshes of the trees were shredded (a decimation fault, since fixed); the owner re-imported the 11 trees with
+whole trunks, which `wild_kit.luau` flattens from the imported `Scene` models in the Workspace into `QtCommonTree_1/3/5`, `QtTwistedTree_1-3`,
+`QtDeadTree_1/3/5`, `QtPine_1/5` (a `Skin` crown and a `Bark` trunk, pivot at the foot). Triangles: common 2,000-2,300, twisted 3,200-3,300,
+dead 1,500, pine 1,500-1,800. The trial `Mix*` trees (a crown on a Yasu trunk) are retired.
+
+Recoloured crowns (a tint only multiplies): `tools/map/recolour_leaves.py` repaints the pack's leaf pictures (alpha kept) into
+`art/models/quaternius/recolour/` (gitignored: the author's licence forbids passing the assets on as files), they were uploaded with the Studio
+`upload_image` tool, and `wild_kit.luau` makes the variants `Qt<Tree>_<Colour>` with the picture as the crown's ColorMap:
+
+| Variant | Leaf picture (asset id) |
+|---|---|
+| `QtTwistedTree_1/2/3_Purple` | 122236132244225 |
+| `QtTwistedTree_1/2/3_Orange` | 100102769739429 |
+| `QtTwistedTree_1/2/3_Gold` | 128362824192938 |
+| `QtCommonTree_1/3/5_Teal` | 104754989321409 |
+| `QtCommonTree_1/3/5_Purple` | 112755273870028 |
+
+Terrain earth: `tools/map/make_dirt.py` makes `art/textures/watercolor/DirtRoad.png` (the earthy tan road, asset 115722630865787, in `WildDirt` over
+Sandstone) and `DirtWorn.png` (a dark rust brown, asset 102870054982158, in `WildWorn` over Asphalt, a terrain material no Part uses; the worn
+earth of the valley's middle is Asphalt, so `Ground` stays the village soil's). Both are from Voxel Core Lab's DirtPath (CC0).
 
 `Own*` (20), loaded by `wild_kit.luau` with `InsertService:LoadAsset` from the owner's inventory (triangles measured):
 
