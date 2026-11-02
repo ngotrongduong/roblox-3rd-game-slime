@@ -194,10 +194,32 @@ once the owner has pressed Ctrl+S.
 Tried and left out: "Stylized Colorful Tree Pack" 96193157220829 (ceconello, 15-31 meshes a tree), `ServerStorage.AssetTest.StylizedNature_Vexa`
 (plain cones and cubes).
 
-## Waiting for import: `art/models/quaternius/*.glb`
+## Qt*, Own*, Mix* in WildKit (added 2026-11-02)
 
-Thirty models from Quaternius' "Stylized Nature MegaKit" standard version (CC0, https://quaternius.com/packs/stylizednaturemegakit.html),
-shrunk for phones by `tools/map/prepare_quaternius.py`. The owner imports them (File > Import 3D); then they join WildKit.
+`Qt*` (30): Quaternius' "Stylized Nature MegaKit" standard version (the pack and its licence file say CC0; the author's site-wide licence, QAL v1.0 of 2026-08-28, allows use in games but
+not passing the assets on as files, so the .glb files stay out of this public repo; https://quaternius.com/packs/stylizednaturemegakit.html), shrunk
+for phones by `tools/map/prepare_quaternius.py`, imported by the owner. Measured triangles: rocks 244-522, pebbles 78-136, stepping stone
+300, fern 288, plants 112-360, grass 155-200, clover 199, flower groups 368-449, bushes 316-499, mushrooms 250-449, trees 1,300-3,300.
+`tools/map/wild_kit.luau` turns each leaf piece's `TextureID` into a `SurfaceAppearance` (ColorMap, AlphaMode Transparency): as a
+TextureID Roblox ignores the alpha and every leaf card draws as a dark opaque sheet. A tint (`SurfaceAppearance.Color`) only multiplies:
+the red twisted crowns stay red, the common crowns green (the wisp grass is naturally golden, `Bush_Common` naturally red).
+**The `Bark` meshes of the trees are shredded** (the decimation tore them at the texture seams), so the trees are `Mix*` models:
+a Qt crown on a Yasu trunk (`MixCommon1/3/5`, `MixTwisted1/2/3`, `MixPine1/5`). `QtDeadTree_*` is not used (all trunk, shredded).
+
+`Own*` (20), loaded by `wild_kit.luau` with `InsertService:LoadAsset` from the owner's inventory (triangles measured):
+
+| Model | Asset id | Triangles | Used |
+|---|---|---|---|
+| OwnAncientJungleTree | 138768266237986 | 5,231 | grove hero |
+| OwnMossyRockStack, OwnJungleStoneShelf | 95076775374326, 88910027293012 | 2,281, 3,041 | boulders (few) |
+| OwnStackedBasalt, OwnMoltenPlateau | 120326438638537, 117158825911208 | 2,328, 2,390 | ember rocks |
+| OwnEmberCrystalPatch, OwnMagmaCrystalCluster, OwnFiregrass | 131791034889052, 128091965429686, 79610957358740 | 1,894, 2,526, 3,164 | ember, a few each |
+| OwnIceCrystalCluster, OwnIceCrystalSpire, OwnFrozenRockSpire, OwnSnowberryBush | 118055572065490, 96014375258879, 73340583537098, 133807897663279 | 2,098, 2,762, 1,496, 3,080 | frost, a few each |
+| OwnFlowerBush | 110932950369537 | 3,940 | meadow, a few |
+| OwnMushBlue, OwnMushPurple, OwnMushPurpleSpotted, OwnMushPink | 108230156976781, 82978024017038, 129368300885107, 105673382838100 | 400, 300, 200, 300 | grove, inner ring |
+| OwnCrystalPaleBlue, OwnCrystalRed, OwnCrystalBlue | 89565445204716, 83837005139701, 81030539240809 | 120, 300, 120 | frost, ember |
+
+The hand-made pieces cost 1,500-5,200 triangles each, so they are sprinkled by count (`SPRINKLES` in the build), never scattered.
 
 Road texture: `art/textures/watercolor/DirtPath.png`, from Voxel Core Lab's "Hand-Painted Seamless Terrain Textures" (CC0, by Jonas
 Voland, https://voxelcorelab.itch.io/watercolor-terrain-textures), brightened and shifted to tan.

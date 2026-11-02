@@ -190,6 +190,19 @@ was left there (this game has none); read it there if a cave is ever wanted.
   the original creator's. A colourless canopy takes `SurfaceAppearance.Color`, which gives every mood from one set of trees, but one flat tint
   loses the crown's light and dark: seen from under it is a flat sheet. A root flare placed at the foot hides a thin stake-like trunk.
 - 2026-11-02. `task.wait` is what lets a long `execute_luau` finish; 600 s is plenty for 2,800 parts and the whole terrain.
+- 2026-11-02. Leaves cut out of a card: a MeshPart's `TextureID` ignores the picture's alpha (cards draw as dark opaque sheets); the same
+  picture as a `SurfaceAppearance` ColorMap with `AlphaMode = Transparency` cuts them out and still takes `Color`. Look at every imported
+  model in a showroom (stand at y = 3,300, rows, camera in front) before writing recipes: three of four Qt tree trunks were shredded.
+- 2026-11-02. Decimating a mesh in Blender (`Decimate` collapse) tears it at hard UV seams: scattered triangles. Trunks and other solid
+  parts need Planar/UV-delimited decimation, or no decimation. Always view the shrunk model in Studio before the owner's import is trusted.
+- 2026-11-02. A tint (`SurfaceAppearance.Color`, `MeshPart.Color`) multiplies: it darkens and warms, never changes hue. A red crown cannot
+  become purple or orange, a green one not red; choose which model by its own colour (red bush, golden wisp grass) and tint only for shade.
+- 2026-11-02. Triangles: `AssetService:CreateEditableMeshAsync(part.MeshContent)` counts the owner's and imported meshes; for free packs of
+  other creators it fails, then one clone alone in an empty sky view with `Stats.SceneTriangleCount` (minus the empty view) gives it.
+  `SceneTriangleCount` in a camera view includes everything: take the view with and without the folder to know its share.
+- 2026-11-02. Count cheap and dear pieces apart: the owner's hand-made pieces are 1,500-5,200 triangles, so a drift of three is 10,000.
+  Sprinkle them by count (a `SPRINKLES` list with a cap), use the 100-500 triangle pieces for everything scattered.
+- 2026-11-02. A camera sitting on a trail finds a mushroom in its face: shoot from a point a few studs off the trail's centre.
 
 ## Water and moving things
 

@@ -92,6 +92,12 @@ def thin_cards(ob, keep_triangles):
 
 
 def collapse(ob, wanted):
+	# glTF splits vertices along UV seams: weld them first, or the collapse tears the surface into loose triangles.
+	bm = bmesh.new()
+	bm.from_mesh(ob.data)
+	bmesh.ops.remove_doubles(bm, verts=bm.verts, dist=0.0005)
+	bm.to_mesh(ob.data)
+	bm.free()
 	have = triangles(ob)
 	if have <= wanted:
 		return

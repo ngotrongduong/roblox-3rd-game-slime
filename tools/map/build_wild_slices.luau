@@ -102,7 +102,7 @@ local UNDER_TREES = {
 	inner = Mat.Mud,
 }
 local UNDER_RADIUS = 13
-local HERO_SHARE = 0.6 -- how many clusters are led by one of the owner's big trees
+local HERO_SHARE = 0.5 -- how many clusters are led by one of the owner's big trees
 local WORN_NOISE = 0.46 -- broad noise over this wears the ground to earth anywhere (never on snow)
 
 -- Clockwise from north, as in the reference.
@@ -435,15 +435,24 @@ end
 local function owner(name: string, low: number, high: number, trunk: number?, foot: number?)
 	return { kit = "OwnerKit", name = name, low = low, high = high, trunk = trunk or 0.07, foot = foot or 0.3 }
 end
+local function ownTree(name: string, low: number, high: number, trunk: number?, foot: number?)
+	return { kit = "WildKit", name = "Own" .. name, low = low, high = high, trunk = trunk or 0.07, foot = foot or 0.3 }
+end
 local function nature(name: string, low: number, high: number)
 	return { kit = "NatureKit", name = name, low = low, high = high, trunk = 0.07, foot = 0.6 } -- (their boughs reach the ground)
 end
+-- A Quaternius crown on a Yasu trunk (tools/map/wild_kit.luau). A crown keeps its own hue (a tint only darkens or yellows it).
+local function mix(name: string, low: number, high: number, tints)
+	return { kit = "WildKit", name = name, low = low, high = high, tints = tints, trunk = 0.05, foot = 0.08, roots = true }
+end
 
 local ROUND_TREES = { 1, 3, 5, 6, 13, 15, 17, 18 }
-local function rounds(low: number, high: number, tints)
+local function rounds(low: number, high: number, tints, only: number?)
 	local out = {}
-	for _, n in ROUND_TREES do
-		table.insert(out, yasu(n, low, high, tints))
+	for i, n in ROUND_TREES do
+		if i <= (only or #ROUND_TREES) then
+			table.insert(out, yasu(n, low, high, tints))
+		end
 	end
 	return out
 end
@@ -457,19 +466,38 @@ local function join(...)
 	return out
 end
 
--- Plants and rocks: { kit, name, least height, most height, kind, tints }. A "rock" tilts and may collide, a "plant" never.
-local function plant(kit: string, name: string, low: number, high: number, tints)
-	return { kit = kit, name = name, low = low, high = high, kind = "plant", tints = tints }
+-- Plants and rocks: { kit, name, least size, most size, kind, tints, wide }. The size is the height, or the width when wide (flat
+-- things: ferns, stones). A "rock" tilts and may collide, a "plant" never.
+local function plant(kit: string, name: string, low: number, high: number, tints, wide: boolean?)
+	return { kit = kit, name = name, low = low, high = high, kind = "plant", tints = tints, wide = wide }
 end
-local function rock(kit: string, name: string, low: number, high: number, tints)
-	return { kit = kit, name = name, low = low, high = high, kind = "rock", tints = tints }
+local function rock(kit: string, name: string, low: number, high: number, tints, wide: boolean?)
+	return { kit = kit, name = name, low = low, high = high, kind = "rock", tints = tints, wide = wide }
+end
+-- Crystals stand deep in the ground so no pale plate of their base shows; plants and moss round them hide the rest.
+local function sunk(entry, depth: number)
+	entry.sink = depth
+	return entry
+end
+local function qt(name: string, low: number, high: number, tints, wide: boolean?)
+	return plant("WildKit", "Qt" .. name, low, high, tints, wide)
+end
+local function qtRock(name: string, low: number, high: number, tints, wide: boolean?)
+	return rock("WildKit", "Qt" .. name, low, high, tints, wide)
+end
+local function ownPlant(name: string, low: number, high: number, tints, wide: boolean?)
+	return plant("WildKit", "Own" .. name, low, high, tints, wide)
+end
+local function ownRock(name: string, low: number, high: number, tints, wide: boolean?)
+	return rock("WildKit", "Own" .. name, low, high, tints, wide)
 end
 
-local TUFT_GREEN = { Color3.fromRGB(240, 255, 170), Color3.fromRGB(220, 250, 160) }
-local TUFT_MOSS = { Color3.fromRGB(210, 220, 130), Color3.fromRGB(190, 210, 130) }
-local TUFT_GOLD = { Color3.fromRGB(255, 220, 110), Color3.fromRGB(255, 190, 90) }
+local WHITE = Color3.fromRGB(255, 255, 255)
+local TUFT_GREEN = { Color3.fromRGB(240, 255, 200), Color3.fromRGB(225, 250, 190) }
+local TUFT_MOSS = { Color3.fromRGB(215, 230, 170), Color3.fromRGB(200, 220, 160) }
+local TUFT_GOLD = { WHITE, Color3.fromRGB(255, 240, 200) }
 local TUFT_ICE = { Color3.fromRGB(235, 245, 255) }
-local TUFT_TEAL = { Color3.fromRGB(255, 255, 255), Color3.fromRGB(225, 250, 225) }
+local TUFT_TEAL = { Color3.fromRGB(225, 255, 235), Color3.fromRGB(210, 250, 230) }
 local SPIKE_VIOLET = { Color3.fromRGB(176, 120, 240), Color3.fromRGB(140, 100, 230) }
 local SPIKE_PINK = { Color3.fromRGB(245, 130, 190), Color3.fromRGB(230, 110, 210) }
 local SPIKE_RED = { Color3.fromRGB(240, 90, 60), Color3.fromRGB(240, 150, 50) }
@@ -478,145 +506,236 @@ local BUSH_RED = { Color3.fromRGB(226, 70, 44), Color3.fromRGB(240, 130, 44), Co
 local BUSH_GREEN = { Color3.fromRGB(110, 180, 64), Color3.fromRGB(78, 164, 74) }
 local BUSH_TEAL = { Color3.fromRGB(50, 150, 110) }
 local BUSH_DUSK = { Color3.fromRGB(150, 70, 150), Color3.fromRGB(110, 70, 160), Color3.fromRGB(70, 110, 70) }
-local MUSHROOM_TINT = { Color3.fromRGB(170, 255, 200), Color3.fromRGB(190, 255, 190) }
+local MUSHROOM_TINT = { Color3.fromRGB(140, 255, 215), Color3.fromRGB(170, 255, 225) }
 local AMETHYST = { Color3.fromRGB(176, 110, 240) }
+local QT_GREEN = { WHITE, Color3.fromRGB(240, 255, 200), Color3.fromRGB(225, 250, 190) }
+local QT_TEAL = { Color3.fromRGB(200, 255, 235), Color3.fromRGB(185, 240, 225) }
+local QT_RED = { WHITE, Color3.fromRGB(255, 215, 200), Color3.fromRGB(255, 185, 160) }
+local QT_PINE = { WHITE, Color3.fromRGB(210, 235, 225) }
+local FERN_GOLD = { Color3.fromRGB(255, 235, 150), Color3.fromRGB(240, 220, 130) }
+local FROST_BERRY = { Color3.fromRGB(215, 175, 175), Color3.fromRGB(235, 200, 200) } -- (the red bush at its darkest: winterberries)
+local FERN_ICE = { Color3.fromRGB(190, 225, 215), Color3.fromRGB(175, 215, 210) }
+local FERN_DUSK ={ Color3.fromRGB(170, 200, 160), Color3.fromRGB(150, 190, 150) }
 
-local function tufts(tints, low: number?, high: number?)
-	local out = {}
-	for _ = 1, 3 do
-		table.insert(out, plant("NatureKit", "GrassTuft", low or 2.6, high or 4.2, tints))
+-- Grass: the green clumps for the meadow and the woods, the golden wisps for the dry ember ground. Clover is flat, the rest tall.
+local function tufts(tints, scale: number?, dry: boolean?)
+	local k = scale or 1
+	if dry then
+		return {
+			qt("Grass_Wispy_Short", 3 * k, 4.2 * k, tints),
+			qt("Grass_Wispy_Short", 2.2 * k, 3.4 * k, tints),
+			qt("Grass_Common_Tall", 3 * k, 4.4 * k, tints),
+		}
 	end
-	return out
+	return {
+		qt("Grass_Common_Short", 2.6 * k, 3.8 * k, tints),
+		qt("Grass_Common_Short", 2 * k, 3 * k, tints),
+		qt("Grass_Common_Tall", 3 * k, 4.4 * k, tints),
+		qt("Clover_1", 2 * k, 3 * k, tints, true),
+	}
 end
 local function spikes(tints)
 	return { plant("WildKit", "DokiFlower3", 4.4, 6.4, tints), plant("WildKit", "DokiFlower4", 4.4, 7, tints) }
 end
 
--- The references' signature is a round grey boulder capped with moss. The kit's nearest: the owner's chunky rocks (3,000 triangles
--- each) and NatureKit's MossyBoulder, tan by itself, tinted grey here. (KitCache's rock_boulder_mossy is a flat pancake: not used.)
-local STONE = { Color3.fromRGB(176, 178, 190), Color3.fromRGB(158, 162, 176) }
-local ROCKS = {
-	rock("OwnerKit", "WideBoulder", 3.8, 6.5),
-	rock("OwnerKit", "StackedRocks", 3.8, 6.5),
-	rock("OwnerKit", "JaggedRocks", 3.8, 6.5),
-	rock("NatureKit", "MossyBoulder", 3, 6, STONE),
-	rock("NatureKit", "MossyBoulder", 2.4, 4.6, STONE),
-	rock("NatureKit", "MossyBoulder", 3.6, 6.5, STONE),
-	rock("NatureKit", "MossyBoulder", 2, 3.4, STONE),
+-- The references' signature is a round grey boulder capped with moss: the Quaternius rocks (244-522 triangles) with a clover tuft
+-- laid on top for the moss. The owner's mossy rock stack (2,300) stands in as the rare big one. (NatureKit's MossyBoulder, 1,466,
+-- tan with green goo, is gone; KitCache's rock_boulder_mossy is a flat pancake.)
+local QTROCKS = {
+	qtRock("Rock_Medium_1", 3.2, 5.2),
+	qtRock("Rock_Medium_2", 2.8, 4.6),
+	qtRock("Rock_Medium_3", 3.2, 5.2),
+	qtRock("Rock_Medium_1", 2.1, 3.4),
+	qtRock("Rock_Medium_2", 2.2, 3.6),
+	qtRock("Rock_Medium_2", 2.2, 3.4),
 }
-local SNOW_ROCKS = {
-	rock("NatureKit", "SnowyBoulder", 2.5, 5.5),
-	rock("NatureKit", "SnowyMediumRock", 2, 4.5),
+local ROCKS = QTROCKS
+local GROVE_ROCKS = join(QTROCKS, { ownRock("JungleStoneShelf", 4, 6, nil, true) })
+local EMBER_ROCKS = join(QTROCKS, { ownRock("StackedBasalt", 3.4, 5), ownRock("MoltenPlateau", 7, 10, nil, true), rock("OwnerKit", "JaggedRocks", 3.2, 5) })
+local SNOW_ROCKS = join(QTROCKS, { rock("NatureKit", "SnowyBoulder", 2.5, 5), ownRock("FrozenRockSpire", 4.5, 7) })
+local PEBBLES = {
+	qtRock("Pebble_Round_1", 1.4, 2.4, nil, true),
+	qtRock("Pebble_Square_2", 1.2, 2, nil, true),
+	qtRock("RockPath_Round_Small_1", 1.6, 2.6, nil, true),
 }
-local PEBBLES = { rock("KitCache", "rock_boulder_big", 0.8, 1.8, STONE) }
-local SNOW_PEBBLES = { rock("NatureKit", "SnowyMediumRock", 0.8, 1.6) }
+local SNOW_PEBBLES = PEBBLES
 local LOGS = { rock("PropKit", "MossyLog", 4.4, 6), rock("NatureKit", "Log", 2.6, 3.6), rock("NatureKit", "Stump", 2.4, 3.6) }
 
-local FLOWERS_MEADOW = join(
-	spikes(SPIKE_VIOLET),
-	spikes(SPIKE_PINK),
-	{
-		plant("KitCache", "flower_daisies", 3.4, 5),
-		plant("KitCache", "flower_tulips_red", 3, 4.4),
-		plant("PropKit", "PinkDaisies", 3.4, 5.4),
-		plant("PropKit", "PinkDaisies", 2.6, 4),
-	}
-)
+local FLOWERS_MEADOW = join(spikes(SPIKE_VIOLET), spikes(SPIKE_PINK), {
+	plant("KitCache", "flower_daisies", 3.4, 5),
+	plant("KitCache", "flower_tulips_red", 3, 4.4),
+	plant("PropKit", "PinkDaisies", 3.4, 5.4),
+	plant("PropKit", "PinkDaisies", 2.6, 4),
+	qt("Flower_3_Group", 2.4, 3.6, nil, true),
+	qt("Flower_4_Group", 2.4, 3.6, nil, true),
+})
+-- Broad leaves and ferns, the green between the flowers.
+local GREENS = {
+	qt("Fern_1", 4.5, 7, nil, true),
+	qt("Fern_1", 3.6, 5.6, nil, true),
+	qt("Plant_1_Big", 3.6, 5.4, nil, true),
+	qt("Plant_7_Big", 4, 6, nil, true),
+	qt("Bush_Common_Flowers", 4.4, 6.4, nil, true),
+}
 local AUTUMN_PLANT = plant("PropKit", "AutumnPlant", 3.6, 6.4)
+-- The red bush of the Quaternius kit is the references' red leaf plant.
+local RED_BUSH = qt("Bush_Common", 3.6, 5.6, nil, true)
 
 local RECIPES = {
 	meadow_outer = {
 		hero = { owner("BroadleafTree", 42, 56), owner("BanyanTree", 40, 52) },
 		spacing = 62,
-		trees = join(rounds(30, 46, LIME), { owner("BroadleafTree", 30, 42) }),
+		trees = join(
+			rounds(30, 46, LIME, 4),
+			{ owner("BroadleafTree", 30, 42) },
+			{ mix("MixCommon1", 36, 50, QT_GREEN), mix("MixCommon5", 36, 50, QT_GREEN) }
+		),
 		count = { 1, 2 },
 		under = 7,
-		plants = join(FLOWERS_MEADOW, tufts(TUFT_GREEN), { plant("NatureKit", "Fern", 3.6, 5.6) }),
+		plants = join(FLOWERS_MEADOW, tufts(TUFT_GREEN), GREENS),
 		rocks = ROCKS,
 		logs = 0.12,
-		tufts = TUFT_GREEN,
+		tufts = tufts(TUFT_GREEN),
 		bank = FLOWERS_MEADOW,
+		moss = true,
 	},
 	meadow_middle = {
 		hero = { owner("BroadleafTree", 42, 56), owner("BanyanTree", 42, 54), owner("VineTree", 40, 52) },
 		spacing = 44,
-		trees = join(rounds(26, 44, LEAF), { owner("BroadleafTree", 28, 42), owner("BanyanTree", 28, 40) }),
+		trees = join(
+			rounds(26, 44, LEAF, 5),
+			{ owner("BroadleafTree", 28, 42), owner("BanyanTree", 28, 40) },
+			{ mix("MixCommon1", 34, 48, QT_GREEN), mix("MixCommon5", 34, 48, QT_GREEN) }
+		),
 		count = { 2, 4 },
 		under = 7,
-		plants = join(
-			{ plant("NatureKit", "Fern", 3.6, 5.6), plant("WildKit", "YasuBush01", 4, 7, BUSH_GREEN), plant("WildKit", "YasuBush02", 4, 6, BUSH_GREEN) },
-			tufts(TUFT_GREEN),
-			FLOWERS_MEADOW
-		),
+		plants = join({ plant("WildKit", "YasuBush01", 4, 7, BUSH_GREEN) }, GREENS, tufts(TUFT_GREEN), FLOWERS_MEADOW),
 		rocks = ROCKS,
 		logs = 0.15,
-		tufts = TUFT_GREEN,
+		tufts = tufts(TUFT_GREEN),
 		bank = FLOWERS_MEADOW,
+		moss = true,
 	},
 	mushroom_outer = {
-		hero = { owner("BanyanTree", 44, 58), owner("VineTree", 44, 58) },
+		hero = { ownTree("AncientJungleTree", 30, 40), owner("BanyanTree", 44, 58), owner("VineTree", 44, 58) },
 		spacing = 52,
-		trees = join({ owner("BanyanTree", 32, 44), owner("VineTree", 32, 44) }, rounds(28, 42, TEAL)),
+		trees = join(
+			{ ownTree("AncientJungleTree", 26, 34), owner("BanyanTree", 32, 44) },
+			rounds(28, 42, TEAL, 4),
+			{ mix("MixCommon1", 34, 46, QT_TEAL), mix("MixCommon5", 34, 46, QT_TEAL) }
+		),
 		count = { 1, 3 },
 		under = 7,
 		plants = join(
-			{ plant("PropKit", "GlowMushrooms", 5, 12, MUSHROOM_TINT), plant("PropKit", "GlowMushrooms", 3.5, 6, MUSHROOM_TINT), plant("NatureKit", "Fern", 4, 6) },
+			{
+				plant("PropKit", "GlowMushrooms", 5, 12, MUSHROOM_TINT),
+				plant("PropKit", "GlowMushrooms", 3.5, 6, MUSHROOM_TINT),
+				ownPlant("MushBlue", 4.5, 9, MUSHROOM_TINT),
+				ownPlant("MushBlue", 3, 5, MUSHROOM_TINT),
+				qt("Fern_1", 4.5, 7, nil, true),
+				qt("Plant_1_Big", 3.6, 5.4, nil, true),
+				qt("Mushroom_Common", 2.2, 3.4, nil, true),
+			},
 			tufts(TUFT_TEAL),
 			spikes(SPIKE_VIOLET)
 		),
-		rocks = ROCKS,
+		rocks = GROVE_ROCKS,
 		logs = 0.2,
-		tufts = TUFT_TEAL,
-		bank = join(spikes(SPIKE_VIOLET), { plant("PropKit", "GlowMushrooms", 3, 5.5, MUSHROOM_TINT) }),
+		tufts = tufts(TUFT_TEAL),
+		bank = join(spikes(SPIKE_VIOLET), { plant("PropKit", "GlowMushrooms", 3, 5.5, MUSHROOM_TINT), ownPlant("MushBlue", 3, 5, MUSHROOM_TINT) }),
+		moss = true,
 	},
 	mushroom_middle = {
-		hero = { owner("BanyanTree", 46, 60), owner("VineTree", 46, 60), owner("BroadleafTree", 44, 56) },
+		hero = { ownTree("AncientJungleTree", 32, 44), owner("BanyanTree", 46, 60), owner("VineTree", 46, 60), owner("BroadleafTree", 44, 56) },
 		spacing = 38,
-		trees = join({ owner("BanyanTree", 34, 48), owner("VineTree", 34, 48), owner("BroadleafTree", 30, 44) }, rounds(30, 46, TEAL)),
+		trees = join(
+			{ ownTree("AncientJungleTree", 28, 38), owner("BanyanTree", 34, 48), owner("BroadleafTree", 30, 44) },
+			rounds(30, 46, TEAL, 4),
+			{ mix("MixCommon1", 36, 48, QT_TEAL), mix("MixCommon5", 36, 48, QT_TEAL) }
+		),
 		count = { 3, 4 },
 		under = 7,
 		plants = join(
-			{ plant("PropKit", "GlowMushrooms", 6, 14, MUSHROOM_TINT), plant("PropKit", "GlowMushrooms", 3.5, 6, MUSHROOM_TINT), plant("NatureKit", "Fern", 4, 6.5) },
+			{
+				plant("PropKit", "GlowMushrooms", 6, 14, MUSHROOM_TINT),
+				plant("PropKit", "GlowMushrooms", 3.5, 6, MUSHROOM_TINT),
+				ownPlant("MushBlue", 5, 11, MUSHROOM_TINT),
+				ownPlant("MushBlue", 3, 5, MUSHROOM_TINT),
+				ownPlant("MushPurple", 3.5, 6, MUSHROOM_TINT),
+				qt("Fern_1", 4.5, 7.5, nil, true),
+				qt("Fern_1", 4, 6, nil, true),
+				qt("Plant_1_Big", 3.6, 5.6, nil, true),
+				qt("Mushroom_Common", 2.2, 3.4, nil, true),
+			},
 			tufts(TUFT_TEAL)
 		),
-		rocks = ROCKS,
+		rocks = GROVE_ROCKS,
 		logs = 0.25,
-		tufts = TUFT_TEAL,
-		bank = join(spikes(SPIKE_VIOLET), { plant("PropKit", "GlowMushrooms", 3, 5.5, MUSHROOM_TINT) }),
+		tufts = tufts(TUFT_TEAL),
+		bank = join(spikes(SPIKE_VIOLET), { plant("PropKit", "GlowMushrooms", 3, 5.5, MUSHROOM_TINT), ownPlant("MushBlue", 3, 5, MUSHROOM_TINT) }),
+		moss = true,
 	},
 	ember_outer = {
 		spacing = 56,
-		trees = rounds(28, 44, AUTUMN),
+		trees = join(rounds(28, 44, AUTUMN), {
+			mix("MixTwisted1", 28, 42, QT_RED),
+			mix("MixTwisted2", 28, 42, QT_RED),
+			mix("MixTwisted3", 28, 42, QT_RED),
+			mix("MixTwisted1", 30, 44, QT_RED),
+			mix("MixTwisted2", 30, 44, QT_RED),
+		}),
 		count = { 1, 3 },
 		under = 7,
-		plants = join(
-			{ AUTUMN_PLANT, AUTUMN_PLANT, plant("WildKit", "YasuBush01", 3, 6, BUSH_RED), plant("WildKit", "YasuBush02", 3, 5, BUSH_RED), plant("NatureKit", "DryBush", 2.5, 4), plant("KitCache", "flower_daisies", 3.2, 4.6) },
-			tufts(TUFT_GOLD)
-		),
-		rocks = ROCKS,
+		plants = join({
+			AUTUMN_PLANT,
+			RED_BUSH,
+			RED_BUSH,
+			plant("WildKit", "YasuBush01", 3, 6, BUSH_RED),
+			plant("WildKit", "YasuBush02", 3, 5, BUSH_RED),
+			plant("NatureKit", "DryBush", 2.5, 4),
+			plant("KitCache", "flower_daisies", 3.2, 4.6),
+			qt("Fern_1", 4, 6, FERN_GOLD, true),
+			qt("Flower_4_Group", 2.4, 3.4, nil, true),
+		}, tufts(TUFT_GOLD, 1, true)),
+		rocks = EMBER_ROCKS,
 		logs = 0.2,
-		tufts = TUFT_GOLD,
-		bank = { AUTUMN_PLANT, AUTUMN_PLANT, plant("KitCache", "flower_daisies", 3.2, 4.6), plant("WildKit", "YasuBush03", 3, 5, BUSH_RED) },
+		tufts = tufts(TUFT_GOLD, 1, true),
+		bank = { RED_BUSH, plant("KitCache", "flower_daisies", 3.2, 4.6), plant("WildKit", "YasuBush03", 3, 5, BUSH_RED) },
+		dry = true,
 	},
 	ember_middle = {
 		spacing = 40,
-		trees = rounds(28, 46, AUTUMN),
+		trees = join(rounds(28, 46, AUTUMN), {
+			mix("MixTwisted1", 30, 46, QT_RED),
+			mix("MixTwisted2", 30, 46, QT_RED),
+			mix("MixTwisted3", 30, 46, QT_RED),
+			mix("MixTwisted2", 30, 46, QT_RED),
+			mix("MixTwisted3", 30, 44, QT_RED),
+		}),
 		count = { 2, 4 },
 		under = 7,
-		plants = join(
-			{ AUTUMN_PLANT, AUTUMN_PLANT, plant("WildKit", "YasuBush01", 3, 6, BUSH_RED), plant("WildKit", "YasuBush03", 3, 5, BUSH_RED), plant("NatureKit", "DryBush", 2.5, 4), plant("NatureKit", "Fern", 3.4, 5) },
-			tufts(TUFT_GOLD)
-		),
-		rocks = ROCKS,
+		plants = join({
+			AUTUMN_PLANT,
+			RED_BUSH,
+			RED_BUSH,
+			plant("WildKit", "YasuBush01", 3, 6, BUSH_RED),
+			plant("WildKit", "YasuBush03", 3, 5, BUSH_RED),
+			plant("NatureKit", "DryBush", 2.5, 4),
+			qt("Fern_1", 3.8, 5.5, FERN_GOLD, true),
+		}, tufts(TUFT_GOLD, 1, true)),
+		rocks = EMBER_ROCKS,
 		logs = 0.25,
-		tufts = TUFT_GOLD,
-		bank = { AUTUMN_PLANT, plant("KitCache", "flower_daisies", 3.2, 4.6), plant("WildKit", "YasuBush03", 3, 5, BUSH_RED) },
+		tufts = tufts(TUFT_GOLD, 1, true),
+		bank = { plant("KitCache", "flower_daisies", 3.2, 4.6), plant("WildKit", "YasuBush03", 3, 5, BUSH_RED), RED_BUSH },
+		dry = true,
 	},
 	frost_outer = {
 		spacing = 48,
 		trees = {
+			mix("MixPine1", 26, 40, QT_PINE),
+			mix("MixPine5", 24, 36, QT_PINE),
+			mix("MixPine1", 22, 32, QT_PINE),
 			nature("SnowCoveredPine", 22, 38),
-			nature("SnowCoveredPine", 18, 30),
 			nature("SnowyPine", 20, 32),
 			owner("FrozenDeadTree", 24, 34, 0.04, 0.25),
 			yasu(10, 34, 46, ICE),
@@ -624,36 +743,43 @@ local RECIPES = {
 		},
 		count = { 2, 4 },
 		under = 6,
-		plants = join(
-			{ plant("NatureKit", "SnowyBerryBush", 2.4, 4), plant("NatureKit", "SnowyBerryBush", 2, 3.4), plant("PropKit", "CrystalCluster", 3.4, 7) },
-			tufts(TUFT_ICE, 2, 3.2)
-		),
+		plants = join({
+			qt("Bush_Common", 2.6, 4, FROST_BERRY, true),
+			sunk(plant("PropKit", "CrystalCluster", 3.4, 7), 0.9),
+			sunk(ownPlant("CrystalBlue", 4, 7), 0.9),
+			qt("Fern_1", 3.4, 5, FERN_ICE, true),
+		}, tufts(TUFT_ICE, 0.8)),
 		rocks = SNOW_ROCKS,
 		logs = 0,
-		tufts = TUFT_ICE,
-		bank = join(spikes(SPIKE_ICE), { plant("NatureKit", "SnowyBerryBush", 2, 3.2) }),
+		tufts = tufts(TUFT_ICE, 0.8),
+		bank = join(spikes(SPIKE_ICE), { qt("Bush_Common", 2, 3.2, FROST_BERRY, true) }),
 	},
 	frost_middle = {
 		spacing = 36,
 		trees = {
 			owner("TallPineLarge", 30, 44, 0.05, 0.2),
-			owner("TallPineDense", 28, 42, 0.05, 0.2),
 			owner("TallPineSparse", 28, 40, 0.04, 0.15),
 			owner("TallPineSlender", 28, 40, 0.04, 0.15),
+			mix("MixPine1", 28, 42, QT_PINE),
+			mix("MixPine5", 26, 38, QT_PINE),
+			mix("MixPine1", 24, 34, QT_PINE),
+			mix("MixPine5", 22, 32, QT_PINE),
 			nature("SnowCoveredPine", 24, 36),
-			nature("SnowCoveredPine", 20, 30),
 			yasu(10, 36, 48, PINEGREEN),
 		},
 		count = { 3, 5 },
 		under = 6,
-		plants = join(
-			{ plant("NatureKit", "SnowyBerryBush", 2.4, 4), owner("PineBerryBush", 2.4, 4), plant("PropKit", "CrystalCluster", 3.4, 7) },
-			tufts(TUFT_ICE, 2, 3.2)
-		),
+		plants = join({
+			qt("Bush_Common", 2.6, 4, FROST_BERRY, true),
+			sunk(plant("PropKit", "CrystalCluster", 3.4, 7), 0.9),
+			sunk(ownPlant("CrystalBlue", 4, 7), 0.9),
+			qt("Fern_1", 3.4, 5, FERN_ICE, true),
+			qt("Fern_1", 3, 4.4, FERN_ICE, true),
+		}, tufts(TUFT_ICE, 0.8)),
 		rocks = SNOW_ROCKS,
 		logs = 0,
-		tufts = TUFT_ICE,
-		bank = join(spikes(SPIKE_ICE), { plant("NatureKit", "SnowyBerryBush", 2, 3.2) }),
+		tufts = tufts(TUFT_ICE, 0.8),
+		bank = join(spikes(SPIKE_ICE), { qt("Bush_Common", 2, 3.2, FROST_BERRY, true) }),
 	},
 	inner = {
 		spacing = 30,
@@ -665,18 +791,24 @@ local RECIPES = {
 			yasu(9, 32, 46, DUSK),
 			yasu(19, 36, 50, DUSK),
 			yasu(14, 28, 40, DUSK),
-		}, { yasu(1, 30, 44, DUSK), yasu(5, 30, 42, DUSK), yasu(13, 30, 42, DUSK), yasu(17, 30, 44, DUSK), yasu(6, 30, 44, nil, true), yasu(3, 28, 40, nil, true) }, { owner("VineTree", 30, 40) }),
+		}, { yasu(1, 30, 44, DUSK), yasu(5, 30, 42, DUSK), yasu(13, 30, 42, DUSK), yasu(17, 30, 44, DUSK), yasu(6, 30, 44, nil, true), yasu(3, 28, 40, nil, true) }),
 		count = { 2, 4 },
 		under = 7,
-		plants = join(
-			{ plant("WildKit", "YasuBush01", 3, 6, BUSH_DUSK), plant("WildKit", "YasuBush03", 3, 5, BUSH_DUSK), plant("NatureKit", "Fern", 4, 6), plant("PropKit", "AmethystRocks", 4.4, 8) },
-			tufts(TUFT_MOSS),
-			spikes(SPIKE_VIOLET)
-		),
+		plants = join({
+			plant("WildKit", "YasuBush01", 3, 6, BUSH_DUSK),
+			plant("WildKit", "YasuBush03", 3, 5, BUSH_DUSK),
+			qt("Fern_1", 4.5, 7, FERN_DUSK, true),
+			qt("Plant_1_Big", 3.6, 5.4, FERN_DUSK, true),
+			qt("Plant_7_Big", 4, 6, nil, true),
+			sunk(plant("PropKit", "AmethystRocks", 4.4, 8), 1.1),
+			ownPlant("MushPurple", 4, 7),
+			ownPlant("MushPurpleSpotted", 3.5, 6),
+		}, tufts(TUFT_MOSS), spikes(SPIKE_VIOLET)),
 		rocks = ROCKS,
 		logs = 0.3,
-		tufts = TUFT_MOSS,
-		bank = join(spikes(SPIKE_VIOLET), { plant("PropKit", "AmethystRocks", 3, 5.5), plant("WildKit", "DokiFlower1", 1.8, 2.8, SPIKE_VIOLET) }),
+		tufts = tufts(TUFT_MOSS),
+		bank = join(spikes(SPIKE_VIOLET), { sunk(plant("PropKit", "AmethystRocks", 3, 5.5), 0.9), plant("WildKit", "DokiFlower1", 1.8, 2.8, SPIKE_VIOLET), qt("Plant_7_Big", 3.5, 5, nil, true) }),
+		moss = true,
 	},
 }
 local RECIPE_BY_NAME = RECIPES
@@ -759,6 +891,8 @@ type Options = {
 	collide: boolean?,
 	parent: Instance?,
 	stretch: number?,
+	wide: boolean?, -- the size given is the width, not the height (flat plants, rocks)
+	lift: number?,
 }
 local function place(kit: string, name: string, at: Vector3, height: number, yaw: number, options: Options)
 	local src = source(kit, name)
@@ -775,7 +909,8 @@ local function place(kit: string, name: string, at: Vector3, height: number, yaw
 	end
 	model.PrimaryPart = nil
 	model.WorldPivot = CFrame.new()
-	model:ScaleTo(model:GetScale() * height / math.max(size.Y, 0.01))
+	local ref = if options.wide then math.max(size.X, size.Z) else size.Y
+	model:ScaleTo(model:GetScale() * height / math.max(ref, 0.01))
 	local box, scaled = model:GetBoundingBox()
 	local foot = box.Position - Vector3.new(0, scaled.Y / 2, 0)
 	if options.stretch then
@@ -791,7 +926,7 @@ local function place(kit: string, name: string, at: Vector3, height: number, yaw
 	local y = groundY(at)
 	local tilt = options.tilt or 0
 	local turn = CFrame.Angles(rng:NextNumber(-tilt, tilt), yaw, rng:NextNumber(-tilt, tilt))
-	model:PivotTo(CFrame.new(at.X, y - (options.sink or 0.2), at.Z) * turn)
+	model:PivotTo(CFrame.new(at.X, y - (options.sink or 0.2) + (options.lift or 0), at.Z) * turn)
 	local kept: { BasePart } = {}
 	for _, d in model:GetDescendants() do
 		if d:IsA("BasePart") then
@@ -942,6 +1077,16 @@ local function tryTree(entry, p: Vector3, height: number, zone: string): boolean
 end
 
 -- ----- what stands round a tree or a glade -----
+-- A size drawn for an entry: its radius and its real height (a wide entry's size is its width).
+local function drawn(entry, size: Vector3): (number, number, number)
+	local v = rng:NextNumber(entry.low, entry.high)
+	local across = math.max(size.X, size.Z)
+	if entry.wide then
+		return v, v / 2, v * size.Y / across
+	end
+	return v, across * v / size.Y / 2, v
+end
+
 local function tryPlant(entry, p: Vector3, zone: string): boolean
 	local kit, name = entry.kit, entry.name
 	local src = source(kit, name)
@@ -949,13 +1094,11 @@ local function tryPlant(entry, p: Vector3, zone: string): boolean
 		missingNames[name] = true
 		return false
 	end
-	local height = rng:NextNumber(entry.low, entry.high)
-	local size = measure(src)
-	local r = math.max(size.X, size.Z) * height / size.Y / 2
+	local v, r, tall = drawn(entry, measure(src))
 	if not inArea(p, r) or homeDistance(p) < GLADE_CLEAR + r then
 		return false
 	end
-	if height > 2 and lineDistance(p) < LINE_CLEAR + r * 0.8 then
+	if tall > 2 and lineDistance(p) < LINE_CLEAR + r * 0.8 then
 		return false
 	end
 	if trailGap(p) < r * 0.5 then
@@ -964,26 +1107,37 @@ local function tryPlant(entry, p: Vector3, zone: string): boolean
 	if crowded(p, r * 0.3, 0) then
 		return false
 	end
-	place(kit, name, p, height, rng:NextNumber(0, math.pi * 2), {
+	place(kit, name, p, v, rng:NextNumber(0, math.pi * 2), {
 		tint = entry.tints and pickOf(entry.tints) or nil,
-		sink = 0.15,
-		shadow = height > 5,
+		sink = entry.sink or 0.15,
+		shadow = tall > 5,
+		wide = entry.wide,
 	})
 	stand(p, r * 0.3)
 	return true
 end
 
-local function tryRock(entry, p: Vector3, big: boolean?): boolean
+-- A moss cap: a fern laid on a boulder's crown, as the references' grey boulders wear a cushion of moss.
+local MOSS = { Color3.fromRGB(235, 255, 150), Color3.fromRGB(215, 245, 140), WHITE }
+local MOSS_SHARE = 0.75
+local function mossCap(p: Vector3, tall: number, across: number)
+	place("WildKit", "QtFern_1", p, across * rng:NextNumber(0.5, 0.75), rng:NextNumber(0, math.pi * 2), {
+		wide = true,
+		sink = 0,
+		lift = tall * 0.8 - 0.2,
+		tint = pickOf(MOSS),
+	})
+end
+
+local function tryRock(entry, p: Vector3, big: boolean?, moss: boolean?): boolean
 	local src = source(entry.kit, entry.name)
 	if not src then
 		missingNames[entry.name] = true
 		return false
 	end
-	local height = rng:NextNumber(entry.low, entry.high)
-	local size = measure(src)
-	local r = math.max(size.X, size.Z) * height / size.Y / 2
-	local solid = height >= 3.6 and big ~= false
-	if not inArea(p, r) or homeDistance(p) < (if solid then HOME_CLEAR else GLADE_CLEAR) + r then
+	local v, r, tall = drawn(entry, measure(src))
+	local solid = tall >= 3.6 and big ~= false
+	if not inArea(p, r) or homeDistance(p) < (if solid then HOME_CLEAR + 1.2 else GLADE_CLEAR) + r then
 		return false
 	end
 	if lineDistance(p) < LINE_CLEAR + r then
@@ -995,32 +1149,28 @@ local function tryRock(entry, p: Vector3, big: boolean?): boolean
 	if crowded(p, r * 0.7, 0) then
 		return false
 	end
-	place(entry.kit, entry.name, p, height, rng:NextNumber(0, math.pi * 2), {
+	place(entry.kit, entry.name, p, v, rng:NextNumber(0, math.pi * 2), {
 		tint = entry.tints and pickOf(entry.tints) or nil,
 		tilt = 0.14,
-		sink = height * 0.2,
+		sink = tall * 0.2,
 		collide = solid,
-		shadow = height > 2.4,
+		shadow = tall > 2.4,
+		wide = entry.wide,
 	})
+	if moss and tall >= 3 and rng:NextNumber() < MOSS_SHARE then
+		mossCap(p, tall, r * 2)
+	end
 	stand(p, r * 0.7)
 	return true
 end
 
 -- A drift: several of one kind close together with tufts among them, never one flower alone on a lawn.
-local function drift(list, tuftTints, centre: Vector3, zone: string)
+local function drift(list, tufts, centre: Vector3, zone: string)
 	local entry = pickOf(list)
 	for _ = 1, rng:NextInteger(2, 4) do
 		tryPlant(entry, centre + Vector3.new(rng:NextNumber(-4, 4), 0, rng:NextNumber(-4, 4)), zone)
 	end
-	do
-		tryPlant({
-			kit = 'NatureKit',
-			name = 'GrassTuft',
-			low = 2.4,
-			high = 3.8,
-			tints = tuftTints,
-		}, centre + Vector3.new(rng:NextNumber(-5, 5), 0, rng:NextNumber(-5, 5)), zone)
-	end
+	tryPlant(pickOf(tufts), centre + Vector3.new(rng:NextNumber(-5, 5), 0, rng:NextNumber(-5, 5)), zone)
 end
 
 local function ringPoint(centre: Vector3, from: number, to: number): Vector3
@@ -1306,8 +1456,23 @@ end
 -- ===== dressing =====
 -- The references' unit of dressing: a boulder with a drift of flowers hugging its foot.
 local function boulder(recipe, p: Vector3, zone: string)
-	if tryRock(pickOf(recipe.rocks), p) then
+	if tryRock(pickOf(recipe.rocks), p, nil, recipe.moss) then
 		drift(recipe.bank, recipe.tufts, ringPoint(p, 3.5, 6), zone)
+	end
+end
+
+-- A log with shelf mushrooms growing from its side, as in the references.
+local function logWithShelves(p: Vector3)
+	local entry = pickOf(LOGS)
+	if tryRock(entry, p, false) and entry.name == "MossyLog" then
+		for _ = 1, rng:NextInteger(1, 3) do
+			local at = p + Vector3.new(rng:NextNumber(-1.4, 1.4), 0, rng:NextNumber(-1.4, 1.4))
+			place("WildKit", "QtMushroom_Laetiporus", at, rng:NextNumber(1.6, 2.6), rng:NextNumber(0, math.pi * 2), {
+				wide = true,
+				sink = 0,
+				lift = rng:NextNumber(1.2, 2.4),
+			})
+		end
 	end
 end
 
@@ -1344,7 +1509,7 @@ local function dressClusters()
 				boulder(recipe, ringPoint(at, 7, 15), c.zone)
 			end
 			if recipe.logs > 0 and rng:NextNumber() < recipe.logs then
-				tryRock(pickOf(LOGS), ringPoint(at, 8, 16), false)
+				logWithShelves(ringPoint(at, 8, 16))
 			end
 		end
 		if index % 6 == 0 then
@@ -1384,11 +1549,9 @@ local function dressTrails()
 			if recipe then
 				if rng:NextNumber() < STONE_SHARE and homeDistance(p) > GLADE_CLEAR and p.Magnitude > M.HeartRadius + 4 then
 					local offset = Vector3.new(rng:NextNumber(-1.8, 1.8), 0, rng:NextNumber(-1.8, 1.8))
-					place("KitCache", "rock_boulder_big", p + offset, 0.9, rng:NextNumber(0, math.pi * 2), {
-						stretch = rng:NextNumber(1.8, 2.6),
-						sink = 0.42,
-						tint = pickOf(STONE),
-					})
+					-- (flat stepping stones of the Quaternius kit, lying in the earth)
+					local flat = pickOf({ "QtRockPath_Round_Small_1", "QtRockPath_Round_Small_1", "QtPebble_Round_1", "QtPebble_Square_2" })
+					place("WildKit", flat, p + offset, rng:NextNumber(2, 3.2), rng:NextNumber(0, math.pi * 2), { wide = true, sink = 0.05 })
 				end
 				local nextOne = samples[math.min(i + 1, #samples)]
 				local dir = nextOne.at - p
@@ -1397,22 +1560,17 @@ local function dressTrails()
 					local out = s.width / 2 + rng:NextNumber(1.2, 3.4)
 					local where = p + side * out
 					local roll = rng:NextNumber()
-					if roll < 0.42 then
+					if roll < 0.3 then
 						tryRock(pickOf(if recipe.rocks == SNOW_ROCKS then SNOW_PEBBLES else PEBBLES), where, false)
-					elseif roll < 0.82 then
-						tryPlant({
-							kit = "NatureKit",
-							name = "GrassTuft",
-							low = 2.4,
-							high = 3.8,
-							tints = recipe.tufts,
-						}, where, "")
+					elseif roll < 0.5 then
+						tryPlant(pickOf(recipe.tufts), where, "")
 					else
-						drift(recipe.bank, recipe.tufts, where + side * 3, '')
+						-- flowers or leafy plants, a drift of them hugging the trail
+						drift(if roll < 0.75 then recipe.bank else recipe.plants, recipe.tufts, where + side * 3, "")
 					end
 				end
 			end
-			i += rng:NextInteger(8, 20)
+			i += rng:NextInteger(5, 13)
 		end
 		task.wait()
 	end
@@ -1426,11 +1584,48 @@ local function dressLava()
 		if step % 6 == 0 then
 			local side = polar(rng:NextNumber(0, 360), 1)
 			if rng:NextNumber() < 0.55 then
-				tryRock(rock("OwnerKit", "JaggedRocks", 2.4, 4), p + side * rng:NextNumber(7, 11), false)
+				tryRock(pickOf(EMBER_ROCKS), p + side * rng:NextNumber(7, 11), false)
 			else
-				tryPlant(plant("PropKit", "AutumnPlant", 2.2, 4), p + side * rng:NextNumber(7, 12), "")
+				tryPlant(pickOf({ RED_BUSH, RED_BUSH, ownPlant("CrystalRed", 3.5, 6) }), p + side * rng:NextNumber(7, 12), "")
 			end
 		end
+	end
+end
+
+-- The owner's own pieces cost 1,500-3,900 triangles each: a few of each, beside the clusters of the mood they belong to.
+local function zones(...: string)
+	local set = {}
+	for _, name in { ... } do
+		set[name] = true
+	end
+	return set
+end
+local SPRINKLES = {
+	{ zones = zones("meadow_outer", "meadow_middle"), entry = ownPlant("FlowerBush", 4.2, 5.4, nil, true), count = 5 },
+	{ zones = zones("meadow_outer", "meadow_middle", "mushroom_outer", "mushroom_middle", "inner"), entry = ownRock("MossyRockStack", 3.8, 5.4), count = 12, rock = true },
+	{ zones = zones("ember_outer", "ember_middle"), entry = ownPlant("EmberCrystalPatch", 4.5, 6.5, nil, true), count = 8 },
+	{ zones = zones("ember_outer", "ember_middle"), entry = sunk(ownPlant("CrystalRed", 4.5, 7.5), 0.6), count = 14 },
+	{ zones = zones("ember_outer", "ember_middle"), entry = ownRock("MagmaCrystalCluster", 5, 7, nil, true), count = 4, rock = true },
+	{ zones = zones("ember_outer", "ember_middle"), entry = ownPlant("Firegrass", 3.2, 4.4, nil, true), count = 4 },
+	{ zones = zones("frost_outer", "frost_middle"), entry = ownRock("IceCrystalSpire", 6, 9, nil, true), count = 5, rock = true },
+	{ zones = zones("frost_outer", "frost_middle"), entry = sunk(ownPlant("IceCrystalCluster", 4, 6, nil, true), 0.4), count = 6 },
+	{ zones = zones("frost_outer", "frost_middle"), entry = ownPlant("SnowberryBush", 3.6, 5, nil, true), count = 6 },
+}
+local function sprinkle()
+	for _, s in SPRINKLES do
+		local placed, tries = 0, 0
+		while placed < s.count and tries < s.count * 60 do
+			tries += 1
+			local c = clusters[rng:NextInteger(1, #clusters)]
+			if s.zones[c.zone] then
+				local at = ringPoint(c.at, 6, 15)
+				local ok = if s.rock then tryRock(s.entry, at, true) else tryPlant(s.entry, at, c.zone)
+				if ok then
+					placed += 1
+				end
+			end
+		end
+		task.wait()
 	end
 end
 
@@ -1486,9 +1681,8 @@ local function buildHeart()
 			local r = rng:NextNumber(HEART_CLEAR + 8, M.HeartRadius + 2)
 			local p = polar(a, r)
 			if trailGap(p) > 3 then
-				-- (not the kit's FlatBoulder: under that name it holds a wooden lamp post)
-				local entry = pickOf({ "WideBoulder", "StackedRocks", "JaggedRocks" })
-				place("OwnerKit", entry, p, rng:NextNumber(4, 8), rng:NextNumber(0, 6.28), {
+				local entry = pickOf({ "QtRock_Medium_1", "QtRock_Medium_2", "QtRock_Medium_3", "QtRock_Medium_3", "OwnMossyRockStack" })
+				place("WildKit", entry, p, rng:NextNumber(5, 8), rng:NextNumber(0, 6.28), {
 					parent = heartFolder,
 					tilt = 0.08,
 					collide = true,
@@ -1515,6 +1709,7 @@ dressClusters()
 dressGlades()
 dressTrails()
 dressLava()
+sprinkle()
 buildHeart()
 
 local parts, meshes, shadows, collide = 0, 0, 0, 0
