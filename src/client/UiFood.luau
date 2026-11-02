@@ -170,7 +170,7 @@ function UiFood.ingredientIcon(
 	end
 	UiFood.icon(holder, id, size)
 	if lacking then
-		UiKit.icon(holder, "cross", math.floor(size * 0.65), {
+		UiKit.icon(holder, "cross", math.floor(size * 0.5), {
 			AnchorPoint = Vector2.new(1, 1),
 			Position = UDim2.fromScale(1, 1),
 			ZIndex = 5,

@@ -25,7 +25,7 @@ type Spot = {
 	-- what is drawn now: the worker and the ingredients the cook lacks
 	shown: string,
 	-- the card of the pictures of the ingredients a waiting cook lacks (kitchen only)
-	card: BillboardGui?,
+	card: Folder?,
 }
 
 local UiSpots = {}
@@ -118,8 +118,8 @@ local function buildBody(spot: Spot, id: string)
 	end
 end
 
--- A small card over a cook that waits: the pictures of the ingredients it lacks, each crossed out. Sized in Offset pixels
--- and scaled with the screen, like the screens; nothing is drawn when the cook has all it needs.
+-- Over a cook that waits float the 3D models of the ingredients it lacks, each crossed out; nothing when it has all it
+-- needs. Real models, because a ViewportFrame draws nothing inside a world BillboardGui (seen in a play test).
 local function setCard(spot: Spot, lacking: { string })
 	if spot.card then
 		spot.card:Destroy()
@@ -130,42 +130,61 @@ local function setCard(spot: Spot, lacking: { string })
 	end
 	local camera = workspace.CurrentCamera
 	local scale = if camera then math.clamp(camera.ViewportSize.Y / U.ScaleBaseHeight, 1, U.ScaleMax) else 1
-	local icon = U.MissingIcon
-	local width = #lacking * (icon + U.Gap) + U.Gap * 2
-	local height = icon + U.Gap * 2
-	local gui = UiKit.make("BillboardGui", {
-		Name = "MissingCard",
-		Adornee = spot.marker,
-		Size = UDim2.fromOffset(width * scale, height * scale),
-		StudsOffset = Vector3.new(0, U.MissingLift, 0),
-		MaxDistance = U.SpotDistance,
-		LightInfluence = 0,
-		AlwaysOnTop = false,
-		Active = false,
-	}, spot.marker)
-	local card = UiKit.make("Frame", {
-		Name = "Card",
-		AnchorPoint = Vector2.new(0.5, 0.5),
-		Position = UDim2.fromScale(0.5, 0.5),
-		Size = UDim2.fromOffset(width, height),
-		BackgroundColor3 = UiKit.colour("Parchment"),
-		BackgroundTransparency = 0.1,
-		BorderSizePixel = 0,
-	}, gui)
-	UiKit.make("UIScale", { Scale = scale }, card)
-	UiKit.make("UICorner", { CornerRadius = UDim.new(0, 10) }, card)
-	UiKit.make("UIStroke", { Color = UiKit.colour("Wood"), Thickness = 2 }, card)
-	UiKit.make("UIListLayout", {
-		FillDirection = Enum.FillDirection.Horizontal,
-		HorizontalAlignment = Enum.HorizontalAlignment.Center,
-		VerticalAlignment = Enum.VerticalAlignment.Center,
-		Padding = UDim.new(0, U.Gap),
-		SortOrder = Enum.SortOrder.LayoutOrder,
-	}, card)
+	local marker = spot.marker
+	local at = if marker:IsA("BasePart")
+		then marker.Position
+		elseif marker:IsA("Attachment") then marker.WorldPosition
+		elseif marker:IsA("Model") then marker:GetPivot().Position
+		else Vector3.zero
+	local folder = Instance.new("Folder")
+	folder.Name = "MissingCard"
+	local step = U.MissingStuds + U.MissingGap
 	for index, id in lacking do
-		UiFood.ingredientIcon(card, id, icon, true, { LayoutOrder = index })
+		local source = UiFood.model(id)
+		if not source then
+			continue
+		end
+		local copy = source:Clone()
+		local holder: Model
+		if copy:IsA("Model") then
+			holder = copy
+		else
+			holder = Instance.new("Model")
+			copy.Parent = holder
+		end
+		local first: BasePart? = nil
+		for _, part in holder:GetDescendants() do
+			if part:IsA("BasePart") then
+				part.Anchored = true
+				part.CanCollide = false
+				part.CanQuery = false
+				part.CanTouch = false
+				part.CastShadow = false
+				first = first or part
+			end
+		end
+		local extents = holder:GetExtentsSize()
+		holder:ScaleTo(holder:GetScale() * U.MissingStuds / math.max(extents.X, extents.Y, extents.Z))
+		local offset = (index - (#lacking + 1) / 2) * step
+		holder:PivotTo(CFrame.new(at + Vector3.new(offset, U.MissingLift, 0)))
+		holder.Parent = folder
+		if first then
+			local cross = UiKit.make("BillboardGui", {
+				Name = "Cross",
+				Adornee = first,
+				Size = UDim2.fromOffset(U.MissingCross * scale, U.MissingCross * scale),
+				-- just above the model: an AlwaysOnTop billboard did not draw here in a play test
+				StudsOffset = Vector3.new(0, U.MissingStuds / 2, 0),
+				MaxDistance = U.SpotDistance,
+				LightInfluence = 0,
+				AlwaysOnTop = false,
+				Active = false,
+			}, holder)
+			UiKit.icon(cross, "cross", U.MissingCross * scale)
+		end
 	end
-	spot.card = gui
+	folder.Parent = marker
+	spot.card = folder
 end
 
 local function create(area: string, slot: number, marker: Instance): Spot

@@ -134,11 +134,14 @@ end
 
 local function attackPieces(body: BasePart, s: number, r: Rarity): { Piece }
 	local A = C.Attack
-	local e = newEmitter(body, C.SparkTexture)
+	local texture = iconUrl("attack")
+	if texture == "" then
+		return {}
+	end
+	local e = newEmitter(body, texture)
 	local size = A.Size * s * r.size
-	e.Color = ColorSequence.new(Color3.fromHex(A.ColourA), Color3.fromHex(A.ColourB))
-	e.LightEmission = 1
-	e.Size = seq({ { 0, size * 0.3 }, { 0.25, size }, { 1, 0 } })
+	e.Color = ColorSequence.new(Color3.new(1, 1, 1))
+	e.Size = seq({ { 0, size * 0.4 }, { 0.3, size }, { 1, size * 0.1 } })
 	e.Transparency = seq({ { 0, 1 }, { 0.15, r.alpha }, { 0.7, math.min(r.alpha + 0.15, 1) }, { 1, 1 } })
 	e.Lifetime = NumberRange.new(A.LifeMin, A.LifeMax)
 	e.Speed = NumberRange.new(A.SpeedMin * s, A.SpeedMax * s)
@@ -162,7 +165,6 @@ local function defencePieces(body: BasePart, s: number, r: Rarity): { Piece }
 	local size = D.Size * s * r.size
 	local peak = peakOf(D.Peak, r)
 	e.Color = ColorSequence.new(Color3.new(1, 1, 1))
-	e.LightEmission = 0.25
 	e.Size = seq({ { 0, size * 0.7 }, { 0.5, size }, { 1, size * 0.85 } })
 	e.Transparency = seq({ { 0, 1 }, { 0.3, peak }, { 0.7, peak }, { 1, 1 } })
 	e.Lifetime = NumberRange.new(D.Life * 0.8, D.Life * 1.2)
@@ -175,21 +177,16 @@ local function defencePieces(body: BasePart, s: number, r: Rarity): { Piece }
 	return { { emitter = e, rate = D.Rate * r.rate, wind = false } }
 end
 
--- Squashed along its flight, the soft puff reads as a streak.
-local function styleStreak(e: ParticleEmitter)
-	e.Texture = C.StreakTexture
-	e.Color = ColorSequence.new(Color3.fromHex(C.Speed.Colour))
-	e.LightEmission = 0.6
-	e.Orientation = Enum.ParticleOrientation.VelocityParallel
-	e.Squash = NumberSequence.new(C.Speed.Squash)
-	e.Shape = Enum.ParticleEmitterShape.Box
-	e.ShapeStyle = Enum.ParticleEmitterShapeStyle.Volume
-end
-
 local function speedPieces(body: BasePart, s: number, r: Rarity): { Piece }
 	local S = C.Speed
-	local e = newEmitter(body, C.StreakTexture)
-	styleStreak(e)
+	local texture = iconUrl("speed")
+	if texture == "" then
+		return {}
+	end
+	local e = newEmitter(body, texture)
+	e.Color = ColorSequence.new(Color3.new(1, 1, 1))
+	e.Shape = Enum.ParticleEmitterShape.Box
+	e.ShapeStyle = Enum.ParticleEmitterShapeStyle.Volume
 	local size = S.Size * s * r.size
 	local peak = peakOf(S.Alpha, r)
 	e.Size = seq({ { 0, size * 0.5 }, { 0.3, size }, { 1, size * 0.4 } })
@@ -240,10 +237,13 @@ local builders: { [string]: (BasePart, number, Rarity) -> { Piece } } = {
 local function burstOf(stat: string, body: BasePart, s: number, r: Rarity): (ParticleEmitter?, number)
 	if stat == "attack" then
 		local A = C.Attack
-		local e = newEmitter(body, C.SparkTexture)
+		local texture = iconUrl("attack")
+		if texture == "" then
+			return nil, 0
+		end
+		local e = newEmitter(body, texture)
 		local size = A.BurstSize * s * r.size
-		e.Color = ColorSequence.new(Color3.fromHex(A.ColourB), Color3.fromHex(A.ColourA))
-		e.LightEmission = 1
+		e.Color = ColorSequence.new(Color3.new(1, 1, 1))
 		e.Size = seq({ { 0, size }, { 1, 0 } })
 		e.Transparency = seq({ { 0, r.alpha * 0.5 }, { 1, 1 } })
 		e.Lifetime = NumberRange.new(A.BurstLife * 0.7, A.BurstLife)
@@ -263,7 +263,6 @@ local function burstOf(stat: string, body: BasePart, s: number, r: Rarity): (Par
 		local e = newEmitter(body, texture)
 		local size = D.BurstSize * s * r.size
 		e.Color = ColorSequence.new(Color3.new(1, 1, 1))
-		e.LightEmission = 0.25
 		e.Size = seq({ { 0, size * 0.4 }, { 1, size * 1.2 } })
 		e.Transparency = seq({ { 0, 0.1 }, { 0.6, 0.3 }, { 1, 1 } })
 		e.Lifetime = NumberRange.new(D.BurstLife * 0.8, D.BurstLife)
@@ -275,8 +274,12 @@ local function burstOf(stat: string, body: BasePart, s: number, r: Rarity): (Par
 		return e, D.BurstCount
 	elseif stat == "speed" then
 		local S = C.Speed
-		local e = newEmitter(body, C.StreakTexture)
-		styleStreak(e)
+		local texture = iconUrl("speed")
+		if texture == "" then
+			return nil, 0
+		end
+		local e = newEmitter(body, texture)
+		e.Color = ColorSequence.new(Color3.new(1, 1, 1))
 		local size = S.BurstSize * s * r.size
 		e.Size = seq({ { 0, size }, { 1, size * 0.3 } })
 		e.Transparency = seq({ { 0, 0.3 }, { 1, 1 } })

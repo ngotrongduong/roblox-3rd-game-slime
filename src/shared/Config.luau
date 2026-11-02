@@ -1683,9 +1683,9 @@ Config.SlimeBuffFx = {
 	-- The badge (pixels at a 900 px high screen, scaled with the screen between the two limits). It sits where the emote
 	-- sits (1.25 body heights up) but on the other side: SideBody body heights toward the viewer's left.
 	Badge = {
-		Width = 62,
-		Height = 22,
-		TextSize = 14,
+		Width = 84,
+		Height = 30,
+		TextSize = 19,
 		StrokePixels = 2,
 		ScaleReference = 900,
 		ScaleMin = 0.8,
@@ -1693,7 +1693,7 @@ Config.SlimeBuffFx = {
 		LiftBody = 0.75,
 		SideBody = 0.5,
 		PopSeconds = 0.22,
-		IconPixels = 16,
+		IconPixels = 22,
 	},
 	-- Rarity: rate / size multipliers, the faintest the particle gets at its peak (0 = solid; lower = brighter) and the
 	-- burst multiplier. The badge frame takes the colour from Config.Food.Rarities.
@@ -1703,63 +1703,54 @@ Config.SlimeBuffFx = {
 		rare = { rate = 1.9, size = 1.2, alpha = 0.1, burst = 1.9 },
 		epic = { rate = 2.6, size = 1.35, alpha = 0, burst = 2.6 },
 	},
-	-- Roblox's own particle pictures. The sparkle is the attack's; the soft smoke puff, squashed long and aimed along its
-	-- flight, is the speed's streak (no picture of a wind streak exists yet). Shield and heart are the owner's icons
-	-- (Config.Ui.Icons.defence / .hp), untinted.
-	SparkTexture = "rbxasset://textures/particles/sparkles_main.dds",
-	StreakTexture = "rbxasset://textures/particles/smoke_main.dds",
-	-- ---- attack: sparks rising from the body, fast and bright (additive) ----
+	-- Every particle is the owner's icon of its stat (Config.Ui.Icons), untinted, each with its own motion: soft sparks,
+	-- flames and smoke all vanished on the bright village ground in a play test. Sizes are shares of the body's height.
+	-- ---- attack: stars spinning up from the body, fast ----
 	Attack = {
-		Rate = 3.5,
-		Size = 0.17,
-		LifeMin = 0.7,
-		LifeMax = 1.1,
+		Rate = 4,
+		Size = 0.2,
+		LifeMin = 0.6,
+		LifeMax = 0.9,
 		SpeedMin = 0.9,
-		SpeedMax = 1.6,
-		Rise = 1.2,
+		SpeedMax = 1.5,
+		Rise = 1,
 		Spread = 14,
-		ColourA = "#ff8a3c",
-		ColourB = "#ffd96a",
 		BurstCount = 7,
-		BurstSize = 0.24,
+		BurstSize = 0.3,
 		BurstSpeedMin = 2.2,
 		BurstSpeedMax = 3.6,
 		BurstLife = 0.55,
 	},
 	-- ---- defence: a few of the owner's shields breathing in and out on the body's skin ----
 	Defence = {
-		Rate = 1.3,
-		Size = 0.45,
+		Rate = 1.5,
+		Size = 0.3,
 		Life = 1.7,
 		Drift = 0.25,
-		Peak = 0.45,
+		Peak = 0.3,
 		BurstCount = 3,
-		BurstSize = 0.85,
+		BurstSize = 0.5,
 		BurstSpeed = 1.1,
 		BurstLife = 0.7,
 	},
-	-- ---- speed: long soft streaks thrown back behind the body; fewer while it stands still ----
+	-- ---- speed: bolts thrown back behind the body; fewer while it stands still ----
 	Speed = {
 		Rate = 5,
-		IdleShare = 0.3,
-		Size = 0.55,
+		IdleShare = 0.6,
+		Size = 0.2,
 		LifeMin = 0.35,
 		LifeMax = 0.5,
 		SpeedMin = 2.2,
 		SpeedMax = 3.6,
-		-- Emitter.Squash: how long the soft puff is stretched along its flight (positive = longer; flip the sign if the
-		-- streaks look flat when seen in play)
-		Squash = 0.85,
-		Colour = "#e4f6ff",
-		Alpha = 0.45,
+		Alpha = 0.15,
 		BurstCount = 7,
-		BurstSize = 0.5,
+		BurstSize = 0.28,
 		BurstSpeed = 5,
 		BurstLife = 0.4,
 	},
 	-- ---- hp: small hearts that float up slowly and fade ----
 	Hp = {
-		Rate = 1.5,
+		Rate = 2.5,
 		Size = 0.2,
 		LifeMin = 1.3,
 		LifeMax = 1.9,
@@ -1767,7 +1758,7 @@ Config.SlimeBuffFx = {
 		SpeedMax = 0.9,
 		Spread = 28,
 		BurstCount = 5,
-		BurstSize = 0.24,
+		BurstSize = 0.26,
 		BurstSpeedMin = 1.2,
 		BurstSpeedMax = 2,
 		BurstFall = 1.6,
@@ -1934,12 +1925,14 @@ Config.Ui = {
 	FoodCountWidth = 56,
 	-- The recipe picker of a kitchen position (UiRecipes): the bar, a row of the list, the dish picture, an ingredient picture.
 	RecipeBarHeight = 56,
-	RecipeRowHeight = 62,
-	RecipeIcon = 44,
-	IngredientIcon = 22,
-	-- The card over a cook that waits for an ingredient (UiSpots): a world billboard in Offset pixels, the picture size of
-	-- one missing ingredient and how far above the work position it floats (studs).
-	MissingIcon = 30,
+	RecipeRowHeight = 72,
+	RecipeIcon = 52,
+	IngredientIcon = 32,
+	-- Over a cook that waits for an ingredient (UiSpots): the size of each missing ingredient's model and the gap between
+	-- them (studs), the pixels of the cross on it, and how far above the work position they float (studs).
+	MissingStuds = 1.6,
+	MissingGap = 0.4,
+	MissingCross = 22,
 	MissingLift = 4.4,
 	-- Slime book.
 	BookFilters = { "all", "free", "working", "babies" },
