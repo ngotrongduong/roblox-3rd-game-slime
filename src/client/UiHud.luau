@@ -43,8 +43,7 @@ end
 function UiHud.start(root: Frame, onBook: () -> (), onTravel: (place: string) -> ())
 	local bar = UiKit.make("ScrollingFrame", {
 		Name = "Resources",
-		AnchorPoint = Vector2.new(0.5, 0),
-		Position = UDim2.new(0.5, 0, 0, U.Edge),
+		Position = UDim2.fromOffset(U.Edge, U.Edge),
 		Size = UDim2.new(1, -2 * U.Edge, 0, U.ChipHeight),
 		BackgroundTransparency = 1,
 		BorderSizePixel = 0,
@@ -56,7 +55,7 @@ function UiHud.start(root: Frame, onBook: () -> (), onTravel: (place: string) ->
 	}, root)
 	UiKit.make("UIListLayout", {
 		FillDirection = Enum.FillDirection.Horizontal,
-		HorizontalAlignment = Enum.HorizontalAlignment.Center,
+		HorizontalAlignment = Enum.HorizontalAlignment.Left,
 		Padding = UDim.new(0, U.Gap),
 		SortOrder = Enum.SortOrder.LayoutOrder,
 	}, bar)
@@ -111,8 +110,7 @@ function UiHud.start(root: Frame, onBook: () -> (), onTravel: (place: string) ->
 	-- Under the strip: the village's level and how many upgrades its next level still takes.
 	local box, body = UiKit.skin(root, "Wood", "Card", {
 		Name = "VillageBar",
-		AnchorPoint = Vector2.new(0.5, 0),
-		Position = UDim2.new(0.5, 0, 0, U.Edge + U.ChipHeight + U.Gap),
+		Position = UDim2.fromOffset(U.Edge, U.Edge + U.ChipHeight + U.Gap),
 		Size = UDim2.fromOffset(U.VillageBarWidth, U.VillageBarHeight),
 		Visible = false,
 	})
