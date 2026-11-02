@@ -23,7 +23,29 @@ local function put(key: string, parent: Instance)
 		table.insert(out, key .. " MISSING")
 	end
 end
-for _, key in { "grilledFish", "veggieStew", "fishVegSoup", "Egg", "Hoe", "WateringCan", "FishingRod" } do
+for _, key in {
+	"grilledFish",
+	"veggieStew",
+	"fishVegSoup",
+	-- the other 13 dishes of Config.Food.DishOrder (2026-11-03)
+	"blueFishSkewer",
+	"bakedTrout",
+	"cornChowder",
+	"sweetCornSalad",
+	"tomatoFishStew",
+	"salmonSteak",
+	"pumpkinStew",
+	"pufferfishRolls",
+	"salmonPumpkinBisque",
+	"goldenCarpFeast",
+	"starfruitGlazedPuffer",
+	"starfruitTart",
+	"goldenBanquet",
+	"Egg",
+	"Hoe",
+	"WateringCan",
+	"FishingRod",
+} do
 	put(key, items)
 end
 put("Egg", kit)

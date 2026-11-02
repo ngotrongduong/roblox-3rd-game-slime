@@ -60,7 +60,29 @@ end
 -- the cooked dishes and the egg (made with generate_mesh, docs/kit/README.md), and the gardener's and fisher's
 -- tools (tools/kit/make_tools.luau builds the rod and the hoe; the watering can is the garden's): all in PropKit
 local props = storage:FindFirstChild("PropKit")
-for _, key in { "grilledFish", "veggieStew", "fishVegSoup", "Egg", "Hoe", "WateringCan", "FishingRod" } do
+for _, key in {
+	"grilledFish",
+	"veggieStew",
+	"fishVegSoup",
+	-- the other 13 dishes of Config.Food.DishOrder (2026-11-03)
+	"blueFishSkewer",
+	"bakedTrout",
+	"cornChowder",
+	"sweetCornSalad",
+	"tomatoFishStew",
+	"salmonSteak",
+	"pumpkinStew",
+	"pufferfishRolls",
+	"salmonPumpkinBisque",
+	"goldenCarpFeast",
+	"starfruitGlazedPuffer",
+	"starfruitTart",
+	"goldenBanquet",
+	"Egg",
+	"Hoe",
+	"WateringCan",
+	"FishingRod",
+} do
 	take(props and props:FindFirstChild(key), key, items)
 end
 -- (the client draws a carried egg from ClientKit.Egg)

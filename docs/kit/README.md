@@ -146,6 +146,34 @@ in `PropKit` and `tools/kit/export_client_kit.luau` puts them in `ClientKit.Item
 
 `tools/kit/fill_client_items.luau` copies the same models into the work place's own ClientKit for a play test.
 
+### The other 13 dishes (2026-11-03)
+
+Every dish of `Config.Food.DishOrder` now has a model. The free Creator Store search ("low poly food dish bowl", free)
+was tried once again and returned unrelated models, so all 13 are `generate_mesh` objects (no scripts), taken in with
+`tools/kit/intake_dishes.luau` (scripts removed, anchored, no collision, scaled to about 1 stud on its longest side,
+pivot at the middle; the skewer 1.4, the golden dishes 1.1 and 1.2) and looked at from two sides with
+`tools/kit/viewer_dishes.luau`. They sit in `PropKit` and the key lists in `export_client_kit.luau` and
+`fill_client_items.luau` carry them into `ClientKit.Items`. Contact sheets: scratchpad `sheet1_*.png`, `sheet2_*.png`.
+
+| Model (ClientKit.Items) | Asset id | Notes |
+|---|---|---|
+| blueFishSkewer | 91256377532338 | three blue fish on a wooden skewer, 1.4 long |
+| bakedTrout | 139948487482337 | a baked trout with lemon; the generator dropped the plate twice, so `tools/kit/add_plate.luau` puts a white plate with a blue rim (two cylinders) under it |
+| cornChowder | 79143283087769 | a white bowl of creamy yellow soup with corn and carrot bits |
+| sweetCornSalad | 78378428851378 | a white bowl heaped with lettuce, corn and tomato slices |
+| tomatoFishStew | 79482550834309 | a dark iron pot of red stew with a blue fish and a cream swirl |
+| salmonSteak | 122678977348317 | a pink salmon steak with a tomato and a herb sprig (the plate is lost, the steak reads well) |
+| pumpkinStew | 100762556061415 | a hollow orange pumpkin, its lid ajar, full of stew |
+| pufferfishRolls | 111357279329711 | three cabbage-wrapped rolls with rice and fish on a dark slate |
+| salmonPumpkinBisque | 134553016255075 | a fine white and gold bowl of smooth orange bisque with a salmon slice and a swirl |
+| goldenCarpFeast | 85892055364981 | a golden carp on a tray with lemon and herbs; the tray comes out peach, not gold; a second try (72329166016796) was worse and was dropped |
+| starfruitGlazedPuffer | 83828704445905 | a spiny round puffer, peach-gold, with two star slices |
+| starfruitTart | 134816884991323 | a scalloped round tart topped with yellow star slices |
+| goldenBanquet | 78315826309331 | a platter heaped with a golden carp, star slices, gems and a lemon: the richest |
+
+Not tinted gold: the generator makes warm peach rather than metal gold (like the golden carp); a redo with a gold
+material is possible if the owner asks.
+
 ## FoodKit (more fish and vegetables, 2026-10-30)
 
 The owner asked for several kinds of fish and vegetables with rarities (`Config.Food.Kinds`). The free Creator Store
