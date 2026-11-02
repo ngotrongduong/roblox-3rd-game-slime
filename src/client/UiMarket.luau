@@ -120,6 +120,17 @@ function UiMarket.travel(place: string)
 		end
 		if ok and type(answer) == "table" and answer.ok == true then
 			UiKit.closeModal(true)
+			-- the camera comes round behind the character, so a move opens on the view the landing faces
+			local camera = workspace.CurrentCamera
+			local character = game:GetService("Players").LocalPlayer.Character
+			local root = if character then character:FindFirstChild("HumanoidRootPart") else nil
+			if camera and root and root:IsA("BasePart") then
+				local offset = camera.CFrame.Position - camera.Focus.Position
+				local back = root.CFrame.LookVector * Vector3.new(1, 0, 1)
+				local flat = Vector3.new(offset.X, 0, offset.Z).Magnitude
+				camera.CFrame =
+					CFrame.lookAt(root.Position - back.Unit * flat + Vector3.new(0, offset.Y, 0), root.Position)
+			end
 		else
 			local reason = if ok and type(answer) == "table" then answer.reason else nil
 			UiKit.toast(

@@ -259,6 +259,11 @@ was left there (this game has none); read it there if a cave is ever wanted.
 - Two slopes of an awning that only meet leave a slit on the outside of the bend, seen as dark strokes: run each a little past the crease.
 - A walk check with a body-sized box along the way points caught a lantern post put on the line from the Landing to a stall, which no picture showed.
 - A thin road painted in noise falls into dashes: keep the core always earth and let noise fray only the edge (again). Rewrites of terrain re-run the same paint safely (0 cells changed proves it).
+- Material Fabric turned cream to grey and blue to navy under this light: the raycast picture showed the right colours and the real shot did not. SmoothPlastic gave the painting's colours at once, but darken a saturated colour for it (purple went neon).
+- Wide overlapping water beams read as a solid blue dome; separate streams, narrow (0.42 of the share of the ring), show the stone behind and cost fewer beams.
+- Flowers spread over a radius of 9 read as lonely stalks on the grass, and scaling them up read as giant flat flowers. Same count, radius 5-6: clumps. Thin grass blades tinted pale read as white spikes: left out.
+- SurfaceAppearance.Color barely moved the pebble flagstones (a much warmer tint looked the same): the stones stay grey.
+- After a quick-travel move the camera keeps its old angle, so the player opens looking sideways: turn it behind the character on arrival.
 
 ## Water and moving things
 

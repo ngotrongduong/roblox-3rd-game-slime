@@ -150,8 +150,9 @@ Working
   animation engine without the orchestrator's review. [EH CLAUDE.md, AGENTS.md]
 - When several agents work at once, a failing check in a file that is not yours: wait a minute, run it again, report it
   if it stays. [EH CLAUDE.md]
-- The orchestrator does not take the owner's screen while he is using the machine (he often plays in the same Studio
-  window); Studio dialogs (Asset Manager import, Publish As) are clicked by the owner. The play-test log is read with
+- The orchestrator takes Studio whenever the job needs it, even if the owner is in it or in Play: he often only looks
+  in for a moment, so never ask him to stop or wait [owner, 2026-11-02]. Studio dialogs (Asset Manager import, Publish
+  As) are clicked by the owner. The play-test log is read with
   `tools\read_log.ps1`; subagents reach Studio through `node tools/studio_mcp.js`. [Tile Smash, EH]
 - Agent files made during a session load only in the next one: until then, start a `general-purpose` agent and tell it
   to read its role file in `.claude/agents/`. [Tile Smash, 2026-10-06]

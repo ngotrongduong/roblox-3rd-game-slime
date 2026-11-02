@@ -127,7 +127,7 @@ return function(T)
 		local merged = Board.merge({}, live, L.Rows)
 		T.eq(#merged, L.Rows)
 		T.eq(merged[1].userId, 15)
-		T.eq(merged[L.Rows].userId, 6)
+		T.eq(merged[L.Rows].userId, 16 - L.Rows)
 		T.eq(#Board.merge({}, {}, L.Rows), 0)
 	end)
 

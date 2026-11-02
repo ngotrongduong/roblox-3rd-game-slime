@@ -54,21 +54,21 @@ local function group(name: string, class: string?, parent: Instance?): Instance
 end
 
 -- ===== the palette (the owner's stall art, docs/reference/03) =====
-local WOOD = Color3.fromRGB(205, 142, 66)
-local WOOD_LIGHT = Color3.fromRGB(224, 166, 88)
-local WOOD_DARK = Color3.fromRGB(150, 96, 46)
+local WOOD = Color3.fromRGB(176, 112, 54)
+local WOOD_LIGHT = Color3.fromRGB(198, 136, 70)
+local WOOD_DARK = Color3.fromRGB(128, 80, 40)
 local ROPE = Color3.fromRGB(226, 196, 138)
 local BLUE = Color3.fromRGB(46, 92, 196)
 local BLUE_DEEP = Color3.fromRGB(38, 66, 150)
 local CREAM = Color3.fromRGB(246, 234, 204)
 local GOLD = Color3.fromRGB(246, 190, 56)
-local PURPLE = Color3.fromRGB(122, 52, 170)
-local PURPLE_DEEP = Color3.fromRGB(84, 36, 124)
-local STONE = Color3.fromRGB(172, 166, 150)
-local STONE_DARK = Color3.fromRGB(140, 134, 122)
+local PURPLE = Color3.fromRGB(104, 44, 140)
+local PURPLE_DEEP = Color3.fromRGB(72, 30, 106)
+local STONE = Color3.fromRGB(205, 198, 180)
+local STONE_DARK = Color3.fromRGB(170, 164, 150)
 local GLOW = Color3.fromRGB(255, 206, 110)
 local WHITE = Color3.new(1, 1, 1)
-local FLAG_TINTS = { Color3.fromRGB(226, 214, 190), Color3.fromRGB(206, 196, 176), Color3.fromRGB(190, 182, 166), Color3.fromRGB(216, 200, 170) }
+local FLAG_TINTS = { Color3.fromRGB(255, 214, 156), Color3.fromRGB(240, 196, 142), Color3.fromRGB(222, 186, 140), Color3.fromRGB(250, 204, 140) }
 local TUFT = Color3.fromRGB(240, 255, 200)
 
 -- ===== pieces =====
@@ -213,7 +213,7 @@ local function coinBasket(parent: Instance, cf: CFrame, across: number, full: bo
 	end
 end
 local function lashing(parent: Instance, cf: CFrame, d: number, h: number)
-	cylinder(parent, "RopeBand", d, h, cf, ROPE, Mat.Fabric)
+	cylinder(parent, "RopeBand", d, h, cf, ROPE, Mat.SmoothPlastic)
 end
 -- A squared timber post with a stone foot and a darker cap.
 local function post(parent: Instance, x: CFrame, tall: number, w: number)
@@ -224,8 +224,8 @@ end
 
 -- ===== the stalls =====
 type Style = { a: Color3, b: Color3, trim: Color3, cloth: Color3, clothEdge: Color3, crest: string, royal: boolean }
-local W, D = 26, 12 -- between the posts, across and deep
-local STRIPES = 7
+local W, D = 22, 12 -- between the posts, across and deep
+local STRIPES = 5
 local function buildStall(name: string, spot: { x: number, z: number }, style: Style): Model
 	local model = group(name) :: Model
 	local dx, dz = C.Landing.x - spot.x, C.Landing.z - spot.z
@@ -270,12 +270,12 @@ local function buildStall(name: string, spot: { x: number, z: number }, style: S
 	end
 	-- the cloth over the counter: on the top, down the front, a point with a gold edge, its crest
 	local fz = cz - cd / 2 - 0.5
-	piece(model, "ClothTop", Vector3.new(10, 0.12, cd + 1), L(0, 3.1, cz), style.cloth, Mat.Fabric)
-	piece(model, "ClothFront", Vector3.new(10, 1.7, 0.14), L(0, 2.2, fz), style.cloth, Mat.Fabric)
-	piece(model, "ClothEdgeL", Vector3.new(0.5, 1.7, 0.18), L(-4.75, 2.2, fz - 0.02), style.clothEdge, Mat.Fabric)
-	piece(model, "ClothEdgeR", Vector3.new(0.5, 1.7, 0.18), L(4.75, 2.2, fz - 0.02), style.clothEdge, Mat.Fabric)
-	triangle(model, "ClothEdgePoint", L(0, 1.36, fz + 0.02), 10, 1.2, style.clothEdge, Mat.Fabric)
-	triangle(model, "ClothPoint", L(0, 1.36, fz - 0.06), 8.8, 0.95, style.cloth, Mat.Fabric)
+	piece(model, "ClothTop", Vector3.new(10, 0.12, cd + 1), L(0, 3.1, cz), style.cloth, Mat.SmoothPlastic)
+	piece(model, "ClothFront", Vector3.new(10, 1.7, 0.14), L(0, 2.2, fz), style.cloth, Mat.SmoothPlastic)
+	piece(model, "ClothEdgeL", Vector3.new(0.5, 1.7, 0.18), L(-4.75, 2.2, fz - 0.02), style.clothEdge, Mat.SmoothPlastic)
+	piece(model, "ClothEdgeR", Vector3.new(0.5, 1.7, 0.18), L(4.75, 2.2, fz - 0.02), style.clothEdge, Mat.SmoothPlastic)
+	triangle(model, "ClothEdgePoint", L(0, 1.36, fz + 0.02), 10, 1.2, style.clothEdge, Mat.SmoothPlastic)
+	triangle(model, "ClothPoint", L(0, 1.36, fz - 0.06), 8.8, 0.95, style.cloth, Mat.SmoothPlastic)
 	kit(model, PropKit, style.crest, L(0, 0.9, fz - 0.16) , 2.4)
 
 	-- the awning: stripes in two slopes, the lower steeper, so it reads rounded; a scallop on each stripe with a gold edge behind
@@ -289,11 +289,11 @@ local function buildStall(name: string, spot: { x: number, z: number }, style: S
 		local colour = if k % 2 == 1 then style.a else style.b
 		local a0, a1, a2 = V(x, top.Y, top.Z), V(x, mid.Y, mid.Z), V(x, edge.Y, edge.Z)
 		-- (each runs a little past the crease: two slopes that only meet leave a slit on the outside of the bend)
-		bar(model, "AwningUpper", a0, a1:Lerp(a2, 0.08), sw + 0.02, 0.4, colour, Mat.Fabric).CastShadow = true
-		bar(model, "AwningLower", a1:Lerp(a0, 0.05), a2, sw + 0.02, 0.4, colour, Mat.Fabric).CastShadow = true
+		bar(model, "AwningUpper", a0, a1:Lerp(a2, 0.14), sw + 0.02, 0.4, colour, Mat.SmoothPlastic).CastShadow = true
+		bar(model, "AwningLower", a1:Lerp(a0, 0.12), a2, sw + 0.02, 0.4, colour, Mat.SmoothPlastic).CastShadow = true
 		local slope = CFrame.lookAt(a1, a2)
 		local foot = CFrame.new(a2) * (slope - slope.Position)
-		local disc = piece(model, "Scallop", Vector3.new(0.3, sw, sw), foot * CFrame.new(0, 0.02, 0) * CFrame.Angles(0, 0, math.rad(90)), colour, Mat.Fabric) :: Part
+		local disc = piece(model, "Scallop", Vector3.new(0.3, sw, sw), foot * CFrame.new(0, 0.02, 0) * CFrame.Angles(0, 0, math.rad(90)), colour, Mat.SmoothPlastic) :: Part
 		disc.Shape = Enum.PartType.Cylinder
 		local rim = piece(model, "ScallopEdge", Vector3.new(0.2, sw + 0.55, sw + 0.55), foot * CFrame.new(0, -0.1, 0) * CFrame.Angles(0, 0, math.rad(90)), style.trim, Mat.SmoothPlastic) :: Part
 		rim.Shape = Enum.PartType.Cylinder
@@ -303,26 +303,26 @@ local function buildStall(name: string, spot: { x: number, z: number }, style: S
 				local tx = x + sw / 2
 				local tp = L(tx, edge.Y - 1.2, edge.Z - 0.3)
 				ball(model, "TasselKnot", 0.6, tp, GOLD)
-				cylinder(model, "Tassel", 0.5, 1.2, tp * CFrame.new(0, -0.8, 0), GOLD, Mat.Fabric)
+				cylinder(model, "Tassel", 0.5, 1.2, tp * CFrame.new(0, -0.8, 0), GOLD, Mat.SmoothPlastic)
 			end
 		end
 	end
 	-- the awning's sides: a band along each edge
 	for _, x in { -span / 2, span / 2 } do
-		bar(model, "AwningSide", V(x, top.Y - 0.5, top.Z), V(x, mid.Y - 0.5, mid.Z), 0.3, 1.1, style.trim, Mat.Fabric)
-		bar(model, "AwningSide", V(x, mid.Y - 0.5, mid.Z), V(x, edge.Y - 0.5, edge.Z), 0.3, 1.1, style.trim, Mat.Fabric)
+		bar(model, "AwningSide", V(x, top.Y - 0.5, top.Z), V(x, mid.Y - 0.5, mid.Z), 0.3, 1.1, style.trim, Mat.SmoothPlastic)
+		bar(model, "AwningSide", V(x, mid.Y - 0.5, mid.Z), V(x, edge.Y - 0.5, edge.Z), 0.3, 1.1, style.trim, Mat.SmoothPlastic)
 	end
-	bar(model, "AwningRidge", V(-span / 2, top.Y + 0.1, top.Z), V(span / 2, top.Y + 0.1, top.Z), 0.5, 0.7, style.trim, Mat.Fabric)
+	bar(model, "AwningRidge", V(-span / 2, top.Y + 0.1, top.Z), V(span / 2, top.Y + 0.1, top.Z), 0.5, 0.7, style.trim, Mat.SmoothPlastic)
 
 	-- what it sells: two baskets of gold on the counter, stacks of coins beside them, a lantern under the beam
-	for _, x in { -6.6, 6.6 } do
+	for _, x in { -5.8, 5.8 } do
 		coinBasket(model, L(x, 3.05, cz + 0.3) * CFrame.Angles(0, rng:NextNumber(-0.15, 0.15), 0), 4.2)
 	end
-	kit(model, PropKit, "CoinStack", L(-10.8, 3.05, cz - 0.4), 2.8, true)
+	kit(model, PropKit, "CoinStack", L(-9.6, 3.05, cz - 0.4), 2.6, true)
 	lantern(model, L(-7, FRONT_H - 1, FRONT + 1), 2.6, true)
 	lantern(model, L(7, FRONT_H - 1, FRONT + 1), 2.6, not style.royal)
-	cylinder(model, "LanternRope", 0.14, 0.9, L(-7, FRONT_H - 0.6, FRONT + 1), ROPE, Mat.Fabric)
-	cylinder(model, "LanternRope", 0.14, 0.9, L(7, FRONT_H - 0.6, FRONT + 1), ROPE, Mat.Fabric)
+	cylinder(model, "LanternRope", 0.14, 0.9, L(-7, FRONT_H - 0.6, FRONT + 1), ROPE, Mat.SmoothPlastic)
+	cylinder(model, "LanternRope", 0.14, 0.9, L(7, FRONT_H - 0.6, FRONT + 1), ROPE, Mat.SmoothPlastic)
 	return model
 end
 
@@ -358,7 +358,7 @@ do
 	piece(buyer, "SignEdgeTop", Vector3.new(9, 0.45, 0.7), sign * CFrame.new(0, 2.4, 0), WOOD_DARK, Mat.Wood)
 	piece(buyer, "SignEdgeLow", Vector3.new(9, 0.45, 0.7), sign * CFrame.new(0, -2.4, 0), WOOD_DARK, Mat.Wood)
 	for _, sx in { -3, 3 } do
-		cylinder(buyer, "SignRope", 0.2, 2, base * CFrame.new(7.2 + sx, 18.6, 0), ROPE, Mat.Fabric)
+		cylinder(buyer, "SignRope", 0.2, 2, base * CFrame.new(7.2 + sx, 18.6, 0), ROPE, Mat.SmoothPlastic)
 	end
 	kit(buyer, PropKit, "MoneySack", sign * CFrame.new(0, -1.9, -0.32), 3.8, false, GOLD)
 	-- by the counter
@@ -385,20 +385,20 @@ do
 	for k = 1, folds do
 		local fw = (W + 1) / folds
 		local x = -(W + 1) / 2 + (k - 0.5) * fw
-		piece(vip, "BackCurtain", Vector3.new(fw + 0.05, 15.6, 0.3), frame * CFrame.new(x, 7.8, BACK_Z + (k % 2) * 0.22), if k % 2 == 0 then PURPLE_DEEP else Color3.fromRGB(102, 44, 148), Mat.Fabric).CastShadow = k == 7
+		piece(vip, "BackCurtain", Vector3.new(fw + 0.05, 15.6, 0.3), frame * CFrame.new(x, 7.8, BACK_Z + (k % 2) * 0.22), if k % 2 == 0 then PURPLE_DEEP else Color3.fromRGB(88, 38, 124), Mat.SmoothPlastic).CastShadow = k == 7
 	end
 	for _, side in { -1, 1 } do
 		local x = side * (W / 2 + 0.2)
 		for j = 0, 2 do
 			local fx = x - side * j * 0.9
 			local top = frame * CFrame.new(fx, 0, -D / 2 - 0.5)
-			cylinder(vip, "Curtain", 1.2, 6.4, top * CFrame.new(0, 9.2, 0), if j == 1 then PURPLE_DEEP else PURPLE, Mat.Fabric)
-			cylinder(vip, "CurtainFoot", 1.1, 4.6, top * CFrame.new(0, 2.3, 0), if j == 1 then PURPLE_DEEP else PURPLE, Mat.Fabric)
+			cylinder(vip, "Curtain", 1.2, 6.4, top * CFrame.new(0, 9.2, 0), if j == 1 then PURPLE_DEEP else PURPLE, Mat.SmoothPlastic)
+			cylinder(vip, "CurtainFoot", 1.1, 4.6, top * CFrame.new(0, 2.3, 0), if j == 1 then PURPLE_DEEP else PURPLE, Mat.SmoothPlastic)
 		end
 		local tie = frame * CFrame.new(x - side * 0.9, 5, -D / 2 - 0.5)
-		piece(vip, "CurtainTie", Vector3.new(3, 1, 1.3), tie, GOLD, Mat.Fabric)
+		piece(vip, "CurtainTie", Vector3.new(3, 1, 1.3), tie, GOLD, Mat.SmoothPlastic)
 		ball(vip, "CurtainKnot", 0.9, tie * CFrame.new(0, 0, -0.9), GOLD)
-		cylinder(vip, "CurtainTassel", 0.45, 1.6, tie * CFrame.new(0, -1.3, -0.95), GOLD, Mat.Fabric)
+		cylinder(vip, "CurtainTassel", 0.45, 1.6, tie * CFrame.new(0, -1.3, -0.95), GOLD, Mat.SmoothPlastic)
 		-- gold knobs on the tall posts
 		ball(vip, "PostKnob", 1.5, frame * CFrame.new(side * W / 2, 18.2, D / 2), GOLD)
 	end
@@ -482,16 +482,16 @@ local function bannerPost(x: number)
 	bar(banners, "BannerBar", (base * CFrame.new(-4.5, 23.4, 0)).Position, (base * CFrame.new(4.5, 23.4, 0)).Position, 0.9, 0.9, WOOD_LIGHT, Mat.Wood)
 	lashing(banners, base * CFrame.new(0, 23.4, 0), 2.5, 1.2)
 	local cloth = base * CFrame.new(0, 16.5, -1.2)
-	piece(banners, "Banner", Vector3.new(7, 12.4, 0.2), cloth, BLUE, Mat.Fabric).CastShadow = true
+	piece(banners, "Banner", Vector3.new(7, 12.4, 0.2), cloth, BLUE, Mat.SmoothPlastic).CastShadow = true
 	for _, s in { -1, 1 } do
-		piece(banners, "BannerEdge", Vector3.new(0.5, 12.4, 0.24), cloth * CFrame.new(s * 3.3, 0, -0.02), GOLD, Mat.Fabric)
+		piece(banners, "BannerEdge", Vector3.new(0.5, 12.4, 0.24), cloth * CFrame.new(s * 3.3, 0, -0.02), GOLD, Mat.SmoothPlastic)
 	end
-	piece(banners, "BannerTop", Vector3.new(7.4, 0.6, 0.4), cloth * CFrame.new(0, 6.2, 0), GOLD, Mat.Fabric)
-	triangle(banners, "BannerPointEdge", cloth * CFrame.new(0, -6.2, 0), 7, 2.9, GOLD, Mat.Fabric)
-	triangle(banners, "BannerPoint", cloth * CFrame.new(0, -6.2, -0.05), 6, 2.2, BLUE, Mat.Fabric)
+	piece(banners, "BannerTop", Vector3.new(7.4, 0.6, 0.4), cloth * CFrame.new(0, 6.2, 0), GOLD, Mat.SmoothPlastic)
+	triangle(banners, "BannerPointEdge", cloth * CFrame.new(0, -6.2, 0), 7, 2.9, GOLD, Mat.SmoothPlastic)
+	triangle(banners, "BannerPoint", cloth * CFrame.new(0, -6.2, -0.05), 6, 2.2, BLUE, Mat.SmoothPlastic)
 	kit(banners, PropKit, "MoneySack", cloth * CFrame.new(0, -3, -0.2), 5.4, false, GOLD)
 	for _, s in { -3, 3 } do
-		cylinder(banners, "BannerRope", 0.2, 1, base * CFrame.new(s, 23, -1.2), ROPE, Mat.Fabric)
+		cylinder(banners, "BannerRope", 0.2, 1, base * CFrame.new(s, 23, -1.2), ROPE, Mat.SmoothPlastic)
 	end
 end
 bannerPost(23.5)
@@ -504,10 +504,10 @@ local function bunting(a: Vector3, b: Vector3, sag: number, count: number)
 		local s = 4 * t * (1 - t)
 		local p = a:Lerp(b, t) - Vector3.new(0, sag * s, 0)
 		local q = a:Lerp(b, k / count) - Vector3.new(0, sag * 4 * (k / count) * (1 - k / count), 0)
-		bar(banners, "BuntingRope", last, q, 0.14, 0.14, ROPE, Mat.Fabric)
+		bar(banners, "BuntingRope", last, q, 0.14, 0.14, ROPE, Mat.SmoothPlastic)
 		local along = (q - last).Unit
 		local c = CFrame.fromMatrix(p, along, Vector3.yAxis, along:Cross(Vector3.yAxis))
-		triangle(banners, "Pennant", c, 2.9, 3.8, if k % 2 == 1 then BLUE else CREAM, Mat.Fabric)
+		triangle(banners, "Pennant", c, 2.9, 3.8, if k % 2 == 1 then BLUE else CREAM, Mat.SmoothPlastic)
 		last = q
 	end
 end
@@ -587,7 +587,8 @@ do
 	end
 	local function curtains(r0: number, y0: number, r1: number, y1: number, n: number, rate: number)
 		local h = holder("Curtains", Vector3.one * 0.2, A(0, y0, 0))
-		local width = 2 * math.pi * r0 / n * 1.08
+		-- separate streams with the stone showing between them, as in the picture
+		local width = 2 * math.pi * r0 / n * 0.42
 		local turn = (F - F.Position):Inverse()
 		for k = 0, n - 1 do
 			local ang = k * math.pi * 2 / n
@@ -612,7 +613,7 @@ do
 			b.TextureLength = 4
 			b.TextureSpeed = 1.2
 			b.Width0 = width
-			b.Width1 = width * (r1 / math.max(r0, 0.1))
+			b.Width1 = width * 1.15
 			b.Segments = 8
 			b.CurveSize0 = (r1 - r0) * 0.9
 			b.CurveSize1 = 0
@@ -663,8 +664,8 @@ do
 	disc("BowlUnder", 5.6, 0.5, m2 - 0.9, STONE, Mat.Slate)
 	pool(5.6, m2, 0)
 	disc("Finial", 1, 0.6, m2, STONE_DARK, Mat.Slate)
-	curtains(2.9, m2, 5.2, m1, 8, 10)
-	curtains(6, m1, 11, wl, 16, 18)
+	curtains(2.9, m2, 4.4, m1, 6, 10)
+	curtains(6, m1, 8.6, wl, 8, 18)
 	-- a jet out of the top bowl
 	local h = holder("Jet", Vector3.one * 0.15, A(0, m2 + 0.5, 0) * CFrame.Angles(math.rad(90), 0, 0))
 	local e = Instance.new("ParticleEmitter")
@@ -791,8 +792,8 @@ local function flagstone(x: number, z: number, across: number, deep: number)
 	local src = WildKit:FindFirstChild(names[rng:NextInteger(1, #names)])
 	local mesh = src:FindFirstChildWhichIsA("MeshPart", true):Clone()
 	mesh.Name = "Flagstone"
-	mesh.Size = Vector3.new(across, 0.7, deep)
-	mesh.CFrame = at(x, 0.12, z, rng:NextNumber(0, math.pi * 2))
+	mesh.Size = Vector3.new(across, 0.45, deep)
+	mesh.CFrame = at(x, 0.05, z, rng:NextNumber(0, math.pi * 2))
 	mesh.Anchored = true
 	mesh.CanCollide = false
 	mesh.CanTouch = false
@@ -811,26 +812,26 @@ do
 	-- rings round the fountain
 	local r = 22.5
 	while r < 44 do
-		local n = math.floor(2 * math.pi * r / 8.4)
+		local n = math.floor(2 * math.pi * r / 7.2)
 		for k = 1, n do
-			if rng:NextNumber() < 0.88 - (r - 22) * 0.012 then
+			if rng:NextNumber() < 0.94 - (r - 22) * 0.012 then
 				local a = (k + rng:NextNumber(-0.18, 0.18)) * math.pi * 2 / n + r
-				local rr = r + rng:NextNumber(-0.9, 0.9)
-				flagstone(math.cos(a) * rr, math.sin(a) * rr, rng:NextNumber(5.4, 7.6), rng:NextNumber(4.4, 6))
+				local rr = r + rng:NextNumber(-0.7, 0.7)
+				flagstone(math.cos(a) * rr, math.sin(a) * rr, rng:NextNumber(4.8, 6.8), rng:NextNumber(4, 5.4))
 			end
 		end
-		r += 6.8
+		r += 5.6
 	end
 	-- wide stones up the front way and over to each stall and the board
 	local function line(ax: number, az: number, bx: number, bz: number, step: number, spread: number)
 		local len = math.sqrt((bx - ax) ^ 2 + (bz - az) ^ 2)
 		for d = 0, len, step do
 			local t = d / len
-			flagstone(ax + (bx - ax) * t + rng:NextNumber(-spread, spread), az + (bz - az) * t + rng:NextNumber(-spread * 0.4, spread * 0.4), rng:NextNumber(5, 8.5), rng:NextNumber(4, 6))
+			flagstone(ax + (bx - ax) * t + rng:NextNumber(-spread, spread), az + (bz - az) * t + rng:NextNumber(-spread * 0.4, spread * 0.4), rng:NextNumber(4.5, 6.8), rng:NextNumber(3.8, 5.2))
 		end
 	end
-	line(-6, -48, -7, -94, 9, 3)
-	line(7, -50, 8, -92, 11, 3)
+	line(-6, -48, -7, -94, 6.5, 2.5)
+	line(7, -50, 8, -92, 7, 2.5)
 	line(40, -22, 30, -20, 8, 1.5)
 	line(-40, -22, -30, -20, 8, 1.5)
 	line(-6, 46, -8, 54, 7, 2)
@@ -868,7 +869,8 @@ end
 -- (off the line from the Landing through each stall, or a trunk stands as a dark panel in the stall's opening)
 tree("QtCommonTree_5", 84, 62, 48)
 tree("QtCommonTree_1", -84, 62, 46)
-tree("QtCommonTree_3", 118, 74, 50)
+tree("QtCommonTree_3", 96, -4, 72) -- the big one, its crown over the buyer's outer side, as in the picture
+tree("QtCommonTree_1", -100, 20, 56)
 tree("QtCommonTree_3", -4, 118, 54)
 
 -- dry-stone walls with gaps: a row of the kit's wall along a line
@@ -886,11 +888,7 @@ local function wall(ax: number, az: number, bx: number, bz: number)
 end
 -- front corners, on both sides of the way in, turning up the sides with gaps
 wall(26, -86, 56, -88)
-wall(78, -82, 96, -76)
 wall(-26, -86, -56, -88)
-wall(-78, -82, -96, -76)
--- behind the board, broken by the road on the VIP's side
-wall(38, 86, 58, 84)
 
 -- benches facing the fountain, a lantern post beside each; lantern posts at the way in
 local function lanternPost(x: number, z: number, lit: boolean)
@@ -939,9 +937,10 @@ local BED = {
 	{ WildKit, "DokiFlower2", 3.2, true },
 	{ WildKit, "DokiFlower3", 4.4, false },
 	{ WildKit, "DokiFlower4", 4, false },
+	{ WildKit, "DokiFlower1", 3, true },
+	{ WildKit, "DokiFlower2", 3, true },
+	{ WildKit, "DokiFlower3", 3.6, false },
 	{ WildKit, "QtFern_1", 5, true, TUFT },
-	{ WildKit, "DokiGrass2", 3.4, false, TUFT },
-	{ WildKit, "DokiGrass7", 3.4, false, TUFT },
 }
 local function bed(x: number, z: number, radius: number, count: number)
 	for k = 1, count do
@@ -949,7 +948,7 @@ local function bed(x: number, z: number, radius: number, count: number)
 		local e = BED[rng:NextInteger(1, #BED)]
 		local px, pz = x + math.cos(a) * r, z + math.sin(a) * r
 		if not (math.abs(px - C.Landing.x) < 14 and math.abs(pz - C.Landing.z) < 14) then
-			kit(round, e[1], e[2], at(px, -0.1, pz, rng:NextNumber(0, 6.2)), e[3] * rng:NextNumber(0.85, 1.25), e[4], e[5])
+			kit(round, e[1], e[2], at(px, -0.1, pz, rng:NextNumber(0, 6.2)), e[3] * rng:NextNumber(0.95, 1.3), e[4], e[5])
 		end
 	end
 end
@@ -970,22 +969,28 @@ for _, s in { -1, 1 } do
 end
 -- round the fountain's step, in arcs with gaps
 for _, a in { 0.4, 1.3, 2.3, 3.2, 4.2, 5.2 } do
-	bed(math.cos(a) * 20.2, math.sin(a) * 20.2, 3, 4)
+	bed(math.cos(a) * 20.2, math.sin(a) * 20.2, 3.5, 7)
 end
 -- at the board's foot, between the stone beds
 bed(-10, 54, 8, 7)
 bed(10, 54, 8, 7)
 bed(0, 50, 3, 3)
 -- along the walls at the front, by the benches
-bed(40, -80, 9, 7)
-bed(-40, -80, 9, 7)
-bed(84, -68, 9, 6)
-bed(-84, -68, 9, 6)
+bed(40, -80, 5, 7)
+bed(-40, -80, 5, 7)
+bed(84, -68, 5, 6)
+bed(-84, -68, 5, 6)
 -- beside the stalls, outward
-bed(88, -26, 9, 6)
-bed(-88, -24, 9, 6)
-bed(92, 22, 8, 3)
-for _, b in { { 96, -44, 8 }, { -98, -40, 8 }, { 96, 56, 8 }, { -88, 62, 7 }, { 46, 74, 8 }, { -18, 78, 7 }, { 62, -96, 7 }, { -60, -98, 7 } } do
+bed(88, -26, 6, 10)
+bed(-88, -24, 6, 10)
+bed(92, 22, 5, 4)
+-- behind and between the stalls and along the yard's edge, so the square sits in greenery
+for _, s in { -1, 1 } do
+	bed(s * 70, 8, 6, 10)
+	bed(s * 40, 12, 4, 6)
+	bed(s * 62, -40, 5, 8)
+end
+for _, b in { { 96, -44, 8 }, { -98, -40, 8 }, { 96, 56, 8 }, { -88, 62, 7 }, { 46, 74, 8 }, { -18, 78, 7 }, { 62, -96, 7 }, { -60, -98, 7 }, { 66, 12, 9 }, { 76, 2, 9 }, { -66, 12, 9 }, { -76, 2, 9 }, { 50, 18, 8 }, { -50, 18, 8 }, { 24, 58, 8 }, { -24, 58, 8 } } do
 	outdoor(WildKit, "QtBush_Common_Green", b[1], b[2], b[3], true)
 end
 for _, b in { { 86, 70, 7 }, { -76, 48, 7 }, { 28, 76, 7 } } do

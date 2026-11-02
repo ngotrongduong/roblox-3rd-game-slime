@@ -977,7 +977,8 @@ Config.Robux = {
 -- The leaderboard of the Market (src/server/Leaderboard.luau, LeaderboardStore, shared/Leaderboard, and the client's
 -- LeaderboardScreen): the top Rows slimes of the whole game by level, one per player.
 Config.Leaderboard = {
-	Rows = 10,
+	-- Few rows, so the letters read from across the square on a phone.
+	Rows = 6,
 	-- The OrderedDataStore holds each player's best score, the second store the names that go with it (a score is one number).
 	ScoreStore = "GooLineage_Board_v1",
 	NameStore = "GooLineage_BoardNames_v1",
