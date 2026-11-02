@@ -1,5 +1,5 @@
 --!strict
--- The schema-five living village: load-safe slimes, area levels, jobs, food and breeding.
+-- The schema-six living village: load-safe slimes, area levels, jobs, food and breeding.
 -- All clocks are server epoch seconds, and repairs keep valid unrelated progress intact.
 
 local Colours = if script then require(script.Parent.Colours) else require("./Colours")
@@ -20,7 +20,7 @@ export type ColourGenotype = typeof(Genetics.homozygous(""))
 export type Appearance = typeof(Mutations.none())
 
 export type Needs = { fullness: number, energy: number, fun: number }
-export type Buff = { stat: string, percent: number, untilTime: number }
+export type Buff = { stat: string, percent: number, untilTime: number, dish: string? }
 
 -- Gear is kept for the future fight phase; the fallen state is replaced by a timed ghost.
 export type Loadout = { head: string?, hand: string?, tail: string? }
@@ -38,6 +38,7 @@ export type Slime = {
 	trait: string,
 	friends: { [string]: number },
 	buff: Buff?,
+	autoDish: string?,
 	ghostUntil: number?,
 	-- A resting slime stays asleep until rested; its state survives offline steps.
 	sleeping: boolean?,
@@ -88,6 +89,7 @@ export type WorkSlot = {
 	reserve: string?,
 	progress: number,
 	stat: string?,
+	recipe: string?,
 	plot: number?,
 	task: string?,
 	pending: string?,
@@ -155,7 +157,6 @@ export type Farm = {
 	storehouse: { [string]: number },
 	counter: { [string]: number },
 	fridge: { [string]: number },
-	cookedAllowed: { string },
 	breeding: Pairing,
 	teams: { Team },
 	lastSimulatedAt: number,
@@ -253,7 +254,7 @@ function FarmState.newWork(areas: Areas): Work
 	for _, id in Config.Work.Areas do
 		local slots: { WorkSlot } = {}
 		for _ = 1, FarmState.slotCount((areas :: any)[id].level) do
-			table.insert(slots, { progress = 0 })
+			table.insert(slots, { progress = 0, recipe = if id == "kitchen" then Config.Food.DefaultRecipe else nil })
 		end
 		out[id] = {
 			slots = slots,
@@ -325,10 +326,6 @@ function FarmState.removeSlime(farm: Farm, id: string): boolean
 			pair.a, pair.b = nil, nil
 			pair.courtingUntil = nil
 		end
-	end
-	local allowed = table.find(farm.cookedAllowed, id)
-	if allowed then
-		table.remove(farm.cookedAllowed, allowed)
 	end
 	for _, team in farm.teams do
 		local inTeam = table.find(team.members, id)
@@ -417,6 +414,7 @@ function FarmState.newStarters(now: number): { Slime }
 			trait = FarmState.traitForSeed(starterSeed(i)),
 			friends = {},
 			buff = nil,
+			autoDish = nil,
 			ghostUntil = nil,
 			createdAt = createdAt,
 			breedReadyAt = 0,
@@ -447,7 +445,6 @@ function FarmState.newFarm(now: number): Farm
 		storehouse = table.clone(Config.Food.Start),
 		counter = {},
 		fridge = {},
-		cookedAllowed = {},
 		breeding = FarmState.newPairing(areas.breeding.level),
 		teams = FarmState.newTeams(),
 		lastSimulatedAt = now,
@@ -570,7 +567,12 @@ local function validateBuff(raw: any): Buff?
 		and isNum(raw.untilTime)
 		and raw.untilTime >= 0
 	then
-		return { stat = raw.stat, percent = math.clamp(raw.percent, 0, Config.Needs.Max), untilTime = raw.untilTime }
+		return {
+			stat = raw.stat,
+			percent = math.clamp(raw.percent, 0, Config.Needs.Max),
+			untilTime = raw.untilTime,
+			dish = if type(raw.dish) == "string" and (Config.Food.Dishes :: any)[raw.dish] then raw.dish else nil,
+		}
 	end
 	return nil
 end
@@ -632,6 +634,7 @@ local function validateSlime(raw: any, index: number, now: number, warnings: { s
 			else FarmState.traitForSeed(if isNum(raw.seed) then raw.seed else Rng.hash(id)),
 		friends = validateFriends(raw.friends, id),
 		buff = validateBuff(raw.buff),
+		autoDish = if type(raw.autoDish) == "string" and (Config.Food.Dishes :: any)[raw.autoDish] then raw.autoDish else nil,
 		ghostUntil = if isNum(raw.ghostUntil) and raw.ghostUntil > 0 then raw.ghostUntil else nil,
 		createdAt = createdAt,
 		breedReadyAt = breedReadyAt,
@@ -824,6 +827,9 @@ local function validateWork(raw: any, areas: Areas, slimes: { Slime }, now: numb
 						and table.find({ "hoe", "plant", "water", "harvest" }, old.task)
 					then
 						slot.plot, slot.task = old.plot, old.task
+					end
+					if id == "kitchen" and type(old.recipe) == "string" and (Config.Food.Dishes :: any)[old.recipe] then
+						slot.recipe = old.recipe
 					end
 					if id == "training" and table.find(StatsModule.Keys, old.stat) then
 						slot.stat = old.stat
@@ -1269,9 +1275,6 @@ function FarmState.repair(data: any, now: number): (Farm, { string }, boolean)
 		storehouse = validateStock(data.storehouse, Config.Food.RawOrder, storeCapacity(areas.pantry.level)),
 		counter = validateStock(data.counter, Config.Food.RawOrder, Config.Food.CounterCapacity),
 		fridge = validateStock(data.fridge, Config.Food.DishOrder, fridgeCapacity(areas.kitchen.level)),
-		cookedAllowed = stringList(data.cookedAllowed, function(id)
-			return slimeIds[id] == true
-		end),
 		breeding = breeding,
 		teams = validateTeams(data.teams, slimes, work, breeding, warnings),
 		lastSimulatedAt = if isNum(data.lastSimulatedAt) and data.lastSimulatedAt > 0
