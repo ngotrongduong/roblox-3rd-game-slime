@@ -12,6 +12,7 @@ local Rng = if script then require(script.Parent.Rng) else require("./Rng")
 local Stations = if script then require(script.Parent.Stations) else require("./Stations")
 local Stats = if script then require(script.Parent.Stats) else require("./Stats")
 local VillagePath = if script then require(script.Parent.VillagePath) else require("./VillagePath")
+local VillageRules = if script then require(script.Parent.Village) else require("./Village")
 
 type Farm = typeof(FarmState.newFarm(0))
 type Rng = typeof(Rng.new(0))
@@ -219,9 +220,12 @@ function Zombies.deathReward(slime: Slime): number
 	return Mutations.sellValue(slime.appearanceMutation, Stats.level(slime.stats))
 end
 
-function Zombies.pay(farm: Farm, amount: number)
-	farm.coins += amount
-	farm.lifetime.coinsEarned += amount
+function Zombies.pay(farm: Farm, amount: number): number
+	local room = math.max(0, VillageRules.coinCap(farm.areas.pantry.level) - farm.coins)
+	local paid = math.min(math.max(0, amount), room)
+	farm.coins += paid
+	farm.lifetime.coinsEarned += paid
+	return paid
 end
 
 -- Whether a team member can march right now: grown up, alive, awake and not tired. (A slime in a team is never at a job
@@ -359,8 +363,7 @@ function Zombies.fall(farm: Farm, slimeId: string, now: number): number
 	slime.ghostUntil = now + Config.Village.GhostSeconds
 	slime.sleeping = nil
 	local reward = Zombies.deathReward(slime)
-	Zombies.pay(farm, reward)
-	return reward
+	return Zombies.pay(farm, reward)
 end
 
 function Zombies.reviveCost(level: number): number
@@ -382,13 +385,7 @@ function Zombies.revive(farm: Farm, slimeId: string, now: number): (boolean, str
 		return false, "NO_FOOD"
 	end
 	for _ = 1, cost do
-		local best, most = nil, 0
-		for _, id in Config.Food.RawOrder do
-			local count = farm.storehouse[id] or 0
-			if count > most then
-				best, most = id, count
-			end
-		end
+		local best = Food.cheapestRaw(farm.storehouse)
 		Food.take(farm.storehouse, best :: string, 1)
 	end
 	slime.ghostUntil = nil
