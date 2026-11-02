@@ -43,7 +43,7 @@ return function(T)
 		T.same(farm.storehouse, { fish = 10, carrot = 10 })
 		T.same(farm.counter, {})
 		T.same(farm.fridge, {})
-		T.same(farm.cookedAllowed, {})
+		T.eq(farm.cookedAllowed, nil)
 		T.eq(#farm.breeding.pairs, 2)
 		T.same(farm.breeding.pairs[1], {})
 		for _, id in Config.Village.Areas do
@@ -51,7 +51,7 @@ return function(T)
 		end
 		for _, id in Config.Work.Areas do
 			T.eq(#farm.work[id].slots, 1)
-			T.same(farm.work[id].slots[1], { progress = 0 })
+			T.same(farm.work[id].slots[1], if id == "kitchen" then { progress = 0, recipe = "grilledFish" } else { progress = 0 })
 			T.same(farm.work[id].box, {})
 		end
 		T.eq(farm.food, nil)
