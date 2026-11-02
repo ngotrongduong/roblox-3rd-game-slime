@@ -21,8 +21,8 @@ return function(T: any)
 			local order = if group == "fish" then Config.Food.FishOrder else Config.Food.VegOrder
 			local bottom, top = 0, 0
 			for _, id in order do
-				bottom += Config.Food.Kinds[id].weight
-				top += Config.Food.Kinds[id].topWeight
+				bottom += (Config.Food.Kinds :: any)[id].weight
+				top += (Config.Food.Kinds :: any)[id].topWeight
 			end
 			T.eq(bottom, 100)
 			T.eq(top, 100)
@@ -31,8 +31,8 @@ return function(T: any)
 			for _ = 1, 10000 do
 				local low = Food.roll(group, first, 1)
 				local high = Food.roll(group, last, 50)
-				if Config.Food.Kinds[low].rarity == "epic" then commonEpics += 1 end
-				if Config.Food.Kinds[high].rarity == "epic" then highEpics += 1 end
+				if (Config.Food.Kinds :: any)[low].rarity == "epic" then commonEpics += 1 end
+				if (Config.Food.Kinds :: any)[high].rarity == "epic" then highEpics += 1 end
 			end
 			T.ok(highEpics > commonEpics, group .. " top level produces more epics")
 		end
@@ -146,6 +146,8 @@ return function(T: any)
 		T.eq(farm.coins, cap + 300)
 		T.eq(Zombies.pay(farm, 100), 0)
 		T.eq(farm.coins, cap + 300)
+		T.eq(Shop.sell(farm, "slime-2", NOW), 120, "slime sale also ignores the cap")
+		T.eq(farm.coins, cap + 420)
 	end)
 
 	T.test("upgrade anchors hold and intermediate prices never fall", function()
@@ -172,6 +174,6 @@ return function(T: any)
 		T.eq(loaded.data.work.kitchen.slots[1].recipe, "grilledFish")
 		T.eq(loaded.data.slimes[1].autoDish, "veggieStew")
 		T.eq(loaded.data.slimes[1].buff.dish, "fishVegSoup")
-		T.eq(FarmState.newFarm(NOW).cookedAllowed, nil)
+		T.eq((FarmState.newFarm(NOW) :: any).cookedAllowed, nil)
 	end)
 end
