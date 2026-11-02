@@ -45,6 +45,10 @@ What the owner's play rounds taught us. Read before working on the village, its 
 - Coplanar parts flicker: `ZFight` raises the smaller one by 0.03 at every stage build.
 - A BillboardGui sized in Offset stays one screen size (looks bigger when zoomed out); use Scale (studs) for world things.
 - A game script cannot set a SurfaceAppearance's maps: looks come ready made in `ClientKit.Looks`.
+- A ViewportFrame draws nothing in a world BillboardGui, and an AlwaysOnTop billboard over a work spot did not draw either (seen
+  2026-11-03): for a food over a slime, clone the real model and put a plain billboard just above it.
+- Soft particle pictures (sparkles, fire, smoke, additive or not) vanish on the bright village ground. The owner's solid icons read at
+  the game's camera. A particle's Size is about its width in studs: on a 3 stud slime, 0.2 to 0.3 of the body is plenty.
 - `ClientKit` and the kit reach the repo only through a saved place: owner Ctrl+S on the MapWork window, check the file's time
   (`assets/raw/MapWork.rbxlx`) because a save once went to the wrong window, then `lune run tools/kit/export_kit.luau` and
   `export_client_kit.luau`. Back up the place before a rebuild.

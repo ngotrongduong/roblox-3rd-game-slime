@@ -89,6 +89,16 @@ return function(T: any)
 		T.eq(farm.counter.carrot, 3, "the second cook still needs carrots")
 	end)
 
+	T.test("ingredients left by a cook who is gone return to the storehouse and cannot jam the counter", function()
+		local farm = FarmKit.farm(NOW)
+		farm.counter = { fish = 6, carrot = 4 }
+		farm.storehouse = { fish = 1 }
+		local after = VillageSim.step(farm, NOW + 1, 1, Rng.new(1), { errands = false })
+		T.same(after.counter, {})
+		T.eq(after.storehouse.fish, 7)
+		T.eq(after.storehouse.carrot, 4)
+	end)
+
 	T.test("manual feeding replaces a timed buff and never spends stock on refusal", function()
 		local farm = FarmKit.farm(NOW)
 		farm.fridge = { grilledFish = 1, bakedTrout = 1 }

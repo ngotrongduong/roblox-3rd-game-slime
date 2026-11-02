@@ -1,5 +1,25 @@
 # Status
 
+## 2026-11-03 — the kitchen: start here
+
+Done and committed on `main`, not published (rules in `docs/GAMEPLAY.md` §5, numbers and measurements in `docs/ECONOMY.md`): a recipe per cook, 16 dishes with rarity
+and timed buffs, Feed and When hungry, selling dishes at the Market, food rarity by pond and garden level, the coin vault, real upgrade prices (FreeUpgrades off),
+13 new dish models in the kit, the buff badge and four effects from the owner's stat icons. Schema 6: a publish must shut down all old servers.
+
+Proved in a MapWork play test: a cook takes the recipe's ingredients and makes the dish; a missing ingredient floats crossed out over the cook; a locked recipe is refused; the
+recipe list and dish sheet open and act; Feed sets the buff; selling at the Market pays 1000; an upgrade pad charges 310 and raises the level; the vault-full number and toast
+(with the coins set by script); badge and effects of all four stats at the player's camera (with epic buffs set by script). A reviewer read money, saves and remotes.
+
+Only passed tests, not seen in play: dish buffs inside a real fight, fight income stopping at the vault, the save migration on a real old save, recipes above common.
+
+Not seen or not known
+- No screen has been seen on a phone frame: Claude cannot switch Studio's device view. To look at: the Market header (tight at 360 wide), recipe rows, the buff badge.
+- Income from fights is still `price_curve`'s assumption, not a measured hour of play, so prices may need tuning. Dish prices are close together (1000 to 2000), to give
+  level 1 some income.
+- Golden Carp Feast and Starfruit Glazed Puffer came out peach rather than gold, and the puffer has small loose star slices: redo if the owner dislikes them.
+- A rarer buff only means denser particles and a coloured badge frame; the effects use the owner's icons and have no glow.
+- Graphics quality 0 (automatic) counts as full effects: no effects setting exists in the game yet.
+
 ## 2026-11-02 (late) — the Market built, the HUD made for phones: start here
 
 Done and committed on `main`; nothing has been pushed to `origin/main` this stretch.

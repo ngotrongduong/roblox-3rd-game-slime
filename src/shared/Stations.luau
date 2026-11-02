@@ -163,15 +163,10 @@ function Stations.setTrainingStat(farm: Farm, slotIndex: number, statKey: string
 	return true
 end
 
--- Remove ingredients no staffed cook needs after a recipe change, as far as pantry space allows.
-function Stations.setCookRecipe(farm: Farm, slotIndex: number, recipeId: string): boolean
-	local slot = if type(slotIndex) == "number" and slotIndex % 1 == 0 then farm.work.kitchen.slots[slotIndex] else nil
+-- Ingredients no staffed cook needs go back to the storehouse, as far as it has room, so a changed recipe or a cook who
+-- left cannot jam the counter.
+function Stations.returnUnusedCounter(farm: Farm)
 	local level = farm.areas.kitchen.level
-	if not slot or not Food.recipeUnlocked(recipeId, level) then
-		return false
-	end
-	slot.recipe = recipeId
-	slot.progress = 0
 	local useful: { [string]: boolean } = {}
 	for _, other in farm.work.kitchen.slots do
 		if other.worker or other.reserve then
@@ -194,6 +189,16 @@ function Stations.setCookRecipe(farm: Farm, slotIndex: number, recipeId: string)
 			end
 		end
 	end
+end
+
+function Stations.setCookRecipe(farm: Farm, slotIndex: number, recipeId: string): boolean
+	local slot = if type(slotIndex) == "number" and slotIndex % 1 == 0 then farm.work.kitchen.slots[slotIndex] else nil
+	if not slot or not Food.recipeUnlocked(recipeId, farm.areas.kitchen.level) then
+		return false
+	end
+	slot.recipe = recipeId
+	slot.progress = 0
+	Stations.returnUnusedCounter(farm)
 	return true
 end
 

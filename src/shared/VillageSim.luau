@@ -281,6 +281,7 @@ end
 function VillageSim.step(input: Farm, now: number, seconds: number, rng: Rng, opts: Options): (Farm, { Event })
 	local farm: Farm = (ProfileLogic.deepCopy(input) :: any) :: Farm
 	local events: { Event } = {}
+	Stations.returnUnusedCounter(farm)
 	-- An egg in a nest hatches there too, slower (the owner, 2026-10-29); one saved before that rule has no
 	-- clock yet and starts now, at the nest's rate.
 	for _, egg in farm.eggs do

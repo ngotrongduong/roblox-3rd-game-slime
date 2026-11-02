@@ -98,15 +98,31 @@ playing). Nothing dies of hunger and no stat is ever lost to hunger.
 - **Idle slimes carry** box → storehouse (pantry), and storehouse → kitchen counter when the cook needs ingredients;
   cooked dishes go into the **fridge** in the kitchen. With nobody idle, the worker itself carries when its box is
   full, so the village never jams. Offline (and in the abstract sim) every carry happens at once.
-- **Dishes** (kitchen level 1; more recipes later): Grilled Fish (2 fish) +60, buff attack +10% for 20 min; Veggie
-  Stew (2 carrot + 1 cabbage) +65, buff defence +10%; Fish & Veg Soup (1 fish + 1 carrot + 1 cabbage) +90, buff hp
-  +10%. 120 s a dish. The cook makes the best dish its counter allows (most fullness).
-- **Eating**: a hungry slime eats raw food from the storehouse. Only slimes the player **allowed** (a setting at the
-  kitchen, a list of slime ids) eat dishes from the fridge, and fall back to the storehouse when it is empty. Eating
-  order of raw food: whatever there is most of.
+- **Dishes** (2026-11-03; every number in `Config.Food`, why they are what they are in `docs/ECONOMY.md`): 16 recipes, 4
+  rarities x 4 stats. The player picks a recipe for each kitchen position (default Grilled Fish); a cook with an ingredient
+  missing waits, takes nothing, and the models of what it lacks float over it, crossed out.
+
+  | Rarity | Kitchen level | Buff | Lasts | Cook, level 1 | Sells for |
+  |---|---|---|---|---|---|
+  | Common | 1 | +4% | 10 min | 120 s | 1000 |
+  | Uncommon | 8 | +6% | 11 min | 150 s | 1100 |
+  | Rare | 20 | +9% | 13 min | 200 s | 1300 |
+  | Epic | 35 | +12% | 15 min | 300 s | 2000 |
+
+- **Reserve**: the kitchen takes nothing while the storehouse holds fewer than one food per slime.
+- **Eating**: a hungry slime eats raw food from the storehouse, lowest rarity first, so rare food stays for recipes. From
+  the Food list the player taps a dish, then a slime: **Feed** (now, at any fullness) or **When hungry** (it eats this dish
+  by itself; with none left, raw food). Nothing else eats dishes.
+- **Buffs**: one per slime, a new one replaces the old, they count in fights only. A live buff shows the stat's icon and
+  "+N%" over the slime, with particles made of the owner's icon of that stat (stars, shields, bolts, hearts), each with its own
+  motion and start burst; rarer is denser, nearest few slimes only, off at low graphics quality.
+- **Selling**: the Dishes tab at the Market buyer.
+- **Levels**: kitchen = faster cooking and higher rarities; pond and garden = rarer catches, moving from `weight` at level 1 to
+  `topWeight` at level 50; pantry = storehouse room and the coin vault, the larger of 2000 and 3 x the upgrade price at its
+  level. Fight income stops at the vault ("Vault full"); selling always pays in full, even above it; coins held never fall.
 - Storehouse and fridge capacities grow with their area's level. Start: 10 fish + 10 carrots in the storehouse.
 - Offline: the village runs up to 8 h (the original's cap), everything made goes straight to the storehouse.
-- Buffs are kept on the slime (`buff = { stat, percent, untilTime }`) for the fights phase.
+- Buffs are kept on the slime (`buff = { stat, percent, untilTime, dish }`).
 
 ### Food economy rebalance (2026-10-30)
 
@@ -120,7 +136,7 @@ playing). Nothing dies of hunger and no stat is ever lost to hunger.
   work time taken away for walking and hauling, every fishing and garden slot staffed with a worker and a reserve):
   no slime goes hungry at the 13 levels tried from 1 to 50 and the storehouse ends full, with lowest fullness about 50. The 45% is
   an assumption; a Studio play test at the 72-slime cap is still to do. `tests/spec/food_balance.luau` keeps this checked.
-- A kitchen takes raw food only with a cook, at least one slime allowed cooked food, and room in the fridge.
+- A kitchen takes raw food only with a cook, room in the fridge and the reserve above (changed 2026-11-03).
 - Starter inventory (10 Koi + 10 carrots) covers garden establishment; players must still assign
   slimes to fishing, gardening and hauling. No idle farm can feed a full village without workers.
 
