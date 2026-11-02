@@ -561,8 +561,7 @@ local function stepFight(session: Session, team: March, now: number)
 				local zombie = group.byId[entry.to]
 				if zombie then
 					local reward = Zombies.killReward(zombie.kind, zombie.level)
-					Zombies.pay(farm, reward)
-					entry.coins = reward
+					entry.coins = Zombies.pay(farm, reward)
 				else
 					entry.coins = Zombies.fall(farm, entry.to, now)
 				end
