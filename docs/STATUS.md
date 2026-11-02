@@ -8,9 +8,7 @@ slime list everywhere, revive within 15 minutes of play or a slime is lost for g
 (`tools/map/build_wild_slices.luau`).
 
 Not done: Studio's multi-player test (nothing with two players has run); prices (upgrades still free; table in `docs/ECONOMY.md`); frame time on a
-phone with the new map and roaming zombies. MapWork holds unsaved work until the owner presses Ctrl+S in Edit mode: the flame in the campfire, the
-terrain of 8 plots, the new middle and 6 new kit models. After that: `lune run tools/kit/export_kit.luau`, then
-`lune run tools/kit/check_kit.luau TwistedTree GiantMushroom CrystalCluster EmberPlant RuinArch GooBasin`, and commit.
+phone with the new map and roaming zombies. The owner saved MapWork on 2026-11-02 with all of this in it, and the kit in the repo matches that save.
 
 ## 2026-11-01 — ChatGPT's branch reviewed and partly redone: start here
 
