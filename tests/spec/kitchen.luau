@@ -91,6 +91,9 @@ return function(T: any)
 		farm.slimes[1].buff = { stat = "defence", percent = 5, untilTime = NOW + 900 }
 		T.eq(select(2, Food.feed(farm, "slime-1", "not-a-dish", NOW)), "UNKNOWN_DISH")
 		T.eq(select(2, Food.feed(farm, "slime-1", "goldenBanquet", NOW)), "NO_DISH")
+		T.same(farm.fridge, { grilledFish = 1, bakedTrout = 1 }, "refusals do not spend a dish")
+		T.same(farm.slimes[1].buff, { stat = "defence", percent = 5, untilTime = NOW + 900 },
+			"refusals do not replace the buff")
 		T.ok(Food.feed(farm, "slime-1", "grilledFish", NOW))
 		T.same(farm.slimes[1].buff, { stat = "attack", percent = 8, untilTime = NOW + 600, dish = "grilledFish" })
 		T.eq(farm.fridge.grilledFish, nil)
@@ -158,6 +161,19 @@ return function(T: any)
 			T.ok(Village.upgradeCost(level) >= Village.upgradeCost(level - 1), "price dropped at " .. level)
 		end
 		T.eq(Village.coinCap(50), 3 * 78000)
+		T.eq(Config.Pads.FreeUpgrades, false)
+	end)
+
+	T.test("bad saved recipe and dish ids are dropped while valid old buffs remain", function()
+		local farm = FarmKit.farm(NOW)
+		farm.work.kitchen.slots[1].recipe = "invalid"
+		farm.slimes[1].autoDish = "invalid"
+		farm.slimes[1].buff = { stat = "speed", percent = 12, untilTime = NOW + 100, dish = "invalid" }
+		local repaired = FarmState.repair(farm, NOW)
+		T.eq(repaired.work.kitchen.slots[1].recipe, nil)
+		T.eq(Food.slotRecipe(repaired.work.kitchen.slots[1], 1), "grilledFish")
+		T.eq(repaired.slimes[1].autoDish, nil)
+		T.same(repaired.slimes[1].buff, { stat = "speed", percent = 12, untilTime = NOW + 100 })
 	end)
 
 	T.test("schema five migration keeps progress and strips old cooked permissions", function()
