@@ -166,7 +166,8 @@ return function(T: any)
 		farm.work.kitchen.slots[1].recipe = "grilledFish"
 		farm.slimes[1].autoDish = "veggieStew"
 		farm.slimes[1].buff = { stat = "hp", percent = 8, untilTime = NOW + 500, dish = "fishVegSoup" }
-		(farm :: any).cookedAllowed = { "slime-1" }
+		local old: any = farm
+		old.cookedAllowed = { "slime-1" }
 		local loaded = ProfileLogic.prepareLoad({ schemaVersion = 5, data = farm }, FarmSave.hooks(), NOW + 1)
 		T.ok(loaded.ok and loaded.migrated)
 		T.eq(loaded.data.coins, 1234)
