@@ -37,6 +37,9 @@ return function(T: any)
 		T.ok(Stations.assign(slow, "slime-1", "kitchen", 1, false, now))
 		T.ok(Stations.assign(fast, "slime-1", "kitchen", 1, false, now))
 		fast.slimes[1].stats.speed = 10
+		-- a cook with nothing on its counter waits at no progress
+		slow.counter.fish = 2
+		fast.counter.fish = 2
 		local a = VillageSim.step(slow, now + 40, 40, Rng.new(1), { errands = false })
 		local b = VillageSim.step(fast, now + 40, 40, Rng.new(1), { errands = false })
 		T.ok(b.work.kitchen.slots[1].progress > a.work.kitchen.slots[1].progress)

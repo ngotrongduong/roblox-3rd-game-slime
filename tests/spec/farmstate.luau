@@ -43,7 +43,7 @@ return function(T)
 		T.same(farm.storehouse, { fish = 10, carrot = 10 })
 		T.same(farm.counter, {})
 		T.same(farm.fridge, {})
-		T.same(farm.cookedAllowed, {})
+		T.eq((farm :: any).cookedAllowed, nil)
 		T.eq(#farm.breeding.pairs, 2)
 		T.same(farm.breeding.pairs[1], {})
 		for _, id in Config.Village.Areas do

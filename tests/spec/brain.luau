@@ -75,10 +75,10 @@ return function(T)
 		T.eq(farm.eggs[1].place, "incubator")
 		T.ok(farm.eggs[1].hatchAt > NOW)
 	end)
-	T.test("cooked-allowed slime eats fridge dish; another must eat raw", function()
+	T.test("auto-dish slime eats its selected fridge dish; another eats raw", function()
 		local farm = FarmKit.farm(NOW)
 		farm.fridge = { grilledFish = 2 }
-		farm.cookedAllowed = { "slime-1" }
+		farm.slimes[1].autoDish = "grilledFish"
 		farm.slimes[1].needs.fullness = 40
 		farm.slimes[2].needs.fullness = 40
 		local allowed = Brain.choose(farm, "slime-1", CTX, NOW, Rng.new(1))
@@ -174,9 +174,8 @@ return function(T)
 		farm.work.fishing.box = {}
 		farm.work.garden.box = {}
 		farm.counter = {}
-		farm.storehouse = { fish = 2 }
+		farm.storehouse = { fish = 6 }
 		farm.work.kitchen.slots[1].worker = "slime-3"
-		farm.cookedAllowed = { "slime-4" }
 		farm.slimes[1].trait = "hardworking"
 		farm.slimes[2].trait = "hardworking"
 		local first = Brain.choose(farm, "slime-1", CTX, NOW, Rng.new(2))

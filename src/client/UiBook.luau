@@ -115,17 +115,6 @@ local function drawDetail(id: string)
 			end,
 		})
 	end
-	local allowed = slime:GetAttribute("CookedAllowed") == true
-	UiKit.button(actions, {
-		Icon = "food",
-		Text = if allowed then "Cooked" else "Raw",
-		Style = if allowed then "good" else "secondary",
-		Size = UDim2.fromOffset(U.Touch * 2 + 20, U.Touch),
-		LayoutOrder = 2,
-		OnClick = function()
-			request({ action = "SetCookedAllowed", slimeId = id, allowed = not allowed }, function() end)
-		end,
-	})
 end
 
 render = function()

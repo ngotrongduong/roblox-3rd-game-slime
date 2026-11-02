@@ -60,25 +60,20 @@ return function(T)
 		T.same(after.work.kitchen.box, {})
 		T.eq(after.work.kitchen.slots[1].progress, 0)
 		after.counter = { fish = 2 }
-		after.cookedAllowed = { "slime-3" }
 		local cooked = VillageSim.step(after, now + 360, 120, Rng.new(5), { errands = false })
 		T.eq(cooked.work.kitchen.box.grilledFish, 1)
 		T.eq(cooked.counter.fish, nil)
 	end)
-	T.test("a kitchen does not burn raw food when nobody may eat its dishes or the fridge is full", function()
+	T.test("a kitchen requires a cook, spare raw food, and fridge room", function()
 		local now = 1000000
 		local farm = FarmKit.farm(now)
 		farm.storehouse = { fish = 10 }
-		T.same(Food.ingredientsWanted(farm), {}, "no cook: the storehouse keeps its food")
+		T.same(Food.ingredientsWanted(farm), {}, "no cook")
 		T.ok(Stations.assign(farm, "slime-2", "kitchen", 1, false, now))
-		T.same(Food.ingredientsWanted(farm), {}, "nobody allowed to eat dishes")
-		farm.counter = { fish = 2 }
-		local idle = VillageSim.step(farm, now + 240, 240, Rng.new(5), { errands = false })
-		T.eq(idle.counter.fish, 2)
-		T.same(idle.work.kitchen.box, {})
-		farm.cookedAllowed = { "slime-3" }
-		farm.counter = {}
-		T.eq(Food.ingredientsWanted(farm).fish, 2, "a cook with an eater orders again")
+		T.same(Food.ingredientsWanted(farm), { fish = 2 }, "a staffed cook orders its recipe")
+		farm.storehouse = { fish = 4 }
+		T.same(Food.ingredientsWanted(farm), {}, "reserve protects the last meal per slime")
+		farm.storehouse = { fish = 10 }
 		farm.fridge = { grilledFish = Food.fridgeCapacity(farm.areas.kitchen.level) }
 		T.same(Food.ingredientsWanted(farm), {}, "a full fridge stops the orders")
 	end)

@@ -8,6 +8,7 @@ local ServerStorage = game:GetService("ServerStorage")
 local Breeding = require(ReplicatedStorage.Shared.Breeding)
 local Config = require(ReplicatedStorage.Shared.Config)
 local FarmState = require(ReplicatedStorage.Shared.FarmState)
+local Food = require(ReplicatedStorage.Shared.Food)
 local Layout = require(ReplicatedStorage.Shared.Layout)
 local Shop = require(ReplicatedStorage.Shared.Shop)
 local Stations = require(ReplicatedStorage.Shared.Stations)
@@ -97,8 +98,16 @@ local function request(player: Player, data: any): { ok: boolean, reason: string
 		valid = type(data.slimeId) == "string"
 	elseif action == "SetTrainingStat" then
 		valid = integer(data.slot) and type(data.stat) == "string"
-	elseif action == "SetCookedAllowed" then
-		valid = type(data.slimeId) == "string" and type(data.allowed) == "boolean"
+	elseif action == "SetCookRecipe" then
+		valid = integer(data.slot) and type(data.recipe) == "string"
+	elseif action == "FeedDish" or action == "SetAutoDish" then
+		valid = type(data.slimeId) == "string"
+			and (action == "SetAutoDish" and data.dish == nil or type(data.dish) == "string")
+	elseif action == "SellDish" then
+		valid = type(data.dish) == "string"
+			and integer(data.count)
+			and data.count >= 1
+			and data.count <= Food.fridgeCapacity(Config.Village.MaxLevel)
 	elseif action == "UpgradeArea" then
 		valid = type(data.areaId) == "string"
 			and table.find(Config.Village.Areas, data.areaId) ~= nil
@@ -118,7 +127,7 @@ local function request(player: Player, data: any): { ok: boolean, reason: string
 	end
 
 	-- The slime buyer's counter in the Market: the player must stand at it (they walked or travelled there).
-	local atMarket = action == "Sell"
+	local atMarket = (action == "Sell" or action == "SellDish")
 		and ZombieFights.near(player, Layout.marketPoint(Config.Market.Buyer), Config.Zombies.ShopRangeStuds)
 
 	local success, err = pcall(function()
@@ -163,18 +172,32 @@ local function request(player: Player, data: any): { ok: boolean, reason: string
 				if not ok then
 					why = "INVALID_STAT_OR_SLOT"
 				end
-			elseif action == "SetCookedAllowed" then
-				if not FarmState.findSlime(farm, data.slimeId) then
-					why = "MISSING_SLIME"
+			elseif action == "SetCookRecipe" then
+				ok = Stations.setCookRecipe(farm, data.slot, data.recipe)
+				if not ok then
+					why = "INVALID_RECIPE_OR_SLOT"
+				end
+			elseif action == "FeedDish" then
+				if Village.isOut(player, data.slimeId) then
+					why = "OUT"
 					return
 				end
-				local index = table.find(farm.cookedAllowed, data.slimeId)
-				if data.allowed and not index then
-					table.insert(farm.cookedAllowed, data.slimeId)
-				elseif not data.allowed and index then
-					table.remove(farm.cookedAllowed, index)
+				ok, why = Food.feed(farm, data.slimeId, data.dish, now)
+			elseif action == "SetAutoDish" then
+				ok, why = Food.setAutoDish(farm, data.slimeId, data.dish)
+			elseif action == "SellDish" then
+				if not atMarket then
+					why = "TOO_FAR"
+					return
+				elseif data.count > Food.fridgeCapacity(farm.areas.kitchen.level) then
+					why = "INVALID_ARGUMENT"
+					return
 				end
-				ok = true
+				local value, reason = Shop.sellDish(farm, data.dish, data.count)
+				ok, why = value ~= nil, reason
+				if value then
+					print(Config.LogPrefix, "shop: sold dish", data.dish, "for", value)
+				end
 			elseif action == "UpgradeArea" then
 				local free = Config.Pads.FreeUpgrades or (Config.Village.DevFreeUpgrades and RunService:IsStudio())
 				ok, why = VillageRules.upgrade(farm, data.areaId, free)
@@ -245,7 +268,7 @@ local function request(player: Player, data: any): { ok: boolean, reason: string
 	if ok and action == "Assign" and data.asReserve == false then
 		Village.placeAtWork(player, data.slimeId, data.area, data.slot)
 	end
-	if ok and (action == "Revive" or action == "Sell") then
+	if ok and (action == "Revive" or action == "Sell" or action == "SellDish" or action == "FeedDish") then
 		if action == "Revive" then
 			print(Config.LogPrefix, "zombies: revived", data.slimeId)
 		end

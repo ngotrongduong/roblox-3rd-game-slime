@@ -33,6 +33,7 @@ function FarmKit.slime(id: string, opts: { [string]: any }?): any
 		trait = FarmState.traitForSeed(o.seed or 1),
 		friends = {},
 		buff = nil,
+		autoDish = nil,
 		ghostUntil = o.ghostUntil,
 		createdAt = o.createdAt or 0,
 		breedReadyAt = o.breedReadyAt or 0,

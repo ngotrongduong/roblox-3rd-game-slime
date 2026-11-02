@@ -27,7 +27,7 @@ return function(T: any)
 		T.eq(old.work.garden.plots, nil, "migration never alters old snapshot")
 	end)
 
-	T.test("existing healthy crops survive normal schema five load", function()
+	T.test("existing healthy crops survive normal current-schema load", function()
 		local now = 1000000
 		local farm = FarmState.newFarm(now)
 		local plots = farm.work.garden.plots
@@ -40,5 +40,26 @@ return function(T: any)
 		)
 		T.ok(loaded.ok)
 		T.same(loaded.data.work.garden.plots[2], plots[2])
+	end)
+
+	T.test("schema 5 to 6 keeps old progress and discards only old kitchen permissions", function()
+		local now = 1000000
+		local old: any = FarmState.newFarm(now)
+		old.coins = 5000
+		old.areas.kitchen.level = 20
+		old.work.kitchen.slots[1].recipe = "bakedTrout"
+		old.slimes[1].autoDish = "fishVegSoup"
+		old.slimes[1].buff = { stat = "hp", percent = 8, untilTime = now + 500 }
+		old.cookedAllowed = { "slime-1" }
+		local load =
+			ProfileLogic.prepareLoad({ schemaVersion = 5, savedAt = now, data = old }, FarmSave.hooks(), now + 1)
+		T.ok(load.ok and load.migrated)
+		T.eq(load.data.coins, 5000)
+		T.eq(load.data.areas.kitchen.level, 20)
+		T.eq(load.data.work.kitchen.slots[1].recipe, "bakedTrout")
+		T.eq(load.data.slimes[1].autoDish, "fishVegSoup")
+		T.eq(load.data.slimes[1].buff.dish, nil, "older buffs without a dish remain valid")
+		T.eq(load.data.cookedAllowed, nil)
+		T.same(old.cookedAllowed, { "slime-1" }, "migration never mutates the stored snapshot")
 	end)
 end

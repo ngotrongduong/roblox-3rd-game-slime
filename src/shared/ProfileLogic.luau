@@ -245,7 +245,6 @@ function ProfileLogic.migrateVillage(data: any, _now: number): any
 	out.work = work
 	out.counter = {}
 	out.fridge = {}
-	out.cookedAllowed = {}
 	local pairs = {}
 	for _ = 1, Config.Breeding.BasePlaces do
 		table.insert(pairs, {})
@@ -312,6 +311,16 @@ function ProfileLogic.migrateGarden(data: any, _now: number): any
 			out.work.garden.plots = GardenPlots.new(Config.Work.GardenPlotCount)
 		end
 	end
+	return out
+end
+
+-- A schema-five farm already has all durable gameplay progress. Repair validates the new optional fields.
+function ProfileLogic.migrateKitchen(data: any, _now: number): any
+	if type(data) ~= "table" then
+		return data
+	end
+	local out = ProfileLogic.deepCopy(data)
+	out.cookedAllowed = nil
 	return out
 end
 

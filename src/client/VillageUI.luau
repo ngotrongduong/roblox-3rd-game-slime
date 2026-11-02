@@ -70,7 +70,6 @@ local watched: { [string]: boolean } = {
 	WorkSlot = true,
 	Reserve = true,
 	PairIndex = true,
-	CookedAllowed = true,
 }
 local statAttributes: { [string]: string } = { attack = "Attack", defence = "Defence", speed = "Speed", hp = "Hp" }
 local areaTitles: { [string]: string } = {

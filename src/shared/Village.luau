@@ -16,10 +16,31 @@ function Village.populationLimit(farm: Farm): number
 end
 
 function Village.upgradeCost(level: number): number
-	local v = Config.Village
-	local cost = v.UpgradeBase
-		* (v.UpgradeMaxCost / v.UpgradeBase) ^ ((level - v.StartLevel) / (v.UpgradeLastFromLevel - v.StartLevel))
-	return math.floor(cost / v.CostRoundTo + 0.5) * v.CostRoundTo
+	local anchors = Config.Village.UpgradePrices
+	if level <= anchors[1].level then
+		return anchors[1].price
+	end
+	for index = 2, #anchors do
+		local high = anchors[index]
+		local low = anchors[index - 1]
+		if level <= high.level then
+			-- Exact anchors are preserved; intermediate values get two significant digits.
+			if level == high.level then
+				return high.price
+			end
+			local fraction = (level - low.level) / (high.level - low.level)
+			local value = low.price * (high.price / low.price) ^ fraction
+			local magnitude = 10 ^ (math.floor(math.log10(value)) - 1)
+			local rounded = math.floor(value / magnitude + 0.5) * magnitude
+			return math.max(low.price, math.min(high.price, rounded))
+		end
+	end
+	return anchors[#anchors].price
+end
+
+-- Battle income fills the vault only to its ceiling; selling may go over it.
+function Village.coinCap(pantryLevel: number): number
+	return math.max(Config.Village.CoinCapMin, Config.Village.CoinCapPriceFactor * Village.upgradeCost(pantryLevel))
 end
 
 function Village.upgrade(farm: Farm, areaId: string, free: boolean?): (boolean, string?)

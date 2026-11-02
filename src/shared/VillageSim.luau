@@ -99,7 +99,7 @@ local function doWork(
 						plots,
 						slot.plot,
 						slot.task,
-						if slot.task == "plant" then Food.roll("veg", rng) else ""
+						if slot.task == "plant" then Food.roll("veg", rng, farm.areas.garden.level) else ""
 					)
 					if crop then
 						if Food.add(workArea.box, crop, 1, Config.Work.BoxCapacity) == 0 then
@@ -141,6 +141,25 @@ local function doWork(
 			then
 				continue
 			end
+			local recipeId: string? = nil
+			if areaId == "kitchen" then
+				local chosen = Food.slotRecipe(slot, level)
+				recipeId = chosen
+				local recipe = (Config.Food.Dishes :: any)[chosen]
+				local ready = Food.canCook(farm)
+				for item, count in recipe.ingredients do
+					if (farm.counter[item] or 0) < count then
+						ready = false
+						break
+					end
+				end
+				-- An empty counter cannot bank work towards a later dish.
+				if not ready then
+					slot.progress = 0
+					continue
+				end
+				cycle = Food.cookSeconds(chosen, level)
+			end
 			local progress = slot.progress
 				+ math.max(0, seconds)
 					* Needs.workFactor(worker.needs)
@@ -177,7 +196,7 @@ local function doWork(
 							plots,
 							index,
 							action,
-							if action == "plant" then Food.roll("veg", rng) else ""
+							if action == "plant" then Food.roll("veg", rng, farm.areas.garden.level) else ""
 						)
 						if crop then
 							Food.add(workArea.box, crop, 1, Config.Work.BoxCapacity)
@@ -216,7 +235,7 @@ local function doWork(
 				end
 				if areaId == "fishing" then
 					-- Which fish bites is rolled here, by rarity weight (Config.Food.Kinds).
-					local caught = Food.roll("fish", rng)
+					local caught = Food.roll("fish", rng, farm.areas.fishing.level)
 					if workReady then
 						-- Online the catch is held until the fish reaches the visible bin.
 						slot.pending = caught
@@ -225,12 +244,19 @@ local function doWork(
 					end
 					table.insert(events, { kind = "collected", item = caught, area = "fishing", slimeId = worker.id })
 				elseif areaId == "kitchen" then
-					local id = if Food.canCook(farm) then Food.bestDish(farm.counter) else nil
-					if id == nil then
+					local id = recipeId :: string
+					local dish = (Config.Food.Dishes :: any)[id]
+					local ready = Food.canCook(farm)
+					for item, count in dish.ingredients do
+						if (farm.counter[item] or 0) < count then
+							ready = false
+							break
+						end
+					end
+					if not ready then
 						progress = 0
 						break
 					end
-					local dish = (Config.Food.Dishes :: any)[id]
 					for item, count in dish.ingredients do
 						Food.take(farm.counter, item, count)
 					end
