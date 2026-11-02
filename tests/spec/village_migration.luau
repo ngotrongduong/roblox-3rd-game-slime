@@ -40,7 +40,9 @@ return function(T: any)
 		)
 		T.ok(loaded.ok)
 		T.same(loaded.data.work.garden.plots[2], plots[2])
-	end)	T.test("schema 5 to 6 keeps old progress and discards only old kitchen permissions", function()
+	end)
+
+	T.test("schema 5 to 6 keeps old progress and discards only old kitchen permissions", function()
 		local now = 1000000
 		local old: any = FarmState.newFarm(now)
 		old.coins = 5000
