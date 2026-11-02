@@ -841,7 +841,7 @@ Config.Training = {
 
 -- ===== Upgrade pads and work places (the owner, 2026-10-29, docs/GAMEPLAY.md §10) =====
 Config.Pads = {
-	-- The owner: leave every price at $0 for now. Turn this off and the real Village price returns.
+	-- Area upgrades now spend actual coins, following the anchored village price progression.
 	FreeUpgrades = false,
 	Radius = 2.4, -- studs; the pad's disc
 	StandHeight = 6, -- a player this far above the ground still stands on it
