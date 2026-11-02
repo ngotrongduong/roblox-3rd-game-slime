@@ -8,7 +8,8 @@ and timed buffs, Feed and When hungry, selling dishes at the Market, food rarity
 
 Proved in a MapWork play test: a cook takes the recipe's ingredients and makes the dish; a missing ingredient floats crossed out over the cook; a locked recipe is refused; the
 recipe list and dish sheet open and act; Feed sets the buff; selling at the Market pays 1000; an upgrade pad charges 310 and raises the level; the vault-full number and toast
-(with the coins set by script); badge and effects of all four stats at the player's camera (with epic buffs set by script). A reviewer read money, saves and remotes.
+(with the coins set by script); badge and effects of all four stats at the player's camera (with epic buffs set by script); auto-eat (two slimes set to Grilled Fish got hungry on their
+own, ate it and got the attack buff, with no script help). A reviewer read money, saves and remotes.
 
 Only passed tests, not seen in play: dish buffs inside a real fight, fight income stopping at the vault, the save migration on a real old save, recipes above common.
 
