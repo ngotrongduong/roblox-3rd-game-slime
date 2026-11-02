@@ -17,7 +17,7 @@ How to work:
 
 - Simulate with the real modules (`Config`, `Breeding`, `Hatching`, `Growth`, `Mutations`, `Luck`, `Stats`, `Rng` with
   a fixed seed), never with numbers copied out of them. A simulation is a Lune script in `tests/sim/` (not part of
-  `check.ps1`), run with `& "$env:USERPROFILE\.rokit\tool-storage\lune-org\lune\0.10.5\lune.exe" run tests/sim/<name>.luau`
+  `check.ps1`), run with `lune run tests/sim/<name>.luau`
   from the project folder.
 - Model a plain player honestly: timers take their time, the farm keeps running offline up to its cap, coins are spent on
   the cheapest useful upgrade. Say what you assumed.

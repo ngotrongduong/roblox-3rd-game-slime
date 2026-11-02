@@ -30,7 +30,7 @@ How to work:
 - New numbers go in `src/shared/Config.luau` (one block an area). Logic that needs no Roblox API goes in `src/shared`,
   loadable by Lune (`if script then require(script.Parent.X) else require("./X")`), with a spec in
   `tests/spec/<name>.luau` (the kit is `tests/lib/T.luau`, `FarmKit`, `FakeDataStore`). One spec alone:
-  `& "$env:USERPROFILE\.rokit\tool-storage\lune-org\lune\0.10.5\lune.exe" run tests/run.luau <name>` from the project
+  `lune run tests/run.luau <name>` from the project
   folder.
 - What the clients must draw is an attribute, a remote event or an instance the client reads. Name every new one in your
   report. Leave screens and effects to `ui-dev` / `feel-dev` unless the brief says otherwise.

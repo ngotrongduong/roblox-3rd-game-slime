@@ -35,7 +35,7 @@ return function(T)
 		farm.slimes[1].needs.fullness = 20
 		T.eq(Food.eat(farm, "slime-1", 1000), "fishVegSoup")
 		T.eq(farm.slimes[1].needs.fullness, 100)
-		T.same(farm.slimes[1].buff, { stat = "hp", percent = 8, untilTime = 1600, dish = "fishVegSoup" })
+		T.same(farm.slimes[1].buff, { stat = "hp", percent = 4, untilTime = 1600, dish = "fishVegSoup" })
 		T.eq(Food.eat(farm, "slime-1", 1001), "carrot")
 		T.eq(farm.fridge.fishVegSoup, nil)
 	end)

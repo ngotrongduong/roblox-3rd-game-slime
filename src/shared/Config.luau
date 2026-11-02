@@ -176,10 +176,11 @@ Config.Zombies = {
 	-- A wound heals this share of a slime's health a minute while it is home (0.5: a full heal in two minutes).
 	HealPerMinute = 0.5,
 	-- Every slime that fought loses this much energy and fullness when the fight ends (the brain rests and feeds it).
-	-- On repeat a team fights about 25 times an hour: at 5 that is a meal or so more an hour for each slime, which a
-	-- staffed village can still feed; at 15 a team of four ate more than the pond and garden make.
+	-- On repeat a team fights about 25 times an hour. Measured (tools/balance/kitchen_sim.luau, real VillageSim, 0.55
+	-- productive): at 5 the fighters ate more than the pond and garden make and slimes went hungry at levels 1-30; at 3 level
+	-- 20 still did; at 2 nobody is hungry at any level.
 	FightEnergy = 8,
-	FightFullness = 5,
+	FightFullness = 2,
 	-- HpShare on a slime's model is rounded to this step, so a healing wound does not rewrite it every frame.
 	HpShareStep = 0.01,
 	-- A zombie's stats against an even slime of the player's level, per camp. Five levels mean far more at level 4 than
@@ -414,17 +415,17 @@ Config.Village = {
 		{ level = 50, cap = 72 },
 	},
 	UpgradePrices = {
-		{ level = 1, price = 270 },
-		{ level = 5, price = 390 },
-		{ level = 10, price = 840 },
-		{ level = 15, price = 1900 },
-		{ level = 19, price = 2600 },
-		{ level = 25, price = 6600 },
-		{ level = 30, price = 11000 },
-		{ level = 35, price = 19000 },
-		{ level = 39, price = 29000 },
-		{ level = 45, price = 52000 },
-		{ level = 49, price = 78000 },
+		{ level = 1, price = 310 },
+		{ level = 5, price = 480 },
+		{ level = 10, price = 1100 },
+		{ level = 15, price = 2200 },
+		{ level = 19, price = 3100 },
+		{ level = 25, price = 7900 },
+		{ level = 30, price = 14000 },
+		{ level = 35, price = 24000 },
+		{ level = 39, price = 37000 },
+		{ level = 45, price = 67000 },
+		{ level = 49, price = 99000 },
 	},
 	CoinCapMin = 2000,
 	CoinCapPriceFactor = 3,
@@ -750,10 +751,10 @@ Config.Food = {
 	-- its own; only the ripe stage (<crop>4) is its own model.
 	SproutCrop = "Cabbage",
 	DishRarities = {
-		common = { kitchenLevel = 1, percent = 8, buffSeconds = 600, cookSeconds = 120, price = 300 },
-		uncommon = { kitchenLevel = 8, percent = 12, buffSeconds = 660, cookSeconds = 150, price = 800 },
-		rare = { kitchenLevel = 20, percent = 18, buffSeconds = 780, cookSeconds = 200, price = 2500 },
-		epic = { kitchenLevel = 35, percent = 25, buffSeconds = 900, cookSeconds = 300, price = 10000 },
+		common = { kitchenLevel = 1, percent = 4, buffSeconds = 600, cookSeconds = 120, price = 1000 },
+		uncommon = { kitchenLevel = 8, percent = 6, buffSeconds = 660, cookSeconds = 150, price = 1100 },
+		rare = { kitchenLevel = 20, percent = 9, buffSeconds = 780, cookSeconds = 200, price = 1300 },
+		epic = { kitchenLevel = 35, percent = 12, buffSeconds = 900, cookSeconds = 300, price = 2000 },
 	},
 	DefaultRecipe = "grilledFish",
 	CookReservePerSlime = 1,
