@@ -1,6 +1,26 @@
 # Status
 
-## 2026-11-02 — village bar done, economy researched: start here
+## 2026-11-02 (late) — the Market built, the HUD made for phones: start here
+
+Done and committed on `main`; nothing has been pushed to `origin/main` this stretch.
+- The Market in MapWork, saved by the owner at 23:19 (`workspace.Map.Market`, `tools/map/build_market.luau`, `check_market.luau` ends MARKET OK; run the
+  builder after `build_wild_slices`): slime buyer, VIP stall, a board of the 6 best slimes, fountain, surroundings, compared with `art/concept/market-1.jpg`
+  in real shots and seen in play. The kit in the repo holds its new models; they did not change after the export.
+- Quick travel: Market and Home buttons, the camera turns behind the character on arrival.
+- HUD: coins, food, slimes and the village plate in one row on the line of Roblox's buttons (a ScreenGui with `TopbarSafeInsets`); the round buttons in a
+  column on the right edge. The owner approved the compact size and asked for that line.
+- Claude Code Game Studios installed, only the parts that fit (see `CLAUDE.md`).
+
+Not done or not known
+- The HUD's last move has not been seen on a phone frame, by Claude or (as far as reported) the owner.
+- The Market is about 83,000 triangles by the builder's estimate against a target of 60,000; frame time on a cheap phone never measured. Cut first:
+  `PinkDaisies`, `QtFern_1`, then walls.
+- Still unlike the picture: grey flagstones (the tint does not take), thinner tree crowns. The Sell button at the buyer's has not been pressed in a test,
+  and real DataStores for the board are untested.
+- `rbxassetid://203785492` and `14025376080` log asset errors in play; sources not looked for.
+- VIP products and prices wait for the owner; none exist. Before a publish: remove the `SlimeMotionLab` / `SlimeMaterials` bar in the sky.
+
+## 2026-11-02 — village bar done, economy researched
 
 Playable in MapWork with one player: a village per player copied at their saved levels to the first free plot (`Plots`), 108 zombie groups shared
 by the server in 9 slices (`docs/MAP.md` 1.4), teams set at the gate, orders given at a group, marches, wounds, repeat, a home notice, one sorted

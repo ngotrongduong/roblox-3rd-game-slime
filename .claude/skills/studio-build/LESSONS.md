@@ -249,7 +249,7 @@ was left there (this game has none); read it there if a cave is ever wanted.
 
 ## The Market square (2026-11-02, tools/map/build_market.luau, check_market.luau, market_raypreview.luau)
 
-- A MINIMISED Studio shoots white and an agent may not restore the owner's window. Check first with `IsIconic` on the Studio window (user32), not after a job of guessing. Two things still work: the
+- A MINIMISED Studio shoots white. Check first with `IsIconic` on the Studio window (user32), not after a job of guessing. The orchestrator may take Studio (the owner, 2026-11-02, `CLAUDE.md`); a subagent still may not. Two things still work without it: the
   public thumbnails (`thumbnails.roblox.com/v1/assets`, a generated model's `publishedAssetId`, a minute or two after the job) judge a kit model from one side with its texture, and a picture by raycasts
   (`market_raypreview.luau`: a ray per pixel, the part's Color, kit meshes coloured by name; CanQuery on for the picture, then back) judges layout, shape, orientation, slits and framing, and caught all of
   the first draft's real faults. It says nothing on texture, light or water: those wait for a real shot, and a report says so.
@@ -264,6 +264,8 @@ was left there (this game has none); read it there if a cave is ever wanted.
 - Flowers spread over a radius of 9 read as lonely stalks on the grass, and scaling them up read as giant flat flowers. Same count, radius 5-6: clumps. Thin grass blades tinted pale read as white spikes: left out.
 - SurfaceAppearance.Color barely moved the pebble flagstones (a much warmer tint looked the same): the stones stay grey.
 - After a quick-travel move the camera keeps its old angle, so the player opens looking sideways: turn it behind the character on arrival.
+- The builder's triangle tally is rough both ways: primitives count high, and the Doki flowers count 0 (their mesh cannot be read), so more of them does not show in the total.
+- Shoot from the player's side: the frame's world z is -500 - local z, so the way in is at world z -425 and the board's back is at -584. A real pass that passes every check can still look wrong; see the Fabric line above.
 
 ## Water and moving things
 

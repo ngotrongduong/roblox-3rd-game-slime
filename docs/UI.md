@@ -7,7 +7,8 @@ What follows from it (to be detailed when the UI is designed):
 
 - The screen keeps only what cannot live in the world: a small resource strip (coins, food), a
   few round buttons (quick travel Home / Market / Wild Garden, the squad), and short toasts.
-  No menu wall of buttons, no big panels open by default.
+  No menu wall of buttons, no big panels open by default. Judged on a landscape phone first (the owner, 2026-11-02): the
+  strip is one row on the line of Roblox's own buttons, the round buttons one column on the right edge above jump.
 - The world is the menu. Each area of a plot (pond, garden, kitchen, pantry, training ground,
   breeding house, hatchery) and each Market stall is tapped (or approached: a ProximityPrompt) to
   act on it: assign a worker by dragging/tapping a slime onto a work spot, upgrade from a small
