@@ -57,8 +57,6 @@ local glyphs: { [string]: string } = {
 	plus = "+",
 	cross = "x",
 	again = "R",
-	home = "Home",
-	market = "Market",
 }
 
 local function merge(base: Props, extra: Props?): Props

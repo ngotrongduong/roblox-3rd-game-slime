@@ -1506,8 +1506,8 @@ Config.Ui = {
 		level = 99981918632333, -- the Level sort button
 		order = 105007209294287, -- which way a list sorts (points down)
 		-- The round travel buttons (home, market): not drawn yet, a short word stands in (UiKit glyphs).
-		home = 0,
-		market = 0,
+		home = 129188593634951,
+		market = 80845462069782,
 		-- (drawn from the 3D items instead: docs/GAMEPLAY.md, the food chip)
 		fish = 0,
 		carrot = 0,

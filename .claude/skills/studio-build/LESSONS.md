@@ -247,6 +247,19 @@ was left there (this game has none); read it there if a cave is ever wanted.
   a ModuleScript (`Source = LIB`, parented to ServerStorage, required, destroyed) so rules exist once. Port 8765 of `serve_dir.js` was
   taken by someone else: pick another.
 
+## The Market square (2026-11-02, tools/map/build_market.luau, check_market.luau, market_raypreview.luau)
+
+- A MINIMISED Studio shoots white and an agent may not restore the owner's window. Check first with `IsIconic` on the Studio window (user32), not after a job of guessing. Two things still work: the
+  public thumbnails (`thumbnails.roblox.com/v1/assets`, a generated model's `publishedAssetId`, a minute or two after the job) judge a kit model from one side with its texture, and a picture by raycasts
+  (`market_raypreview.luau`: a ray per pixel, the part's Color, kit meshes coloured by name; CanQuery on for the picture, then back) judges layout, shape, orientation, slits and framing, and caught all of
+  the first draft's real faults. It says nothing on texture, light or water: those wait for a real shot, and a report says so.
+- A real thumbnail of grey planes means the generator gave no colour or the mesh failed: throw it away. A lower `maxTriangles` is not a cheaper same model: wall at 280 became one painted slab, baskets at 180 shredded.
+- Fixed spots may not suit the picture's camera. Things 55 studs apart seen from 48 studs away fall outside FOV 50: place foreground dressing where the camera sees it (test `atan(x / distance)` under 39 degrees) instead of along the square's edge, where it was never in view.
+- Count by kit model, not by folder: a tally by name found 6,000 triangles of fences, 4,000 of two benches and 1,500 of one crate stack that nobody would miss. Generated meshes sit in a `body` model: walk up past it for the name.
+- Two slopes of an awning that only meet leave a slit on the outside of the bend, seen as dark strokes: run each a little past the crease.
+- A walk check with a body-sized box along the way points caught a lantern post put on the line from the Landing to a stall, which no picture showed.
+- A thin road painted in noise falls into dashes: keep the core always earth and let noise fray only the edge (again). Rewrites of terrain re-run the same paint safely (0 cells changed proves it).
+
 ## Water and moving things
 
 - 2026-10-21. The owner: a waterfall of parts (a blue block, white rectangles, white balls) "is not water". Falling

@@ -94,6 +94,20 @@ in the work place's PropKit until the owner's Ctrl+S and the export). Triangles 
 | GooBasin | 109097409899804 | 400, the Heart's spring, pressed low |
 | TwistedTree, GiantMushroom, EmberPlant | 120350717564903, 82978024017038, 140577747992093 | no longer used: too simple beside the references |
 
+The Market square (`tools/map/build_market.luau`, 2026-11-02, in the work place's PropKit until the owner's Ctrl+S and the export):
+
+| Model | Asset id | Triangles, where it is used |
+|---|---|---|
+| DryStoneWall | 135000914978921 | 600, walls round the square (mossy chunky stones; 280 triangles lost its stones) |
+| WoodBench | 117022707101322 | 272, benches facing the fountain |
+| WoodLantern | 140544573965083 | 200, hung under stalls, on the board and on lantern posts |
+| MoneyBagCrest, CrownCrest | 128891244988372, 130594568143368 | 300 each, the stalls' cloths, the VIP's top, the board's gable |
+| MoneySack | 93715915129503 | 300, by the stalls, the sign and the banners (tinted gold there) |
+| CoinStack | 117750822805608 | 200, in the baskets and on the counters |
+| MarketStallBlue, MarketStallVip | 90262312554511, 108449026539429 | 1,670, 1,946; good small stalls with a tall counter, unused: the square's are built from parts for a 3-stud counter and the 5-stud player |
+
+Thrown away: the coin baskets (128132363674594 came with no colour, 98220891608911 shredded) and a 280-triangle wall (92076644908435): baskets are built from parts.
+
 A lupin clump (83620754016104) came out shredded and was thrown away. The first look's ground map
 `rbxassetid://138249545071236` and its `WildFlat*` variants are gone from the map; the image stays on the owner's account, unused.
 

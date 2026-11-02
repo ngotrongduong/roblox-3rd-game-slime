@@ -110,8 +110,8 @@ return function(T)
 		end
 	end)
 
-	T.test("the travel icons are named; their pictures are not made yet", function()
-		T.eq(Config.Ui.Icons.home, 0)
-		T.eq(Config.Ui.Icons.market, 0)
+	T.test("the travel icons have their pictures", function()
+		T.ok(Config.Ui.Icons.home > 0)
+		T.ok(Config.Ui.Icons.market > 0)
 	end)
 end
