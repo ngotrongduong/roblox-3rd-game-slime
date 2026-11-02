@@ -5,6 +5,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local HttpService = game:GetService("HttpService")
 
 local Config = require(ReplicatedStorage.Shared.Config)
+local UiFood = require(script.Parent.UiFood)
 local UiKit = require(script.Parent.UiKit)
 
 local U = Config.Ui
@@ -21,7 +22,10 @@ type Spot = {
 	gui: BillboardGui,
 	body: Frame,
 	prompt: ProximityPrompt,
+	-- what is drawn now: the worker and the ingredients the cook lacks
 	shown: string,
+	-- the card of the pictures of the ingredients a waiting cook lacks (kitchen only)
+	card: BillboardGui?,
 }
 
 local UiSpots = {}
@@ -114,6 +118,56 @@ local function buildBody(spot: Spot, id: string)
 	end
 end
 
+-- A small card over a cook that waits: the pictures of the ingredients it lacks, each crossed out. Sized in Offset pixels
+-- and scaled with the screen, like the screens; nothing is drawn when the cook has all it needs.
+local function setCard(spot: Spot, lacking: { string })
+	if spot.card then
+		spot.card:Destroy()
+		spot.card = nil
+	end
+	if #lacking == 0 then
+		return
+	end
+	local camera = workspace.CurrentCamera
+	local scale = if camera then math.clamp(camera.ViewportSize.Y / U.ScaleBaseHeight, 1, U.ScaleMax) else 1
+	local icon = U.MissingIcon
+	local width = #lacking * (icon + U.Gap) + U.Gap * 2
+	local height = icon + U.Gap * 2
+	local gui = UiKit.make("BillboardGui", {
+		Name = "MissingCard",
+		Adornee = spot.marker,
+		Size = UDim2.fromOffset(width * scale, height * scale),
+		StudsOffset = Vector3.new(0, U.MissingLift, 0),
+		MaxDistance = U.SpotDistance,
+		LightInfluence = 0,
+		AlwaysOnTop = false,
+		Active = false,
+	}, spot.marker)
+	local card = UiKit.make("Frame", {
+		Name = "Card",
+		AnchorPoint = Vector2.new(0.5, 0.5),
+		Position = UDim2.fromScale(0.5, 0.5),
+		Size = UDim2.fromOffset(width, height),
+		BackgroundColor3 = UiKit.colour("Parchment"),
+		BackgroundTransparency = 0.1,
+		BorderSizePixel = 0,
+	}, gui)
+	UiKit.make("UIScale", { Scale = scale }, card)
+	UiKit.make("UICorner", { CornerRadius = UDim.new(0, 10) }, card)
+	UiKit.make("UIStroke", { Color = UiKit.colour("Wood"), Thickness = 2 }, card)
+	UiKit.make("UIListLayout", {
+		FillDirection = Enum.FillDirection.Horizontal,
+		HorizontalAlignment = Enum.HorizontalAlignment.Center,
+		VerticalAlignment = Enum.VerticalAlignment.Center,
+		Padding = UDim.new(0, U.Gap),
+		SortOrder = Enum.SortOrder.LayoutOrder,
+	}, card)
+	for index, id in lacking do
+		UiFood.ingredientIcon(card, id, icon, true, { LayoutOrder = index })
+	end
+	spot.card = gui
+end
+
 local function create(area: string, slot: number, marker: Instance): Spot
 	local context = ctx :: Context
 	local gui = UiKit.make("BillboardGui", {
@@ -166,6 +220,7 @@ function UiSpots.refresh()
 		return
 	end
 	local work = parse(own:GetAttribute("Work"))
+	local have = UiFood.have(own)
 	for _, area in Config.Work.Areas do
 		local stations: { any } = work[area] or {}
 		for slot, saved in stations do
@@ -184,9 +239,19 @@ function UiSpots.refresh()
 			end
 			if spot then
 				local id = workerOf(area, slot, saved)
-				if spot.shown ~= id then
-					spot.shown = id
+				-- a cook that cannot start: the ingredients of its recipe that neither the counter nor the storehouse has
+				local lacking: { string } = {}
+				if area == "kitchen" and id ~= "" then
+					local recipe = if type(saved.recipe) == "string" and saved.recipe ~= ""
+						then saved.recipe
+						else Config.Food.DefaultRecipe
+					lacking = UiFood.missing(recipe, have)
+				end
+				local drawn = id .. "|" .. table.concat(lacking, ",")
+				if spot.shown ~= drawn then
+					spot.shown = drawn
 					buildBody(spot, id)
+					setCard(spot, lacking)
 					spot.prompt.ActionText = if id ~= "" then "Change" else "Assign"
 				end
 			end
@@ -196,6 +261,9 @@ end
 
 function UiSpots.clear()
 	for _, spot in spots do
+		if spot.card then
+			spot.card:Destroy()
+		end
 		spot.gui:Destroy()
 		spot.prompt:Destroy()
 	end

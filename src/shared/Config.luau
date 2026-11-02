@@ -1809,6 +1809,15 @@ Config.Ui = {
 	FoodRowHeight = 52,
 	FoodIconSize = 44,
 	FoodCountWidth = 56,
+	-- The recipe picker of a kitchen position (UiRecipes): the bar, a row of the list, the dish picture, an ingredient picture.
+	RecipeBarHeight = 56,
+	RecipeRowHeight = 62,
+	RecipeIcon = 44,
+	IngredientIcon = 22,
+	-- The card over a cook that waits for an ingredient (UiSpots): a world billboard in Offset pixels, the picture size of
+	-- one missing ingredient and how far above the work position it floats (studs).
+	MissingIcon = 30,
+	MissingLift = 4.4,
 	-- Slime book.
 	BookFilters = { "all", "free", "working", "babies" },
 	-- The one slime list (UiSlimeList): its sort buttons in order, the attribute each one sorts by, and the tile: width and

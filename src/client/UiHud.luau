@@ -19,6 +19,8 @@ local villageLabel: TextLabel? = nil
 local villageFill: Frame? = nil
 local chips: { [string]: UiKit.Chip } = {}
 local lastOwn: Folder? = nil
+-- Whether the coins were at the cap at the last look; nil until the vault's cap is known.
+local coinsFull: boolean? = nil
 
 local function short(amount: number): string
 	if amount >= 1_000_000 then
@@ -155,13 +157,31 @@ function UiHud.setVisible(visible: boolean)
 end
 
 function UiHud.refresh(own: Folder?)
+	if own ~= lastOwn then
+		-- a new village: the first look at its vault is silent
+		coinsFull = nil
+	end
 	lastOwn = own
 	if not strip or not own then
 		return
 	end
 	local store, fridge = UiFood.read(own)
 	local coins = own:GetAttribute("Coins")
-	chips.coins.set(short(if type(coins) == "number" then coins else 0))
+	local amount = if type(coins) == "number" then coins else 0
+	chips.coins.set(short(amount))
+	-- The vault is full at the cap (sales may still go above it): the number turns red, and one toast the moment it fills.
+	local cap = own:GetAttribute("CoinCap")
+	local full = type(cap) == "number" and amount >= cap
+	local value = chips.coins.root:FindFirstChild("Value", true)
+	if value and value:IsA("TextLabel") then
+		value.TextColor3 = UiKit.colour(if full then "Red" else "Brown")
+	end
+	if type(cap) == "number" then
+		if coinsFull == false and full then
+			UiKit.toast("Vault full")
+		end
+		coinsFull = full
+	end
 	local total = 0
 	for _, kind in Config.Food.RawOrder do
 		total += store[kind] or 0

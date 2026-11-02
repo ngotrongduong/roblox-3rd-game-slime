@@ -10,6 +10,7 @@ local Config = require(ReplicatedStorage.Shared.Config)
 local Layout = require(ReplicatedStorage.Shared.Layout)
 local Mutations = require(ReplicatedStorage.Shared.Mutations)
 local ZombieRules = require(ReplicatedStorage.Shared.Zombies)
+local UiDishShop = require(script.Parent.UiDishShop)
 local UiFood = require(script.Parent.UiFood)
 local UiKit = require(script.Parent.UiKit)
 local UiMarket = require(script.Parent.UiMarket)
@@ -64,6 +65,10 @@ local reasons: { [string]: string } = {
 	NO_SLIME = "Slime not found.",
 	RATE_LIMIT = "One moment.",
 	NOT_READY = "Village is loading.",
+	NO_DISH = "None left.",
+	UNKNOWN_DISH = "Not available.",
+	INVALID_COUNT = "Not available.",
+	INVALID_ARGUMENT = "Not available.",
 }
 
 local function reasonText(reason: any): string
@@ -363,7 +368,23 @@ local function openShop(point: Vector3)
 	}, head)
 	UiKit.icon(head, "coins", U.Touch - 12, { LayoutOrder = 1 })
 	local coins =
-		UiKit.label(head, "", U.TextHeader, "Brown", { LayoutOrder = 2, Size = UDim2.fromOffset(200, U.Touch) })
+		UiKit.label(head, "", U.TextNormal, "Brown", { LayoutOrder = 2, Size = UDim2.fromOffset(100, U.Touch) })
+	-- two tabs: the slimes and the dishes (pictures only)
+	local tab = "slimes"
+	local setTab: (name: string) -> () = function(_) end
+	local tabButtons: { [string]: TextButton } = {}
+	for index, item in { { id = "slimes", icon = "slimes" }, { id = "dishes", icon = "food" } } do
+		tabButtons[item.id] = UiKit.button(head, {
+			Name = item.id,
+			Icon = item.icon,
+			Style = if item.id == tab then "primary" else "secondary",
+			Size = UDim2.fromOffset(U.Touch, U.Touch),
+			LayoutOrder = 2 + index,
+			OnClick = function()
+				setTab(item.id)
+			end,
+		})
+	end
 
 	local slimes: { Configuration } = {}
 	local list = UiSlimeList.new(modal.content, {
@@ -427,10 +448,27 @@ local function openShop(point: Vector3)
 		end,
 	})
 
+	-- The dishes tab sits over the slime list; the server checks the Market's range for both kinds of sale.
+	local dishes = UiDishShop.new(modal.content, { own = ownOf, ask = ask, reason = reasonText })
+	setTab = function(name)
+		tab = name
+		for id, button in tabButtons do
+			UiKit.setStyle(button, if id == name then "primary" else "secondary")
+		end
+		list.root.Visible = name == "slimes"
+		dishes.root.Visible = name == "dishes"
+		bar.Visible = false
+		tick()
+	end
+
 	tick = function()
 		local own = ownOf()
 		local money = if own then own:GetAttribute("Coins") else nil
 		coins.Text = UiKit.money(if type(money) == "number" then money else 0)
+		if tab == "dishes" then
+			dishes.tick()
+			return
+		end
 		slimes = UiSlimes.slimes(own)
 		local chosen: Configuration? = nil
 		for _, slime in slimes do

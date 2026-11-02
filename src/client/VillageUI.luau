@@ -9,9 +9,11 @@ local HttpService = game:GetService("HttpService")
 local Config = require(ReplicatedStorage.Shared.Config)
 local FarmState = require(ReplicatedStorage.Shared.FarmState)
 local UiBook = require(script.Parent.UiBook)
+local UiFood = require(script.Parent.UiFood)
 local UiHud = require(script.Parent.UiHud)
 local UiKit = require(script.Parent.UiKit)
 local UiMarket = require(script.Parent.UiMarket)
+local UiRecipes = require(script.Parent.UiRecipes)
 local UiSlimeList = require(script.Parent.UiSlimeList)
 local UiSlimes = require(script.Parent.UiSlimes)
 local UiSpots = require(script.Parent.UiSpots)
@@ -42,6 +44,8 @@ local sheetHeader: Frame? = nil
 local sheetContent: Frame? = nil
 local pick: Pick? = nil
 local pickView: UiSlimeList.List? = nil
+-- What a kitchen position's sheet redraws when the village changes (its recipe bar and recipe list).
+local pickLive: (() -> ())? = nil
 local live: (() -> ())? = nil
 local renderedKey = ""
 local busy = false
@@ -70,6 +74,7 @@ local watched: { [string]: boolean } = {
 	WorkSlot = true,
 	Reserve = true,
 	PairIndex = true,
+	AutoDish = true,
 }
 local statAttributes: { [string]: string } = { attack = "Attack", defence = "Defence", speed = "Speed", hp = "Hp" }
 local areaTitles: { [string]: string } = {
@@ -90,6 +95,7 @@ local reasons: { [string]: string } = {
 	NOT_ASSIGNED = "Not assigned.",
 	OUT = "Out fighting.",
 	INVALID_STAT_OR_SLOT = "Choose a valid stat.",
+	INVALID_RECIPE_OR_SLOT = "Not available.",
 	SERVER_ERROR = "Please try again.",
 }
 
@@ -325,7 +331,7 @@ local function openWorkPick(area: string, slot: number)
 		Dim = 0.8,
 		OnClose = function()
 			UiSlimes.releaseAll()
-			activePoint, pick, pickView = nil, nil, nil
+			activePoint, pick, pickView, pickLive = nil, nil, nil, nil
 		end,
 	})
 	local marker = findSpot(area, slot)
@@ -394,6 +400,94 @@ local function openWorkPick(area: string, slot: number)
 			Position = UDim2.fromOffset(0, U.Touch + U.Gap),
 			Size = UDim2.new(1, 0, 1, -U.Touch - U.Gap),
 		}, modal.content)
+	elseif area == "kitchen" then
+		-- The cook's recipe: a bar with the chosen dish and its ingredients over the slime list; a tap on it swaps the
+		-- sheet for the list of dishes (locked ones veiled), and a pick comes back here.
+		local override: string? = nil
+		local function recipeNow(): string
+			local kitchenWork: { [string]: any } = if own then parse(own:GetAttribute("Work")) else {}
+			local entry = ((kitchenWork.kitchen or {}) :: any)[slot]
+			local published = Config.Food.DefaultRecipe
+			if type(entry) == "table" and type(entry.recipe) == "string" and entry.recipe ~= "" then
+				published = entry.recipe
+			end
+			if override == published then
+				override = nil
+			end
+			return override or published
+		end
+		local main = UiKit.make("Frame", {
+			Name = "Main",
+			BackgroundTransparency = 1,
+			Size = UDim2.fromScale(1, 1),
+		}, modal.content)
+		local recipes = UiKit.make("Frame", {
+			Name = "RecipePick",
+			BackgroundTransparency = 1,
+			Size = UDim2.fromScale(1, 1),
+			Visible = false,
+		}, modal.content)
+		local recipeHost = UiKit.make("Frame", {
+			Name = "RecipeHost",
+			BackgroundTransparency = 1,
+			Position = UDim2.fromOffset(0, U.Touch + U.Gap),
+			Size = UDim2.new(1, 0, 1, -U.Touch - U.Gap),
+		}, recipes)
+		local recipeList: UiRecipes.List? = nil
+		local barRefresh: () -> () = function() end
+		local options: UiRecipes.Options = {
+			own = function()
+				return own
+			end,
+			level = function()
+				local levels: { [string]: any } = if own then parse(own:GetAttribute("Areas")) else {}
+				return if type(levels.kitchen) == "number" then levels.kitchen else Config.Village.StartLevel
+			end,
+			current = recipeNow,
+			choose = function(_) end,
+		}
+		local function showMain()
+			if recipeList then
+				recipeList.destroy()
+				recipeList = nil
+			end
+			recipes.Visible = false
+			main.Visible = true
+			barRefresh()
+		end
+		options.choose = function(id)
+			override = id
+			showMain()
+			request({ action = "SetCookRecipe", slot = slot, recipe = id }, nil, function()
+				override = nil
+				barRefresh()
+			end)
+		end
+		local bar = UiRecipes.bar(main, options, function()
+			main.Visible = false
+			recipes.Visible = true
+			recipeList = UiRecipes.list(recipeHost, options)
+		end)
+		barRefresh = bar.refresh
+		UiKit.button(recipes, {
+			Name = "Back",
+			Icon = "back",
+			Style = "secondary",
+			Size = UDim2.fromOffset(U.Touch, U.Touch),
+			OnClick = showMain,
+		})
+		pickLive = function()
+			bar.refresh()
+			if recipeList then
+				recipeList.refresh()
+			end
+		end
+		listHost = UiKit.make("Frame", {
+			Name = "List",
+			BackgroundTransparency = 1,
+			Position = UDim2.fromOffset(0, U.RecipeBarHeight + U.Gap),
+			Size = UDim2.new(1, 0, 1, -U.RecipeBarHeight - U.Gap),
+		}, main)
 	end
 	local list = UiSlimeList.new(listHost, { entries = pickEntries, onTap = spec.choose })
 	pickView = list
@@ -676,7 +770,7 @@ end
 local function onSheetClosed()
 	UiSlimes.releaseAll()
 	activePoint, activeArea = nil, nil
-	pick, pickView, live = nil, nil, nil
+	pick, pickView, pickLive, live = nil, nil, nil, nil
 	sheetHeader, sheetContent = nil, nil
 	renderedKey = ""
 end
@@ -710,8 +804,12 @@ local function refreshAll()
 			UiBook.refresh()
 		end
 		local shown = UiKit.modalId()
+		UiFood.refreshDish()
 		if pick and pickView and (shown == "pick" or shown == "sheet") then
 			pickView.refresh()
+			if pickLive then
+				pickLive()
+			end
 			return
 		end
 		if shown ~= "sheet" or not activeArea then
@@ -910,7 +1008,19 @@ local function bind(root: Folder?)
 		return
 	end
 	UiHud.setVisible(true)
-	for _, attribute in { "Coins", "Storehouse", "Fridge", "Population", "Limit", "VillageLevel", "VillageUpgrades" } do
+	for _, attribute in
+		{
+			"Coins",
+			"CoinCap",
+			"Storehouse",
+			"Fridge",
+			"Counter",
+			"Population",
+			"Limit",
+			"VillageLevel",
+			"VillageUpgrades",
+		}
+	do
 		table.insert(
 			rootConnections,
 			root:GetAttributeChangedSignal(attribute):Connect(function()
