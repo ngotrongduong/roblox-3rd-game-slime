@@ -107,7 +107,7 @@ for _, d in template:GetDescendants() do
 		end
 		if folder then
 			local item = treeOf(d, folder)
-			if item:GetAttribute("VillageTrees") ~= nil then
+			if item:GetAttribute("VillageTrees") ~= nil or item:GetAttribute("VillageRocks") ~= nil then
 				sceneryNew += partTris(d)
 			elseif not counted[item] then
 				counted[item] = true
