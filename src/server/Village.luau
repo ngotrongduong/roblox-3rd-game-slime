@@ -87,6 +87,10 @@ type Session = {
 	seated: { [string]: string },
 	-- where the storehouse's Deposit store prompt stands (its sign), nil = at the storehouse spot
 	sign: Vector3?,
+	-- where each carry prompt stands, whether the kitchen has a real fridge, when the prompts were last looked at
+	promptAt: { [string]: Vector3 }?,
+	fridgeBuilt: boolean?,
+	promptsChecked: number?,
 	actors: { [string]: Actor },
 	reserved: { [string]: string },
 	-- slimes out on a zombie squad (src/server/ZombieFights.luau): they have no actor and are left alone by the brain
@@ -1738,21 +1742,46 @@ local function displayCarry(player: Player, hold: Carried)
 	hold.model = model
 end
 
-local function refreshPrompts(session: Session)
+local function selectItem(farm: Farm, session: Session, spot: string): Carried?
+	if string.match(spot, "^nest:%d+$") then
+		local slot = tonumber(string.match(spot, "^nest:(%d+)$"))
+		for _, egg in farm.eggs do
+			if egg.place == "nest" and egg.slot == slot and not session.reserved["egg:" .. egg.id] then
+				return { item = "Egg", origin = spot, eggId = egg.id }
+			end
+		end
+		return nil
+	end
+	local order: { string } = if spot == "counter" then Config.Food.DishOrder else Config.Food.RawOrder
+	for _, item in order do
+		local stock = stockAt(farm, spot, item)
+		local selected: Carried = { item = item, origin = spot }
+		if stock and (stock[item] or 0) > 0 and not session.reserved[holdingKey(selected)] then
+			return selected
+		end
+	end
+	return nil
+end
+
+local function refreshPrompts(player: Player, session: Session)
+	local farm = PlayerData.get(player)
 	for _, instance in session.prompts do
 		if instance:IsA("ProximityPrompt") then
 			local hold = session.carried
 			local destination = instance:GetAttribute("VillageSpot")
-			local fits = hold ~= nil
-				and type(destination) == "string"
-				and VillageCarry.allowed(hold.item, hold.origin, destination)
+			if type(destination) ~= "string" then
+				continue
+			end
+			local fits = hold ~= nil and VillageCarry.allowed(hold.item, hold.origin, destination)
 			if destination == "storehouse" then
 				-- The storehouse only takes things back (owner, 2026-10-30): no pick-up there.
 				instance.ActionText = "Deposit store"
 				instance.Enabled = fits
 			else
 				instance.ActionText = if hold then "Put down" else "Pick up"
-				instance.Enabled = hold == nil or fits
+				local hasItem = hold == nil and farm ~= nil and selectItem(farm, session, destination) ~= nil
+				instance.Enabled =
+					VillageCarry.promptOpen(destination, hold ~= nil, fits, hasItem, session.fridgeBuilt == true)
 			end
 		end
 	end
@@ -1785,28 +1814,7 @@ local function releaseCarry(player: Player, session: Session, restore: boolean)
 		hold.model:Destroy()
 	end
 	session.carried = nil
-	refreshPrompts(session)
-end
-
-local function selectItem(farm: Farm, session: Session, spot: string): Carried?
-	if string.match(spot, "^nest:%d+$") then
-		local slot = tonumber(string.match(spot, "^nest:(%d+)$"))
-		for _, egg in farm.eggs do
-			if egg.place == "nest" and egg.slot == slot and not session.reserved["egg:" .. egg.id] then
-				return { item = "Egg", origin = spot, eggId = egg.id }
-			end
-		end
-		return nil
-	end
-	local order: { string } = if spot == "counter" then Config.Food.DishOrder else Config.Food.RawOrder
-	for _, item in order do
-		local stock = stockAt(farm, spot, item)
-		local selected: Carried = { item = item, origin = spot }
-		if stock and (stock[item] or 0) > 0 and not session.reserved[holdingKey(selected)] then
-			return selected
-		end
-	end
-	return nil
+	refreshPrompts(player, session)
 end
 
 local function carryPrompt(player: Player, session: Session, spot: string)
@@ -1823,7 +1831,8 @@ local function carryPrompt(player: Player, session: Session, spot: string)
 	if not root or not root:IsA("BasePart") or not humanoid or humanoid.Health <= 0 then
 		return
 	end
-	local reachFrom = if spot == "storehouse" and session.sign then session.sign else point(target)
+	local placed = session.promptAt and session.promptAt[spot]
+	local reachFrom = if spot == "storehouse" and session.sign then session.sign else placed or point(target)
 	if (root.Position - reachFrom).Magnitude > Config.Village.CarryReachStuds then
 		return
 	end
@@ -1850,7 +1859,7 @@ local function carryPrompt(player: Player, session: Session, spot: string)
 			releaseCarry(player, session, false)
 			PlayerData.markKeyMoment(player, "delivered carried item")
 		end
-	elseif spot ~= "storehouse" and VillageCarry.pickupSources(spot) then
+	elseif spot ~= "storehouse" and VillageCarry.pickupSources(spot) and (spot ~= "counter" or session.fridgeBuilt) then
 		local picked: Carried? = nil
 		PlayerData.update(player, function(data: any)
 			local selected = selectItem(data, session, spot)
@@ -1871,7 +1880,7 @@ local function carryPrompt(player: Player, session: Session, spot: string)
 			session.carried = picked
 			session.reserved[holdingKey(picked)] = "player"
 			displayCarry(player, picked)
-			refreshPrompts(session)
+			refreshPrompts(player, session)
 			PlayerData.markKeyMoment(player, "picked carried item")
 		end
 	end
@@ -1888,6 +1897,31 @@ local LABELS: { [string]: string } = {
 	counter = "Kitchen counter",
 	fridge = "Fridge",
 }
+-- Stands the prompts on the things they belong to (these change with the levels) and notes whether a fridge has been built.
+local function placePrompts(player: Player, session: Session)
+	local plot = Plots.model(session.plot)
+	local places: { [string]: Vector3 } = {}
+	for _, anchor in session.prompts do
+		if anchor:IsA("BasePart") then
+			local id = string.sub(anchor.Name, #"CarrySpot_" + 1)
+			local place = Spots.carryPromptAt(plot, id)
+			if place then
+				places[id] = place
+				anchor.Position = place
+			elseif id == "storehouse" then
+				if session.sign then
+					anchor.Position = session.sign
+				end
+			elseif session.spots[id] then
+				anchor.Position = point(session.spots[id]) + Vector3.new(0, Config.Village.CarryPromptHeight, 0)
+			end
+		end
+	end
+	session.promptAt = places
+	session.fridgeBuilt = Spots.carryObject(plot, "fridge") ~= nil
+	refreshPrompts(player, session)
+end
+
 local function setupCarry(player: Player, session: Session)
 	for _, spot in session.spots do
 		-- No prompt at a guessed place (an incubator not built yet stood by the nests). The storehouse prompt is
@@ -1933,6 +1967,7 @@ local function setupCarry(player: Player, session: Session)
 			table.insert(session.prompts, prompt)
 		end
 	end
+	placePrompts(player, session)
 	local function characterAdded(character: Model)
 		if session.deathConnection then
 			session.deathConnection:Disconnect()
@@ -2053,11 +2088,7 @@ function Village.start()
 							held.seat = nil
 						end
 						session.sign = Spots.storehouseSign(plot)
-						for _, anchor in session.prompts do
-							if anchor.Name == "CarrySpot_storehouse" and anchor:IsA("BasePart") and session.sign then
-								anchor.Position = session.sign
-							end
-						end
+						placePrompts(player, session)
 					end
 				end)
 			end
@@ -2135,6 +2166,12 @@ function Village.start()
 				task.wait(Config.Village.TickSeconds)
 				if session.active and sessions[player] == session then
 					tick(player, session)
+					-- (stock comes and goes as the slimes work: a prompt shows only while there is something to take)
+					local clock = os.clock()
+					if clock - (session.promptsChecked or 0) >= Config.Village.CarryPromptRefreshSeconds then
+						session.promptsChecked = clock
+						refreshPrompts(player, session)
+					end
 				end
 			end
 		end)

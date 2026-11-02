@@ -265,6 +265,47 @@ local function front(model: Instance?): Vector3?
 	return nil
 end
 
+-- The thing a carry prompt belongs on: the kitchen's counter and fridge, an area's bin. A spot itself is where a slime stands, out on the lawn.
+function Spots.carryObject(plot: Instance?, id: string): Instance?
+	local names = Config.Village.SpotNames
+	local area, list
+	if id == "counter" then
+		area, list = "kitchen", names.CounterModels
+	elseif id == "fridge" then
+		area, list = "kitchen", names.FridgeProps
+	elseif id == "box:fishing" or id == "box:garden" then
+		area, list = string.sub(id, 5), names.Box
+	else
+		return nil
+	end
+	local model = if plot then plot:FindFirstChild((MODELS :: { [string]: string })[area]) else nil
+	if not model then
+		return nil
+	end
+	for _, name in list do
+		for _, inst in model:GetDescendants() do
+			if (inst:IsA("Model") or inst:IsA("BasePart")) and string.sub(inst.Name, 1, #name) == name then
+				return inst
+			end
+		end
+	end
+	return nil
+end
+
+-- Where the carry prompt of that object stands: just above its top.
+function Spots.carryPromptAt(plot: Instance?, id: string): Vector3?
+	local object = Spots.carryObject(plot, id)
+	local cf, size
+	if object and object:IsA("Model") then
+		cf, size = object:GetBoundingBox()
+	elseif object and object:IsA("BasePart") then
+		cf, size = object.CFrame, object.Size
+	else
+		return nil
+	end
+	return cf.Position + Vector3.new(0, size.Y / 2 + Config.Village.CarryPromptAboveObject, 0)
+end
+
 function Spots.build(plotNumber: number, plot: Instance?): { [string]: Spot }
 	local found, fallback = 0, 0
 	local foundNames: { string } = {}

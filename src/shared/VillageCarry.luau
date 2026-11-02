@@ -26,4 +26,25 @@ function Carry.pickupSources(spot: string): boolean
 		or string.match(spot, "^nest:%d+$") ~= nil
 end
 
+-- Whether a carry prompt shows (not the storehouse's, which only takes things back). The fridge has a prompt only once a real one stands in
+-- the kitchen; until then a dish could go nowhere, so the counter offers none, though it still takes ingredients.
+function Carry.promptOpen(
+	spot: string,
+	holding: boolean,
+	fits: boolean,
+	hasItem: boolean,
+	fridgeBuilt: boolean
+): boolean
+	if spot == "fridge" and not fridgeBuilt then
+		return false
+	end
+	if holding then
+		return fits
+	end
+	if spot == "counter" and not fridgeBuilt then
+		return false
+	end
+	return hasItem and Carry.pickupSources(spot)
+end
+
 return Carry

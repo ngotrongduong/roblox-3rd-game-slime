@@ -442,6 +442,8 @@ Config.Village = {
 	PathConflictPasses = 3,
 	CarryPromptDistance = 10,
 	CarryPromptHeight = 1.5,
+	CarryPromptAboveObject = 1,
+	CarryPromptRefreshSeconds = 0.5,
 	CarryPromptHoldSeconds = 0,
 	CarryReachStuds = 12,
 	CarryModelScale = 0.42,
@@ -464,6 +466,8 @@ Config.Village = {
 		Box = { "FishBin", "VegBin", "CollectionBox", "FishBucket", "HarvestBox", "DishBox" },
 		CounterModels = { "KitchenCounter", "Counter", "PrepCounter" },
 		FridgeModels = { "Fridge", "Refrigerator" },
+		-- the real fridges among the kitchen's props: the Fridge prompt exists only with one of them
+		FridgeProps = { "IceBox", "GooFridge", "Fridge", "Refrigerator" },
 		NapModels = { "Bench", "Stump", "Log" },
 		FountainModels = { "Well", "StoneWell", "Fountain" },
 		CampfireModels = { "Campfire", "FirePit", "Fire" },
