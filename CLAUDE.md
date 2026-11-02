@@ -60,6 +60,11 @@ a script file, run with one command.
   (from github.com/DietrichGebert/ponytail, MIT, commit 09c434a, installed 2026-10-27 at the owner's
   request): the smallest change that fully solves a task, and plain-English reviews and audits. This
   guide wins where they differ (replies to the owner stay in Vietnamese).
+  Also from Claude Code Game Studios (github.com/Donchitos/Claude-Code-Game-Studios, MIT, commit 05ad7c8, installed
+  2026-11-02 at the owner's request, only the parts that fit): agents game-designer, economy-designer, ux-designer,
+  live-ops-designer, performance-analyst, security-engineer, accessibility-specialist; skills balance-check, security-audit,
+  perf-profile, launch-checklist, scope-check, patch-notes, ux-review, asset-audit; their `.claude/docs` and `project.yaml`
+  (`modes.automation: autonomous`). Its hooks, settings and CLAUDE.md are deliberately left out. This guide wins.
 
 ## Rules of the code
 
