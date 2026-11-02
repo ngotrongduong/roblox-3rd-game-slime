@@ -79,19 +79,23 @@ by slot and era. Kitchen and training ground models (asset ids of the published 
 | ClippedTopiary | 118869481227017 | village garden piece, era 2 |
 | PaintedLampPost, SteelStreetLamp | 81425132591063, 135167358158216 | village lamps, eras 2 and 4 |
 
-The shared middle of the valley (`tools/map/build_wild_slices.luau`, 2026-11-02; in the work place's PropKit until the owner's
-Ctrl+S and the export):
+The shared middle of the valley (`tools/map/build_wild_slices.luau`, rebuilt 2026-11-02 after the owner rejected the first look;
+in the work place's PropKit until the owner's Ctrl+S and the export). Triangles are measured in the scene, not the ceiling asked for:
 
 | Model | Asset id | Triangles, where it is used |
 |---|---|---|
-| TwistedTree | 120350717564903 | 450, the inner ring (a first try, 84759709497860, came out thin and spiky: unused) |
-| GiantMushroom | 82978024017038 | 300, Mushroom Grove, large and small |
-| CrystalCluster | 89565445204716 | 120, Frost Glade blue; painted amethyst in the inner ring |
-| EmberPlant | 140577747992093 | 160, Ember Garden |
+| GlowMushrooms | 108230156976781 | 400, Mushroom Grove (three caps, turquoise) |
+| AmethystRocks | 98736474914475 | 300, inner ring |
+| AutumnPlant | 122337295279967 | 1,150 (asked for 220), Ember Garden |
+| PinkDaisies | 99877208898698 | 300, Sunny Meadow |
+| MossyLog | 102252511379031 | 596, by the trees: short and brick red, not the references' long hollow log |
+| CrystalCluster | 89565445204716 | 120, Frost Glade, blue |
 | RuinArch | 119137243254659 | 600, the Heart |
 | GooBasin | 109097409899804 | 400, the Heart's spring, pressed low |
+| TwistedTree, GiantMushroom, EmberPlant | 120350717564903, 82978024017038, 140577747992093 | no longer used: too simple beside the references |
 
-The ground's colour map: `rbxassetid://138249545071236` (a soft mottled tile made by script, the owner's upload).
+A lupin clump (83620754016104) came out shredded and was thrown away. The first look's ground map
+`rbxassetid://138249545071236` and its `WildFlat*` variants are gone from the map; the image stays on the owner's account, unused.
 
 ## CropKit.rbxm (four growth stages: 1 seedling, 2 young, 3 growing, 4 ripe)
 
@@ -176,6 +180,19 @@ like the koi) into `ServerStorage.FoodKit` and copies the ripe vegetables into `
 
 The free Creator Store "Nature stylized Pack" (109637424937405, no scripts): bushes, flowers, ferns,
 tufts, rocks, stumps, logs, water lilies, trees.
+
+## WildKit.rbxm (the valley's middle, free Creator Store packs, no scripts)
+
+Fitted by `tools/map/wild_kit.luau` (anchored, pivot at the foot), which also removed the packs' labelled display boards. Exported
+once the owner has pressed Ctrl+S.
+
+| Models | From | Notes |
+|---|---|---|
+| YasuTree01-20, YasuBush01-03, YasuRoots* | "Yasu's Stylized Tree Pack" 79689531752352, by mvyasu (the original; the search also lists many re-uploads under other names, not to be used) | two meshes a tree, 460-2,500 triangles; colourless canopies tinted per mood through `SurfaceAppearance.Color`, alpha leaves |
+| DokiGrass1-8, DokiFlower1-7 | "Doki3D Plant Pack 01" 132133490211548, by Doki_3D | DokiFlower3 and 4 are the lupin spikes (24 triangles); the single grass blades read as lonely spikes and are not placed |
+
+Tried and left out: "Stylized Colorful Tree Pack" 96193157220829 (ceconello, 15-31 meshes a tree), `ServerStorage.AssetTest.StylizedNature_Vexa`
+(plain cones and cubes).
 
 ## HomePlot.rbxm
 

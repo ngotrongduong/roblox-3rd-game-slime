@@ -167,6 +167,29 @@ was left there (this game has none); read it there if a cave is ever wanted.
 - 2026-11-02. Keeping march lines free: a tree's crown may reach over a line (it does not collide and clears a slime's head),
   so test a trunk share of the spread against lines, the whole spread against homes and paths; with the full spread on lines
   almost no tree found room. Write the check as its own script from the same numbers; it caught what pictures did not.
+- 2026-11-02 (the valley's middle, second try, after the owner rejected flat colour, cream slabs, discs and simple trees). This overturns
+  the first try's lessons above on painted ground and slab paths for anything outdoors: real terrain textures blended by noise, and
+  dirt paths painted in the terrain, are what the owner calls natural.
+- 2026-11-02. A shot from a camera that moves only for the shot shows terrain's coarse far level, where 4-stud trails fall into dashes,
+  and I lost three rounds "fixing" dashes that were not in the voxels (an ASCII dump of the top voxels showed them whole). Set the
+  camera, wait about 7 s, then shoot; dump voxels before changing a trail.
+- 2026-11-02. A terrain path is about 7 studs drawn to read as 6; cells within 3.9 of the centre line are always path, the noise only
+  frays the rest. One material along a trail: two in turns read as sewn patches. Trails must ride the swells with the ground beside
+  them, or a lower cell is buried by its neighbours.
+- 2026-11-02. Occupancy of the voxel above the solid top raises terrain smoothly: surface = 2 + 4 x occupancy (measured). Swells need a mask
+  of the distance to march lines and homes, or a checker finds steps.
+- 2026-11-02. Terrain materials per zone: a material has one colour in the whole place, so give each zone its own material, and scan
+  which materials the rest of the valley uses first (here only Grass, Rock, Sand). Materials are not what their names say: Sandstone looks
+  like cracked dry earth, Ground like wood chips, Salt stays pale, Mud with an olive colour makes good moss; lay out swatches and look.
+  A `SetMaterialColor` under the texture can make it read pink under the lilac ambient: (176,102,66) did; (158,98,50) did not.
+- 2026-11-02. Look at every kit model at real size BEFORE writing the recipes. I went by names twice: FlatBoulder is a lamp post on a
+  beam, rock_boulder_mossy a pancake, SnowyBush lime under its snow, MossyBoulder a tan stone with green goo on it.
+- 2026-11-02. Measure triangles in the scene (`Stats.SceneTriangleCount` with one clone in an empty view): the owner's trees are 4,400-5,200,
+  his rocks 1,700-2,900, NatureKit's small rocks 1,174. A pebble of 1,174 is a waste nobody sees; use the 140 ones for what is small.
+- 2026-11-02. Free tree packs: the description names the real pack; search lists a dozen re-uploads of one pack under other names. Take
+  the original creator's. A colourless canopy takes `SurfaceAppearance.Color`, which gives every mood from one set of trees, but one flat tint
+  loses the crown's light and dark: seen from under it is a flat sheet. A root flare placed at the foot hides a thin stake-like trunk.
+- 2026-11-02. `task.wait` is what lets a long `execute_luau` finish; 600 s is plenty for 2,800 parts and the whole terrain.
 
 ## Water and moving things
 

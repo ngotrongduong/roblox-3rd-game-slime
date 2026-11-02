@@ -132,16 +132,22 @@ Config.Zombies = {
 	-- Food to revive: ceil(1 + level / this) items (the original's 20 food x ceil(1 + level / 5); an item is about 20).
 	ReviveLevelsPerFood = 5,
 	LevelOffsets = { 0, 3, 5 },
-	-- Camps on the map (src/server/ZombieFights.luau). Every camp holds GroupsPerCamp groups so four squads can always
-	-- find a fight; a beaten group comes back RespawnSeconds later at the level of that moment.
-	GroupsPerCamp = 4,
+	-- A beaten group comes back RespawnSeconds later at the level of that moment.
 	RespawnSeconds = 30,
 	-- Where (docs/MAP.md, 1.4): every plot owns the slice of the valley in front of its gate. From the gate straight
 	-- towards the centre, the first camp is CampFirstDistance out, each next one CampSpacing further; a camp's groups
-	-- stand GroupSpreadDegrees apart, either side of the path. 9 places on the rim make a slice 40 degrees wide.
+	-- lie about there, either side of its trail. 9 places on the rim make a slice 40 degrees wide.
 	CampFirstDistance = 90,
 	CampSpacing = 70,
-	GroupSpreadDegrees = 10,
+	-- Where the groups of a camp live (the owner, 2026-11-02: 4 in the easy ring, 3 in the next, 2 in the hardest), loose
+	-- as in nature: degrees off the slice's middle, studs further out or in. Odd slices are mirrored and every home shifts a
+	-- little by slice (HomeJitterDegrees), so no two slices read alike.
+	Homes = {
+		{ { -14, 10 }, { -4, -12 }, { 5, 14 }, { 14, -8 } },
+		{ { -12, -8 }, { 2, 10 }, { 12, -6 } },
+		{ { -10, 6 }, { 9, -8 } },
+	},
+	HomeJitterDegrees = 2.5,
 	-- A group nobody attacked for this long takes its slice's level again (the owner, 2026-11-02).
 	IdleResetSeconds = 5 * 60,
 	-- The camps of the whole server (src/server/ZombieFights.luau) look at their groups this often (respawn, idle reset),

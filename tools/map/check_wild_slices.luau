@@ -1,6 +1,8 @@
--- Checks the shared middle (tools/map/build_wild_slices.luau): every part that stands within the limits of a zombie group's
--- home, its march line or a path, and every ground height off by more than a stud on those lines and homes. Run in Edit mode
--- through Studio's MCP; it must end with "WILD OK".
+-- Checks the shared middle (tools/map/build_wild_slices.luau): nothing that collides within a zombie group's roam or across a
+-- team's march line, no prop standing in a glade or on a line, no terrain step on those lines, the Heart's middle clear, and none of
+-- the rejected first rebuild left (flat variants, discs, slabs, neon puddles). Run in Edit mode through Studio's MCP; it must end
+-- with "WILD OK".
+local MaterialService = game:GetService("MaterialService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Config = require(ReplicatedStorage.Shared.Config)
@@ -9,17 +11,16 @@ local Zombies = require(ReplicatedStorage.Shared.Zombies)
 
 local M = Config.Map
 local HOME_CLEAR = 16 -- a roam of 12 and a little more
+local GLADE_OPEN = 11 -- no low prop nearer a home than this
 local LINE_CLEAR = 1.75 -- half a slime's width
-local PATH_HALF = M.PathWidth / 2
-local RINGS = { 261, 191, M.HeartRadius }
-local MAX_OFF = 1
+local HEART_CLEAR = 40 -- the boss rises here later
+local MAX_OFF = 1 -- the ground on a line or at a home, off the plain
+local MAX_STEP = 1 -- between two probes of a line, STEP studs apart
+local STEP = 4
 local TALL = 60 -- stands of test models high over the map are not in the way
 local GATE_SILL = 2 -- the last studs before a gate belong to the village's own drop to its floor
-local STEP = 4
--- A tree's crown may reach over a march line, above a slime's head (it does not collide): only this share of the spread of
--- these one-mesh models stands low; a part named Foliage whose underside clears HEAD_CLEAR counts for nothing on a line.
-local LOW_SHARE = { TwistedTree = 0.45, GiantMushroom = 0.4 }
-local HEAD_CLEAR = 3.5
+local HEAD_CLEAR = 3.5 -- what hangs higher than a slime's head does not stop one
+local FLOWER = 2 -- what stands lower than this is walked through (flowers, tufts)
 
 local function flat(p: Vector3): Vector3
 	return Vector3.new(p.X, 0, p.Z)
@@ -30,13 +31,12 @@ local function toSegment(p: Vector3, a: Vector3, b: Vector3): number
 	return (p - (a + ab * t)).Magnitude
 end
 
-local homes, lines, gates = {}, {}, {}
+local homes, lines = {}, {}
 for slice = 0, M.PlotCount do
 	local gate = Layout.sliceGate(slice)
-	table.insert(gates, flat(gate.Position))
 	for camp = 1, #Config.Zombies.LevelOffsets do
-		for index = 1, Config.Zombies.GroupsPerCamp do
-			local across, forward = Zombies.campOffset(camp, index)
+		for index = 1, #Config.Zombies.Homes[camp] do
+			local across, forward = Zombies.homeOffset(slice, camp, index)
 			local home = flat((gate * CFrame.new(across, 0, -forward)).Position)
 			local id = Zombies.groupId(slice, camp, index)
 			table.insert(homes, { id = id, at = home })
@@ -48,38 +48,40 @@ end
 local out = {}
 local partsSeen = 0
 
-local function checkPart(part: BasePart, isScenery: boolean)
+local function checkSolid(part: BasePart, reach: number)
 	local p = flat(part.Position)
-	-- trees and bushes are round in plan
-	local reach = math.max(part.Size.X, part.Size.Z) / 2
-	partsSeen += 1
 	for _, home in homes do
 		if (p - home.at).Magnitude < HOME_CLEAR + reach then
 			table.insert(out, string.format("HOME %s: %s %.1f from it, reach %.1f", home.id, part:GetFullName(), (p - home.at).Magnitude, reach))
 			return
 		end
 	end
-	local low = reach * (LOW_SHARE[part:GetAttribute("Kit") or ""] or 1)
-	if part.Name == "Foliage" and part.Position.Y - part.Size.Y / 2 > M.GroundY + HEAD_CLEAR then
-		low = 0
-	end
 	for _, line in lines do
-		if low > 0 and toSegment(p, line.from, line.to) < LINE_CLEAR + low then
+		if toSegment(p, line.from, line.to) < LINE_CLEAR + reach then
 			table.insert(out, string.format("LINE %s: %s, reach %.1f", line.id, part:GetFullName(), reach))
 			return
 		end
 	end
-	if isScenery then
-		local r = p.Magnitude
-		for _, ring in RINGS do
-			if math.abs(r - ring) < PATH_HALF + reach then
-				table.insert(out, string.format("CIRCLE %d: %s", ring, part:GetFullName()))
-				return
-			end
+end
+
+local function checkLow(part: BasePart)
+	-- A prop that does not collide but stands where a group lives or a team marches: it would be walked through in plain sight.
+	local p = flat(part.Position)
+	local bottom = part.Position.Y - part.Size.Y / 2
+	if bottom > M.GroundY + HEAD_CLEAR or part.Size.Y < FLOWER then
+		return
+	end
+	local reach = math.min(part.Size.X, part.Size.Z) / 2
+	for _, home in homes do
+		if (p - home.at).Magnitude < GLADE_OPEN then
+			table.insert(out, string.format("GLADE %s: %s", home.id, part:GetFullName()))
+			return
 		end
-		for _, gate in gates do
-			if toSegment(p, gate, gate.Unit * M.HeartRadius) < PATH_HALF + reach then
-				table.insert(out, string.format("PATH: %s", part:GetFullName()))
+	end
+	if part.Size.Y < 25 then
+		for _, line in lines do
+			if toSegment(p, line.from, line.to) < LINE_CLEAR + reach * 0.5 then
+				table.insert(out, string.format("ON LINE %s: %s, %.1f high", line.id, part:GetFullName(), part.Size.Y))
 				return
 			end
 		end
@@ -87,33 +89,52 @@ local function checkPart(part: BasePart, isScenery: boolean)
 end
 
 local map = workspace.Map
-local scenery = map.WildGarden:FindFirstChild("Scenery")
+local wild = map.WildGarden
 local count = 0
-for _, d in scenery:GetChildren() do
+for _, d in wild:GetDescendants() do
 	if d:IsA("BasePart") then
-		checkPart(d, true)
+		partsSeen += 1
+		if flat(d.Position).Magnitude < HEART_CLEAR and d.Position.Y < TALL then
+			table.insert(out, "HEART: " .. d:GetFullName())
+		end
+		if d.CanCollide then
+			local reach = if d.Name == "TrunkBlock"
+				then d.Size.Y / 2
+				else math.max(d.Size.X, d.Size.Z) / 2
+			checkSolid(d, reach)
+		elseif not d.Transparency or d.Transparency < 1 then
+			checkLow(d)
+		end
+		if d.Material == Enum.Material.Neon and d.Name ~= "Spring" then
+			table.insert(out, "NEON: " .. d:GetFullName())
+		end
+		if d.Name == "Road" or d.Name == "Path" or d.Name == "Puddle" or d.Name == "Clearing" or d.Name == "Goo" then
+			table.insert(out, "OLD PIECE: " .. d:GetFullName())
+		end
 		count += 1
 		if count % 50 == 0 then
 			task.wait()
 		end
 	end
 end
--- Whatever else stands on the lines: the heart, the Market, the rim, test models left in the place (not the villages).
+for _, v in MaterialService:GetChildren() do
+	if v:IsA("MaterialVariant") and string.sub(v.Name, 1, 8) == "WildFlat" then
+		table.insert(out, "OLD VARIANT: " .. v.Name)
+	end
+end
+
+-- Whatever else stands on the lines: the Market, the rim, test models left in the place (not the villages).
 for _, d in workspace:GetDescendants() do
 	if
 		d:IsA("BasePart")
+		and d.CanCollide
 		and d.Position.Y < TALL
 		and d.Name ~= "Terrain"
-		and not d:IsDescendantOf(scenery)
-		and not d:IsDescendantOf(map.WildGarden.Paths)
-		and not d:IsDescendantOf(map.WildGarden.Puddles)
-		and not d:IsDescendantOf(map.WildGarden.Goo)
+		and not d:IsDescendantOf(wild)
 		and not d:IsDescendantOf(map.Plot5)
+		and flat(d.Position).Magnitude < M.WildRadius + 60
 	then
-		local r = flat(d.Position).Magnitude
-		if r < M.WildRadius + 60 then
-			checkPart(d, false)
-		end
+		checkSolid(d, math.max(d.Size.X, d.Size.Z) / 2)
 	end
 	count += 1
 	if count % 2000 == 0 then
@@ -133,18 +154,24 @@ local function ground(p: Vector3): (number, string)
 	return hit.Position.Y, hit.Material.Name
 end
 local probes = 0
-local function probe(p: Vector3, what: string)
+local function probe(p: Vector3, what: string): number
 	probes += 1
 	local y, material = ground(p)
 	if math.abs(y - M.GroundY) > MAX_OFF or material == "Water" then
 		table.insert(out, string.format("GROUND %s: %.2f %s at %.0f,%.0f", what, y, material, p.X, p.Z))
 	end
+	return y
 end
 for _, line in lines do
 	local length = (line.to - line.from).Magnitude
 	local d = GATE_SILL
+	local last = nil
 	while d <= length do
-		probe(line.from + (line.to - line.from).Unit * d, line.id)
+		local y = probe(line.from + (line.to - line.from).Unit * d, line.id)
+		if last and math.abs(y - last) > MAX_STEP then
+			table.insert(out, string.format("STEP %s: %.2f to %.2f at %.0f along", line.id, last, y, d))
+		end
+		last = y
 		d += STEP
 	end
 end

@@ -224,8 +224,8 @@ local function makeCamps(now: number)
 		sliceFolder.Parent = root
 		local gate = Layout.sliceGate(slice)
 		for camp = 1, #Config.Zombies.LevelOffsets do
-			for index = 1, Config.Zombies.GroupsPerCamp do
-				local across, forward = Zombies.campOffset(camp, index)
+			for index = 1, #Config.Zombies.Homes[camp] do
+				local across, forward = Zombies.homeOffset(slice, camp, index)
 				-- the gate looks at the valley centre: local -Z is the way out
 				local flat = (gate * CFrame.new(across, 0, -forward)).Position
 				local id = Zombies.groupId(slice, camp, index)

@@ -242,28 +242,16 @@ return function(T: any)
 		T.ok(Zombies.marchSeconds(200, { 1 }) > near)
 		T.eq(Zombies.marchSeconds(100, {}), 0)
 	end)
-	T.test("camps lie further out each, groups spread across the way and centred", function()
-		local n = Config.Zombies.GroupsPerCamp
-		local first, sum = nil, 0
-		for index = 1, n do
-			local across, forward = Zombies.campOffset(1, index)
-			sum += across
-			T.eq(forward, Config.Zombies.CampFirstDistance)
-			if first then
-				T.ok(across > first)
-			end
-			first = across
-		end
-		T.eq(sum, 0, "centred on the way out")
-		-- every camp stays inside its plot's slice of the valley (40 degrees: 9 places on the rim)
-		for camp = 1, #Config.Zombies.LevelOffsets do
-			local across, forward = Zombies.campOffset(camp, Config.Zombies.GroupsPerCamp)
-			local radius = Config.Map.RimRadius - Config.Map.PlotSize / 2 - forward
-			T.ok(across / radius < math.tan(math.rad(20)), "camp " .. camp .. " inside its slice")
-		end
-		local _, near = Zombies.campOffset(1, 1)
-		local _, far = Zombies.campOffset(#Config.Zombies.LevelOffsets, 1)
-		T.ok(far > near)
+	T.test("the rings hold 4, 3 and 2 homes, further in each, and no two slices lay them out alike", function()
+		T.same({ #Config.Zombies.Homes[1], #Config.Zombies.Homes[2], #Config.Zombies.Homes[3] }, { 4, 3, 2 })
+		local _, near = Zombies.homeOffset(1, 1, 2)
+		local _, far = Zombies.homeOffset(1, 3, 2)
+		T.ok(far > near, "the hard ring is further from the gate")
+		local a, b = Zombies.homeOffset(1, 1, 1)
+		local c, d = Zombies.homeOffset(2, 1, 1)
+		T.ok(a ~= c or b ~= d)
+		T.ok(a * c < 0, "odd and even slices are mirrored")
+		T.eq(select(1, Zombies.homeOffset(3, 2, 1)), select(1, Zombies.homeOffset(3, 2, 1)), "a home never moves")
 	end)
 	T.test("a hungry slime fights at half strength, a dish buff adds on", function()
 		local slime = FarmKit.slime("a", { stats = { attack = 10, defence = 1, speed = 1, hp = 10 } })
@@ -314,7 +302,7 @@ return function(T: any)
 		local count = 0
 		for slice = 0, Config.Map.PlotCount do
 			for camp = 1, #Config.Zombies.LevelOffsets do
-				for index = 1, Config.Zombies.GroupsPerCamp do
+				for index = 1, #Config.Zombies.Homes[camp] do
 					local id = Zombies.groupId(slice, camp, index)
 					T.ok(not seen[id], "unique: " .. id)
 					seen[id] = true
@@ -325,7 +313,8 @@ return function(T: any)
 				end
 			end
 		end
-		T.eq(count, (Config.Map.PlotCount + 1) * #Config.Zombies.LevelOffsets * Config.Zombies.GroupsPerCamp)
+		T.eq(count, (Config.Map.PlotCount + 1) * (4 + 3 + 2))
+		T.eq(Zombies.parseGroupId("s1c3g3"), nil, "the hardest ring has only two groups")
 		T.eq(Zombies.parseGroupId("c1g1"), nil, "an id of the old camps is not a group")
 		T.eq(Zombies.parseGroupId("s9c1g1"), nil, "no such slice")
 		T.eq(Zombies.parseGroupId("s1c4g1"), nil, "no such camp")

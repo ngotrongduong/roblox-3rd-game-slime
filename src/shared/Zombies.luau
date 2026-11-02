@@ -146,7 +146,7 @@ function Zombies.parseGroupId(id: any): (number?, number?, number?)
 		or c < 1
 		or c > #Config.Zombies.LevelOffsets
 		or i < 1
-		or i > Config.Zombies.GroupsPerCamp
+		or i > #Config.Zombies.Homes[c]
 	then
 		return nil, nil, nil
 	end
@@ -314,14 +314,16 @@ function Zombies.marchSeconds(distance: number, speeds: { number }): number
 	return VillagePath.duration(distance, slowest, Config.Zombies.MarchGait)
 end
 
--- Where a group stands, as (across, forward) studs from the plot's gate towards the valley centre: camp 1..#LevelOffsets
--- further out each, the groups of a camp spread across the way and centred on it.
-function Zombies.campOffset(camp: number, index: number): (number, number)
+-- Where a group lives, as (across, forward) studs from its slice's gate towards the valley centre: Config.Zombies.Homes,
+-- mirrored on odd slices and shifted a little by slice, always the same for the same group.
+function Zombies.homeOffset(slice: number, camp: number, index: number): (number, number)
 	local z = Config.Zombies
-	local forward = z.CampFirstDistance + (camp - 1) * z.CampSpacing
-	-- Groups spread by angle, so a camp stays inside its plot's slice of the valley as the slice narrows to the middle.
-	local radius = Config.Map.RimRadius - Config.Map.PlotSize / 2 - forward
-	return (index - (z.GroupsPerCamp + 1) / 2) * radius * math.rad(z.GroupSpreadDegrees), forward
+	local home = z.Homes[camp][index]
+	local wobble = math.sin(slice * 12.9898 + camp * 78.233 + index * 37.719) * z.HomeJitterDegrees
+	local angle = math.rad((home[1] + wobble) * (if slice % 2 == 1 then -1 else 1))
+	local gateRadius = Config.Map.RimRadius - Config.Map.PlotSize / 2
+	local radius = gateRadius - z.CampFirstDistance - (camp - 1) * z.CampSpacing + home[2]
+	return radius * math.sin(angle), gateRadius - radius * math.cos(angle)
 end
 
 -- A slime as it fights: hungry at half strength (docs/MAP.md), its dish buff on top, and the health it has left

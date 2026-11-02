@@ -162,8 +162,8 @@ return function(T)
 			for slice = 0, M.PlotCount do
 				local gate = Layout.sliceGate(slice)
 				for camp = 1, #Z.LevelOffsets do
-					for index = 1, Z.GroupsPerCamp do
-						local across, forward = Zombies.campOffset(camp, index)
+					for index = 1, #Z.Homes[camp] do
+						local across, forward = Zombies.homeOffset(slice, camp, index)
 						local at = (gate * CFrame.new(across, 0, -forward)).Position
 						-- (the slice is 40 degrees wide: 360 / 9 places on the rim)
 						local angle = math.deg(math.atan2(at.X, -at.Z))
@@ -179,10 +179,11 @@ return function(T)
 			end
 			for i = 1, #all do
 				for j = i + 1, #all do
-					T.ok((all[i] - all[j]).Magnitude > 10, "two groups on one spot")
+					-- (a group roams 12 studs round its home: two must not mix)
+					T.ok((all[i] - all[j]).Magnitude > 30, "two groups too close")
 				end
 			end
-			T.eq(#all, (M.PlotCount + 1) * #Z.LevelOffsets * Z.GroupsPerCamp)
+			T.eq(#all, (M.PlotCount + 1) * (4 + 3 + 2), "4, 3 and 2 groups in the three rings")
 		end
 	)
 
