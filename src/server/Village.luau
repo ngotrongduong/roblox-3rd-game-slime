@@ -369,7 +369,16 @@ local function workClock(
 	local level = (farm.areas :: any)[area].level
 	local total = if area == "garden"
 		then Config.Work.GardenActionSeconds * Config.Work.CycleLevelFactor ^ (level - Config.Village.StartLevel)
-		else Stations.cycleSeconds(area, level)
+		else if area == "kitchen"
+			then Food.cookSeconds(Food.slotRecipe(slot, level), level)
+			else Stations.cycleSeconds(area, level)
+	if area == "kitchen" then
+		local dish = (Config.Food.Dishes :: any)[Food.slotRecipe(slot, level)]
+		if not Food.canCook(farm) then return "", 0, 0 end
+		for item, count in dish.ingredients do
+			if (farm.counter[item] or 0) < count then return "", 0, 0 end
+		end
+	end
 	if slot.progress >= total then
 		return "", 0, 0
 	end
@@ -383,6 +392,8 @@ local function show(session: Session, farm: Farm, epoch: number)
 	set(root, "Coins", farm.coins)
 	set(root, "Storehouse", HttpService:JSONEncode(farm.storehouse))
 	set(root, "Fridge", HttpService:JSONEncode(farm.fridge))
+	set(root, "Counter", HttpService:JSONEncode(farm.counter))
+	set(root, "CoinCap", VillageRules.coinCap(farm.areas.pantry.level))
 	set(root, "Population", #farm.slimes + #farm.eggs)
 	set(root, "Limit", VillageRules.populationLimit(farm))
 	set(root, "VillageLevel", VillageRules.level(farm))
@@ -397,12 +408,15 @@ local function show(session: Session, farm: Farm, epoch: number)
 	for _, area in Config.Work.Areas do
 		local areaWork = (farm.work :: any)[area]
 		local slots: { { [string]: any } } = {}
-		local cycle = Stations.cycleSeconds(area, (farm.areas :: any)[area].level)
+		local level = (farm.areas :: any)[area].level
 		for _, slot in areaWork.slots do
+			local recipe = if area == "kitchen" then Food.slotRecipe(slot, level) else ""
+			local cycle = if area == "kitchen" then Food.cookSeconds(recipe, level) else Stations.cycleSeconds(area, level)
 			table.insert(slots, {
 				worker = slot.worker or "",
 				reserve = slot.reserve or "",
 				stat = slot.stat or "",
+				recipe = recipe,
 				progress = math.clamp(slot.progress / cycle, 0, 1),
 			})
 		end
@@ -551,7 +565,14 @@ local function show(session: Session, farm: Farm, epoch: number)
 				farm.areas.breeding.level - Config.Village.StartLevel
 			)
 		)
-		set(model, "CookedAllowed", table.find(farm.cookedAllowed, slime.id) ~= nil)
+		local buff = slime.buff
+		local activeBuff = buff ~= nil and buff.untilTime > epoch
+		local dish = if activeBuff and buff then (Config.Food.Dishes :: any)[buff.dish or ""] else nil
+		set(model, "BuffStat", if activeBuff and buff then buff.stat else "")
+		set(model, "BuffPercent", if activeBuff and buff then buff.percent else 0)
+		set(model, "BuffUntil", if activeBuff and buff then buff.untilTime else 0)
+		set(model, "BuffRarity", if dish then dish.rarity else "")
+		set(model, "AutoDish", slime.autoDish or "")
 		local pairIndex = 0
 		for index, pair in farm.breeding.pairs do
 			if pair.a == slime.id or pair.b == slime.id then
@@ -1572,7 +1593,7 @@ local function tick(player: Player, session: Session)
 									data.work.garden.plots,
 									slot.plot,
 									slot.task,
-									if slot.task == "plant" then Food.roll("veg", session.rng) else ""
+									if slot.task == "plant" then Food.roll("veg", session.rng, farm.areas.garden.level) else ""
 								)
 								if harvested then
 									slot.pending = harvested
