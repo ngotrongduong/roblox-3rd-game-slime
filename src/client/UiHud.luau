@@ -40,11 +40,18 @@ local function item(name: string): Instance?
 end
 
 function UiHud.start(root: Frame, onBook: () -> (), onTravel: (place: string) -> ())
+	-- The strip shares the line of Roblox's own buttons: its own ScreenGui in the free space the engine leaves in the topbar.
+	local host = root:FindFirstAncestorOfClass("ScreenGui") :: ScreenGui
+	local top = UiKit.make("ScreenGui", {
+		Name = "GooTopStrip",
+		ResetOnSpawn = false,
+		ScreenInsets = Enum.ScreenInsets.TopbarSafeInsets,
+		DisplayOrder = host.DisplayOrder,
+		ZIndexBehavior = Enum.ZIndexBehavior.Sibling,
+	}, host.Parent)
 	local bar = UiKit.make("ScrollingFrame", {
 		Name = "Resources",
-		-- (as tall as a touch target, or it would clip the food button's press area; the plates sit centred in it)
-		Position = UDim2.fromOffset(U.Edge, U.Edge - (U.Touch - U.ChipHeight) / 2),
-		Size = UDim2.new(1, -2 * U.Edge, 0, U.Touch),
+		Size = UDim2.fromScale(1, 1),
 		BackgroundTransparency = 1,
 		BorderSizePixel = 0,
 		AutomaticCanvasSize = Enum.AutomaticSize.X,
@@ -52,7 +59,7 @@ function UiHud.start(root: Frame, onBook: () -> (), onTravel: (place: string) ->
 		ScrollBarThickness = 0,
 		ScrollingDirection = Enum.ScrollingDirection.X,
 		Visible = false,
-	}, root)
+	}, top)
 	UiKit.make("UIListLayout", {
 		FillDirection = Enum.FillDirection.Horizontal,
 		HorizontalAlignment = Enum.HorizontalAlignment.Left,
