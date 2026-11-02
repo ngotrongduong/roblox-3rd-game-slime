@@ -44,7 +44,7 @@ return function(T: any)
 		T.eq(Food.slotRecipe(farm.work.kitchen.slots[1], 1), "grilledFish")
 		T.ok(not Stations.setCookRecipe(farm, 1, "bakedTrout"))
 		T.ok(not Stations.setCookRecipe(farm, 1, "unknown"))
-		T.eq(farm.work.kitchen.slots[1].recipe, "grilledFish")
+		T.eq(farm.work.kitchen.slots[1].recipe, nil, "invalid assignment leaves no explicit recipe")
 		farm.areas.kitchen.level = 8
 		T.ok(Stations.setCookRecipe(farm, 1, "bakedTrout"))
 		T.eq(farm.work.kitchen.slots[1].recipe, "bakedTrout")
