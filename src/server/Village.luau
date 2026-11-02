@@ -1593,7 +1593,7 @@ local function tick(player: Player, session: Session)
 									data.work.garden.plots,
 									slot.plot,
 									slot.task,
-									if slot.task == "plant" then Food.roll("veg", session.rng, farm.areas.garden.level) else ""
+									if slot.task == "plant" then Food.roll("veg", session.rng, data.areas.garden.level) else ""
 								)
 								if harvested then
 									slot.pending = harvested
