@@ -24,7 +24,10 @@ so for this version (an approval is for that publish only).
 Studio must be signed in to the account that owns the game. The owner signs in; Claude never does, and never switches
 accounts. Studio's publish dialogs are invisible to computer use, so the owner usually clicks them himself.
 
-1. Open the built place (`GooLineage.rbxlx`).
+1. Build the place: after `tools\check.ps1`, `lune run tools/build_publish.luau` must end with `PUBLISH PLACE OK`. It joins
+   the world saved in `assets/raw/MapWork.rbxlx` (so the owner's Ctrl+S comes first if the world changed) with the repo's
+   code, leaves out the work place's labs and test stages, and sets streaming. Open `assets/raw/Publish.rbxl`. **Never
+   publish `GooLineage.rbxlx` (it has no village) or `MapWork.rbxlx` (it has labs players would see).**
 2. File > Publish to Roblox As… > pick the experience by its name. **If the list does not show the game, this Studio is
    on another account: cancel and tell the owner.** Never click any other experience in that list.
 3. Pick the existing place > Overwrite. A request to grant asset permissions is expected for assets of the owner's
@@ -44,8 +47,8 @@ environment and never written into the project.
 1. Verify: `games.roblox.com/v1/games?universeIds=<id>` (`updated`), or Studio's MCP `list_roblox_studios` /
    `script_grep` on the published place; press Play, read the log: no script errors, the save loads, the world line
    prints.
-2. Saving is tried on the live game (Studio's "access to API services" may be off): change something, leave, come back,
-   compare.
+2. Saving is tried on the live game, never from Studio (a Studio play test always uses the in-memory store unless
+   `Config.Save.StudioUsesRealStore` is on): change something, leave, come back, compare.
 3. Commit, note in `docs/STATUS.md` and the project memory what was published and what was not seen.
 4. Tell the owner in Vietnamese: what is new for players, what to try themselves (purchases above all).
 

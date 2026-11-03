@@ -20,12 +20,13 @@ play test reports what to look at instead.
 - With Studio's MCP server (`Roblox_Studio` tools in the session; `node tools/studio_mcp.js` in a subagent):
   `list_roblox_studios` for the id (ids change when a place is reopened), `start_stop_play`, `get_console_output`,
   `screen_capture`, `execute_luau` in the Server or Client datamodel. It does not take over the screen.
-- The owner opens the built `GooLineage.rbxlx` himself when there is no Studio open with it; after a rebuild he reopens
-  it (a second open says "in use by another Studio instance"). Never `open_application` Studio: it starts a second,
-  empty Studio. Never take the mouse or keyboard while the owner is using the machine.
+- Test in `assets/raw/MapWork.rbxlx` (`village-playtest`): the built `GooLineage.rbxlx` has no world. To try what players
+  would get, `lune run tools/build_publish.luau`, open `assets/raw/Publish.rbxl`, and pass `studio_id` to each Studio
+  tool. Never `open_application` Studio: it starts a second, empty Studio. Never take the mouse or keyboard while the
+  owner is using the machine.
 - If the owner is playing in the Studio window, let him play and read the log instead of grabbing the mouse.
-- A local place file has no DataStore: nothing is saved there (the profile layer uses its in-memory store). Saving is
-  tried in the published place only (see `publish`).
+- A Studio play test saves nothing and never touches real saves (the profile layer uses its in-memory store). Saving is
+  tried on the live game only (see `publish`).
 
 ## 3. Read what happened
 

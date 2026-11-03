@@ -191,6 +191,23 @@ function Stations.returnUnusedCounter(farm: Farm)
 	end
 end
 
+-- A held catch or a planned garden chore belongs to the slime on its way with it (busySpots: "work:<area>:<slot>"). When no
+-- slime is (sold, moved to other work), the catch goes in the bin as soon as it fits and the chore is dropped: the crop has
+-- not changed yet, so the next worker does it. Without this the place stays jammed until the player rejoins.
+function Stations.freeAbandoned(farm: Farm, busySpots: { [string]: boolean })
+	for _, areaId in Config.Work.Areas do
+		local workArea = (farm.work :: any)[areaId]
+		for index, slot in workArea.slots do
+			if not busySpots["work:" .. areaId .. ":" .. index] then
+				slot.task, slot.plot = nil, nil
+				if slot.pending and Food.add(workArea.box, slot.pending, 1, Config.Work.BoxCapacity) > 0 then
+					slot.pending = nil
+				end
+			end
+		end
+	end
+end
+
 function Stations.setCookRecipe(farm: Farm, slotIndex: number, recipeId: string): boolean
 	local slot = if type(slotIndex) == "number" and slotIndex % 1 == 0 then farm.work.kitchen.slots[slotIndex] else nil
 	if not slot or not Food.recipeUnlocked(recipeId, farm.areas.kitchen.level) then

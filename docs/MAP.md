@@ -180,8 +180,8 @@ the owner's art style and is checked against their paintings.
 
 - 8 players a server (one plot each). A new player gets a free plot; their plot appears with
   their farm when they join and clears when they leave.
-- StreamingEnabled: far plots and quarters stream out; other players' plots show a light
-  version from afar. Monster count, particles and animated slimes are capped per client.
+- StreamingEnabled (set for players by `tools/build_publish.luau`: MinRadius 64, TargetRadius 400):
+  far plots and quarters stream out; other players' plots show a light version from afar. Monster count, particles and animated slimes are capped per client.
 - One art style everywhere: chunky, rounded, saturated cartoon models matching the owner's
   paintings; bright soft daylight; the Wild Garden slightly more magical (fireflies, glow).
 

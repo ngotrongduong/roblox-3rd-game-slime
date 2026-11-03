@@ -1474,7 +1474,14 @@ local function tick(player: Player, session: Session)
 			workReady[id] = actor.action.spot
 		end
 	end
+	local busySpots: { [string]: boolean } = {}
+	for _, actor in session.actors do
+		if actor.workPhase and actor.action then
+			busySpots[actor.action.spot] = true
+		end
+	end
 	PlayerData.update(player, function(data: any)
+		Stations.freeAbandoned(data, busySpots)
 		-- Stage upgrades may add beds. Grow the saved array before the simulation, never in the renderer.
 		do
 			local plot = Plots.model(session.plot)

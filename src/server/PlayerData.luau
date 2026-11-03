@@ -48,12 +48,12 @@ local function runCallback(what: string, fn: (...any) -> ...any, ...: any)
 	end
 end
 
--- The real DataStore on live servers. In Studio without API access (or an unpublished place) an
--- in-memory store, loudly, so testing still works; a live server never falls back.
+-- The real DataStore on live servers. A Studio play test never touches real saves: an in-memory
+-- store, loudly, unless Save.StudioUsesRealStore says otherwise; a live server never falls back.
 local function openDataStore(): (ProfileStore.DataStoreLike, boolean)
 	local isStudio = RunService:IsStudio()
-	if isStudio and game.PlaceId == 0 then
-		warn(PREFIX, "unpublished place: using an in-memory store, progress in this test is NOT saved")
+	if isStudio and not Save.StudioUsesRealStore then
+		warn(PREFIX, "Studio play test: using an in-memory store, progress in this test is NOT saved")
 		return ProfileStore.memoryStore(), false
 	end
 	local ok, result = pcall(function()

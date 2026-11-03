@@ -1431,6 +1431,8 @@ Config.Save = {
 	-- DataStore name and key: one key a player, Save.KeyPrefix .. userId.
 	StoreName = "GooLineage_Profiles_v1",
 	KeyPrefix = "Player_",
+	-- A test switch, off in anything committed: a Studio play test may use the real store only when on.
+	StudioUsesRealStore = false,
 	-- The data shape's version. Bump it with each change of shape and add a migration for it.
 	-- 2: discoveries gained the material bucket (docs/MATERIALS.md).
 	-- 3: appearance determines colour genes; the pattern gene is retired.

@@ -1,6 +1,18 @@
 # Status
 
-## 2026-11-03 — the kitchen: start here
+## 2026-11-03 — before a publish, from the whole-repo audit: start here
+
+Fixed: a publish now goes through `lune run tools/build_publish.luau`, which writes `assets/raw/Publish.rbxl` (the MapWork world, the repo's code, no labs or test stages, streaming on);
+a Studio play test always uses the in-memory store (`Config.Save.StudioUsesRealStore`, off); a catch or garden chore whose slime is gone no longer jams its work place (`Stations.freeAbandoned`).
+
+Proved by playing `Publish.rbxl` in Studio: the village, Market and slimes load with no errors; quick travel works; going to the far side of the valley dropped the client from about 9,000 parts to
+2,630, and coming home brought back the village, prompts, bins and pad labels. Re-assigning a carrying fisher in play put the fish in the storehouse and the next catch came 59 s later;
+a gardener re-assigned between chores carried on. Not measured: a real phone, 8 players at once, a real publish.
+
+Still open from the audit (`Should fix`): a lost save lock skips the leaving clean-up; a lock can stay up to 10 minutes after a crash; the capacity formula is written twice; the request rules in
+`VillageRemotes` have no tests.
+
+## 2026-11-03 — the kitchen
 
 Done and committed on `main`, not published (rules in `docs/GAMEPLAY.md` §5, numbers and measurements in `docs/ECONOMY.md`): a recipe per cook, 16 dishes with rarity
 and timed buffs, Feed and When hungry, selling dishes at the Market, food rarity by pond and garden level, the coin vault, real upgrade prices (FreeUpgrades off),
@@ -39,7 +51,7 @@ Not done or not known
 - Still unlike the picture: grey flagstones (the tint does not take), thinner tree crowns. The Sell button at the buyer's has not been pressed in a test,
   and real DataStores for the board are untested.
 - `rbxassetid://203785492` and `14025376080` log asset errors in play; sources not looked for.
-- VIP products and prices wait for the owner; none exist. Before a publish: remove the `SlimeMotionLab` / `SlimeMaterials` bar in the sky.
+- VIP products and prices wait for the owner; none exist.
 
 ## 2026-11-02 — village bar done, economy researched
 
