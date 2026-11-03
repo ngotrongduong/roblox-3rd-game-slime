@@ -31,6 +31,14 @@ game is English** (UI, signs, labels, names, even greybox labels) — the owner'
 One plain command per call: no `cd &&`, no pipes, no heredocs. Anything with several steps goes in
 a script file, run with one command.
 
+**The owner's hard rule (2026-11-03): never make him click "Allow once".**
+- An inline command never contains `|`, `;`, `&&`, `Where-Object`, `Select-Object`, `Format-Table`, `ForEach-Object`, a
+  `{ }` script block or `$(...)`.
+- Finding files or folders is Glob, searching text is Grep, reading is Read.
+- Process lists, filtered output or anything with several steps go in a `.ps1` file in the scratchpad, run as
+  `& "<path>.ps1"`.
+- Check every shell command against this rule before running it. Every agent brief repeats it.
+
 - `& "C:\Roblox 3rd game\tools\check.ps1"` — format (stylua), lint (selene), tests (lune) and build
   (rojo). Must end with `CHECK OK` before work is reported as done.
 - Git: `git -C "C:/Roblox 3rd game" …`, with `-c user.name=ngotrongduong -c
