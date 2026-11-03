@@ -41,6 +41,7 @@ local FarmState = require(ReplicatedStorage.Shared.FarmState)
 local Layout = require(ReplicatedStorage.Shared.Layout)
 local Rng = require(ReplicatedStorage.Shared.Rng)
 local Zombies = require(ReplicatedStorage.Shared.Zombies)
+local PantryStages = require(script.Parent.PantryStages)
 local PlayerData = require(script.Parent.PlayerData)
 local Plots = require(script.Parent.Plots)
 local Village = require(script.Parent.Village)
@@ -651,6 +652,9 @@ end
 -- members that cannot go now (asleep, tired, dead, away) stay home. Returns whether it went, else why not; nothing
 -- changes on a refusal.
 local function launch(session: Session, team: March, group: Group, farm: any, now: number): (boolean, string?)
+	if not Zombies.teamOpen(farm, team.index) then
+		return false, "LOCKED"
+	end
 	local line = farm.teams[team.index]
 	local going: { string } = {}
 	for _, id in line.members do
@@ -703,7 +707,8 @@ end
 local function repeatTeam(session: Session, team: March, farm: any, now: number)
 	local line = farm.teams[team.index]
 	team.waiting = ""
-	if not line.repeatOn then
+	-- (a team of an old save the village has not opened yet stays home)
+	if not line.repeatOn or not Zombies.teamOpen(farm, team.index) then
 		return
 	end
 	local alive = 0
@@ -893,13 +898,24 @@ function ZombieFights.near(player: Player, point: Vector3, range: number): boole
 	return near(player, point, range)
 end
 
--- Whether the player stands at their own village gate, where the teams' line-ups are set.
+-- Whether the player stands at the team banner inside their own village gate, where the teams' line-ups are set.
 function ZombieFights.nearGate(player: Player): boolean
 	local plot = Plots.of(player)
 	if not plot then
 		return false
 	end
-	return near(player, Layout.plotGate(plot).Position, Config.Zombies.GateRangeStuds)
+	return near(player, Layout.plotMuster(plot).Position, Config.Zombies.GateRangeStuds)
+end
+
+-- The team banner stands inside the gate of every village built (its owner's prompt is UiTeams'), from the prop kit.
+local function placeBanner(plot: number, model: Model)
+	local Z = Config.Zombies
+	local banner = PantryStages.place(model, Layout.plotMuster(plot), Z.MusterKit, 0, 0, Z.MusterHeight, Z.MusterFoot)
+	if banner then
+		banner.Name = "TeamBanner"
+	else
+		warn(Config.LogPrefix, "zombies: no", Z.MusterKit, "in the prop kit, plot", plot, "has no team banner")
+	end
 end
 
 function ZombieFights.start()
@@ -917,6 +933,9 @@ function ZombieFights.start()
 	end
 	assert(remote:IsA("RemoteEvent"), "Fight remote must be a RemoteEvent")
 	fightRemote = remote
+	Plots.onBuilt(function(_player: Player, plot: number, model: Model)
+		placeBanner(plot, model)
+	end)
 	RunService.Heartbeat:Connect(function(dt: number)
 		for _, player in Players:GetPlayers() do
 			local plot = Plots.of(player)

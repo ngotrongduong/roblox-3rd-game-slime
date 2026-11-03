@@ -1,5 +1,13 @@
 # Status
 
+## 2026-11-03 — team banner at the gate, shorter prompt ranges, teams open with the village
+
+The owner: the Teams prompt and the attack prompt worked from very far; put something at the gate for the line-ups; more teams as the village
+levels up (4 at most). Now a team banner stands just inside the gate (Teams prompt within 10 studs), an attack needs 16 studs, and teams 2-4 open
+at village levels 10, 20, 30 (`docs/GAMEPLAY.md` §8 "Teams"). Proved in a Studio play test: the banner beside the path, the prompt shown only near
+it, team 2 refused (LOCKED) at village level 1, a line-up refused from 18 studs, an attack refused from 21 studs and sent from 12, only tab 1 shown at
+level 1 and tabs 1-3 at level 20.
+
 ## 2026-11-03 — fights made dramatic (owner: "4 slimes attack in unison, no impact effects")
 
 Done in three steps (`docs/GAMEPLAY.md` §8 "The fight"): each fighter on its own beat with a wind-up, a lunge, the owner's battle art on

@@ -49,6 +49,7 @@ local reasons: { [string]: string } = {
 	IN_TEAM = "In another team.",
 	NO_MEMBERS = "Nobody can go.",
 	BAD_TEAM = "No such team.",
+	LOCKED = "Upgrade the village first.",
 	NO_GROUP = "Group is gone.",
 	NO_CAMPS = "No camps yet.",
 	BUSY = "One moment.",

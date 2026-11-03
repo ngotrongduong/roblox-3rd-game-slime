@@ -24,6 +24,16 @@ local function squadOf(level: number): { any }
 	return out
 end
 
+-- Opens every team: the village grown big enough (all areas but the breeding pen, whose level changes how fast babies grow).
+local function openTeams(farm: any)
+	for _, id in Config.Village.Areas do
+		if id ~= "breeding" then
+			farm.areas[id].level = Config.Village.MaxLevel
+		end
+	end
+	assert(Zombies.teamsOpen(FarmState.villageLevel(farm.areas)) == Config.Zombies.Teams, "every team open")
+end
+
 local function winRate(playerLevel: number, camp: number): number
 	local wins = 0
 	for seed = 1, 200 do
@@ -304,6 +314,7 @@ return function(T: any)
 	end)
 	T.test("a team is 0 to 4 different slimes that are free; a slime in another team moves", function()
 		local farm = FarmKit.farm(NOW, FarmKit.many(8))
+		openTeams(farm)
 		local function refusal(index: number, ids: { string }, isOut: ((string) -> boolean)?): string?
 			local ok, why = Zombies.setTeam(farm, index, ids, NOW, isOut)
 			T.ok(not ok, "refused")
@@ -337,8 +348,28 @@ return function(T: any)
 		T.eq(refusal(1, { "s5" }), "BUSY")
 		T.same(farm.teams[1].members, {}, "a refusal changes nothing")
 	end)
+	T.test("teams open as the village grows, 4 at most; a closed team cannot be filled, only emptied", function()
+		local opens = Config.Zombies.TeamOpensAt
+		T.eq(Zombies.teamsOpen(1), 1)
+		T.eq(Zombies.teamsOpen(opens[2] - 1), 1)
+		T.eq(Zombies.teamsOpen(opens[2]), 2)
+		T.eq(Zombies.teamsOpen(opens[#opens]), Config.Zombies.Teams)
+		T.eq(Zombies.teamsOpen(Config.Village.MaxLevel), Config.Zombies.Teams)
+		local farm = FarmKit.farm(NOW, FarmKit.many(8))
+		T.eq(FarmState.villageLevel(farm.areas) < opens[2], true, "a new village")
+		T.ok(Zombies.setTeam(farm, 1, { "s1" }, NOW))
+		T.eq(select(2, Zombies.setTeam(farm, 2, { "s2" }, NOW)), "LOCKED")
+		-- (an old save may hold a line-up in a team the village has not opened: it can still be emptied)
+		farm.teams[2].members = { "s3" }
+		T.ok(Zombies.setTeam(farm, 2, {}, NOW))
+		T.ok(not Zombies.teamOpen(farm, 2))
+		openTeams(farm)
+		T.ok(Zombies.teamOpen(farm, 4))
+		T.ok(Zombies.setTeam(farm, 2, { "s2" }, NOW))
+	end)
 	T.test("one job at a time: a team slime cannot work or breed, a worker or parent cannot join a team", function()
 		local farm = FarmKit.farm(NOW, FarmKit.many(6))
+		openTeams(farm)
 		T.ok(Zombies.setTeam(farm, 1, { "s1", "s2" }, NOW))
 		T.eq(select(2, Stations.canAssign(farm, "s1", "fishing", 1, false, NOW)), "IN_TEAM")
 		T.eq(select(2, Stations.assign(farm, "s2", "garden", 1, true, NOW)), "IN_TEAM")
@@ -355,6 +386,7 @@ return function(T: any)
 	end)
 	T.test("a team survives a slime lost for good: removeSlime takes it out of its team", function()
 		local farm = FarmKit.farm(NOW, FarmKit.many(6))
+		openTeams(farm)
 		T.ok(Zombies.setTeam(farm, 1, { "s1", "s2" }, NOW))
 		T.ok(Zombies.setTeam(farm, 3, { "s3" }, NOW))
 		T.ok(FarmState.removeSlime(farm, "s1"))

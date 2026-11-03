@@ -193,6 +193,14 @@ playing). Nothing dies of hunger and no stat is ever lost to hunger.
 - Spare slimes are **sold at the shop** in the Market; the higher the level, the more coins (`Mutations.sellValue`).
 - In this build: selling at the shop and paying coins for area upgrades; fights and ghosts later.
 
+### Teams (the owner, 2026-11-03)
+
+- Line-ups are set at the **team banner** just inside the village gate (`Layout.plotMuster`, the kit's
+  `Config.Zombies.MusterKit`); the Teams prompt works only within `GateRangeStuds` (10) of it, and an attack only within
+  `SendRangeStuds` (16) of the zombie group. Both used to work from far away.
+- Teams open as the village grows: team n from village level `TeamOpensAt[n]` (1, 10, 20, 30), 4 at most. A closed team
+  cannot be filled, sent or set to repeat (`LOCKED`); a line-up left in one by an old save can still be emptied.
+
 ### The fight (the owner, 2026-11-03: "each slime is its own individual, so is each zombie")
 
 - The server runs the fight (`shared/Combat`, `server/ZombieFights`); the client only draws its events

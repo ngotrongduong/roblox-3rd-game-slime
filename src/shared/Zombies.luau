@@ -219,9 +219,26 @@ function Zombies.canSend(farm: Farm, slime: Slime, now: number): boolean
 	return not Stations.isBusy(farm, slime.id) and not FarmState.inPair(farm, slime.id)
 end
 
+-- How many teams a village of this level can set and send (Config.Zombies.TeamOpensAt): teams 1..this.
+function Zombies.teamsOpen(villageLevel: number): number
+	local open = 1
+	for index, level in Config.Zombies.TeamOpensAt do
+		if villageLevel >= level then
+			open = math.max(open, index)
+		end
+	end
+	return math.min(open, Config.Zombies.Teams)
+end
+
+-- Whether team `teamIndex` of this farm is open yet.
+function Zombies.teamOpen(farm: Farm, teamIndex: number): boolean
+	return teamIndex <= Zombies.teamsOpen(FarmState.villageLevel(farm.areas))
+end
+
 -- Sets the line-up of team `teamIndex` to these slimes (none empties it). A slime already in another team moves here.
 -- `isOut` says which slimes are away on a march. Returns whether it was set, else why not; nothing changes on a refusal:
--- BAD_TEAM, BAD_SIZE, DUPLICATE, NO_SLIME, BABY, DEAD, BUSY (at a job or in a pair), OUT.
+-- BAD_TEAM, LOCKED (the village is not big enough for it yet; it can still be emptied), BAD_SIZE, DUPLICATE, NO_SLIME,
+-- BABY, DEAD, BUSY (at a job or in a pair), OUT.
 function Zombies.setTeam(
 	farm: Farm,
 	teamIndex: number,
@@ -232,6 +249,8 @@ function Zombies.setTeam(
 	local team = if teamIndex % 1 == 0 then farm.teams[teamIndex] else nil
 	if not team then
 		return false, "BAD_TEAM"
+	elseif #ids > 0 and not Zombies.teamOpen(farm, teamIndex) then
+		return false, "LOCKED"
 	elseif #ids > Config.Zombies.TeamSize then
 		return false, "BAD_SIZE"
 	end

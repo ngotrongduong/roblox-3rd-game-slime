@@ -191,10 +191,20 @@ Config.Zombies = {
 	FightStepSeconds = 0.1,
 	MaxStepsPerFrame = 5,
 	FightMaxSeconds = 300,
-	-- The player must stand this close to a group to order an attack on it, to the village gate to set a team's line-up,
-	-- and to the Market to sell a slime.
-	SendRangeStuds = 60,
-	GateRangeStuds = 40,
+	-- The player must stand this close to a group to order an attack on it, to the team banner inside the village gate to
+	-- set a team's line-up (the owner, 2026-11-03: both worked from very far), and to the Market to sell a slime.
+	SendRangeStuds = 16,
+	GateRangeStuds = 10,
+	-- The team banner (the kit's MusterKit): MusterAcross studs to the side of the gate's middle and MusterIn studs into
+	-- the village, MusterHeight tall, at most MusterFoot wide (Layout.plotMuster).
+	MusterKit = "BannerFlag",
+	MusterAcross = 8,
+	MusterIn = 10,
+	MusterHeight = 8,
+	MusterFoot = 4,
+	-- Team n can be set and sent from village level TeamOpensAt[n] (the owner, 2026-11-03: more teams as the village
+	-- grows, 4 at most).
+	TeamOpensAt = { 1, 10, 20, 30 },
 	-- The longest group id a saved team may name as its target (ids look like "c3g4").
 	TargetIdMaxLength = 16,
 	ShopRangeStuds = 40,

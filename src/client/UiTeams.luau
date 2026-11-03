@@ -1,5 +1,6 @@
 --!strict
--- The screens of the zombie teams (the owner, 2026-11-02): at the village gate a sheet sets up the four teams' line-ups from
+-- The screens of the zombie teams (the owner, 2026-11-02): at the team banner just inside the village gate a sheet sets up
+-- the line-ups of the teams the village has opened (Config.Zombies.TeamOpensAt) from
 -- the one slime list; at a zombie group a small sheet orders a team to attack it; a chip per team on the left edge shows
 -- where it is; a notice at the right edge says who came back and what it earned. They read what the server publishes (the
 -- Teams folder, slime attributes, workspace.ZombieCamps) and ask through UiSquad's context; the server decides, so a button it
@@ -8,6 +9,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Config = require(ReplicatedStorage.Shared.Config)
 local Layout = require(ReplicatedStorage.Shared.Layout)
+local Zombies = require(ReplicatedStorage.Shared.Zombies)
 local UiKit = require(script.Parent.UiKit)
 local UiSlimeList = require(script.Parent.UiSlimeList)
 local UiSlimes = require(script.Parent.UiSlimes)
@@ -44,6 +46,13 @@ local gatePlot = 0
 local function context(): Context
 	assert(ctx, "UiTeams.start first")
 	return ctx
+end
+
+-- How many teams the village has opened (Config.Zombies.TeamOpensAt), by the level it publishes: only those show.
+local function teamsOpen(): number
+	local own = context().own()
+	local level = if own then own:GetAttribute("VillageLevel") else nil
+	return Zombies.teamsOpen(if type(level) == "number" then level else 1)
 end
 
 local function slimeById(id: string): Configuration?
@@ -386,11 +395,16 @@ local function openTeams(point: Vector3)
 
 	tick = function()
 		teamsNow = ZombieTeams.all()
+		local open = teamsOpen()
+		if tab > open then
+			tab = 1
+		end
 		local mine = teamsNow[tab]
 		if not mine then
 			return
 		end
 		for index, button in tabButtons do
+			button.Visible = index <= open
 			UiKit.setStyle(button, if index == tab then "primary" else "secondary")
 			local team = teamsNow[index]
 			local state = tabStates[index]
@@ -474,6 +488,7 @@ local function openAttack(groupId: string)
 	UiKit.make("UIPadding", { PaddingRight = UDim.new(0, 8), PaddingBottom = UDim.new(0, 4) }, scroller)
 
 	type Card = {
+		root: GuiObject,
 		portraits: Frame,
 		powerLabel: TextLabel,
 		stateIcon: ImageLabel,
@@ -484,7 +499,7 @@ local function openAttack(groupId: string)
 	local cards: { [number]: Card } = {}
 	local busy = false
 	for index = 1, Z.Teams do
-		local _, body = UiKit.card(scroller, { Size = UDim2.new(1, 0, 0, V.CardHeight), LayoutOrder = index })
+		local root, body = UiKit.card(scroller, { Size = UDim2.new(1, 0, 0, V.CardHeight), LayoutOrder = index })
 		UiKit.label(body, tostring(index), U.TextNormal, "Brown", {
 			AnchorPoint = Vector2.new(0, 0.5),
 			Position = UDim2.fromScale(0, 0.5),
@@ -571,6 +586,7 @@ local function openAttack(groupId: string)
 			end,
 		})
 		cards[index] = {
+			root = root,
 			portraits = portraits,
 			powerLabel = powerLabel,
 			stateIcon = icon,
@@ -587,9 +603,11 @@ local function openAttack(groupId: string)
 			UiKit.closeModal()
 			return
 		end
+		local open = teamsOpen()
 		for index, card in cards do
 			local team = ZombieTeams.get(index)
-			if team then
+			card.root.Visible = index <= open
+			if team and index <= open then
 				local members = membersOf(team)
 				if table.concat(team.members, ",") ~= card.key then
 					card.key = table.concat(team.members, ",")
@@ -677,8 +695,8 @@ function UiTeams.placeGate()
 		return
 	end
 	gatePlot = plot
-	local gate = Layout.plotGate(plot).Position
-	local at = CFrame.new(gate.X, Config.Map.GroundY + V.AnchorLift, gate.Z)
+	-- on the team banner just inside the gate (ZombieFights.placeBanner stands it there)
+	local at = Layout.plotMuster(plot) + Vector3.new(0, V.AnchorLift, 0)
 	local old = gateAnchor
 	if old then
 		old.CFrame = at
@@ -717,8 +735,9 @@ function UiTeams.refresh()
 		return
 	end
 	local now = workspace:GetServerTimeNow()
+	local open = teamsOpen()
 	for _, team in ZombieTeams.all() do
-		local show = #team.members > 0 or team.state ~= "home"
+		local show = (#team.members > 0 and team.index <= open) or team.state ~= "home"
 		local item = chips[team.index]
 		if show or item then
 			item = chipFor(team.index)

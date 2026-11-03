@@ -143,6 +143,12 @@ function Layout.plotGate(plot: number): CFrame
 	return Layout.sliceGate(plot)
 end
 
+-- The team banner of a plot, on the ground just inside its gate, facing into the village (Config.Zombies.Muster*).
+function Layout.plotMuster(plot: number): CFrame
+	local Z = Config.Zombies
+	return Layout.plotGate(plot) * CFrame.new(Z.MusterAcross, M.GroundY, Z.MusterIn) * CFrame.Angles(0, math.pi, 0)
+end
+
 -- Which Wild Garden quarter a point is in, or nil outside the Wild Garden.
 function Layout.quarterAt(pos: Vector3): Quarter?
 	local flat = Vector3.new(pos.X, 0, pos.Z)

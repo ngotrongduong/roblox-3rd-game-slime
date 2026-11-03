@@ -156,7 +156,9 @@ function VillageRequests.run(farm: any, data: any, now: number, env: Env): (bool
 		return Zombies.setTeam(farm, data.team, data.slimeIds, now, env.isOut)
 	elseif action == "SetTeamRepeat" then
 		local team = farm.teams[data.team]
-		if data.on and #team.members == 0 then
+		if data.on and not Zombies.teamOpen(farm, data.team) then
+			return false, "LOCKED"
+		elseif data.on and #team.members == 0 then
 			return false, "NO_MEMBERS"
 		end
 		team.repeatOn = data.on
