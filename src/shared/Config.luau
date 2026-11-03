@@ -1447,7 +1447,8 @@ Config.Save = {
 
 	-- Session lock: a lock not refreshed for LockStaleSeconds belongs to a dead server and may be
 	-- taken over. A live server refreshes its locks every LockRefreshSeconds even when idle.
-	LockStaleSeconds = 200,
+	-- (long enough to outlast a few minutes of DataStore trouble: a failed write also delays the lock's refresh)
+	LockStaleSeconds = 300,
 	LockRefreshSeconds = 60,
 	-- Joining while another server still holds a fresh lock (a quick server hop): retry this many
 	-- times, this far apart, then kick with a friendly "rejoin in a few minutes" instead of loading stale data.
