@@ -10,6 +10,7 @@
 local Breeding = if script then require(script.Parent.Breeding) else require("./Breeding")
 local Config = if script then require(script.Parent.Config) else require("./Config")
 local FarmState = if script then require(script.Parent.FarmState) else require("./FarmState")
+local Rewards = if script then require(script.Parent.Rewards) else require("./Rewards")
 local Stations = if script then require(script.Parent.Stations) else require("./Stations")
 local VillageRules = if script then require(script.Parent.Village) else require("./Village")
 local Zombies = if script then require(script.Parent.Zombies) else require("./Zombies")
@@ -358,6 +359,26 @@ local intros: { [string]: Intro } = {
 		end,
 		done = function(farm)
 			return hasWorker(farm, "training")
+		end,
+	},
+	rewards = {
+		line = "A gift waits! Tap the trophy: daily gifts, quests and play rewards.",
+		target = "hud:rewards",
+		when = function(farm, now)
+			return Rewards.ready(farm, now) > 0
+		end,
+		done = function(farm)
+			return Rewards.everClaimed(farm)
+		end,
+	},
+	index = {
+		line = "A new kind of slime! See every kind you found in the Index.",
+		target = "hud:slimes",
+		when = function(farm)
+			return Rewards.found(farm) > 1
+		end,
+		done = function(farm)
+			return farm.rewards.indexSeen
 		end,
 	},
 	recipes = {

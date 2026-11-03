@@ -89,6 +89,17 @@ end
 -- A live portrait of the slime's own look. Returns the framed box and a function that builds the viewport (cheap
 -- lists build it only when the card scrolls into view).
 local function buildView(slime: Configuration): ViewportFrame
+	return UiSlimes.lookView({
+		Colour = slime:GetAttribute("Colour"),
+		Material = slime:GetAttribute("Material"),
+		DualId = slime:GetAttribute("DualId"),
+		SecretId = slime:GetAttribute("SecretId"),
+		Scale = 1,
+	}, true)
+end
+
+-- A portrait of a look (SlimeLook's attributes), with the owner's face or without one (the Index's shadows).
+function UiSlimes.lookView(attrs: { [string]: any }, face: boolean): ViewportFrame
 	do
 		local view = UiKit.make("ViewportFrame", {
 			Name = "Portrait",
@@ -98,13 +109,7 @@ local function buildView(slime: Configuration): ViewportFrame
 			LightColor = Color3.new(1, 1, 1),
 		}, nil)
 		local world = UiKit.make("WorldModel", nil, view)
-		local model = SlimeLook.build({
-			Colour = slime:GetAttribute("Colour"),
-			Material = slime:GetAttribute("Material"),
-			DualId = slime:GetAttribute("DualId"),
-			SecretId = slime:GetAttribute("SecretId"),
-			Scale = 1,
-		})
+		local model = SlimeLook.build(attrs)
 		model:PivotTo(CFrame.Angles(0, math.pi, 0))
 		model.Parent = world
 		local camera = UiKit.make("Camera", nil, view)
@@ -116,7 +121,8 @@ local function buildView(slime: Configuration): ViewportFrame
 		-- The owner's own face pictures (the "normal" expression) laid over the body at its face height. One body height
 		-- is `unit` of the portrait.
 		local unit = U.PortraitFaceZoom / (2 * U.PortraitDistance * math.tan(math.rad(U.PortraitFov / 2)))
-		for _, name in { "normal_eyeL", "normal_eyeR", "normal_mouth" } do
+		local parts: { string } = if face then { "normal_eyeL", "normal_eyeR", "normal_mouth" } else {}
+		for _, name in parts do
 			local sprite = FaceArt.Sprites[name]
 			UiKit.make("ImageLabel", {
 				Name = name,

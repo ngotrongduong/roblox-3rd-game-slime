@@ -4,6 +4,7 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Config = require(ReplicatedStorage.Shared.Config)
+local UiIndex = require(script.Parent.UiIndex)
 local UiKit = require(script.Parent.UiKit)
 local UiSlimeList = require(script.Parent.UiSlimeList)
 local UiSlimes = require(script.Parent.UiSlimes)
@@ -18,6 +19,8 @@ export type Context = {
 local UiBook = {}
 local ctx: Context? = nil
 local filter = U.BookFilters[1]
+-- "slimes" or "index"
+local page = "slimes"
 local detail: string? = nil
 local view: UiSlimeList.List? = nil
 local detailCard: UiSlimes.Card? = nil
@@ -127,15 +130,41 @@ render = function()
 		return
 	end
 	UiSlimes.releaseAll()
+	UiIndex.release()
 	UiKit.clear(host)
 	UiKit.clear(bar)
 	detailCard = nil
-	UiKit.icon(bar, "slimes", U.Touch - 8, { AnchorPoint = Vector2.new(0, 0.5), Position = UDim2.fromScale(0, 0.5) })
+	-- The two pages of the book: the player's own slimes, and the Index of every kind there is.
+	UiKit.segmented(
+		bar,
+		{
+			{ id = "slimes", icon = "slimes" },
+			{ id = "index", icon = "collection" },
+		},
+		page,
+		function(id)
+			page = id
+			render()
+		end,
+		{ Name = "Pages", ItemWidth = U.Touch, Size = UDim2.fromOffset(U.Touch * 2 + U.Gap, U.Touch) }
+	)
 	countLabel = UiKit.label(bar, "", U.TextNormal, "Brown", {
-		Position = UDim2.fromOffset(U.Touch - 6, 0),
-		Size = UDim2.fromOffset(56, U.Touch),
+		Position = UDim2.fromOffset(U.Touch * 2 + U.Gap * 3, 0),
+		Size = UDim2.fromOffset(120, U.Touch),
 		TextTruncate = Enum.TextTruncate.None,
 	})
+	if page == "index" then
+		local own = ctx.own()
+		local have, all = UiIndex.totals(own)
+		local label = countLabel :: TextLabel
+		label.Text = "Index " .. have .. "/" .. all
+		UiIndex.draw(host, own)
+		-- (the Index's intro is done once the player has looked at it)
+		if own and own:GetAttribute("IndexSeen") == false then
+			ctx.request({ action = "IndexSeen" }, function() end)
+		end
+		return
+	end
 	local filters = {}
 	for _, id in U.BookFilters do
 		table.insert(filters, { id = id, text = filterLabels[id] })
@@ -170,6 +199,9 @@ function UiBook.refresh()
 		return
 	end
 	local own = if ctx then ctx.own() else nil
+	if page == "index" then
+		return
+	end
 	if countLabel and own then
 		countLabel.Text = tostring(own:GetAttribute("Population") or 0)
 			.. "/"
@@ -199,11 +231,17 @@ function UiBook.open(context: Context)
 	end
 	ctx = context
 	detail = nil
+	-- the Index's intro opens the book on the Index
+	local own = context.own()
+	if own and own:GetAttribute("GuideId") == "index" then
+		page = "index"
+	end
 	local modal = UiKit.openModal("book", {
 		Width = U.BookWidth,
 		Height = U.BookHeight,
 		OnClose = function()
 			UiSlimes.releaseAll()
+			UiIndex.release()
 			view, detailCard, countLabel, content, header = nil, nil, nil, nil, nil
 			detail = nil
 		end,

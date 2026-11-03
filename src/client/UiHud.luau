@@ -19,6 +19,8 @@ local villageLabel: TextLabel? = nil
 local villageFill: Frame? = nil
 local chips: { [string]: UiKit.Chip } = {}
 local lastOwn: Folder? = nil
+local rewardsButton: ImageButton? = nil
+local badge: TextLabel? = nil
 -- Whether the coins were at the cap at the last look; nil until the vault's cap is known.
 local coinsFull: boolean? = nil
 
@@ -41,7 +43,7 @@ local function item(name: string): Instance?
 	return found
 end
 
-function UiHud.start(root: Frame, onBook: () -> (), onTravel: (place: string) -> ())
+function UiHud.start(root: Frame, onBook: () -> (), onTravel: (place: string) -> (), onRewards: () -> ())
 	-- The strip shares the line of Roblox's own buttons: its own ScreenGui in the free space the engine leaves in the topbar.
 	local host = root:FindFirstAncestorOfClass("ScreenGui") :: ScreenGui
 	local top = UiKit.make("ScreenGui", {
@@ -117,7 +119,28 @@ function UiHud.start(root: Frame, onBook: () -> (), onTravel: (place: string) ->
 	UiKit.roundButton(group, "home", U.TravelButton, function()
 		onTravel("Home")
 	end, { LayoutOrder = 2 })
-	UiKit.roundButton(group, "slimes", U.BookButton, onBook, { LayoutOrder = 3 })
+	-- The trophy: the daily check-in, quests and online gifts (UiRewards), with a red count while something waits. Shown once
+	-- the tutorial is over.
+	local trophy = UiKit.roundButton(group, "rewards", U.BookButton, onRewards, { LayoutOrder = 3, Visible = false })
+	local dot = UiKit.make("Frame", {
+		Name = "Badge",
+		AnchorPoint = Vector2.new(1, 0),
+		Position = UDim2.fromScale(1, 0),
+		Size = UDim2.fromOffset(Config.Rewards.BadgeSize, Config.Rewards.BadgeSize),
+		BackgroundColor3 = UiKit.colour("Red"),
+		BorderSizePixel = 0,
+		Visible = false,
+		ZIndex = 5,
+	}, trophy)
+	UiKit.make("UICorner", { CornerRadius = UDim.new(0.5, 0) }, dot)
+	UiKit.make("UIStroke", { Color = UiKit.colour("Cream"), Thickness = 2 }, dot)
+	badge = UiKit.label(dot, "", U.TextTiny, "Cream", {
+		Size = UDim2.fromScale(1, 1),
+		TextXAlignment = Enum.TextXAlignment.Center,
+		ZIndex = 6,
+	})
+	rewardsButton = trophy
+	UiKit.roundButton(group, "slimes", U.BookButton, onBook, { LayoutOrder = 4 })
 	edge = group
 
 	-- Last in the strip: the village's level over a bar of the upgrades done towards the next one.
@@ -145,6 +168,34 @@ function UiHud.start(root: Frame, onBook: () -> (), onTravel: (place: string) ->
 		TextXAlignment = Enum.TextXAlignment.Center,
 		ZIndex = 3,
 	})
+	-- The luck potion's time left, only while one runs.
+	chips.luck = UiKit.chip(bar, "luck", "", order + 2)
+	chips.luck.root.Visible = false
+end
+
+-- The trophy button and the luck chip, from the village folder (called every second): the trophy shows once the tutorial is
+-- over, its badge counts the rewards that wait; the chip counts the luck potion down.
+function UiHud.rewards(own: Folder?)
+	local button, label = rewardsButton, badge
+	if not (button and label and own) then
+		return
+	end
+	button.Visible = own:GetAttribute("RewardsOpen") == true
+	local ready = own:GetAttribute("RewardsReady")
+	local count = if type(ready) == "number" then ready else 0
+	local dot = label.Parent :: GuiObject
+	dot.Visible = count > 0
+	label.Text = if count > 9 then "9+" else tostring(count)
+	local luck = chips.luck
+	local untilTime = own:GetAttribute("LuckUntil")
+	local left = if type(untilTime) == "number" then untilTime - workspace:GetServerTimeNow() else 0
+	if luck then
+		luck.root.Visible = left > 0
+		if left > 0 then
+			local seconds = math.floor(left)
+			luck.set(string.format("x%d %d:%02d", Config.Luck.Potion, seconds // 60, seconds % 60))
+		end
+	end
 end
 
 function UiHud.setVisible(visible: boolean)

@@ -7,6 +7,7 @@ local Config = if script then require(script.Parent.Config) else require("./Conf
 local FarmState = if script then require(script.Parent.FarmState) else require("./FarmState")
 local Food = if script then require(script.Parent.Food) else require("./Food")
 local Guide = if script then require(script.Parent.Guide) else require("./Guide")
+local Rewards = if script then require(script.Parent.Rewards) else require("./Rewards")
 local Shop = if script then require(script.Parent.Shop) else require("./Shop")
 local Stations = if script then require(script.Parent.Stations) else require("./Stations")
 local Village = if script then require(script.Parent.Village) else require("./Village")
@@ -20,6 +21,8 @@ export type Env = {
 	attack: (farm: any, team: number, groupId: string, now: number) -> (boolean, string?),
 	clearWounds: (slimeId: string) -> (),
 	freeUpgrades: boolean,
+	-- Seconds played since the server last wrote the online clock into the save; asking takes them (server/Rewards).
+	unsavedPlay: () -> number,
 }
 
 local VillageRequests = {}
@@ -87,8 +90,12 @@ function VillageRequests.valid(data: any, hasPlot: boolean): boolean
 			and hasPlot
 	elseif action == "GuideSeen" or action == "GuideNext" then
 		return type(data.step) == "string" and #data.step <= Config.Guide.IdMaxLength
-	elseif action == "GuideSkip" then
+	elseif action == "GuideSkip" or action == "ClaimDaily" or action == "ClaimQuestBonus" or action == "IndexSeen" then
 		return true
+	elseif action == "ClaimQuest" then
+		return integer(data.index) and data.index >= 1 and data.index <= Config.Rewards.QuestCount
+	elseif action == "ClaimOnline" then
+		return integer(data.step) and data.step >= 1 and data.step <= #Config.Rewards.Online
 	end
 	return false
 end
@@ -193,6 +200,22 @@ function VillageRequests.run(farm: any, data: any, now: number, env: Env): (bool
 		return Guide.next(farm, data.step, now)
 	elseif action == "GuideSkip" then
 		return Guide.skip(farm, now)
+	elseif action == "ClaimDaily" then
+		return Rewards.claimDaily(farm, now)
+	elseif action == "ClaimQuest" then
+		return Rewards.claimQuest(farm, data.index, now)
+	elseif action == "ClaimQuestBonus" then
+		return Rewards.claimBonus(farm, now)
+	elseif action == "ClaimOnline" then
+		-- (the time played since the server last wrote it counts first)
+		Rewards.addPlayed(farm, now, env.unsavedPlay())
+		return Rewards.claimOnline(farm, data.step, now)
+	elseif action == "IndexSeen" then
+		if farm.rewards.indexSeen then
+			return false, "TAKEN"
+		end
+		farm.rewards.indexSeen = true
+		return true, nil
 	end
 	return false, "BAD_REQUEST"
 end

@@ -1,5 +1,19 @@
 # Status
 
+## 2026-11-04 — daily check-in, daily quests, online gifts and the slime Index
+
+Retention features (`docs/GAMEPLAY.md` §13): a trophy button with a badge opens Daily (7-day check-in), Quests (3 a day, all done gives
+luck) and Online (9 gifts for minutes played); coins scale with the cheapest next upgrade, luck is minutes of the x2 potion with a chip in
+the top strip. The slime book has a second page, the Index of all 150 kinds (Secrets as shadows). Icons for the tabs and luck from ChatGPT
+(`art/icons/`), the trophy and Index buttons are the owner's art. Two new intros. Saved in the farm: **schema 8**, so a publish must shut
+down old servers; old saves start the rewards fresh. Lune tests in `tests/spec/rewards.luau` (383 pass), CHECK OK, TYPES OK.
+
+Proved in a Studio play test (`Publish.rbxl`, shots in `docs/ui/rewards/`): the trophy hidden during the tutorial and shown after it with a
+badge; Day 1 claimed (+160 coins, the tile Taken, the clock to midnight); three quests drawn; the 1-minute gift opened on its own and was
+claimed (+100); the Index tabs with the found Navy and dark shadows; no errors from the new code in the console. Not seen live: quest
+progress and its claim, the quest bonus, a real luck claim (the chip was shown by a local preview), a found Secret's golden shadow, the
+two new intros (all covered by the Lune tests), and a real phone.
+
 ## 2026-11-03 — tutorial: the trail points the right way, breeding is quick while it runs
 
 The owner: the arrows on the trail pointed the wrong way; speed up breeding during the tutorial. The trail is now a row of the gold

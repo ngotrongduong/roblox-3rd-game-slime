@@ -192,6 +192,7 @@ local function consume(farm: Farm, slimeId: string, item: string, from: string, 
 	if (stock[item] or 0) <= 0 or Food.take(stock, item, 1) == 0 then
 		return false
 	end
+	farm.lifetime.meals += 1
 	local dish = (Config.Food.Dishes :: any)[item]
 	slime.needs = Needs.eatValue(slime.needs, if dish then dish.fullness else (Config.Food.Raw :: any)[item])
 	if dish then

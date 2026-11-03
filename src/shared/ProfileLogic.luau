@@ -336,6 +336,26 @@ function ProfileLogic.migrateGuide(data: any, _now: number): any
 	return out
 end
 
+-- A farm saved before the rewards: nothing taken yet, so the check-in starts at day 1 and today's quests are made at the
+-- next look; sales and meals are counted from now.
+function ProfileLogic.migrateRewards(data: any, _now: number): any
+	if type(data) ~= "table" then
+		return data
+	end
+	local out = ProfileLogic.deepCopy(data)
+	out.rewards = {
+		daily = { streak = 0, day = 0 },
+		quests = { day = 0, list = {}, bonus = false },
+		online = { day = 0, secs = 0, claimed = {} },
+		indexSeen = false,
+	}
+	if type(out.lifetime) == "table" then
+		out.lifetime.slimesSold = 0
+		out.lifetime.meals = 0
+	end
+	return out
+end
+
 -- Runs the steps from `fromVersion` to `toVersion`, each found by its `from`, so the list may be in
 -- any order. Refuses data from a newer version instead of guessing at it.
 function ProfileLogic.migrate(

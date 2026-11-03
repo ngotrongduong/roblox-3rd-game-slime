@@ -1647,7 +1647,8 @@ Config.Save = {
 	-- 5: plot-by-plot growing vegetables with safe migration from the old timed output.
 	-- 6: per-cook recipes and per-slime automatic dishes and buff sources.
 	-- 7: the tutorial's step and the intros seen (`guide`).
-	SchemaVersion = 7,
+	-- 8: the daily check-in, quests and online gifts (`rewards`), lifetime counts of slimes sold and meals eaten.
+	SchemaVersion = 8,
 	-- A stored envelope without a version is this one.
 	FirstSchemaVersion = 1,
 
@@ -2010,6 +2011,8 @@ Config.Guide = {
 		"dish",
 		"training",
 		"recipes",
+		"rewards",
+		"index",
 	},
 	-- (a step or intro id a request may name is at most this long)
 	IdMaxLength = 16,
@@ -2049,6 +2052,71 @@ Config.Guide = {
 	SeenPollSeconds = 0.25,
 }
 
+-- ===== Rewards for coming back (docs/GAMEPLAY.md §13; rules in shared/Rewards, server/Rewards, client/UiRewards) =====
+-- A day is the UTC day. Coins in a reward are `coins` times the price of the village's cheapest next upgrade (so a reward
+-- keeps its worth as the farm grows), rounded to two figures, never under CoinFloor. `luck` is minutes of the luck
+-- potion (Config.Luck.Potion): it adds to the time left, up to LuckMaxMinutes. Paid coins are not held by the vault.
+Config.Rewards = {
+	CoinFloor = 100,
+	LuckMaxMinutes = 120,
+	-- The daily check-in: day n of a run of days in a row, then day 1 again. A day missed starts the run over.
+	Daily = {
+		{ coins = 0.5 },
+		{ coins = 0.75 },
+		{ coins = 1 },
+		{ coins = 0.5, luck = 15 },
+		{ coins = 1.5 },
+		{ coins = 2 },
+		{ coins = 3, luck = 30 },
+	},
+	-- Daily quests: QuestCount a day, drawn from the kinds that fit the farm by a dice of the player and the day; quest n
+	-- asks the n-th share of its kind's { least, most } and pays QuestCoins[n]. All of them claimed: QuestBonus once.
+	QuestCount = 3,
+	QuestKinds = { "breed", "hatch", "sell", "feed", "win", "upgrade" },
+	QuestNeed = {
+		breed = { 1, 3 },
+		hatch = { 1, 3 },
+		sell = { 1, 3 },
+		feed = { 10, 30 },
+		win = { 4, 12 },
+		upgrade = { 1, 2 },
+	},
+	QuestCoins = { 0.4, 0.7, 1 },
+	QuestBonus = { luck = 20 },
+	-- "sell" is drawn only for a village of at least this many slimes (the last ones cannot be sold).
+	QuestSellMinSlimes = 6,
+	-- Online gifts: minutes played this UTC day (earlier visits count); each taken once a day.
+	Online = {
+		{ minutes = 1, coins = 0.2 },
+		{ minutes = 3, coins = 0.3 },
+		{ minutes = 5, coins = 0.4 },
+		{ minutes = 10, coins = 0, luck = 5 },
+		{ minutes = 15, coins = 0.6 },
+		{ minutes = 20, coins = 0.8 },
+		{ minutes = 30, coins = 0.5, luck = 10 },
+		{ minutes = 45, coins = 1 },
+		{ minutes = 60, coins = 1.5, luck = 15 },
+	},
+	-- The server writes the minutes played into the save this often (and when the player leaves).
+	OnlineFlushSeconds = 60,
+	-- The server looks at every player's rewards this often.
+	CheckSeconds = 1,
+	-- The client: the rewards sheet, a tile of the check-in and online grids, a quest row, a card of the Index.
+	SheetWidth = 520,
+	SheetHeight = 440,
+	-- (four check-in days a row, three online gifts a row)
+	TileWidth = 108,
+	OnlineTileWidth = 148,
+	TileHeight = 112,
+	QuestRowHeight = 80,
+	IndexCell = 96,
+	IndexCellHeight = 118,
+	-- How dark an Index card stays while its slime is not found (the 3D body drawn as a shadow).
+	SilhouetteColour = "#3a2a1c",
+	-- The red dot on the Rewards button while something waits.
+	BadgeSize = 18,
+}
+
 -- ===== The screen kit (src/client/Ui*.luau): the owner's art, palette, fonts and sizes =====
 -- Every image is the owner's own art from reference/goo-lineage-web/assets, trimmed to its bounds only and uploaded
 -- (art-pipeline). An id of 0 is a picture that does not exist yet: the client logs it once and shows a stand-in.
@@ -2084,6 +2152,14 @@ Config.Ui = {
 		-- The round travel buttons (home, market): not drawn yet, a short word stands in (UiKit glyphs).
 		home = 129188593634951,
 		market = 80845462069782,
+		-- The rewards sheet's tabs and the luck potion (ChatGPT, 2026-11-04); the trophy and the Index are the owner's own
+		-- ui.btn.trophy and ui.btn.collection, trimmed only (art/icons/btn-*.png).
+		daily = 128691395639891,
+		quests = 128098601387106,
+		online = 115129814887456,
+		luck = 76165751061122,
+		rewards = 92181600961063,
+		collection = 91176780566160,
 		-- (drawn from the 3D items instead: docs/GAMEPLAY.md, the food chip)
 		fish = 0,
 		carrot = 0,
@@ -2095,6 +2171,7 @@ Config.Ui = {
 	-- The round edge buttons are the original's ui.btn.<id> art.
 	Buttons = {
 		slimes = 74629091770984,
+		rewards = 92181600961063,
 	},
 	-- Nine-slice frames: the owner's ui-frame-gold (panels) and ui-frame-wood (buttons, cards). Slice numbers are
 	-- pixels of the trimmed picture; Scale is how big its border draws on screen.

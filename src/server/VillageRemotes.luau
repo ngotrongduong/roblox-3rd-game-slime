@@ -12,6 +12,7 @@ local VillageRequests = require(ReplicatedStorage.Shared.VillageRequests)
 local Guide = require(script.Parent.Guide)
 local PlayerData = require(script.Parent.PlayerData)
 local Plots = require(script.Parent.Plots)
+local Rewards = require(script.Parent.Rewards)
 local Village = require(script.Parent.Village)
 local ZombieFights = require(script.Parent.ZombieFights)
 
@@ -62,6 +63,9 @@ local function envOf(player: Player): VillageRequests.Env
 			ZombieFights.clearWounds(player, slimeId)
 		end,
 		freeUpgrades = Config.Pads.FreeUpgrades or (Config.Village.DevFreeUpgrades and RunService:IsStudio()),
+		unsavedPlay = function(): number
+			return Rewards.unsavedPlay(player)
+		end,
 	}
 end
 
@@ -113,6 +117,10 @@ local function request(player: Player, data: any): { ok: boolean, reason: string
 	elseif action == "GuideSkip" or action == "GuideSeen" or action == "GuideNext" then
 		print(Config.LogPrefix, "guide:", player.Name, action, data.step or "")
 		PlayerData.markKeyMoment(player, "guide")
+	elseif string.sub(action, 1, 5) == "Claim" or action == "IndexSeen" then
+		print(Config.LogPrefix, "rewards:", player.Name, action, data.index or data.step or "", "paid", value or 0)
+		PlayerData.markKeyMoment(player, "rewards")
+		task.spawn(Rewards.refresh, player)
 	end
 	-- The owner's rule (2026-10-29): an assigned worker appears at its work place at once and starts working.
 	if action == "Assign" and data.asReserve == false then

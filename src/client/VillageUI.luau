@@ -15,6 +15,7 @@ local UiHud = require(script.Parent.UiHud)
 local UiKit = require(script.Parent.UiKit)
 local UiMarket = require(script.Parent.UiMarket)
 local UiRecipes = require(script.Parent.UiRecipes)
+local UiRewards = require(script.Parent.UiRewards)
 local UiSlimeList = require(script.Parent.UiSlimeList)
 local UiSlimes = require(script.Parent.UiSlimes)
 local UiSpots = require(script.Parent.UiSpots)
@@ -1032,6 +1033,17 @@ local function bind(root: Folder?)
 			end)
 		)
 	end
+	for _, attribute in { "Rewards", "RewardsReady", "LuckUntil", "RewardsOpen" } do
+		table.insert(
+			rootConnections,
+			root:GetAttributeChangedSignal(attribute):Connect(function()
+				if own == root then
+					UiHud.rewards(root)
+					UiRewards.refresh()
+				end
+			end)
+		)
+	end
 	for _, attribute in { "Work", "Pairs", "Areas", "Box" } do
 		table.insert(
 			rootConnections,
@@ -1078,6 +1090,23 @@ function VillageUI.start()
 		})
 	end, function(place: string)
 		UiMarket.travel(place)
+	end, function()
+		UiRewards.open()
+	end)
+
+	-- the daily check-in, quests and online gifts: the trophy's badge, the luck chip and the open sheet's clocks
+	UiRewards.start({
+		own = function()
+			return own
+		end,
+		request = request,
+	})
+	task.spawn(function()
+		while gui.Parent do
+			UiHud.rewards(own)
+			UiRewards.refresh()
+			task.wait(1)
+		end
 	end)
 
 	UiSpots.start({

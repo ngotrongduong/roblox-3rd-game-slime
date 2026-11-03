@@ -315,3 +315,30 @@ vault is full (the pantry pad), the village is full (Market), enough coins for a
 kitchen needs a cook, a dish is ready, the training ground, new recipes. An intro whose reason goes away closes unseen and may come back.
 
 Saved in the farm as `guide` (schema 7: `step`, `mark`, `intro`, `introMark`, `seen`); saves from before it count the tutorial as done.
+Two more intros (2026-11-04): a gift waits (the trophy button) and a second kind of slime was found (the slime book, which then opens on the
+Index).
+
+## 13. Rewards for coming back and the Index (2026-11-04)
+
+One trophy button at the right edge (the owner's trophy art) opens a sheet with three tabs; a red badge counts the gifts waiting. It shows
+only after the tutorial. Rules in `shared/Rewards` (Lune tests `tests/spec/rewards.luau`), server `server/Rewards`, drawing
+`client/UiRewards`, every number in `Config.Rewards`. Days are UTC days of the server clock; the foot of each tab counts down to midnight.
+
+- **Coins scale with the farm**: a reward is a share of the cheapest next area upgrade (`Village.upgradeCost`), rounded to two figures,
+  never under `CoinFloor` (100). Coins bypass the vault limit. **Luck** is minutes of the luck potion (x2, `Config.Luck`), added to any
+  potion still running, never more than `LuckMaxMinutes` (120) ahead; a chip in the top strip shows "x2 m:ss" while it runs.
+- **Daily check-in**: seven days, one claim a day: 0.5, 0.75, 1, 0.5 + 15 min luck, 1.5, 2, 3 + 30 min luck. Missing a whole day starts
+  again at day 1; after day 7 it starts again too.
+- **Daily quests**: three a day, different kinds, the same three for the whole day (seeded by the player and the day), made only after the
+  tutorial: lay eggs, hatch eggs, sell slimes (only with 6 slimes or more), slimes eat meals, beat zombies, upgrade an area (only while one
+  can be upgraded). Progress is the lifetime count now minus the count when the quest was made (`lifetime.breeds`, hatched, `slimesSold`,
+  `meals`, `mobsKilled`, the sum of area levels). Rewards 0.4 / 0.7 / 1 of the base; all three claimed gives 20 min of luck.
+- **Online gifts**: nine gifts for minutes played today (1, 3, 5, 10, 15, 20, 30, 45, 60), coins and luck. Play is counted by the server
+  (written into the save every minute and when the player leaves); a claim counts the unsaved seconds first.
+- **Index**: the slime book has two pages, the player's slimes and the Index of every kind: 11 colours, 55 Duals, 66 Secrets, 18
+  materials (the found ones from `discoveries`). A found kind is its 3D look with its name; a kind not found is a dark brown shadow
+  ("???" except the colours). Secrets have no art yet: a found one is a golden shadow.
+
+Saved in the farm as `rewards` (schema 8: `daily {streak, day}`, `quests {day, list, bonus}`, `online {day, secs, claimed}`,
+`indexSeen`) and `lifetime.slimesSold`, `lifetime.meals`; old saves start fresh. Claims go through the Village remote (`ClaimDaily`,
+`ClaimQuest`, `ClaimQuestBonus`, `ClaimOnline`, `IndexSeen`), each checked on the server and saved at once.

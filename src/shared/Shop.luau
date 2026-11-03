@@ -41,6 +41,7 @@ function Shop.sell(farm: Farm, slimeId: string, now: number): (number?, string?)
 	FarmState.removeSlime(farm, slimeId)
 	farm.coins += value
 	farm.lifetime.coinsEarned += value
+	farm.lifetime.slimesSold += 1
 	return value, nil
 end
 

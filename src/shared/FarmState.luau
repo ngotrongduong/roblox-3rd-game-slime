@@ -110,6 +110,16 @@ export type Team = { members: { string }, repeatOn: boolean, target: string? }
 -- The tutorial (shared/Guide): its step (Config.Guide.Steps, or "done"), the number the step measures from, the intro on
 -- screen and the number it measures from, and the intros already done or put away.
 export type Guide = { step: string, mark: number, intro: string?, introMark: number, seen: { [string]: boolean } }
+-- Rewards for coming back (shared/Rewards). Days are UTC day numbers, 0 for never. daily: the day of the run last taken
+-- and when; a quest: its kind, how many it asks, the lifetime count it is measured from, whether its reward was taken;
+-- online: seconds played that day and the gifts taken. indexSeen: the Index was opened (its intro is done).
+export type Quest = { kind: string, need: number, mark: number, claimed: boolean }
+export type Rewards = {
+	daily: { streak: number, day: number },
+	quests: { day: number, list: { Quest }, bonus: boolean },
+	online: { day: number, secs: number, claimed: { number } },
+	indexSeen: boolean,
+}
 
 -- kind: "INVENTORY", "EQUIPPED_TO_SLIME" (with slimeId and slot), "BATTLE_ESCROW", "PENDING_RETURN".
 export type ItemOwnership = { kind: string, slimeId: string?, slot: string? }
@@ -126,6 +136,8 @@ export type Lifetime = {
 	bossesKilled: number,
 	breeds: number,
 	bestRaidKillSec: number,
+	slimesSold: number,
+	meals: number,
 }
 
 export type AvatarLoadout = {
@@ -173,6 +185,7 @@ export type Farm = {
 	tutorialDone: boolean?,
 	tutorialDoneAt: number?,
 	guide: Guide,
+	rewards: Rewards,
 	luckPotionUntil: number?,
 	lastSiegeTeam: { string }?,
 	wbKingSlain: boolean?,
@@ -238,6 +251,15 @@ end
 -- A tutorial at its first step, or already over (`done`: a farm that has played without one).
 function FarmState.newGuide(done: boolean): Guide
 	return { step = if done then "done" else Config.Guide.Steps[1], mark = 0, introMark = 0, seen = {} }
+end
+
+function FarmState.newRewards(): Rewards
+	return {
+		daily = { streak = 0, day = 0 },
+		quests = { day = 0, list = {}, bonus = false },
+		online = { day = 0, secs = 0, claimed = {} },
+		indexSeen = false,
+	}
 end
 
 function FarmState.newTeams(): { Team }
@@ -479,11 +501,14 @@ function FarmState.newFarm(now: number): Farm
 			bossesKilled = 0,
 			breeds = 0,
 			bestRaidKillSec = 0,
+			slimesSold = 0,
+			meals = 0,
 		},
 		avatar = FarmState.newAvatar(now),
 		tutorialDone = false,
 		tutorialDoneAt = nil,
 		guide = FarmState.newGuide(false),
+		rewards = FarmState.newRewards(),
 		luckPotionUntil = nil,
 		lastSiegeTeam = nil,
 		wbKingSlain = nil,
@@ -1063,6 +1088,70 @@ local function validateAvatar(raw: any, now: number, warnings: { string }): Avat
 	}
 end
 
+-- Each part of the rewards is repaired alone; a quest list is kept only whole (a damaged one is made again the next time
+-- the server looks, from that moment's counts).
+local function validateRewards(raw: any, warnings: { string }): Rewards
+	local out = FarmState.newRewards()
+	if type(raw) ~= "table" then
+		if raw ~= nil then
+			table.insert(warnings, "rewards: not a table, reset")
+		end
+		return out
+	end
+	local daily = raw.daily
+	if type(daily) == "table" then
+		out.daily = {
+			streak = math.min(nonNegInt(daily.streak, 0), #Config.Rewards.Daily),
+			day = nonNegInt(daily.day, 0),
+		}
+	end
+	local quests = raw.quests
+	if type(quests) == "table" and type(quests.list) == "table" then
+		local list: { Quest } = {}
+		local whole = #quests.list <= Config.Rewards.QuestCount
+		for _, q in quests.list do
+			if
+				type(q) == "table"
+				and table.find(Config.Rewards.QuestKinds, q.kind)
+				and isNum(q.need)
+				and q.need >= 1
+				and isNum(q.mark)
+			then
+				table.insert(
+					list,
+					{ kind = q.kind, need = math.floor(q.need), mark = q.mark, claimed = q.claimed == true }
+				)
+			else
+				whole = false
+			end
+		end
+		if whole then
+			out.quests = { day = nonNegInt(quests.day, 0), list = list, bonus = quests.bonus == true }
+		else
+			table.insert(warnings, "rewards: quests damaged, made again")
+		end
+	end
+	local online = raw.online
+	if type(online) == "table" then
+		local claimed: { number } = {}
+		if type(online.claimed) == "table" then
+			for _, step in online.claimed do
+				if
+					isNum(step)
+					and step % 1 == 0
+					and Config.Rewards.Online[step] ~= nil
+					and not table.find(claimed, step)
+				then
+					table.insert(claimed, step)
+				end
+			end
+		end
+		out.online = { day = nonNegInt(online.day, 0), secs = nonNegInt(online.secs, 0), claimed = claimed }
+	end
+	out.indexSeen = raw.indexSeen == true
+	return out
+end
+
 -- Gear bookkeeping: an item is equipped only while a loadout names it. A loadout slot naming a
 -- missing item (or one already claimed; the avatar claims first) is cleared; item ownership is
 -- then re-stamped from the claims. Returns how many fixes were made.
@@ -1263,6 +1352,8 @@ function FarmState.repair(data: any, now: number): (Farm, { string }, boolean)
 			bossesKilled = nonNegInt(lt.bossesKilled, 0),
 			breeds = nonNegInt(lt.breeds, 0),
 			bestRaidKillSec = nonNegInt(lt.bestRaidKillSec, 0),
+			slimesSold = nonNegInt(lt.slimesSold, 0),
+			meals = nonNegInt(lt.meals, 0),
 		}
 	else
 		lifetime = {
@@ -1275,6 +1366,8 @@ function FarmState.repair(data: any, now: number): (Farm, { string }, boolean)
 			bossesKilled = 0,
 			breeds = 0,
 			bestRaidKillSec = 0,
+			slimesSold = 0,
+			meals = 0,
 		}
 	end
 
@@ -1341,6 +1434,7 @@ function FarmState.repair(data: any, now: number): (Farm, { string }, boolean)
 		tutorialDone = tutorialDone,
 		tutorialDoneAt = if isNum(data.tutorialDoneAt) then data.tutorialDoneAt else nil,
 		guide = guide,
+		rewards = validateRewards(data.rewards, warnings),
 		luckPotionUntil = if isNum(data.luckPotionUntil) and data.luckPotionUntil >= 0
 			then data.luckPotionUntil
 			else nil,
