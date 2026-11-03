@@ -1,5 +1,13 @@
 # Status
 
+## 2026-11-04 — new players start with eight slimes
+
+The owner: the start is slow; begin with 8 slimes so a player can fight at once. `Config.Farm.StarterCount` is 8 (was 4): a full team of
+four and four more for the fisher, the gardener and a pair (village level 1 holds 12). Only new farms; existing saves keep their slimes.
+The test farm (`FarmKit.farm`) keeps the four slimes the specs were written for; a new spec checks that the tutorial's team step no longer
+waits for a baby. Proved in a Studio play test of a fresh player: 8 slimes, 8/12 in the HUD, team 1 set to slimes 5-8 at the banner at
+once, no game errors.
+
 ## 2026-11-04 — daily check-in, daily quests, online gifts and the slime Index
 
 Retention features (`docs/GAMEPLAY.md` §13): a trophy button with a badge opens Daily (7-day check-in), Quests (3 a day, all done gives

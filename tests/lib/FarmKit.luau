@@ -49,6 +49,11 @@ function FarmKit.farm(now: number, slimes: { any }?): any
 	farm.guide = FarmState.newGuide(true)
 	if slimes then
 		farm.slimes = slimes
+	else
+		-- the four starters the specs were written for, however many a new player gets (Config.Farm.StarterCount)
+		while #farm.slimes > 4 do
+			table.remove(farm.slimes)
+		end
 	end
 	return farm
 end

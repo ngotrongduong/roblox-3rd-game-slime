@@ -57,8 +57,28 @@ return function(T: any)
 		T.eq(view.target, "hud:slimes")
 	end)
 
+	T.test("a new player's starters leave free adults for a team, so the team step does not wait", function()
+		local farm: any = FarmState.newFarm(NOW)
+		T.ok(
+			#farm.slimes >= Config.Zombies.TeamSize + 4,
+			"a full team and four more for fishing, the garden and a pair"
+		)
+		T.ok((Stations.assign(farm, "slime-1", "fishing", 1, false, NOW)))
+		T.ok((Stations.assign(farm, "slime-2", "garden", 1, false, NOW)))
+		T.ok((Breeding.setPair(farm, 1, "slime-3", "slime-4", NOW)))
+		farm.guide.step = "team"
+		local view = Guide.view(farm, NOW)
+		assert(view)
+		T.eq(view.id, "team")
+		T.ok(string.find(view.line, "grows up", 1, true) == nil)
+	end)
+
 	T.test("a fresh player walks the whole tutorial by playing, and finishing it starts the new-player luck", function()
 		local farm: any = FarmState.newFarm(NOW)
+		-- (a farm of four, so every adult is busy by the team step and the wait line shows)
+		while #farm.slimes > 4 do
+			table.remove(farm.slimes)
+		end
 		local now = NOW
 		-- nothing moves on by itself, and a screen step only goes with the screen the player opened
 		T.ok(not Guide.update(farm, now, HOME))

@@ -283,7 +283,8 @@ Slimes that are not working or breeding choose what to do from their needs, pers
 
 ## 12. Tutorial and intros (2026-11-03)
 
-A new player is walked through the game one step at a time (rules `shared/Guide`, server `server/Guide`, drawing `client/UiGuide`, ids
+A new player starts with eight navy adults (`Config.Farm.StarterCount`, the owner, 2026-11-04): a full team of four can go and fight
+from the start while the others fish, garden and breed. A new player is walked through the game one step at a time (rules `shared/Guide`, server `server/Guide`, drawing `client/UiGuide`, ids
 and numbers in `Config.Guide`). Each step is one short line in a card at the top centre (Next only where the step is a tip, Skip always),
 an arrow on the real thing (a bobbing arrow over a place in the world with a trail of arrows from the player's feet, or an arrow beside a
 HUD button that pulses) and it moves on only when the server sees the farm really change, checked once a second:

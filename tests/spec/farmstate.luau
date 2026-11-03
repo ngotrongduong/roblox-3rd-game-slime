@@ -7,14 +7,19 @@ local Rng = require("../../src/shared/Rng")
 local NOW = 1793059200 + 3600
 
 return function(T)
-	T.test("four navy starters are adults with fixed traits and complete needs", function()
+	T.test("the navy starters are adults with fixed traits and complete needs", function()
 		local farm = FarmState.newFarm(NOW)
 		local seeds = { 2654435769, 467448786, 2514546031, 267659000 }
-		T.eq(#farm.slimes, 4)
+		T.eq(#farm.slimes, Config.Farm.StarterCount)
+		local seen = {}
 		for i, slime in farm.slimes do
 			T.eq(slime.id, "slime-" .. i)
 			T.eq(slime.name, "Slime " .. i)
-			T.eq(slime.seed, seeds[i])
+			if seeds[i] then
+				T.eq(slime.seed, seeds[i])
+			end
+			T.ok(not seen[slime.seed], "every starter has its own seed")
+			seen[slime.seed] = true
 			T.same(slime.stats, { attack = 1, defence = 1, speed = 1, hp = 10 })
 			T.same(slime.colourGenotype, { alleles = { "navy", "navy" } })
 			T.same(slime.appearanceMutation, { type = "none" })
@@ -35,7 +40,7 @@ return function(T)
 		local farm = FarmState.newFarm(NOW)
 		T.same(farm.eggs, {})
 		T.same(farm.discoveries, {
-			base = { navy = { firstDiscoveredAt = NOW, hatchCount = 4 } },
+			base = { navy = { firstDiscoveredAt = NOW, hatchCount = Config.Farm.StarterCount } },
 			dual = {},
 			secret = {},
 			material = {},
@@ -81,6 +86,9 @@ return function(T)
 
 	T.test("one broken slime is repaired without erasing good slimes, items or coins", function()
 		local farm = FarmState.newFarm(NOW)
+		while #farm.slimes > 4 do
+			table.remove(farm.slimes)
+		end
 		farm.coins = 1234.7
 		local broken = table.clone(farm.slimes[2])
 		broken.stats = "junk"

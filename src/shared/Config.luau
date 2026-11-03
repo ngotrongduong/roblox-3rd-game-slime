@@ -557,7 +557,8 @@ Config.Luck = {
 }
 
 Config.Farm = {
-	StarterCount = 4,
+	-- (the owner, 2026-11-04: eight, so a new player fills a team of TeamSize and still has slimes to work and breed)
+	StarterCount = 8,
 	StarterColour = "navy",
 	StartingFood = 20,
 	StartingCoins = 0,

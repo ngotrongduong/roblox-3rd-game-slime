@@ -154,8 +154,9 @@ return function(T)
 		T.same(r2.farm.discoveries.dual["dual-red-pink-38"], { firstDiscoveredAt = NOW, hatchCount = 2 })
 		T.eq(r2.farm.discoveries.base.pink, nil)
 		local r3 = Hatching.hatch(r2.farm, "e3", NOW)
-		T.eq(r3.farm.discoveries.base.navy.hatchCount, 5, "4 starters + 1")
-		T.eq(farm.discoveries.base.navy.hatchCount, 4, "the input discoveries are not changed")
+		local starters = farm.discoveries.base.navy.hatchCount
+		T.eq(r3.farm.discoveries.base.navy.hatchCount, starters + 1, "the starters + 1")
+		T.eq(farm.discoveries.base.navy.hatchCount, starters, "the input discoveries are not changed")
 	end)
 
 	T.test("discoveries: a material hatch registers in its own bucket and counts toward the rank", function()
@@ -173,8 +174,8 @@ return function(T)
 		local r3 = Hatching.hatch(r2.farm, "e3", NOW + 6)
 		T.same(r3.firstDiscovery, { type = "material", definitionId = "mud" })
 		T.eq(r3.farm.discoveries.material.mud.hatchCount, 1)
-		-- 4 starters + 3 material hatches, counted once each
-		T.eq(Hatching.totalHatched(r3.farm.discoveries), 7)
+		-- the starters + 3 material hatches, counted once each
+		T.eq(Hatching.totalHatched(r3.farm.discoveries), farm.discoveries.base.navy.hatchCount + 3)
 		T.eq(farm.discoveries.material.gold, nil, "the input discoveries are not changed")
 	end)
 

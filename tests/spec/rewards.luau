@@ -98,6 +98,9 @@ return function(T: any)
 
 	T.test("quests wait for the tutorial, are the same for a player all day and differ in kind", function()
 		local farm: any = FarmState.newFarm(NOW)
+		while #farm.slimes > 4 do
+			table.remove(farm.slimes)
+		end
 		T.ok(not Rewards.ensureQuests(farm, 42, NOW), "no quests during the tutorial")
 		played(farm)
 		T.ok(Rewards.ensureQuests(farm, 42, NOW))
