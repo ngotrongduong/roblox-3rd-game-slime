@@ -101,6 +101,102 @@ return function(T: any)
 		end
 		T.ok(seen.attack and seen.defence and seen.speed and seen.hp, "equal stats spread over every role")
 	end)
+	T.test("a guard draws the blows; a fast slime goes for the foe with the least health", function()
+		local function slime(id: string, role: string): any
+			return { id = id, attack = 5, defence = 5, speed = 5, hp = 50, role = role }
+		end
+		local hits: { [string]: number } = {}
+		local rng = Rng.new(3)
+		for _ = 1, 40 do
+			local squad = { slime("guard", "defence"), slime("a", "hp"), slime("b", "hp"), slime("c", "hp") }
+			local fight = Combat.new(squad, { { id = "z", attack = 5, defence = 5, speed = 5, hp = 9999 } }, rng)
+			for _ = 1, 30 do
+				for _, event in Combat.step(fight, 0.1) do
+					if event.kind == "aim" and event.from == "z" then
+						hits[event.to] = (hits[event.to] or 0) + 1
+					end
+				end
+			end
+		end
+		T.ok((hits.guard or 0) > (hits.a or 0) * 2, "the guard is picked far more than any other")
+		local foes = {
+			{ id = "full", attack = 1, defence = 1, speed = 1, hp = 50 },
+			{ id = "hurt", attack = 1, defence = 1, speed = 1, hp = 10, maxHp = 50 },
+		}
+		local fight = Combat.new({ slime("fast", "speed") }, foes, Rng.new(1))
+		local first: string? = nil
+		while not first do
+			for _, event in Combat.step(fight, 0.1) do
+				if event.kind == "aim" and event.from == "fast" then
+					first = event.to
+				end
+			end
+		end
+		T.eq(first, "hurt")
+	end)
+	T.test(
+		"skills: every few blows a skill is announced and struck; a guard takes the blows meant for its team",
+		function()
+			local function run(squad: { any }, foes: { any }, seconds: number): { any }
+				local fight = Combat.new(squad, foes, Rng.new(5))
+				local events = {}
+				for _ = 1, seconds * 10 do
+					for _, event in Combat.step(fight, 0.1) do
+						table.insert(events, event)
+					end
+				end
+				return events
+			end
+			local function foe(id: string): any
+				return { id = id, attack = 0, defence = 0, speed = 0, hp = 1e6 }
+			end
+			local skills = Config.Combat.Skills
+			-- Belly Bounce strikes every foe at once, and is announced first
+			local events = run({ { id = "h", attack = 5, defence = 0, speed = 0, hp = 50, role = "hp" } }, {
+				foe("x"),
+				foe("y"),
+				foe("z"),
+			}, 30)
+			local announced, struck, plain = false, {}, 0
+			for _, event in events do
+				if event.kind == "aim" and event.skill == "hp" then
+					announced = true
+				elseif (event.kind == "hit" or event.kind == "dodge") and event.from == "h" then
+					if event.skill == "hp" then
+						struck[event.to] = true
+					else
+						plain += 1
+					end
+				end
+			end
+			T.ok(announced and struck.x and struck.y and struck.z, "Belly Bounce announced, then hits all three")
+			T.ok(plain >= skills.hp.every - 1, "plain blows between skills")
+			-- Dash Strike: its blows numbered 1..hits
+			local most = 0
+			for _, event in
+				run({ { id = "s", attack = 5, defence = 0, speed = 0, hp = 50, role = "speed" } }, { foe("x") }, 30)
+			do
+				if event.skill == "speed" and event.n then
+					most = math.max(most, event.n)
+				end
+			end
+			T.eq(most, skills.speed.hits)
+			-- Jelly Guard: after the guard event, blows at the team-mate land on the guard
+			events = run({
+				{ id = "g", attack = 1, defence = 5, speed = 0, hp = 1e6, role = "defence" },
+				{ id = "m", attack = 0, defence = 0, speed = 0, hp = 1e5, role = "hp" },
+			}, { { id = "z", attack = 5, defence = 0, speed = 0, hp = 1e6, kind = "toxic" } }, 60)
+			-- (a toxic zombie goes for the weaker team-mate, never the guard itself)
+			local guarded = false
+			for _, event in events do
+				if event.kind == "hit" and event.guard == "g" then
+					T.eq(event.to, "g")
+					guarded = true
+				end
+			end
+			T.ok(guarded, "a blow was taken by the guard")
+		end
+	)
 	T.test("a group of the player's own level is usually beaten, harder groups less often", function()
 		for _, level in { 4, 12, 30 } do
 			local same, three, five = winRate(level, 1), winRate(level, 2), winRate(level, 3)

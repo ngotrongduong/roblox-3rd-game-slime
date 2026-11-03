@@ -17,11 +17,40 @@ export type Unit = {
 	target: Unit?,
 	-- the coming blow has been announced (an "aim" event, WindupSeconds before it lands)
 	aimed: boolean,
+	-- how it fights: a slime's role (Combat.role), a zombie's kind
+	role: string,
+	-- blows struck so far (every Skills[role].every-th is its skill), and whether the coming one is
+	blows: number,
+	skillNext: boolean,
+	-- a guard covers its team-mates until this many seconds into the fight
+	guardUntil: number,
 }
 export type Fight = { units: { Unit }, rng: Rng, seconds: number, winner: string? }
-export type Event = { kind: string, from: string?, to: string, amount: number?, crit: boolean? }
+-- `skill` is the way of fighting whose skill struck (a key of Config.Combat.Skills); `n` the blow's number in a
+-- several-blow skill; `splash` a blow that struck beside the target; `guard` the guard that took a blow aimed elsewhere.
+export type Event = {
+	kind: string,
+	from: string?,
+	to: string,
+	amount: number?,
+	crit: boolean?,
+	skill: string?,
+	n: number?,
+	splash: boolean?,
+	guard: string?,
+}
 -- `maxHp` is the full health when the fighter starts wounded (hp below it); left out, hp is the full health.
-export type Fighter = { id: string, attack: number, defence: number, speed: number, hp: number, maxHp: number? }
+-- `role` is a slime's way of fighting (Combat.role), `kind` a zombie's kind; either sets whom it goes for.
+export type Fighter = {
+	id: string,
+	attack: number,
+	defence: number,
+	speed: number,
+	hp: number,
+	maxHp: number?,
+	role: string?,
+	kind: string?,
+}
 
 local Combat = {}
 
@@ -63,6 +92,10 @@ end
 -- (each fighter opens at its own moment: a team that strikes all at once reads as one body, not four slimes)
 local function unit(fighter: Fighter, side: string, rng: Rng): Unit
 	local c = Config.Combat
+	local role = fighter.role or fighter.kind or ""
+	-- (each counts its blows from its own start, so fighters of one kind do not strike their skills all together)
+	local s = (c.Skills :: any)[role]
+	local blows = if s then math.floor(rng:next() * s.every) else 0
 	return {
 		id = fighter.id,
 		side = side,
@@ -73,6 +106,10 @@ local function unit(fighter: Fighter, side: string, rng: Rng): Unit
 		maxHp = fighter.maxHp or fighter.hp,
 		cooldown = c.OpeningCooldown + rng:next() * c.OpeningSpread,
 		aimed = false,
+		role = role,
+		blows = blows,
+		skillNext = false,
+		guardUntil = 0,
 	}
 end
 
@@ -87,14 +124,138 @@ function Combat.new(squad: { Fighter }, foes: { Fighter }, rng: Rng): Fight
 	return { units = units, rng = rng, seconds = 0 }
 end
 
-local function pick(fight: Fight, side: string): Unit?
+-- Whom a fighter goes for, by its way of fighting (Config.Combat.Aims): the one with the least health left, the one that
+-- hits hardest, or anyone, though a guard draws more of the blows (Config.Combat.Pull).
+local function pick(fight: Fight, attacker: Unit): Unit?
+	local c = Config.Combat
 	local alive: { Unit } = {}
 	for _, other in fight.units do
-		if other.side ~= side and other.hp > 0 then
+		if other.side ~= attacker.side and other.hp > 0 then
 			table.insert(alive, other)
 		end
 	end
-	return if #alive > 0 then alive[math.floor(fight.rng:next() * #alive) + 1] else nil
+	if #alive == 0 then
+		return nil
+	end
+	local aim = (c.Aims :: any)[attacker.role]
+	if aim == "weakest" or aim == "strongest" then
+		local best = alive[1]
+		for _, other in alive do
+			if (aim == "weakest" and other.hp < best.hp) or (aim == "strongest" and other.attack > best.attack) then
+				best = other
+			end
+		end
+		return best
+	end
+	local total = 0
+	for _, other in alive do
+		total += (c.Pull :: any)[other.role] or 1
+	end
+	local roll = fight.rng:next() * total
+	for _, other in alive do
+		roll -= (c.Pull :: any)[other.role] or 1
+		if roll <= 0 then
+			return other
+		end
+	end
+	return alive[#alive]
+end
+
+-- A guard of the target's side that covers it now (not the target itself), or nil.
+local function guardOf(fight: Fight, target: Unit): Unit?
+	for _, other in fight.units do
+		if other ~= target and other.side == target.side and other.hp > 0 and other.guardUntil > fight.seconds then
+			return other
+		end
+	end
+	return nil
+end
+
+-- One blow of `attacker` at `target`, `factor` times its usual weight: a guard may take it, the target may dodge it, a
+-- slime's may crit. `extra` goes into the events (the skill, the blow's number, a splash).
+local function blow(
+	fight: Fight,
+	attacker: Unit,
+	target: Unit,
+	factor: number,
+	events: { Event },
+	extra: { [string]: any }?
+)
+	local c = Config.Combat
+	local guard = guardOf(fight, target)
+	local struck = guard or target
+	local function event(kind: string): Event
+		local out: any = { kind = kind, from = attacker.id, to = struck.id, guard = if guard then guard.id else nil }
+		if extra then
+			for key, value in extra do
+				out[key] = value
+			end
+		end
+		return out
+	end
+	if fight.rng:next() < math.min(c.DodgeCap, struck.speed * c.DodgePerSpeed) then
+		table.insert(events, event("dodge"))
+		return
+	end
+	local defence = struck.defence * (if guard then (c.Skills :: any).defence.defence else 1)
+	local amount = Combat.damage(attacker.attack, defence) * factor
+	local crit = attacker.side == "squad"
+		and fight.rng:next() < math.min(c.CritCap, c.CritBase + attacker.speed * c.CritPerSpeed)
+	if crit then
+		amount *= c.CritFactor
+	end
+	struck.hp = math.max(0, struck.hp - amount)
+	local hit = event("hit")
+	hit.amount, hit.crit = amount, crit
+	table.insert(events, hit)
+	if struck.hp <= 0 then
+		table.insert(events, event("fallen"))
+	end
+end
+
+-- The living fighters of the other side.
+local function foesOf(fight: Fight, attacker: Unit): { Unit }
+	local out: { Unit } = {}
+	for _, other in fight.units do
+		if other.side ~= attacker.side and other.hp > 0 then
+			table.insert(out, other)
+		end
+	end
+	return out
+end
+
+-- The fighter's skill (Config.Combat.Skills, by its way of fighting) instead of a plain blow.
+local function skill(fight: Fight, attacker: Unit, target: Unit, events: { Event })
+	local s = (Config.Combat.Skills :: any)[attacker.role]
+	local extra = { skill = attacker.role }
+	if s.kind == "splash" then
+		blow(fight, attacker, target, s.factor, events, extra)
+		local others = foesOf(fight, attacker)
+		for index = 1, math.min(s.spread, #others) do
+			local other = others[index]
+			if other ~= target and other.hp > 0 then
+				blow(fight, attacker, other, s.splash, events, { skill = attacker.role, splash = true })
+			end
+		end
+	elseif s.kind == "multi" then
+		for n = 1, s.hits do
+			if target.hp > 0 then
+				blow(fight, attacker, target, s.factor, events, { skill = attacker.role, n = n })
+			end
+		end
+	elseif s.kind == "guard" then
+		attacker.guardUntil = fight.seconds + s.seconds
+		table.insert(events, { kind = "guard", from = attacker.id, to = attacker.id, skill = attacker.role })
+		blow(fight, attacker, target, s.factor, events, extra)
+	elseif s.kind == "all" then
+		for _, foe in foesOf(fight, attacker) do
+			blow(fight, attacker, foe, s.factor, events, extra)
+			-- (knocked off its beat)
+			foe.cooldown += s.stun or 0
+		end
+	else
+		blow(fight, attacker, target, s.factor, events, extra)
+	end
 end
 
 -- Moves the fight on by one step and returns what happened in it. Nothing changes once there is a winner.
@@ -108,16 +269,23 @@ function Combat.step(fight: Fight, dt: number): { Event }
 	for _, attacker in fight.units do
 		if attacker.hp > 0 then
 			attacker.cooldown -= dt
-			-- the blow is announced a moment before it lands, so the client can show the wind-up
+			-- the blow is announced a moment before it lands, so the client can show the wind-up (and the skill's name)
 			if not attacker.aimed and attacker.cooldown <= c.WindupSeconds then
 				local target = attacker.target
 				if not target or target.hp <= 0 then
-					target = pick(fight, attacker.side)
+					target = pick(fight, attacker)
 					attacker.target = target
 				end
 				if target then
 					attacker.aimed = true
-					table.insert(events, { kind = "aim", from = attacker.id, to = target.id })
+					local s = (c.Skills :: any)[attacker.role]
+					attacker.skillNext = s ~= nil and (attacker.blows + 1) % s.every == 0
+					table.insert(events, {
+						kind = "aim",
+						from = attacker.id,
+						to = target.id,
+						skill = if attacker.skillNext then attacker.role else nil,
+					})
 				end
 			end
 			if attacker.cooldown <= 0 then
@@ -126,28 +294,17 @@ function Combat.step(fight: Fight, dt: number): { Event }
 				attacker.cooldown += Combat.cooldown(attacker.speed) * (1 + (fight.rng:next() * 2 - 1) * c.CooldownJitter)
 				local target = attacker.target
 				if not target or target.hp <= 0 then
-					target = pick(fight, attacker.side)
+					target = pick(fight, attacker)
 					attacker.target = target
 				end
 				if target then
-					if fight.rng:next() < math.min(c.DodgeCap, target.speed * c.DodgePerSpeed) then
-						table.insert(events, { kind = "dodge", from = attacker.id, to = target.id })
+					attacker.blows += 1
+					if attacker.skillNext then
+						skill(fight, attacker, target, events)
 					else
-						local amount = Combat.damage(attacker.attack, target.defence)
-						local crit = attacker.side == "squad"
-							and fight.rng:next() < math.min(c.CritCap, c.CritBase + attacker.speed * c.CritPerSpeed)
-						if crit then
-							amount *= c.CritFactor
-						end
-						target.hp = math.max(0, target.hp - amount)
-						table.insert(
-							events,
-							{ kind = "hit", from = attacker.id, to = target.id, amount = amount, crit = crit }
-						)
-						if target.hp <= 0 then
-							table.insert(events, { kind = "fallen", from = attacker.id, to = target.id })
-						end
+						blow(fight, attacker, target, 1, events)
 					end
+					attacker.skillNext = false
 				end
 			end
 		end

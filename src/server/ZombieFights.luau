@@ -552,13 +552,7 @@ local function stepFight(session: Session, team: March, now: number)
 	local out: { any } = {}
 	local fallen: { any } = {}
 	for _, event in events do
-		local entry: { [string]: any } = {
-			kind = event.kind,
-			from = event.from,
-			to = event.to,
-			amount = event.amount,
-			crit = event.crit,
-		}
+		local entry: { [string]: any } = table.clone(event :: any)
 		table.insert(out, entry)
 		if event.kind == "fallen" then
 			table.insert(fallen, entry)
@@ -606,10 +600,11 @@ local function beginFight(session: Session, team: March, farm: any, now: number)
 	for _, id in team.members do
 		local slime = FarmState.findSlime(farm, id)
 		if slime then
-			local fighter = Zombies.fighter(slime, now, 1 - (session.wounds[id] or 0))
+			local fighter: any = Zombies.fighter(slime, now, 1 - (session.wounds[id] or 0))
+			fighter.role = Combat.role(fighter, slime.seed)
 			table.insert(fighters, fighter)
 			table.insert(here, id)
-			roles[id] = Combat.role(fighter, slime.seed)
+			roles[id] = fighter.role
 		else
 			-- (gone from the farm while away: nothing of it is left to bring back)
 			Village.setOut(session.player, id, false)

@@ -12,6 +12,10 @@ local Rng = require("../../src/shared/Rng")
 local Zombies = require("../../src/shared/Zombies")
 
 local FIGHTS = tonumber(process.args[1]) or 500
+-- "noskills" as the second argument: no fighter strikes a skill (to compare with the fights before skills).
+if process.args[2] == "noskills" then
+	Config.Combat.Skills = {}
+end
 local STATS = { "attack", "defence", "speed", "hp" }
 local RARITIES = { "common", "uncommon", "rare", "epic" }
 
@@ -38,7 +42,10 @@ local function batch(level: number, camp: number, offset: number, buff: { rarity
 					dish = "x",
 				}
 			end
-			table.insert(squad, Zombies.fighter(slime, 0, 1))
+			-- (one slime of each way of fighting, as a mixed team)
+			local fighter: any = Zombies.fighter(slime, 0, 1)
+			fighter.role = Config.Combat.Roles[(index - 1) % #Config.Combat.Roles + 1]
+			table.insert(squad, fighter)
 		end
 		local group = Zombies.group("z", level, camp, rng)
 		local byId = {}

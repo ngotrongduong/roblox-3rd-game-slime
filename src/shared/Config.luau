@@ -129,6 +129,25 @@ Config.Combat = {
 	WindupSeconds = 0.3,
 	-- A slime's way of fighting is its strongest stat (Combat.role), in this order on a tie broken by its seed.
 	Roles = { "attack", "defence", "speed", "hp" },
+	-- Whom each way of fighting goes for (a slime's role or a zombie's kind; the rest pick anyone): a fast slime finishes
+	-- the one with the least health left, a strong one goes for the hardest hitter, a toxic zombie for the weakest slime.
+	Aims = { speed = "weakest", attack = "strongest", toxic = "weakest" },
+	-- How much more often a fighter that picks anyone picks one of these: the guard draws the blows to itself.
+	Pull = { defence = 3 },
+	-- Every way of fighting has its own skill, struck instead of every `every`-th blow (the owner, 2026-11-03), its name
+	-- shouted by the one who strikes it. `factor` is the weight of each of its blows against a plain one.
+	--   splash: the target, and up to `spread` others beside it at `splash`;   multi: `hits` quick blows at the target;
+	--   guard: for `seconds` the guard takes every blow aimed at a team-mate, its defence times `defence`;
+	--   all: every foe at once, each knocked `stun` seconds off its beat;   single: one heavy blow.
+	Skills = {
+		attack = { kind = "splash", name = "Goo Slam", every = 4, factor = 1.4, splash = 0.4, spread = 2 },
+		speed = { kind = "multi", name = "Dash Strike", every = 4, factor = 0.5, hits = 3 },
+		defence = { kind = "guard", name = "Jelly Guard", every = 5, factor = 1, seconds = 3, defence = 1.3 },
+		hp = { kind = "all", name = "Belly Bounce", every = 5, factor = 0.5, stun = 0.4 },
+		rotten = { kind = "single", name = "Chomp", every = 5, factor = 1.6 },
+		toxic = { kind = "all", name = "Acid Rain", every = 5, factor = 0.45 },
+		plague = { kind = "all", name = "Plague Burst", every = 4, factor = 0.6, stun = 0.4 },
+	},
 }
 
 -- The zombie slimes outside the village (the owner, 2026-11-02, docs/ECONOMY.md).
@@ -278,6 +297,37 @@ Config.Zombies = {
 		KnockStuds = 1.4,
 		KnockSeconds = 0.32,
 		CritKnock = 1.7,
+		-- A skill (Config.Combat.Skills): its name called out once over the one who strikes it (TextSize, Colour), a deeper
+		-- wind-up (Windup times the usual). Goo Slam and Belly Bounce leap (Leap studs) and their blows land when they come
+		-- down (CastSeconds), as do those of a skill that strikes everyone; Dash Strike's blows come MultiGap apart; acid
+		-- falls from RainHeight. Looks: where the skill's art plays (on its target or the one who strikes it), its burst
+		-- (Burst studs) with bits, its rings on the ground (Ring studs across, the second smaller), the drop that rains
+		-- on each foe and the ring it leaves there.
+		Skill = {
+			TextSize = 30,
+			Colour = "#ffe066",
+			Windup = 1.8,
+			Leap = 1.1,
+			CastSeconds = 0.38,
+			MultiGap = 0.09,
+			RainHeight = 10,
+			Burst = 5,
+			Ring = 11,
+			Looks = {
+				attack = {
+					leap = true,
+					onTarget = true,
+					burst = "burstShock",
+					bits = "moteShock",
+					ring = "groundCrack",
+					ring2 = "ringShock",
+				},
+				hp = { leap = true, burst = "shockwave", bits = "moteShock", ring = "ring" },
+				defence = { burst = "holyHit", bits = "sparkStar", ring = "ring" },
+				toxic = { burst = "burstAcid", bits = "acidDrop", rain = "acidDrop", rainRing = "ringAcid" },
+				plague = { burst = "burstArcane", bits = "spore", ring = "ringArcane" },
+			},
+		},
 		-- A winning team cheers (Config.Zombies.CheerSeconds): this many hops each, CheerGap apart, the next slime a bit
 		-- later than the last.
 		CheerHops = 3,
@@ -290,6 +340,26 @@ Config.Zombies = {
 		-- Health just lost stays white this long on a bar, then drains.
 		BarLagSeconds = 0.25,
 		BarDrainSeconds = 0.35,
+		-- Fighters move about the field on their own (src/client/ZombieFight): after each blow each takes its place against
+		-- its target, on its own side at its own angle (Spread, degrees either side), Stand body widths beyond touching
+		-- (Gap studs between skins). A fast slime circles to a new flank each time; a guard steps in front of its most
+		-- hurt team-mate; a toxic zombie keeps its distance and backs off when one comes closer than TooClose; one that
+		-- cannot reach (Reach studs of gap) dashes in. Moves run at Speed studs/s within Min/MaxSeconds; a move as short as
+		-- DashSeconds leaves after-images. A winning team gets back in line RegroupSeconds before it marches home.
+		Moves = {
+			Gap = 0.6,
+			Speed = 24,
+			MinSeconds = 0.18,
+			MaxSeconds = 0.45,
+			MinStuds = 0.6,
+			DashSeconds = 0.26,
+			Hop = 0.35,
+			Reach = 5,
+			TooClose = 3,
+			RegroupSeconds = 0.45,
+			Stand = { attack = 0.6, defence = 0.5, speed = 1.6, hp = 0.8, rotten = 0.7, toxic = 2.6, plague = 0.6 },
+			Spread = { attack = 35, defence = 20, speed = 85, hp = 30, rotten = 55, toxic = 40, plague = 30 },
+		},
 		Fx = {
 			-- The owner's own battle art from the original game (reference/goo-lineage-web/assets/battlefx-*.png), uploaded
 			-- 2026-11-03, never recoloured.

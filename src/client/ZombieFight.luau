@@ -46,7 +46,7 @@ type Bar = {
 	connection: RBXScriptConnection,
 }
 -- A move out from the standing place and back: reaches `delta` after `out` of `duration`, holds there `hold` seconds,
--- then comes back.
+-- then comes back; or, when `stay`, a move to a new standing place (home + delta) over `duration`.
 type Anim = {
 	actor: SlimeActor.Slime,
 	home: Vector3,
@@ -55,6 +55,7 @@ type Anim = {
 	duration: number,
 	out: number,
 	hold: number,
+	stay: boolean,
 }
 
 local ZombieFight = {}
@@ -166,6 +167,10 @@ local function stopAnim(actor: SlimeActor.Slime)
 end
 
 local function shapeOf(anim: Anim, elapsed: number): number
+	if anim.stay then
+		local t = math.clamp(elapsed / anim.duration, 0, 1)
+		return t * t * (3 - 2 * t)
+	end
 	local outSeconds = anim.duration * anim.out
 	if elapsed < outSeconds then
 		local t = elapsed / outSeconds
@@ -208,7 +213,8 @@ local function play(
 	delta: Vector3,
 	seconds: number,
 	out: number?,
-	hold: number?
+	hold: number?,
+	stay: boolean?
 )
 	stopAnim(actor)
 	table.insert(anims, {
@@ -219,6 +225,7 @@ local function play(
 		duration = seconds,
 		out = out or 0.5,
 		hold = hold or 0,
+		stay = stay == true,
 	})
 	if not animLoop then
 		animLoop = RunService.RenderStepped:Connect(stepAnims)
@@ -227,34 +234,60 @@ end
 
 -- ===== Who is who =====
 
+-- Where each fighter stands now: it moves about the field during the fight (nil = where it began: the end of the march
+-- or its place in the group), and whom it last went for (from the "aim" events).
+local homes: { [string]: Vector3 } = {}
+local targets: { [string]: string } = {}
+
+local function fightOf(id: string): Fight?
+	for _, fight in fights do
+		if fight.fighters[id] then
+			return fight
+		end
+	end
+	return nil
+end
+
 -- The body and the standing place of a fighter (a body of the march) or a zombie by its id; the last is whether it is a
 -- zombie (a zombie id never matches a slime of a team).
 local function find(id: string): (SlimeActor.Slime?, Vector3?, boolean)
-	for _, fight in fights do
-		if fight.fighters[id] then
-			local body = ZombieMarch.body(id)
-			if body then
-				return body.actor, body.stand, false
-			end
-			return nil, nil, false
+	if fightOf(id) then
+		local body = ZombieMarch.body(id)
+		if body then
+			return body.actor, homes[id] or body.stand, false
 		end
+		return nil, nil, false
 	end
 	local zombie = ZombieWorld.zombie(id)
 	if zombie then
-		return zombie.actor, zombie.spot, true
+		return zombie.actor, homes[id] or zombie.spot, true
 	end
 	return nil, nil, true
 end
 
--- How a fighter's blows look: a slime by its role, a zombie by its kind.
-local function styleOf(id: string): FightFx.Style
-	for _, fight in fights do
-		if fight.fighters[id] then
-			return FightFx.style(fight.roles[id])
-		end
+-- Where a fighter began (its side of the field): the end of the march, or its place in the group.
+local function anchorOf(id: string): Vector3?
+	if fightOf(id) then
+		local body = ZombieMarch.body(id)
+		return if body then body.stand else nil
 	end
 	local zombie = ZombieWorld.zombie(id)
-	return FightFx.style(if zombie then zombie.kind else nil)
+	return if zombie then zombie.spot else nil
+end
+
+-- A fighter's way of fighting: a slime's role, a zombie's kind.
+local function wayOf(id: string): string
+	local fight = fightOf(id)
+	if fight then
+		return fight.roles[id] or "attack"
+	end
+	local zombie = ZombieWorld.zombie(id)
+	return if zombie then zombie.kind else "rotten"
+end
+
+-- How a fighter's blows look.
+local function styleOf(id: string): FightFx.Style
+	return FightFx.style(wayOf(id))
 end
 
 local function flat(delta: Vector3): Vector3
@@ -270,9 +303,132 @@ local function radius(actor: SlimeActor.Slime): number
 	return actor.body.Size.X / 2
 end
 
+-- A fixed number in 0..1 for a fighter (its own angle round a target, the same every time).
+local function hash(id: string): number
+	local h = 0
+	for index = 1, #id do
+		h = (h * 31 + string.byte(id, index)) % 100003
+	end
+	return h / 100003
+end
+
+-- ===== Moving about the field =====
+
+-- The fighter hops to a new standing place, turned to `faceAt`.
+local function moveTo(
+	id: string,
+	actor: SlimeActor.Slime,
+	from: Vector3,
+	to: Vector3,
+	faceAt: Vector3,
+	seconds: number?
+)
+	local M = V.Moves
+	local distance = flat(to - from).Magnitude
+	if distance < M.MinStuds then
+		return
+	end
+	local spot = ZombieWorld.groundOnMap(to.X, to.Z)
+	local time = seconds or math.clamp(distance / M.Speed, M.MinSeconds, M.MaxSeconds)
+	homes[id] = spot
+	local look = along(faceAt - from, actor.root.LookVector)
+	SlimeActor.setCFrame(actor, CFrame.lookAt(from, from + look))
+	SlimeActor.hop(actor, M.Hop)
+	if time <= M.DashSeconds then
+		FightFx.afterImages(actor.body, spot - from)
+	end
+	play(actor, from, spot - from, time, nil, nil, true)
+end
+
+-- The guard's place: between its most hurt team-mate and the foe it faces.
+local function guardSpot(id: string, actor: SlimeActor.Slime, foeAt: Vector3): Vector3?
+	local fight = fightOf(id)
+	local team = if fight then ZombieTeams.get(fight.team) else nil
+	if not fight or not team then
+		return nil
+	end
+	local weakest: string? = nil
+	local lowest = 1
+	for _, other in fight.order do
+		local node = team.node:FindFirstChild(other)
+		if other ~= id and node and not fight.fighters[other].fallen then
+			local share = number(node, "Hp", 1) / math.max(number(node, "MaxHp", 1), 1)
+			if share < lowest then
+				weakest, lowest = other, share
+			end
+		end
+	end
+	if not weakest then
+		return nil
+	end
+	local ally, allyAt = find(weakest)
+	if not ally or not allyAt then
+		return nil
+	end
+	return allyAt + along(foeAt - allyAt, actor.root.LookVector) * (radius(ally) + radius(actor) + V.Moves.Gap)
+end
+
+-- Where a fighter wants to stand against its target: on its own side, at its own angle round the target (a fast one
+-- circles to a new flank each time), as far as its way of fighting keeps; a guard covers its most hurt team-mate. Not on
+-- top of another fighter.
+local function spotFor(id: string, actor: SlimeActor.Slime, targetId: string): (Vector3?, Vector3?)
+	local M = V.Moves
+	local target, at = find(targetId)
+	local anchor = anchorOf(id)
+	if not target or not at or not anchor then
+		return nil, nil
+	end
+	local way = wayOf(id)
+	if way == "defence" then
+		local guard = guardSpot(id, actor, at)
+		if guard then
+			return guard, at
+		end
+	end
+	local spread = (M.Spread :: any)[way] or 30
+	local angle = if way == "speed" then (math.random() * 2 - 1) * spread else (hash(id) * 2 - 1) * spread
+	local side = CFrame.Angles(0, math.rad(angle), 0):VectorToWorldSpace(along(anchor - at, -target.root.LookVector))
+	local keep = ((M.Stand :: any)[way] or 0.4) * actor.body.Size.X
+	local spot = at + side * (radius(target) + radius(actor) + M.Gap + keep)
+	for other, otherAt in homes do
+		local gap = flat(spot - otherAt)
+		if other ~= id and gap.Magnitude < radius(actor) * 2 then
+			spot += along(gap, side) * (radius(actor) * 2 - gap.Magnitude)
+		end
+	end
+	return spot, at
+end
+
+-- After its blow (or before one it cannot reach) a fighter takes its place against its target.
+local function reposition(id: string, seconds: number?)
+	local targetId = targets[id]
+	local actor, home = find(id)
+	if not targetId or not actor or not home or actor.destroyed or ZombieWorld.isDead(id) then
+		return
+	end
+	local fight = fightOf(id)
+	if fight and (fight.over or fight.fighters[id].fallen) then
+		return
+	end
+	local spot, at = spotFor(id, actor, targetId)
+	if spot and at then
+		moveTo(id, actor, home, spot, at, seconds)
+	end
+end
+
 -- How long after its event a blow reaches its target: a spit flies, a lunge reaches the skin.
 local function contactSeconds(style: FightFx.Style): number
 	return if style.shot then F.ShotSeconds else V.LungeSeconds * V.ContactShare
+end
+
+-- The skill an event belongs to (Config.Combat.Skills), or nil for a plain blow.
+local function skillOf(event: { [string]: any }): any
+	return if type(event.skill) == "string" then (Config.Combat.Skills :: any)[event.skill] else nil
+end
+
+-- How a skill looks (View.Skill.Looks).
+local function looksOf(event: { [string]: any }): { [string]: any }
+	return (V.Skill.Looks :: any)[event.skill] or {}
 end
 
 -- ===== Health bars =====
@@ -410,23 +566,44 @@ local function onStart(teamIndex: number, event: { [string]: any })
 	syncLoop()
 end
 
--- A blow is coming: the attacker turns to its target and winds up (a squash; a spitter puffs up).
+-- A blow is coming: the attacker turns to its target and winds up (a squash; a spitter puffs up). One too far to reach
+-- its target dashes in first (its blow lands at the end of the wind-up).
 local function onAim(event: { [string]: any })
+	targets[event.from] = event.to
 	local attacker, from = find(event.from)
-	local _, to = find(event.to)
-	if not attacker or not from or not to then
+	local target, to = find(event.to)
+	if not attacker or not from or not target or not to then
+		return
+	end
+	local s = skillOf(event)
+	local deeper = if s then V.Skill.Windup else 1
+	if s then
+		floatText(
+			from + Vector3.new(0, attacker.body.Size.Y + 1.5, 0),
+			s.name,
+			Color3.fromHex(V.Skill.Colour),
+			V.Skill.TextSize
+		)
+	end
+	-- (a skill that strikes everyone is struck from where its caster stands)
+	local gap = flat(to - from).Magnitude - radius(attacker) - radius(target)
+	local shot = styleOf(event.from).shot ~= nil
+	local reaching = not (s and s.kind == "all")
+	if reaching and ((not shot and gap > V.Moves.Reach) or (shot and gap < V.Moves.TooClose)) then
+		reposition(event.from, Config.Combat.WindupSeconds * 0.8)
 		return
 	end
 	local look = along(to - from, attacker.root.LookVector)
 	SlimeActor.setCFrame(attacker, CFrame.lookAt(attacker.root.Position, attacker.root.Position + look))
-	if styleOf(event.from).shot then
-		SlimeActor.kick(attacker, "puff", V.WindupPuff)
+	if shot or (s and s.kind == "all") then
+		SlimeActor.kick(attacker, "puff", V.WindupPuff * deeper)
 	else
-		SlimeActor.kick(attacker, "squash", V.WindupSquash)
+		SlimeActor.kick(attacker, "squash", V.WindupSquash * deeper)
 	end
 end
 
--- The blow reaches the target: its mark, the goo, the knock-back, the number.
+-- The blow reaches the target: its mark, the goo, the knock-back, the number. A skill's heavy blow (not a splash, not one
+-- of Dash Strike's quick ones) hits like a crit; a blow a guard took for a team-mate flashes on the guard.
 local function impact(event: { [string]: any }, style: FightFx.Style)
 	local target, to, foe = find(event.to)
 	if not target or not to then
@@ -434,15 +611,21 @@ local function impact(event: { [string]: any }, style: FightFx.Style)
 	end
 	local _, from = find(event.from)
 	local crit = event.crit == true
+	local s = skillOf(event)
+	local heavy = crit or (s ~= nil and s.kind ~= "multi" and event.splash ~= true)
 	local dir = along(to - (from or to - target.root.LookVector), -target.root.LookVector)
 	local height = target.body.Size.Y
 	local skin = to - dir * radius(target) * 0.8 + Vector3.new(0, height * 0.5, 0)
-	FightFx.mark(style, skin, skin - dir * 3, crit)
-	FightFx.goo(target.body, skin, dir, if crit then F.Goo.count * 2 else F.Goo.count)
-	play(target, to, dir * V.KnockStuds * (if crit then V.CritKnock else 1), V.KnockSeconds, 0.2, V.HitStopSeconds)
+	FightFx.mark(style, skin, skin - dir * 3, heavy)
+	FightFx.goo(target.body, skin, dir, if heavy then F.Goo.count * 2 else F.Goo.count)
+	play(target, to, dir * V.KnockStuds * (if heavy then V.CritKnock else 1), V.KnockSeconds, 0.2, V.HitStopSeconds)
 	local side = if math.random() < 0.5 then -1 else 1
-	SlimeActor.kick(target, "side", side * V.FlinchSide * (if crit then 2 else 1))
-	SlimeActor.kick(target, "squash", V.FlinchSquash * (if crit then 2 else 1))
+	SlimeActor.kick(target, "side", side * V.FlinchSide * (if heavy then 2 else 1))
+	SlimeActor.kick(target, "squash", V.FlinchSquash * (if heavy then 2 else 1))
+	if type(event.guard) == "string" then
+		local guard = V.Skill.Looks.defence
+		FightFx.burst(guard.burst, skin, V.Skill.Burst * 0.5, nil)
+	end
 	local colours = V.NumberColours
 	local hit = math.max(1, math.floor((event.amount or 0) + 0.5))
 	floatText(
@@ -477,17 +660,140 @@ local function strike(event: { [string]: any }, style: FightFx.Style, land: () -
 	task.delay(contactSeconds(style), land)
 end
 
-local function onHit(event: { [string]: any })
-	local style = styleOf(event.from)
-	strike(event, style, function()
-		safe("impact", function()
-			impact(event, style)
+-- The one who strikes a skill moves once for all its blows: Goo Slam leaps onto its target, Belly Bounce leaps where it
+-- stands, the rest puff up; when it comes down the skill's art bursts and rings the ground (View.Skill.Looks).
+local function cast(event: { [string]: any }, looks: { [string]: any })
+	local caster, from = find(event.from)
+	local target, to = find(event.to)
+	if not caster or not from then
+		return
+	end
+	local K = V.Skill
+	local centre = from
+	if looks.leap then
+		SlimeActor.hop(caster, K.Leap)
+		if looks.onTarget and target and to then
+			local line = flat(to - from)
+			local reach = math.max(0, line.Magnitude - (radius(caster) + radius(target)) * 0.85)
+			local seconds = K.CastSeconds + V.KnockSeconds
+			play(
+				caster,
+				from,
+				along(line, caster.root.LookVector) * reach,
+				seconds,
+				K.CastSeconds / seconds,
+				V.HitStopSeconds
+			)
+			centre = to
+		end
+	else
+		SlimeActor.kick(caster, "puff", V.WindupPuff * K.Windup)
+	end
+	task.delay(if looks.leap then K.CastSeconds else 0, function()
+		safe("cast", function()
+			if caster.destroyed then
+				return
+			end
+			if looks.leap then
+				SlimeActor.kick(caster, "squash", V.WindupSquash * K.Windup)
+			end
+			if looks.burst then
+				FightFx.burst(looks.burst, centre + Vector3.new(0, caster.body.Size.Y * 0.5, 0), K.Burst, looks.bits)
+			end
+			if looks.ring then
+				FightFx.ring(looks.ring, centre, K.Ring)
+			end
+			if looks.ring2 then
+				FightFx.ring(looks.ring2, centre, K.Ring * 0.7)
+			end
 		end)
 	end)
 end
 
+-- How a blow gets to its target, then `land`: a plain blow lunges or spits (strike); a skill's blows wait for its caster
+-- (`first` is the skill's first blow in this batch, which moves the caster): Dash Strike dashes through and lands its
+-- blows one after another, a skill that strikes around lands them when its caster comes down, acid falls from above.
+local function deliver(event: { [string]: any }, style: FightFx.Style, first: boolean, land: () -> ())
+	local s = skillOf(event)
+	local K = V.Skill
+	if not s or (s.kind ~= "multi" and s.kind ~= "all" and s.kind ~= "splash") then
+		strike(event, style, land)
+	elseif s.kind == "multi" then
+		if first then
+			local attacker, from = find(event.from)
+			local target, to = find(event.to)
+			if attacker and from and target and to then
+				local line = flat(to - from)
+				FightFx.afterImages(
+					attacker.body,
+					along(line, attacker.root.LookVector) * (line.Magnitude - radius(target))
+				)
+			end
+			strike(event, style, function() end)
+		end
+		local n = if type(event.n) == "number" then event.n else 1
+		task.delay(contactSeconds(style) + (n - 1) * K.MultiGap, land)
+	else
+		local looks = looksOf(event)
+		if first then
+			cast(event, looks)
+		end
+		local target, to = find(event.to)
+		if looks.rain and target and to then
+			local skin = to + Vector3.new(0, target.body.Size.Y * 0.5, 0)
+			FightFx.shot(looks.rain, skin + Vector3.new(0, K.RainHeight, 0), skin, function()
+				safe("rain", function()
+					if looks.rainRing then
+						FightFx.ring(looks.rainRing, to, K.Ring * 0.45)
+					end
+				end)
+				land()
+			end)
+		else
+			task.delay(K.CastSeconds + (if event.splash then K.MultiGap else 0), land)
+		end
+	end
+end
+
+-- After its blow, once back from the lunge, the attacker takes its place again (a fast one circles to a new flank).
+local function afterBlow(event: { [string]: any }, style: FightFx.Style)
+	local back = if style.shot then 0 else V.LungeSeconds * (1 - V.ContactShare) + V.HitStopSeconds
+	if skillOf(event) then
+		back = math.max(back, V.Skill.CastSeconds + V.KnockSeconds)
+	end
+	task.delay(back, function()
+		safe("move", function()
+			reposition(event.from)
+		end)
+	end)
+end
+
+local function onHit(event: { [string]: any }, first: boolean)
+	local style = styleOf(event.from)
+	deliver(event, style, first, function()
+		safe("impact", function()
+			impact(event, style)
+		end)
+		if first then
+			afterBlow(event, style)
+		end
+	end)
+end
+
+-- Jelly Guard: the guard glows and rings the ground; for a while it takes the blows aimed at its team-mates.
+local function onGuard(event: { [string]: any })
+	local guard, at = find(event.from)
+	if not guard or not at then
+		return
+	end
+	local looks = V.Skill.Looks.defence
+	SlimeActor.kick(guard, "puff", V.WindupPuff * V.Skill.Windup)
+	FightFx.burst(looks.burst, at + Vector3.new(0, guard.body.Size.Y * 0.5, 0), V.Skill.Burst, looks.bits)
+	FightFx.ring(looks.ring, at, V.Skill.Ring * 0.8)
+end
+
 -- A miss: the blow comes, the target is already stepping aside and leaves fading copies of itself.
-local function onDodge(event: { [string]: any })
+local function onDodge(event: { [string]: any }, first: boolean)
 	local style = styleOf(event.from)
 	local target, home = find(event.to)
 	if target and home then
@@ -498,13 +804,16 @@ local function onDodge(event: { [string]: any })
 		play(target, home, step, V.DodgeSeconds)
 		SlimeActor.hop(target, V.LungeHop)
 	end
-	strike(event, style, function()
+	deliver(event, style, first, function()
 		safe("miss", function()
 			local body, at = find(event.to)
 			if body and at then
 				floatText(at + Vector3.new(0, body.body.Size.Y, 0), "Miss", Color3.new(1, 1, 1), V.HitTextSize)
 			end
 		end)
+		if first then
+			afterBlow(event, style)
+		end
 	end)
 end
 
@@ -572,7 +881,17 @@ end
 -- A fall shows when the blow that caused it lands (after the lunge or the spit), not before.
 local function onFallen(event: { [string]: any })
 	local style = if type(event.from) == "string" then styleOf(event.from) else FightFx.style(nil)
-	task.delay(contactSeconds(style) + V.HitStopSeconds, function()
+	-- (as deliver lands a skill's blows)
+	local s = skillOf(event)
+	local landing = contactSeconds(style)
+	if s and s.kind == "multi" then
+		landing += ((if type(event.n) == "number" then event.n else 1) - 1) * V.Skill.MultiGap
+	elseif s and (s.kind == "all" or s.kind == "splash") then
+		landing = if looksOf(event).rain
+			then F.ShotSeconds
+			else V.Skill.CastSeconds + (if event.splash then V.Skill.MultiGap else 0)
+	end
+	task.delay(landing + V.HitStopSeconds, function()
 		safe("fall", function()
 			fall(event)
 		end)
@@ -627,10 +946,31 @@ local function onEnd(teamIndex: number, event: { [string]: any })
 				cheer(fight)
 			end)
 		end)
+		-- then back into line where the march left them, just before it takes them home
+		task.delay(Config.Zombies.CheerSeconds - V.Moves.RegroupSeconds, function()
+			safe("regroup", function()
+				for _, id in fight.order do
+					local body = ZombieMarch.body(id)
+					local home = homes[id]
+					if body and home and not fight.fighters[id].fallen and not body.actor.destroyed then
+						moveTo(id, body.actor, home, body.stand, body.stand + body.facing, V.Moves.RegroupSeconds)
+					end
+				end
+			end)
+		end)
 	end
 	task.delay(Config.Zombies.CheerSeconds, function()
 		if fights[teamIndex] == fight then
 			fights[teamIndex] = nil
+		end
+		for _, id in fight.order do
+			homes[id], targets[id] = nil, nil
+		end
+		local foes = ZombieWorld.group(fight.groupId)
+		if foes then
+			for id in foes.byId do
+				homes[id], targets[id] = nil, nil
+			end
 		end
 	end)
 end
@@ -652,17 +992,26 @@ local function onEvents(payload: any)
 	if type(payload) ~= "table" or type(payload.team) ~= "number" or type(payload.events) ~= "table" then
 		return
 	end
+	-- (a skill's blows come together in one batch; its caster moves for the first of them only)
+	local casting: { [string]: boolean } = {}
 	for _, event in payload.events do
 		safe("event " .. tostring(event.kind), function()
 			local kind = event.kind
+			local first = true
+			if (kind == "hit" or kind == "dodge") and event.skill ~= nil and type(event.from) == "string" then
+				first = not casting[event.from]
+				casting[event.from] = true
+			end
 			if kind == "start" then
 				onStart(payload.team, event)
 			elseif kind == "aim" then
 				onAim(event)
+			elseif kind == "guard" then
+				onGuard(event)
 			elseif kind == "hit" then
-				onHit(event)
+				onHit(event, first)
 			elseif kind == "dodge" then
-				onDodge(event)
+				onDodge(event, first)
 			elseif kind == "fallen" then
 				onFallen(event)
 			elseif kind == "end" then
