@@ -1,5 +1,20 @@
 # Status
 
+## 2026-11-04 — the Slime Dungeon (Sunny Meadow), first playable
+
+The owner: an arena where monsters come in waves, more each wave, their level and strength rising. `docs/GAMEPLAY.md` §14.
+A portal beside every village gate (Egg Heist's portal, rebuilt by the server from its published kit meshes, as the owner asked)
+opens a sheet: pick teams and the level, Enter. A private arena per player; 10 waves of Sunny Meadow's 7 monsters (mini-boss on 5,
+boss on 10); drops paid at each wave clear, the open wave lost on a defeat or a leave; Next Level / Replay / Leave at the end.
+Saved: **schema 9** (`farm.dungeon.best`), so a publish must shut down old servers. Drop icons and the portal icon from ChatGPT
+(`art/icons/dg_*.png`). Balance: the original's numbers beat four starters in wave 1, so `StatScale` 0.3 and a level is x1.6.
+
+Proved in Studio play tests (`Publish.rbxl`): the portal at the gate (`docs/ui/dungeon-portal-gate.jpg`), the sheet with the drop
+pictures, the HUD, slimes fighting, waves 1-2 cleared and paid (coins and carrots in the HUD), a defeat in wave 3 with the
+Defeated card, Leave back in front of the portal, no console errors. Still stand-ins: the greybox arena and the monsters (zombie
+bodies tinted by kind); next are the Sunny Meadow arena scene and the seven monster models from the owner's paintings. Not seen
+live: a victory, Next Level, the mini-boss and boss skills, a phone screen.
+
 ## 2026-11-04 — new players start with eight slimes
 
 The owner: the start is slow; begin with 8 slimes so a player can fight at once. `Config.Farm.StarterCount` is 8 (was 4): a full team of

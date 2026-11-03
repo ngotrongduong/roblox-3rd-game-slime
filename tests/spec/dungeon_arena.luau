@@ -83,19 +83,14 @@ return function(T: any)
 		end
 	end)
 
-	T.test("a player who leaves lands ExitOut studs from their portal, on the gate's side, facing away", function()
+	T.test("a player who leaves lands ExitOut studs in front of their portal's opening, facing away", function()
 		for plot = 1, M.PlotCount do
-			local portal = Layout.plotPortal(plot).Position
+			local frame = Layout.plotPortal(plot)
+			local portal = frame.Position
 			local landing = Layout.portalLanding(plot)
 			local flat = landing.Position - portal
 			T.near(math.sqrt(flat.X ^ 2 + flat.Z ^ 2), D.ExitOut, 0.01, "plot " .. plot)
-			local gate = Layout.plotGate(plot).Position
-			local other = portal - Vector3.new(flat.X, 0, flat.Z)
-			T.ok(
-				(Vector3.new(landing.Position.X, 0, landing.Position.Z) - Vector3.new(gate.X, 0, gate.Z)).Magnitude
-					<= (Vector3.new(other.X, 0, other.Z) - Vector3.new(gate.X, 0, gate.Z)).Magnitude,
-				"the gate's side, plot " .. plot
-			)
+			T.ok(frame:VectorToObjectSpace(Vector3.new(flat.X, 0, flat.Z)).Z > 0, "the opening's side, plot " .. plot)
 			T.ok(
 				landing.LookVector:Dot(Vector3.new(flat.X, 0, flat.Z).Unit) > 0.99,
 				"facing away from the portal, plot " .. plot

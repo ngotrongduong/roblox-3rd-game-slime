@@ -23,6 +23,8 @@ local rewardsButton: ImageButton? = nil
 local badge: TextLabel? = nil
 -- Whether the coins were at the cap at the last look; nil until the vault's cap is known.
 local coinsFull: boolean? = nil
+-- Whether a Slime Dungeon run is on (the village's edge buttons stay put away).
+local inArena = false
 
 local function short(amount: number): string
 	if amount >= 1_000_000 then
@@ -203,7 +205,23 @@ function UiHud.setVisible(visible: boolean)
 		strip.Visible = visible
 	end
 	if edge then
-		edge.Visible = visible
+		edge.Visible = visible and not inArena
+	end
+end
+
+-- Inside the Slime Dungeon the village's round buttons, team chips and notices have nothing to do: they are put away for the
+-- run (the resource strip stays; the drops are coins and food too). The dead chip is put away by UiSquad itself.
+function UiHud.setArena(on: boolean)
+	inArena = on
+	if edge then
+		edge.Visible = not on and (strip ~= nil and strip.Visible)
+	end
+	local root = if edge then edge.Parent else nil
+	for _, name in { "TeamChips", "Notices" } do
+		local found = if root then root:FindFirstChild(name) else nil
+		if found and found:IsA("GuiObject") then
+			found.Visible = not on
+		end
 	end
 end
 

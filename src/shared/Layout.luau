@@ -158,20 +158,12 @@ function Layout.plotPortal(plot: number): CFrame
 		* CFrame.Angles(0, math.rad(P.TurnDegrees), 0)
 end
 
--- Where a player is put when they leave the Dungeon: Config.Dungeon.ExitOut studs from their portal on the side of the
--- gate (the portal's opening faces one way or the other), ExitLift up, turned away from the portal.
+-- Where a player is put when they leave the Dungeon: Config.Dungeon.ExitOut studs in front of their portal's opening (its
+-- +Z, which faces the path; its back stands by the fence), ExitLift up, turned away from the portal.
 function Layout.portalLanding(plot: number): CFrame
 	local D = Config.Dungeon
 	local portal = Layout.plotPortal(plot)
-	local gate = Layout.plotGate(plot).Position
-	local best: Vector3? = nil
-	for side = -1, 1, 2 do
-		local at = (portal * CFrame.new(0, 0, side * D.ExitOut)).Position
-		if best == nil or (at - gate).Magnitude < (best - gate).Magnitude then
-			best = at
-		end
-	end
-	local at = best :: Vector3
+	local at = (portal * CFrame.new(0, 0, D.ExitOut)).Position
 	local away = at - portal.Position
 	-- (yaw by hand, as slotFrame does: a yaw's LookVector is (-sin, 0, -cos))
 	return CFrame.new(at.X, M.GroundY + D.ExitLift, at.Z) * CFrame.Angles(0, math.atan2(-away.X, -away.Z), 0)

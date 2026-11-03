@@ -343,3 +343,33 @@ only after the tutorial. Rules in `shared/Rewards` (Lune tests `tests/spec/rewar
 Saved in the farm as `rewards` (schema 8: `daily {streak, day}`, `quests {day, list, bonus}`, `online {day, secs, claimed}`,
 `indexSeen`) and `lifetime.slimesSold`, `lifetime.meals`; old saves start fresh. Claims go through the Village remote (`ClaimDaily`,
 `ClaimQuest`, `ClaimQuestBonus`, `ClaimOnline`, `IndexSeen`), each checked on the server and saved at once.
+
+## 14. The Slime Dungeon (2026-11-04)
+
+A private arena where the player's teams fight monsters that come in waves (the owner: more monsters each wave, their level and
+strength rising). Numbers from the original (`docs/reference/02-battle.md` §5-7, §13), all in `Config.Dungeon`. Rules in
+`shared/Dungeon` (Lune tests `tests/spec/dungeon.luau`, `dungeon_arena.luau`), the run in `server/Dungeon`, the portal in
+`server/DungeonPortal`, screens in `client/UiDungeon`, the fight drawn by `client/DungeonFight` with the zombie fight's code.
+
+- **The portal**: Egg Heist's portal (the owner, 2026-11-04: use the portal we have), rebuilt by the server from its kit meshes beside
+  every plot's gate, outside the fence, its opening toward the path (`Layout.plotPortal`). Only the owner of the plot can use it.
+- **The sheet**: the map (Sunny Meadow) with its drops as pictures and ranges, the teams that are home and have members (several can
+  go), the level from 1 to the best cleared + 1, Enter.
+- **A run**: 10 waves. A wave's crowd has a budget (6, 9, 12, 15, then x1.3 from wave 6, at most 40) filled from the map's monsters by
+  cost; wave 5 is the mini-boss Bloomshell alone, wave 10 the boss Bramblehorn alone. One monster comes in every 0.8 s while fewer than
+  8 stand, at the arena's rim. HP and attack are x`StatScale` (0.3), x1.12 each wave and x1.6 each level; the shown level is the
+  monster's stats read as a slime's.
+- **Monsters of Sunny Meadow**: Sproutling (melee), Honey Bee (goes for the weakest, its sting slows 70% for 2 s), Puffdandy (ranged),
+  Glowmoth (heals the most wounded monster), Clover Snail (armoured elite), Bloomshell (Pollen Shockwave: hits every slime, a short
+  stun), Bramblehorn (Thorn Charge: a heavy blow that splashes).
+- **Drops**: each monster rolls once by its role (normal, elite, mini-boss, boss; luck +5% a level) and the map's own Boar Tusk (2 from
+  the boss, 18% from the mini-boss and elites). Coins go to the purse (the vault limit holds), "food" is carrots in the storehouse, the
+  rest to `farm.materials` (for the Smithy later). A wave's drops are paid when it clears; the wave in play is lost on a defeat or a
+  leave.
+- **Slimes**: a slime that falls is a ghost (the village's rule, revived with food); wounds carry from wave to wave and home. A run
+  costs every slime that went energy 8 and fullness 2, once.
+- **End**: Victory raises the best level and offers Next Level, Replay or Leave; Defeat offers Replay or Leave. Leave puts the player in
+  front of their portal; the slimes walk home.
+
+Saved in the farm as `dungeon = { best }` (schema 9). Requests through the Village remote (`DungeonEnter`, `DungeonNext`,
+`DungeonReplay`, `DungeonLeave`), each checked on the server (who, where, which teams, the level, the rate).

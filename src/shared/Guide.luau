@@ -381,6 +381,14 @@ local intros: { [string]: Intro } = {
 			return farm.rewards.indexSeen
 		end,
 	},
+	dungeon = {
+		line = "The Dungeon is open! Step into the portal.",
+		target = "portal",
+		when = hasTeam,
+		done = function(farm)
+			return farm.dungeon.best >= 1
+		end,
+	},
 	recipes = {
 		line = "New recipes! Choose one at a cook's spot.",
 		target = "spot:kitchen",

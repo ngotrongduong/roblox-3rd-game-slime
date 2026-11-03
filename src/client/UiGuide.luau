@@ -207,6 +207,8 @@ local function worldTarget(target: string): Vector3?
 		return breedingPosition()
 	elseif kind == "banner" and type(plot) == "number" then
 		return Layout.plotMuster(plot).Position
+	elseif kind == "portal" and type(plot) == "number" then
+		return Layout.plotPortal(plot).Position
 	elseif kind == "market" then
 		return Layout.marketPoint(Config.Market.Buyer)
 	elseif kind == "group" then
@@ -556,6 +558,13 @@ end
 local function step(t: number)
 	local id = text("GuideId")
 	local kind = text("GuideKind")
+	-- (inside the Dungeon the village's arrows and cards have nothing to point at; they come back with the player)
+	local run = player:GetAttribute("DungeonPhase")
+	if id ~= "" and type(run) == "string" and run ~= "" then
+		shown, shownKind = "", ""
+		hideAll()
+		return
+	end
 	if id == "" then
 		if shownKind == "tutorial" and not skipped then
 			UiKit.toast("Tutorial complete. Happy breeding!")

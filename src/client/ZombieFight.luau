@@ -44,8 +44,22 @@ type Bar = {
 	gui: BillboardGui,
 	fill: Frame,
 	lag: Frame,
-	node: Configuration,
+	node: Instance,
 	connection: RBXScriptConnection,
+}
+-- A body somebody else stands on this field (the Slime Dungeon, client/DungeonFight: the squad and the monsters of the
+-- arena), registered with ZombieFight.adopt so the same fight drawing works on it. `way` is the way it fights, `stand`
+-- where it began, `foe` whether it is a monster, `node` where its Hp / MaxHp are read, `gone` runs when a monster has
+-- fallen and burst away.
+export type Extra = {
+	actor: SlimeActor.Slime,
+	stand: Vector3,
+	foe: boolean,
+	way: string,
+	size: number,
+	dead: boolean,
+	node: Instance,
+	gone: (() -> ())?,
 }
 -- A move out from the standing place and back: reaches `delta` after `out` of `duration`, holds there `hold` seconds,
 -- then comes back; or, when `stay`, a move to a new standing place (home + delta) over `duration`.
@@ -69,6 +83,10 @@ local syncing = false
 local numbersAlive = 0
 local burstsAlive = 0
 local warned: { [string]: boolean } = {}
+-- The Slime Dungeon's bodies (see Extra) and the round field they fight on (nil outside it).
+local extras: { [string]: Extra } = {}
+local arena: { centre: Vector3, radius: number }? = nil
+local dungeonHandler: ((events: { any }) -> ())? = nil
 
 local function safe(label: string, work: () -> ())
 	local ok, err = pcall(function(): any
@@ -253,6 +271,10 @@ end
 -- The body and the standing place of a fighter (a body of the march) or a zombie by its id; the last is whether it is a
 -- zombie (a zombie id never matches a slime of a team).
 local function find(id: string): (SlimeActor.Slime?, Vector3?, boolean)
+	local extra = extras[id]
+	if extra then
+		return extra.actor, homes[id] or extra.stand, extra.foe
+	end
 	if fightOf(id) then
 		local body = ZombieMarch.body(id)
 		if body then
@@ -269,6 +291,10 @@ end
 
 -- Where a fighter began (its side of the field): the end of the march, or its place in the group.
 local function anchorOf(id: string): Vector3?
+	local extra = extras[id]
+	if extra then
+		return extra.stand
+	end
 	if fightOf(id) then
 		local body = ZombieMarch.body(id)
 		return if body then body.stand else nil
@@ -279,6 +305,10 @@ end
 
 -- A fighter's way of fighting: a slime's role, a zombie's kind.
 local function wayOf(id: string): string
+	local extra = extras[id]
+	if extra then
+		return extra.way
+	end
 	local fight = fightOf(id)
 	if fight then
 		return fight.roles[id] or "attack"
@@ -316,6 +346,21 @@ end
 
 -- ===== Moving about the field =====
 
+-- The ground under a place on the field: in the Dungeon's arena the flat floor at the arena's height, kept inside its
+-- rim; elsewhere the map's ground.
+local function groundFor(point: Vector3): Vector3
+	local field = arena
+	if not field then
+		return ZombieWorld.groundOnMap(point.X, point.Z)
+	end
+	local offset = flat(point - field.centre)
+	local limit = field.radius - Config.Dungeon.View.EdgeMargin
+	if offset.Magnitude > limit then
+		offset = offset.Unit * limit
+	end
+	return Vector3.new(field.centre.X + offset.X, field.centre.Y, field.centre.Z + offset.Z)
+end
+
 -- The fighter hops to a new standing place, turned to `faceAt`.
 local function moveTo(
 	id: string,
@@ -330,7 +375,7 @@ local function moveTo(
 	if distance < M.MinStuds then
 		return
 	end
-	local spot = ZombieWorld.groundOnMap(to.X, to.Z)
+	local spot = groundFor(to)
 	local time = seconds or math.clamp(distance / M.Speed, M.MinSeconds, M.MaxSeconds)
 	homes[id] = spot
 	local look = along(faceAt - from, actor.root.LookVector)
@@ -346,13 +391,14 @@ end
 local function guardSpot(id: string, actor: SlimeActor.Slime, foeAt: Vector3): Vector3?
 	local fight = fightOf(id)
 	local team = if fight then ZombieTeams.get(fight.team) else nil
-	if not fight or not team then
+	if not fight or not (team or extras[id]) then
 		return nil
 	end
 	local weakest: string? = nil
 	local lowest = 1
 	for _, other in fight.order do
-		local node = team.node:FindFirstChild(other)
+		local extra = extras[other]
+		local node = if extra then extra.node elseif team then team.node:FindFirstChild(other) else nil
 		if other ~= id and node and not fight.fighters[other].fallen then
 			local share = number(node, "Hp", 1) / math.max(number(node, "MaxHp", 1), 1)
 			if share < lowest then
@@ -375,6 +421,10 @@ local function fightAround(id: string): Fight?
 	local fight = fightOf(id)
 	if fight then
 		return fight
+	end
+	local extra = extras[id]
+	if extra and extra.foe then
+		return fights[0]
 	end
 	for _, each in fights do
 		local group = ZombieWorld.group(each.groupId)
@@ -404,6 +454,14 @@ local function apart(id: string, actor: SlimeActor.Slime, spot: Vector3): Vector
 	if group then
 		for other in group.byId do
 			if other ~= id and other ~= targetId and not ZombieWorld.isDead(other) then
+				table.insert(others, other)
+			end
+		end
+	end
+	if fight.team == 0 then
+		-- (the Dungeon's monsters)
+		for other, extra in extras do
+			if extra.foe and other ~= id and other ~= targetId and not extra.dead then
 				table.insert(others, other)
 			end
 		end
@@ -458,11 +516,16 @@ end
 local function reposition(id: string, seconds: number?)
 	local targetId = targets[id]
 	local actor, home = find(id)
-	if not targetId or not actor or not home or actor.destroyed or ZombieWorld.isDead(id) then
+	local extra = extras[id]
+	local gone = if extra then extra.dead else ZombieWorld.isDead(id)
+	if not targetId or not actor or not home or actor.destroyed or gone then
 		return
 	end
 	local fight = fightOf(id)
 	if fight and (fight.over or fight.fighters[id].fallen) then
+		return
+	end
+	if extra and extra.foe and (not fights[0] or fights[0].over) then
 		return
 	end
 	local spot, at = spotFor(id, actor, targetId)
@@ -497,7 +560,7 @@ local function dropBar(id: string)
 	end
 end
 
-local function showBar(id: string, actor: SlimeActor.Slime, node: Configuration, ours: boolean)
+local function showBar(id: string, actor: SlimeActor.Slime, node: Instance, ours: boolean)
 	local bar = bars[id]
 	if bar and bar.gui.Adornee == actor.body then
 		return
@@ -560,6 +623,21 @@ end
 
 -- Bars follow the bodies: drawn while the team or the group is near, gone when it is not (the fight itself goes on).
 local function sync(fight: Fight)
+	if fight.team == 0 then
+		-- (the Dungeon: every body is registered, there is no march or camp to look up)
+		for id, extra in extras do
+			safe("sync " .. id, function()
+				local fighter = fight.fighters[id]
+				local standing = if extra.foe then not extra.dead else fighter ~= nil and not fighter.fallen
+				if not fight.over and standing and not extra.actor.destroyed then
+					showBar(id, extra.actor, extra.node, not extra.foe)
+				else
+					dropBar(id)
+				end
+			end)
+		end
+		return
+	end
 	local group = ZombieWorld.group(fight.groupId)
 	local team = ZombieTeams.get(fight.team)
 	for _, id in fight.order do
@@ -853,6 +931,22 @@ local function onGuard(event: { [string]: any })
 	FightFx.ring(looks.ring, at, V.Skill.Ring * 0.8)
 end
 
+-- A healer mends a team-mate (the Dungeon's monsters do): the healer puffs up, the mended one gets the cross and a green
+-- number.
+local function onHeal(event: { [string]: any })
+	local healer = find(event.from)
+	local target, to = find(event.to)
+	if healer then
+		SlimeActor.kick(healer, "puff", V.WindupPuff)
+	end
+	if target and to then
+		local amount = math.max(1, math.floor((event.amount or 0) + 0.5))
+		local P = Config.Dungeon.View
+		FightFx.burst("healCross", to + Vector3.new(0, target.body.Size.Y * 0.5, 0), P.HealBurst, nil)
+		floatText(to + Vector3.new(0, target.body.Size.Y, 0), "+" .. amount, UiKit.colour(P.HealColour), V.HitTextSize)
+	end
+end
+
 -- A miss: the blow comes, the target is already stepping aside and leaves fading copies of itself.
 local function onDodge(event: { [string]: any }, first: boolean)
 	local style = styleOf(event.from)
@@ -883,6 +977,30 @@ local function fall(event: { [string]: any })
 	local coins: number = event.coins or 0
 	local actor, spot, foe = find(id)
 	local size = V.RewardTextSize
+	local monster = extras[id]
+	if monster and monster.foe then
+		-- a Dungeon monster: it bursts in the way it fights; its drops are the Dungeon's to show (no coins fly from it)
+		monster.dead = true
+		dropBar(id)
+		local style = FightFx.style(monster.way)
+		local bigness = math.clamp(monster.size, 1, Config.Dungeon.View.DeathBigness)
+		local body = monster.actor.body
+		local at = spot or monster.stand
+		local centre = at + Vector3.new(0, body.Size.Y * 0.5, 0)
+		SlimeActor.kick(monster.actor, "squash", V.DeathSquash)
+		task.delay(V.DeathDelay, function()
+			safe("burst", function()
+				FightFx.burst(style.death or "burstShock", centre, F.DeathBurst * bigness, style.bits)
+				FightFx.ring(style.ring or "ringShock", at, F.DeathRing * bigness)
+				FightFx.goo(body, centre, body.CFrame.LookVector, F.DeathGoo)
+			end)
+			local gone = monster.gone
+			if gone then
+				gone()
+			end
+		end)
+		return
+	end
 	if foe then
 		local zombie = ZombieWorld.zombie(id)
 		local kind = if zombie then zombie.kind else nil
@@ -910,12 +1028,11 @@ local function fall(event: { [string]: any })
 			if fighter then
 				fighter.fallen = true
 				dropBar(id)
-				local body = ZombieMarch.body(id)
-				if actor and body then
+				if actor then
 					SlimeActor.setEmotion(actor, "sad")
 					SlimeActor.kick(actor, "turn", V.FallTurn)
 					FightFx.stars(actor.body.Position + Vector3.new(0, actor.body.Size.Y * 0.6, 0), V.StarSize)
-					for _, part in body.model:GetDescendants() do
+					for _, part in actor.model:GetDescendants() do
 						if part:IsA("MeshPart") then
 							TweenService
 								:Create(part, TweenInfo.new(V.FadeSeconds), {
@@ -963,9 +1080,10 @@ end
 local function cheer(fight: Fight)
 	for index, id in fight.order do
 		local fighter = fight.fighters[id]
-		local body = ZombieMarch.body(id)
-		if fighter and not fighter.fallen and body then
-			local actor = body.actor
+		local extra = extras[id]
+		local body = if extra then nil else ZombieMarch.body(id)
+		local actor = if extra then extra.actor elseif body then body.actor else nil
+		if fighter and not fighter.fallen and actor then
 			local start = (index - 1) * V.CheerStagger + V.HitStopSeconds
 			task.delay(start, function()
 				if not actor.destroyed then
@@ -1025,6 +1143,10 @@ local function onEnd(teamIndex: number, event: { [string]: any })
 			end)
 		end)
 	end
+	if teamIndex == 0 then
+		-- (the Dungeon's field stays as it is until DungeonFight clears it: the end card is on the screen)
+		return
+	end
 	task.delay(Config.Zombies.CheerSeconds, function()
 		if fights[teamIndex] == fight then
 			fights[teamIndex] = nil
@@ -1056,6 +1178,13 @@ local function onEvents(payload: any)
 	if type(payload) ~= "table" or type(payload.team) ~= "number" or type(payload.events) ~= "table" then
 		return
 	end
+	-- (the Slime Dungeon's bodies are made first, so every event of the batch finds them)
+	local handler = dungeonHandler
+	if payload.dungeon == true and handler then
+		safe("dungeon", function()
+			handler(payload.events)
+		end)
+	end
 	-- (a skill's blows come together in one batch; its caster moves for the first of them only)
 	local casting: { [string]: boolean } = {}
 	for _, event in payload.events do
@@ -1078,6 +1207,8 @@ local function onEvents(payload: any)
 				onDodge(event, first)
 			elseif kind == "fallen" then
 				onFallen(event)
+			elseif kind == "heal" then
+				onHeal(event)
 			elseif kind == "end" then
 				onEnd(payload.team, event)
 			elseif kind == "home" then
@@ -1085,6 +1216,54 @@ local function onEvents(payload: any)
 			end
 		end)
 	end
+end
+
+-- ===== The Slime Dungeon's door into the drawing (client/DungeonFight) =====
+
+-- The round field the fight is on (its middle at the floor's top, its radius), nil when there is none.
+function ZombieFight.setArena(centre: Vector3?, rim: number?)
+	arena = if centre and rim then { centre = centre, radius = rim } else nil
+end
+
+-- Who gets the batches of events that say `dungeon = true`, before ZombieFight draws them.
+function ZombieFight.setDungeon(handler: ((events: { any }) -> ())?)
+	dungeonHandler = handler
+end
+
+-- A body of the Dungeon joins the fight under `id` (the id the events name); a new run reuses ids, so what the last run
+-- left under it is forgotten.
+function ZombieFight.adopt(id: string, extra: Extra)
+	homes[id], targets[id] = nil, nil
+	dropBar(id)
+	extras[id] = extra
+	local fight = fights[0]
+	if fight then
+		safe("adopt", function()
+			sync(fight)
+		end)
+	end
+end
+
+function ZombieFight.release(id: string)
+	dropBar(id)
+	extras[id], homes[id], targets[id] = nil, nil, nil
+end
+
+-- Where a body of the fight stands now (nil when it is not known).
+function ZombieFight.where(id: string): Vector3?
+	local _, at = find(id)
+	return at
+end
+
+-- The run is over: every body and bar is let go, and the field with it.
+function ZombieFight.endDungeon()
+	for id in extras do
+		dropBar(id)
+		homes[id], targets[id] = nil, nil
+	end
+	table.clear(extras)
+	fights[0] = nil
+	arena = nil
 end
 
 function ZombieFight.start()

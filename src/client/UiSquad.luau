@@ -11,6 +11,7 @@ local Layout = require(ReplicatedStorage.Shared.Layout)
 local Mutations = require(ReplicatedStorage.Shared.Mutations)
 local ZombieRules = require(ReplicatedStorage.Shared.Zombies)
 local UiDishShop = require(script.Parent.UiDishShop)
+local UiDungeon = require(script.Parent.UiDungeon)
 local UiFood = require(script.Parent.UiFood)
 local UiKit = require(script.Parent.UiKit)
 local UiMarket = require(script.Parent.UiMarket)
@@ -70,6 +71,13 @@ local reasons: { [string]: string } = {
 	UNKNOWN_DISH = "Not available.",
 	INVALID_COUNT = "Not available.",
 	INVALID_ARGUMENT = "Not available.",
+	-- the Slime Dungeon
+	IN_RUN = "Already in the Dungeon.",
+	NO_PLOT = "Village is loading.",
+	LEVEL_LOCKED = "Clear the level below first.",
+	NO_FIT = "Nobody can go.",
+	NO_RUN = "Not in the Dungeon.",
+	BAD_PHASE = "Not yet.",
 }
 
 local function reasonText(reason: any): string
@@ -293,7 +301,9 @@ local function refreshChip()
 	end
 	local own = ownOf()
 	local dead = if own then deadSlimes() else {}
-	item.root.Visible = #dead > 0
+	-- (not inside the Dungeon: the village's chips are put away for the run)
+	local run = player:GetAttribute("DungeonPhase")
+	item.root.Visible = #dead > 0 and not (type(run) == "string" and run ~= "")
 	if #dead > 0 then
 		item.set(tostring(#dead) .. "  " .. clock(dead[1].left))
 		local value = item.root:FindFirstChild("Value", true)
@@ -533,6 +543,9 @@ function UiSquad.start(own: () -> Folder?)
 
 	-- the teams: the gate sheet, the attack sheet, the chips and the notice
 	UiTeams.start({ own = own, ask = ask, reason = reasonText, open = openSheet })
+
+	-- the Slime Dungeon: the portal's sheet, the arena's plate, the banner and the end card
+	UiDungeon.start({ own = own, ask = ask, reason = reasonText, open = openSheet })
 
 	-- the Market: the VIP counter's prompt and sheet (UiMarket), and one prompt where the slime buyer stands
 	UiMarket.start({ open = openSheet, anchor = anchorAt })

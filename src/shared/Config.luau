@@ -719,18 +719,34 @@ Config.Dungeon = {
 	BossMapMaterial = 2,
 	-- A "food" drop is this raw food in the storehouse (Config.Food.Raw); what does not fit the pantry is lost.
 	FoodItem = "carrot",
-	-- What a drop is. `kind`: coins go to the purse, food to the storehouse, a material to farm.materials.
+	-- What a drop is. `kind`: coins go to the purse, food to the storehouse, a material to farm.materials. The screens
+	-- (client/UiDungeon) draw coins and food with the owner's coin and food pictures (Config.Ui.Icons) and a material with its
+	-- `icon`: a Roblox image id (a number) or "rbxassetid://..." once the picture exists; until then ("") a plain rounded tile
+	-- carries its `short` name. DropOrder is the order drops are listed in.
 	Materials = {
 		coins = { name = "Coins", kind = "coins" },
 		food = { name = "Slime Snacks", kind = "food" },
-		wood = { name = "Hardwood", kind = "material" },
-		cloth = { name = "Linen Cloth", kind = "material" },
-		ore = { name = "Iron Ore", kind = "material" },
-		common_part = { name = "Slime Residue", kind = "material" },
-		rare_part = { name = "Gooey Core Fragment", kind = "material" },
-		monster_core = { name = "Monster Core", kind = "material" },
-		boss_essence = { name = "Boss Essence", kind = "material" },
-		boar_tusk = { name = "Boar Tusk", kind = "material" },
+		-- (the pictures: ChatGPT in the game's icon style, 2026-11-04, art/icons/dg_*.png)
+		wood = { name = "Hardwood", short = "Wood", kind = "material", icon = 105540459123913 },
+		cloth = { name = "Linen Cloth", short = "Cloth", kind = "material", icon = 128498997412713 },
+		ore = { name = "Iron Ore", short = "Ore", kind = "material", icon = 107577459785586 },
+		common_part = { name = "Slime Residue", short = "Residue", kind = "material", icon = 109902889353186 },
+		rare_part = { name = "Gooey Core Fragment", short = "Fragment", kind = "material", icon = 104963871301466 },
+		monster_core = { name = "Monster Core", short = "Core", kind = "material", icon = 118559273498942 },
+		boss_essence = { name = "Boss Essence", short = "Essence", kind = "material", icon = 135452085949250 },
+		boar_tusk = { name = "Boar Tusk", short = "Tusk", kind = "material", icon = 97935793546139 },
+	},
+	DropOrder = {
+		"coins",
+		"food",
+		"wood",
+		"cloth",
+		"ore",
+		"common_part",
+		"rare_part",
+		"monster_core",
+		"boss_essence",
+		"boar_tusk",
 	},
 
 	-- ===== The run (server/Dungeon) =====
@@ -755,7 +771,7 @@ Config.Dungeon = {
 	SpawnMinApart = 14,
 	SpawnTries = 12,
 	-- The player stands PlayerSpot (flat, from the middle) PlayerLift up, facing the middle; leaving puts them ExitOut studs
-	-- in front of their portal (on the side of the gate), ExitLift up. A player who strays StrayStuds past the rim (a
+	-- in front of their portal's opening, ExitLift up. A player who strays StrayStuds past the rim (a
 	-- respawn, a fall) is put back.
 	PlayerSpot = { x = 0, z = 22 },
 	PlayerLift = 4,
@@ -787,6 +803,71 @@ Config.Dungeon = {
 			bramblehorn = "#8a5a3a",
 		},
 		Sizes = { normal = 3, armoured = 4, miniboss = 7, boss = 10 },
+	},
+
+	-- ===== The client (client/UiDungeon, DungeonFight, MonsterLook): pixels, studs and seconds =====
+	View = {
+		-- The gate sheet: its height, a team row (the row's portraits), the level stepper and the Enter button.
+		GateSheetHeight = 420,
+		TeamRowHeight = 56,
+		TeamPortrait = 40,
+		DropIcon = 22,
+		StepperButton = 48,
+		StepperLabel = 70,
+		EnterWidth = 110,
+		-- The arena HUD: the plate at the top (wave, level, monsters left), the drops column at the left edge, the Leave button
+		-- at the right edge.
+		PlateWidth = 236,
+		PlateHeight = 40,
+		PlateWave = 88,
+		PlateLevel = 48,
+		PlateLeft = 34,
+		DropsWidth = 300,
+		DropChip = 34,
+		LeaveWidth = 104,
+		-- The end card at the top: Victory or Defeat, the drops of the run and the buttons.
+		EndWidth = 420,
+		EndHeight = 140,
+		EndTitle = 30,
+		-- The wave banner ("Wave 3", "Mini-boss!", "Boss!"): where (share of the screen's height), how big, how long.
+		BannerTop = 0.2,
+		BannerSize = 44,
+		BannerSeconds = 1.8,
+		BannerColours = { normal = "#ffe9a8", miniboss = "#ffb02e", boss = "#ff6a5a" },
+		-- How often the HUD and the arena's published health are looked at (the HUD itself follows the player's attributes).
+		PollSeconds = 0.25,
+		-- The squad stands in a row across the arena's middle, SquadBack studs behind the centre line, facing the player.
+		SquadBack = 2,
+		-- A fighter stays this far inside the rim.
+		EdgeMargin = 5,
+		-- A monster's name and level over its health bar (pixels); a stray body is cleared when the player's DungeonPhase has
+		-- been empty this long after a run began.
+		NameWidth = 160,
+		NameHeight = 22,
+		ClearGrace = 3,
+		NameColours = { normal = "#fffdf4", miniboss = "#ffb02e", boss = "#ff6a5a" },
+		-- A drop popping out of a fallen monster: the picture's size, how long it floats, how high it rises, how many at once.
+		PopIcon = 30,
+		PopSeconds = 1.3,
+		PopRise = 5,
+		PopMax = 10,
+		PopDelay = 0.22,
+		-- The way each monster kind fights, as a Config.Zombies.View.Fx.Styles / Moves name (a kind left out fights as rotten).
+		Ways = {
+			melee = "rotten",
+			hunter = "plague",
+			ranged = "toxic",
+			healer = "rotten",
+			bloomshell = "plague",
+			bramblehorn = "rotten",
+		},
+		-- A monster's burst when it falls grows with its size, up to this many times a plain one's.
+		DeathBigness = 2,
+		-- A healer's mending: the picture over the one healed (studs across).
+		HealBurst = 4,
+		HealColour = "Green",
+		-- How often the portal prompts are looked at.
+		GateWatchSeconds = 1,
 	},
 
 	-- ===== The portal (server/DungeonPortal, Layout.plotPortal) =====
@@ -2294,6 +2375,7 @@ Config.Guide = {
 		"recipes",
 		"rewards",
 		"index",
+		"dungeon",
 	},
 	-- (a step or intro id a request may name is at most this long)
 	IdMaxLength = 16,
@@ -2441,6 +2523,8 @@ Config.Ui = {
 		luck = 76165751061122,
 		rewards = 92181600961063,
 		collection = 91176780566160,
+		-- The Slime Dungeon's gate sheet header: a stone portal ring with a blue swirl (ChatGPT, 2026-11-04, art/icons/dg_dungeon.png).
+		dungeon = 136488942687177,
 		-- (drawn from the 3D items instead: docs/GAMEPLAY.md, the food chip)
 		fish = 0,
 		carrot = 0,
