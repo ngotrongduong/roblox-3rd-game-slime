@@ -134,7 +134,17 @@ Config.Combat = {
 	Roles = { "attack", "defence", "speed", "hp" },
 	-- Whom each way of fighting goes for (a slime's role or a zombie's kind; the rest pick anyone): a fast slime finishes
 	-- the one with the least health left, a strong one goes for the hardest hitter, a toxic zombie for the weakest slime.
-	Aims = { speed = "weakest", attack = "strongest", toxic = "weakest" },
+	-- (a dungeon hunter, like the toxic zombie, finishes the one with the least health)
+	Aims = { speed = "weakest", attack = "strongest", toxic = "weakest", hunter = "weakest" },
+	-- A healer (dungeon monsters, docs/reference/02-battle.md §10) does not strike while a team-mate is wounded: the most
+	-- wounded one gets back `share` times the healer's attack (the original's attack x 3 at its damage weight), and the
+	-- healer waits `extraCooldown` seconds more before its next turn.
+	Heals = { healer = { share = 0.9, extraCooldown = 1 } },
+	-- A ranged fighter strikes as any other; its events say `ranged` so the client keeps it at a distance.
+	Ranged = { ranged = true },
+	-- A plain blow of this way of fighting slows the one it hits: its beat runs at (1 - slow) speed for `seconds`
+	-- (Honey Bee: 70% for 2 s, docs/reference/02-battle.md §7). A new sting only renews the time; it never stacks.
+	Stings = { hunter = { slow = 0.7, seconds = 2 } },
 	-- How much more often a fighter that picks anyone picks one of these: the guard draws the blows to itself.
 	Pull = { defence = 3 },
 	-- Every way of fighting has its own skill, struck instead of every `every`-th blow (the owner, 2026-11-03), its name
@@ -150,6 +160,11 @@ Config.Combat = {
 		rotten = { kind = "single", name = "Chomp", every = 5, factor = 1.6 },
 		toxic = { kind = "all", name = "Acid Rain", every = 5, factor = 0.45 },
 		plague = { kind = "all", name = "Plague Burst", every = 4, factor = 0.6, stun = 0.4 },
+		-- The two bosses of the Slime Dungeon's Sunny Meadow (Config.Dungeon): Bloomshell shakes every slime at once,
+		-- Bramblehorn charges the target with a heavy blow that throws the thorns about it (the original's charge: x2.0 on
+		-- the target, x0.6 beside it).
+		bloomshell = { kind = "all", name = "Pollen Shockwave", every = 5, factor = 0.5, stun = 0.6 },
+		bramblehorn = { kind = "splash", name = "Thorn Charge", every = 4, factor = 2, splash = 0.6, spread = 2 },
 	},
 }
 
@@ -530,6 +545,214 @@ Config.Zombies = {
 		SegmentHops = 3,
 		FormationSpacing = 4.2,
 		FormationStagger = 1.4,
+	},
+}
+
+-- The Slime Dungeon (the owner, 2026-11-04): a private arena where the team fights monsters that come in waves; each wave
+-- a set number of them, stronger from wave to wave and from dungeon level to dungeon level. The numbers are the original's
+-- (docs/reference/02-battle.md §5 waves, §6 level ladder, §7 roster, §13 loot); the rules are shared/Dungeon.
+Config.Dungeon = {
+	-- The maps in the order they open; only the first so far. `material` is the map's own drop (a boss gives
+	-- BossMapMaterial of it, a mini-boss or an elite MapMaterialChance of one). A monster: its budget `cost` (none for a
+	-- mini-boss or boss, which come alone), its level-1 stats (the same kind of numbers a slime has), its `role`, and
+	-- `kind`: the way it fights in Config.Combat (melee strikes anyone; ranged keeps its distance; hunter goes for the
+	-- slime with the least health and stings it slow; healer mends its wounded team-mates; bloomshell and bramblehorn are
+	-- the two bosses with a skill of their own).
+	Maps = {
+		meadow = {
+			name = "Sunny Meadow",
+			material = "boar_tusk",
+			monsters = {
+				{
+					id = "green_sprout",
+					name = "Sproutling",
+					role = "swarmer",
+					cost = 1,
+					attack = 1,
+					defence = 0,
+					speed = 3,
+					hp = 13,
+					kind = "melee",
+				},
+				{
+					id = "green_bee",
+					name = "Honey Bee",
+					role = "raider",
+					cost = 2,
+					attack = 3,
+					defence = 0,
+					speed = 5,
+					hp = 18,
+					kind = "hunter",
+				},
+				{
+					id = "green_dandelion",
+					name = "Puffdandy",
+					role = "spitter",
+					cost = 2,
+					attack = 3,
+					defence = 0,
+					speed = 2,
+					hp = 16,
+					kind = "ranged",
+				},
+				{
+					id = "green_moth",
+					name = "Glowmoth",
+					role = "shaman",
+					cost = 2,
+					attack = 1,
+					defence = 0,
+					speed = 2.5,
+					hp = 20,
+					kind = "healer",
+				},
+				{
+					id = "green_snail",
+					name = "Clover Snail",
+					role = "armoured",
+					cost = 3,
+					attack = 3,
+					defence = 8,
+					speed = 0.7,
+					hp = 38,
+					kind = "melee",
+				},
+				{
+					id = "green_turtle",
+					name = "Bloomshell",
+					role = "miniboss",
+					attack = 5,
+					defence = 7,
+					speed = 1.5,
+					hp = 140,
+					kind = "bloomshell",
+				},
+				{
+					id = "green_boar",
+					name = "Bramblehorn",
+					role = "boss",
+					attack = 7,
+					defence = 4,
+					speed = 2,
+					hp = 280,
+					kind = "bramblehorn",
+				},
+			} :: { any },
+		},
+	},
+	MapOrder = { "meadow" },
+
+	-- ===== Waves (§5) =====
+	-- A run is Waves waves: the mini-boss alone on MiniBossWave, the boss alone on BossWave, the others a crowd whose
+	-- cost is the budget (round((Base + PerWave x (wave - 1)) x (LateFactor from LateFrom on)), at most Max).
+	Waves = 10,
+	MiniBossWave = 5,
+	BossWave = 10,
+	BudgetBase = 6,
+	BudgetPerWave = 3,
+	BudgetLateFrom = 6,
+	BudgetLateFactor = 1.3,
+	BudgetMax = 40,
+	-- A wave's crowd is drawn with the run's seed + wave x WaveSeedStep.
+	WaveSeedStep = 7919,
+	-- The queue lets one monster in every SpawnSeconds while fewer than MaxAlive stand; between two waves the arena rests
+	-- PauseSeconds, and a wave is announced CountdownSeconds before its first monster.
+	SpawnSeconds = 0.8,
+	MaxAlive = 8,
+	PauseSeconds = 2.5,
+	CountdownSeconds = 1,
+
+	-- ===== Difficulty (the owner tunes these by playing) =====
+	-- HP and ATK of a monster times WaveGrowth^(wave - 1) inside a run, and times LevelPower^(level - 1) for the dungeon
+	-- level. Defence and speed are never scaled. A monster's shown level is Stats.level of its scaled stats, so it rises
+	-- every wave. LuckPerLevel: loot luck = 1 + LuckPerLevel x (level - 1). StatScale: HP and ATK of every monster times
+	-- this (the original's numbers beat a team of four starters in wave 1; tools/balance/dungeon_sim.luau).
+	-- Measured (20 seeds, a team of four): at 0.3 starters reach wave 3, level-10 slimes the boss's door, level 40 clear
+	-- level 1. LevelPower 1.6 (the original's 5 left even level-80 slimes short of clearing level 2).
+	StatScale = 0.3,
+	WaveGrowth = 1.12,
+	LevelPower = 1.6,
+	LuckPerLevel = 0.05,
+	-- The first dungeon level, and the best one that must be cleared before the next opens.
+	FirstLevel = 1,
+
+	-- ===== Loot (§13) =====
+	-- One regular drop a monster: a roll r in [0, 1) lands in the first window whose `upTo` is above it. The first window of
+	-- a row is scaled by the level's luck: `luck = "times"` (a rarer prize that luck makes likelier) or `"over"` (a window
+	-- of nothing that luck makes smaller); a window without an `item` is nothing. The amount is min..max.
+	-- LootClass: a monster's row by its role (any role left out is "normal").
+	LootClass = { boss = "boss", miniboss = "miniboss", armoured = "elite" },
+	Loot = {
+		boss = {
+			{ upTo = 0.05, item = "boss_essence", min = 1, max = 1, luck = "times" },
+			{ upTo = 0.50, item = "coins", min = 12, max = 20 },
+			{ upTo = 0.78, item = "ore", min = 2, max = 3 },
+			{ upTo = 1, item = "rare_part", min = 1, max = 2 },
+		} :: { any },
+		miniboss = {
+			{ upTo = 0.10, item = "monster_core", min = 1, max = 1, luck = "times" },
+			{ upTo = 0.55, item = "coins", min = 6, max = 11 },
+			{ upTo = 0.85, item = "ore", min = 1, max = 2 },
+			{ upTo = 1, item = "rare_part", min = 1, max = 1 },
+		} :: { any },
+		elite = {
+			{ upTo = 0.25, luck = "over" },
+			{ upTo = 0.45, item = "rare_part", min = 1, max = 1 },
+			{ upTo = 0.70, item = "ore", min = 1, max = 2 },
+			{ upTo = 0.85, item = "wood", min = 1, max = 2 },
+			{ upTo = 1, item = "food", min = 3, max = 5 },
+		} :: { any },
+		normal = {
+			{ upTo = 0.40, luck = "over" },
+			{ upTo = 0.55, item = "coins", min = 2, max = 5 },
+			{ upTo = 0.75, item = "food", min = 3, max = 5 },
+			{ upTo = 0.84, item = "common_part", min = 1, max = 1 },
+			{ upTo = 0.91, item = "cloth", min = 1, max = 1 },
+			{ upTo = 0.96, item = "wood", min = 1, max = 1 },
+			{ upTo = 1, item = "ore", min = 1, max = 1 },
+		} :: { any },
+	},
+	-- The map's own drop, a separate roll: these roles have MapMaterialChance of one; a boss always gives BossMapMaterial.
+	MapMaterialRoles = { miniboss = true, armoured = true },
+	MapMaterialChance = 0.18,
+	BossMapMaterial = 2,
+	-- A "food" drop is this raw food in the storehouse (Config.Food.Raw); what does not fit the pantry is lost.
+	FoodItem = "carrot",
+	-- What a drop is. `kind`: coins go to the purse, food to the storehouse, a material to farm.materials.
+	Materials = {
+		coins = { name = "Coins", kind = "coins" },
+		food = { name = "Slime Snacks", kind = "food" },
+		wood = { name = "Hardwood", kind = "material" },
+		cloth = { name = "Linen Cloth", kind = "material" },
+		ore = { name = "Iron Ore", kind = "material" },
+		common_part = { name = "Slime Residue", kind = "material" },
+		rare_part = { name = "Gooey Core Fragment", kind = "material" },
+		monster_core = { name = "Monster Core", kind = "material" },
+		boss_essence = { name = "Boss Essence", kind = "material" },
+		boar_tusk = { name = "Boar Tusk", kind = "material" },
+	},
+
+	-- ===== The portal (server/DungeonPortal, Layout.plotPortal) =====
+	-- Egg Heist's portal (the owner, 2026-11-04: "use the portal we have, near the village gate"), rebuilt from its kit
+	-- meshes, which the owner's account published (InsertService ids). It stands Across studs to the side of the gate's
+	-- middle and Out studs outside the fence, turned TurnDegrees so its opening faces the path out of the gate, at Scale of
+	-- its full size (about 29 x 23 studs when scaled). The prompt that opens the Dungeon works from PromptRangeStuds.
+	Portal = {
+		Pieces = {
+			bush_tall_grass = 86818606224653,
+			portal_crystal = 81030539240809,
+			portal_pillar = 95971264752250,
+			rock_boulder_big = 76184147421470,
+			rock_cliff_chunk = 120536488786893,
+			rock_cracked_split = 74245328366319,
+			rock_flat_slab = 120446354505612,
+		},
+		Across = -34,
+		Out = 22,
+		TurnDegrees = 150,
+		Scale = 0.55,
+		PromptRangeStuds = 14,
 	},
 }
 
@@ -1649,7 +1872,8 @@ Config.Save = {
 	-- 6: per-cook recipes and per-slime automatic dishes and buff sources.
 	-- 7: the tutorial's step and the intros seen (`guide`).
 	-- 8: the daily check-in, quests and online gifts (`rewards`), lifetime counts of slimes sold and meals eaten.
-	SchemaVersion = 8,
+	-- 9: the Slime Dungeon's best level cleared (`dungeon`).
+	SchemaVersion = 9,
 	-- A stored envelope without a version is this one.
 	FirstSchemaVersion = 1,
 

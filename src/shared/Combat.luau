@@ -24,10 +24,17 @@ export type Unit = {
 	skillNext: boolean,
 	-- a guard covers its team-mates until this many seconds into the fight
 	guardUntil: number,
+	-- stung slow: until this many seconds into the fight its beat runs at (1 - slowBy) speed
+	slowUntil: number,
+	slowBy: number,
 }
-export type Fight = { units: { Unit }, rng: Rng, seconds: number, winner: string? }
+-- `open`: more foes are still to come (the dungeon's queue), so the fight does not end when the foes in it are down; a
+-- squad wiped out ends it all the same.
+export type Fight = { units: { Unit }, rng: Rng, seconds: number, winner: string?, open: boolean? }
 -- `skill` is the way of fighting whose skill struck (a key of Config.Combat.Skills); `n` the blow's number in a
--- several-blow skill; `splash` a blow that struck beside the target; `guard` the guard that took a blow aimed elsewhere.
+-- several-blow skill; `splash` a blow that struck beside the target; `guard` the guard that took a blow aimed elsewhere;
+-- `ranged` a blow from a fighter that keeps its distance; `slow` a sting that slowed its target. A "heal" event carries
+-- the health given back in `amount`.
 export type Event = {
 	kind: string,
 	from: string?,
@@ -38,6 +45,8 @@ export type Event = {
 	n: number?,
 	splash: boolean?,
 	guard: string?,
+	ranged: boolean?,
+	slow: boolean?,
 }
 -- `maxHp` is the full health when the fighter starts wounded (hp below it); left out, hp is the full health.
 -- `role` is a slime's way of fighting (Combat.role), `kind` a zombie's kind; either sets whom it goes for.
@@ -110,6 +119,8 @@ local function unit(fighter: Fighter, side: string, rng: Rng): Unit
 		blows = blows,
 		skillNext = false,
 		guardUntil = 0,
+		slowUntil = 0,
+		slowBy = 0,
 	}
 end
 
@@ -122,6 +133,17 @@ function Combat.new(squad: { Fighter }, foes: { Fighter }, rng: Rng): Fight
 		table.insert(units, unit(fighter, "foe", rng))
 	end
 	return { units = units, rng = rng, seconds = 0 }
+end
+
+-- A fighter joins a fight that is going on (the dungeon's next monster): it opens at its own moment, as at the start.
+-- A fight that has a winner is over; nobody joins it.
+function Combat.add(fight: Fight, fighter: Fighter, side: string): Unit?
+	if fight.winner then
+		return nil
+	end
+	local joined = unit(fighter, side, fight.rng)
+	table.insert(fight.units, joined)
+	return joined
 end
 
 -- Whom a fighter goes for, by its way of fighting (Config.Combat.Aims): the one with the least health left, the one that
@@ -191,6 +213,9 @@ local function blow(
 				out[key] = value
 			end
 		end
+		if (c.Ranged :: any)[attacker.role] then
+			out.ranged = true
+		end
 		return out
 	end
 	if fight.rng:next() < math.min(c.DodgeCap, struck.speed * c.DodgePerSpeed) then
@@ -207,6 +232,13 @@ local function blow(
 	struck.hp = math.max(0, struck.hp - amount)
 	local hit = event("hit")
 	hit.amount, hit.crit = amount, crit
+	-- (only a plain blow stings: a skill has its own weight)
+	local sting = if extra == nil then (c.Stings :: any)[attacker.role] else nil
+	if sting and struck.hp > 0 then
+		struck.slowUntil = fight.seconds + sting.seconds
+		struck.slowBy = sting.slow
+		hit.slow = true
+	end
 	table.insert(events, hit)
 	if struck.hp <= 0 then
 		table.insert(events, event("fallen"))
@@ -262,6 +294,33 @@ local function skill(fight: Fight, attacker: Unit, target: Unit, events: { Event
 	end
 end
 
+-- A healer's turn (Config.Combat.Heals): the most wounded living team-mate gets back a share of its attack instead of a
+-- blow. False, and nothing done, when it is no healer or nobody is hurt.
+local function heal(fight: Fight, healer: Unit, events: { Event }): boolean
+	local h = (Config.Combat.Heals :: any)[healer.role]
+	if not h then
+		return false
+	end
+	local worst: Unit? = nil
+	local worstShare = 1
+	for _, other in fight.units do
+		if other ~= healer and other.side == healer.side and other.hp > 0 and other.hp < other.maxHp then
+			local share = other.hp / other.maxHp
+			if share < worstShare then
+				worst, worstShare = other, share
+			end
+		end
+	end
+	if not worst then
+		return false
+	end
+	local amount = math.min(worst.maxHp - worst.hp, healer.attack * h.share)
+	worst.hp += amount
+	healer.cooldown += h.extraCooldown
+	table.insert(events, { kind = "heal", from = healer.id, to = worst.id, amount = amount })
+	return true
+end
+
 -- Moves the fight on by one step and returns what happened in it. Nothing changes once there is a winner.
 function Combat.step(fight: Fight, dt: number): { Event }
 	local events: { Event } = {}
@@ -272,7 +331,8 @@ function Combat.step(fight: Fight, dt: number): { Event }
 	fight.seconds += dt
 	for _, attacker in fight.units do
 		if attacker.hp > 0 then
-			attacker.cooldown -= dt
+			-- (a stung fighter's beat runs slow)
+			attacker.cooldown -= dt * (if attacker.slowUntil > fight.seconds then 1 - attacker.slowBy else 1)
 			-- the blow is announced a moment before it lands, so the client can show the wind-up (and the skill's name)
 			if not attacker.aimed and attacker.cooldown <= c.WindupSeconds then
 				local target = attacker.target
@@ -296,10 +356,18 @@ function Combat.step(fight: Fight, dt: number): { Event }
 				attacker.aimed = false
 				-- (a little off the beat each time, so fighters of the same speed drift apart)
 				attacker.cooldown += Combat.cooldown(attacker.speed) * (1 + (fight.rng:next() * 2 - 1) * c.CooldownJitter)
+				if heal(fight, attacker, events) then
+					attacker.skillNext = false
+					continue
+				end
 				local target = attacker.target
 				if not target or target.hp <= 0 then
 					target = pick(fight, attacker)
 					attacker.target = target
+				end
+				if not target and fight.open then
+					-- (no foe in the arena yet: it waits for the next one and opens at its own moment, as at the start)
+					attacker.cooldown = c.OpeningCooldown + fight.rng:next() * c.OpeningSpread
 				end
 				if target then
 					attacker.blows += 1
@@ -323,7 +391,7 @@ function Combat.step(fight: Fight, dt: number): { Event }
 			end
 		end
 	end
-	if squad == 0 or foes == 0 then
+	if squad == 0 or (foes == 0 and not fight.open) then
 		fight.winner = if squad > 0 then "squad" else "foe"
 	end
 	return events

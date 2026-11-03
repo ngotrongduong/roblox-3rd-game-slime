@@ -120,6 +120,8 @@ export type Rewards = {
 	online: { day: number, secs: number, claimed: { number } },
 	indexSeen: boolean,
 }
+-- The Slime Dungeon (shared/Dungeon): the highest dungeon level cleared, 0 for none (level best + 1 is the next to open).
+export type Dungeon = { best: number }
 
 -- kind: "INVENTORY", "EQUIPPED_TO_SLIME" (with slimeId and slot), "BATTLE_ESCROW", "PENDING_RETURN".
 export type ItemOwnership = { kind: string, slimeId: string?, slot: string? }
@@ -186,6 +188,7 @@ export type Farm = {
 	tutorialDoneAt: number?,
 	guide: Guide,
 	rewards: Rewards,
+	dungeon: Dungeon,
 	luckPotionUntil: number?,
 	lastSiegeTeam: { string }?,
 	wbKingSlain: boolean?,
@@ -260,6 +263,10 @@ function FarmState.newRewards(): Rewards
 		online = { day = 0, secs = 0, claimed = {} },
 		indexSeen = false,
 	}
+end
+
+function FarmState.newDungeon(): Dungeon
+	return { best = 0 }
 end
 
 function FarmState.newTeams(): { Team }
@@ -509,6 +516,7 @@ function FarmState.newFarm(now: number): Farm
 		tutorialDoneAt = nil,
 		guide = FarmState.newGuide(false),
 		rewards = FarmState.newRewards(),
+		dungeon = FarmState.newDungeon(),
 		luckPotionUntil = nil,
 		lastSiegeTeam = nil,
 		wbKingSlain = nil,
@@ -1152,6 +1160,20 @@ local function validateRewards(raw: any, warnings: { string }): Rewards
 	return out
 end
 
+-- The dungeon's best level is a whole number, never negative; anything else starts the ladder over (nothing else is stored).
+local function validateDungeon(raw: any, warnings: { string }): Dungeon
+	if type(raw) ~= "table" then
+		if raw ~= nil then
+			table.insert(warnings, "dungeon: not a table, reset")
+		end
+		return FarmState.newDungeon()
+	end
+	if raw.best ~= nil and not (isNum(raw.best) and raw.best >= 0 and raw.best % 1 == 0) then
+		table.insert(warnings, "dungeon: best level damaged, repaired")
+	end
+	return { best = nonNegInt(raw.best, 0) }
+end
+
 -- Gear bookkeeping: an item is equipped only while a loadout names it. A loadout slot naming a
 -- missing item (or one already claimed; the avatar claims first) is cleared; item ownership is
 -- then re-stamped from the claims. Returns how many fixes were made.
@@ -1435,6 +1457,7 @@ function FarmState.repair(data: any, now: number): (Farm, { string }, boolean)
 		tutorialDoneAt = if isNum(data.tutorialDoneAt) then data.tutorialDoneAt else nil,
 		guide = guide,
 		rewards = validateRewards(data.rewards, warnings),
+		dungeon = validateDungeon(data.dungeon, warnings),
 		luckPotionUntil = if isNum(data.luckPotionUntil) and data.luckPotionUntil >= 0
 			then data.luckPotionUntil
 			else nil,

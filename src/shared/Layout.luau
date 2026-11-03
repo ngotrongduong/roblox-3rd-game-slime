@@ -149,6 +149,15 @@ function Layout.plotMuster(plot: number): CFrame
 	return Layout.plotGate(plot) * CFrame.new(Z.MusterAcross, M.GroundY, Z.MusterIn) * CFrame.Angles(0, math.pi, 0)
 end
 
+-- The Dungeon Portal of a plot, beside its gate outside the fence (Config.Dungeon.Portal): its foot on the ground, its
+-- opening turned toward the path out of the gate.
+function Layout.plotPortal(plot: number): CFrame
+	local P = Config.Dungeon.Portal
+	return Layout.plotGate(plot)
+		* CFrame.new(P.Across, M.GroundY, -P.Out)
+		* CFrame.Angles(0, math.rad(P.TurnDegrees), 0)
+end
+
 -- Which Wild Garden quarter a point is in, or nil outside the Wild Garden.
 function Layout.quarterAt(pos: Vector3): Quarter?
 	local flat = Vector3.new(pos.X, 0, pos.Z)

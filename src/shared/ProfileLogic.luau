@@ -356,6 +356,16 @@ function ProfileLogic.migrateRewards(data: any, _now: number): any
 	return out
 end
 
+-- A farm saved before the Slime Dungeon: no level cleared yet.
+function ProfileLogic.migrateDungeon(data: any, _now: number): any
+	if type(data) ~= "table" then
+		return data
+	end
+	local out = ProfileLogic.deepCopy(data)
+	out.dungeon = { best = 0 }
+	return out
+end
+
 -- Runs the steps from `fromVersion` to `toVersion`, each found by its `from`, so the list may be in
 -- any order. Refuses data from a newer version instead of guessing at it.
 function ProfileLogic.migrate(
