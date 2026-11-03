@@ -8,6 +8,7 @@ local Breeding = if script then require(script.Parent.Breeding) else require("./
 local Config = if script then require(script.Parent.Config) else require("./Config")
 local FarmState = if script then require(script.Parent.FarmState) else require("./FarmState")
 local Genetics = if script then require(script.Parent.Genetics) else require("./Genetics")
+local Growth = if script then require(script.Parent.Growth) else require("./Growth")
 local Mutations = if script then require(script.Parent.Mutations) else require("./Mutations")
 local Rng = if script then require(script.Parent.Rng) else require("./Rng")
 local Stats = if script then require(script.Parent.Stats) else require("./Stats")
@@ -130,6 +131,13 @@ end
 function Hatching.babyFromEgg(farm: Farm, egg: Egg, now: number): Slime
 	local embryo = egg.embryo
 	local colour = Genetics.visibleColour(embryo.appearanceMutation, embryo.colourGenotype)
+	-- While the tutorial runs a baby grows up in TutorialGrowUpSeconds: growth comes from the birth time, set back.
+	local bornAt = now
+	if farm.tutorialDone == false then
+		local full =
+			Growth.growUpSeconds(Stats.level(embryo.stats), farm.areas.breeding.level - Config.Village.StartLevel)
+		bornAt = now - math.max(0, full - Config.Growth.TutorialGrowUpSeconds)
+	end
 	return {
 		id = egg.offspringId,
 		name = Hatching.nextName(farm),
@@ -146,7 +154,7 @@ function Hatching.babyFromEgg(farm: Farm, egg: Egg, now: number): Slime
 		friends = {},
 		buff = nil,
 		ghostUntil = nil,
-		createdAt = now,
+		createdAt = bornAt,
 		-- Rested at once; the baby rule still keeps it from breeding until it grows up.
 		breedReadyAt = now,
 		loadout = FarmState.emptyLoadout(),

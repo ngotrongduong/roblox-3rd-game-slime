@@ -40,6 +40,30 @@ local function egg(id: string, appearance: any, colours: { string }?)
 end
 
 return function(T)
+	T.test("while the tutorial runs, courtship, hatching and growing up are quick", function()
+		local Config = require("../../src/shared/Config")
+		T.eq(Breeding.courtshipSeconds(true), Config.Breeding.TutorialCourtshipSeconds)
+		T.eq(Breeding.courtshipSeconds(false), Config.Breeding.CourtshipSeconds)
+		T.eq(Breeding.incubationSeconds(9, 1, true), Config.Breeding.TutorialHatchSeconds)
+		local farm = FarmKit.farm(NOW)
+		farm.tutorialDone = false
+		local res = Breeding.createEgg(farm, "slime-1", "slime-2", NOW, Rng.new(1), FarmKit.ids())
+		assert(res.ok and res.egg, "egg laid")
+		T.eq(res.egg.hatchAt, NOW + Config.Breeding.TutorialHatchSeconds * Config.Breeding.NestSlowFactor)
+		assert(Breeding.placeInIncubator(res.farm, res.egg.id, NOW), "into the incubator")
+		local hatched = Hatching.hatch(res.farm, res.egg.id, NOW + Config.Breeding.TutorialHatchSeconds)
+		local baby = hatched.slime
+		assert(hatched.ok and baby, "hatched")
+		local level = Stats.level(baby.stats)
+		local after = hatched.farm.areas.breeding.level - Config.Village.StartLevel
+		local at = NOW + Config.Breeding.TutorialHatchSeconds
+		T.ok(Growth.isBaby(baby.createdAt, at, level, after))
+		T.ok(not Growth.isBaby(baby.createdAt, at + Config.Growth.TutorialGrowUpSeconds, level, after))
+		-- still drawn small at its hatch, full size when grown
+		T.eq(Growth.scale(baby.createdAt, at, level, after, baby.breedReadyAt), Config.Growth.BabyScale)
+		T.eq(Growth.scale(baby.createdAt, at + Config.Growth.TutorialGrowUpSeconds, level, after, baby.breedReadyAt), 1)
+	end)
+
 	T.test("not ready before hatchAt; a missing egg is reported", function()
 		local farm, e = farmWithEgg()
 		local early = Hatching.hatch(farm, e.id, e.hatchAt - 0.5)

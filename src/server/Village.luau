@@ -477,7 +477,8 @@ local function show(session: Session, farm: Farm, epoch: number)
 				slime.createdAt,
 				epoch,
 				Stats.level(slime.stats),
-				farm.areas.breeding.level - Config.Village.StartLevel
+				farm.areas.breeding.level - Config.Village.StartLevel,
+				slime.breedReadyAt
 			)
 		)
 		set(model, "Name", slime.name)
@@ -594,7 +595,7 @@ local function show(session: Session, farm: Farm, epoch: number)
 		if clockKind == "" and courting and courting > epoch then
 			clockKind = "court"
 			clockEnd = courting
-			clockStart = clockEnd - Config.Breeding.CourtshipSeconds
+			clockStart = clockEnd - Breeding.courtshipSeconds(farm.tutorialDone == false)
 		end
 		-- the simulation advances once a second: keep the published times while they still agree to a fraction of
 		-- a second, so a running clock does not rewrite its attributes every tick
@@ -644,8 +645,11 @@ local function show(session: Session, farm: Farm, epoch: number)
 		-- NestSlowFactor times longer than an incubator, and a move keeps the progress made).
 		local eggEnd, eggStart = 0, 0
 		if egg.hatchAt then
-			local span = Breeding.incubationSeconds(Stats.level(egg.embryo.stats), farm.areas.breeding.level)
-				* (if egg.place == "nest" then Config.Breeding.NestSlowFactor else 1)
+			local span = Breeding.incubationSeconds(
+				Stats.level(egg.embryo.stats),
+				farm.areas.breeding.level,
+				farm.tutorialDone == false
+			) * (if egg.place == "nest" then Config.Breeding.NestSlowFactor else 1)
 			-- (hatchAt is unix seconds; the server clock the clients read is unix time too)
 			eggEnd = egg.hatchAt
 			eggStart = eggEnd - math.max(span, egg.hatchAt - epoch)
@@ -1153,7 +1157,8 @@ local function think(
 		slime.createdAt,
 		epoch,
 		Stats.level(slime.stats),
-		farm.areas.breeding.level - Config.Village.StartLevel
+		farm.areas.breeding.level - Config.Village.StartLevel,
+		slime.breedReadyAt
 	)
 	-- Off a seat: hop down to the ground in front of it first, then walk on from there.
 	local sittingOn = if string.sub(actor.current.id, 1, 5) == "seat:" then seatById(session, actor.current.id) else nil
@@ -1291,7 +1296,8 @@ local function refreshMoving(
 		slime.createdAt,
 		epoch,
 		Stats.level(slime.stats),
-		farm.areas.breeding.level - Config.Village.StartLevel
+		farm.areas.breeding.level - Config.Village.StartLevel,
+		slime.breedReadyAt
 	)
 	actor.route = route(session, actor, action, target, scale)
 	actor.index = if #actor.route > 0 then 1 else 0

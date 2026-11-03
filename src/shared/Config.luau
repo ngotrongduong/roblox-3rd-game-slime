@@ -50,9 +50,12 @@ Config.Breeding = {
 	PopulationBase = 20,
 	PopulationPerLevel = 5,
 	PopulationMaxLevel = 40,
-	-- The tutorial's first egg: a new homozygous colour, this many stats beat the parents, fast hatch.
+	-- The tutorial's first egg: a new homozygous colour, this many stats beat the parents.
 	TutorialBoostedStats = 2,
-	TutorialHatchSeconds = 20,
+	-- While the tutorial runs, breeding is quick so a new player does not wait (the owner, 2026-11-03): every egg
+	-- hatches in this long in an incubator (NestSlowFactor times longer in a nest) and a courtship takes this long.
+	TutorialHatchSeconds = 10,
+	TutorialCourtshipSeconds = 10,
 	-- How many fresh ids to ask for before giving up (a counter or GUID never collides).
 	IdAttempts = 32,
 	-- Two places at level 1, one extra at each milestone.
@@ -538,6 +541,8 @@ Config.Growth = {
 	UpgradeMaxLevel = 20,
 	-- A hatchling is drawn at BabyScale and eases to 1 while it grows.
 	BabyScale = 0.62,
+	-- A slime hatched while the tutorial runs grows up in this long (its birth time is set back; the owner, 2026-11-03).
+	TutorialGrowUpSeconds = 30,
 }
 
 Config.Luck = {
@@ -2028,14 +2033,18 @@ Config.Guide = {
 	HudPointerBobPixels = 8,
 	PulseScale = 1.12,
 	PulseSeconds = 0.6,
-	-- The trail of arrows on the ground from the character's feet to the target, shown while farther than BeamMinStuds.
-	BeamWidth = 1.8,
-	BeamTextureLength = 2.4,
-	BeamSpeed = 1.5,
-	BeamMinStuds = 14,
-	BeamFootDrop = 2.6,
-	BeamLift = 0.6,
-	BeamTransparency = 0.1,
+	-- The trail of arrows on the ground from the character's feet to the target, shown while farther than TrailMinStuds:
+	-- at most TrailMaxArrows, TrailSpacing apart, creeping forward at TrailSpeed (studs, studs a second).
+	TrailArrowStuds = 1.8,
+	TrailMaxArrows = 20,
+	TrailSpacing = 3,
+	TrailSpeed = 3,
+	TrailStartStuds = 2,
+	TrailEndStuds = 3,
+	TrailMinStuds = 14,
+	TrailFootDrop = 2.6,
+	TrailLift = 0.6,
+	TrailTransparency = 0.1,
 	-- A screen the server cannot see (the book, the food panel) is looked for this often while its step waits.
 	SeenPollSeconds = 0.25,
 }

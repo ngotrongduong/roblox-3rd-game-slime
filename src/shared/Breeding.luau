@@ -68,9 +68,12 @@ local function roundMs(seconds: number): number
 	return math.round(seconds * 1000) / 1000
 end
 
--- Incubation begins only after an egg has entered a free incubator.
-function Breeding.incubationSeconds(babyLevel: number, breedingLevel: number?): number
+-- Incubation begins only after an egg has entered a free incubator. While the tutorial runs it is short.
+function Breeding.incubationSeconds(babyLevel: number, breedingLevel: number?, tutorial: boolean?): number
 	local b = Config.Breeding
+	if tutorial then
+		return b.TutorialHatchSeconds
+	end
 	local base = b.IncubationSeconds + math.max(0, babyLevel - b.IncubationLevelBase) * b.IncubationPerBabyLevel
 	return math.round(
 		base * b.IncubationAreaFactor ^ ((breedingLevel or Config.Village.StartLevel) - Config.Village.StartLevel)
@@ -281,7 +284,7 @@ function Breeding.createEgg(farm: Farm, idA: string, idB: string, now: number, r
 		status = "incubating",
 	}
 	-- The egg starts hatching in the nest at once, at the nest's slower rate (the owner, 2026-10-29).
-	egg.hatchAt = now + Breeding.nestSeconds(egg, farm.areas.breeding.level)
+	egg.hatchAt = now + Breeding.nestSeconds(egg, farm.areas.breeding.level, farm.tutorialDone == false)
 	local occupied: { [number]: boolean } = {}
 	for _, e in farm.eggs do
 		if e.place == "nest" then
@@ -385,9 +388,14 @@ end
 function Breeding.startCourtship(farm: Farm, index: number, now: number): CheckResult
 	local ready = Breeding.pairReady(farm, index, now)
 	if ready.ok then
-		farm.breeding.pairs[index].courtingUntil = now + Config.Breeding.CourtshipSeconds
+		farm.breeding.pairs[index].courtingUntil = now + Breeding.courtshipSeconds(farm.tutorialDone == false)
 	end
 	return ready
+end
+
+-- A courtship is short while the tutorial runs.
+function Breeding.courtshipSeconds(tutorial: boolean?): number
+	return if tutorial then Config.Breeding.TutorialCourtshipSeconds else Config.Breeding.CourtshipSeconds
 end
 
 function Breeding.layEgg(farm: Farm, index: number, now: number, rng: Rng, newId: IdFn): BreedResult
@@ -414,15 +422,16 @@ end
 
 -- An egg hatches in its nest too, but NestSlowFactor times slower than in an incubator (the owner, 2026-10-29):
 -- the whole time it takes in a nest.
-function Breeding.nestSeconds(egg: Egg, breedingLevel: number): number
-	return Breeding.incubationSeconds(Stats.level(egg.embryo.stats), breedingLevel) * Config.Breeding.NestSlowFactor
+function Breeding.nestSeconds(egg: Egg, breedingLevel: number, tutorial: boolean?): number
+	return Breeding.incubationSeconds(Stats.level(egg.embryo.stats), breedingLevel, tutorial)
+		* Config.Breeding.NestSlowFactor
 end
 
 -- The hatch time of a nest egg moved into an incubator: the progress made is kept, the rest runs at the
 -- incubator's rate (an egg with no clock yet starts a full incubation).
-function Breeding.toIncubator(egg: Egg, now: number, breedingLevel: number): number
+function Breeding.toIncubator(egg: Egg, now: number, breedingLevel: number, tutorial: boolean?): number
 	if egg.hatchAt == nil then
-		return now + Breeding.incubationSeconds(Stats.level(egg.embryo.stats), breedingLevel)
+		return now + Breeding.incubationSeconds(Stats.level(egg.embryo.stats), breedingLevel, tutorial)
 	end
 	return now + math.max(0, egg.hatchAt - now) / Config.Breeding.NestSlowFactor
 end
@@ -451,7 +460,7 @@ function Breeding.placeInIncubator(farm: Farm, eggId: string, now: number, reque
 	for slot = 1, limit do
 		if not occupied[slot] and (requestedSlot == nil or slot == requestedSlot) then
 			egg.place, egg.slot = "incubator", slot
-			egg.hatchAt = Breeding.toIncubator(egg, now, farm.areas.breeding.level)
+			egg.hatchAt = Breeding.toIncubator(egg, now, farm.areas.breeding.level, farm.tutorialDone == false)
 			egg.status = FarmState.eggStatus(egg, now)
 			return true, nil
 		end

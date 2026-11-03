@@ -38,8 +38,7 @@ local skipButton: TextButton? = nil
 local closeButton: TextButton? = nil
 local anchor: Part? = nil
 local billboard: BillboardGui? = nil
-local beam: Beam? = nil
-local feet: Attachment? = nil
+local trail: { BillboardGui } = {}
 local hudLayers: { [ScreenGui]: Frame } = {}
 local hudArrow: ImageLabel? = nil
 local pulsed: { target: GuiObject, scale: UIScale, made: boolean }? = nil
@@ -264,46 +263,63 @@ local function makeWorld()
 		Size = UDim2.fromScale(1, 1),
 		Rotation = POINT_DOWN,
 	}, gui)
-	local to = Instance.new("Attachment")
-	to.Name = "To"
-	to.Position = Vector3.new(0, G.BeamLift, 0)
-	to.Parent = part
-	local trail = Instance.new("Beam")
-	trail.Name = "Trail"
-	trail.Texture = ARROW
-	trail.TextureMode = Enum.TextureMode.Wrap
-	trail.TextureLength = G.BeamTextureLength
-	trail.TextureSpeed = G.BeamSpeed
-	trail.Width0 = G.BeamWidth
-	trail.Width1 = G.BeamWidth
-	trail.FaceCamera = true
-	trail.LightInfluence = 0
-	trail.Segments = 1
-	trail.Transparency = NumberSequence.new(G.BeamTransparency)
-	trail.Attachment0 = to
-	trail.Enabled = false
-	trail.Parent = part
+	-- The trail: small arrows on the anchor, each placed along the way by its offset and turned on the screen every
+	-- frame (a Beam lays its picture across the beam, so its arrows pointed sideways).
+	for i = 1, G.TrailMaxArrows do
+		local dot = Instance.new("BillboardGui")
+		dot.Name = "Trail" .. i
+		-- (a BillboardGui's scale size is in studs: the arrows shrink with distance like things on the ground)
+		dot.Size = UDim2.fromScale(G.TrailArrowStuds, G.TrailArrowStuds)
+		dot.LightInfluence = 0
+		dot.MaxDistance = G.PointerMaxDistance
+		dot.Enabled = false
+		dot.Adornee = part
+		dot.Parent = part
+		UiKit.make("ImageLabel", {
+			Name = "Arrow",
+			BackgroundTransparency = 1,
+			Image = ARROW,
+			ImageTransparency = G.TrailTransparency,
+			ScaleType = Enum.ScaleType.Fit,
+			Size = UDim2.fromScale(1, 1),
+		}, dot)
+		trail[i] = dot
+	end
 	part.Parent = workspace
-	anchor, billboard, beam = part, gui, trail
+	anchor, billboard = part, gui
 end
 
--- The trail's other end rides on the character's feet (a new character gets a new attachment).
-local function feetAttachment(): Attachment?
-	local character = player.Character
-	local root = if character then character:FindFirstChild("HumanoidRootPart") else nil
-	if not root then
-		return nil
+-- Lays the trail from the character's feet towards `at`, the arrows creeping forward, each turned to point along the
+-- way as the camera sees it.
+local function drawTrail(at: Vector3, t: number)
+	local from = characterPosition()
+	local camera = workspace.CurrentCamera
+	local lift = Vector3.new(0, G.TrailLift, 0)
+	local start = if from then from - Vector3.new(0, G.TrailFootDrop, 0) + lift else nil
+	local finish = at + lift
+	local way = if start then finish - start else Vector3.zero
+	local flat = Vector3.new(way.X, 0, way.Z).Magnitude
+	local count = 0
+	if start and camera and flat > G.TrailMinStuds then
+		local dir = way.Unit
+		local creep = (t * G.TrailSpeed) % G.TrailSpacing
+		local d = G.TrailStartStuds + creep
+		while count < #trail and d < way.Magnitude - G.TrailEndStuds do
+			count += 1
+			local point = start + dir * d
+			local dot = trail[count]
+			dot.StudsOffsetWorldSpace = point - at
+			local a = camera:WorldToViewportPoint(point)
+			local b = camera:WorldToViewportPoint(point + dir)
+			local arrow = dot:FindFirstChild("Arrow") :: ImageLabel
+			arrow.Rotation = math.deg(math.atan2(b.Y - a.Y, b.X - a.X)) + POINT_RIGHT
+			dot.Enabled = true
+			d += G.TrailSpacing
+		end
 	end
-	local existing = feet
-	if existing and existing.Parent == root then
-		return existing
+	for i = count + 1, #trail do
+		trail[i].Enabled = false
 	end
-	local made = Instance.new("Attachment")
-	made.Name = "GuideFeet"
-	made.Position = Vector3.new(0, -G.BeamFootDrop, 0)
-	made.Parent = root
-	feet = made
-	return made
 end
 
 local function layerOf(target: GuiObject): Frame?
@@ -424,8 +440,8 @@ local function hideWorld()
 	if billboard then
 		billboard.Enabled = false
 	end
-	if beam then
-		beam.Enabled = false
+	for _, dot in trail do
+		dot.Enabled = false
 	end
 end
 
@@ -433,20 +449,12 @@ local function drawWorld(at: Vector3, t: number)
 	if not anchor then
 		makeWorld()
 	end
-	local part, gui, trail = anchor :: Part, billboard :: BillboardGui, beam :: Beam
+	local part, gui = anchor :: Part, billboard :: BillboardGui
 	part.CFrame = CFrame.new(at)
 	local bob = math.sin(t * 2 * math.pi / G.PointerBobSeconds) * G.PointerBobStuds
 	gui.StudsOffsetWorldSpace = Vector3.new(0, G.PointerLift + bob, 0)
 	gui.Enabled = true
-	local from = characterPosition()
-	local foot = feetAttachment()
-	if from and foot then
-		trail.Attachment1 = foot
-		local flat = Vector3.new(at.X - from.X, 0, at.Z - from.Z)
-		trail.Enabled = flat.Magnitude > G.BeamMinStuds
-	else
-		trail.Enabled = false
-	end
+	drawTrail(at, t)
 end
 
 local function makeCard()

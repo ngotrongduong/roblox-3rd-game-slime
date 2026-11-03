@@ -286,7 +286,7 @@ function VillageSim.step(input: Farm, now: number, seconds: number, rng: Rng, op
 	-- clock yet and starts now, at the nest's rate.
 	for _, egg in farm.eggs do
 		if egg.place == "nest" and egg.hatchAt == nil then
-			egg.hatchAt = now + Breeding.nestSeconds(egg, farm.areas.breeding.level)
+			egg.hatchAt = now + Breeding.nestSeconds(egg, farm.areas.breeding.level, farm.tutorialDone == false)
 			egg.status = FarmState.eggStatus(egg, now)
 		end
 	end

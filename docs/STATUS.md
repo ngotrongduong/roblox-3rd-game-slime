@@ -1,5 +1,13 @@
 # Status
 
+## 2026-11-03 — tutorial: the trail points the right way, breeding is quick while it runs
+
+The owner: the arrows on the trail pointed the wrong way; speed up breeding during the tutorial. The trail is now a row of the gold
+arrows each turned on the screen along the way (a Beam had laid the picture sideways); seen in a Studio shot pointing at the pond. While
+the tutorial runs: courtship 10 s, hatching 10 s, growing up 30 s, and a pair goes courting before a nap or a meal
+(`docs/GAMEPLAY.md` §12). Measured in Studio play tests: egg to hatch 16 s (was 68), hatch to adult 30 s with the baby growing from small
+(was about 300), pair to egg 57-109 s (was 159), the rest being the parents' walk to the nest.
+
 ## 2026-11-03 — a step-by-step tutorial and feature intros
 
 The owner: a detailed tutorial that walks a new player through the game and introduces the features. Now 14 steps (slime book, a fisher,

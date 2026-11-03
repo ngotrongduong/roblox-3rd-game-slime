@@ -144,6 +144,30 @@ function Brain.choose(farm: Farm, slimeId: string, ctx: Context, now: number, rn
 			end
 		end
 	end
+	local function court(): Action?
+		for index, pair in farm.breeding.pairs do
+			if
+				(pair.a == slimeId or pair.b == slimeId)
+				and (pair.courtingUntil or Breeding.pairReady(farm, index, now).ok)
+			then
+				-- Each pair courts at its own nest (pair k at nest k), so two pairs never crowd one spot and get stuck
+				-- (the owner, 2026-10-30); a nest not built yet (a guessed spot) falls back to the breeding area's spot.
+				local nestId = "nest:" .. index
+				local nest = if ctx.spots then (ctx.spots :: any)[nestId] else nil
+				local a = make("court", if nest and not nest.guessed then nestId else "breeding", "loved")
+				a.partner = if pair.a == slimeId then pair.b else pair.a
+				return a
+			end
+		end
+		return nil
+	end
+	-- While the tutorial runs a pair goes courting before a nap or a meal, so the new player is not kept waiting.
+	if farm.tutorialDone == false then
+		local a = court()
+		if a then
+			return a
+		end
+	end
 	if slime.sleeping or Needs.isTired(slime.needs) then
 		return make("sleep", "nap", "sleepy")
 	end
@@ -155,19 +179,9 @@ function Brain.choose(farm: Farm, slimeId: string, ctx: Context, now: number, rn
 			return action
 		end
 	end
-	for index, pair in farm.breeding.pairs do
-		if
-			(pair.a == slimeId or pair.b == slimeId)
-			and (pair.courtingUntil or Breeding.pairReady(farm, index, now).ok)
-		then
-			-- Each pair courts at its own nest (pair k at nest k), so two pairs never crowd one spot and get stuck
-			-- (the owner, 2026-10-30); a nest not built yet (a guessed spot) falls back to the breeding area's spot.
-			local nestId = "nest:" .. index
-			local nest = if ctx.spots then (ctx.spots :: any)[nestId] else nil
-			local a = make("court", if nest and not nest.guessed then nestId else "breeding", "loved")
-			a.partner = if pair.a == slimeId then pair.b else pair.a
-			return a
-		end
+	local paired = court()
+	if paired then
+		return paired
 	end
 	for _, area in Config.Work.Areas do
 		for index, slot in (farm.work :: any)[area].slots do

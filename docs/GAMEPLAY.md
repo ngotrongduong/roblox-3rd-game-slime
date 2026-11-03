@@ -305,7 +305,11 @@ HUD button that pulses) and it moves on only when the server sees the farm reall
 | attack | the nearest waiting zombie group | a team set out, or coins came from a fight |
 | win | that group | coins came from a fight |
 
-The tutorial's first egg is the boosted fast one (§7). Finishing or skipping sets `tutorialDone`, which starts the new-player luck.
+The tutorial's first egg is the boosted one (§7). While the tutorial runs, breeding is quick (the owner, 2026-11-03): a pair
+goes courting before a nap or a meal, a courtship takes `TutorialCourtshipSeconds` (10 s), an egg hatches in `TutorialHatchSeconds`
+(10 s in an incubator) and a baby grows up in `Config.Growth.TutorialGrowUpSeconds` (30 s; its birth time is set back, and it is still
+drawn small at its hatch). The trail is a row of the gold arrows, each turned on the screen to point along the way.
+Finishing or skipping sets `tutorialDone`, which starts the new-player luck.
 After the tutorial, short intros open once each when they become true, one at a time, with a close button: a slime fell (the skull), the
 vault is full (the pantry pad), the village is full (Market), enough coins for an upgrade (a pad), Repeat at the banner, teams 2-4 open, the
 kitchen needs a cook, a dish is ready, the training ground, new recipes. An intro whose reason goes away closes unseen and may come back.
