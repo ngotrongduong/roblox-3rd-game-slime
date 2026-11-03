@@ -41,10 +41,10 @@ local FarmState = require(ReplicatedStorage.Shared.FarmState)
 local Layout = require(ReplicatedStorage.Shared.Layout)
 local Rng = require(ReplicatedStorage.Shared.Rng)
 local Zombies = require(ReplicatedStorage.Shared.Zombies)
-local PantryStages = require(script.Parent.PantryStages)
 local PlayerData = require(script.Parent.PlayerData)
 local Plots = require(script.Parent.Plots)
 local Village = require(script.Parent.Village)
+local WavingFlag = require(script.Parent.WavingFlag)
 
 type Zombie = typeof(Zombies.make("z", "rotten", 1, 1))
 type Fight = typeof(Combat.new({}, {}, Rng.new(0)))
@@ -907,15 +907,10 @@ function ZombieFights.nearGate(player: Player): boolean
 	return near(player, Layout.plotMuster(plot).Position, Config.Zombies.GateRangeStuds)
 end
 
--- The team banner stands inside the gate of every village built (its owner's prompt is UiTeams'), from the prop kit.
+-- The team banner, a waving flag, stands inside the gate of every village built (its owner's prompt is UiTeams'); its
+-- cloth flies away from the path (the muster frame's -X).
 local function placeBanner(plot: number, model: Model)
-	local Z = Config.Zombies
-	local banner = PantryStages.place(model, Layout.plotMuster(plot), Z.MusterKit, 0, 0, Z.MusterHeight, Z.MusterFoot)
-	if banner then
-		banner.Name = "TeamBanner"
-	else
-		warn(Config.LogPrefix, "zombies: no", Z.MusterKit, "in the prop kit, plot", plot, "has no team banner")
-	end
+	task.spawn(WavingFlag.stand, model, Layout.plotMuster(plot), Config.Zombies.MusterHeight, "TeamBanner")
 end
 
 function ZombieFights.start()

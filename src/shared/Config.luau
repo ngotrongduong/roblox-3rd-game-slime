@@ -150,6 +150,28 @@ Config.Combat = {
 	},
 }
 
+-- The waving flag (the owner, 2026-11-03: "thin, flying softly like a real flag"): tools/blender/flag.py, imported by the
+-- owner; the server puts it together from these meshes (server/WavingFlag) and the client waves it (client/FlagWave).
+-- Offsets are from the pole's foot, in studs of the imported model (ModelHeight tall, cloth flying along -X).
+Config.Flag = {
+	PoleMesh = "rbxassetid://112369592171464",
+	FinialMesh = "rbxassetid://86258054180806",
+	ClothMesh = "rbxassetid://99599710505900",
+	ClothTexture = "rbxassetid://71768414532152",
+	ModelHeight = 10.58,
+	PoleAt = { 0, 5, 0 },
+	FinialAt = { 0, 10.23, 0 },
+	ClothAt = { -2.517, 8.25, 0 },
+	-- the first bone at the cloth's pole edge, then Bones in a chain BoneStep apart (as in the import)
+	BoneAt = { -0.117, 8.25, 0 },
+	Bones = 8,
+	BoneStep = 0.6,
+	PoleColour = { 110, 70, 38 },
+	FinialColour = { 232, 182, 64 },
+	-- the flag of the training ground stands on its FlagBase this tall
+	TrainingHeight = 9.5,
+}
+
 -- The zombie slimes outside the village (the owner, 2026-11-02, docs/ECONOMY.md).
 Config.Zombies = {
 	Teams = 4,
@@ -195,13 +217,11 @@ Config.Zombies = {
 	-- set a team's line-up (the owner, 2026-11-03: both worked from very far), and to the Market to sell a slime.
 	SendRangeStuds = 16,
 	GateRangeStuds = 10,
-	-- The team banner (the kit's MusterKit): MusterAcross studs to the side of the gate's middle and MusterIn studs into
-	-- the village, MusterHeight tall, at most MusterFoot wide (Layout.plotMuster).
-	MusterKit = "BannerFlag",
+	-- The team banner (the waving flag, Config.Flag): MusterAcross studs to the side of the gate's middle and MusterIn
+	-- studs into the village, MusterHeight tall (Layout.plotMuster), its cloth flying away from the path.
 	MusterAcross = 8,
 	MusterIn = 10,
-	MusterHeight = 8,
-	MusterFoot = 4,
+	MusterHeight = 10,
 	-- Team n can be set and sent from village level TeamOpensAt[n] (the owner, 2026-11-03: more teams as the village
 	-- grows, 4 at most).
 	TeamOpensAt = { 1, 10, 20, 30 },

@@ -195,8 +195,8 @@ playing). Nothing dies of hunger and no stat is ever lost to hunger.
 
 ### Teams (the owner, 2026-11-03)
 
-- Line-ups are set at the **team banner** just inside the village gate (`Layout.plotMuster`, the kit's
-  `Config.Zombies.MusterKit`); the Teams prompt works only within `GateRangeStuds` (10) of it, and an attack only within
+- Line-ups are set at the **team banner**, a waving flag just inside the village gate (`Layout.plotMuster`,
+  `server/WavingFlag`); the Teams prompt works only within `GateRangeStuds` (10) of it, and an attack only within
   `SendRangeStuds` (16) of the zombie group. Both used to work from far away.
 - Teams open as the village grows: team n from village level `TeamOpensAt[n]` (1, 10, 20, 30), 4 at most. A closed team
   cannot be filled, sent or set to repeat (`LOCKED`); a line-up left in one by an old save can still be emptied.

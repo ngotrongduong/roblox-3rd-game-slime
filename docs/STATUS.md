@@ -1,5 +1,14 @@
 # Status
 
+## 2026-11-03 — waving flags at the gate and the training ground
+
+The owner: the team banner and the training ground's flag must be thin and fly softly like a real flag. Now both are one waving flag
+(`tools/blender/flag.py` -> `art/models/flag/`, imported by the owner; meshes in `Config.Flag`): a wooden pole, a gold finial and a thin
+two-sided cloth with the owner's sword art crossed, on a chain of 8 bones. The server puts it together from the meshes (`server/WavingFlag`,
+the bones under the cloth so the skin follows them) and every client waves it (`client/FlagWave`: a ripple running to the free end, a slow
+swing about the pole, a little droop; only near the camera, 30 updates a second). The kit's stiff BannerFlag is no longer used. Proved in a
+Studio play test: both flags built, the cloth bends and moves, no errors. Not seen on a phone.
+
 ## 2026-11-03 — team banner at the gate, shorter prompt ranges, teams open with the village
 
 The owner: the Teams prompt and the attack prompt worked from very far; put something at the gate for the line-ups; more teams as the village

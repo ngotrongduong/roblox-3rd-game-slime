@@ -22,6 +22,7 @@
 local PantryStages = require(script.Parent.PantryStages)
 local PondStages = require(script.Parent.PondStages)
 local GateArch = require(script.Parent.GateArch)
+local WavingFlag = require(script.Parent.WavingFlag)
 
 local TrainingStages = {}
 
@@ -324,6 +325,7 @@ function TrainingStages.build(area: Instance, frame: CFrame, level: number): Mod
 
 	local back = if level >= GROW_FROM then ZF + GROW else ZF
 	local dz = back - ZF
+	local oldFlag: Model? = nil
 	for _, d in area:GetChildren() do
 		-- (the kit fence and dummy go: the layer builds them in the era's materials)
 		local kitGone = (d.Name == "Fence" and d:IsA("Folder")) or (d.Name == "TrainingDummy" and d:IsA("Model"))
@@ -353,12 +355,21 @@ function TrainingStages.build(area: Instance, frame: CFrame, level: number): Mod
 				d:SetAttribute("Moved", true)
 				d:PivotTo(d:GetPivot() + frame:VectorToWorldSpace(Vector3.new(-5, 0, -5.4)))
 			end
+			if d:IsA("Model") then
+				oldFlag = d
+			end
 		elseif d.Name == "WeaponRack" and d:IsA("Model") and not d:GetAttribute("Turned") then
 			d:SetAttribute("Turned", true)
 			turn(d, -90)
 			local box = d:GetBoundingBox()
 			d:PivotTo(d:GetPivot() + (at(-12 - WIDER, 0, 3.9 * DEEP).Position - box.Position) * Vector3.new(1, 0, 1))
 		end
+	end
+	-- the kit's stiff banner gives way to the waving flag, on the same wooden foot (the owner, 2026-11-03)
+	local base = area:FindFirstChild("FlagBase")
+	if oldFlag and base and base:IsA("BasePart") then
+		oldFlag:Destroy()
+		task.spawn(WavingFlag.stand, area, base.CFrame * CFrame.new(0, base.Size.Y / 2, 0), WavingFlag.TrainingHeight)
 	end
 
 	if dz > 0 then
