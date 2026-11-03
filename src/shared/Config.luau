@@ -1641,7 +1641,8 @@ Config.Save = {
 	-- 4: living-village needs, jobs, pantry, pairs and incubators replace legacy farm fields.
 	-- 5: plot-by-plot growing vegetables with safe migration from the old timed output.
 	-- 6: per-cook recipes and per-slime automatic dishes and buff sources.
-	SchemaVersion = 6,
+	-- 7: the tutorial's step and the intros seen (`guide`).
+	SchemaVersion = 7,
 	-- A stored envelope without a version is this one.
 	FirstSchemaVersion = 1,
 
@@ -1971,6 +1972,74 @@ Config.SlimeBuffFx = {
 	},
 }
 
+-- ===== The tutorial and the intros (docs/GAMEPLAY.md §12; rules in shared/Guide, server/Guide, client/UiGuide) =====
+Config.Guide = {
+	-- The first-time tutorial, in order; after the last step it is "done". Each step's line, target and check: shared/Guide.
+	Steps = {
+		"book",
+		"fish",
+		"garden",
+		"food",
+		"pair",
+		"egg",
+		"hatch",
+		"market",
+		"sell",
+		"home",
+		"pads",
+		"team",
+		"attack",
+		"win",
+	},
+	-- The intros of later features, most urgent first: each opens once, when its feature starts to matter.
+	Intros = {
+		"ghost",
+		"vault",
+		"full",
+		"upgrade",
+		"repeat",
+		"team2",
+		"team3",
+		"team4",
+		"kitchen",
+		"dish",
+		"training",
+		"recipes",
+	},
+	-- (a step or intro id a request may name is at most this long)
+	IdMaxLength = 16,
+	-- The server looks at every player's step this often.
+	CheckSeconds = 1,
+	-- "Home" and "at the Market": the character stands within this share of a plot's side of its plot's (or the Market's)
+	-- centre.
+	HomeShare = 0.55,
+	-- The client. The line sits on a card at the top edge, under the topbar; buttons at its ends.
+	CardWidth = 440,
+	CardHeight = 52,
+	-- The world pointer: the owner's gold arrow over the target, pointing down, bobbing; pixels and studs.
+	PointerSize = 64,
+	PointerLift = 5,
+	PointerBobStuds = 0.8,
+	PointerBobSeconds = 0.9,
+	PointerMaxDistance = 2000,
+	-- The arrow beside a button on the screen, and the button's slow pulse.
+	HudPointerSize = 44,
+	HudPointerGap = 2,
+	HudPointerBobPixels = 8,
+	PulseScale = 1.12,
+	PulseSeconds = 0.6,
+	-- The trail of arrows on the ground from the character's feet to the target, shown while farther than BeamMinStuds.
+	BeamWidth = 1.8,
+	BeamTextureLength = 2.4,
+	BeamSpeed = 1.5,
+	BeamMinStuds = 14,
+	BeamFootDrop = 2.6,
+	BeamLift = 0.6,
+	BeamTransparency = 0.1,
+	-- A screen the server cannot see (the book, the food panel) is looked for this often while its step waits.
+	SeenPollSeconds = 0.25,
+}
+
 -- ===== The screen kit (src/client/Ui*.luau): the owner's art, palette, fonts and sizes =====
 -- Every image is the owner's own art from reference/goo-lineage-web/assets, trimmed to its bounds only and uploaded
 -- (art-pipeline). An id of 0 is a picture that does not exist yet: the client logs it once and shows a stand-in.
@@ -1997,6 +2066,8 @@ Config.Ui = {
 		close = 103131383048931,
 		cross = 103131383048931,
 		back = 110115571347055,
+		-- the tutorial's pointer: the same gold arrow (it points left; turned to point where it must)
+		pointer = 110115571347055,
 		plus = 115669941400247,
 		again = 87479558872031, -- the Repeat toggle
 		level = 99981918632333, -- the Level sort button

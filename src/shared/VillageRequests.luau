@@ -6,6 +6,7 @@ local Breeding = if script then require(script.Parent.Breeding) else require("./
 local Config = if script then require(script.Parent.Config) else require("./Config")
 local FarmState = if script then require(script.Parent.FarmState) else require("./FarmState")
 local Food = if script then require(script.Parent.Food) else require("./Food")
+local Guide = if script then require(script.Parent.Guide) else require("./Guide")
 local Shop = if script then require(script.Parent.Shop) else require("./Shop")
 local Stations = if script then require(script.Parent.Stations) else require("./Stations")
 local Village = if script then require(script.Parent.Village) else require("./Village")
@@ -84,6 +85,10 @@ function VillageRequests.valid(data: any, hasPlot: boolean): boolean
 			and type(data.groupId) == "string"
 			and #data.groupId <= Config.Zombies.TargetIdMaxLength
 			and hasPlot
+	elseif action == "GuideSeen" or action == "GuideNext" then
+		return type(data.step) == "string" and #data.step <= Config.Guide.IdMaxLength
+	elseif action == "GuideSkip" then
+		return true
 	end
 	return false
 end
@@ -182,6 +187,12 @@ function VillageRequests.run(farm: any, data: any, now: number, env: Env): (bool
 		end
 		local value, why = Shop.sell(farm, data.slimeId, now)
 		return value ~= nil, why, value
+	elseif action == "GuideSeen" then
+		return Guide.seen(farm, data.step, now)
+	elseif action == "GuideNext" then
+		return Guide.next(farm, data.step, now)
+	elseif action == "GuideSkip" then
+		return Guide.skip(farm, now)
 	end
 	return false, "BAD_REQUEST"
 end

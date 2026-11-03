@@ -46,6 +46,7 @@ end
 function FarmKit.farm(now: number, slimes: { any }?): any
 	local farm = FarmState.newFarm(now)
 	farm.tutorialDone = true
+	farm.guide = FarmState.newGuide(true)
 	if slimes then
 		farm.slimes = slimes
 	end

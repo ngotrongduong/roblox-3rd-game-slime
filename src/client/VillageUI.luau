@@ -10,6 +10,7 @@ local Config = require(ReplicatedStorage.Shared.Config)
 local FarmState = require(ReplicatedStorage.Shared.FarmState)
 local UiBook = require(script.Parent.UiBook)
 local UiFood = require(script.Parent.UiFood)
+local UiGuide = require(script.Parent.UiGuide)
 local UiHud = require(script.Parent.UiHud)
 local UiKit = require(script.Parent.UiKit)
 local UiMarket = require(script.Parent.UiMarket)
@@ -1093,6 +1094,13 @@ function VillageUI.start()
 	UiSquad.start(function()
 		return own
 	end)
+
+	-- the tutorial and the intros, drawn over the HUD's edges (the server says what to show)
+	UiGuide.start({
+		own = function()
+			return own
+		end,
+	})
 
 	local world = workspace:WaitForChild("Villages")
 	local id = tostring(player.UserId)

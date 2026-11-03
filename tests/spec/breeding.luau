@@ -142,6 +142,7 @@ return function(T)
 		local farm = FarmKit.farm(NOW)
 		local before = FarmState.newFarm(NOW)
 		before.tutorialDone = true
+		before.guide = FarmState.newGuide(true)
 		local res = Breeding.createEgg(farm, "slime-1", "slime-2", NOW, Rng.new(1), FarmKit.ids())
 		T.ok(res.ok)
 		local egg = res.egg

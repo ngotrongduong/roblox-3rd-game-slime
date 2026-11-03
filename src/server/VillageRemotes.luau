@@ -9,6 +9,7 @@ local ServerStorage = game:GetService("ServerStorage")
 local Config = require(ReplicatedStorage.Shared.Config)
 local Layout = require(ReplicatedStorage.Shared.Layout)
 local VillageRequests = require(ReplicatedStorage.Shared.VillageRequests)
+local Guide = require(script.Parent.Guide)
 local PlayerData = require(script.Parent.PlayerData)
 local Plots = require(script.Parent.Plots)
 local Village = require(script.Parent.Village)
@@ -109,6 +110,9 @@ local function request(player: Player, data: any): { ok: boolean, reason: string
 		print(Config.LogPrefix, "zombies: team", data.team, "repeat", if data.on then "on" else "off")
 	elseif action == "Revive" then
 		print(Config.LogPrefix, "zombies: revived", data.slimeId)
+	elseif action == "GuideSkip" or action == "GuideSeen" or action == "GuideNext" then
+		print(Config.LogPrefix, "guide:", player.Name, action, data.step or "")
+		PlayerData.markKeyMoment(player, "guide")
 	end
 	-- The owner's rule (2026-10-29): an assigned worker appears at its work place at once and starts working.
 	if action == "Assign" and data.asReserve == false then
@@ -124,6 +128,8 @@ local function request(player: Player, data: any): { ok: boolean, reason: string
 			event:Fire(player, data.areaId, upgradedLevel)
 		end
 	end
+	-- (the tutorial's line moves on at once after what the player did, not at the next look)
+	task.spawn(Guide.refresh, player)
 	return { ok = true, value = value }
 end
 

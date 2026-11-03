@@ -107,6 +107,9 @@ export type Pairing = { pairs: { Pair } }
 -- A fighting team (Config.Zombies.Teams of them, always): its line-up, whether it attacks again by itself, and the
 -- id of the zombie group it was last ordered at (ZombieFights; a group id is stable, so the order survives a rejoin).
 export type Team = { members: { string }, repeatOn: boolean, target: string? }
+-- The tutorial (shared/Guide): its step (Config.Guide.Steps, or "done"), the number the step measures from, the intro on
+-- screen and the number it measures from, and the intros already done or put away.
+export type Guide = { step: string, mark: number, intro: string?, introMark: number, seen: { [string]: boolean } }
 
 -- kind: "INVENTORY", "EQUIPPED_TO_SLIME" (with slimeId and slot), "BATTLE_ESCROW", "PENDING_RETURN".
 export type ItemOwnership = { kind: string, slimeId: string?, slot: string? }
@@ -169,6 +172,7 @@ export type Farm = {
 	-- nil on legacy saves means the tour is done.
 	tutorialDone: boolean?,
 	tutorialDoneAt: number?,
+	guide: Guide,
 	luckPotionUntil: number?,
 	lastSiegeTeam: { string }?,
 	wbKingSlain: boolean?,
@@ -229,6 +233,11 @@ function FarmState.newPairing(level: number): Pairing
 		table.insert(pairs, {})
 	end
 	return { pairs = pairs }
+end
+
+-- A tutorial at its first step, or already over (`done`: a farm that has played without one).
+function FarmState.newGuide(done: boolean): Guide
+	return { step = if done then "done" else Config.Guide.Steps[1], mark = 0, introMark = 0, seen = {} }
 end
 
 function FarmState.newTeams(): { Team }
@@ -474,6 +483,7 @@ function FarmState.newFarm(now: number): Farm
 		avatar = FarmState.newAvatar(now),
 		tutorialDone = false,
 		tutorialDoneAt = nil,
+		guide = FarmState.newGuide(false),
 		luckPotionUntil = nil,
 		lastSiegeTeam = nil,
 		wbKingSlain = nil,
@@ -1268,6 +1278,34 @@ function FarmState.repair(data: any, now: number): (Farm, { string }, boolean)
 		}
 	end
 
+	-- The tutorial: a known step or "done", in step with tutorialDone (nil on a legacy save means the tour is done).
+	local tutorialDone = if type(data.tutorialDone) == "boolean" then data.tutorialDone else nil
+	local guide = FarmState.newGuide(tutorialDone ~= false)
+	local rawGuide = data.guide
+	if type(rawGuide) == "table" then
+		local step = rawGuide.step
+		local known = step == "done" or table.find(Config.Guide.Steps, step) ~= nil
+		if known and (step == "done") == (tutorialDone ~= false) then
+			guide.step = step
+			guide.mark = if isNum(rawGuide.mark) then rawGuide.mark else 0
+		elseif step ~= nil then
+			table.insert(warnings, "guide: step " .. tostring(step) .. " reset")
+		end
+		if type(rawGuide.intro) == "string" and table.find(Config.Guide.Intros, rawGuide.intro) then
+			guide.intro = rawGuide.intro
+			guide.introMark = if isNum(rawGuide.introMark) then rawGuide.introMark else 0
+		end
+		if type(rawGuide.seen) == "table" then
+			for id, value in rawGuide.seen do
+				if value == true and type(id) == "string" and table.find(Config.Guide.Intros, id) then
+					guide.seen[id] = true
+				end
+			end
+		end
+	elseif rawGuide ~= nil then
+		table.insert(warnings, "guide: not a table, reset")
+	end
+
 	-- The Queen raid unlock: an explicit flag, or evidence only a King kill leaves behind.
 	local kingSlain = data.wbKingSlain == true or (materials.crown_shard or 0) > 0 or (materials.royal_jelly or 0) > 0
 	for _, item in items do
@@ -1300,8 +1338,9 @@ function FarmState.repair(data: any, now: number): (Farm, { string }, boolean)
 		materials = materials,
 		lifetime = lifetime,
 		avatar = validateAvatar(data.avatar, now, warnings),
-		tutorialDone = if type(data.tutorialDone) == "boolean" then data.tutorialDone else nil,
+		tutorialDone = tutorialDone,
 		tutorialDoneAt = if isNum(data.tutorialDoneAt) then data.tutorialDoneAt else nil,
+		guide = guide,
 		luckPotionUntil = if isNum(data.luckPotionUntil) and data.luckPotionUntil >= 0
 			then data.luckPotionUntil
 			else nil,

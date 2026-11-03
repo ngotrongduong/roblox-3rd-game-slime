@@ -280,3 +280,34 @@ Slimes that are not working or breeding choose what to do from their needs, pers
 3. Client: slimes drawn with `SlimeActor`, work motions, carried items, boxes and fridge, pickers, a small HUD.
 4. The hatch reveal by rarity and the nursery.
 5. The shop in the Market; area upgrades cost coins.
+
+## 12. Tutorial and intros (2026-11-03)
+
+A new player is walked through the game one step at a time (rules `shared/Guide`, server `server/Guide`, drawing `client/UiGuide`, ids
+and numbers in `Config.Guide`). Each step is one short line in a card at the top centre (Next only where the step is a tip, Skip always),
+an arrow on the real thing (a bobbing arrow over a place in the world with a trail of arrows from the player's feet, or an arrow beside a
+HUD button that pulses) and it moves on only when the server sees the farm really change, checked once a second:
+
+| Step | Line points at | Done when |
+| --- | --- | --- |
+| book | the slime book button | the book was opened |
+| fish | a free fishing spot | a fisher works |
+| garden | a free garden spot | a gardener works |
+| food | the Food chip | the food sheet was opened |
+| pair | the breeding house | a pair is full |
+| egg | the breeding house | an egg was laid |
+| hatch | the breeding house | the egg hatched |
+| market | the Market button | the player stands at the Market |
+| sell | the buyer | Next |
+| home | the Home button | the player is home |
+| pads | the cheapest upgrade pad | Next |
+| team | the team banner | a team has a member (while there is no free adult: "Your baby grows up soon...") |
+| attack | the nearest waiting zombie group | a team set out, or coins came from a fight |
+| win | that group | coins came from a fight |
+
+The tutorial's first egg is the boosted fast one (§7). Finishing or skipping sets `tutorialDone`, which starts the new-player luck.
+After the tutorial, short intros open once each when they become true, one at a time, with a close button: a slime fell (the skull), the
+vault is full (the pantry pad), the village is full (Market), enough coins for an upgrade (a pad), Repeat at the banner, teams 2-4 open, the
+kitchen needs a cook, a dish is ready, the training ground, new recipes. An intro whose reason goes away closes unseen and may come back.
+
+Saved in the farm as `guide` (schema 7: `step`, `mark`, `intro`, `introMark`, `seen`); saves from before it count the tutorial as done.

@@ -42,6 +42,7 @@ function FarmSave.hooks(log: ((string) -> ())?)
 			{ from = 3, to = 4, migrate = ProfileLogic.migrateVillage },
 			{ from = 4, to = 5, migrate = ProfileLogic.migrateGarden },
 			{ from = 5, to = 6, migrate = ProfileLogic.migrateKitchen },
+			{ from = 6, to = 7, migrate = ProfileLogic.migrateGuide },
 		},
 		newData = function(now: number): any
 			return FarmState.newFarm(now)

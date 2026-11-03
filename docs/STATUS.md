@@ -1,5 +1,18 @@
 # Status
 
+## 2026-11-03 — a step-by-step tutorial and feature intros
+
+The owner: a detailed tutorial that walks a new player through the game and introduces the features. Now 14 steps (slime book, a fisher,
+a gardener, the Food chip, a pair, the egg, the hatch, the Market, selling, home, the upgrade pads, a team, an attack, the win) and 12
+one-time intros for later features (`docs/GAMEPLAY.md` §12). Each step points at the real thing and moves on only from real farm state
+checked on the server; Skip at any time. Saved in the farm: **schema 7**, so a publish must shut down old servers; old saves count the
+tutorial as done. Lune tests in `tests/spec/guide.luau`.
+
+Proved in a Studio play test of a fresh player (`Publish.rbxl`): all 14 steps passed in order from real play (book and Food by clicks,
+the egg laid at 159 s and hatched at 227 s, quick travel to the Market and home, the wait line until the baby grew up, the team, the
+attack, 140 coins), then the "slime fell" intro with its arrow on the skull, closed by its button, and the Repeat intro after it; no game
+errors in the console. Not seen: the world arrow and its trail in a picture (Studio captures show only the GUI), a real phone.
+
 ## 2026-11-03 — waving flags at the gate and the training ground
 
 The owner: the team banner and the training ground's flag must be thin and fly softly like a real flag. Now both are one waving flag
