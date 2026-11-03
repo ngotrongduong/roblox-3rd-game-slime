@@ -158,6 +158,41 @@ function Layout.plotPortal(plot: number): CFrame
 		* CFrame.Angles(0, math.rad(P.TurnDegrees), 0)
 end
 
+-- Where a player is put when they leave the Dungeon: Config.Dungeon.ExitOut studs from their portal on the side of the
+-- gate (the portal's opening faces one way or the other), ExitLift up, turned away from the portal.
+function Layout.portalLanding(plot: number): CFrame
+	local D = Config.Dungeon
+	local portal = Layout.plotPortal(plot)
+	local gate = Layout.plotGate(plot).Position
+	local best: Vector3? = nil
+	for side = -1, 1, 2 do
+		local at = (portal * CFrame.new(0, 0, side * D.ExitOut)).Position
+		if best == nil or (at - gate).Magnitude < (best - gate).Magnitude then
+			best = at
+		end
+	end
+	local at = best :: Vector3
+	local away = at - portal.Position
+	-- (yaw by hand, as slotFrame does: a yaw's LookVector is (-sin, 0, -cos))
+	return CFrame.new(at.X, M.GroundY + D.ExitLift, at.Z) * CFrame.Angles(0, math.atan2(-away.X, -away.Z), 0)
+end
+
+-- The frame of plot `plot`'s Dungeon arena: the middle of its floor's top, far from the valley (Config.Dungeon.Arena*).
+function Layout.arenaFrame(plot: number): CFrame
+	assert(plot >= 1 and plot <= M.PlotCount, "plot out of range")
+	local D = Config.Dungeon
+	return CFrame.new(D.ArenaOrigin.x + (plot - 1) * D.ArenaSpacing, D.ArenaOrigin.y, D.ArenaOrigin.z)
+end
+
+-- Where a player stands in the arena: Config.Dungeon.PlayerSpot, PlayerLift up, facing the middle.
+function Layout.arenaPlayerSpot(plot: number): CFrame
+	local D = Config.Dungeon
+	local frame = Layout.arenaFrame(plot)
+	local at = (frame * CFrame.new(D.PlayerSpot.x, D.PlayerLift, D.PlayerSpot.z)).Position
+	local toward = frame.Position - at
+	return CFrame.new(at) * CFrame.Angles(0, math.atan2(-toward.X, -toward.Z), 0)
+end
+
 -- Which Wild Garden quarter a point is in, or nil outside the Wild Garden.
 function Layout.quarterAt(pos: Vector3): Quarter?
 	local flat = Vector3.new(pos.X, 0, pos.Z)

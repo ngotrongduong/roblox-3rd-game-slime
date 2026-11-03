@@ -124,6 +124,43 @@ function Dungeon.plan(mapId: string, level: number, wave: number, seed: number):
 	return out
 end
 
+-- ===== the arena =====
+
+-- Where the next monster comes in, flat from the arena's middle: a random point of the edge band (SpawnMinFromCentre to
+-- ArenaRadius - SpawnInset from the middle) at least SpawnMinApart from every point in `taken`. When SpawnTries tries find
+-- no such point, the one that stood farthest from the others is taken.
+function Dungeon.spawnPoint(rng: Rng, taken: { { x: number, z: number } }): (number, number)
+	local outer = D.ArenaRadius - D.SpawnInset
+	local bestX, bestZ, bestGap = 0, 0, -1
+	for _ = 1, D.SpawnTries do
+		local angle = rng:next() * math.pi * 2
+		local radius = D.SpawnMinFromCentre + rng:next() * (outer - D.SpawnMinFromCentre)
+		local x, z = math.sin(angle) * radius, -math.cos(angle) * radius
+		local gap = math.huge
+		for _, other in taken do
+			gap = math.min(gap, math.sqrt((other.x - x) ^ 2 + (other.z - z) ^ 2))
+		end
+		if gap >= D.SpawnMinApart then
+			return x, z
+		end
+		if gap > bestGap then
+			bestX, bestZ, bestGap = x, z, gap
+		end
+	end
+	return bestX, bestZ
+end
+
+-- The def of a monster by its id on a map (the plan's monsters carry the id only), nil when there is none.
+function Dungeon.defOf(mapId: string, defId: string): any
+	local defs: { any } = map(mapId).monsters
+	for _, def in defs do
+		if def.id == defId then
+			return def
+		end
+	end
+	return nil
+end
+
 -- Loot luck of a dungeon level: 1 at the first, more above.
 function Dungeon.luck(level: number): number
 	return 1 + D.LuckPerLevel * (level - 1)

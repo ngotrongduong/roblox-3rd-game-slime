@@ -894,6 +894,25 @@ function ZombieFights.clearWounds(player: Player, slimeId: string)
 	end
 end
 
+-- The share of health a slime lost in its last fight (0 when whole): the Dungeon starts its fighters from it.
+function ZombieFights.woundOf(player: Player, slimeId: string): number
+	local session = sessions[player]
+	return if session then session.wounds[slimeId] or 0 else 0
+end
+
+-- Sets the share of health a slime lost (0 clears it); it heals at home as any wound does. The Dungeon writes it when a run
+-- ends, so a survivor keeps its wounds as after a zombie fight.
+function ZombieFights.setWound(player: Player, slimeId: string, lost: number)
+	local session = sessions[player]
+	if session then
+		if lost > 0 then
+			session.wounds[slimeId] = math.min(lost, 1)
+		else
+			session.wounds[slimeId] = nil
+		end
+	end
+end
+
 -- Whether the player stands within range of a point (flat distance), for the gate, the groups and the shop.
 function ZombieFights.near(player: Player, point: Vector3, range: number): boolean
 	return near(player, point, range)

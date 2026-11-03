@@ -9,6 +9,7 @@ local ServerStorage = game:GetService("ServerStorage")
 local Config = require(ReplicatedStorage.Shared.Config)
 local Layout = require(ReplicatedStorage.Shared.Layout)
 local VillageRequests = require(ReplicatedStorage.Shared.VillageRequests)
+local Dungeon = require(script.Parent.Dungeon)
 local Guide = require(script.Parent.Guide)
 local PlayerData = require(script.Parent.PlayerData)
 local Plots = require(script.Parent.Plots)
@@ -82,6 +83,16 @@ local function request(player: Player, data: any): { ok: boolean, reason: string
 	local action = data.action
 	if not VillageRequests.valid(data, Plots.of(player) ~= nil) then
 		return { ok = false, reason = "INVALID_ARGUMENT" }
+	end
+	-- The Slime Dungeon's requests run the arena (server/Dungeon), which checks where the player stands, what they own and
+	-- how often they ask.
+	if string.sub(action, 1, 7) == "Dungeon" then
+		local done, result = pcall(Dungeon.request, player, data)
+		if not done then
+			warn(Config.LogPrefix, "dungeon request failed:", result)
+			return { ok = false, reason = "SERVER_ERROR" }
+		end
+		return { ok = result.ok, reason = result.reason, value = nil }
 	end
 	local now = os.time()
 	local ok = false

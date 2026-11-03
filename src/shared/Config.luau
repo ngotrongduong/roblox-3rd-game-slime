@@ -733,6 +733,62 @@ Config.Dungeon = {
 		boar_tusk = { name = "Boar Tusk", kind = "material" },
 	},
 
+	-- ===== The run (server/Dungeon) =====
+	-- One private arena a run, at a slot a plot far from the valley (Layout.arenaFrame): plot n's arena stands at ArenaOrigin
+	-- + (n - 1) x ArenaSpacing along X, beyond the hills, so it is never seen from the valley. The frame is the floor's top
+	-- middle. ServerStorage's model named ArenaTemplate, when it exists, is cloned (a model whose pivot is that middle, about ArenaRadius
+	-- wide); until the art step brings it, a greybox of parts is built (round floor, low rim of ArenaRimSegments boxes).
+	ArenaOrigin = { x = 2400, y = 0, z = 0 },
+	ArenaSpacing = 400,
+	ArenaRadius = 70,
+	ArenaTemplate = "DungeonArena",
+	ArenaFolder = "DungeonArenas",
+	ArenaFloorThickness = 4,
+	ArenaRimHeight = 6,
+	ArenaRimThickness = 2,
+	ArenaRimSegments = 24,
+	-- A monster comes in at a random point of the arena's edge band: SpawnMinFromCentre to ArenaRadius - SpawnInset from the
+	-- middle, at least SpawnMinApart from every monster that stands (the original's 140 and 60 on its 320-wide field, in
+	-- studs); after SpawnTries tries the point farthest from the others is taken.
+	SpawnInset = 5,
+	SpawnMinFromCentre = 50,
+	SpawnMinApart = 14,
+	SpawnTries = 12,
+	-- The player stands PlayerSpot (flat, from the middle) PlayerLift up, facing the middle; leaving puts them ExitOut studs
+	-- in front of their portal (on the side of the gate), ExitLift up. A player who strays StrayStuds past the rim (a
+	-- respawn, a fall) is put back.
+	PlayerSpot = { x = 0, z = 22 },
+	PlayerLift = 4,
+	ExitOut = 12,
+	ExitLift = 4,
+	StrayStuds = 30,
+	-- Enter works within the portal prompt's range plus this much; the Enter, Next and Replay requests are this far apart.
+	EnterSlackStuds = 6,
+	RequestSeconds = 1.5,
+	-- A wave that goes on this long is lost (nothing should reach it; it is a guard against a stuck fight).
+	WaveMaxSeconds = 240,
+	-- What a run takes from each slime that fought, once when it ends (as a zombie fight does: Config.Zombies.FightEnergy).
+	RunEnergy = 8,
+	RunFullness = 2,
+	-- How often the arena's and the player's attributes are written, and how long a fallen monster's stand-in lingers.
+	PublishSeconds = 0.25,
+	FoeFadeSeconds = 1.2,
+	-- How long the server waits for the client to stream the arena in before it moves the player there.
+	StreamSeconds = 6,
+	-- The stand-in for a monster until its model exists (the art step): a ball whose colour follows its kind, as big as its
+	-- role. Not a final look.
+	StandIn = {
+		Colours = {
+			melee = "#7fc15a",
+			hunter = "#f2c230",
+			ranged = "#f0e6a0",
+			healer = "#b79cf0",
+			bloomshell = "#3f9a6a",
+			bramblehorn = "#8a5a3a",
+		},
+		Sizes = { normal = 3, armoured = 4, miniboss = 7, boss = 10 },
+	},
+
 	-- ===== The portal (server/DungeonPortal, Layout.plotPortal) =====
 	-- Egg Heist's portal (the owner, 2026-11-04: "use the portal we have, near the village gate"), rebuilt from its kit
 	-- meshes, which the owner's account published (InsertService ids). It stands Across studs to the side of the gate's

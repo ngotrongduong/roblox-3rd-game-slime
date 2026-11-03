@@ -355,14 +355,24 @@ function Zombies.fighter(
 	}
 end
 
--- A slime falls: it pays by its level and rarity, and its 15 minutes start.
-function Zombies.fall(farm: Farm, slimeId: string, now: number): number
+-- A slime becomes a ghost: its 15 minutes start (the village's one rule for a fallen slime). False when it is gone or is
+-- one already.
+function Zombies.ghost(farm: Farm, slimeId: string, now: number): boolean
 	local slime = FarmState.findSlime(farm, slimeId)
 	if not slime or (slime.ghostUntil and slime.ghostUntil > now) then
-		return 0
+		return false
 	end
 	slime.ghostUntil = now + Config.Village.GhostSeconds
 	slime.sleeping = nil
+	return true
+end
+
+-- A slime falls: it pays by its level and rarity, and its 15 minutes start.
+function Zombies.fall(farm: Farm, slimeId: string, now: number): number
+	local slime = FarmState.findSlime(farm, slimeId)
+	if not slime or not Zombies.ghost(farm, slimeId, now) then
+		return 0
+	end
 	local reward = Zombies.deathReward(slime)
 	return Zombies.pay(farm, reward)
 end

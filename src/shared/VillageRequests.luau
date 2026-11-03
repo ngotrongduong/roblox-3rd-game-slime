@@ -51,10 +51,31 @@ local function idList(value: any): boolean
 	return count == #value
 end
 
+-- The teams a Dungeon run brings: a plain list of one team number up to every team, none twice.
+local function teamList(value: any): boolean
+	if type(value) ~= "table" or #value < 1 or #value > Config.Zombies.Teams then
+		return false
+	end
+	local count = 0
+	local seen: { [number]: boolean } = {}
+	for key, team in value do
+		if type(key) ~= "number" or not teamNumber(team) or seen[team] then
+			return false
+		end
+		seen[team] = true
+		count += 1
+	end
+	return count == #value
+end
+
 -- hasPlot: the player holds a plot (upgrades and teams need one).
 function VillageRequests.valid(data: any, hasPlot: boolean): boolean
 	local action = data.action
-	if action == "SetPair" then
+	if action == "DungeonEnter" then
+		return integer(data.level) and data.level >= Config.Dungeon.FirstLevel and teamList(data.teams) and hasPlot
+	elseif action == "DungeonNext" or action == "DungeonReplay" or action == "DungeonLeave" then
+		return hasPlot
+	elseif action == "SetPair" then
 		return integer(data.index)
 			and (data.a == nil or type(data.a) == "string")
 			and (data.b == nil or type(data.b) == "string")
