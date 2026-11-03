@@ -1,16 +1,20 @@
 --!strict
 -- The fight drawn. The server runs it (src/server/ZombieFights.luau) and sends Remotes.Fight events; this only draws them
--- on the bodies of the march (ZombieMarch stands the team's slimes at the end of the leg, facing the zombies): fighters
--- lunge as hits land, flinch, dodge and fall with floating coins; when it ends the team turns round and hops home on the
--- march, and the "home" event brings the notice. State follows the events even for a fight far from the camera; bodies,
--- bars and particles exist only while the group or the team is near. One error never stops the drawing: per-fighter work is
--- in pcall.
+-- on the bodies of the march (ZombieMarch stands the team's slimes at the end of the leg, facing the zombies). Every
+-- fighter is its own slime (the owner, 2026-11-03): it winds up when its blow is announced ("aim"), lunges to the skin of
+-- its target and holds there a beat, and its blow leaves the mark of its own way of fighting (a slime's role, a zombie's
+-- kind; src/client/FightFx) with goo knocked out of the one hit, which is thrown back; a toxic zombie spits instead; a
+-- dodge leaves after-images; a zombie that falls bursts on a ring with its coins, a slime that falls sees stars and fades;
+-- a team that wins cheers. No camera effects: the player watches from outside. State follows the events even for a
+-- fight far from the camera; bodies, bars and particles exist only while the group or the team is near. One error never
+-- stops the drawing: per-fighter work is in pcall.
 local Debris = game:GetService("Debris")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
 
 local Config = require(ReplicatedStorage.Shared.Config)
+local FightFx = require(script.Parent.FightFx)
 local SlimeActor = require(script.Parent.SlimeActor)
 local UiKit = require(script.Parent.UiKit)
 local UiTeams = require(script.Parent.UiTeams)
@@ -20,6 +24,7 @@ local ZombieTeams = require(script.Parent.ZombieTeams)
 local ZombieWorld = require(script.Parent.ZombieWorld)
 
 local V = Config.Zombies.View
+local F = V.Fx
 
 type Fighter = {
 	id: string,
@@ -30,20 +35,26 @@ type Fight = {
 	groupId: string,
 	fighters: { [string]: Fighter },
 	order: { string },
+	roles: { [string]: string },
 	over: boolean,
 }
 type Bar = {
 	gui: BillboardGui,
 	fill: Frame,
+	lag: Frame,
 	node: Configuration,
 	connection: RBXScriptConnection,
 }
+-- A move out from the standing place and back: reaches `delta` after `out` of `duration`, holds there `hold` seconds,
+-- then comes back.
 type Anim = {
 	actor: SlimeActor.Slime,
 	home: Vector3,
 	delta: Vector3,
 	start: number,
 	duration: number,
+	out: number,
+	hold: number,
 }
 
 local ZombieFight = {}
@@ -72,22 +83,7 @@ local function number(inst: Instance, name: string, default: number): number
 	return if type(value) == "number" and value == value then value else default
 end
 
--- ===== Floating numbers and bursts =====
-
-local function anchorAt(position: Vector3): Part
-	local anchor = Instance.new("Part")
-	anchor.Name = "FightFx"
-	anchor.Size = Vector3.one
-	anchor.Transparency = 1
-	anchor.Anchored = true
-	anchor.CanCollide = false
-	anchor.CanTouch = false
-	anchor.CanQuery = false
-	anchor.CastShadow = false
-	anchor.CFrame = CFrame.new(position)
-	anchor.Parent = workspace
-	return anchor
-end
+-- ===== Floating numbers and coins =====
 
 local function screenScale(): number
 	local camera = workspace.CurrentCamera
@@ -100,7 +96,7 @@ local function floatText(position: Vector3, text: string, colour: Color3, size: 
 	end
 	numbersAlive += 1
 	local jitter = Vector3.new((math.random() - 0.5) * 1.6, 0, (math.random() - 0.5) * 1.6)
-	local anchor = anchorAt(position + jitter)
+	local anchor = FightFx.anchorAt(position + jitter)
 	local gui = Instance.new("BillboardGui")
 	gui.Size = UDim2.fromOffset(180, size + 16)
 	gui.AlwaysOnTop = true
@@ -133,57 +129,26 @@ local function floatText(position: Vector3, text: string, colour: Color3, size: 
 	end)
 end
 
-local function emitter(texture: string, parent: Instance): ParticleEmitter
-	local particles = Instance.new("ParticleEmitter")
-	particles.Texture = texture
-	particles.Rate = 0
-	particles.Shape = Enum.ParticleEmitterShape.Box
-	particles.SpreadAngle = Vector2.new(180, 180)
-	particles.Parent = parent
-	return particles
-end
-
--- A burst of coins and sparks (or only a puff) at a point; few particles, and never more than View.MaxBursts alive.
-local function burst(position: Vector3, coins: boolean, tint: Color3, strength: number)
-	if burstsAlive >= V.MaxBursts then
+-- The owner's coins thrown up out of a fallen zombie; never more than View.MaxBursts showers alive.
+local function coinShower(position: Vector3, strength: number)
+	local id = (Config.Ui.Icons :: any).coins
+	if burstsAlive >= V.MaxBursts or type(id) ~= "number" or id <= 0 then
 		return
 	end
 	burstsAlive += 1
-	local anchor = anchorAt(position)
-	local puff = emitter(V.PuffTexture, anchor)
-	puff.Color = ColorSequence.new(tint)
-	puff.Size = NumberSequence.new({
-		NumberSequenceKeypoint.new(0, V.Puff.size * 0.4),
-		NumberSequenceKeypoint.new(1, V.Puff.size),
-	})
-	puff.Transparency = NumberSequence.new({
-		NumberSequenceKeypoint.new(0, V.Puff.transparency),
-		NumberSequenceKeypoint.new(1, 1),
-	})
-	puff.Lifetime = NumberRange.new(V.Puff.life)
-	puff.Speed = NumberRange.new(V.Puff.speedMin, V.Puff.speedMax)
-	puff:Emit(math.floor(V.PuffBurst * strength))
-	if coins then
-		local spark = emitter(V.SparkTexture, anchor)
-		spark.Color = ColorSequence.new(Color3.fromHex(V.Spark.colour))
-		spark.LightEmission = 1
-		spark.Size =
-			NumberSequence.new({ NumberSequenceKeypoint.new(0, V.Spark.size), NumberSequenceKeypoint.new(1, 0) })
-		spark.Lifetime = NumberRange.new(V.Spark.life)
-		spark.Speed = NumberRange.new(V.Spark.speedMin, V.Spark.speedMax)
-		spark:Emit(math.floor(V.SparkBurst * strength))
-		local id = (Config.Ui.Icons :: any).coins
-		if type(id) == "number" and id > 0 then
-			local coin = emitter("rbxassetid://" .. tostring(id), anchor)
-			coin.Size = NumberSequence.new(V.Coin.size)
-			coin.Lifetime = NumberRange.new(V.Coin.life)
-			coin.Speed = NumberRange.new(V.Coin.speedMin, V.Coin.speedMax)
-			coin.SpreadAngle = Vector2.new(35, 35)
-			coin.EmissionDirection = Enum.NormalId.Top
-			coin.Acceleration = Vector3.new(0, -V.Coin.gravity, 0)
-			coin:Emit(math.floor(V.CoinBurst * strength))
-		end
-	end
+	local anchor = FightFx.anchorAt(position)
+	local coin = Instance.new("ParticleEmitter")
+	coin.Texture = "rbxassetid://" .. tostring(id)
+	coin.Rate = 0
+	coin.LightInfluence = 0
+	coin.Size = NumberSequence.new(V.Coin.size)
+	coin.Lifetime = NumberRange.new(V.Coin.life)
+	coin.Speed = NumberRange.new(V.Coin.speedMin, V.Coin.speedMax)
+	coin.SpreadAngle = Vector2.new(35, 35)
+	coin.EmissionDirection = Enum.NormalId.Top
+	coin.Acceleration = Vector3.new(0, -V.Coin.gravity, 0)
+	coin.Parent = anchor
+	coin:Emit(math.floor(V.CoinBurst * strength))
 	Debris:AddItem(anchor, V.BurstSeconds)
 	task.delay(V.BurstSeconds, function()
 		burstsAlive -= 1
@@ -200,7 +165,20 @@ local function stopAnim(actor: SlimeActor.Slime)
 	end
 end
 
--- The lunge and the dodge: out and back from the standing place, once.
+local function shapeOf(anim: Anim, elapsed: number): number
+	local outSeconds = anim.duration * anim.out
+	if elapsed < outSeconds then
+		local t = elapsed / outSeconds
+		return 1 - (1 - t) * (1 - t)
+	elseif elapsed < outSeconds + anim.hold then
+		return 1
+	end
+	local back = math.max(anim.duration - outSeconds, 1e-3)
+	local t = math.clamp((elapsed - outSeconds - anim.hold) / back, 0, 1)
+	return 1 - t * t * (3 - 2 * t)
+end
+
+-- The lunges, knock-backs and side-steps: out and back from the standing place, once.
 local function stepAnims()
 	local now = os.clock()
 	for index = #anims, 1, -1 do
@@ -208,12 +186,12 @@ local function stepAnims()
 		if anim.actor.destroyed then
 			table.remove(anims, index)
 		else
+			local elapsed = now - anim.start
 			safe("motion", function()
-				local t = math.clamp((now - anim.start) / anim.duration, 0, 1)
-				local k = math.sin(math.pi * t)
+				local k = shapeOf(anim, elapsed)
 				SlimeActor.setCFrame(anim.actor, CFrame.new(anim.home + anim.delta * k) * anim.actor.root.Rotation)
 			end)
-			if now - anim.start >= anim.duration and anims[index] == anim then
+			if elapsed >= anim.duration + anim.hold and anims[index] == anim then
 				table.remove(anims, index)
 			end
 		end
@@ -224,7 +202,14 @@ local function stepAnims()
 	end
 end
 
-local function play(actor: SlimeActor.Slime, home: Vector3, delta: Vector3, seconds: number)
+local function play(
+	actor: SlimeActor.Slime,
+	home: Vector3,
+	delta: Vector3,
+	seconds: number,
+	out: number?,
+	hold: number?
+)
 	stopAnim(actor)
 	table.insert(anims, {
 		actor = actor,
@@ -232,6 +217,8 @@ local function play(actor: SlimeActor.Slime, home: Vector3, delta: Vector3, seco
 		delta = delta,
 		start = os.clock(),
 		duration = seconds,
+		out = out or 0.5,
+		hold = hold or 0,
 	})
 	if not animLoop then
 		animLoop = RunService.RenderStepped:Connect(stepAnims)
@@ -259,8 +246,33 @@ local function find(id: string): (SlimeActor.Slime?, Vector3?, boolean)
 	return nil, nil, true
 end
 
+-- How a fighter's blows look: a slime by its role, a zombie by its kind.
+local function styleOf(id: string): FightFx.Style
+	for _, fight in fights do
+		if fight.fighters[id] then
+			return FightFx.style(fight.roles[id])
+		end
+	end
+	local zombie = ZombieWorld.zombie(id)
+	return FightFx.style(if zombie then zombie.kind else nil)
+end
+
 local function flat(delta: Vector3): Vector3
 	return Vector3.new(delta.X, 0, delta.Z)
+end
+
+local function along(delta: Vector3, fallback: Vector3): Vector3
+	local line = flat(delta)
+	return if line.Magnitude > 1e-3 then line.Unit else flat(fallback).Unit
+end
+
+local function radius(actor: SlimeActor.Slime): number
+	return actor.body.Size.X / 2
+end
+
+-- How long after its event a blow reaches its target: a spit flies, a lunge reaches the skin.
+local function contactSeconds(style: FightFx.Style): number
+	return if style.shot then F.ShotSeconds else V.LungeSeconds * V.ContactShare
 end
 
 -- ===== Health bars =====
@@ -298,19 +310,41 @@ local function showBar(id: string, actor: SlimeActor.Slime, node: Configuration,
 		BorderSizePixel = 0,
 	}, gui)
 	UiKit.make("UICorner", { CornerRadius = UDim.new(0.5, 0) }, track)
+	-- the health just lost shows white a moment, then drains after the bar
+	local lag = UiKit.make("Frame", {
+		Size = UDim2.fromScale(1, 1),
+		BackgroundColor3 = Color3.new(1, 1, 1),
+		BorderSizePixel = 0,
+	}, track)
+	UiKit.make("UICorner", { CornerRadius = UDim.new(0.5, 0) }, lag)
 	local fill = UiKit.make("Frame", {
 		Size = UDim2.fromScale(1, 1),
 		BackgroundColor3 = UiKit.colour(if ours then "Green" else "Red"),
 		BorderSizePixel = 0,
 	}, track)
 	UiKit.make("UICorner", { CornerRadius = UDim.new(0.5, 0) }, fill)
-	local function update()
+	local function share(): number
 		local maxHp = math.max(number(node, "MaxHp", 1), 1)
-		fill.Size = UDim2.fromScale(math.clamp(number(node, "Hp", maxHp) / maxHp, 0, 1), 1)
+		return math.clamp(number(node, "Hp", maxHp) / maxHp, 0, 1)
 	end
-	update()
-	bars[id] =
-		{ gui = gui, fill = fill, node = node, connection = node:GetAttributeChangedSignal("Hp"):Connect(update) }
+	fill.Size = UDim2.fromScale(share(), 1)
+	lag.Size = fill.Size
+	local function update()
+		local size = UDim2.fromScale(share(), 1)
+		fill.Size = size
+		task.delay(V.BarLagSeconds, function()
+			if lag.Parent then
+				TweenService:Create(lag, TweenInfo.new(V.BarDrainSeconds), { Size = fill.Size }):Play()
+			end
+		end)
+	end
+	bars[id] = {
+		gui = gui,
+		fill = fill,
+		lag = lag,
+		node = node,
+		connection = node:GetAttributeChangedSignal("Hp"):Connect(update),
+	}
 end
 
 -- Bars follow the bodies: drawn while the team or the group is near, gone when it is not (the fight itself goes on).
@@ -364,7 +398,9 @@ end
 
 local function onStart(teamIndex: number, event: { [string]: any })
 	local members: { string } = event.members
-	local fight: Fight = { team = teamIndex, groupId = event.group, fighters = {}, order = {}, over = false }
+	local roles = if type(event.roles) == "table" then event.roles else {}
+	local fight: Fight =
+		{ team = teamIndex, groupId = event.group, fighters = {}, order = {}, roles = roles, over = false }
 	fights[teamIndex] = fight
 	for _, id in members do
 		fight.fighters[id] = { id = id, fallen = false }
@@ -374,58 +410,129 @@ local function onStart(teamIndex: number, event: { [string]: any })
 	syncLoop()
 end
 
-local function onHit(event: { [string]: any })
+-- A blow is coming: the attacker turns to its target and winds up (a squash; a spitter puffs up).
+local function onAim(event: { [string]: any })
 	local attacker, from = find(event.from)
-	local target, to, foe = find(event.to)
-	local crit = event.crit == true
-	if attacker and from and target and to then
-		play(attacker, from, flat(to - from) * V.LungeFraction, V.LungeSeconds)
-		SlimeActor.hop(attacker, V.LungeHop)
+	local _, to = find(event.to)
+	if not attacker or not from or not to then
+		return
 	end
-	if target then
-		local side = if math.random() < 0.5 then -1 else 1
-		SlimeActor.kick(target, "side", side * V.FlinchSide * (if crit then 2 else 1))
-		SlimeActor.kick(target, "squash", V.FlinchSquash * (if crit then 2 else 1))
-	end
-	if target and to then
-		local colours = V.NumberColours
-		local hit = math.max(1, math.floor((event.amount or 0) + 0.5))
-		floatText(
-			to + Vector3.new(0, target.body.Size.Y, 0),
-			(if crit then "-" .. hit .. "!" else "-" .. hit),
-			Color3.fromHex(if crit then colours.Crit else (if foe then colours.Foe else colours.Ours)),
-			if crit then V.CritTextSize else V.HitTextSize
-		)
+	local look = along(to - from, attacker.root.LookVector)
+	SlimeActor.setCFrame(attacker, CFrame.lookAt(attacker.root.Position, attacker.root.Position + look))
+	if styleOf(event.from).shot then
+		SlimeActor.kick(attacker, "puff", V.WindupPuff)
+	else
+		SlimeActor.kick(attacker, "squash", V.WindupSquash)
 	end
 end
 
+-- The blow reaches the target: its mark, the goo, the knock-back, the number.
+local function impact(event: { [string]: any }, style: FightFx.Style)
+	local target, to, foe = find(event.to)
+	if not target or not to then
+		return
+	end
+	local _, from = find(event.from)
+	local crit = event.crit == true
+	local dir = along(to - (from or to - target.root.LookVector), -target.root.LookVector)
+	local height = target.body.Size.Y
+	local skin = to - dir * radius(target) * 0.8 + Vector3.new(0, height * 0.5, 0)
+	FightFx.mark(style, skin, skin - dir * 3, crit)
+	FightFx.goo(target.body, skin, dir, if crit then F.Goo.count * 2 else F.Goo.count)
+	play(target, to, dir * V.KnockStuds * (if crit then V.CritKnock else 1), V.KnockSeconds, 0.2, V.HitStopSeconds)
+	local side = if math.random() < 0.5 then -1 else 1
+	SlimeActor.kick(target, "side", side * V.FlinchSide * (if crit then 2 else 1))
+	SlimeActor.kick(target, "squash", V.FlinchSquash * (if crit then 2 else 1))
+	local colours = V.NumberColours
+	local hit = math.max(1, math.floor((event.amount or 0) + 0.5))
+	floatText(
+		to + Vector3.new(0, height, 0),
+		(if crit then "-" .. hit .. "!" else "-" .. hit),
+		Color3.fromHex(if crit then colours.Crit else (if foe then colours.Foe else colours.Ours)),
+		if crit then V.CritTextSize else V.HitTextSize
+	)
+end
+
+-- The attacker's move: a spitter spits, the rest lunge to the skin of their target and hold a beat there. `land` runs
+-- when the blow arrives.
+local function strike(event: { [string]: any }, style: FightFx.Style, land: () -> ())
+	local attacker, from = find(event.from)
+	local target, to = find(event.to)
+	if not attacker or not from or not target or not to then
+		task.delay(contactSeconds(style), land)
+		return
+	end
+	local line = flat(to - from)
+	local dir = along(line, attacker.root.LookVector)
+	if style.shot then
+		SlimeActor.kick(attacker, "lean", 1.5)
+		local mouth = from + dir * radius(attacker) + Vector3.new(0, attacker.body.Size.Y * 0.6, 0)
+		local skin = to - dir * radius(target) + Vector3.new(0, target.body.Size.Y * 0.5, 0)
+		FightFx.shot(style.shot :: string, mouth, skin, land)
+		return
+	end
+	local reach = math.max(0, line.Magnitude - (radius(attacker) + radius(target)) * 0.85)
+	play(attacker, from, dir * reach, V.LungeSeconds, V.ContactShare, V.HitStopSeconds)
+	SlimeActor.hop(attacker, V.LungeHop)
+	task.delay(contactSeconds(style), land)
+end
+
+local function onHit(event: { [string]: any })
+	local style = styleOf(event.from)
+	strike(event, style, function()
+		safe("impact", function()
+			impact(event, style)
+		end)
+	end)
+end
+
+-- A miss: the blow comes, the target is already stepping aside and leaves fading copies of itself.
 local function onDodge(event: { [string]: any })
+	local style = styleOf(event.from)
 	local target, home = find(event.to)
 	if target and home then
 		local side = if math.random() < 0.5 then -1 else 1
 		local across = Vector3.new(-target.root.LookVector.Z, 0, target.root.LookVector.X)
-		play(target, home, across * side * V.DodgeStuds, V.DodgeSeconds)
+		local step = across * side * V.DodgeStuds
+		FightFx.afterImages(target.body, step)
+		play(target, home, step, V.DodgeSeconds)
 		SlimeActor.hop(target, V.LungeHop)
 	end
+	strike(event, style, function()
+		safe("miss", function()
+			local body, at = find(event.to)
+			if body and at then
+				floatText(at + Vector3.new(0, body.body.Size.Y, 0), "Miss", Color3.new(1, 1, 1), V.HitTextSize)
+			end
+		end)
+	end)
 end
 
-local function onFallen(event: { [string]: any })
+local function fall(event: { [string]: any })
 	local id: string = event.to
 	local coins: number = event.coins or 0
 	local actor, spot, foe = find(id)
 	local size = V.RewardTextSize
 	if foe then
-		local tint = Color3.fromRGB(150, 150, 150)
 		local zombie = ZombieWorld.zombie(id)
-		local look = if zombie then ZombieLook.look(zombie.kind) else nil
-		if look then
-			size = size * look.size
-			tint = Color3.fromHex(look.burst)
-		end
+		local kind = if zombie then zombie.kind else nil
+		local style = FightFx.style(kind)
+		local look = if kind then ZombieLook.look(kind) else nil
+		local bigness = if look then look.size else 1
+		size = size * bigness
 		ZombieWorld.kill(id)
 		dropBar(id)
 		if actor and spot then
-			burst(spot + Vector3.new(0, 1.5, 0), true, tint, if look then look.size ^ 2 else 1)
+			local body = actor.body
+			local centre = spot + Vector3.new(0, body.Size.Y * 0.5, 0)
+			task.delay(V.DeathDelay, function()
+				safe("burst", function()
+					FightFx.burst(style.death or "burstShock", centre, F.DeathBurst * bigness, style.bits)
+					FightFx.ring(style.ring or "ringShock", spot, F.DeathRing * bigness)
+					FightFx.goo(body, centre, body.CFrame.LookVector, F.DeathGoo)
+					coinShower(centre, bigness ^ 2)
+				end)
+			end)
 		end
 	else
 		for _, fight in fights do
@@ -436,6 +543,8 @@ local function onFallen(event: { [string]: any })
 				local body = ZombieMarch.body(id)
 				if actor and body then
 					SlimeActor.setEmotion(actor, "sad")
+					SlimeActor.kick(actor, "turn", V.FallTurn)
+					FightFx.stars(actor.body.Position + Vector3.new(0, actor.body.Size.Y * 0.6, 0), V.StarSize)
 					for _, part in body.model:GetDescendants() do
 						if part:IsA("MeshPart") then
 							TweenService
@@ -460,8 +569,43 @@ local function onFallen(event: { [string]: any })
 	end
 end
 
--- The fight is over: the bars go; the team's bodies turn round and hop home on the march (the server has set them going).
-local function onEnd(teamIndex: number)
+-- A fall shows when the blow that caused it lands (after the lunge or the spit), not before.
+local function onFallen(event: { [string]: any })
+	local style = if type(event.from) == "string" then styleOf(event.from) else FightFx.style(nil)
+	task.delay(contactSeconds(style) + V.HitStopSeconds, function()
+		safe("fall", function()
+			fall(event)
+		end)
+	end)
+end
+
+-- The team that won hops for joy, one after another, while it stays on the field (Config.Zombies.CheerSeconds).
+local function cheer(fight: Fight)
+	for index, id in fight.order do
+		local fighter = fight.fighters[id]
+		local body = ZombieMarch.body(id)
+		if fighter and not fighter.fallen and body then
+			local actor = body.actor
+			local start = (index - 1) * V.CheerStagger + V.HitStopSeconds
+			task.delay(start, function()
+				if not actor.destroyed then
+					SlimeActor.setEmotion(actor, "happy")
+					FightFx.stars(actor.body.Position + Vector3.new(0, actor.body.Size.Y * 0.6, 0), V.StarSize)
+				end
+			end)
+			for hop = 0, V.CheerHops - 1 do
+				task.delay(start + hop * V.CheerGap, function()
+					if not actor.destroyed then
+						SlimeActor.hop(actor, V.CheerHop)
+					end
+				end)
+			end
+		end
+	end
+end
+
+-- The fight is over: the bars go; a winning team cheers, then hops home on the march (the server sets it going).
+local function onEnd(teamIndex: number, event: { [string]: any })
 	local fight = fights[teamIndex]
 	if not fight then
 		return
@@ -476,7 +620,15 @@ local function onEnd(teamIndex: number)
 			dropBar(id)
 		end
 	end
-	task.delay(V.SyncSeconds * 2, function()
+	if event.winner == "squad" then
+		-- (after the last blow has landed)
+		task.delay(V.LungeSeconds, function()
+			safe("cheer", function()
+				cheer(fight)
+			end)
+		end)
+	end
+	task.delay(Config.Zombies.CheerSeconds, function()
 		if fights[teamIndex] == fight then
 			fights[teamIndex] = nil
 		end
@@ -505,6 +657,8 @@ local function onEvents(payload: any)
 			local kind = event.kind
 			if kind == "start" then
 				onStart(payload.team, event)
+			elseif kind == "aim" then
+				onAim(event)
 			elseif kind == "hit" then
 				onHit(event)
 			elseif kind == "dodge" then
@@ -512,7 +666,7 @@ local function onEvents(payload: any)
 			elseif kind == "fallen" then
 				onFallen(event)
 			elseif kind == "end" then
-				onEnd(payload.team)
+				onEnd(payload.team, event)
 			elseif kind == "home" then
 				onHome(payload, event)
 			end

@@ -121,6 +121,14 @@ Config.Combat = {
 	CritFactor = 1.6,
 	DodgePerSpeed = 0.005,
 	DodgeCap = 0.25,
+	-- Each fighter opens somewhere in OpeningCooldown .. + OpeningSpread seconds and every blow is up to CooldownJitter
+	-- off its beat, so a team never strikes as one (the owner, 2026-11-03: "4 independent slimes"). An "aim" event goes
+	-- out WindupSeconds before each blow for the wind-up.
+	OpeningSpread = 1.5,
+	CooldownJitter = 0.15,
+	WindupSeconds = 0.3,
+	-- A slime's way of fighting is its strongest stat (Combat.role), in this order on a tie broken by its seed.
+	Roles = { "attack", "defence", "speed", "hp" },
 }
 
 -- The zombie slimes outside the village (the owner, 2026-11-02, docs/ECONOMY.md).
@@ -175,6 +183,8 @@ Config.Zombies = {
 	-- and back the same way; the slowest member sets the pace.
 	MarchStandOffStuds = 11,
 	MarchGait = "walk",
+	-- A team that won stays on the field this long to cheer before it marches home.
+	CheerSeconds = 2.2,
 	-- A wound heals this share of a slime's health a minute while it is home (0.5: a full heal in two minutes).
 	HealPerMinute = 0.5,
 	-- Every slime that fought loses this much energy and fullness when the fight ends (the brain rests and feeds it).
@@ -252,20 +262,107 @@ Config.Zombies = {
 		RewardTextSize = 32,
 		MaxNumbers = 20,
 		NumberColours = { Foe = "#fffdf4", Ours = "#ff6a5a", Crit = "#ffb02e", Coins = "#ffd23c" },
-		-- Particles: at most MaxBursts alive at once; counts for one zombie's fall and one slime's pop.
+		-- Coins thrown out of a zombie that falls (the owner's coin picture): at most MaxBursts showers alive at once.
 		MaxBursts = 6,
 		CoinBurst = 6,
-		SparkBurst = 8,
-		PuffBurst = 5,
 		BurstSeconds = 1.6,
 		-- The fight keeps its bodies and bars in step with the group's distance this often.
 		SyncSeconds = 0.25,
-		-- The textures are Roblox's own particle pictures (as UpgradeReveal) and the owner's coin picture.
-		SparkTexture = "rbxasset://textures/particles/sparkles_main.dds",
-		PuffTexture = "rbxasset://textures/particles/smoke_main.dds",
+		-- A blow (src/client/ZombieFight + FightFx): the wind-up when it is announced (squash, the toxic puffs up), the lunge
+		-- that reaches the target's skin after ContactShare of LungeSeconds and holds there HitStopSeconds (the bodies
+		-- freeze for a beat: the weight of the hit, no camera), the knock-back of the one hit.
+		WindupSquash = -1.6,
+		WindupPuff = 1.2,
+		ContactShare = 0.35,
+		HitStopSeconds = 0.08,
+		KnockStuds = 1.4,
+		KnockSeconds = 0.32,
+		CritKnock = 1.7,
+		-- A winning team cheers (Config.Zombies.CheerSeconds): this many hops each, CheerGap apart, the next slime a bit
+		-- later than the last.
+		CheerHops = 3,
+		CheerGap = 0.55,
+		CheerStagger = 0.15,
+		CheerHop = 0.55,
+		-- A slime that falls twists (a kick into its turn spring) under rising stars (studs).
+		FallTurn = 3,
+		StarSize = 0.9,
+		-- Health just lost stays white this long on a bar, then drains.
+		BarLagSeconds = 0.25,
+		BarDrainSeconds = 0.35,
+		Fx = {
+			-- The owner's own battle art from the original game (reference/goo-lineage-web/assets/battlefx-*.png), uploaded
+			-- 2026-11-03, never recoloured.
+			Textures = {
+				burstShock = 133346055977942,
+				moteShock = 138447116339479,
+				slashArc = 95547681540742,
+				sparkStar = 106004463491821,
+				holyHit = 123273947779821,
+				shockwave = 94188471939456,
+				ring = 91239577409299,
+				ringShock = 113076278171097,
+				groundCrack = 77360860823212,
+				biteMarks = 114773166164920,
+				clawMarks = 103284846741774,
+				gooBlob = 82520552927313,
+				acidSplat = 108936202345260,
+				acidDrop = 135178961338375,
+				ringAcid = 117408949400540,
+				burstAcid = 76291902623074,
+				spore = 76735351216148,
+				burstArcane = 75506448951291,
+				ringArcane = 70489654789239,
+				moteArcane = 118302010408844,
+				healCross = 110992077814805,
+			},
+			-- How a blow looks, by the attacker: a slime by its role (Config.Combat.Roles), a zombie by its kind. Every one
+			-- its own art (the owner: never one effect recoloured). mark = the picture at the point of the hit (studs);
+			-- bits = what flies off it; slash = the mark lies across the line of the blow; shot = spat from afar instead of
+			-- a lunge; death / ring = a zombie's burst and the ring on the ground where it falls.
+			Styles = {
+				attack = { mark = "burstShock", bits = "moteShock", size = 3.4 },
+				defence = { mark = "holyHit", bits = "sparkStar", size = 3 },
+				speed = { mark = "slashArc", bits = "sparkStar", size = 3.6, slash = true },
+				hp = { mark = "shockwave", bits = "moteShock", size = 3.8 },
+				rotten = { mark = "biteMarks", size = 3, death = "burstShock", ring = "ringShock" },
+				toxic = {
+					mark = "acidSplat",
+					bits = "acidDrop",
+					shot = "gooBlob",
+					size = 3,
+					death = "burstAcid",
+					ring = "ringAcid",
+				},
+				plague = { mark = "clawMarks", bits = "spore", size = 3.8, death = "burstArcane", ring = "ringArcane" },
+			},
+			MarkSeconds = 0.34,
+			MarkSwell = 1.35,
+			CritScale = 1.35,
+			CritSparks = 7,
+			Bits = 5,
+			-- A spit flies this long, this big (studs).
+			ShotSeconds = 0.24,
+			ShotSize = 1.8,
+			ShotArc = 2.5,
+			-- Goo knocked out of the one hit: glossy drops of its own body (count, studs, studs/s, seconds); more when it falls.
+			Goo = { count = 5, size = 0.38, speedMin = 9, speedMax = 16, up = 11, gravity = 55, life = 0.6 },
+			DeathGoo = 12,
+			-- A fall: the burst over the body, the ring on the ground (studs, seconds).
+			DeathBurst = 6,
+			DeathRing = 9,
+			RingSeconds = 0.65,
+			-- A dodge leaves this many fading copies of the body along the side-step.
+			AfterImages = 3,
+			AfterImageSeconds = 0.32,
+			AfterImageTransparency = 0.55,
+			-- Stars over a slime that falls, and over a cheering one.
+			Stars = 5,
+			-- At most this many marks and goo drops alive at once (cheap phones).
+			MaxMarks = 14,
+			MaxGoo = 48,
+		},
 		Coin = { size = 1.1, life = 1.1, speedMin = 14, speedMax = 22, gravity = 32 },
-		Spark = { size = 2.2, life = 0.7, speedMin = 6, speedMax = 14, colour = "#ffd23c" },
-		Puff = { size = 4, life = 0.8, speedMin = 4, speedMax = 9, transparency = 0.5 },
 		-- The dead chip: when its time turns red (seconds left); the shop confirm window.
 		ReviveWarnSeconds = 60,
 		ConfirmSeconds = 3,

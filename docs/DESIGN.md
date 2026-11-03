@@ -79,6 +79,9 @@ an Open Cloud key the owner creates); Claude never signs in or uploads with the 
   hop, landing squash and settle, wobble that dies down. This lifts the original's 2D vetoes on body squash
   (`docs/reference/04-vfx-animation.md` §2 and §14 items 8-9); the blink itself stays on the face.
 - No sound per hop or per enemy death; hit sounds and music are welcome.
+- Fights have no camera effects: no shake, punch, zoom or slow motion of the camera (owner, 2026-11-03: the
+  player only watches from outside). The drama is in the fighters: wind-up, impact marks, goo, knockback, a short
+  freeze of the bodies, falls and cheering. Each slime and each zombie fights as an individual.
 - Drops are rare; difficulty steps are big; cosmetics are expensive.
 - No animated slime bodies or avatar backgrounds (static originals; procedural squash/hop is fine).
 - Lists keep their scroll and sort and hide slimes that cannot be used; icons over words.

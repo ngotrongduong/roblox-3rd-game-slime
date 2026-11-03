@@ -61,6 +61,46 @@ return function(T: any)
 		T.eq(b, d)
 		T.ok(a ~= nil)
 	end)
+	T.test("fighters open apart, and every blow is announced before it lands", function()
+		local rng = Rng.new(9)
+		local fight = Combat.new(squadOf(8), Zombies.group("z", 8, 1, rng), rng)
+		local firstBlow: { [string]: number } = {}
+		local aimed: { [string]: boolean } = {}
+		while not fight.winner and fight.seconds < 60 do
+			for _, event in Combat.step(fight, 0.1) do
+				local from = event.from :: string
+				if event.kind == "aim" then
+					T.ok(not aimed[from], "one aim per blow")
+					aimed[from] = true
+				elseif event.kind == "hit" or event.kind == "dodge" then
+					T.ok(aimed[from], "a blow lands only after its aim")
+					aimed[from] = nil
+					firstBlow[from] = firstBlow[from] or fight.seconds
+				end
+			end
+		end
+		local times: { number } = {}
+		for _, seconds in firstBlow do
+			table.insert(times, seconds)
+		end
+		table.sort(times)
+		T.ok(#times >= 4)
+		T.ok(times[#times] - times[1] >= 0.5, "the first blows are spread out")
+	end)
+	T.test("a slime fights by its strongest stat; a tie goes by its seed", function()
+		local hpPer = Config.Stats.HpPerLevel
+		local function role(attack: number, defence: number, speed: number, hp: number, seed: number): string
+			return Combat.role({ id = "s", attack = attack, defence = defence, speed = speed, hp = hp }, seed)
+		end
+		T.eq(role(9, 2, 2, 2 * hpPer, 0), "attack")
+		T.eq(role(2, 2, 9, 2 * hpPer, 0), "speed")
+		T.eq(role(2, 2, 2, 9 * hpPer, 0), "hp")
+		local seen: { [string]: boolean } = {}
+		for seed = 0, 3 do
+			seen[role(1, 1, 1, hpPer, seed)] = true
+		end
+		T.ok(seen.attack and seen.defence and seen.speed and seen.hp, "equal stats spread over every role")
+	end)
 	T.test("a group of the player's own level is usually beaten, harder groups less often", function()
 		for _, level in { 4, 12, 30 } do
 			local same, three, five = winRate(level, 1), winRate(level, 2), winRate(level, 3)

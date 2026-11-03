@@ -15,6 +15,8 @@ export type Unit = {
 	maxHp: number,
 	cooldown: number,
 	target: Unit?,
+	-- the coming blow has been announced (an "aim" event, WindupSeconds before it lands)
+	aimed: boolean,
 }
 export type Fight = { units: { Unit }, rng: Rng, seconds: number, winner: string? }
 export type Event = { kind: string, from: string?, to: string, amount: number?, crit: boolean? }
@@ -35,7 +37,32 @@ function Combat.cooldown(speed: number): number
 	return math.max(c.MinCooldown, 1 / (1 + math.max(0, speed) * c.CooldownPerSpeed))
 end
 
-local function unit(fighter: Fighter, side: string): Unit
+-- How a slime fights, from its strongest stat (hp counted per level, as Stats.level does); a tie is settled by the
+-- slime's seed, so even starters with equal stats fight in different ways.
+function Combat.role(fighter: Fighter, seed: number): string
+	local values = {
+		attack = fighter.attack,
+		defence = fighter.defence,
+		speed = fighter.speed,
+		hp = (fighter.maxHp or fighter.hp) / Config.Stats.HpPerLevel,
+	}
+	local best = -math.huge
+	local tied: { string } = {}
+	for _, key in Config.Combat.Roles do
+		local value = values[key]
+		if value > best + 1e-9 then
+			best = value
+			tied = { key }
+		elseif math.abs(value - best) <= 1e-9 then
+			table.insert(tied, key)
+		end
+	end
+	return tied[math.floor(math.abs(seed)) % #tied + 1]
+end
+
+-- (each fighter opens at its own moment: a team that strikes all at once reads as one body, not four slimes)
+local function unit(fighter: Fighter, side: string, rng: Rng): Unit
+	local c = Config.Combat
 	return {
 		id = fighter.id,
 		side = side,
@@ -44,17 +71,18 @@ local function unit(fighter: Fighter, side: string): Unit
 		speed = fighter.speed,
 		hp = fighter.hp,
 		maxHp = fighter.maxHp or fighter.hp,
-		cooldown = Config.Combat.OpeningCooldown,
+		cooldown = c.OpeningCooldown + rng:next() * c.OpeningSpread,
+		aimed = false,
 	}
 end
 
 function Combat.new(squad: { Fighter }, foes: { Fighter }, rng: Rng): Fight
 	local units: { Unit } = {}
 	for _, fighter in squad do
-		table.insert(units, unit(fighter, "squad"))
+		table.insert(units, unit(fighter, "squad", rng))
 	end
 	for _, fighter in foes do
-		table.insert(units, unit(fighter, "foe"))
+		table.insert(units, unit(fighter, "foe", rng))
 	end
 	return { units = units, rng = rng, seconds = 0 }
 end
@@ -80,8 +108,22 @@ function Combat.step(fight: Fight, dt: number): { Event }
 	for _, attacker in fight.units do
 		if attacker.hp > 0 then
 			attacker.cooldown -= dt
+			-- the blow is announced a moment before it lands, so the client can show the wind-up
+			if not attacker.aimed and attacker.cooldown <= c.WindupSeconds then
+				local target = attacker.target
+				if not target or target.hp <= 0 then
+					target = pick(fight, attacker.side)
+					attacker.target = target
+				end
+				if target then
+					attacker.aimed = true
+					table.insert(events, { kind = "aim", from = attacker.id, to = target.id })
+				end
+			end
 			if attacker.cooldown <= 0 then
-				attacker.cooldown += Combat.cooldown(attacker.speed)
+				attacker.aimed = false
+				-- (a little off the beat each time, so fighters of the same speed drift apart)
+				attacker.cooldown += Combat.cooldown(attacker.speed) * (1 + (fight.rng:next() * 2 - 1) * c.CooldownJitter)
 				local target = attacker.target
 				if not target or target.hp <= 0 then
 					target = pick(fight, attacker.side)

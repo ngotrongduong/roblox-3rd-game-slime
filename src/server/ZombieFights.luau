@@ -84,6 +84,8 @@ type March = {
 	spot: Vector3,
 	waiting: string,
 	folder: Configuration,
+	-- a team that won cheers on the field until then (server time), then marches home
+	cheerUntil: number?,
 }
 type Session = {
 	player: Player,
@@ -454,6 +456,17 @@ local function arriveHome(session: Session, team: March)
 	team.state = "home"
 end
 
+-- The survivors march back from their spot to the gate (or are home at once when the save is gone).
+local function goHome(session: Session, team: March)
+	local farm = PlayerData.get(session.player)
+	if farm and #team.members > 0 then
+		team.state = "returning"
+		startLeg(team, farm, team.spot, session.gate)
+	else
+		arriveHome(session, team)
+	end
+end
+
 local function endFight(session: Session, team: March, winner: string, now: number)
 	local player = session.player
 	local fight = team.fight :: Fight
@@ -522,12 +535,13 @@ local function endFight(session: Session, team: March, winner: string, now: numb
 		"survivors",
 		#survivors
 	)
-	local farm = PlayerData.get(player)
-	if #survivors > 0 and farm then
-		team.state = "returning"
-		startLeg(team, farm, team.spot, session.gate)
-	else
+	if #survivors == 0 then
 		arriveHome(session, team)
+	elseif winner == "squad" then
+		-- the winners stay on the field to cheer (still "fighting" to the clients, with no fight), then march home
+		team.cheerUntil = workspace:GetServerTimeNow() + Config.Zombies.CheerSeconds
+	else
+		goHome(session, team)
 	end
 end
 
@@ -588,11 +602,14 @@ local function beginFight(session: Session, team: March, farm: any, now: number)
 	local group = team.group :: Group
 	local fighters: { any } = {}
 	local here: { string } = {}
+	local roles: { [string]: string } = {}
 	for _, id in team.members do
 		local slime = FarmState.findSlime(farm, id)
 		if slime then
-			table.insert(fighters, Zombies.fighter(slime, now, 1 - (session.wounds[id] or 0)))
+			local fighter = Zombies.fighter(slime, now, 1 - (session.wounds[id] or 0))
+			table.insert(fighters, fighter)
 			table.insert(here, id)
+			roles[id] = Combat.role(fighter, slime.seed)
 		else
 			-- (gone from the farm while away: nothing of it is left to bring back)
 			Village.setOut(session.player, id, false)
@@ -631,7 +648,7 @@ local function beginFight(session: Session, team: March, farm: any, now: number)
 	group.state = "fighting"
 	group.quietSince = now
 	publishGroup(group)
-	fire(session, team.index, { { kind = "start", group = group.id, members = table.clone(here) } })
+	fire(session, team.index, { { kind = "start", group = group.id, members = table.clone(here), roles = roles } })
 	print(Config.LogPrefix, "zombies: team", team.index, "met", group.id, "level", group.zombies[1].level)
 end
 
@@ -754,6 +771,10 @@ local function frame(session: Session, dt: number)
 			elseif state == "returning" then
 				arriveHome(session, team)
 			end
+		end
+		if state == "fighting" and not team.fight and team.cheerUntil and serverNow >= team.cheerUntil then
+			team.cheerUntil = nil
+			goHome(session, team)
 		end
 	end
 	-- the fights
