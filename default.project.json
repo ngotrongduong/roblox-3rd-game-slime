@@ -11,16 +11,7 @@
 				"$path": "assets/ClientKit.rbxm"
 			},
 			"Remotes": {
-				"$className": "Folder",
-				"Action": {
-					"$className": "RemoteEvent"
-				},
-				"Fx": {
-					"$className": "RemoteEvent"
-				},
-				"Query": {
-					"$className": "RemoteFunction"
-				}
+				"$className": "Folder"
 			}
 		},
 		"ServerStorage": {

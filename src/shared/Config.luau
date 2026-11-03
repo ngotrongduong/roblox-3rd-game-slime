@@ -154,6 +154,8 @@ Config.Zombies = {
 	-- and each player's level (the one the slices are filled by, published as PlayerLevel) is worked out this often.
 	CampTickSeconds = 1,
 	PlayerLevelSeconds = 2,
+	-- How often the teams and the slimes' health shares are published to the clients.
+	PublishSeconds = 0.25,
 	-- The ground under a group is found by a ray from GroundProbeUp above the map's ground height down GroundProbeDown more.
 	GroundProbeUp = 80,
 	GroundProbeDown = 200,
@@ -1445,10 +1447,10 @@ Config.Save = {
 
 	-- Session lock: a lock not refreshed for LockStaleSeconds belongs to a dead server and may be
 	-- taken over. A live server refreshes its locks every LockRefreshSeconds even when idle.
-	LockStaleSeconds = 600,
-	LockRefreshSeconds = 180,
+	LockStaleSeconds = 200,
+	LockRefreshSeconds = 60,
 	-- Joining while another server still holds a fresh lock (a quick server hop): retry this many
-	-- times, this far apart, then kick with a friendly "rejoin in a minute" instead of loading stale data.
+	-- times, this far apart, then kick with a friendly "rejoin in a few minutes" instead of loading stale data.
 	LoadLockRetries = 6,
 	LoadLockWaitSeconds = 5,
 

@@ -76,7 +76,7 @@ local function reasonText(reason: any): string
 end
 
 -- One request to the server; yields, so callers run it in task.spawn.
-local function ask(data: { [string]: any }): (boolean, string?)
+local function ask(data: { [string]: any }): (boolean, string?, number?)
 	local remotes = ReplicatedStorage:FindFirstChild("Remotes")
 	local remote = if remotes then remotes:FindFirstChild("Village") else nil
 	if not remote or not remote:IsA("RemoteFunction") then
@@ -86,7 +86,7 @@ local function ask(data: { [string]: any }): (boolean, string?)
 		return remote:InvokeServer(data)
 	end)
 	if ok and type(answer) == "table" then
-		return answer.ok == true, answer.reason
+		return answer.ok == true, answer.reason, answer.value
 	end
 	return false, "SERVER_ERROR"
 end

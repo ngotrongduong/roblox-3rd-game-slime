@@ -69,10 +69,8 @@ function Stations.canAssign(
 	if Stations.isBusy(farm, slimeId) then
 		return false, "ALREADY_ASSIGNED"
 	end
-	for _, pair in farm.breeding.pairs do
-		if pair.a == slimeId or pair.b == slimeId then
-			return false, "IN_PAIR"
-		end
+	if FarmState.inPair(farm, slimeId) then
+		return false, "IN_PAIR"
 	end
 	if FarmState.teamOf(farm, slimeId) then
 		return false, "IN_TEAM"

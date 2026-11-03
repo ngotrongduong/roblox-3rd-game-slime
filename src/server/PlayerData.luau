@@ -19,7 +19,7 @@ local PREFIX = Config.LogPrefix
 
 -- Shown when a player is kicked rather than given a farm we are unsure of.
 local KICK_MESSAGES: { [string]: string } = {
-	locked = "Your farm is still being saved by another server. Please rejoin in a minute - nothing is lost.",
+	locked = "Your farm is still being saved by another server. Please rejoin in a few minutes - nothing is lost.",
 	newerSchema = "Your farm was saved by a newer version of the game. Please rejoin to get a new server - nothing is lost.",
 	corrupt = "Your farm's save could not be read, so we left it untouched. Please rejoin; if it keeps happening, tell us.",
 	storeDown = "Roblox's save servers did not answer, so your farm was not loaded (to keep it safe). Please rejoin in a minute.",
@@ -118,6 +118,12 @@ local function onPlayerAdded(player: Player)
 	end
 end
 
+local function runLeaving(player: Player, profile: ProfileStore.Profile)
+	for _, callback in leavingCallbacks do
+		runCallback("onLeaving", callback, player, profile.data)
+	end
+end
+
 local function onPlayerRemoving(player: Player)
 	local s = store
 	local profile = profiles[player]
@@ -125,9 +131,7 @@ local function onPlayerRemoving(player: Player)
 		return
 	end
 	-- Systems write their last state (through update) before the final write.
-	for _, callback in leavingCallbacks do
-		runCallback("onLeaving", callback, player, profile.data)
-	end
+	runLeaving(player, profile)
 	profiles[player] = nil
 	-- A failed release stays in the store and is retried by its step (and by BindToClose).
 	s.release(profile)
@@ -206,6 +210,9 @@ function PlayerData.start(hooks: ProfileLogic.Hooks)
 		onLost = function(profile: ProfileStore.Profile)
 			local player = playerOf(profile)
 			if player then
+				-- The kick's PlayerRemoving finds no profile, so the systems let go of this player here
+				-- (their writes are refused: this data is no longer ours).
+				runLeaving(player, profile)
 				profiles[player] = nil
 				player:Kick(KICK_MESSAGES.lockLost)
 			end
@@ -229,9 +236,7 @@ function PlayerData.start(hooks: ProfileLogic.Hooks)
 	game:BindToClose(function()
 		-- Players still here get their leaving callbacks first, so their last state is in the write.
 		for player, profile in profiles do
-			for _, callback in leavingCallbacks do
-				runCallback("onLeaving", callback, player, profile.data)
-			end
+			runLeaving(player, profile)
 			profiles[player] = nil
 		end
 		if not s.closeAll(Save.ShutdownSeconds) then

@@ -427,14 +427,6 @@ function Breeding.toIncubator(egg: Egg, now: number, breedingLevel: number): num
 	return now + math.max(0, egg.hatchAt - now) / Config.Breeding.NestSlowFactor
 end
 
--- The hatch time of an incubator egg sent back to a nest (a save that lost incubators): the rest runs slower.
-function Breeding.toNest(egg: Egg, now: number, breedingLevel: number): number
-	if egg.hatchAt == nil then
-		return now + Breeding.nestSeconds(egg, breedingLevel)
-	end
-	return now + math.max(0, egg.hatchAt - now) * Config.Breeding.NestSlowFactor
-end
-
 function Breeding.placeInIncubator(farm: Farm, eggId: string, now: number, requestedSlot: number?): (boolean, string?)
 	local egg = FarmState.findEgg(farm, eggId)
 	if not egg then

@@ -77,7 +77,6 @@ return function(T: any)
 		T.eq(Zombies.playerLevel(farm, NOW), 20, "weak slimes kept at home change nothing")
 		farm.slimes[1].ghostUntil = NOW + 100
 		T.eq(Zombies.playerLevel(farm, NOW), 19, "a ghost does not count")
-		T.same(Zombies.campLevels(20), { 20, 23, 25 })
 	end)
 	T.test("rarer zombies and higher levels pay more; kinds roll by weight", function()
 		T.ok(Zombies.killReward("toxic", 10) > Zombies.killReward("rotten", 10))

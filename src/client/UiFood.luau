@@ -429,10 +429,6 @@ function UiFood.refreshDish()
 	end
 end
 
-function UiFood.openDish(own: Instance?, id: string)
-	openDishSheet(own, id)
-end
-
 openDishSheet = function(own: Instance?, id: string)
 	ownRef = own
 	local name, rarityName, colour = UiFood.describe(id)

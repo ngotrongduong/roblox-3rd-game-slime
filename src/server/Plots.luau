@@ -385,20 +385,6 @@ local function waitPlot(player: Player): number?
 	return plotOf[player]
 end
 
--- Yields until the player's copy is built; the plot's container, nil when the player left or has no plot.
-function Plots.waitBuilt(player: Player): Model?
-	local plot = waitPlot(player)
-	local state = if plot then states[plot] else nil
-	if not state then
-		return nil
-	end
-	local epoch = state.epoch
-	while state.epoch == epoch and not state.built and player.Parent == Players do
-		task.wait(Config.Plots.WaitSeconds)
-	end
-	return if state.epoch == epoch and state.built then state.container else nil
-end
-
 -- The player's village is complete and set to their saved levels (AreaUpgrade says so).
 function Plots.setReady(player: Player)
 	local plot = plotOf[player]

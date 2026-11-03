@@ -240,6 +240,15 @@ function FarmState.newTeams(): { Team }
 end
 
 -- The number of the team a slime stands in, nil when it is in none.
+function FarmState.inPair(farm: Farm, slimeId: string): boolean
+	for _, pair in farm.breeding.pairs do
+		if pair.a == slimeId or pair.b == slimeId then
+			return true
+		end
+	end
+	return false
+end
+
 function FarmState.teamOf(farm: Farm, slimeId: string): number?
 	for index, team in farm.teams do
 		if table.find(team.members, slimeId) then
@@ -757,11 +766,11 @@ local function validateAreas(raw: any): Areas
 	return areas
 end
 
-local function storeCapacity(level: number): number
+function FarmState.storehouseCapacity(level: number): number
 	return Config.Food.StorehouseBase + Config.Food.StorehousePerLevel * (level - Config.Village.StartLevel)
 end
 
-local function fridgeCapacity(level: number): number
+function FarmState.fridgeCapacity(level: number): number
 	return Config.Food.FridgeBase + Config.Food.FridgePerLevel * (level - Config.Village.StartLevel)
 end
 
@@ -1274,9 +1283,13 @@ function FarmState.repair(data: any, now: number): (Farm, { string }, boolean)
 		discoveries = validateDiscoveries(data.discoveries, warnings),
 		areas = areas,
 		work = work,
-		storehouse = validateStock(data.storehouse, Config.Food.RawOrder, storeCapacity(areas.pantry.level)),
+		storehouse = validateStock(
+			data.storehouse,
+			Config.Food.RawOrder,
+			FarmState.storehouseCapacity(areas.pantry.level)
+		),
 		counter = validateStock(data.counter, Config.Food.RawOrder, Config.Food.CounterCapacity),
-		fridge = validateStock(data.fridge, Config.Food.DishOrder, fridgeCapacity(areas.kitchen.level)),
+		fridge = validateStock(data.fridge, Config.Food.DishOrder, FarmState.fridgeCapacity(areas.kitchen.level)),
 		breeding = breeding,
 		teams = validateTeams(data.teams, slimes, work, breeding, warnings),
 		lastSimulatedAt = if isNum(data.lastSimulatedAt) and data.lastSimulatedAt > 0

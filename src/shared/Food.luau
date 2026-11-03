@@ -10,13 +10,8 @@ type Farm = typeof(FarmState.newFarm(0))
 type Rng = typeof(RngModule.new(0))
 local Food = {}
 
-function Food.storehouseCapacity(level: number): number
-	return Config.Food.StorehouseBase + Config.Food.StorehousePerLevel * (level - Config.Village.StartLevel)
-end
-
-function Food.fridgeCapacity(level: number): number
-	return Config.Food.FridgeBase + Config.Food.FridgePerLevel * (level - Config.Village.StartLevel)
-end
+Food.storehouseCapacity = FarmState.storehouseCapacity
+Food.fridgeCapacity = FarmState.fridgeCapacity
 
 -- Which raw kind a catch or a planting is: one roll over the weights of the group ("fish" or "veg"), in Config order.
 -- Luck does not affect rarity; pond or garden level alone changes the distribution.

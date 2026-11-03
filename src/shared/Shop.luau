@@ -24,10 +24,8 @@ function Shop.canSell(farm: Farm, slimeId: string, now: number): (boolean, strin
 	elseif #farm.slimes <= Config.Zombies.MinSlimes then
 		return false, "LAST_SLIMES"
 	end
-	for _, pair in farm.breeding.pairs do
-		if pair.a == slimeId or pair.b == slimeId then
-			return false, "IN_PAIR"
-		end
+	if FarmState.inPair(farm, slimeId) then
+		return false, "IN_PAIR"
 	end
 	return true, nil
 end

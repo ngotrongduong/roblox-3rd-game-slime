@@ -13,7 +13,7 @@ local U = Config.Ui
 
 export type Context = {
 	own: () -> Instance?,
-	ask: (data: { [string]: any }) -> (boolean, string?),
+	ask: (data: { [string]: any }) -> (boolean, string?, number?),
 	reason: (why: any) -> string,
 }
 export type Shop = { root: Frame, tick: () -> () }
@@ -69,10 +69,10 @@ function UiDishShop.new(parent: Instance, context: Context): Shop
 		end
 		selling = true
 		task.spawn(function()
-			local ok, why = context.ask({ action = "SellDish", dish = id, count = count })
+			local ok, why, paid = context.ask({ action = "SellDish", dish = id, count = count })
 			selling = false
 			if ok then
-				UiKit.toast("+" .. UiKit.money(priceOf(id) * count))
+				UiKit.toast("+" .. UiKit.money(paid or 0))
 			else
 				UiKit.toast(context.reason(why))
 			end

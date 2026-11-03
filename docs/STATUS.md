@@ -9,8 +9,9 @@ Proved by playing `Publish.rbxl` in Studio: the village, Market and slimes load 
 2,630, and coming home brought back the village, prompts, bins and pad labels. Re-assigning a carrying fisher in play put the fish in the storehouse and the next catch came 59 s later;
 a gardener re-assigned between chores carried on. Not measured: a real phone, 8 players at once, a real publish.
 
-Still open from the audit (`Should fix`): a lost save lock skips the leaving clean-up; a lock can stay up to 10 minutes after a crash; the capacity formula is written twice; the request rules in
-`VillageRemotes` have no tests.
+Also from the audit: a lost save lock now runs the leaving clean-up; a crashed server's lock frees in 200 s (refresh 60 s); one capacity formula and one pair check (`FarmState`); the request rules
+moved to `shared/VillageRequests` with a spec; team and health publishing runs 4 times a second; the dish toast shows what the server paid; dead code removed. Proved in a MapWork play test: refusals
+with the right reasons, a slime sale paying 120, a march and fight with its reward. Only read or tested, not seen: the lost-lock clean-up, the crash lock time, the dish toast itself (no dish at hand).
 
 ## 2026-11-03 — the kitchen
 
@@ -50,7 +51,7 @@ Not done or not known
   `PinkDaisies`, `QtFern_1`, then walls.
 - Still unlike the picture: grey flagstones (the tint does not take), thinner tree crowns. The Sell button at the buyer's has not been pressed in a test,
   and real DataStores for the board are untested.
-- `rbxassetid://203785492` and `14025376080` log asset errors in play; sources not looked for.
+- `rbxassetid://203785492` logs an asset error in play; it is in neither `src` nor the saved place, so probably the test player's avatar. `14025376080` is a texture of particles in the place and did not log an error in the 2026-11-03 tests.
 - VIP products and prices wait for the owner; none exist.
 
 ## 2026-11-02 — village bar done, economy researched

@@ -98,6 +98,7 @@ type Session = {
 	-- the level this player's slice is filled by (Zombies.playerLevel), worked out again every PlayerLevelSeconds
 	level: number,
 	levelAt: number,
+	publishAt: number,
 }
 
 local ZombieFights = {}
@@ -358,6 +359,7 @@ local function openSession(player: Player, root: Folder, farm: any, plot: number
 		accumulator = 0,
 		level = level,
 		levelAt = os.clock(),
+		publishAt = 0,
 	}
 	set(root, "PlayerLevel", level)
 	session.teamsFolder.Name = "Teams"
@@ -783,6 +785,11 @@ local function frame(session: Session, dt: number)
 			end
 		end
 	end
+	-- What follows is what players see of the teams: a few times a second is enough, not every frame for every slime.
+	if os.clock() - session.publishAt < Config.Zombies.PublishSeconds then
+		return
+	end
+	session.publishAt = os.clock()
 	for index = 1, #session.teams do
 		local team = session.teams[index]
 		local state = team.state

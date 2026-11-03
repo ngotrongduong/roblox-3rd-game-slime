@@ -42,15 +42,6 @@ local function isDead(slime: Slime, now: number): boolean
 	return slime.ghostUntil ~= nil and slime.ghostUntil > now
 end
 
-local function inPair(farm: Farm, slimeId: string): boolean
-	for _, pair in farm.breeding.pairs do
-		if pair.a == slimeId or pair.b == slimeId then
-			return true
-		end
-	end
-	return false
-end
-
 local function canFight(farm: Farm, slime: Slime, now: number): boolean
 	return not isDead(slime, now) and not isBaby(farm, slime, now)
 end
@@ -161,15 +152,6 @@ function Zombies.targetFits(target: any, plot: number): boolean
 	return slice == plot
 end
 
--- The level of each camp for a player of this level: the same, a little above, far above.
-function Zombies.campLevels(playerLevel: number): { number }
-	local out: { number } = {}
-	for _, offset in Config.Zombies.LevelOffsets do
-		table.insert(out, playerLevel + offset)
-	end
-	return out
-end
-
 function Zombies.rollKind(camp: number, rng: Rng): string
 	local z = Config.Zombies
 	local sum = 0
@@ -234,7 +216,7 @@ function Zombies.canSend(farm: Farm, slime: Slime, now: number): boolean
 	if not canFight(farm, slime, now) or slime.sleeping or Needs.isTired(slime.needs) then
 		return false
 	end
-	return not Stations.isBusy(farm, slime.id) and not inPair(farm, slime.id)
+	return not Stations.isBusy(farm, slime.id) and not FarmState.inPair(farm, slime.id)
 end
 
 -- Sets the line-up of team `teamIndex` to these slimes (none empties it). A slime already in another team moves here.
@@ -268,7 +250,7 @@ function Zombies.setTeam(
 			return false, "BABY"
 		elseif isDead(slime, now) then
 			return false, "DEAD"
-		elseif Stations.isBusy(farm, id) or inPair(farm, id) then
+		elseif Stations.isBusy(farm, id) or FarmState.inPair(farm, id) then
 			return false, "BUSY"
 		end
 	end
@@ -370,7 +352,7 @@ function Zombies.reviveCost(level: number): number
 	return math.ceil(1 + math.max(0, level) / Config.Zombies.ReviveLevelsPerFood)
 end
 
--- Pays with the raw food there is most of, all or nothing, and brings the slime back.
+-- Pays with the lowest-rarity raw food first, all or nothing, and brings the slime back.
 function Zombies.revive(farm: Farm, slimeId: string, now: number): (boolean, string?)
 	local slime = FarmState.findSlime(farm, slimeId)
 	if not slime or not slime.ghostUntil or slime.ghostUntil <= now then
