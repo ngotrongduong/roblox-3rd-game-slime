@@ -1,5 +1,16 @@
 # Status
 
+## 2026-11-03 — fights made dramatic (owner: "4 slimes attack in unison, no impact effects")
+
+Done in three steps (`docs/GAMEPLAY.md` §8 "The fight"): each fighter on its own beat with a wind-up, a lunge, the owner's battle art on
+impact, goo, knock-back, falls and a cheer; each moves about the field by its way of fighting (its strongest stat, a zombie's kind) and keeps
+clear of the others; skills every few blows with their names called out. No camera effects (the owner). Balance re-run with `fight_sim`.
+
+Proved in Studio play tests (`Publish.rbxl`): two fights won with no errors; the skill names showed once per cast (Goo Slam 7, Dash Strike 7,
+Belly Bounce 5, Chomp 15); Goo Slam's cracks and rings, Belly Bounce's ring, Dash Strike's slashes and Jelly Guard's guard events all fired;
+fighters stood apart. Not seen close up: Acid Rain (cast in play, not caught on camera) and Plague Burst (no plague zombie in the test groups), a real phone. No hit
+sounds yet (the game has no sound assets).
+
 ## 2026-11-03 — before a publish, from the whole-repo audit: start here
 
 Fixed: a publish now goes through `lune run tools/build_publish.luau`, which writes `assets/raw/Publish.rbxl` (the MapWork world, the repo's code, no labs or test stages, streaming on);

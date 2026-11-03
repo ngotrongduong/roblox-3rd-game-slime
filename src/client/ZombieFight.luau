@@ -36,6 +36,8 @@ type Fight = {
 	fighters: { [string]: Fighter },
 	order: { string },
 	roles: { [string]: string },
+	-- the zombies of the group when the fight began (a group beaten or left is respawned with new ids at once)
+	foes: { string },
 	over: boolean,
 }
 type Bar = {
@@ -368,6 +370,66 @@ local function guardSpot(id: string, actor: SlimeActor.Slime, foeAt: Vector3): V
 	return allyAt + along(foeAt - allyAt, actor.root.LookVector) * (radius(ally) + radius(actor) + V.Moves.Gap)
 end
 
+-- The fight a fighter is in: as a slime of the team or a zombie of the group.
+local function fightAround(id: string): Fight?
+	local fight = fightOf(id)
+	if fight then
+		return fight
+	end
+	for _, each in fights do
+		local group = ZombieWorld.group(each.groupId)
+		if group and group.byId[id] then
+			return each
+		end
+	end
+	return nil
+end
+
+-- `spot` moved off every other fighter of the fight, slimes and zombies alike, where they stand or are going (each
+-- keeps Gap studs of air round it), in a few passes, as one push can land on another.
+local function apart(id: string, actor: SlimeActor.Slime, spot: Vector3): Vector3
+	local fight = fightAround(id)
+	if not fight then
+		return spot
+	end
+	-- (not its own target: the place is already outside it, and a push off it would carry the fighter out of reach)
+	local targetId = targets[id]
+	local others: { string } = {}
+	for _, other in fight.order do
+		if other ~= id and other ~= targetId and not fight.fighters[other].fallen then
+			table.insert(others, other)
+		end
+	end
+	local group = ZombieWorld.group(fight.groupId)
+	if group then
+		for other in group.byId do
+			if other ~= id and other ~= targetId and not ZombieWorld.isDead(other) then
+				table.insert(others, other)
+			end
+		end
+	end
+	local look = actor.root.LookVector
+	local across = Vector3.new(-look.Z, 0, look.X)
+	for _ = 1, V.Moves.Passes do
+		local moved = false
+		for _, other in others do
+			local body, at = find(other)
+			if body and at then
+				local need = radius(actor) + radius(body) + V.Moves.Gap
+				local gap = flat(spot - at)
+				if gap.Magnitude < need then
+					spot += along(gap, across) * (need - gap.Magnitude)
+					moved = true
+				end
+			end
+		end
+		if not moved then
+			break
+		end
+	end
+	return spot
+end
+
 -- Where a fighter wants to stand against its target: on its own side, at its own angle round the target (a fast one
 -- circles to a new flank each time), as far as its way of fighting keeps; a guard covers its most hurt team-mate. Not on
 -- top of another fighter.
@@ -382,21 +444,14 @@ local function spotFor(id: string, actor: SlimeActor.Slime, targetId: string): (
 	if way == "defence" then
 		local guard = guardSpot(id, actor, at)
 		if guard then
-			return guard, at
+			return apart(id, actor, guard), at
 		end
 	end
 	local spread = (M.Spread :: any)[way] or 30
 	local angle = if way == "speed" then (math.random() * 2 - 1) * spread else (hash(id) * 2 - 1) * spread
 	local side = CFrame.Angles(0, math.rad(angle), 0):VectorToWorldSpace(along(anchor - at, -target.root.LookVector))
 	local keep = ((M.Stand :: any)[way] or 0.4) * actor.body.Size.X
-	local spot = at + side * (radius(target) + radius(actor) + M.Gap + keep)
-	for other, otherAt in homes do
-		local gap = flat(spot - otherAt)
-		if other ~= id and gap.Magnitude < radius(actor) * 2 then
-			spot += along(gap, side) * (radius(actor) * 2 - gap.Magnitude)
-		end
-	end
-	return spot, at
+	return apart(id, actor, at + side * (radius(target) + radius(actor) + M.Gap + keep)), at
 end
 
 -- After its blow (or before one it cannot reach) a fighter takes its place against its target.
@@ -556,7 +611,13 @@ local function onStart(teamIndex: number, event: { [string]: any })
 	local members: { string } = event.members
 	local roles = if type(event.roles) == "table" then event.roles else {}
 	local fight: Fight =
-		{ team = teamIndex, groupId = event.group, fighters = {}, order = {}, roles = roles, over = false }
+		{ team = teamIndex, groupId = event.group, fighters = {}, order = {}, roles = roles, foes = {}, over = false }
+	local group = ZombieWorld.group(event.group)
+	if group then
+		for id in group.byId do
+			table.insert(fight.foes, id)
+		end
+	end
 	fights[teamIndex] = fight
 	for _, id in members do
 		fight.fighters[id] = { id = id, fallen = false }
@@ -930,14 +991,19 @@ local function onEnd(teamIndex: number, event: { [string]: any })
 		return
 	end
 	fight.over = true
-	for _, id in fight.order do
-		dropBar(id)
-	end
+	-- every zombie of the fight: those it began with and any of the group now
+	local foes = table.clone(fight.foes)
 	local group = ZombieWorld.group(fight.groupId)
 	if group then
 		for id in group.byId do
-			dropBar(id)
+			table.insert(foes, id)
 		end
+	end
+	for _, id in fight.order do
+		dropBar(id)
+	end
+	for _, id in foes do
+		dropBar(id)
 	end
 	if event.winner == "squad" then
 		-- (after the last blow has landed)
@@ -966,11 +1032,9 @@ local function onEnd(teamIndex: number, event: { [string]: any })
 		for _, id in fight.order do
 			homes[id], targets[id] = nil, nil
 		end
-		local foes = ZombieWorld.group(fight.groupId)
-		if foes then
-			for id in foes.byId do
-				homes[id], targets[id] = nil, nil
-			end
+		for _, id in foes do
+			homes[id], targets[id] = nil, nil
+			dropBar(id)
 		end
 	end)
 end

@@ -3,7 +3,7 @@
 -- a blow leaves (by the attacker: a slime's role, a zombie's kind), the goo it knocks out of the one hit (glossy drops of
 -- its own body), the sparks of a crit, a spit that flies, the burst and ground ring of a fall, the after-images of a dodge,
 -- the stars of a fall and of a cheer. Each effect is a short-lived anchored part with a burst of particles, capped
--- (View.Fx.MaxMarks, MaxGoo) for cheap phones. Client only: nothing here changes a fight, and nothing touches the camera
+-- (View.Fx.MaxMarks, MaxGoo, MaxImages) for cheap phones. Client only: nothing here changes a fight, and nothing touches the camera
 -- (the owner, 2026-11-03: the player watches from outside).
 local Debris = game:GetService("Debris")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -28,6 +28,7 @@ type Drop = { part: Part, velocity: Vector3, born: number, life: number, size: n
 
 local FightFx = {}
 local marksAlive = 0
+local imagesAlive = 0
 local drops: { Drop } = {}
 local dropLoop: RBXScriptConnection? = nil
 
@@ -286,8 +287,16 @@ end
 -- ===== After-images of a dodge =====
 
 -- Fading copies of the body along the side-step it is about to make (`step`, studs).
+-- Never more than View.Fx.MaxImages copies alive: many fighters dashing at once skip theirs.
 function FightFx.afterImages(body: MeshPart, step: Vector3)
 	local count = F.AfterImages
+	if imagesAlive + count > F.MaxImages then
+		return
+	end
+	imagesAlive += count
+	task.delay(F.AfterImageSeconds + 0.05, function()
+		imagesAlive -= count
+	end)
 	local start = body.CFrame
 	for index = 1, count do
 		local copy = body:Clone()

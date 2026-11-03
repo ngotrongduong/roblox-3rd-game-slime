@@ -193,6 +193,28 @@ playing). Nothing dies of hunger and no stat is ever lost to hunger.
 - Spare slimes are **sold at the shop** in the Market; the higher the level, the more coins (`Mutations.sellValue`).
 - In this build: selling at the shop and paying coins for area upgrades; fights and ghosts later.
 
+### The fight (the owner, 2026-11-03: "each slime is its own individual, so is each zombie")
+
+- The server runs the fight (`shared/Combat`, `server/ZombieFights`); the client only draws its events
+  (`client/ZombieFight`, `client/FightFx`). **No camera effects**: the player watches from outside.
+- Every fighter opens at its own moment and keeps its own beat (a little off each time). A blow is announced
+  `WindupSeconds` before it lands, so the attacker winds up; it lunges to the skin of its target and holds there a beat,
+  and the blow leaves the mark of its way of fighting (the owner's battle art), goo and a knock-back. A dodge leaves
+  after-images. A zombie that falls bursts on a ring with its coins; a slime that falls sees stars and fades. A team
+  that wins cheers (`Config.Zombies.CheerSeconds`) before it marches home.
+- **Way of fighting**: a slime fights by its strongest stat (a tie settled by its seed): **attack** goes for the foe that
+  hits hardest, **speed** for the one with least health and circles to a new flank each time, **defence** draws more of
+  the blows and steps in front of its most hurt team-mate, **hp** takes anyone. A zombie fights by its kind (rotten,
+  toxic spits from a distance and goes for the weakest, plague). Fighters move about the field and never stand on one
+  another.
+- **Skills** every few blows (`Config.Combat.Skills`), each fighter counting from its own start so a team never strikes
+  them all at once; the name is called out once over the caster: Goo Slam (attack: leaps onto its target, cracks the
+  ground, splashes the foes beside it), Dash Strike (speed: three quick blows with after-images), Jelly Guard (defence:
+  for a few seconds takes every blow aimed at a team-mate, harder to hurt), Belly Bounce (hp: leaps and hits every foe,
+  knocking them off their beat); zombies Chomp (rotten), Acid Rain (toxic: acid falls on every foe) and Plague Burst
+  (plague). Balance (`tools/balance/fight_sim.luau`): income within a few percent of before skills; the hardest camp
+  (+5 levels) is won about 6 times in 10.
+
 ## 9. Village life (the slime brain, server)
 
 Slimes that are not working or breeding choose what to do from their needs, personality and what the village needs

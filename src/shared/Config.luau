@@ -357,6 +357,8 @@ Config.Zombies = {
 			Reach = 5,
 			TooClose = 3,
 			RegroupSeconds = 0.45,
+			-- rounds of stepping off other fighters when a place is chosen
+			Passes = 4,
 			Stand = { attack = 0.6, defence = 0.5, speed = 1.6, hp = 0.8, rotten = 0.7, toxic = 2.6, plague = 0.6 },
 			Spread = { attack = 35, defence = 20, speed = 85, hp = 30, rotten = 55, toxic = 40, plague = 30 },
 		},
@@ -428,9 +430,10 @@ Config.Zombies = {
 			AfterImageTransparency = 0.55,
 			-- Stars over a slime that falls, and over a cheering one.
 			Stars = 5,
-			-- At most this many marks and goo drops alive at once (cheap phones).
+			-- At most this many marks, goo drops and after-image copies alive at once (cheap phones).
 			MaxMarks = 14,
 			MaxGoo = 48,
+			MaxImages = 12,
 		},
 		Coin = { size = 1.1, life = 1.1, speedMin = 14, speedMax = 22, gravity = 32 },
 		-- The dead chip: when its time turns red (seconds left); the shop confirm window.

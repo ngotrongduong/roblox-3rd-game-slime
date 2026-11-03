@@ -249,6 +249,10 @@ local function skill(fight: Fight, attacker: Unit, target: Unit, events: { Event
 		blow(fight, attacker, target, s.factor, events, extra)
 	elseif s.kind == "all" then
 		for _, foe in foesOf(fight, attacker) do
+			-- (a guard may already have fallen taking an earlier foe's blow)
+			if foe.hp <= 0 then
+				continue
+			end
 			blow(fight, attacker, foe, s.factor, events, extra)
 			-- (knocked off its beat)
 			foe.cooldown += s.stun or 0

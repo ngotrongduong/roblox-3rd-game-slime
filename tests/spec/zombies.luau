@@ -195,6 +195,22 @@ return function(T: any)
 				end
 			end
 			T.ok(guarded, "a blow was taken by the guard")
+			-- a skill that strikes everyone never strikes a fighter that has fallen (a guard felled covering a team-mate)
+			for seed = 1, 30 do
+				local fight = Combat.new({
+					{ id = "g", attack = 0, defence = 0, speed = 0, hp = 3, role = "defence" },
+					{ id = "m", attack = 0, defence = 0, speed = 0, hp = 1e5, role = "hp" },
+				}, { { id = "z", attack = 50, defence = 0, speed = 0, hp = 1e6, kind = "toxic" } }, Rng.new(seed))
+				local falls = 0
+				for _ = 1, 300 do
+					for _, event in Combat.step(fight, 0.1) do
+						if event.kind == "fallen" and event.to == "g" then
+							falls += 1
+						end
+					end
+				end
+				T.ok(falls <= 1, "the guard falls once, seed " .. seed)
+			end
 		end
 	)
 	T.test("a group of the player's own level is usually beaten, harder groups less often", function()
