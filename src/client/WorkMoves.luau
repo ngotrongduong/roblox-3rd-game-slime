@@ -33,6 +33,7 @@ type Target = {
 	power: number,
 	axis: Vector3,
 	moved: boolean,
+	ranged: boolean, -- shot at, never lunged at
 }
 
 export type State = {
@@ -348,9 +349,12 @@ local function dummyTarget(body: BasePart): Target?
 		power = 1,
 		axis = Vector3.zAxis,
 		moved = false,
+		ranged = false,
 	}
 end
 
+-- A kit model rocking from the foot of its box. The archery target is only ever shot at, in the middle of its board
+-- (a little above the box's middle: the easel's legs are below).
 local function modelTarget(model: Model): Target
 	local box, size = model:GetBoundingBox()
 	local parts: { BasePart } = {}
@@ -359,12 +363,14 @@ local function modelTarget(model: Model): Target
 			table.insert(parts, d)
 		end
 	end
+	local ranged = model.Name == "ArcheryTarget"
 	return {
 		parts = parts,
 		homes = {},
 		pivot = CFrame.new(box.Position - Vector3.new(0, size.Y / 2, 0)),
-		centre = box.Position,
-		radius = math.min(size.X, size.Z) / 2,
+		centre = box.Position + Vector3.new(0, if ranged then size.Y * T.BoardLift else 0, 0),
+		radius = if ranged then T.BoardDepth else math.min(size.X, size.Z) / 2,
+		ranged = ranged,
 		hitAt = 0,
 		power = 1,
 		axis = Vector3.zAxis,
@@ -434,8 +440,8 @@ function WorkMoves.train(
 		FightFx.mark(style, skin, skin - dir * 3, heavy)
 		rock(target, from, heavy)
 	end
-	if reach > T.MaxLungeStuds then
-		-- out of reach: spit goo at it
+	if target.ranged or reach > T.MaxLungeStuds then
+		-- the archery target, or out of reach: spit goo at it
 		if u >= T.WindupShare and state.hitBeat ~= index then
 			state.hitBeat = index
 			SlimeActor.kick(actor, "lean", 1.5)

@@ -9,10 +9,12 @@ publishes: Working, ClockKind, the village's Work slots), while the place's cloc
   `workCook`.
 - trainee: every `Train.BeatSeconds` a windup, a lunge to the skin of the nearest dummy or punching bag and back, a mark in
   the style of the stat the place trains (FightFx, the battle art), every 4th blow heavy; the dummy rocks from its foot
-  (client side, restored after). A target out of reach (the archery target) is spat at with goo. Motion `workTrain`.
-Numbers in `Config.VillageClient.Cook` / `.Train`. Seen in a play test: the lunge measured 6.6 -> 2.1 studs from the dummy
-and back each beat (`docs/work/train-dummy.jpg`, `docs/work/cook-pan.jpg`). Not yet seen: the punching bag (from training
-level 21) and the archery spot (level 31).
+  (client side, restored after). The archery target (and any target out of reach) is spat at with goo, aimed at the
+  middle of its board. Motion `workTrain`.
+Numbers in `Config.VillageClient.Cook` / `.Train`. Seen in a play test with the training ground at level 35, all three
+places staffed: the dummy lunge 6.6 -> 2.1 studs and back each beat, the punching bag 8.3 -> 2.5 studs with the bag
+rocking 8.6 degrees, the goo flying from the third place's slime to the archery board (`docs/work/cook-pan.jpg`,
+`train-dummy.jpg`, `train-bag.jpg`, `train-archery.jpg`).
 
 ## 2026-11-04 — "Best" on the Teams sheet
 

@@ -2446,8 +2446,11 @@ Config.VillageClient = {
 		RockHz = 2.2,
 		RockDamp = 3.5,
 		RockSeconds = 1.6,
-		-- the goo spat at a far target
+		-- the goo spat at a far target, and at the archery target's board: this share of its height above its box's middle,
+		-- this deep from the face
 		Shot = "gooBlob",
+		BoardLift = 0.12,
+		BoardDepth = 0.3,
 	},
 	GhostFloat = 0.35,
 	GhostFloatHz = 0.35,
