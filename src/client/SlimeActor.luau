@@ -90,6 +90,10 @@ export type Creature = {
 	hover: number,
 	bob: number,
 	bobHz: number,
+	-- its height over its ground spot (top of the model at full hover), and its pitch (radians, negative dives nose
+	-- down) about the middle of its height
+	top: number,
+	tilt: number,
 	-- how much of the jelly's lean the whole creature takes, and how a forward lean reads as an attack (0..1)
 	lean: number,
 	attackGain: number,
@@ -365,10 +369,14 @@ local function tick(a: Slime, dt: number, write: boolean)
 		creature.last = at
 		local attack = math.clamp(pose.leanFwd * creature.attackGain, 0, 1)
 		local rise = pose.lift * s + MonsterMotion.lift(creature.hover, creature.bob, creature.bobHz, now)
+		local middle = (creature.top - creature.hover) / 2
 		local base = a.root
 			* CFrame.new(0, rise, 0)
 			* CFrame.Angles(0, pose.yaw, 0)
 			* CFrame.Angles(pose.leanFwd * creature.lean, 0, pose.leanSide * creature.lean)
+			* CFrame.new(0, middle, 0)
+			* CFrame.Angles(creature.tilt, 0, 0)
+			* CFrame.new(0, -middle, 0)
 		for i, part in creature.parts do
 			local rx, ry, rz = MonsterMotion.angles(creature.specs[i], now, moving, attack)
 			n += 1
@@ -664,6 +672,15 @@ function Actor.dress(self: Slime, creature: Creature)
 		part.CanQuery = false
 		part.CanTouch = false
 	end
+end
+
+-- How far above the body's centre a bar or a name goes: the slime's top, or a dressed creature's (a flyer floats high).
+function Actor.topOffset(self: Slime): number
+	local creature = self.creature
+	if creature then
+		return creature.top - self.body.Size.Y / 2
+	end
+	return self.body.Size.Y / 2
 end
 
 -- Turn the body to a point while standing still (nil: keep the heading).

@@ -117,7 +117,7 @@ local function nameTag(actor: SlimeActor.Slime, text: string, role: string): Bil
 	gui.Size = UDim2.fromOffset(P.NameWidth, P.NameHeight + V.BarHeight)
 	-- (its lower edge stands on the health bar's centre; the label sits above the bar's own height)
 	gui.SizeOffset = Vector2.new(0, 0.5)
-	gui.StudsOffset = Vector3.new(0, actor.body.Size.Y / 2 + V.BarLift, 0)
+	gui.StudsOffset = Vector3.new(0, SlimeActor.topOffset(actor) + V.BarLift, 0)
 	gui.AlwaysOnTop = false
 	gui.MaxDistance = V.BarDistance
 	gui.LightInfluence = 0

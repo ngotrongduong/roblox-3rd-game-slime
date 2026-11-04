@@ -896,7 +896,8 @@ Config.Dungeon = {
 	-- Each monster's model (the owner's painting built in Blender as rigid pieces, art/models/monsters/MOTION.md, imported
 	-- into ClientKit.Monsters) and how its pieces move (shared/MonsterMotion; client/MonsterLook, SlimeActor.dress).
 	-- `height` the model's height in studs, `min` its lowest, rightmost (-X), frontmost corner from its ground spot (the
-	-- Body's origin), `hover` how high a flyer floats with a `bob` at `bobHz`. A piece: its `joint` from the ground spot
+	-- Body's origin), `hover` how high a flyer floats with a `bob` at `bobHz`, `tilt` its pitch in degrees (negative: nose
+	-- down) about the middle of its height. A piece: its `joint` from the ground spot
 	-- (studs, Roblox axes: front -Z) and its swing (MonsterMotion); `transparency` for glassy wings. A left/right pair runs
 	-- apart (phase 0.5) or mirrored (sign -1); legs go in diagonal pairs.
 	Looks = {
@@ -916,6 +917,8 @@ Config.Dungeon = {
 			model = "HoneyBee",
 			height = 4.12,
 			min = { -2.24, 0, -1.21 },
+			-- the painting's bee dives: head down, the abdomen and its honey bud up behind
+			tilt = -25,
 			hover = 3.5,
 			bob = 0.15,
 			bobHz = 3,

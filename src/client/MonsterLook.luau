@@ -85,6 +85,8 @@ local function creatureOf(spec: any, kitModel: Model, holder: Model, scale: numb
 		hover = (spec.hover or 0) * scale,
 		bob = (spec.bob or 0) * scale,
 		bobHz = spec.bobHz or 0,
+		top = ((spec.hover or 0) + spec.height) * scale,
+		tilt = math.rad(spec.tilt or 0),
 		lean = spec.lean or 0.5,
 		attackGain = spec.attackGain or 2,
 		last = nil,

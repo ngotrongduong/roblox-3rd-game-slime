@@ -570,7 +570,7 @@ local function showBar(id: string, actor: SlimeActor.Slime, node: Instance, ours
 	gui.Name = "HpBar"
 	gui.Adornee = actor.body
 	gui.Size = UDim2.fromOffset(V.BarWidth, V.BarHeight)
-	gui.StudsOffset = Vector3.new(0, actor.body.Size.Y / 2 + V.BarLift, 0)
+	gui.StudsOffset = Vector3.new(0, SlimeActor.topOffset(actor) + V.BarLift, 0)
 	gui.AlwaysOnTop = false
 	gui.MaxDistance = V.BarDistance
 	gui.LightInfluence = 0
