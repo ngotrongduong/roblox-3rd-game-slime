@@ -180,7 +180,9 @@ local function openTeams(point: Vector3)
 		tabStates[index] = cornerIcon(button, 18)
 	end
 
-	-- the four slots and the Repeat toggle
+	-- the four slots, Best and the Repeat toggle
+	local bestWidth = U.Touch + 24
+	local buttonsWidth = bestWidth + U.Touch + 2 * U.Gap
 	local top = UiKit.make("Frame", {
 		Name = "Top",
 		BackgroundTransparency = 1,
@@ -189,7 +191,7 @@ local function openTeams(point: Vector3)
 	local slotRow = UiKit.make("Frame", {
 		Name = "Slots",
 		BackgroundTransparency = 1,
-		Size = UDim2.new(1, -U.Touch - U.Gap, 1, 0),
+		Size = UDim2.new(1, -buttonsWidth, 1, 0),
 	}, top)
 	UiKit.make("UIListLayout", {
 		FillDirection = Enum.FillDirection.Horizontal,
@@ -201,7 +203,7 @@ local function openTeams(point: Vector3)
 		BackgroundColor3 = UiKit.colour("Parchment"),
 		BackgroundTransparency = 0.3,
 		BorderSizePixel = 0,
-		Size = UDim2.new(1, -U.Touch - U.Gap, 1, 0),
+		Size = UDim2.new(1, -buttonsWidth, 1, 0),
 		Active = true,
 		Visible = false,
 		ZIndex = 20,
@@ -398,6 +400,67 @@ local function openTeams(point: Vector3)
 	end
 	info:GetPropertyChangedSignal("Visible"):Connect(placeList)
 	placeList()
+
+	-- Best (the owner, 2026-11-04): fills the team with the strongest slimes that may join it (not at work, not in a pair,
+	-- not a baby or a ghost, not in another team), those ready to march first (awake, rested, unhurt), then by level and
+	-- health. The server checks the line-up as for any other change.
+	local function ready(slime: Configuration): boolean
+		return slime:GetAttribute("Sleeping") ~= true
+			and UiSlimes.number(slime, "Energy") > Config.Needs.Tired
+			and UiSlimes.hpShare(slime) >= 1
+	end
+	local function stronger(a: Configuration, b: Configuration): boolean
+		local readyA, readyB = ready(a), ready(b)
+		if readyA ~= readyB then
+			return readyA
+		end
+		local levelA, levelB = UiSlimes.number(a, "Level"), UiSlimes.number(b, "Level")
+		if levelA ~= levelB then
+			return levelA > levelB
+		end
+		local hpA, hpB = UiSlimes.number(a, "Hp"), UiSlimes.number(b, "Hp")
+		if hpA ~= hpB then
+			return hpA > hpB
+		end
+		return a.Name < b.Name
+	end
+	UiKit.button(top, {
+		Name = "Best",
+		Text = "Best",
+		Style = "primary",
+		Size = UDim2.fromOffset(bestWidth, U.Touch),
+		AnchorPoint = Vector2.new(1, 0.5),
+		Position = UDim2.new(1, -U.Touch - U.Gap, 0.5, 0),
+		OnClick = function()
+			local mine = teamsNow[tab]
+			if not mine then
+				return
+			end
+			if mine.state ~= "home" then
+				UiKit.toast(c.reason("TEAM_OUT"))
+				return
+			end
+			local pool: { Configuration } = {}
+			for _, entry in entries(teamsNow) do
+				local owner = ZombieTeams.teamOf(entry.slime.Name, teamsNow)
+				if not entry.blocked and (owner == nil or owner == mine.index) then
+					table.insert(pool, entry.slime)
+				end
+			end
+			table.sort(pool, stronger)
+			local ids: { string } = {}
+			for index = 1, math.min(Z.TeamSize, #pool) do
+				table.insert(ids, pool[index].Name)
+			end
+			if #ids == 0 then
+				UiKit.toast(c.reason("NO_MEMBERS"))
+				return
+			end
+			change(function()
+				setTeam(mine.index, ids)
+			end)
+		end,
+	})
 
 	tick = function()
 		teamsNow = ZombieTeams.all()

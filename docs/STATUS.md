@@ -1,5 +1,12 @@
 # Status
 
+## 2026-11-04 — "Best" on the Teams sheet
+
+The owner: a button that fills a team with the best slimes that can fight. `client/UiTeams`: "Best" (gold, beside Repeat) puts
+the four strongest slimes that may join into the open tab's team: not at work, in a pair, a baby, a ghost or in another team;
+those ready to march (awake, rested, unhurt) first, then by level, then HP. One `SetTeam` request; the server checks it as any
+other. Seen in a play test on the phone frame: team 1 of three Lv 4 slimes became Lv 41, 41, 35, 35 (`docs/ui/kit/phone-teams-best.jpg`).
+
 ## 2026-11-04 — one frame per slime; every screen looked over for what is off
 
 The owner: a frame inside a frame means nothing; drop one frame for each slime on every screen, and straighten anything off
