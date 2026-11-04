@@ -4,6 +4,7 @@
 -- The middle stays empty. All food is ONE button (the owner, 2026-10-30): a 3D bowl and the total; tapping it opens the
 -- food panel (UiFood). Its picture is the 3D item itself (ClientKit.Items in a ViewportFrame).
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
 
 local Config = require(ReplicatedStorage.Shared.Config)
 local UiFood = require(script.Parent.UiFood)
@@ -167,6 +168,14 @@ function UiHud.start(
 		Visible = false,
 	})
 	edge = group
+	-- The owner's debug menu button: Studio only. Found by name and not required at the top, because the publish build removes
+	-- the module (tools/build_publish.luau) and the published game must start without it.
+	if RunService:IsStudio() then
+		local debugUi = script.Parent:FindFirstChild("UiDebug")
+		if debugUi and debugUi:IsA("ModuleScript") then
+			(require(debugUi) :: any).attach(group)
+		end
+	end
 
 	-- Last in the strip: the village's level over a bar of the upgrades done towards the next one.
 	local _, body = UiKit.skin(bar, "Wood", "Card", {

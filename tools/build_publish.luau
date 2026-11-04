@@ -55,6 +55,18 @@ if shared then
 end
 code:GetService("ReplicatedStorage").Shared:Clone().Parent = place:GetService("ReplicatedStorage")
 
+-- The owner's debug menu is for Studio only: these two modules (and nothing else) never reach players. The game finds them
+-- by name and runs without them (Main.server.luau, UiHud.luau). The check below fails the build if either is still here.
+local DEBUG_ONLY = { OwnerDebug = "Server", UiDebug = "Client" }
+for _, service in place:GetChildren() do
+	for _, d in service:GetDescendants() do
+		if DEBUG_ONLY[d.Name] and d:IsA("LuaSourceContainer") then
+			print("left out of the game (Studio only):", d:GetFullName())
+			d:Destroy()
+		end
+	end
+end
+
 local workspace = place:GetService("Workspace")
 for _, child in workspace:GetChildren() do
 	if not KEEP_IN_WORKSPACE[child.Name] then
@@ -119,6 +131,15 @@ if not (map and map:FindFirstChild("Market")) then
 end
 if not place:GetService("ReplicatedStorage"):FindFirstChild("ClientKit") then
 	problem("no ReplicatedStorage.ClientKit")
+end
+
+-- The debug menu must be gone (a second look at the finished place, not a trust in the step above).
+for _, service in place:GetChildren() do
+	for _, d in service:GetDescendants() do
+		if DEBUG_ONLY[d.Name] and d:IsA("LuaSourceContainer") then
+			problem("the owner's debug menu is still in the place: " .. d:GetFullName())
+		end
+	end
 end
 
 -- Nothing may run for players but the repo's code.

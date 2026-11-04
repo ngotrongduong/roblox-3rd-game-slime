@@ -1,6 +1,7 @@
 --!strict
 -- Starts the server services. The server decides everything; clients draw and ask.
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
 
 local Config = require(ReplicatedStorage.Shared.Config)
 local FarmSave = require(ReplicatedStorage.Shared.FarmSave)
@@ -41,5 +42,14 @@ end))
 
 -- The Market's leaderboard reads the loaded farms and sends the best slime of each player to its stores.
 Leaderboard.start()
+
+-- The owner's debug menu: Studio only. It is found by name and not required at the top, because the publish build removes
+-- the module (tools/build_publish.luau) and the published game must start without it.
+if RunService:IsStudio() then
+	local debugModule = script.Parent:FindFirstChild("OwnerDebug")
+	if debugModule and debugModule:IsA("ModuleScript") then
+		(require(debugModule) :: any).start()
+	end
+end
 
 print(Config.LogPrefix, "server started")
