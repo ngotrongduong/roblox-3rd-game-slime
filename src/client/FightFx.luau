@@ -287,10 +287,11 @@ end
 -- ===== After-images of a dodge =====
 
 -- Fading copies of the body along the side-step it is about to make (`step`, studs).
--- Never more than View.Fx.MaxImages copies alive: many fighters dashing at once skip theirs.
+-- Never more than View.Fx.MaxImages copies alive: many fighters dashing at once skip theirs. A hidden body (a dungeon
+-- monster drawn by its own pieces) leaves none: its copies would be slime-shaped.
 function FightFx.afterImages(body: MeshPart, step: Vector3)
 	local count = F.AfterImages
-	if imagesAlive + count > F.MaxImages then
+	if imagesAlive + count > F.MaxImages or body.Transparency >= 1 then
 		return
 	end
 	imagesAlive += count

@@ -200,6 +200,9 @@ local function addMonster(event: { [string]: any })
 		return
 	end
 	actor.body.CanCollide = false
+	if look.creature then
+		SlimeActor.dress(actor, look.creature)
+	end
 	local hp = if type(event.hp) == "number" then event.hp else 1
 	local node = healthNode(hp, hp)
 	local role = if type(event.role) == "string" then event.role else "normal"

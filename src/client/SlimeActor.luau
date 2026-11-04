@@ -24,6 +24,7 @@ local SlimeMotion = require(ReplicatedStorage.Shared.SlimeMotion)
 local VillagePath = require(ReplicatedStorage.Shared.VillagePath)
 local Gaits = require(ReplicatedStorage.Shared.Gaits)
 local SlimeShape = require(ReplicatedStorage.Shared.SlimeShape)
+local MonsterMotion = require(ReplicatedStorage.Shared.MonsterMotion)
 local SlimeFace = require(script.Parent.SlimeFace)
 
 local C = Config.Slime
@@ -76,6 +77,23 @@ export type Slime = {
 	heldParts: { BasePart },
 	heldOffsets: { CFrame },
 	heldPose: ((now: number) -> CFrame)?,
+	-- A dungeon monster drawn by its own pieces in place of the slime body (Actor.dress).
+	creature: Creature?,
+}
+
+-- A creature's pieces turn about their joints (MonsterMotion); joints and rests are in the feet frame, studs.
+export type Creature = {
+	parts: { BasePart },
+	specs: { MonsterMotion.Piece },
+	joints: { CFrame },
+	fromJoints: { CFrame },
+	hover: number,
+	bob: number,
+	bobHz: number,
+	-- how much of the jelly's lean the whole creature takes, and how a forward lean reads as an attack (0..1)
+	lean: number,
+	attackGain: number,
+	last: Vector3?,
 }
 
 local Actor = {}
@@ -337,6 +355,27 @@ local function tick(a: Slime, dt: number, write: boolean)
 			cfs[n] = top * a.attachedOffsets[i]
 		end
 	end
+	local creature = a.creature
+	if creature then
+		-- The pieces follow the hidden body's spot, hop and turn; each turns about its own joint. A monster that moved
+		-- this frame walks (its legs swing in full); leaning forward is its attack.
+		local now = workspace:GetServerTimeNow()
+		local at = a.root.Position
+		local moving = creature.last ~= nil and (at - (creature.last :: Vector3)).Magnitude > dt * VC.CreatureWalkSpeed
+		creature.last = at
+		local attack = math.clamp(pose.leanFwd * creature.attackGain, 0, 1)
+		local rise = pose.lift * s + MonsterMotion.lift(creature.hover, creature.bob, creature.bobHz, now)
+		local base = a.root
+			* CFrame.new(0, rise, 0)
+			* CFrame.Angles(0, pose.yaw, 0)
+			* CFrame.Angles(pose.leanFwd * creature.lean, 0, pose.leanSide * creature.lean)
+		for i, part in creature.parts do
+			local rx, ry, rz = MonsterMotion.angles(creature.specs[i], now, moving, attack)
+			n += 1
+			parts[n] = part
+			cfs[n] = base * creature.joints[i] * CFrame.Angles(rx, ry, rz) * creature.fromJoints[i]
+		end
+	end
 	local heldPose = a.heldPose
 	if a.held and heldPose then
 		-- A held tool follows the body's hop and lean; its pose is in studs for a full-size slime.
@@ -486,6 +525,7 @@ function Actor.new(model: Model, emotion: string?): Slime?
 		heldParts = {},
 		heldOffsets = {},
 		heldPose = nil,
+		creature = nil,
 	}
 	-- Only the body is a collision surface. The outline and face remain non-collidable.
 	body.CanCollide = true
@@ -603,6 +643,27 @@ function Actor.unhold(self: Slime)
 	self.heldPose = nil
 	table.clear(self.heldParts)
 	table.clear(self.heldOffsets)
+end
+
+-- Draw a creature (MonsterLook's pieces, already parented in the model) in place of the slime: the body stays, unseen,
+-- for the walk, the hop and the hits; the face is put away.
+function Actor.dress(self: Slime, creature: Creature)
+	self.creature = creature
+	self.body.Transparency = 1
+	if self.hull then
+		self.hull.Transparency = 1
+	end
+	for _, inst in self.model:GetDescendants() do
+		if inst:IsA("SurfaceGui") then
+			inst.Enabled = false
+		end
+	end
+	for _, part in creature.parts do
+		part.Anchored = true
+		part.CanCollide = false
+		part.CanQuery = false
+		part.CanTouch = false
+	end
 end
 
 -- Turn the body to a point while standing still (nil: keep the heading).

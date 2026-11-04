@@ -893,6 +893,115 @@ Config.Dungeon = {
 		},
 		Sizes = { normal = 3, armoured = 4, miniboss = 7, boss = 10 },
 	},
+	-- Each monster's model (the owner's painting built in Blender as rigid pieces, art/models/monsters/MOTION.md, imported
+	-- into ClientKit.Monsters) and how its pieces move (shared/MonsterMotion; client/MonsterLook, SlimeActor.dress).
+	-- `height` the model's height in studs, `min` its lowest, rightmost (-X), frontmost corner from its ground spot (the
+	-- Body's origin), `hover` how high a flyer floats with a `bob` at `bobHz`. A piece: its `joint` from the ground spot
+	-- (studs, Roblox axes: front -Z) and its swing (MonsterMotion); `transparency` for glassy wings. A left/right pair runs
+	-- apart (phase 0.5) or mirrored (sign -1); legs go in diagonal pairs.
+	Looks = {
+		green_sprout = {
+			model = "Sproutling",
+			height = 4.37,
+			min = { -2.13, -0.16, -1.40 },
+			pieces = {
+				Sprout = { joint = { -0.08, 2.79, 0 }, axis = "z", amp = 12, hz = 0.8 },
+				EarL = { joint = { -1.18, 1.99, -0.17 }, axis = "z", amp = 10, hz = 1.5, hit = 20 },
+				EarR = { joint = { 0.73, 1.80, -0.26 }, axis = "z", amp = 10, hz = 1.5, sign = -1, hit = 20 },
+				FootL = { joint = { -1.04, 0.71, -0.52 }, axis = "x", amp = 25, hz = 2, walk = true },
+				FootR = { joint = { 0.89, 0.69, -0.86 }, axis = "x", amp = 25, hz = 2, phase = 0.5, walk = true },
+			},
+		},
+		green_bee = {
+			model = "HoneyBee",
+			height = 4.12,
+			min = { -2.24, 0, -1.21 },
+			hover = 3.5,
+			bob = 0.15,
+			bobHz = 3,
+			pieces = {
+				Abdomen = { joint = { 0, 2.02, 0.53 }, axis = "x", amp = 8, hz = 1.2, hit = -20 },
+				Bud = { joint = { 0, 3.11, 2.25 }, axis = "x", amp = 10, hz = 2, phase = 0.25 },
+				WingL = { joint = { -0.57, 2.29, 0.02 }, axis = "z", amp = 35, hz = 16, transparency = 0.35 },
+				WingR = { joint = { 0.57, 2.29, 0.02 }, axis = "z", amp = 35, hz = 16, sign = -1, transparency = 0.35 },
+				AntennaL = { joint = { -0.27, 1.75, -0.91 }, axis = "x", amp = 12, hz = 1.6 },
+				AntennaR = { joint = { 0.27, 1.75, -0.91 }, axis = "x", amp = 12, hz = 1.6, phase = 0.5 },
+				LegsL = { joint = { -0.40, 1.30, 0.53 }, axis = "x", amp = 14, hz = 2 },
+				LegsR = { joint = { 0.40, 1.30, 0.53 }, axis = "x", amp = 14, hz = 2, phase = 0.5 },
+			},
+		},
+		green_dandelion = {
+			model = "Puffdandy",
+			height = 4.41,
+			min = { -1.78, 0.12, -1.33 },
+			hover = 2,
+			bob = 0.25,
+			bobHz = 1.2,
+			pieces = {
+				Puff = { joint = { 0.04, 1.86, 0.07 }, axis = "z", amp = 6, hz = 1 },
+				ArmL = { joint = { -0.86, 1.45, -0.04 }, axis = "z", amp = 25, hz = 1.8, hit = 30 },
+				ArmR = { joint = { 0.82, 1.32, -0.07 }, axis = "z", amp = 25, hz = 1.8, sign = -1, hit = 30 },
+				Tail = { joint = { -0.27, 0.95, 0.04 }, axis = "y", amp = 18, hz = 1.5 },
+			},
+		},
+		green_moth = {
+			model = "Glowmoth",
+			height = 3.98,
+			min = { -2.56, -0.07, -1.32 },
+			hover = 3,
+			bob = 0.3,
+			bobHz = 1.5,
+			pieces = {
+				WingL = { joint = { -1.07, 1.74, 0.25 }, axis = "z", amp = 30, hz = 3.5 },
+				WingR = { joint = { 1.07, 1.74, 0.25 }, axis = "z", amp = 30, hz = 3.5, sign = -1 },
+				AntennaL = { joint = { -0.33, 2.35, 0 }, axis = "x", amp = 10, hz = 1.2 },
+				AntennaR = { joint = { 0.33, 2.35, 0 }, axis = "x", amp = 10, hz = 1.2, phase = 0.5 },
+				FootL = { joint = { -0.39, 0.49, -0.16 }, axis = "x", amp = 10, hz = 1.5 },
+				FootR = { joint = { 0.49, 0.64, -0.12 }, axis = "x", amp = 10, hz = 1.5, phase = 0.5 },
+			},
+		},
+		green_snail = {
+			model = "CloverSnail",
+			height = 4.75,
+			min = { -1.50, 0, -2.67 },
+			pieces = {
+				StalkL = { joint = { -0.55, 1.80, -1.27 }, axis = "z", amp = 14, hz = 1.1 },
+				StalkR = { joint = { 0.55, 1.80, -1.27 }, axis = "z", amp = 14, hz = 1.1, phase = 0.5 },
+				Shell = { joint = { 0, 0.55, 0.75 }, axis = "z", amp = 5, hz = 1, hit = 8 },
+			},
+		},
+		green_turtle = {
+			model = "Bloomshell",
+			height = 7.98,
+			min = { -4.25, -0.67, -5.87 },
+			shadow = true,
+			pieces = {
+				Bud = { joint = { 0, 4.86, 0.86 }, axis = "z", amp = 6, hz = 0.7 },
+				Head = { joint = { 0, 1.33, -2.74 }, axis = "y", amp = 15, hz = 0.3 },
+				LegFL = { joint = { -2.81, 1.94, -2.02 }, axis = "x", amp = 20, hz = 1.1, walk = true, hit = 35 },
+				LegFR = { joint = { 2.81, 1.94, -2.02 }, axis = "x", amp = 20, hz = 1.1, phase = 0.5, walk = true },
+				LegBL = { joint = { -2.88, 1.87, 2.88 }, axis = "x", amp = 20, hz = 1.1, phase = 0.5, walk = true },
+				LegBR = { joint = { 2.88, 1.87, 2.88 }, axis = "x", amp = 20, hz = 1.1, walk = true },
+			},
+		},
+		green_boar = {
+			model = "Bramblehorn",
+			height = 10.96,
+			min = { -4.83, 0, -9.82 },
+			shadow = true,
+			pieces = {
+				-- a head-butt dips the head (a turn about X with the front going down)
+				Head = { joint = { 0, 3.84, -3.17 }, axis = "x", amp = 4, hz = 0.6, hit = -20 },
+				EarL = { joint = { -2.06, 5.28, -4.80 }, axis = "z", amp = 15, hz = 2.5 },
+				EarR = { joint = { 2.06, 5.28, -4.80 }, axis = "z", amp = 15, hz = 2.5, sign = -1 },
+				LegFL = { joint = { -2.59, 5.18, -1.92 }, axis = "x", amp = 22, hz = 1, walk = true },
+				LegFR = { joint = { 2.59, 5.18, -1.92 }, axis = "x", amp = 22, hz = 1, phase = 0.5, walk = true },
+				LegBL = { joint = { -2.69, 5.18, 5.38 }, axis = "x", amp = 22, hz = 1, phase = 0.5, walk = true },
+				LegBR = { joint = { 2.69, 5.18, 5.38 }, axis = "x", amp = 22, hz = 1, walk = true },
+				Tail = { joint = { 0, 6.24, 7.68 }, axis = "y", amp = 25, hz = 1.4 },
+			},
+		},
+	},
 
 	-- ===== The client (client/UiDungeon, DungeonFight, MonsterLook): pixels, studs and seconds =====
 	View = {
@@ -2213,6 +2322,8 @@ Config.VillageClient = {
 	CanPourHz = 0.9,
 	GhostFloat = 0.35,
 	GhostFloatHz = 0.35,
+	-- A dungeon monster drawn by its pieces walks (its legs swing in full) while it moves faster than this, studs a second.
+	CreatureWalkSpeed = 0.8,
 	EggWobbleWindow = 8,
 	EggWobbleDegrees = 10,
 	EggWobbleHz = 4,
