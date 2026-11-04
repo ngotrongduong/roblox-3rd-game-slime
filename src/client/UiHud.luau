@@ -27,13 +27,22 @@ local coinsFull: boolean? = nil
 -- Whether a Slime Dungeon run is on (the village's edge buttons stay put away).
 local inArena = false
 
+-- 2,000 up to 99,999 in full with commas, then 120K and 1.2M, so "amount/cap" stays short in a phone's strip.
 local function short(amount: number): string
 	if amount >= 1_000_000 then
 		return string.format("%.1fM", amount / 1_000_000)
 	elseif amount >= 100_000 then
 		return string.format("%.0fK", amount / 1000)
 	end
-	return tostring(math.floor(amount))
+	return UiKit.money(amount)
+end
+
+-- Colours the number of a chip: red when what it holds has reached its cap.
+local function paint(chip: UiKit.Chip, full: boolean)
+	local value = chip.root:FindFirstChild("Value", true)
+	if value and value:IsA("TextLabel") then
+		value.TextColor3 = UiKit.colour(if full then "Red" else "Brown")
+	end
 end
 
 local function item(name: string): Instance?
@@ -251,31 +260,30 @@ function UiHud.refresh(own: Folder?)
 	if not strip or not own then
 		return
 	end
-	local store, fridge = UiFood.read(own)
+	local store = UiFood.read(own)
 	local coins = own:GetAttribute("Coins")
 	local amount = if type(coins) == "number" then coins else 0
-	chips.coins.set(short(amount))
-	-- The vault is full at the cap (sales may still go above it): the number turns red, and one toast the moment it fills.
+	-- The coins over what the vault holds ("100/2,000"; sales and gifts may go above it): the number turns red at the cap,
+	-- and one toast the moment it fills.
 	local cap = own:GetAttribute("CoinCap")
+	chips.coins.set(if type(cap) == "number" then short(amount) .. "/" .. short(cap) else short(amount))
 	local full = type(cap) == "number" and amount >= cap
-	local value = chips.coins.root:FindFirstChild("Value", true)
-	if value and value:IsA("TextLabel") then
-		value.TextColor3 = UiKit.colour(if full then "Red" else "Brown")
-	end
+	paint(chips.coins, full)
 	if type(cap) == "number" then
 		if coinsFull == false and full then
 			UiKit.toast("Vault full")
 		end
 		coinsFull = full
 	end
+	-- The food in the storehouse over what it holds ("24/50"), so upgrading the pantry is felt; red when it is full. (The
+	-- dishes in the fridge have a room of their own and are not counted here.)
 	local total = 0
 	for _, kind in Config.Food.RawOrder do
 		total += store[kind] or 0
 	end
-	for _, kind in Config.Food.DishOrder do
-		total += fridge[kind] or 0
-	end
-	chips.food.set(short(total))
+	local room = own:GetAttribute("StorehouseCap")
+	chips.food.set(if type(room) == "number" then short(total) .. "/" .. short(room) else short(total))
+	paint(chips.food, type(room) == "number" and total >= room)
 	UiFood.refresh(own)
 	chips.slimes.set(tostring(own:GetAttribute("Population") or 0) .. "/" .. tostring(own:GetAttribute("Limit") or 0))
 

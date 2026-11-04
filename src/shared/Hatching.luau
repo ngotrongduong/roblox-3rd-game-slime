@@ -38,7 +38,15 @@ export type HatchResult = {
 	improvedStats: { string }?,
 	-- The avatar rank went up with this hatch.
 	rankUp: boolean?,
+	-- The coins the Index paid for a kind found for the first time (0 for a kind already found); already in `farm`.
+	discoveryCoins: number?,
 }
+
+-- What the Index pays for the first find of a kind: kind is "plain" (a base colour), "dual", "material" or "secret".
+function Hatching.discoveryCoins(kind: string?): number
+	local pays = if kind then (Config.Index.DiscoverCoins :: any)[kind] else nil
+	return if type(pays) == "number" then pays else 0
+end
 
 -- "Slime N" where N is one more than the highest "Slime <n>" on the farm.
 function Hatching.nextName(farm: Farm): string
@@ -195,6 +203,13 @@ function Hatching.hatch(farm: Farm, eggId: string, now: number): HatchResult
 	after.discoveries = discoveries
 	after.lifetime = table.clone(farm.lifetime)
 	after.lifetime.bestSlimeLevel = math.max(farm.lifetime.bestSlimeLevel, Stats.level(slime.stats))
+	-- The Index pays once per kind: the discovery record above is made only the first time, so this is paid only then.
+	local found: string? = if firstRare then slime.appearanceMutation.type elseif newColour then "plain" else nil
+	local coins = Hatching.discoveryCoins(found)
+	if coins > 0 then
+		after.coins = farm.coins + coins
+		after.lifetime.coinsEarned = farm.lifetime.coinsEarned + coins
+	end
 
 	return {
 		ok = true,
@@ -204,6 +219,7 @@ function Hatching.hatch(farm: Farm, eggId: string, now: number): HatchResult
 		newColour = newColour,
 		improvedStats = improved,
 		rankUp = Hatching.avatarRank(discoveries) > rankBefore,
+		discoveryCoins = coins,
 	}
 end
 

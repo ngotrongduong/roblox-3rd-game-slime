@@ -125,6 +125,8 @@ local function request(player: Player, data: any): { ok: boolean, reason: string
 	end
 	if action == "Sell" then
 		print(Config.LogPrefix, "shop: sold", data.slimeId, "for", value)
+	elseif action == "SellMany" then
+		print(Config.LogPrefix, "shop: sold", #data.slimeIds, "slimes for", value)
 	elseif action == "SellDish" then
 		print(Config.LogPrefix, "shop: sold dish", data.dish, "for", value)
 	elseif action == "SetTeam" then
@@ -154,7 +156,13 @@ local function request(player: Player, data: any): { ok: boolean, reason: string
 	if action == "Assign" and data.asReserve == false then
 		Village.placeAtWork(player, data.slimeId, data.area, data.slot)
 	end
-	if action == "Revive" or action == "Sell" or action == "SellDish" or action == "FeedDish" then
+	if
+		action == "Revive"
+		or action == "Sell"
+		or action == "SellMany"
+		or action == "SellDish"
+		or action == "FeedDish"
+	then
 		PlayerData.markKeyMoment(player, string.lower(action))
 	end
 	if upgradedLevel then

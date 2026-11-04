@@ -256,6 +256,9 @@ Config.Zombies = {
 	-- The longest group id a saved team may name as its target (ids look like "c3g4").
 	TargetIdMaxLength = 16,
 	ShopRangeStuds = 40,
+	-- Most slimes one "SellMany" request may name (the shop ticks several slimes and sells them with one press; the server
+	-- refuses a longer list outright, so one request cannot be made to loop over a huge table).
+	SellManyMax = 12,
 	-- A team marches from the gate to a spot MarchStandOffStuds short of its group (towards the village), in MarchGait,
 	-- and back the same way; the slowest member sets the pace.
 	MarchStandOffStuds = 11,
@@ -1257,15 +1260,13 @@ Config.Village = {
 	-- simulation steps once a second; this stops a running clock from rewriting its attributes every tick).
 	ClockKeepSeconds = 0.6,
 	MaxLevel = 50,
-	-- Smooth capacity progression: interpolate between these checkpoints.
-	-- Low levels grow slowly until the second fishing and gardening stations unlock at level 11;
-	-- higher levels add 1 or 2 slimes, never a sudden 15-slime jump. Keep all old-save slimes.
+	-- Smooth capacity progression: interpolate between these checkpoints. Every village level adds 1 or 2 slimes,
+	-- never a sudden 15-slime jump (the owner, 2026-11-04: "my village is level 6 and the slime limit did not grow";
+	-- levels 1-6 used to stay at 12). Keep all old-save slimes.
 	PopulationProgression = {
 		{ level = 1, cap = 12 },
-		{ level = 7, cap = 13 },
-		{ level = 10, cap = 13 },
-		{ level = 20, cap = 27 },
-		{ level = 30, cap = 42 },
+		{ level = 20, cap = 31 },
+		{ level = 30, cap = 43 },
 		{ level = 40, cap = 57 },
 		{ level = 50, cap = 72 },
 	},
@@ -2851,10 +2852,25 @@ Config.Rewards = {
 	QuestRowHeight = 80,
 	IndexCell = 96,
 	IndexCellHeight = 118,
-	-- How dark an Index card stays while its slime is not found (the 3D body drawn as a shadow).
-	SilhouetteColour = "#3a2a1c",
+	-- An Index card whose slime is not found yet shows the slime's own picture, darkened: the only light on it is this
+	-- ambient colour (its textures still read, so the player sees what to look for). A found Secret has no art yet and
+	-- stays a golden shadow (Ui.Colours.Gold).
+	LockedAmbient = "#55463d",
+	-- The Index builds its cards this many a frame, and the pictures of the cards in view this many a frame, so opening
+	-- it (150 kinds) never stalls a phone for a frame.
+	IndexCardsPerFrame = 10,
+	IndexPicturesPerFrame = 2,
 	-- The red dot on the Rewards button while something waits.
 	BadgeSize = 18,
+}
+
+-- ===== The Index pays for finding (shared/Hatching, server/Rewards, client toast) =====
+-- The first time a kind of slime is hatched on a farm it pays coins once, by how hard it is to find: a plain colour, a Dual,
+-- a Material, a Secret. A camp-1 fight pays about 800 and a plain slime sells for 100 (Economy.SellBase), so a plain find is
+-- a small thank-you and a Secret is a prize. Paid straight into the purse like a sale: the vault's ceiling does not hold it.
+-- Kinds found before this paid nothing (they were never asked to).
+Config.Index = {
+	DiscoverCoins = { plain = 100, dual = 400, material = 800, secret = 2000 },
 }
 
 -- ===== The screen kit (src/client/Ui*.luau): the owner's art, palette, fonts and sizes =====
@@ -3188,7 +3204,19 @@ Config.Ui = {
 	-- the size of the mark in a tile's corner.
 	Sorts = { "level", "attack", "defence", "speed", "hp" },
 	SortAttributes = { level = "Level", attack = "Attack", defence = "Defence", speed = "Speed", hp = "Hp" },
-	Tile = { Width = 84, Height = 112, Portrait = 56, WoundHeight = 5, WoundLow = 0.35, SortArrow = 16, MarkSize = 22 },
+	Tile = {
+		Width = 84,
+		Height = 112,
+		Portrait = 56,
+		WoundHeight = 5,
+		WoundLow = 0.35,
+		SortArrow = 16,
+		MarkSize = 22,
+		-- A list opens by making this many tiles a frame (the first rows come first) and showing this many slime pictures a
+		-- frame: 70 tiles made in one frame was the stall the owner saw on opening a slime list (2026-11-04).
+		PerFrame = 8,
+		PicturesPerFrame = 6,
+	},
 }
 
 return Config

@@ -59,6 +59,22 @@ local function idList(value: any): boolean
 	return count == #value
 end
 
+-- The slimes of one multi-sale: a plain list of one up to Config.Zombies.SellManyMax short ids (duplicates are refused when
+-- it runs).
+local function sellList(value: any): boolean
+	if type(value) ~= "table" or #value < 1 or #value > Config.Zombies.SellManyMax then
+		return false
+	end
+	local count = 0
+	for key, id in value do
+		if type(key) ~= "number" or not shortText(id) then
+			return false
+		end
+		count += 1
+	end
+	return count == #value
+end
+
 -- The teams a Dungeon run brings: a plain list of one team number up to every team, none twice.
 local function teamList(value: any): boolean
 	if type(value) ~= "table" or #value < 1 or #value > Config.Zombies.Teams then
@@ -94,6 +110,8 @@ function VillageRequests.valid(data: any, hasPlot: boolean): boolean
 			and type(data.asReserve) == "boolean"
 	elseif action == "Unassign" or action == "Revive" or action == "Sell" then
 		return type(data.slimeId) == "string"
+	elseif action == "SellMany" then
+		return sellList(data.slimeIds)
 	elseif action == "SetTrainingStat" then
 		return integer(data.slot) and type(data.stat) == "string"
 	elseif action == "SetCookRecipe" then
@@ -228,6 +246,17 @@ function VillageRequests.run(farm: any, data: any, now: number, env: Env): (bool
 			return false, "OUT"
 		end
 		local value, why = Shop.sell(farm, data.slimeId, now)
+		return value ~= nil, why, value
+	elseif action == "SellMany" then
+		if not env.atMarket() then
+			return false, "TOO_FAR"
+		end
+		for _, slimeId in data.slimeIds do
+			if env.isOut(slimeId) then
+				return false, "OUT"
+			end
+		end
+		local value, why = Shop.sellMany(farm, data.slimeIds, now)
 		return value ~= nil, why, value
 	elseif action == "SmithyCraft" then
 		if not env.atSmithy() then

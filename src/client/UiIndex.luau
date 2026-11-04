@@ -1,8 +1,14 @@
 --!strict
 -- The Index (docs/GAMEPLAY.md §13): every kind of slime as a card, in four tabs (the 11 colours, the Duals, the Secrets, the
--- materials), lit when the player has found it and a dark shadow of the 3D body when not. Drawn inside the slime book
--- (UiBook); what was found comes from the village folder's Found attribute (server/Rewards). Secrets have no art of their
--- own yet: a found Secret stays a golden shadow with its name, so the Index never shows art that does not exist.
+-- materials). A kind the player has found shows its own picture; one not found yet shows the same picture darkened (the only
+-- light on it is Config.Rewards.LockedAmbient), so the player sees what to look for. Secrets have no art of their own yet: a
+-- found Secret stays a golden shadow with its name, so the Index never shows art that does not exist. Drawn inside the slime
+-- book (UiBook); what was found comes from the village folder's Found attribute (server/Rewards).
+--
+-- Opening is cheap on purpose: the cards are made a few a frame, and a card's picture (a ViewportFrame with a clone of the
+-- slime body) only when it is in view, a couple a frame. Pictures are built once per kind and parked when the book closes or
+-- changes tab (parked, never destroyed with their card: a destroyed one could not be put on a card again, which left the
+-- Index without pictures after a tab change).
 local HttpService = game:GetService("HttpService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
@@ -18,6 +24,9 @@ local U = Config.Ui
 local R = Config.Rewards
 
 type Kind = { id: string, name: string, look: { [string]: any } }
+-- "lit": found, its own picture with the owner's face. "gold": a found Secret (no art yet). "dark": not found.
+type Mode = "lit" | "gold" | "dark"
+type Slot = { box: Frame, holder: Frame, kind: Kind, mode: Mode, drawn: boolean }
 
 local UiIndex = {}
 
@@ -25,7 +34,7 @@ local TABS = { "base", "dual", "secret", "material" }
 local TAB_NAMES: { [string]: string } = { base = "Colours", dual = "Duals", secret = "Secrets", material = "Materials" }
 local tab = "base"
 
--- Portraits are built once per look and parked when the book closes.
+-- Portraits are built once per look and mode, and parked when the book closes.
 local cache: { [string]: ViewportFrame } = {}
 local token = 0
 
@@ -103,17 +112,13 @@ function UiIndex.totals(own: Folder?): (number, number)
 	return have, all
 end
 
-local function portrait(kind: Kind, shadow: string?): ViewportFrame
-	local key = kind.id .. "|" .. tostring(shadow)
-	local saved = cache[key]
-	if saved then
-		return saved
-	end
+-- A new portrait of a kind in the given mode.
+local function build(kind: Kind, mode: Mode): ViewportFrame
 	local look = table.clone(kind.look)
 	look.Scale = 1
-	local view = UiSlimes.lookView(look, shadow == nil)
-	if shadow then
-		-- the 3D body as a flat shadow: plain white parts lit by the shadow colour only
+	local view = UiSlimes.lookView(look, mode == "lit")
+	if mode == "gold" then
+		-- the 3D body as a flat golden shadow: plain white parts lit by the shadow colour only
 		for _, item in view:GetDescendants() do
 			if item:IsA("BasePart") then
 				item.Color = Color3.new(1, 1, 1)
@@ -128,14 +133,36 @@ local function portrait(kind: Kind, shadow: string?): ViewportFrame
 				item:Destroy()
 			end
 		end
-		view.Ambient = Color3.fromHex(shadow)
+		view.Ambient = Color3.fromHex(U.Colours.Gold)
+		view.LightColor = Color3.new(0, 0, 0)
+	elseif mode == "dark" then
+		-- the real picture (skin and all), lit by the locked ambient colour only
+		view.Ambient = Color3.fromHex(R.LockedAmbient)
 		view.LightColor = Color3.new(0, 0, 0)
 	end
-	cache[key] = view
 	return view
 end
 
--- Puts every portrait back on the shelf (the book closes or redraws).
+-- Puts the picture of a kind on its card, building it the first time.
+local function portrait(kind: Kind, mode: Mode, holder: Frame)
+	local key = kind.id .. "|" .. mode
+	local saved = cache[key]
+	if saved then
+		local ok = pcall(function()
+			saved.Parent = holder
+		end)
+		if ok then
+			return
+		end
+		-- (one that was destroyed cannot be used again)
+		cache[key] = nil
+	end
+	local view = build(kind, mode)
+	cache[key] = view
+	view.Parent = holder
+end
+
+-- Puts every portrait back on the shelf (the book closes, redraws or changes tab). Call it before the cards are cleared.
 function UiIndex.release()
 	token += 1
 	for _, view in cache do
@@ -161,6 +188,8 @@ function UiIndex.draw(host: Frame, own: Folder?)
 	end
 	UiKit.segmented(host, items, tab, function(id)
 		tab = id
+		-- (the pictures are parked first: clearing the cards would destroy them)
+		UiIndex.release()
 		UiKit.clear(host)
 		UiIndex.draw(host, own)
 	end, { Name = "IndexTabs", ItemWidth = 92 })
@@ -187,54 +216,87 @@ function UiIndex.draw(host: Frame, own: Folder?)
 		CellPadding = UDim2.fromOffset(U.Gap, U.Gap),
 		SortOrder = Enum.SortOrder.LayoutOrder,
 	}, area)
-	local slots: { { box: Frame, holder: Frame, kind: Kind, shadow: string? } } = {}
-	for order, kind in list do
-		local isFound = found[tab][kind.id] == true
-		-- a Secret has no art: found, it is a golden shadow; any kind not found is a dark one
-		local shadow: string? = if not isFound
-			then R.SilhouetteColour
-			elseif tab == "secret" then U.Colours.Gold
-			else nil
-		local box, body = UiKit.skin(area, "Wood", if isFound then "Card" else "CardDeep", {
-			Name = kind.id,
-			LayoutOrder = order,
-		})
-		box:SetAttribute("Found", isFound)
-		local holder = UiKit.make("Frame", {
-			Name = "Picture",
-			BackgroundTransparency = 1,
-			Size = UDim2.new(1, 0, 1, -(U.TextTiny + 8)),
-		}, body)
-		UiKit.label(body, if isFound or tab == "base" then kind.name else "???", U.TextTiny, "Brown", {
-			Name = "Name",
-			AnchorPoint = Vector2.new(0, 1),
-			Position = UDim2.fromScale(0, 1),
-			Size = UDim2.new(1, 0, 0, U.TextTiny + 6),
-			TextXAlignment = Enum.TextXAlignment.Center,
-		})
-		table.insert(slots, { box = box, holder = holder, kind = kind, shadow = shadow })
-	end
-	-- Portraits are built only for cards in view, a few a frame, so a long tab opens at once.
+
 	token += 1
 	local mine = token
-	local function fill()
+	local slots: { Slot } = {}
+	local pumping = false
+
+	local function inView(slot: Slot): boolean
 		local top = area.AbsolutePosition.Y
 		local bottom = top + area.AbsoluteSize.Y
-		for _, slot in slots do
-			if mine ~= token then
+		local y, height = slot.box.AbsolutePosition.Y, slot.box.AbsoluteSize.Y
+		-- (one row of margin, so a picture is ready as its card scrolls in)
+		return height > 0 and y + height >= top - height and y <= bottom + height
+	end
+	-- Pictures for the cards in view, R.IndexPicturesPerFrame a frame, until every card in view has one. Starts one frame
+	-- late so the cards have been laid out.
+	local function pump()
+		if pumping then
+			return
+		end
+		pumping = true
+		task.spawn(function()
+			while mine == token and area.Parent do
+				task.wait()
+				if mine ~= token then
+					break
+				end
+				local made = 0
+				for _, slot in slots do
+					if made >= R.IndexPicturesPerFrame then
+						break
+					end
+					if not slot.drawn and inView(slot) then
+						slot.drawn = true
+						portrait(slot.kind, slot.mode, slot.holder)
+						made += 1
+					end
+				end
+				if made == 0 then
+					break
+				end
+			end
+			pumping = false
+		end)
+	end
+	area:GetPropertyChangedSignal("CanvasPosition"):Connect(pump)
+	area:GetPropertyChangedSignal("AbsoluteSize"):Connect(pump)
+
+	-- The cards, R.IndexCardsPerFrame a frame (the first rows come first).
+	task.spawn(function()
+		for order, kind in list do
+			if mine ~= token or not area.Parent then
 				return
 			end
-			local y = slot.box.AbsolutePosition.Y
-			if not slot.holder:FindFirstChild("Portrait") and y + slot.box.AbsoluteSize.Y >= top and y <= bottom then
-				portrait(slot.kind, slot.shadow).Parent = slot.holder
+			local isFound = found[tab][kind.id] == true
+			-- a Secret has no art: found, it is a golden shadow; any kind not found is its picture, darkened
+			local mode: Mode = if not isFound then "dark" elseif tab == "secret" then "gold" else "lit"
+			local box, body = UiKit.skin(area, "Wood", if isFound then "Card" else "CardDeep", {
+				Name = kind.id,
+				LayoutOrder = order,
+			})
+			box:SetAttribute("Found", isFound)
+			local holder = UiKit.make("Frame", {
+				Name = "Picture",
+				BackgroundTransparency = 1,
+				Size = UDim2.new(1, 0, 1, -(U.TextTiny + 8)),
+			}, body)
+			UiKit.label(body, if isFound or tab == "base" then kind.name else "???", U.TextTiny, "Brown", {
+				Name = "Name",
+				AnchorPoint = Vector2.new(0, 1),
+				Position = UDim2.fromScale(0, 1),
+				Size = UDim2.new(1, 0, 0, U.TextTiny + 6),
+				TextXAlignment = Enum.TextXAlignment.Center,
+			})
+			table.insert(slots, { box = box, holder = holder, kind = kind, mode = mode, drawn = false })
+			if order % R.IndexCardsPerFrame == 0 then
+				pump()
 				task.wait()
 			end
 		end
-	end
-	area:GetPropertyChangedSignal("CanvasPosition"):Connect(function()
-		task.spawn(fill)
+		pump()
 	end)
-	task.defer(fill)
 end
 
 return UiIndex

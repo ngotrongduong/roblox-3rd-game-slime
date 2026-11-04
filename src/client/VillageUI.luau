@@ -1017,6 +1017,7 @@ local function bind(root: Folder?)
 		{
 			"Coins",
 			"CoinCap",
+			"StorehouseCap",
 			"Storehouse",
 			"Fridge",
 			"Counter",
@@ -1047,6 +1048,25 @@ local function bind(root: Folder?)
 			end)
 		)
 	end
+	-- The Index paid for a slime found for the first time (server/Rewards): a short toast with the coin and the number.
+	local village: Folder = root
+	local function gift(): (number, number)
+		local data = parse(village:GetAttribute("IndexGift"))
+		return if type(data.n) == "number" then data.n else 0, if type(data.coins) == "number" then data.coins else 0
+	end
+	local seen = gift()
+	table.insert(
+		rootConnections,
+		village:GetAttributeChangedSignal("IndexGift"):Connect(function()
+			local n, coins = gift()
+			if own == village and n > seen then
+				seen = n
+				if coins > 0 then
+					UiKit.toast("New slime! +" .. UiKit.money(coins), "coins")
+				end
+			end
+		end)
+	)
 	for _, attribute in { "Work", "Pairs", "Areas", "Box", "GearBag", "Materials" } do
 		table.insert(
 			rootConnections,

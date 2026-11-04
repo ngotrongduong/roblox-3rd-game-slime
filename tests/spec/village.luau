@@ -8,7 +8,7 @@ return function(T)
 		T.eq(Village.populationLimit(farm), 12)
 		farm.areas.fishing.level = 7
 		T.eq(Village.level(farm), 2)
-		T.eq(Village.populationLimit(farm), 12)
+		T.eq(Village.populationLimit(farm), 13)
 	end)
 	T.test("population rises in single or double increments, never jumping 15 at a milestone", function()
 		local farm = FarmKit.farm(1000)
@@ -37,18 +37,18 @@ return function(T)
 		for _, milestone in
 			{
 				{ 1, 12 },
-				{ 6, 12 },
-				{ 7, 13 },
-				{ 10, 13 },
-				{ 11, 14 },
-				{ 12, 15 },
-				{ 15, 20 },
-				{ 20, 27 },
-				{ 21, 28 },
-				{ 25, 34 },
-				{ 30, 42 },
-				{ 31, 43 },
-				{ 35, 49 },
+				{ 6, 17 },
+				{ 7, 18 },
+				{ 10, 21 },
+				{ 11, 22 },
+				{ 12, 23 },
+				{ 15, 26 },
+				{ 20, 31 },
+				{ 21, 32 },
+				{ 25, 37 },
+				{ 30, 43 },
+				{ 31, 44 },
+				{ 35, 50 },
 				{ 40, 57 },
 				{ 41, 58 },
 				{ 45, 64 },

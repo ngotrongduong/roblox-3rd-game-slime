@@ -45,6 +45,34 @@ function Shop.sell(farm: Farm, slimeId: string, now: number): (number?, string?)
 	return value, nil
 end
 
+-- Sells several slimes at once for the sum of their prices: all or nothing. Each one must pass the single sale's rules
+-- (Shop.canSell), none may be named twice, and the farm must keep its last Zombies.MinSlimes after all of them are gone.
+-- Returns the coins paid in all, or nil and why not; a refusal changes nothing.
+function Shop.sellMany(farm: Farm, slimeIds: { string }, now: number): (number?, string?)
+	if #slimeIds == 0 or #slimeIds > Config.Zombies.SellManyMax then
+		return nil, "INVALID_COUNT"
+	end
+	local named: { [string]: boolean } = {}
+	for _, slimeId in slimeIds do
+		if named[slimeId] then
+			return nil, "DUPLICATE"
+		end
+		named[slimeId] = true
+		local ok, why = Shop.canSell(farm, slimeId, now)
+		if not ok then
+			return nil, why
+		end
+	end
+	if #farm.slimes - #slimeIds < Config.Zombies.MinSlimes then
+		return nil, "LAST_SLIMES"
+	end
+	local total = 0
+	for _, slimeId in slimeIds do
+		total += Shop.sell(farm, slimeId, now) or 0
+	end
+	return total, nil
+end
+
 -- Dish sales are not limited by the combat coin vault.
 function Shop.sellDish(farm: Farm, dishId: string, count: number): (number?, string?)
 	local dish = (Config.Food.Dishes :: any)[dishId]

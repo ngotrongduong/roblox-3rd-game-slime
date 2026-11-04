@@ -372,7 +372,8 @@ local function blockedReason(slime: Configuration, count: number): string?
 end
 
 local function openShop(point: Vector3)
-	local selected: string? = nil
+	-- The slimes ticked for sale (their ids): tap one to tick or untick it, one Sell button sells them all.
+	local selected: { [string]: boolean } = {}
 	local confirmUntil = 0
 	local tick: () -> () = function() end
 	local modal = openSheet("shop", U.SheetHeight, function()
@@ -409,6 +410,16 @@ local function openShop(point: Vector3)
 	end
 
 	local slimes: { Configuration } = {}
+	-- The ticked slimes that are still there and could still be sold, in list order.
+	local function ticked(): { Configuration }
+		local out: { Configuration } = {}
+		for _, slime in slimes do
+			if selected[slime.Name] and blockedReason(slime, #slimes) == nil then
+				table.insert(out, slime)
+			end
+		end
+		return out
+	end
 	local list = UiSlimeList.new(modal.content, {
 		entries = function()
 			local entries: { UiSlimeList.Entry } = {}
@@ -418,14 +429,29 @@ local function openShop(point: Vector3)
 					slime = slime,
 					blocked = why ~= nil,
 					why = if why then reasonText(why) else nil,
-					selected = slime.Name == selected,
+					selected = selected[slime.Name] == true,
 					mark = UiSlimeList.stateMark(slime),
 				})
 			end
 			return entries
 		end,
 		onTap = function(slime)
-			selected = slime.Name
+			if selected[slime.Name] then
+				selected[slime.Name] = nil
+			else
+				local count = 0
+				for _ in selected do
+					count += 1
+				end
+				if count >= Z.SellManyMax then
+					UiKit.toast("Up to " .. Z.SellManyMax .. " at a time.")
+					return
+				elseif #slimes - count - 1 < Z.MinSlimes then
+					UiKit.toast(reasonText("LAST_SLIMES"))
+					return
+				end
+				selected[slime.Name] = true
+			end
 			confirmUntil = 0
 			tick()
 		end,
@@ -441,28 +467,36 @@ local function openShop(point: Vector3)
 		AnchorPoint = Vector2.new(1, 0),
 		Position = UDim2.fromScale(1, 0),
 		OnClick = function()
-			local slime: Configuration? = nil
-			for _, other in slimes do
-				if other.Name == selected then
-					slime = other
-				end
-			end
-			if not slime then
+			local chosen = ticked()
+			if #chosen == 0 then
 				return
 			end
 			-- Dual, Secret and Material slimes ask first: a second press inside the window sells.
-			if Mutations.needsSellConfirm(appearanceOf(slime)) and os.clock() > confirmUntil then
+			local rare = false
+			local amount = 0
+			local ids: { string } = {}
+			for _, slime in chosen do
+				rare = rare or Mutations.needsSellConfirm(appearanceOf(slime))
+				amount += sellValue(slime)
+				table.insert(ids, slime.Name)
+			end
+			if rare and os.clock() > confirmUntil then
 				confirmUntil = os.clock() + V.ConfirmSeconds
 				return
 			end
 			confirmUntil = 0
 			UiKit.setEnabled(sell, false)
-			local amount = sellValue(slime)
-			local sold = slime.Name
 			task.spawn(function()
-				local ok, why = ask({ action = "Sell", slimeId = sold })
+				-- (one slime goes as a plain sale, several as one request that sells all of them or none)
+				local ok: boolean, why: string?, paid: number?
+				if #ids == 1 then
+					ok, why, paid = ask({ action = "Sell", slimeId = ids[1] })
+				else
+					ok, why, paid = ask({ action = "SellMany", slimeIds = ids })
+				end
 				if ok then
-					UiKit.toast("+" .. UiKit.money(amount))
+					selected = {}
+					UiKit.toast("+" .. UiKit.money(paid or amount), "coins")
 				else
 					UiKit.toast(reasonText(why))
 				end
@@ -492,22 +526,28 @@ local function openShop(point: Vector3)
 			return
 		end
 		slimes = UiSlimes.slimes(own)
-		local chosen: Configuration? = nil
-		for _, slime in slimes do
-			if slime.Name == selected then
-				chosen = slime
+		-- (a ticked slime that was sold, went to work or died drops out; so do ticks that would take the last ones)
+		local chosen = ticked()
+		local keep: { [string]: boolean } = {}
+		local total, count = 0, 0
+		for index, slime in chosen do
+			if #slimes - index < Z.MinSlimes then
+				break
 			end
+			keep[slime.Name] = true
+			total += sellValue(slime)
+			count += 1
 		end
-		local count = #slimes
-		if chosen and blockedReason(chosen, count) == nil then
+		selected = keep
+		if count > 0 then
 			bar.Visible = true
-			value.Text = UiKit.money(sellValue(chosen))
+			-- the total, before the press that sells it
+			value.Text = UiKit.money(total)
 			local asking = os.clock() <= confirmUntil
 			UiKit.setStyle(sell, if asking then "danger" else "good")
-			setLabel(sell, if asking then "Sure?" else "Sell")
+			setLabel(sell, if asking then "Sure?" elseif count > 1 then "Sell " .. count else "Sell")
 			UiKit.setEnabled(sell, true)
 		else
-			selected = nil
 			bar.Visible = false
 		end
 		list.refresh()

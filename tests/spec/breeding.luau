@@ -91,7 +91,7 @@ return function(T)
 		for _, id in { "fishing", "garden", "kitchen", "pantry", "training", "breeding" } do
 			farm.areas[id].level = 11
 		end
-		T.eq(FarmState.populationLimit(farm.areas), 14)
+		T.eq(FarmState.populationLimit(farm.areas), 22)
 		T.ok(Breeding.check(farm, "s1", "s2", NOW).ok)
 	end)
 

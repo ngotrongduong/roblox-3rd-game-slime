@@ -3,13 +3,15 @@
 -- writes the minutes played into the save every Config.Rewards.OnlineFlushSeconds (and when the player leaves), and
 -- publishes on the player's village folder what the client draws: Rewards (JSON of Rewards.view), RewardsReady (how many
 -- wait), RewardsOpen (after the tutorial), OnlineSince (the server time today's clock would have started), LuckUntil (the
--- luck potion's end, 0 for none) and Found (JSON of the kinds of slime found, for the Index). Claims come through the
+-- luck potion's end, 0 for none), Found (JSON of the kinds of slime found, for the Index) and IndexGift (the coins the Index
+-- just paid for a new find, for a toast). Claims come through the
 -- Village remote (shared/VillageRequests).
 local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Config = require(ReplicatedStorage.Shared.Config)
+local Hatching = require(ReplicatedStorage.Shared.Hatching)
 local RewardRules = require(ReplicatedStorage.Shared.Rewards)
 local PlayerData = require(script.Parent.PlayerData)
 local Village = require(script.Parent.Village)
@@ -20,6 +22,9 @@ local Rewards = {}
 local flushedAt: { [Player]: number } = {}
 -- The last Found count published, so the list is encoded only when it grows.
 local foundCount: { [Player]: number } = {}
+-- The kinds found at the last look, and how many gifts have been announced (announceFinds).
+local foundSeen: { [Player]: { [string]: string } } = {}
+local giftCount: { [Player]: number } = {}
 
 local function set(inst: Instance, name: string, value: any)
 	if inst:GetAttribute(name) ~= value then
@@ -33,6 +38,39 @@ function Rewards.unsavedPlay(player: Player): number
 	local last = flushedAt[player]
 	flushedAt[player] = now
 	return if last then math.max(0, now - last) else 0
+end
+
+-- Every kind found, as "bucket/id" keys.
+local function foundKeys(farm: any): { [string]: string }
+	local keys: { [string]: string } = {}
+	for _, bucket in { "base", "dual", "secret", "material" } do
+		for id in farm.discoveries[bucket] do
+			keys[bucket .. "/" .. id] = if bucket == "base" then "plain" else bucket
+		end
+	end
+	return keys
+end
+
+-- A find the player has just made (the Index already paid for it, in shared/Hatching): the toast's number goes out as the
+-- village folder's IndexGift (JSON { n, coins }); n counts up so the client can tell a new gift from the old one. The first
+-- look after joining only learns what is already found, so finds made while away are not announced again.
+local function announceFinds(player: Player, root: Folder, farm: any)
+	local keys = foundKeys(farm)
+	local known = foundSeen[player]
+	foundSeen[player] = keys
+	if not known then
+		return
+	end
+	local coins = 0
+	for key, kind in keys do
+		if not known[key] then
+			coins += Hatching.discoveryCoins(kind)
+		end
+	end
+	if coins > 0 then
+		giftCount[player] = (giftCount[player] or 0) + 1
+		set(root, "IndexGift", HttpService:JSONEncode({ n = giftCount[player], coins = coins }))
+	end
 end
 
 local function foundList(farm: any): string
@@ -85,6 +123,7 @@ function Rewards.refresh(player: Player)
 	if foundCount[player] ~= count or root:GetAttribute("Found") == nil then
 		foundCount[player] = count
 		set(root, "Found", foundList(farm))
+		announceFinds(player, root, farm)
 	end
 end
 
@@ -98,6 +137,8 @@ function Rewards.start()
 		end)
 		flushedAt[player] = nil
 		foundCount[player] = nil
+		foundSeen[player] = nil
+		giftCount[player] = nil
 	end)
 	task.spawn(function()
 		while true do

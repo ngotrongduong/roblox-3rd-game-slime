@@ -218,7 +218,10 @@ function UiKit.kit(parent: Instance?, name: string, props: Props?): ImageLabel
 		parent
 	) :: ImageLabel
 	wear(image, name)
-	if piece.Slice then
+	-- Only a pill (sliced left and right, its height setting the edge scale) must be worn again when it is resized; a
+	-- frame's edges are a fixed scale, so a list of 150 cards keeps no listener per card.
+	local slice = piece.Slice
+	if slice and slice[2] == 0 and slice[4] == piece.Height then
 		image:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()
 			wear(image, image:GetAttribute("Piece") :: string)
 		end)
@@ -734,7 +737,9 @@ function UiKit.modalHeight(): number
 end
 
 -- A short message under the resource strip; a new one replaces the old.
-function UiKit.toast(text: string)
+-- A short line at the top. `icon` (a Config.Ui.Icons name) puts that picture in front of the text: a reward is its picture
+-- and a number.
+function UiKit.toast(text: string, icon: string?)
 	local parent = UiKit.root()
 	if not toastGroup or not toastText then
 		local group = make("CanvasGroup", {
@@ -757,7 +762,23 @@ function UiKit.toast(text: string)
 		return
 	end
 	label.Text = text
-	group.Size = UDim2.fromOffset(math.clamp(#text * 10 + 36, 140, 380), U.Touch)
+	-- the picture of the last toast that had one is taken away; a new one is made for this toast
+	local old = label.Parent and label.Parent:FindFirstChild("ToastIcon")
+	if old then
+		old:Destroy()
+	end
+	local lead = 0
+	if icon and label.Parent then
+		lead = U.IconNormal + 4
+		UiKit.icon(label.Parent, icon, U.IconNormal, {
+			Name = "ToastIcon",
+			AnchorPoint = Vector2.new(0, 0.5),
+			Position = UDim2.fromScale(0, 0.5),
+		})
+	end
+	label.Position = UDim2.fromOffset(lead, 0)
+	label.Size = UDim2.new(1, -lead, 1, 0)
+	group.Size = UDim2.fromOffset(math.clamp(#text * 10 + 36 + lead, 140, 380), U.Touch)
 	toastToken += 1
 	local mine = toastToken
 	UiKit.tween(group, 0.12, { GroupTransparency = 0 })

@@ -51,6 +51,8 @@ type Tile = {
 	markHost: Frame,
 	veil: Frame,
 	show: () -> (),
+	-- its picture has been asked for (the list shows pictures a few a frame)
+	shown: boolean,
 	entry: Entry,
 	key: string,
 	markKey: string,
@@ -232,6 +234,7 @@ local function makeTile(parent: Instance, entry: Entry, onTap: (Configuration) -
 		markHost = markHost,
 		veil = veil,
 		show = show,
+		shown = false,
 		entry = entry,
 		key = "",
 		markKey = "",
@@ -357,15 +360,42 @@ function UiSlimeList.new(parent: Instance, options: Options): List
 		local cell = math.floor((width - U.Gap * (columns - 1)) / columns)
 		grid.CellSize = UDim2.fromOffset(cell, T.Height)
 	end
+	local revealing = false
+	-- Pictures for the tiles in view, T.PicturesPerFrame a frame until each has one (a picture that has to be built is a
+	-- clone of the slime body; a screenful of them in one frame is a stall on a phone).
 	local function reveal()
-		local top = scroller.AbsolutePosition.Y - T.Height
-		local bottom = scroller.AbsolutePosition.Y + scroller.AbsoluteSize.Y + T.Height
-		for _, id in order do
-			local tile = tiles[id]
-			if tile and tile.root.AbsolutePosition.Y >= top and tile.root.AbsolutePosition.Y <= bottom then
-				tile.show()
-			end
+		if revealing then
+			return
 		end
+		revealing = true
+		task.spawn(function()
+			while scroller.Parent do
+				local top = scroller.AbsolutePosition.Y - T.Height
+				local bottom = scroller.AbsolutePosition.Y + scroller.AbsoluteSize.Y + T.Height
+				local made = 0
+				for _, id in order do
+					local tile = tiles[id]
+					if
+						tile
+						and not tile.shown
+						and tile.root.AbsolutePosition.Y >= top
+						and tile.root.AbsolutePosition.Y <= bottom
+					then
+						tile.shown = true
+						tile.show()
+						made += 1
+						if made >= T.PicturesPerFrame then
+							break
+						end
+					end
+				end
+				if made < T.PicturesPerFrame then
+					break
+				end
+				task.wait()
+			end
+			revealing = false
+		end)
 	end
 	scroller:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()
 		fit()
@@ -374,6 +404,8 @@ function UiSlimeList.new(parent: Instance, options: Options): List
 	scroller:GetPropertyChangedSignal("CanvasPosition"):Connect(reveal)
 
 	local refresh: () -> ()
+	-- A refresh of the rest of the tiles is already waiting for the next frame.
+	local continuing = false
 	local function paintSorts()
 		for id, button in buttons do
 			UiKit.setStyle(button, if id == sortKey then "primary" else "secondary")
@@ -416,27 +448,52 @@ function UiSlimeList.new(parent: Instance, options: Options): List
 		table.sort(list, before)
 		local keep = scroller.CanvasPosition
 		local fresh: { [string]: boolean } = {}
-		local changed = #list ~= #order
+		local changed = false
+		local previous = #order
+		-- New tiles are made T.PerFrame at a time, the first of the sort first; the rest wait for the next frame, so
+		-- opening a list of 70 slimes never makes 70 tiles (about 2000 instances) in one frame.
+		local budget = T.PerFrame
+		local built = 0
+		local waiting = false
 		for index, entry in list do
 			local id = entry.slime.Name
 			local tile = tiles[id]
-			if not tile then
+			if not tile and budget > 0 then
+				budget -= 1
 				tile = makeTile(scroller, entry, options.onTap)
 				tiles[id] = tile
 				changed = true
 			end
-			update(tile, entry)
-			if tile.root.LayoutOrder ~= index then
-				tile.root.LayoutOrder = index
+			if tile then
+				update(tile, entry)
+				if tile.root.LayoutOrder ~= index then
+					tile.root.LayoutOrder = index
+				end
+				built += 1
+				if order[built] ~= id then
+					changed = true
+				end
+				order[built] = id
+				fresh[id] = true
+			else
+				waiting = true
 			end
-			if order[index] ~= id then
-				changed = true
-			end
-			order[index] = id
-			fresh[id] = true
 		end
-		for index = #order, #list + 1, -1 do
+		for index = #order, built + 1, -1 do
 			order[index] = nil
+		end
+		if previous ~= built then
+			changed = true
+		end
+		if waiting and not continuing then
+			continuing = true
+			task.spawn(function()
+				task.wait()
+				continuing = false
+				if root.Parent then
+					refresh()
+				end
+			end)
 		end
 		for id, tile in tiles do
 			if not fresh[id] then
