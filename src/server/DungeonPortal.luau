@@ -180,6 +180,8 @@ local function build(base: CFrame): Model
 			gui.LightInfluence = 0
 			gui.Brightness = 2.5
 			gui.CanvasSize = Vector2.new(128, 128)
+			-- (14 rune canvases: drawn as far as the portal's own sparkles, not from every plot of the valley)
+			gui.MaxDistance = Config.Perf.EmitterStuds
 			gui.Parent = plate
 			local img = Instance.new("ImageLabel")
 			img.Size = UDim2.fromScale(1, 1)
