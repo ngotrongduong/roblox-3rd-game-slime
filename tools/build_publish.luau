@@ -75,9 +75,33 @@ workspace.StreamingMinRadius = 64
 workspace.StreamingTargetRadius = 400
 workspace.StreamOutBehavior = Enum.StreamOutBehavior.Opportunistic
 workspace.ModelStreamingBehavior = Enum.ModelStreamingBehavior.Improved
-workspace.StreamingIntegrityMode = Enum.StreamingIntegrityMode.PauseOutsideLoadedArea
+-- (PauseOutsideLoadedArea froze the character whenever it ran past what had streamed in; this pauses only when the
+-- ground right around it is missing)
+workspace.StreamingIntegrityMode = Enum.StreamingIntegrityMode.MinimumRadiusPause
 
 local map = workspace:FindFirstChild("Map")
+
+-- Cheap phones: small props cast no shadow, and meshes that are not skinned may use fewer triangles far away.
+local shadowsOff, fidelityAuto = 0, 0
+if map then
+	for _, d in map:GetDescendants() do
+		if d:IsA("BasePart") then
+			if d.CastShadow and d.Size.Magnitude < Config.Perf.SmallShadowStuds then
+				d.CastShadow = false
+				shadowsOff += 1
+			end
+			if
+				d:IsA("MeshPart")
+				and d.RenderFidelity == Enum.RenderFidelity.Precise
+				and not d:FindFirstChildWhichIsA("Bone", true)
+			then
+				d.RenderFidelity = Enum.RenderFidelity.Automatic
+				fidelityAuto += 1
+			end
+		end
+	end
+end
+print(string.format("small parts without shadow: %d, meshes to automatic detail: %d", shadowsOff, fidelityAuto))
 local template = if map then map:FindFirstChild("Plot" .. Config.Plots.TemplatePlot) else nil
 local parts = 0
 if template then

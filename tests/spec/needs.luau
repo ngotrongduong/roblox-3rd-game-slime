@@ -6,7 +6,10 @@ return function(T)
 		T.same(Needs.tick(n, "idle", 60), { fullness = 98.5, energy = 99.5, fun = 99.5 })
 		T.same(Needs.tick(n, "work", 60), { fullness = 97.75, energy = 98, fun = 99.5 })
 		T.eq(n.fullness, 100, "tick does not modify its input")
-		T.eq(Needs.tick({ fullness = 10, energy = 20, fun = 0 }, "sleep", 120).energy, 30)
+		T.eq(
+			Needs.tick({ fullness = 10, energy = 20, fun = 0 }, "sleep", 120).energy,
+			20 + 2 * Config.Needs.SleepEnergyPerMinute
+		)
 	end)
 	T.test("continuous sleep reaches rested energy without interrupted shifts", function()
 		local VillageSim = require("../../src/shared/VillageSim")
@@ -17,15 +20,15 @@ return function(T)
 		farm.slimes[1].needs.energy = 20
 		T.ok(Stations.assign(farm, "slime-1", "fishing", 1, false, 1000000))
 		-- Offline (errands on) the sim itself puts a tired slime to bed; online the brain walks it there.
-		for i = 1, 10 do
+		local per = Config.Needs.SleepEnergyPerMinute
+		local minutes = math.ceil((Config.Needs.Rested - 20) / per)
+		for i = 1, minutes - 1 do
 			farm = VillageSim.step(farm, 1000000 + i * 60, 60, Rng.new(i), { errands = true })
 		end
-		T.eq(farm.slimes[1].needs.energy, 70)
+		T.eq(farm.slimes[1].needs.energy, 20 + (minutes - 1) * per)
 		T.ok(farm.slimes[1].sleeping)
-		for i = 11, 14 do
-			farm = VillageSim.step(farm, 1000000 + i * 60, 60, Rng.new(i), { errands = true })
-		end
-		T.eq(farm.slimes[1].needs.energy, 90)
+		farm = VillageSim.step(farm, 1000000 + minutes * 60, 60, Rng.new(minutes), { errands = true })
+		T.ok(farm.slimes[1].needs.energy >= Config.Needs.Rested)
 		T.eq(farm.slimes[1].sleeping, nil)
 	end)
 	T.test("threshold boundaries, hunger and baby multiplier", function()

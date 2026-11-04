@@ -1,5 +1,34 @@
 # Status
 
+## 2026-11-04 — smoother frames, a faster first hour
+
+The owner: the game stutters, and new players get bored waiting.
+
+**Frames.** Measured in a play test with ScriptProfilerService:
+- every script together takes under 1 ms a frame, and the server holds a steady 60 Hz;
+- the cost is drawing: every plot's fires, fountain and lamps (49 emitters, 30 lights) stayed on at any distance, with big soft
+  smoke particles.
+
+Changes:
+- `client/EffectsLod`: the Map's emitters stop beyond `Config.Perf.EmitterStuds` (170) and its lights beyond `LightStuds` (150),
+  checked 4 times a second. In a play test: 27 emitters on at the village fire, 6 at the Market.
+- `tools/build_publish.luau`, for the player place only:
+  - small parts cast no shadow (314 parts);
+  - meshes that are not skinned use Automatic detail (319);
+  - streaming pauses only when the ground right around the character is missing (`MinimumRadiusPause` instead of
+    `PauseOutsideLoadedArea`, which froze a running character).
+
+These ship with the next publish.
+
+**Early game** (`docs/ECONOMY.md`, `tools/balance/early_game_sim.luau`). Changes:
+- the prices of levels 1-19 are halved;
+- wounds heal in 30 s;
+- a fight costs 2 energy and naps are twice as fast;
+- camp 1 is easier (0.62).
+
+Village level 5 now comes at 10 min (was 22), 10 at 30 min (was 75), 20 at 2.9 h (was 7.8). The fight cycle is 129 s instead
+of 244 s.
+
 ## 2026-11-04 — cooks work a pan, trainees hit the dummy
 
 The owner: a pan and a stove for the cooks, a dummy for the trainees. `client/WorkMoves` (client only, from what the server

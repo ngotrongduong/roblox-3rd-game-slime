@@ -252,19 +252,24 @@ Config.Zombies = {
 	MarchGait = "walk",
 	-- A team that won stays on the field this long to cheer before it marches home.
 	CheerSeconds = 2.2,
-	-- A wound heals this share of a slime's health a minute while it is home (0.5: a full heal in two minutes).
-	HealPerMinute = 0.5,
+	-- A wound heals this share of a slime's health a minute while it is home (2: a full heal in 30 s). The owner,
+	-- 2026-11-04: new players waited more than they fought. At 0.5 a 4 minute repeat cycle held 23 s of fighting and
+	-- about 64 s of healing (tools/balance/early_game_sim.luau).
+	HealPerMinute = 2,
 	-- Every slime that fought loses this much energy and fullness when the fight ends (the brain rests and feeds it).
 	-- On repeat a team fights about 25 times an hour. Measured (tools/balance/kitchen_sim.luau, real VillageSim, 0.55
 	-- productive): at 5 the fighters ate more than the pond and garden make and slimes went hungry at levels 1-30; at 3 level
-	-- 20 still did; at 2 nobody is hungry at any level.
-	FightEnergy = 8,
+	-- 20 still did; at 2 nobody is hungry at any level. Energy at 8 sent the team to sleep for 14 minutes every 10 fights,
+	-- the largest wait of all (37% of the cycle); at 2 a team fights about 35 times, an hour or more, before it naps.
+	FightEnergy = 2,
 	FightFullness = 2,
 	-- HpShare on a slime's model is rounded to this step, so a healing wound does not rewrite it every frame.
 	HpShareStep = 0.01,
 	-- A zombie's stats against an even slime of the player's level, per camp. Five levels mean far more at level 4 than
 	-- at level 60, so a camp's risk comes from this and stays the same all game; its level sets the reward.
-	StatFactors = { 0.75, 0.9, 1.03 },
+	-- (camp 1 was 0.75: three slimes in four fell every fight there, each one a ghost to feed back to life; the owner,
+	-- 2026-11-04, wants new players to keep playing)
+	StatFactors = { 0.62, 0.9, 1.03 },
 	-- base = coins at level 0, as Config.Economy.SellBase for slimes; weights = its chance in each camp: rarer zombies
 	-- gather where it is more dangerous, which is what makes the harder camps worth the risk.
 	Kinds = {
@@ -1254,13 +1259,15 @@ Config.Village = {
 		{ level = 40, cap = 57 },
 		{ level = 50, cap = 72 },
 	},
+	-- The owner, 2026-11-04: the first 20 levels were too slow for what a new player earns (a camp-1 fight pays about
+	-- 800 all game). Halved there: 1-2 is a fifth of a fight, 19-20 about two fights. Level 25 eases into the old curve.
 	UpgradePrices = {
-		{ level = 1, price = 310 },
-		{ level = 5, price = 480 },
-		{ level = 10, price = 1100 },
-		{ level = 15, price = 2200 },
-		{ level = 19, price = 3100 },
-		{ level = 25, price = 7900 },
+		{ level = 1, price = 150 },
+		{ level = 5, price = 260 },
+		{ level = 10, price = 550 },
+		{ level = 15, price = 1100 },
+		{ level = 19, price = 1700 },
+		{ level = 25, price = 6000 },
 		{ level = 30, price = 14000 },
 		{ level = 35, price = 24000 },
 		{ level = 39, price = 37000 },
@@ -1268,7 +1275,8 @@ Config.Village = {
 		{ level = 49, price = 99000 },
 	},
 	CoinCapMin = 2000,
-	CoinCapPriceFactor = 3,
+	-- (was 3 before the early prices were halved on 2026-11-04; 6 keeps the vault where it was)
+	CoinCapPriceFactor = 6,
 	OfflineCapSeconds = 8 * 60 * 60,
 	StepSeconds = 60,
 	-- How long a dead slime waits to be revived with food before it is lost for good (the owner, 2026-11-02).
@@ -1485,7 +1493,8 @@ Config.Needs = {
 	WorkFullnessPerMinute = 2.25,
 	IdleEnergyPerMinute = 0.5,
 	WorkEnergyPerMinute = 2,
-	SleepEnergyPerMinute = 5,
+	-- (was 5: a nap from Tired to Rested took 14 minutes, the longest wait of a fighting team; the owner, 2026-11-04)
+	SleepEnergyPerMinute = 10,
 	FunFallPerMinute = 0.5,
 	BabyFactor = 0.5,
 	WantsFood = 50,
@@ -1947,6 +1956,19 @@ Config.Map = {
 	RockShiftStep = 0.5,
 	RockShiftSteps = 8,
 	RockSeatTolerance = 0.05,
+}
+
+-- ===== Frame cost on phones (src/client/EffectsLod.client.luau, tools/build_publish.luau) =====
+Config.Perf = {
+	-- The world's particle emitters and lights (fires, fountain, lamps; under Workspace.Map) draw only this near the
+	-- camera. Measured 2026-11-04: scripts take under 1 ms a frame, but every plot's fires and lamps stayed on at any
+	-- distance, and big soft smoke particles are what phones pay for most.
+	EmitterStuds = 170,
+	LightStuds = 150,
+	-- How often a second the distances are looked at again.
+	CheckHz = 4,
+	-- In the place that goes to players, parts smaller than this (the length of their size) cast no shadow.
+	SmallShadowStuds = 6,
 }
 
 -- ===== The Market (docs/MAP.md 1.3; the owner, 2026-11-02: one slime buyer, one VIP counter, one leaderboard) =====

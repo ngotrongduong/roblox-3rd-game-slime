@@ -64,14 +64,26 @@ A team marches from its gate and back (26, 46 and 66 s each way to the three rin
 its wounds. With that, fights earn about 32,000 coins an hour at the start, 84,000 at village level 19 and 206,000 at the
 top. Selling a baby instead of sending it adds a little: the shop is the side income the owner described.
 
+**2026-11-04, the early game (owner: "new players get bored, one fight pays about 600 and then the slimes rest").**
+Measured with the real modules (`tools/balance/early_game_sim.luau`, one team on Repeat at camp 1): a fight pays about
+800 all game, but a 4 minute cycle held 23 s of fighting. The rest was sleeping (37%: 14 minute naps every 10 fights), healing
+(26%) and marching. Three in four slimes fell in each fight at camp 1, and each became a ghost to feed back to life. Changed:
+- the prices of levels 1-19 halved, with level 25 easing into the old curve (the vault ceiling factor 3 -> 6 keeps it where it was);
+- wounds heal in 30 s instead of 2 min;
+- a fight costs 2 energy instead of 8, and a nap runs 10 a minute instead of 5;
+- camp 1's zombies go from 0.75 to 0.62 of an even slime.
+
+Result: village level 5 at 10 min (was 22), 10 at 30 min (was 75), 20 at 2.9 h (was 7.8). The cycle is now 129 s, and 0.05
+slimes fall per fight. The time columns below are the earlier solve's.
+
 | Area level | Price | One upgrade takes | Village level reached | At (active hours) |
 |---|---|---|---|---|
-| 1 | 310 | 30 s | 2 | 0.05 |
-| 5 | 480 | 40 s | 6 | 0.3 |
-| 10 | 1,100 | 1 min | 11 | 0.7 |
-| 15 | 2,200 | 1.4 min | 16 | 1.3 |
-| 19 | 3,100 | 1.9 min | 20 | **2.0** |
-| 25 | 7,900 | 3 min | 26 | 3.5 |
+| 1 | 150 | 30 s | 2 | 0.05 |
+| 5 | 260 | 40 s | 6 | 0.2 |
+| 10 | 550 | 1 min | 11 | 0.5 |
+| 15 | 1,100 | 1.4 min | 16 | 1.3 |
+| 19 | 1,700 | 1.9 min | 20 | **2.9** |
+| 25 | 6,000 | 3 min | 26 | 3.5 |
 | 30 | 14,000 | 4.7 min | 31 | 5.5 |
 | 35 | 24,000 | 7 min | 36 | 8.5 |
 | 39 | 37,000 | 10 min | 40 | **12.0** |

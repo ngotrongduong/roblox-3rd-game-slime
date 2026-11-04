@@ -177,7 +177,7 @@ return function(T: any)
 		for level = 2, 50 do
 			T.ok(Village.upgradeCost(level) >= Village.upgradeCost(level - 1), "price dropped at " .. level)
 		end
-		T.eq(Village.coinCap(50), 3 * 99000)
+		T.eq(Village.coinCap(50), Config.Village.CoinCapPriceFactor * 99000)
 		T.eq(Config.Pads.FreeUpgrades, false)
 	end)
 
