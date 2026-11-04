@@ -14,7 +14,7 @@ local FULL = UDim2.fromScale(1, 1)
 
 export type Props = { [string]: any }
 export type Bar = { root: Frame, set: (fraction: number, low: boolean) -> () }
-export type Chip = { root: Frame, set: (text: string) -> () }
+export type Chip = { root: GuiObject, set: (text: string) -> () }
 export type Modal = { header: Frame, content: Frame }
 
 type ModalState = {
@@ -34,19 +34,20 @@ local toastGroup: CanvasGroup? = nil
 local toastText: TextLabel? = nil
 local toastToken = 0
 
-local styleFill: { [string]: string } = {
-	primary = "Gold",
-	secondary = "Cream",
-	good = "Green",
-	danger = "Red",
-	soft = "CardDeep",
+-- A button's style is a kit pill (Config.Ui.Kit); an icon-only button is the small square frame, tinted for its style.
+local stylePiece: { [string]: string } = {
+	primary = "gold",
+	secondary = "cream",
+	good = "green",
+	danger = "red",
+	soft = "cream",
+	special = "purple",
 }
-local styleText: { [string]: string } = {
-	primary = "Cream",
-	secondary = "Brown",
-	good = "Cream",
-	danger = "Cream",
-	soft = "Brown",
+local styleTint: { [string]: Color3 } = {
+	primary = Color3.fromRGB(255, 205, 110),
+	good = Color3.fromRGB(170, 235, 140),
+	danger = Color3.fromRGB(255, 150, 140),
+	special = Color3.fromRGB(215, 165, 255),
 }
 -- Short stand-ins for pictures that do not exist yet; never a final look.
 local glyphs: { [string]: string } = {
@@ -164,44 +165,119 @@ function UiKit.icon(parent: Instance?, name: string, size: number, props: Props?
 	)
 end
 
--- The owner's frame as a nine-slice border over a flat parchment fill. Returns the box and its content area.
-function UiKit.skin(parent: Instance?, key: string, fill: string?, props: Props?): (Frame, Frame)
-	local frame = (U.Frames :: any)[key]
-	local inset: number = frame.Inset
-	local box = make("Frame", merge({ Name = key, BackgroundTransparency = 1 }, props), parent)
-	if fill then
-		local panel = make("Frame", {
-			Name = "Fill",
-			Position = UDim2.fromOffset(inset, inset),
-			Size = UDim2.new(1, -2 * inset, 1, -2 * inset),
-			BackgroundColor3 = UiKit.colour(fill),
-			BorderSizePixel = 0,
-			ZIndex = 1,
-		}, box)
-		make("UICorner", { CornerRadius = UDim.new(0, inset) }, panel)
-		make("UIGradient", {
-			Rotation = 90,
-			Color = ColorSequence.new(Color3.new(1, 1, 1), Color3.new(0.95, 0.94, 0.92)),
-		}, panel)
+-- A size in points: the drawn size with every UIScale above it taken back out (nine-slice edges are drawn in points).
+local function points(inst: GuiObject): Vector2
+	local scale = 1
+	local node: Instance? = inst
+	while node do
+		local factor = node:FindFirstChildOfClass("UIScale")
+		if factor then
+			scale *= factor.Scale
+		end
+		node = node.Parent
 	end
+	return inst.AbsoluteSize / math.max(scale, 0.01)
+end
+
+-- Puts a kit piece on a picture: its image, its nine-slice centre and the scale of its edges.
+local function wear(image: ImageLabel, name: string)
+	local piece = (U.Kit :: any)[name]
+	image.Image = "rbxassetid://" .. tostring(piece.Id)
+	image:SetAttribute("Piece", name)
+	local slice = piece.Slice
+	if not slice then
+		image.ScaleType = Enum.ScaleType.Fit
+		return
+	end
+	image.ScaleType = Enum.ScaleType.Slice
+	if slice[2] == 0 and slice[4] == piece.Height then
+		-- sliced only left and right: the height fills the box, so the round ends stay round. (A centre as tall as the
+		-- picture draws wrongly in Roblox, so the centre is a thin middle row.)
+		local half = piece.Height / 2
+		image.SliceCenter = Rect.new(slice[1], half - 1, slice[3], half + 1)
+		local height = points(image).Y
+		if height > 0 then
+			image.SliceScale = height / piece.Height
+		end
+	else
+		image.SliceCenter = Rect.new(slice[1], slice[2], slice[3], slice[4])
+		image.SliceScale = piece.Scale or 1
+	end
+end
+
+-- A piece of the UI kit (Config.Ui.Kit) as a picture, at its own size unless props say otherwise.
+function UiKit.kit(parent: Instance?, name: string, props: Props?): ImageLabel
+	local piece = (U.Kit :: any)[name]
+	local image = make(
+		"ImageLabel",
+		merge({
+			Name = name,
+			BackgroundTransparency = 1,
+			Size = UDim2.fromOffset(piece.Width, piece.Height),
+		}, props),
+		parent
+	) :: ImageLabel
+	wear(image, name)
+	if piece.Slice then
+		image:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()
+			wear(image, image:GetAttribute("Piece") :: string)
+		end)
+	end
+	return image
+end
+
+-- Which kit frame a skin key draws: the modal's window, or the small wood frame of cards, tiles and buttons.
+local skinPiece: { [string]: string } = { Panel = "window", Wood = "square" }
+
+-- Tints the inside of a skin (UiKit.skin); the plain cream fills leave the frame's own painted inside showing.
+function UiKit.setFill(box: Instance, fill: string)
+	local panel = box:FindFirstChild("Fill")
+	if panel and panel:IsA("Frame") then
+		panel.BackgroundColor3 = UiKit.colour(fill)
+		panel.BackgroundTransparency = if fill == "Card" or fill == "Parchment" then 1 else 0
+	end
+end
+
+-- A kit frame with its cream inside and a Fill over it that UiKit.setFill tints. Returns the box and its content area.
+function UiKit.skin(parent: Instance?, key: string, fill: string?, props: Props?): (Frame, Frame)
+	local name = skinPiece[key] or key
+	local inset: number = (U.Kit :: any)[name].Inset or 0
+	local box = make("Frame", merge({ Name = key, BackgroundTransparency = 1 }, props), parent)
+	UiKit.kit(box, name, { Name = "Border", Size = FULL, ZIndex = 1 })
+	local panel = make("Frame", {
+		Name = "Fill",
+		Position = UDim2.fromOffset(inset, inset),
+		Size = UDim2.new(1, -2 * inset, 1, -2 * inset),
+		BorderSizePixel = 0,
+		ZIndex = 2,
+	}, box)
+	make("UICorner", { CornerRadius = UDim.new(0, inset) }, panel)
+	UiKit.setFill(box, fill or "Card")
 	local body = make("Frame", {
 		Name = "Body",
 		BackgroundTransparency = 1,
 		Position = UDim2.fromOffset(inset, inset),
 		Size = UDim2.new(1, -2 * inset, 1, -2 * inset),
-		ZIndex = 2,
-	}, box)
-	make("ImageLabel", {
-		Name = "Border",
-		BackgroundTransparency = 1,
-		Image = "rbxassetid://" .. tostring(frame.Id),
-		ScaleType = Enum.ScaleType.Slice,
-		SliceCenter = Rect.new(frame.MinX, frame.MinY, frame.MaxX, frame.MaxY),
-		SliceScale = frame.Scale,
-		Size = FULL,
 		ZIndex = 3,
 	}, box)
 	return box, body
+end
+
+-- Text on a coloured kit piece: white with the concept's dark outline.
+function UiKit.outline(label: TextLabel, on: boolean)
+	local stroke = label:FindFirstChild("Outline") :: UIStroke?
+	if on and not stroke then
+		stroke = make("UIStroke", {
+			Name = "Outline",
+			Color = Color3.fromHex(U.KitOutline),
+			Thickness = U.KitOutlineThickness,
+			ApplyStrokeMode = Enum.ApplyStrokeMode.Contextual,
+		}, label)
+	end
+	if stroke then
+		stroke.Enabled = on
+	end
+	label.TextColor3 = if on then Color3.new(1, 1, 1) else UiKit.colour("Brown")
 end
 
 local function pressable(button: GuiButton, target: Instance)
@@ -220,15 +296,19 @@ end
 
 function UiKit.setStyle(button: GuiButton, style: string)
 	local group = button:FindFirstChild("Visual")
-	local wood = if group then group:FindFirstChild("Wood") else nil
-	local fill = if wood then wood:FindFirstChild("Fill") else nil
-	local body = if wood then wood:FindFirstChild("Body") else nil
+	local face = if group then group:FindFirstChild("Face") else nil
+	local body = if group then group:FindFirstChild("Body") else nil
 	local label = if body then body:FindFirstChild("Label") else nil
-	if fill and fill:IsA("Frame") then
-		fill.BackgroundColor3 = UiKit.colour(styleFill[style] or "Cream")
+	local piece = stylePiece[style] or "cream"
+	if face and face:IsA("ImageLabel") then
+		if face:GetAttribute("Piece") == "square" then
+			face.ImageColor3 = styleTint[style] or Color3.new(1, 1, 1)
+		else
+			wear(face, piece)
+		end
 	end
 	if label and label:IsA("TextLabel") then
-		label.TextColor3 = UiKit.colour(styleText[style] or "Brown")
+		UiKit.outline(label, piece ~= "cream")
 	end
 	button:SetAttribute("Style", style)
 end
@@ -256,7 +336,17 @@ function UiKit.button(parent: Instance?, props: Props): TextButton
 		LayoutOrder = props.LayoutOrder or 0,
 	}, parent)
 	local group = make("CanvasGroup", { Name = "Visual", BackgroundTransparency = 1, Size = FULL }, button)
-	local _, body = UiKit.skin(group, "Wood", styleFill[style], { Size = FULL })
+	local square = props.Text == nil
+	UiKit.kit(group, if square then "square" else stylePiece[style] or "cream", { Name = "Face", Size = FULL })
+	local body = make("Frame", { Name = "Body", BackgroundTransparency = 1, Size = FULL, ZIndex = 2 }, group)
+	if not square then
+		-- (the pill's glossy rim is thicker at the bottom)
+		make("UIPadding", {
+			PaddingLeft = UDim.new(0, U.Gap),
+			PaddingRight = UDim.new(0, U.Gap),
+			PaddingBottom = UDim.new(0, 2),
+		}, body)
+	end
 	make("UIListLayout", {
 		FillDirection = Enum.FillDirection.Horizontal,
 		HorizontalAlignment = Enum.HorizontalAlignment.Center,
@@ -268,7 +358,7 @@ function UiKit.button(parent: Instance?, props: Props): TextButton
 		UiKit.icon(body, props.Icon, props.IconSize or U.IconNormal, { LayoutOrder = 1 })
 	end
 	if props.Text then
-		UiKit.label(body, props.Text, props.TextSize or U.TextSmall, styleText[style], {
+		UiKit.label(body, props.Text, props.TextSize or U.TextSmall, "Brown", {
 			Name = "Label",
 			LayoutOrder = 2,
 			Size = UDim2.fromScale(0, 1),
@@ -350,34 +440,50 @@ end
 -- A small count chip for the resource strip: picture and number on a wooden plate. `model`: show this 3D item
 -- (ClientKit.Items) instead of the icon picture.
 function UiKit.chip(parent: Instance?, icon: string, text: string, order: number, model: Instance?): Chip
-	local box, body = UiKit.skin(parent, "Wood", "Card", {
+	-- the kit's counter plate: the picture sits in its round socket at the left, the number on the cream part
+	local height = U.ChipHeight
+	local socket = height * 0.85
+	local box = UiKit.kit(parent, "counter", {
 		Name = icon,
-		Size = UDim2.fromOffset(0, U.ChipHeight),
+		Size = UDim2.fromOffset(0, height),
 		LayoutOrder = order,
 	})
-	make("UIListLayout", {
-		FillDirection = Enum.FillDirection.Horizontal,
-		VerticalAlignment = Enum.VerticalAlignment.Center,
-		Padding = UDim.new(0, 4),
-		SortOrder = Enum.SortOrder.LayoutOrder,
-	}, body)
+	local picture = {
+		Name = "Picture",
+		AnchorPoint = Vector2.new(0.5, 0.5),
+		Position = UDim2.new(0, socket / 2 + 1, 0.5, 0),
+		ZIndex = 2,
+	}
 	if model then
-		UiKit.modelIcon(body, model, U.IconSmall, { LayoutOrder = 1 })
+		UiKit.modelIcon(box, model, U.IconSmall, picture)
 	else
-		UiKit.icon(body, icon, U.IconSmall, { LayoutOrder = 1 })
+		UiKit.icon(box, icon, U.IconSmall, picture)
 	end
-	local value = UiKit.label(body, text, U.TextSmall, "Brown", {
+	local value = UiKit.label(box, text, U.TextSmall, "Brown", {
 		Name = "Value",
-		LayoutOrder = 2,
-		Size = UDim2.new(1, -U.IconSmall - 4, 1, 0),
+		Position = UDim2.fromOffset(socket + 2, 0),
+		Size = UDim2.new(1, -socket - 8, 1, 0),
+		TextXAlignment = Enum.TextXAlignment.Center,
+		ZIndex = 2,
 	})
 	local function set(next: string)
 		value.Text = next
-		box.Size = UDim2.fromOffset(U.IconSmall + 24 + #next * 9, U.ChipHeight)
+		box.Size = UDim2.fromOffset(socket + 16 + #next * 9, height)
 	end
 	set(text)
 	return { root = box, set = set }
 end
+
+-- A bar's colour name as a kit bar (Config.Ui.Kit), with a tint for colours the kit has no bar of; a low need turns red.
+local barPiece: { [string]: string } = {
+	Fullness = "barOrange",
+	GoldLight = "barOrange",
+	Energy = "barBlue",
+	Fun = "barPink",
+	Green = "barBlue",
+}
+local barTint: { [string]: Color3 } = { Green = Color3.fromRGB(120, 255, 110) }
+local lowTint = Color3.fromRGB(255, 110, 100)
 
 -- A need bar: a picture and a filling track. No numbers, no words.
 function UiKit.bar(parent: Instance?, icon: string, colour: string, props: Props?): Bar
@@ -395,26 +501,25 @@ function UiKit.bar(parent: Instance?, icon: string, colour: string, props: Props
 		UiKit.icon(row, icon, U.IconSmall, { Position = UDim2.fromOffset(0, 0) })
 		lead = U.IconSmall + 4
 	end
-	local track = make("Frame", {
+	local track = UiKit.kit(row, "track", {
 		Name = "Track",
 		AnchorPoint = Vector2.new(0, 0.5),
 		Position = UDim2.new(0, lead, 0.5, 0),
 		Size = UDim2.new(1, -lead, 0, U.BarHeight),
-		BackgroundColor3 = UiKit.colour("Track"),
-		BorderSizePixel = 0,
-	}, row)
-	make("UICorner", { CornerRadius = UDim.new(0.5, 0) }, track)
-	local fill = make("Frame", {
+	})
+	local fill = UiKit.kit(track, barPiece[colour] or "barOrange", {
 		Name = "Fill",
 		Size = UDim2.fromScale(0, 1),
-		BackgroundColor3 = UiKit.colour(colour),
-		BorderSizePixel = 0,
-	}, track)
-	make("UICorner", { CornerRadius = UDim.new(0.5, 0) }, fill)
+		ImageColor3 = barTint[colour] or Color3.new(1, 1, 1),
+	})
 	local function set(fraction: number, low: boolean)
-		fill.Size = UDim2.fromScale(math.clamp(fraction, 0, 1), 1)
-		fill.BackgroundColor3 = UiKit.colour(if low then "Red" else colour)
+		local part = math.clamp(fraction, 0, 1)
+		fill.Size = UDim2.fromScale(part, 1)
+		fill.Visible = part > 0
+		fill.ImageColor3 = if low then lowTint else barTint[colour] or Color3.new(1, 1, 1)
 	end
+	-- (never narrower than tall while it shows, so its round ends stay round)
+	make("UISizeConstraint", { Name = "Round", MinSize = Vector2.new(U.BarHeight, 0) }, fill)
 	return { root = row, set = set }
 end
 

@@ -278,8 +278,8 @@ local function update(tile: Tile, entry: Entry)
 		tile.woundFill.Size = UDim2.fromScale(share, 1)
 		tile.woundFill.BackgroundColor3 = UiKit.colour(if share < T.WoundLow then "Red" else "Green")
 		tile.veil.Visible = entry.blocked == true
-		if tile.fill then
-			tile.fill.BackgroundColor3 = UiKit.colour(if entry.selected or entry.suggested then "Portrait" else "Card")
+		if tile.fill and tile.fill.Parent then
+			UiKit.setFill(tile.fill.Parent, if entry.selected or entry.suggested then "Portrait" else "Card")
 		end
 	end
 	local markKey = markKeyOf(mark)

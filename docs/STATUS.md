@@ -1,5 +1,20 @@
 # Status
 
+## 2026-11-04 — every screen in ChatGPT's painted UI kit; the slime page as in the concept
+
+The owner: the UI in the game exactly like the one ChatGPT made, every other screen in the same style, and ask ChatGPT for any
+piece that is missing. (`docs/UI.md`, "The UI kit".)
+- ChatGPT drew the kit in three sheets (frames, buttons, ornaments) after the slime page concept; 28 pieces cut, 9-sliced and
+  uploaded (`art/ui/kit/`, `Config.Ui.Kit`). The owner's ui-frame-gold and ui-frame-wood frames are retired.
+- `UiKit` draws every modal, card, button, chip and bar with the kit, so the HUD chips, the book, Bag, Rewards, Smithy, Dungeon
+  gate, Teams and every other screen changed together. A picked tile or row is tinted through `UiKit.setFill`.
+- The slime page rebuilt piece by piece after the concept: hexagon portrait, name ribbon and Lv pill; slots with name plates;
+  the pedestal and gold accents; the needs plate; a Feed button (dishes from the fridge) and an Equip button; the stats panel
+  with its diamond, rows and green "+n" pills; the trait scroll.
+- Seen in a MapWork play test on the 844 x 350 phone frame (`docs/ui/kit/`): slime page, Bag (and a picked tile), Smithy, Dungeon
+  gate, Teams; Feed lowered Grilled Fish x2 → x1, Equip opened the Head list. Not done: the concept's warm glow behind the slime
+  (needs a painted glow piece).
+
 ## 2026-11-04 — one Dungeon portal in the Market, a Bag, and the slime's page as an RPG sheet
 
 The owner: Hand becomes Weapon and Tail becomes Charm; one portal for everyone in the Market, each player sent to their own

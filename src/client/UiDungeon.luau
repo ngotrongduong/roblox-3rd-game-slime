@@ -508,11 +508,7 @@ local function openGate(point: Vector3)
 					end
 				end
 				row.mark.Visible = selected[index] == true
-				local fill = row.root:FindFirstChild("Fill")
-				if fill and fill:IsA("Frame") then
-					fill.BackgroundColor3 =
-						UiKit.colour(if selected[index] then "GoldLight" elseif ready then "Card" else "CardDeep")
-				end
+				UiKit.setFill(row.root, if selected[index] then "GoldLight" elseif ready then "Card" else "CardDeep")
 			end
 		end
 		-- the first team that can go is chosen at the start

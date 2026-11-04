@@ -175,7 +175,7 @@ local function materialTile(parent: Instance, item: string, count: number, order
 	end)
 	local box, body = UiKit.card(button, { Size = UDim2.fromScale(1, 1) })
 	if selected == item then
-		UiKit.make("UIStroke", { Color = UiKit.colour("Gold"), Thickness = 3 }, box:FindFirstChild("Fill"))
+		UiKit.setFill(box, "GoldLight")
 	end
 	UiDungeon.dropIcon(body, item, B.MaterialIcon, {
 		AnchorPoint = Vector2.new(0.5, 0.5),
@@ -291,7 +291,7 @@ end
 -- The strip: a material's name and the pieces that need it; a piece's name, rarity, points and how many are worn.
 local function drawDetail(body: Frame, view: View, id: string)
 	UiKit.clear(body)
-	local pictureSize = B.DetailHeight - 2 * (U.Frames.Wood.Inset + 2)
+	local pictureSize = B.DetailHeight - 2 * (U.Kit.square.Inset + 2)
 	local left = pictureSize + 8
 	local text = UiKit.make("Frame", {
 		Name = "Text",

@@ -21,17 +21,34 @@ What follows from it (to be detailed when the UI is designed):
   over words, no explanatory text, lists that keep their scroll and sort, only usable slimes in
   pickers, thin elegant frames, tap outside to close, touch targets of 44 px or more.
 
+## The UI kit (the owner, 2026-11-04: "the UI in the game exactly like ChatGPT's", every screen in that style)
+
+Every frame, button, chip and bar is a piece of one painted kit that ChatGPT drew after the slime page concept
+(`docs/ui/slime-sheet/concept.webp`): three sheets on magenta (`art/inbox/kit-frames|buttons|ornaments.webp`) cut by
+`tools/chatgpt/prepare_ui_kit.py`, named and squeezed for 9-slicing by `tools/chatgpt/kit_slices.py` (map: `tools/chatgpt/ui_kit.json`)
+into `art/ui/kit/<name>.png`, uploaded, and listed in `Config.Ui.Kit` (id, size, slice, scale, inset). `UiKit.kit(parent, name)`
+draws a piece; `UiKit.skin` (modals = window, cards = square, with a `Fill` that `UiKit.setFill` tints for a picked or locked
+state), `UiKit.button` (gold primary, green good, red danger, purple special, cream secondary; icon-only buttons are the square
+piece tinted), `UiKit.chip` (the counter piece) and `UiKit.bar` (track + orange / blue / pink fill) all use it, so a new screen
+built with UiKit is in the style with no extra work. Text on a coloured piece is white with the concept's dark outline
+(`UiKit.outline`). Missing pieces go to ChatGPT in the same chat, on magenta, in the same style.
+- Roblox quirk: a piece sliced only left and right (pills, bars, plates, ribbon) must use a thin middle row as its SliceCenter
+  and `SliceScale = height / picture height`; a SliceCenter as tall as the picture draws arches. `UiKit.kit` does this.
+- Not done: the concept's warm glow behind the slime (it needs a painted glow piece, not a code shape).
+- Shots on a phone frame: `docs/ui/kit/`.
+
 ## The slime's page (the owner, 2026-11-04: "make it like an RPG")
 
-The detail page of the slime book (`client/UiSlimeSheet`, `client/UiGearSlots`; sizes in `Config.Ui.SlimeSheet`), after
-`docs/ui/slime-sheet/concept.webp`. Header: Back, the slime's portrait, its name and a "Lv n" pill (the modal's Close at the
-right). Left: the slime on a pedestal, Head above it, Weapon (the Hand slot) and Charm (the Tail slot) beside it, each a framed
-square under a name plate (empty: the faint picture `Icons.slotWeapon / slotHead / slotCharm`; worn: the piece), and under it the
-Food, Energy and Fun bars. Tapping a slot opens a short list beside it (the pieces of that slot in the bag, "Take off"); a tap
-outside closes it. Right: Attack, Defence, Speed, HP with the slime's own value and the gear's bonus as a green "+n", the trait
-("Trait: Shy") and, while it works, Stop work. There is no Feed button: feeding is per dish (`FeedDish` lives in the food
-panel), so it has no single clean call from here. The page is a fixed stage of 720 x 244 px (a landscape phone's book content),
-shrunk to fit a smaller room and never grown past 1.25x; it is laid out for landscape, not for a 360 px portrait phone.
+The detail page of the slime book (`client/UiSlimeSheet`, `client/UiGearSlots`; sizes in `Config.Ui.SlimeSheet`), built to
+match `docs/ui/slime-sheet/concept.webp` with the kit. Header: Back, the hexagon portrait, a ribbon with the name and a "Lv n"
+pill (the modal's Close at the right). Left: the slime on its pedestal between two gold accents, Head above it, Weapon (the Hand
+slot) and Charm (the Tail slot) beside it, each a framed slot under a name plate (empty: the faint picture
+`Icons.slotWeapon / slotHead / slotCharm`; worn: the piece); under it Feed (green), the Food / Energy / Fun bars on a plate, and
+Equip (purple). Feed opens a list of the dishes in the fridge (tap one: `FeedDish`); Equip opens the list of the first empty slot.
+Tapping a slot opens a short list beside it (the pieces of that slot in the bag, "Take off"); a tap outside closes it. Right: a
+panel with Attack, Defence, Speed, HP, each a row with the slime's own value and the gear's bonus as a green "+n" pill, the trait
+on a scroll ("Trait: Shy") and, while it works, Stop work. The page is a fixed stage of 720 x 320 points, shrunk to fit a
+smaller room and never grown past 1.25x; it is laid out for landscape, not for a 360 px portrait phone.
 
 ## The Bag (the owner, 2026-11-04: an inventory for loot and gear)
 

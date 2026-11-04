@@ -17,17 +17,21 @@ local G = U.Gear
 local K = U.SlimeSheet
 local S = Config.Smithy
 
-export type Slots = { refresh: () -> () }
+-- choose: opens the list of a slot (nil closes it), as a tap on the slot does
+export type Slots = { refresh: () -> (), choose: (slot: string?) -> () }
 
-type Cell = { body: Frame, pick: UIStroke, shown: string }
+type Cell = { body: Frame, frame: ImageLabel, shown: string }
 
 local UiGearSlots = {}
 
 -- The faint picture of an empty slot, by slot.
 local emptyIcons: { [string]: string } = { hand = "slotWeapon", head = "slotHead", tail = "slotCharm" }
 local FADE = 0.55
-local CELL_HEIGHT = K.PlateHeight + K.Slot - K.PlateOverlap
-local INSET: number = U.Frames.Wood.Inset
+local CELL_HEIGHT = K.PlateHeight + K.SlotHeight - K.PlateOverlap
+local INSET: number = U.Kit.square.Inset
+-- the slot frame's cream inside, as fractions of its picture (Config.Ui.Kit.slot: a wooden top band, thinner sides)
+local INSIDE_LEFT, INSIDE_TOP, INSIDE_RIGHT, INSIDE_BOTTOM = 0.11, 0.22, 0.89, 0.91
+local PICKED = Color3.fromRGB(255, 215, 120)
 local STAT_TAGS = { { "attack", "ATK" }, { "defence", "DEF" }, { "speed", "SPD" }, { "hp", "HP" } }
 
 -- The piece id worn in a slot, nil when empty or when the id is not a piece of that slot.
@@ -49,38 +53,37 @@ local function buildCell(parent: Instance, slot: string, centreX: number, top: n
 		Size = UDim2.fromOffset(K.PlateWidth, CELL_HEIGHT),
 		ZIndex = 3,
 	}, parent)
-	local box, body = UiKit.card(button, {
+	local frame = UiKit.kit(button, "slot", {
 		Name = "Frame",
 		AnchorPoint = Vector2.new(0.5, 0),
 		Position = UDim2.new(0.5, 0, 0, K.PlateHeight - K.PlateOverlap),
-		Size = UDim2.fromOffset(K.Slot, K.Slot),
+		Size = UDim2.fromOffset(K.Slot, K.SlotHeight),
 		ZIndex = 1,
 	})
-	local fill: any = box:FindFirstChild("Fill")
-	local pick = UiKit.make("UIStroke", {
-		Name = "Pick",
-		Color = UiKit.colour("Gold"),
-		Thickness = 3,
-		Enabled = false,
-	}, fill)
-	local plate = UiKit.make("Frame", {
+	local body = UiKit.make("Frame", {
+		Name = "Body",
+		BackgroundTransparency = 1,
+		Position = UDim2.fromScale(INSIDE_LEFT, INSIDE_TOP),
+		Size = UDim2.fromScale(INSIDE_RIGHT - INSIDE_LEFT, INSIDE_BOTTOM - INSIDE_TOP),
+		ZIndex = 2,
+	}, frame)
+	local plate = UiKit.kit(button, "plate", {
 		Name = "Plate",
 		AnchorPoint = Vector2.new(0.5, 0),
 		Position = UDim2.fromScale(0.5, 0),
 		Size = UDim2.fromOffset(K.PlateWidth, K.PlateHeight),
-		BackgroundColor3 = UiKit.colour("Wood"),
-		BorderSizePixel = 0,
-		ZIndex = 2,
-	}, button)
-	UiKit.make("UICorner", { CornerRadius = UDim.new(0.4, 0) }, plate)
-	UiKit.make("UIStroke", { Color = UiKit.colour("Gold"), Thickness = 1.5 }, plate)
-	UiKit.label(plate, (S.SlotNames :: any)[slot], U.TextTiny, "Cream", {
-		Size = UDim2.fromScale(1, 1),
-		TextXAlignment = Enum.TextXAlignment.Center,
-		TextTruncate = Enum.TextTruncate.None,
+		ZIndex = 3,
 	})
+	local name = UiKit.label(plate, (S.SlotNames :: any)[slot], U.TextSmall, "Brown", {
+		Size = UDim2.new(1, 0, 1, -2),
+		TextXAlignment = Enum.TextXAlignment.Center,
+		TextYAlignment = Enum.TextYAlignment.Center,
+		TextTruncate = Enum.TextTruncate.None,
+		ZIndex = 4,
+	})
+	UiKit.outline(name, true)
 	button.Activated:Connect(onTap)
-	return { body = body, pick = pick, shown = "?" }
+	return { body = body, frame = frame, shown = "?" }
 end
 
 -- A slime's three slots, drawn into `stage` (the sheet's left column, LeftWidth wide).
@@ -189,12 +192,11 @@ function UiGearSlots.new(stage: Instance, slime: Configuration): Slots
 					Name = gearId,
 					Text = "",
 					AutoButtonColor = false,
-					BackgroundColor3 = UiKit.colour("CardDeep"),
-					BorderSizePixel = 0,
+					BackgroundTransparency = 1,
 					Size = UDim2.new(1, -8, 0, G.PickerRow),
 					LayoutOrder = order,
 				}, scroll)
-				UiKit.make("UICorner", { CornerRadius = UDim.new(0, 8) }, row)
+				UiKit.kit(row, "row", { Size = UDim2.fromScale(1, 1), ZIndex = 0 })
 				row.Activated:Connect(function()
 					send({ action = "GearEquip", slimeId = slime.Name, gearId = gearId })
 				end)
@@ -251,7 +253,7 @@ function UiGearSlots.new(stage: Instance, slime: Configuration): Slots
 			if cell.shown ~= key then
 				cell.shown = key
 				UiKit.clear(cell.body)
-				local inner = K.Slot - 2 * INSET
+				local inner = math.floor(K.Slot * (INSIDE_RIGHT - INSIDE_LEFT)) - 2
 				if id then
 					UiSmithy.pieceTile(cell.body, id, inner, {
 						AnchorPoint = Vector2.new(0.5, 0.5),
@@ -269,7 +271,7 @@ function UiGearSlots.new(stage: Instance, slime: Configuration): Slots
 					end
 				end
 			end
-			cell.pick.Enabled = selected == slot
+			cell.frame.ImageColor3 = if selected == slot then PICKED else Color3.new(1, 1, 1)
 		end
 		backdrop.Visible = selected ~= nil
 
@@ -292,7 +294,13 @@ function UiGearSlots.new(stage: Instance, slime: Configuration): Slots
 		end
 	end
 	refresh()
-	return { refresh = refresh }
+	return {
+		refresh = refresh,
+		choose = function(slot: string?)
+			selected = slot
+			refresh()
+		end,
+	}
 end
 
 return UiGearSlots

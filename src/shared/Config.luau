@@ -2826,28 +2826,61 @@ Config.Ui = {
 		slimes = 74629091770984,
 		rewards = 92181600961063,
 	},
-	-- Nine-slice frames: the owner's ui-frame-gold (panels) and ui-frame-wood (buttons, cards). Slice numbers are
-	-- pixels of the trimmed picture; Scale is how big its border draws on screen.
-	Frames = {
-		Panel = {
-			Id = 109389746503451,
-			MinX = 255,
-			MinY = 260,
-			MaxX = 495,
-			MaxY = 505,
-			Scale = 0.14,
-			Inset = 10,
+	-- (The owner's ui-frame-gold 109389746503451 and ui-frame-wood 72424466145847 drew the frames until 2026-11-04.)
+	-- The game's UI kit (the owner, 2026-11-04: every screen exactly in the style of ChatGPT's slime sheet,
+	-- docs/ui/slime-sheet/concept.webp): pieces ChatGPT drew on magenta (art/inbox/kit-*.webp), cut by
+	-- tools/chatgpt/prepare_ui_kit.py and made ready by tools/chatgpt/kit_slices.py (tools/chatgpt/ui_kit.json), art/ui/kit/.
+	-- Width/Height are the picture's pixels; Slice the nine-slice centre { minX, minY, maxX, maxY } (a piece without it is
+	-- drawn whole). A piece sliced only left and right is scaled so its height fills the box (its round ends stay round);
+	-- the others are drawn at Scale. Inset: how far a frame's content sits inside its box, in points.
+	Kit = {
+		window = {
+			Id = 83319470030702,
+			Width = 200,
+			Height = 200,
+			Slice = { 96, 96, 104, 104 },
+			Scale = 0.3,
+			Inset = 15,
 		},
-		Wood = {
-			Id = 72424466145847,
-			MinX = 130,
-			MinY = 130,
-			MaxX = 630,
-			MaxY = 640,
-			Scale = 0.075,
-			Inset = 6,
+		panel = {
+			Id = 103359321971280,
+			Width = 152,
+			Height = 160,
+			Slice = { 72, 80, 80, 88 },
+			Scale = 0.28,
+			Inset = 14,
 		},
+		slot = { Id = 81210065494197, Width = 225, Height = 233 },
+		plate = { Id = 78306538497691, Width = 132, Height = 75, Slice = { 62, 0, 70, 75 } },
+		square = { Id = 84612457545890, Width = 88, Height = 88, Slice = { 40, 40, 48, 48 }, Scale = 0.3, Inset = 7 },
+		row = { Id = 81008255857827, Width = 88, Height = 68, Slice = { 40, 30, 48, 38 }, Scale = 0.45 },
+		soft = { Id = 119025095153238, Width = 88, Height = 88, Slice = { 40, 40, 48, 48 }, Scale = 0.3, Inset = 6 },
+		green = { Id = 98438118018822, Width = 200, Height = 185, Slice = { 96, 0, 104, 185 } },
+		purple = { Id = 95952653032375, Width = 200, Height = 185, Slice = { 96, 0, 104, 185 } },
+		gold = { Id = 130632152693674, Width = 200, Height = 185, Slice = { 96, 0, 104, 185 } },
+		cream = { Id = 139658287172578, Width = 200, Height = 180, Slice = { 96, 0, 104, 180 } },
+		red = { Id = 113159248515361, Width = 200, Height = 186, Slice = { 96, 0, 104, 186 } },
+		bonus = { Id = 133796846693988, Width = 120, Height = 108, Slice = { 56, 0, 64, 108 } },
+		level = { Id = 87264171926717, Width = 120, Height = 108, Slice = { 56, 0, 64, 108 } },
+		track = { Id = 90211603666665, Width = 92, Height = 78, Slice = { 42, 0, 50, 78 } },
+		barOrange = { Id = 130533140062342, Width = 92, Height = 77, Slice = { 42, 0, 50, 77 } },
+		barBlue = { Id = 115049534015440, Width = 92, Height = 78, Slice = { 42, 0, 50, 78 } },
+		barPink = { Id = 73235879796719, Width = 92, Height = 79, Slice = { 42, 0, 50, 79 } },
+		portrait = { Id = 79472351597634, Width = 424, Height = 286 },
+		ribbon = { Id = 107472306493164, Width = 340, Height = 216, Slice = { 100, 0, 108, 216 } },
+		pedestal = { Id = 99303720716976, Width = 512, Height = 181 },
+		scroll = { Id = 127635216154773, Width = 308, Height = 172, Slice = { 150, 0, 158, 172 } },
+		accentLeft = { Id = 139409738038703, Width = 105, Height = 126 },
+		accentRight = { Id = 126281894013539, Width = 105, Height = 126 },
+		leavesLeft = { Id = 85680082265881, Width = 147, Height = 157 },
+		leavesRight = { Id = 90512180302533, Width = 146, Height = 156 },
+		diamond = { Id = 137886691459154, Width = 95, Height = 96 },
+		counter = { Id = 132334214999463, Width = 200, Height = 151, Slice = { 140, 0, 148, 151 } },
 	},
+	-- The kit's text: white with a dark brown outline on the coloured buttons and the name ribbon (as in the concept),
+	-- brown on cream.
+	KitOutline = "#4a2c14",
+	KitOutlineThickness = 1.5,
 	-- The original's palette (docs/reference/03-shell-ui-world.md): parchment, cream, wood brown, orange-gold.
 	Colours = {
 		Parchment = "#fff4dd",
@@ -2917,53 +2950,77 @@ Config.Ui = {
 		PickerTile = 36,
 	},
 	-- The slime's page in the book (UiSlimeSheet, UiGearSlots), an RPG character sheet after docs/ui/slime-sheet/concept.webp.
-	-- It is drawn on a fixed stage of DesignWidth x DesignHeight pixels (a landscape phone's book content, about 728 x 244) and
-	-- shrunk to fit a smaller one (never grown past ScaleMax). The left column holds the slime on its pedestal, the three gear
-	-- slots round it and the need bars under it; the right one the stats, the trait and the Stop work button.
+	-- It is drawn from the UI kit (Config.Ui.Kit) on a fixed stage of DesignWidth x DesignHeight points laid out as the concept,
+	-- shrunk to fit a smaller screen (a landscape phone's book content is about 728 x 244) and never grown past ScaleMax. The
+	-- left column holds the slime on its pedestal, the three gear slots round it, the need bars and Feed; the right one the
+	-- stats panel with the trait, Equip and, while it works, Stop work. Every number below is in points of the stage.
 	SlimeSheet = {
 		DesignWidth = 720,
-		DesignHeight = 244,
+		DesignHeight = 320,
 		ScaleMax = 1.25,
 		LeftWidth = 440,
-		ColumnGap = 12,
-		-- a gear slot: its framed square, the name plate over its top edge (width, height, how far it dips onto the square),
-		-- how far the Weapon and Charm stand from the slime's centre, and the top of their cells
-		Slot = 60,
-		PlateWidth = 72,
-		PlateHeight = 18,
-		PlateOverlap = 6,
-		SideOffset = 146,
-		SideTop = 74,
-		-- the slime's picture (a square viewport; the body fills about 60% of it) and the pedestal under it
-		SlimeSize = 116,
-		SlimeTop = 53,
-		PedestalWidth = 150,
-		PedestalHeight = 26,
-		PedestalTop = 140,
+		ColumnGap = 16,
+		-- a gear slot: the kit's slot frame (SlotHeight keeps its picture's shape), the name plate over its wooden top (width,
+		-- height, how far it sits down onto the frame), how far Weapon and Charm stand from the slime's centre and their top
+		Slot = 78,
+		SlotHeight = 81,
+		PlateWidth = 96,
+		PlateHeight = 26,
+		PlateOverlap = 12,
+		SideOffset = 140,
+		SideTop = 84,
+		-- the yellow strokes either side of the Head slot: size, distance of their centres from the middle, top
+		AccentWidth = 34,
+		AccentHeight = 40,
+		AccentGap = 70,
+		AccentTop = 26,
+		-- the slime's picture (a square viewport; the body fills about 60% of it) and the pedestal under it (height from its
+		-- picture)
+		SlimeSize = 136,
+		SlimeTop = 80,
+		PedestalWidth = 220,
+		PedestalTop = 168,
 		-- the need bars' plate
-		NeedsWidth = 340,
-		NeedsTop = 176,
-		NeedsHeight = 62,
-		NeedRow = 19,
-		NeedIcon = 18,
-		NeedNameWidth = 50,
-		-- the stats panel: its height, a row and the gap between rows, the stat's picture, the name's, value's and bonus pill's widths
-		StatsHeight = 156,
+		NeedsLeft = 136,
+		NeedsTop = 244,
+		NeedsWidth = 304,
+		NeedsHeight = 74,
+		NeedRow = 21,
+		NeedIcon = 20,
+		NeedNameWidth = 58,
+		-- the round buttons at the bottom (Feed, Equip, Stop work): top, height, widths, the picture in them
+		ButtonTop = 258,
+		ButtonHeight = 54,
+		FeedWidth = 126,
+		EquipWidth = 156,
+		StopWidth = 100,
+		ButtonIcon = 30,
+		-- the stats panel (the kit's panel, its gold diamond on top): top, height, the first row inside it, a row and the gap
+		-- between rows, the stat's picture, the name's and value's widths, the green bonus pill
+		PanelTop = 12,
+		PanelHeight = 236,
+		RowsTop = 12,
 		StatRow = 32,
-		StatGap = 3,
-		StatIcon = 24,
-		StatNameWidth = 96,
-		StatValueWidth = 52,
-		BonusWidth = 44,
-		TraitTop = 162,
-		TraitHeight = 28,
-		ButtonTop = 196,
-		-- the header: the small portrait and the level pill
-		HeaderPortrait = 44,
-		LevelPillHeight = 26,
-		-- the list of pieces that opens beside a tapped slot
+		StatGap = 5,
+		StatIcon = 28,
+		StatNameWidth = 90,
+		StatValueWidth = 40,
+		BonusWidth = 48,
+		BonusHeight = 26,
+		DiamondSize = 24,
+		-- the trait scroll inside the panel's bottom, its leaves standing out past the panel's sides
+		TraitTop = 186,
+		TraitHeight = 42,
+		TraitOverhang = 20,
+		-- the header: the hexagon portrait (taller than the bar, it hangs over the frame), the slime's face in it, the name
+		-- ribbon and the level pill on it
+		HeaderPortrait = 62,
+		HeaderFace = 40,
+		RibbonHeight = 42,
+		LevelPillHeight = 28,
+		-- the list that opens beside a tapped slot, or over Feed
 		PopoverWidth = 216,
-		PopoverMaxHeight = 236,
+		PopoverMaxHeight = 300,
 	},
 	-- The Bag (UiBag): a modal with a Materials tab and a Gear tab, read-only. Its size, a tile and the gap between tiles, a
 	-- material's picture, a group header, the small worn badge, a "used in" piece's picture and the details strip's height.

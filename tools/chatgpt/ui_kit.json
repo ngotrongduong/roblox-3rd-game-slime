@@ -1,0 +1,33 @@
+{
+	"_about": "The game's UI kit (ChatGPT, 2026-11-04, after docs/ui/slime-sheet/concept.webp). Each piece: its cut from prepare_ui_kit.py, its nine-slice margins in source pixels [left, top, right, bottom] (0 = that edge is not sliced), and where a clean stretch strip is taken from (x, y in the piece; default the middle) so an ornament in the middle of an edge is not smeared. Pieces without margins are drawn whole. Run tools/chatgpt/kit_slices.py.",
+	"pieces": {
+		"window": { "from": "kit-frames-1", "margins": [96, 96, 96, 96] },
+		"panel": { "from": "kit-frames-2", "margins": [72, 80, 72, 72], "clean": [130, 280] },
+		"slot": { "from": "kit-frames-3" },
+		"plate": { "from": "kit-frames-4", "margins": [62, 0, 62, 0] },
+		"square": { "from": "kit-frames-5", "margins": [40, 40, 40, 40] },
+		"row": { "from": "kit-frames-6", "margins": [40, 30, 40, 30] },
+		"soft": { "from": "kit-frames-7", "margins": [40, 40, 40, 40] },
+		"green": { "from": "kit-buttons-1", "margins": [96, 0, 96, 0] },
+		"purple": { "from": "kit-buttons-2", "margins": [96, 0, 96, 0] },
+		"gold": { "from": "kit-buttons-3", "margins": [96, 0, 96, 0] },
+		"cream": { "from": "kit-buttons-4", "margins": [96, 0, 96, 0] },
+		"red": { "from": "kit-buttons-5", "margins": [96, 0, 96, 0] },
+		"bonus": { "from": "kit-buttons-6", "margins": [56, 0, 56, 0] },
+		"level": { "from": "kit-buttons-7", "margins": [56, 0, 56, 0] },
+		"track": { "from": "kit-buttons-8", "margins": [42, 0, 42, 0] },
+		"barOrange": { "from": "kit-buttons-9", "margins": [42, 0, 42, 0] },
+		"barBlue": { "from": "kit-buttons-10", "margins": [42, 0, 42, 0] },
+		"barPink": { "from": "kit-buttons-11", "margins": [42, 0, 42, 0] },
+		"portrait": { "from": "kit-ornaments-1" },
+		"ribbon": { "from": "kit-ornaments-2", "margins": [100, 0, 232, 0], "clean": [250, 0] },
+		"pedestal": { "from": "kit-ornaments-3" },
+		"scroll": { "from": "kit-ornaments-4", "margins": [150, 0, 150, 0] },
+		"accentLeft": { "from": "kit-ornaments-5" },
+		"accentRight": { "from": "kit-ornaments-6" },
+		"leavesLeft": { "from": "kit-ornaments-7" },
+		"leavesRight": { "from": "kit-ornaments-8" },
+		"diamond": { "from": "kit-ornaments-9" },
+		"counter": { "from": "kit-ornaments-10", "margins": [140, 0, 52, 0] }
+	}
+}

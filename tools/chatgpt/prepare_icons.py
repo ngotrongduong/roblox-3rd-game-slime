@@ -48,10 +48,8 @@ def background(image):
 	return back
 
 
-os.makedirs(OUT, exist_ok=True)
-for name in sys.argv[1:]:
-	path = ROOT + "art/inbox/" + name
-	image = Image.open(path + (".webp" if os.path.exists(path + ".webp") else ".png")).convert("RGBA")
+# The magenta background made see-through in place, with a soft edge and no pink fringe (also used by prepare_ui_kit.py).
+def key_out(image):
 	px = image.load()
 	back = background(image)
 	for y in range(image.height):
@@ -71,12 +69,24 @@ for name in sys.argv[1:]:
 						max(0, min(255, int(b - (255 - g) * amount))),
 						int(255 * keep),
 					)
-	box = image.getchannel("A").point(lambda a: 255 if a > 16 else 0).getbbox()
-	image = image.crop(box)
-	inner = SIZE - 2 * PAD
-	scale = inner / max(image.size)
-	image = image.resize((max(1, round(image.width * scale)), max(1, round(image.height * scale))), Image.LANCZOS)
-	sheet = Image.new("RGBA", (SIZE, SIZE), (0, 0, 0, 0))
-	sheet.paste(image, ((SIZE - image.width) // 2, (SIZE - image.height) // 2), image)
-	sheet.save(OUT + name + ".png")
-	print(name, "ready, was", box)
+
+
+def main():
+	os.makedirs(OUT, exist_ok=True)
+	for name in sys.argv[1:]:
+		path = ROOT + "art/inbox/" + name
+		image = Image.open(path + (".webp" if os.path.exists(path + ".webp") else ".png")).convert("RGBA")
+		key_out(image)
+		box = image.getchannel("A").point(lambda a: 255 if a > 16 else 0).getbbox()
+		image = image.crop(box)
+		inner = SIZE - 2 * PAD
+		scale = inner / max(image.size)
+		image = image.resize((max(1, round(image.width * scale)), max(1, round(image.height * scale))), Image.LANCZOS)
+		sheet = Image.new("RGBA", (SIZE, SIZE), (0, 0, 0, 0))
+		sheet.paste(image, ((SIZE - image.width) // 2, (SIZE - image.height) // 2), image)
+		sheet.save(OUT + name + ".png")
+		print(name, "ready, was", box)
+
+
+if __name__ == "__main__":
+	main()

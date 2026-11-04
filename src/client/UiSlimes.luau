@@ -384,10 +384,7 @@ function UiSlimes.card(parent: Instance?, entry: Entry, onClick: ((Configuration
 		bars.Fun.set(UiSlimes.number(slime, "Fun") / Config.Needs.Max, false)
 		drawTag(tagHost, slime, next)
 		veil.Visible = next.blocked ~= nil
-		local fill = box:FindFirstChild("Fill")
-		if fill and fill:IsA("Frame") then
-			fill.BackgroundColor3 = UiKit.colour(if next.suggested then "Portrait" else "Card")
-		end
+		UiKit.setFill(box, if next.suggested then "Portrait" else "Card")
 	end
 	update(entry)
 	root.Activated:Connect(function()
