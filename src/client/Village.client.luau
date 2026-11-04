@@ -5,6 +5,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Config = require(ReplicatedStorage.Shared.Config)
 local Layout = require(ReplicatedStorage.Shared.Layout)
+local HatchReveal = require(script.Parent.HatchReveal)
 local ProgressClock = require(script.Parent.ProgressClock)
 local SlimeActor = require(script.Parent.SlimeActor)
 local SlimeLook = require(script.Parent.SlimeLook)
@@ -183,6 +184,10 @@ local function refreshLook(entry: Entry)
 	-- Every player's village is drawn, but a body is made only for a slime near the camera (the timer below makes it when
 	-- the camera comes near, and drops it when the camera goes away).
 	if not entry.model and not withinReach(entry, 1) then
+		return
+	end
+	-- A newborn waits for the flash of its hatch reveal (the timer below asks again).
+	if not entry.model and HatchReveal.holds(config.Name) then
 		return
 	end
 	if type(config:GetAttribute("Look")) ~= "string" or type(config:GetAttribute("Colour")) ~= "string" then
@@ -964,10 +969,35 @@ local function addEgg(village: Village, child: Instance)
 	end
 end
 
-local function removeEgg(village: Village, child: Instance)
+local function removeEgg(village: Village, child: Instance, gone: boolean?)
 	ProgressClock.drop(village.eggClocks[child])
 	village.eggClocks[child] = nil
 	local model = village.eggs[child]
+	-- The server removed an egg that was due: it hatched. Its reveal plays where the egg stood, and the baby (which may
+	-- already be drawn) waits for the flash.
+	local hatchAt = number(child, "HatchAt", 0)
+	if
+		gone
+		and model
+		and hatchAt > 0
+		and hatchAt - workspace:GetServerTimeNow() <= Config.HatchFx.HatchSlackSeconds
+	then
+		local babyId = stringAttr(child, "Offspring", "")
+		HatchReveal.fromEgg(
+			village.root,
+			child,
+			model,
+			model:GetPivot().Position,
+			village.root.Name == tostring(Players.LocalPlayer.UserId)
+		)
+		if HatchReveal.holds(babyId) then
+			for _, entry in village.slimes do
+				if entry.model and entry.config.Name == babyId then
+					dropBody(entry)
+				end
+			end
+		end
+	end
 	if model then
 		model:Destroy()
 		village.eggs[child] = nil
@@ -986,7 +1016,9 @@ local function bindVillage(root: Instance)
 			return
 		end
 		local added: (any, Instance) -> () = if name == "Slimes" then addSlime :: any else addEgg :: any
-		local removed: (any, Instance) -> () = if name == "Slimes" then removeSlime :: any else removeEgg :: any
+		local removed: (any, Instance, boolean?) -> () = if name == "Slimes"
+			then removeSlime :: any
+			else removeEgg :: any
 		for _, child in folder:GetChildren() do
 			added(village, child)
 		end
@@ -999,7 +1031,7 @@ local function bindVillage(root: Instance)
 		table.insert(
 			village.connections,
 			folder.ChildRemoved:Connect(function(child)
-				removed(village, child)
+				removed(village, child, true)
 			end)
 		)
 	end
@@ -1029,6 +1061,7 @@ local function unbindVillage(root: Instance)
 	for child in village.eggs do
 		removeEgg(village, child)
 	end
+	HatchReveal.stopFor(root)
 	villages[root :: Folder] = nil
 end
 

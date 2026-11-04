@@ -653,6 +653,8 @@ local function show(session: Session, farm: Farm, epoch: number)
 		set(model, "Place", egg.place)
 		set(model, "Slot", egg.slot)
 		set(model, "HatchAt", egg.hatchAt or 0)
+		-- the baby this egg becomes (its id only: what it is stays secret until it hatches); the clients' hatch reveal looks it up
+		set(model, "Offspring", egg.offspringId)
 		-- The hatch clock: it ends at hatchAt and took the whole time of the place the egg is in now (a nest takes
 		-- NestSlowFactor times longer than an incubator, and a move keeps the progress made).
 		local eggEnd, eggStart = 0, 0

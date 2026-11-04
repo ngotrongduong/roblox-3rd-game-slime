@@ -2718,6 +2718,230 @@ Config.SlimeBuffFx = {
 	},
 }
 
+-- ===== The hatch reveal (src/client/HatchReveal.luau, started by Village.client when a hatched egg leaves the nest) =====
+-- A plain hatch is a small clean pop; a Dual, a Material and a Secret each have their OWN design, bigger with rarity:
+-- anticipation (the egg shakes harder, a light builds) -> flash -> main picture -> secondary glitter -> decay. The
+-- baby's body stays off until the flash. Everything is the owner's battle art or Roblox's own sparkles, never a code
+-- shape; no camera effect, no white screen flash (docs/reference/04-vfx-animation.md §14, §15). Times are seconds from
+-- the moment the egg leaves the nest; sizes are studs (the egg is about 3 studs tall); a count is particles.
+Config.HatchFx = {
+	Enabled = true,
+	-- a hatch farther than this from the camera is not drawn (the baby just appears)
+	ViewStuds = 220,
+	-- at most this many reveals at once; one more only gets the small pop (and the baby shows at once)
+	MaxLive = 3,
+	-- another player's hatch (their village) is drawn with this share of the particles and no title
+	OthersShare = 0.6,
+	-- a removed egg counts as hatched when its HatchAt is at most this far ahead of the server clock; the baby's data may
+	-- arrive a moment later than the egg's removal: wait this long for it before drawing a plain pop
+	HatchSlackSeconds = 3,
+	WaitSlimeSeconds = 1.5,
+	-- 1 = real time. A play test sets it below 1 to slow a reveal down so a screenshot can catch it; 1 in anything committed
+	TimeScale = 1,
+	-- Effects setting (as Config.SlimeBuffFx): the graphics quality (1..21) at or below which the reveal has no particles
+	-- and no light (a short shake and the title only), and at or below which it is the light version.
+	LowQualityMax = 2,
+	LightQualityMax = 5,
+	LightShare = 0.5,
+	LowAnticipationSeconds = 0.3,
+	-- Where each picture comes from: Roblox's own sparkles, and the owner's battle art (Config.Zombies.View.Fx.Textures).
+	Textures = {
+		sparkle = "rbxasset://textures/particles/sparkles_main.dds",
+		-- sparkStar, a silver four-point star: tinted, it is every glint and streak
+		star = "rbxassetid://106004463491821",
+		-- holyHit, a golden sunburst of rays: the Dual's picture
+		sunburst = "rbxassetid://123273947779821",
+		-- shockwave, a white spiked flash with a cool edge: the Material's picture
+		prism = "rbxassetid://94188471939456",
+		-- burstArcane, a violet star with lightning: the Secret's picture; moteArcane its small violet star
+		arcane = "rbxassetid://75506448951291",
+		arcaneStar = "rbxassetid://118302010408844",
+	},
+	-- ---- plain: a quick double shake, then the baby's own colour pops out in a few sparkles ----
+	Plain = {
+		Anticipation = 0.4,
+		WobbleFrom = 5,
+		WobbleTo = 9,
+		HzFrom = 7,
+		HzTo = 11,
+		Swell = 0.04,
+		Sparkles = 12,
+		SparkleSize = 0.55,
+		Stars = 5,
+		StarSize = 0.6,
+		SpeedMin = 5,
+		SpeedMax = 9,
+		LifeMin = 0.45,
+		LifeMax = 0.8,
+		-- how much white the baby's colour gets in its sparkles (0 = its colour, 1 = white)
+		WhiteShare = 0.45,
+		EndSeconds = 0.9,
+	},
+	-- ---- dual: a golden sunburst with a fountain of stars in the design's own two colours ----
+	Dual = {
+		Anticipation = 0.9,
+		WobbleFrom = 6,
+		WobbleTo = 15,
+		HzFrom = 8,
+		HzTo = 15,
+		Swell = 0.1,
+		-- the light that builds in the egg (brightness at the flash's start, range) and flares at the flash
+		Glow = 1.2,
+		GlowRange = 12,
+		GlowColour = "#ffd75e",
+		FlashLight = 2.4,
+		LightSeconds = 0.7,
+		-- the egg's tint (the glow colour): how see-through it still is at the end (1 = none)
+		TintEnd = 0.72,
+		-- stars gathering into the egg while it shakes (a second, at the start and at the end)
+		GatherRateFrom = 10,
+		GatherRateTo = 80,
+		GatherSize = 0.9,
+		GatherRadius = 3.2,
+		-- the sunburst: the picture's size and seconds, its turn (degrees a second), and a smaller one turning back
+		SunSize = 8,
+		SunSeconds = 0.6,
+		SunSpin = 45,
+		SunBackSize = 5.5,
+		SunBackDelay = 0.1,
+		-- the fountain: stars in the two colours of the design (more white = brighter), and gold sparkles
+		Stars = 18,
+		StarSize = 0.85,
+		StarSpeedMin = 9,
+		StarSpeedMax = 15,
+		StarGravity = 20,
+		Sparkles = 24,
+		SparkleSize = 0.6,
+		Gold = "#ffd75e",
+		Cream = "#fff6e0",
+		-- the second and third showers (seconds after the flash) and how many stars each
+		LaterAt = { 0.28, 0.6 },
+		LaterStars = 9,
+		-- the label over the egg: seconds shown and the size (pixels at a 900 px high screen)
+		LabelSeconds = 1.6,
+		EndSeconds = 2.2,
+	},
+	-- ---- material: the shell glints like polished stuff, then a prism flash and falling glitter in the material's colour ----
+	Material = {
+		Anticipation = 0.85,
+		WobbleFrom = 4,
+		WobbleTo = 11,
+		HzFrom = 7,
+		HzTo = 13,
+		Swell = 0.08,
+		Glow = 1,
+		GlowRange = 11,
+		FlashLight = 2,
+		LightSeconds = 0.6,
+		TintEnd = 0.6,
+		-- glints on the shell: sparkles a second, rising (the shell is the sphere of GlintRadius)
+		GlintRateFrom = 12,
+		GlintRateTo = 80,
+		GlintSize = 1.1,
+		GlintRadius = 1.7,
+		-- the prism flash and a second turned one
+		PrismSize = 7,
+		PrismSeconds = 0.42,
+		PrismSpin = -70,
+		PrismBackSize = 4.5,
+		-- glitter: sparkles and tinted stars falling slowly, counted for a common material; rare x RareShare, precious x PreciousShare
+		Glitter = 30,
+		GlitterSize = 0.45,
+		GlitterSpeedMin = 3,
+		GlitterSpeedMax = 8,
+		GlitterGravity = 5,
+		GlitterLifeMin = 1,
+		GlitterLifeMax = 1.7,
+		Stars = 12,
+		StarSize = 0.8,
+		RareShare = 1.3,
+		PreciousShare = 1.8,
+		-- precious materials (Gold, Silver) add a second prism flash this long after the first
+		PreciousPrismDelay = 0.16,
+		LaterAt = { 0.4 },
+		LaterGlitter = 14,
+		LabelSeconds = 1.5,
+		EndSeconds = 2.2,
+	},
+	-- ---- secret: the egg rises and shakes while violet stars pour into it and a column of light streaks goes up; the star bursts
+	-- with lightning, rainbow glints rain down, and a title owns the middle for a moment ----
+	Secret = {
+		Anticipation = 1.5,
+		WobbleFrom = 4,
+		WobbleTo = 18,
+		HzFrom = 6,
+		HzTo = 17,
+		Swell = 0.14,
+		-- the egg floats up this many studs while it gathers power
+		Rise = 0.7,
+		Glow = 1.6,
+		GlowRange = 14,
+		GlowColour = "#b478ff",
+		FlashLight = 2.2,
+		LightSeconds = 1,
+		TintEnd = 0.62,
+		-- violet stars pour in from a sphere (a second at the start and at the end)
+		GatherRateFrom = 12,
+		GatherRateTo = 110,
+		GatherSize = 2,
+		GatherRadius = 6,
+		-- the column of light: tall streaks of the star rising from the egg, from this share of the anticipation on
+		ColumnFrom = 0.35,
+		ColumnRateFrom = 5,
+		ColumnRateTo = 34,
+		ColumnSize = 1,
+		ColumnSpeed = 30,
+		ColumnLife = 0.7,
+		ColumnBurst = 22,
+		-- the burst: the lightning star, and a smaller one turning back
+		StarSize = 12,
+		StarSeconds = 0.75,
+		StarSpin = 35,
+		StarBackSize = 7.5,
+		StarBackDelay = 0.12,
+		-- rainbow glints and violet motes, and sparkles floating up
+		Glints = 34,
+		GlintSize = 0.95,
+		GlintSpeedMin = 8,
+		GlintSpeedMax = 16,
+		GlintGravity = 9,
+		Motes = 26,
+		MoteSize = 0.9,
+		Sparkles = 30,
+		SparkleSize = 0.6,
+		Violet = "#b478ff",
+		-- the second wave (seconds after the flash) and how many glints it has
+		LaterAt = { 0.35, 0.8 },
+		LaterGlints = 16,
+		-- the title: a delay after the flash, the pop-in, how long it holds, the fade, and how far it rises
+		TitleDelay = 0.15,
+		TitlePopSeconds = 0.4,
+		TitleHoldSeconds = 1.5,
+		TitleFadeSeconds = 0.45,
+		EndSeconds = 3,
+	},
+	-- the rainbow of the Secret (the original's palette, docs/reference/04-vfx-animation.md §7)
+	Rainbow = { "#ff6ad5", "#6ad5ff", "#ffe66a", "#8dff6a", "#c48dff", "#ffffff" },
+	-- The title / label over the egg: pixels at a 900 px high screen (scaled with the screen between the limits), studs
+	-- above the egg's top, how far it floats up while shown.
+	Title = {
+		Width = 460,
+		Height = 120,
+		SmallWidth = 240,
+		SmallHeight = 64,
+		ScaleReference = 900,
+		ScaleMin = 0.8,
+		ScaleMax = 1.4,
+		Lift = 2.8,
+		Rise = 1.2,
+		Stroke = "#3a2466",
+		Cream = "#fffdf4",
+		DualText = "#ffd75e",
+		SecretText = "#e8dcff",
+		StrokePixels = 2,
+	},
+}
+
 -- ===== The tutorial and the intros (docs/GAMEPLAY.md §12; rules in shared/Guide, server/Guide, client/UiGuide) =====
 Config.Guide = {
 	-- The first-time tutorial, in order; after the last step it is "done". Each step's line, target and check: shared/Guide.
