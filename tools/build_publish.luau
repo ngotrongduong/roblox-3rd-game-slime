@@ -4,6 +4,8 @@
 -- Studio scripts cannot set most streaming properties, so they are set here. Fails loudly if anything needed is missing.
 -- Run tools/check.ps1 first (it writes GooLineage.rbxlx), then:
 --   lune run tools/build_publish.luau
+-- `lune run tools/build_publish.luau studio` builds the same place WITH the owner's debug menu, for Studio play tests only,
+-- into assets/raw/StudioTest.rbxl (Studio scripts cannot add modules to Shared, so a test place is built here instead).
 local fs = require("@lune/fs")
 local process = require("@lune/process")
 local roblox = require("@lune/roblox")
@@ -12,7 +14,8 @@ local Config = require("../src/shared/Config")
 
 local WORLD = "assets/raw/MapWork.rbxlx"
 local CODE = "GooLineage.rbxlx"
-local OUT = "assets/raw/Publish.rbxl"
+local STUDIO_TEST = process.args[1] == "studio"
+local OUT = if STUDIO_TEST then "assets/raw/StudioTest.rbxl" else "assets/raw/Publish.rbxl"
 
 -- All that stays of the work place's Workspace. (Map holds the village template Plots.start needs; the rest are stages.)
 local KEEP_IN_WORKSPACE = { Camera = true, Terrain = true, Map = true }
@@ -60,7 +63,7 @@ code:GetService("ReplicatedStorage").Shared:Clone().Parent = place:GetService("R
 local DEBUG_ONLY = { OwnerDebug = "Server", UiDebug = "Client" }
 for _, service in place:GetChildren() do
 	for _, d in service:GetDescendants() do
-		if DEBUG_ONLY[d.Name] and d:IsA("LuaSourceContainer") then
+		if not STUDIO_TEST and DEBUG_ONLY[d.Name] and d:IsA("LuaSourceContainer") then
 			print("left out of the game (Studio only):", d:GetFullName())
 			d:Destroy()
 		end
@@ -136,7 +139,7 @@ end
 -- The debug menu must be gone (a second look at the finished place, not a trust in the step above).
 for _, service in place:GetChildren() do
 	for _, d in service:GetDescendants() do
-		if DEBUG_ONLY[d.Name] and d:IsA("LuaSourceContainer") then
+		if not STUDIO_TEST and DEBUG_ONLY[d.Name] and d:IsA("LuaSourceContainer") then
 			problem("the owner's debug menu is still in the place: " .. d:GetFullName())
 		end
 	end
