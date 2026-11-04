@@ -26,6 +26,8 @@ export type List = { root: ScrollingFrame, refresh: () -> (), destroy: () -> () 
 
 type Row = {
 	root: TextButton,
+	-- the row plate: gold for the recipe being cooked
+	back: ImageLabel,
 	veil: Frame,
 	level: TextLabel,
 	strip: Frame?,
@@ -91,25 +93,22 @@ function UiRecipes.list(parent: Instance, options: Options): List
 
 	local rows: { [string]: Row } = {}
 	for order, id in Config.Food.DishOrder do
-		local name, _, colour = UiFood.describe(id)
+		local name = UiFood.describe(id)
 		local root = UiKit.make("TextButton", {
 			Name = id,
 			Text = "",
 			AutoButtonColor = false,
-			BackgroundColor3 = UiKit.colour("Card"),
 			BorderSizePixel = 0,
 			Size = UDim2.new(1, 0, 0, U.RecipeRowHeight),
 			LayoutOrder = order,
 		}, scroller)
-		UiKit.make("UICorner", { CornerRadius = UDim.new(0, 10) }, root)
-		-- the rarity is the colour of the frame
-		UiKit.make("UIStroke", { Color = Color3.fromHex(colour), Thickness = 2 }, root)
+		local back = UiKit.rowBack(root)
 		local icon = U.RecipeIcon
 		UiFood.icon(root, id, icon, {
 			AnchorPoint = Vector2.new(0, 0.5),
-			Position = UDim2.new(0, U.Gap, 0.5, 0),
+			Position = UDim2.new(0, U.Gap + 4, 0.5, 0),
 		})
-		local textLeft = U.Gap * 2 + icon
+		local textLeft = U.Gap * 2 + 4 + icon
 		UiKit.label(root, name, U.TextSmall, "Brown", {
 			Position = UDim2.fromOffset(textLeft, 4),
 			Size = UDim2.new(1, -textLeft - FACTS_WIDTH - U.Pad, 0, U.TextSmall + 4),
@@ -143,7 +142,7 @@ function UiRecipes.list(parent: Instance, options: Options): List
 				UiKit.toast("Kitchen Lv " .. tostring(neededLevel(id)))
 			end
 		end)
-		rows[id] = { root = root, veil = veil, level = level, strip = nil, key = "" }
+		rows[id] = { root = root, back = back, veil = veil, level = level, strip = nil, key = "" }
 	end
 
 	local function refresh()
@@ -158,12 +157,12 @@ function UiRecipes.list(parent: Instance, options: Options): List
 				row.key = key
 				row.veil.Visible = locked
 				row.level.Visible = locked
-				row.root.BackgroundColor3 = UiKit.colour(if id == current then "Portrait" else "Card")
+				row.back.ImageColor3 = if id == current then Color3.fromRGB(255, 215, 120) else Color3.new(1, 1, 1)
 				if row.strip then
 					row.strip:Destroy()
 				end
 				row.strip = UiFood.ingredientStrip(row.root, id, if locked then nil else have, U.IngredientIcon, {
-					Position = UDim2.fromOffset(U.Gap * 2 + U.RecipeIcon, 8 + U.TextSmall),
+					Position = UDim2.fromOffset(U.Gap * 2 + 4 + U.RecipeIcon, 8 + U.TextSmall),
 				})
 			end
 		end

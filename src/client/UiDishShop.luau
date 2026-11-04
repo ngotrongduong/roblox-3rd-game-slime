@@ -23,6 +23,9 @@ type Row = { root: Frame, count: TextLabel, held: number }
 local UiDishShop = {}
 
 local BUTTON_GAP = 6
+-- the pill buttons are wide enough for their word to clear the round ends
+local ONE_WIDTH = U.Touch + 12
+local ALL_WIDTH = U.Touch + 24
 
 local function priceOf(id: string): number
 	local dish = (Config.Food.Dishes :: any)[id]
@@ -83,21 +86,18 @@ function UiDishShop.new(parent: Instance, context: Context): Shop
 		local height = U.Touch + 8
 		local card = UiKit.make("Frame", {
 			Name = id,
-			BackgroundColor3 = UiKit.colour("Card"),
 			BorderSizePixel = 0,
 			Size = UDim2.new(1, 0, 0, height),
 			LayoutOrder = order,
 		}, scroller)
-		UiKit.make("UICorner", { CornerRadius = UDim.new(0, 10) }, card)
-		local _, _, colour = UiFood.describe(id)
-		UiKit.make("UIStroke", { Color = Color3.fromHex(colour), Thickness = 2 }, card)
+		UiKit.rowBack(card)
 		local icon = U.FoodIconSize
 		UiFood.icon(card, id, icon, {
 			AnchorPoint = Vector2.new(0, 0.5),
-			Position = UDim2.new(0, U.Gap, 0.5, 0),
+			Position = UDim2.new(0, U.Gap + 4, 0.5, 0),
 		})
-		local textLeft = U.Gap * 2 + icon
-		local buttons = U.Touch * 2 + BUTTON_GAP + U.Gap
+		local textLeft = U.Gap * 2 + 4 + icon
+		local buttons = ONE_WIDTH + ALL_WIDTH + BUTTON_GAP + U.Gap
 		local name = UiFood.describe(id)
 		UiKit.label(card, name, U.TextSmall, "Brown", {
 			Position = UDim2.fromOffset(textLeft, 5),
@@ -133,9 +133,9 @@ function UiDishShop.new(parent: Instance, context: Context): Shop
 			Text = "1",
 			TextSize = U.TextNormal,
 			Style = "good",
-			Size = UDim2.fromOffset(U.Touch, U.Touch),
+			Size = UDim2.fromOffset(ONE_WIDTH, U.Touch),
 			AnchorPoint = Vector2.new(1, 0.5),
-			Position = UDim2.new(1, -U.Gap - U.Touch - BUTTON_GAP, 0.5, 0),
+			Position = UDim2.new(1, -U.Gap - ALL_WIDTH - BUTTON_GAP, 0.5, 0),
 			OnClick = function()
 				sell(id, 1)
 			end,
@@ -144,7 +144,7 @@ function UiDishShop.new(parent: Instance, context: Context): Shop
 			Name = "SellAll",
 			Text = "All",
 			Style = "good",
-			Size = UDim2.fromOffset(U.Touch, U.Touch),
+			Size = UDim2.fromOffset(ALL_WIDTH, U.Touch),
 			AnchorPoint = Vector2.new(1, 0.5),
 			Position = UDim2.new(1, -U.Gap, 0.5, 0),
 			OnClick = function()

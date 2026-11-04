@@ -266,24 +266,22 @@ local function makeRow(parent: Instance, id: string, order: number): Row
 	local right = U.FoodCountWidth + (if isDish then FACTS_WIDTH else 0)
 	local root = UiKit.make("Frame", {
 		Name = id,
-		BackgroundColor3 = UiKit.colour("Card"),
 		BorderSizePixel = 0,
 		Size = UDim2.new(1, -8, 0, height),
 		LayoutOrder = order,
 		Visible = false,
 	}, parent)
-	UiKit.make("UICorner", { CornerRadius = UDim.new(0, 10) }, root)
-	UiKit.make("UIStroke", { Color = UiKit.colour("Track"), Thickness = 1.5 }, root)
+	UiKit.rowBack(root)
 	local iconSize = U.FoodIconSize
 	local holder = UiKit.make("Frame", {
 		Name = "Icon",
 		BackgroundTransparency = 1,
-		Position = UDim2.fromOffset(U.Gap, (height - iconSize) / 2),
+		Position = UDim2.fromOffset(U.Gap + 4, (height - iconSize) / 2),
 		Size = UDim2.fromOffset(iconSize, iconSize),
 	}, root)
 	UiFood.icon(holder, id, iconSize)
 	local name, rarityName, colour = UiFood.describe(id)
-	local textLeft = U.Gap * 2 + iconSize
+	local textLeft = U.Gap * 2 + 4 + iconSize
 	UiKit.label(root, name, U.TextNormal, "Brown", {
 		Name = "Name",
 		Position = UDim2.fromOffset(textLeft, 6),

@@ -246,6 +246,7 @@ local function openTeams(point: Vector3)
 		BackgroundTransparency = 1,
 		Position = UDim2.fromOffset(0, V.SlotSize + 4),
 		Size = UDim2.new(1, 0, 0, U.IconSmall),
+		Visible = false,
 	}, modal.content)
 	UiKit.make("UIListLayout", {
 		FillDirection = Enum.FillDirection.Horizontal,
@@ -389,9 +390,14 @@ local function openTeams(point: Vector3)
 			end)
 		end,
 	})
-	local listTop = V.SlotSize + 4 + U.IconSmall + 4
-	list.root.Position = UDim2.fromOffset(0, listTop)
-	list.root.Size = UDim2.new(1, 0, 1, -listTop)
+	-- the list sits under the slots, and under the waiting line only while that shows
+	local function placeList()
+		local listTop = V.SlotSize + U.Gap + (if info.Visible then U.IconSmall + 4 else 0)
+		list.root.Position = UDim2.fromOffset(0, listTop)
+		list.root.Size = UDim2.new(1, 0, 1, -listTop)
+	end
+	info:GetPropertyChangedSignal("Visible"):Connect(placeList)
+	placeList()
 
 	tick = function()
 		teamsNow = ZombieTeams.all()
@@ -619,7 +625,7 @@ local function openAttack(groupId: string)
 					UiKit.clear(card.portraits)
 					for k, slime in members do
 						local _, show =
-							UiSlimes.portrait(card.portraits, slime, V.CardPortrait, { LayoutOrder = k }, "card")
+							UiSlimes.portrait(card.portraits, slime, V.CardPortrait, { LayoutOrder = k }, "card", true)
 						show()
 					end
 				end

@@ -141,9 +141,9 @@ local function openSheet(id: string, height: number, tick: () -> (), point: Vect
 	return modal
 end
 
--- The bottom bar of a sheet with a list: the list takes the rest. Returns the bar.
+-- The bottom bar of a sheet with a list: the list takes the rest, and all of the sheet while the bar is hidden. Returns
+-- the bar.
 local function bottomBar(modal: UiKit.Modal, list: UiSlimeList.List): Frame
-	list.root.Size = UDim2.new(1, 0, 1, -U.Touch - U.Gap)
 	local bar = UiKit.make("Frame", {
 		Name = "Bar",
 		BackgroundTransparency = 1,
@@ -152,6 +152,11 @@ local function bottomBar(modal: UiKit.Modal, list: UiSlimeList.List): Frame
 		Size = UDim2.new(1, 0, 0, U.Touch),
 		Visible = false,
 	}, modal.content)
+	local function fit()
+		list.root.Size = if bar.Visible then UDim2.new(1, 0, 1, -U.Touch - U.Gap) else UDim2.fromScale(1, 1)
+	end
+	bar:GetPropertyChangedSignal("Visible"):Connect(fit)
+	fit()
 	return bar
 end
 
@@ -380,10 +385,13 @@ local function openShop(point: Vector3)
 		Padding = UDim.new(0, U.Gap),
 		SortOrder = Enum.SortOrder.LayoutOrder,
 	}, head)
-	UiKit.icon(head, "coins", U.Touch - 12, { LayoutOrder = 1 })
-	local coins =
-		UiKit.label(head, "", U.TextNormal, "Brown", { LayoutOrder = 2, Size = UDim2.fromOffset(100, U.Touch) })
-	-- two tabs: the slimes and the dishes (pictures only)
+	-- two tabs at the left, as in the book: the slimes and the dishes (pictures only); then the player's coins
+	UiKit.icon(head, "coins", U.Touch - 12, { LayoutOrder = 3 })
+	local coins = UiKit.label(head, "", U.TextNormal, "Brown", {
+		LayoutOrder = 4,
+		Size = UDim2.fromOffset(0, U.Touch),
+		AutomaticSize = Enum.AutomaticSize.X,
+	})
 	local tab = "slimes"
 	local setTab: (name: string) -> () = function(_) end
 	local tabButtons: { [string]: TextButton } = {}
@@ -393,7 +401,7 @@ local function openShop(point: Vector3)
 			Icon = item.icon,
 			Style = if item.id == tab then "primary" else "secondary",
 			Size = UDim2.fromOffset(U.Touch, U.Touch),
-			LayoutOrder = 2 + index,
+			LayoutOrder = index,
 			OnClick = function()
 				setTab(item.id)
 			end,

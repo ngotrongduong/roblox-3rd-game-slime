@@ -210,15 +210,25 @@ function UiSlimes.prewarm(own: Instance?)
 end
 
 -- `variant`: a viewport sits in one place at a time, so a slime shown twice at once (a team slot and its list tile) asks
--- for a second one by another name ("ui" is the list's).
+-- for a second one by another name ("ui" is the list's). `bare`: no frame of its own, for a slime inside a card that
+-- already has one (the owner, 2026-11-04: no frame inside a frame).
 function UiSlimes.portrait(
 	parent: Instance?,
 	slime: Configuration,
 	size: number,
 	props: UiKit.Props?,
-	variant: string?
+	variant: string?,
+	bare: boolean?
 ): (Frame, () -> ())
-	local box, body = UiKit.skin(parent, "Wood", "Portrait", props)
+	local box, body
+	if bare then
+		box = UiKit.make("Frame", props, parent) :: Frame
+		box.Name = "Slime"
+		box.BackgroundTransparency = 1
+		body = box
+	else
+		box, body = UiKit.skin(parent, "Wood", "Portrait", props)
+	end
 	box.Size = UDim2.fromOffset(size, size)
 	local built = false
 	local function build()
@@ -312,7 +322,7 @@ function UiSlimes.card(parent: Instance?, entry: Entry, onClick: ((Configuration
 		BackgroundTransparency = 1,
 	}, parent)
 	local box, body = UiKit.card(root, { Size = UDim2.fromScale(1, 1) })
-	local _, show = UiSlimes.portrait(body, slime, U.PortraitSize, { Position = UDim2.fromOffset(0, 0) })
+	local _, show = UiSlimes.portrait(body, slime, U.PortraitSize, { Position = UDim2.fromOffset(0, 0) }, nil, true)
 	local level = UiKit.label(body, "", U.TextSmall, "Brown", {
 		Position = UDim2.fromOffset(0, U.PortraitSize + 2),
 		Size = UDim2.fromOffset(U.PortraitSize, U.TextSmall + 6),

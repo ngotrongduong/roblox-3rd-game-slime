@@ -229,6 +229,13 @@ end
 -- Which kit frame a skin key draws: the modal's window, or the small wood frame of cards, tiles and buttons.
 local skinPiece: { [string]: string } = { Panel = "window", Wood = "square" }
 
+-- Puts the kit's row plate behind a list row (a Frame or a button) and clears the row's own background. (A tint on the
+-- plate darkens its cream inside too, so rarity is not shown on it.)
+function UiKit.rowBack(row: GuiObject): ImageLabel
+	row.BackgroundTransparency = 1
+	return UiKit.kit(row, "row", { Name = "Back", Size = FULL, ZIndex = 0 })
+end
+
 -- Tints the inside of a skin (UiKit.skin); the plain cream fills leave the frame's own painted inside showing.
 function UiKit.setFill(box: Instance, fill: string)
 	local panel = box:FindFirstChild("Fill")
@@ -547,12 +554,15 @@ function UiKit.segmented(
 	}, row)
 	local buttons: { [string]: TextButton } = {}
 	for index, item in items do
+		-- a word needs a pill wide enough that it clears the pill's round ends
+		local text = item.text
+		local width = if text then math.max(U.Touch + 24, #text * 10 + 28) else U.Touch
 		local button = UiKit.button(row, {
 			Name = item.id,
-			Text = item.text,
+			Text = text,
 			Icon = item.icon,
 			Style = if item.id == selected then "primary" else "secondary",
-			Size = UDim2.fromOffset(itemWidth or (if item.text then U.Touch + 8 else U.Touch), U.Touch),
+			Size = UDim2.fromOffset(itemWidth or width, U.Touch),
 			LayoutOrder = index,
 			OnClick = function()
 				for id, other in buttons do

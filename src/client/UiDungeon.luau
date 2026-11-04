@@ -480,8 +480,14 @@ local function openGate(point: Vector3)
 						local slime = slimeById(id)
 						if slime then
 							order += 1
-							local _, show =
-								UiSlimes.portrait(row.portraits, slime, P.TeamPortrait, { LayoutOrder = order }, "card")
+							local _, show = UiSlimes.portrait(
+								row.portraits,
+								slime,
+								P.TeamPortrait,
+								{ LayoutOrder = order },
+								"card",
+								true
+							)
 							show()
 						end
 					end

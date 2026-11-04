@@ -1,5 +1,18 @@
 # Status
 
+## 2026-11-04 — one frame per slime; every screen looked over for what is off
+
+The owner: a frame inside a frame means nothing; drop one frame for each slime on every screen, and straighten anything off
+centre, unbalanced or spilling out of its frame.
+- Slime tiles (book, pickers, sell, teams), the old slime cards, team rows at the Dungeon gate and attack cards: the slime sits
+  bare in its card; the tile's slime, level and stat line are stacked and centred.
+- Book filters All / Free / Work / Baby were squeezed into circles with the word touching the edge: now pills wide enough.
+- Sell sheet: tabs at the left as in the book, coins after them; the list takes the bottom room while no slime is picked.
+  Teams: the empty "waiting" line no longer leaves a band above the list.
+- Dish sale, Food panel and recipe rows: the kit's row plate instead of the old white boxes; "1" / "All" buttons are pills.
+- Seen on the 844 x 350 phone frame (`docs/ui/kit/`): book, kitchen picker, sell, dish sale, Dungeon gate with a team, Teams,
+  Food panel, recipes.
+
 ## 2026-11-04 — every screen in ChatGPT's painted UI kit; the slime page as in the concept
 
 The owner: the UI in the game exactly like the one ChatGPT made, every other screen in the same style, and ask ChatGPT for any

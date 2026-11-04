@@ -140,20 +140,28 @@ local function makeTile(parent: Instance, entry: Entry, onTap: (Configuration) -
 		BackgroundTransparency = 1,
 	}, parent)
 	local box, body = UiKit.card(root, { Size = UDim2.fromScale(1, 1) })
-	local _, show = UiSlimes.portrait(body, slime, T.Portrait, {
-		AnchorPoint = Vector2.new(0.5, 0),
-		Position = UDim2.fromScale(0.5, 0),
-	})
+	-- the slime (no frame of its own inside the card), its level and the stat line, stacked and centred in the card; the
+	-- stat line drops out of the stack while it is hidden
+	local stack =
+		UiKit.make("Frame", { Name = "Stack", BackgroundTransparency = 1, Size = UDim2.fromScale(1, 1) }, body)
+	UiKit.make("UIListLayout", {
+		FillDirection = Enum.FillDirection.Vertical,
+		HorizontalAlignment = Enum.HorizontalAlignment.Center,
+		VerticalAlignment = Enum.VerticalAlignment.Center,
+		Padding = UDim.new(0, 2),
+		SortOrder = Enum.SortOrder.LayoutOrder,
+	}, stack)
+	local portrait, show = UiSlimes.portrait(stack, slime, T.Portrait, { LayoutOrder = 1 }, nil, true)
 	local track = UiKit.make("Frame", {
 		Name = "Wound",
-		AnchorPoint = Vector2.new(0.5, 0),
-		Position = UDim2.new(0.5, 0, 0, T.Portrait - T.WoundHeight - 5),
+		AnchorPoint = Vector2.new(0.5, 1),
+		Position = UDim2.new(0.5, 0, 1, -2),
 		Size = UDim2.fromOffset(T.Portrait - 12, T.WoundHeight),
 		BackgroundColor3 = UiKit.colour("Track"),
 		BorderSizePixel = 0,
 		Visible = false,
 		ZIndex = 6,
-	}, body)
+	}, portrait)
 	UiKit.make("UICorner", { CornerRadius = UDim.new(0.5, 0) }, track)
 	local woundFill = UiKit.make("Frame", {
 		Name = "Fill",
@@ -162,17 +170,17 @@ local function makeTile(parent: Instance, entry: Entry, onTap: (Configuration) -
 		BorderSizePixel = 0,
 	}, track)
 	UiKit.make("UICorner", { CornerRadius = UDim.new(0.5, 0) }, woundFill)
-	local level = UiKit.label(body, "", U.TextSmall, "Brown", {
-		Position = UDim2.fromOffset(0, T.Portrait + 2),
+	local level = UiKit.label(stack, "", U.TextSmall, "Brown", {
+		LayoutOrder = 2,
 		Size = UDim2.new(1, 0, 0, U.TextSmall + 4),
 		TextXAlignment = Enum.TextXAlignment.Center,
 	})
 	local statRow = UiKit.make("Frame", {
 		Name = "Stat",
 		BackgroundTransparency = 1,
-		Position = UDim2.fromOffset(0, T.Portrait + U.TextSmall + 6),
+		LayoutOrder = 3,
 		Size = UDim2.new(1, 0, 0, U.IconSmall - 2),
-	}, body)
+	}, stack)
 	UiKit.make("UIListLayout", {
 		FillDirection = Enum.FillDirection.Horizontal,
 		HorizontalAlignment = Enum.HorizontalAlignment.Center,
@@ -197,10 +205,10 @@ local function makeTile(parent: Instance, entry: Entry, onTap: (Configuration) -
 		Name = "Mark",
 		BackgroundTransparency = 1,
 		AnchorPoint = Vector2.new(1, 0),
-		Position = UDim2.new(0.5, T.Portrait / 2, 0, 0),
+		Position = UDim2.fromScale(1, 0),
 		Size = UDim2.fromOffset(T.Portrait, T.MarkSize),
 		ZIndex = 7,
-	}, body)
+	}, portrait)
 	local veil = UiKit.make("Frame", {
 		Name = "Veil",
 		BackgroundColor3 = UiKit.colour("Parchment"),

@@ -34,6 +34,10 @@ built with UiKit is in the style with no extra work. Text on a coloured piece is
 (`UiKit.outline`). Missing pieces go to ChatGPT in the same chat, on magenta, in the same style.
 - Roblox quirk: a piece sliced only left and right (pills, bars, plates, ribbon) must use a thin middle row as its SliceCenter
   and `SliceScale = height / picture height`; a SliceCenter as tall as the picture draws arches. `UiKit.kit` does this.
+- One frame per thing (the owner, 2026-11-04): a slime inside a card that has a frame is drawn bare
+  (`UiSlimes.portrait(..., bare = true)`); only a slime standing alone (a team slot, a seat) keeps its own frame. A list row is
+  the kit's row plate (`UiKit.rowBack`), never a hand-drawn rounded box with a stroke; a text pill is wide enough for its word to
+  clear the round ends; an empty bar or line gives its room back to the list under it.
 - Not done: the concept's warm glow behind the slime (it needs a painted glow piece, not a code shape).
 - Shots on a phone frame: `docs/ui/kit/`.
 
