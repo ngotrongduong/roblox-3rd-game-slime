@@ -106,6 +106,7 @@ type Session = {
 	prompts: { Instance },
 	characterConnection: RBXScriptConnection?,
 	deathConnection: RBXScriptConnection?,
+	tickWarned: boolean?,
 }
 
 local Village = {}
@@ -2126,6 +2127,9 @@ function Village.rootOf(player: Player): Folder?
 end
 
 function Village.start()
+	-- Made now, not with the first village: five client scripts wait for it and logged "Infinite yield possible" on
+	-- every join while the first plot was still building.
+	child(workspace, "Villages", "Folder")
 	local events = ServerStorage:FindFirstChild("VillageEvents")
 	local changed = if events then events:FindFirstChild("AreaLevelChanged") else nil
 	if changed and changed:IsA("BindableEvent") then
@@ -2221,7 +2225,12 @@ function Village.start()
 			while session.active and sessions[player] == session and PlayerData.isReady(player) do
 				task.wait(Config.Village.TickSeconds)
 				if session.active and sessions[player] == session then
-					tick(player, session)
+					-- One bad tick must not stop this player's village for the rest of the session.
+					local ok, err = pcall(tick :: any, player, session)
+					if not ok and not session.tickWarned then
+						session.tickWarned = true
+						warn(Config.LogPrefix, "village tick failed for", player.Name, err)
+					end
 					-- (stock comes and goes as the slimes work: a prompt shows only while there is something to take)
 					local clock = os.clock()
 					if clock - (session.promptsChecked or 0) >= Config.Village.CarryPromptRefreshSeconds then
