@@ -288,6 +288,24 @@ return function(T: any)
 		T.ok(Dungeon.canEnter(farm, 1), "any cleared level can be played again")
 	end)
 
+	T.test("only a grown farm enters: enough slimes and a village of the set level", function()
+		local farm = FarmKit.farm(NOW, FarmKit.many(D.EnterMinSlimes - 1))
+		for _, area in farm.areas do
+			area.level = D.EnterMinVillageLevel
+		end
+		T.eq(Dungeon.entryBlock(farm), "FEW_SLIMES")
+		table.insert(farm.slimes, FarmKit.slime("extra"))
+		T.eq(Dungeon.entryBlock(farm), nil)
+		farm.areas[Config.Village.Areas[1]].level = D.EnterMinVillageLevel - #Config.Village.Areas
+		T.eq(Dungeon.entryBlock(farm), "VILLAGE_LEVEL")
+		T.eq(Dungeon.entryBlock(FarmKit.farm(NOW)), "FEW_SLIMES", "a new player's farm stays out")
+		farm.areas[Config.Village.Areas[1]].level = D.EnterMinVillageLevel
+		T.ok(
+			FarmState.populationLimit(farm.areas) >= D.EnterMinSlimes,
+			"a village of that level has room for the slimes"
+		)
+	end)
+
 	T.test("an open fight does not end when the foes are down; a foe that joins carries it on", function()
 		local rng = Rng.new(1)
 		local striker = { id = "s", attack = 50, defence = 0, speed = 0, hp = 1000 }

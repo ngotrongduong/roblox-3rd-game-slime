@@ -384,7 +384,12 @@ local intros: { [string]: Intro } = {
 	dungeon = {
 		line = "The Dungeon is open! Step into the portal.",
 		target = "portal",
-		when = hasTeam,
+		-- only once the farm may go in (Config.Dungeon.EnterMinSlimes, EnterMinVillageLevel)
+		when = function(farm)
+			return hasTeam(farm)
+				and #farm.slimes >= Config.Dungeon.EnterMinSlimes
+				and FarmState.villageLevel(farm.areas) >= Config.Dungeon.EnterMinVillageLevel
+		end,
 		done = function(farm)
 			return farm.dungeon.best >= 1
 		end,

@@ -1,5 +1,22 @@
 # Status
 
+## 2026-11-04 — the Dungeon is for grown farms: 20 slimes and village level 15
+
+The owner: a starter team losing is right, the Dungeon is not for new players; entering needs at least 20 slimes and a village
+of a set level. The difficulty (`StatScale`, `WaveGrowth`) is unchanged.
+- `Config.Dungeon.EnterMinSlimes = 20` (eggs not counted) and `EnterMinVillageLevel = 15`: 15 is the first village level whose
+  population limit holds 20 slimes, so the two needs arrive together. `Dungeon.entryBlock` gives "FEW_SLIMES" or
+  "VILLAGE_LEVEL"; the server checks it in `DungeonEnter` before anything else; a test covers both.
+- The gate sheet shows the two needs at the top (slime picture "8/20", house picture "Lv 1/15", red while short) and keeps
+  Enter off; the row is gone once both are met. The "Dungeon is open!" intro waits for the same.
+- `tools/balance/dungeon_sim.luau` takes StatScale and WaveGrowth on its command line and has rows with wood and iron gear.
+  Level 1, 40 seeds: starters reach wave 3.0, with wood gear 4.0, with iron gear 6.1, four level-20 slimes 8.3, level 40 clear.
+- Seen in a MapWork play test (`docs/ui/dungeon/gate-needs.jpg`, `gate-met.jpg`): 8 slimes and village 1 → red needs, the server
+  answers FEW_SLIMES; 22 slimes and village 15 → the row is gone and the server moves on to the team check.
+- Phone frame: the game's screen squeezed to 844 x 350 points (UIScale 1, as on a phone) in the play test. The Smithy sheet
+  (460 x 330) and the slime's page with its three gear slots (about 55 points each) fit and read
+  (`docs/ui/smithy/phone-smithy.jpg`, `phone-gear.jpg`). A simulated frame, not a phone or Studio's device view.
+
 ## 2026-11-04 — fewer drops, gear crafted at the Blacksmith in the Market
 
 The owner: few kinds of drops shared by the monsters (only the rate differs), a few rare things from the mini-boss and boss,
@@ -23,10 +40,10 @@ recipes for gear from them, and a Blacksmith in the Market. The design is `docs/
 
 Not done or not known
 - MapWork needs the owner's Ctrl+S for the stall; then `build_publish`.
-- Not seen on a phone frame; the "x1" moved 12 px in from the card's edge after the shot, not seen again.
+- The "x1" moved 12 px in from the card's edge after the shot, not seen again. (Phone frame: see the entry above.)
 - The Market is now about 96,000 triangles (the stall 13,000) against a 60,000 target.
 - MapWork has no `MonsterKit`: its play test draws stand-ins for the monsters (Publish.rbxl has it).
-- Starter slimes lose level 1 at wave 3: balance not looked at.
+- Starter slimes lose level 1 at wave 3: as the owner wants (see the entry above).
 
 ## 2026-11-04 — the dungeon's monsters are the owner's Egg Heist creatures
 

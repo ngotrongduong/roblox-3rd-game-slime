@@ -275,6 +275,16 @@ function Dungeon.canEnter(farm: Farm, level: number): boolean
 		and level <= farm.dungeon.best + D.FirstLevel
 end
 
+-- Why this farm may not go into the Dungeon at all: "FEW_SLIMES" or "VILLAGE_LEVEL"; nil when it may.
+function Dungeon.entryBlock(farm: Farm): string?
+	if #farm.slimes < D.EnterMinSlimes then
+		return "FEW_SLIMES"
+	elseif FarmState.villageLevel(farm.areas) < D.EnterMinVillageLevel then
+		return "VILLAGE_LEVEL"
+	end
+	return nil
+end
+
 -- A level was cleared: the best moves up when this is the best so far (and was open). True when it did.
 function Dungeon.recordClear(farm: Farm, level: number): boolean
 	if Dungeon.canEnter(farm, level) and level > farm.dungeon.best then

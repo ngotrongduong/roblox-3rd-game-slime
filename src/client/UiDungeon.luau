@@ -111,9 +111,10 @@ end
 -- ===== Pictures of the drops =====
 
 -- A drop as a picture: coins and food with the owner's pictures, a material with its own `icon` once it exists. A material
--- without one yet gets a plain rounded tile with its short name (a stand-in, never the final look).
+-- without one yet gets a plain rounded tile with its short name (a stand-in, never the final look). (`slimes` and `home`
+-- are the gate sheet's entry needs on the same plates.)
 function UiDungeon.dropIcon(parent: Instance?, item: string, size: number, props: UiKit.Props?): GuiObject
-	if item == "coins" or item == "food" then
+	if item == "coins" or item == "food" or item == "slimes" or item == "home" then
 		return UiKit.icon(parent, item, size, props)
 	end
 	local entry: any = (D.Materials :: any)[item]
@@ -329,6 +330,31 @@ local function openGate(point: Vector3)
 	UiKit.make("UIListLayout", { Padding = UDim.new(0, U.Gap), SortOrder = Enum.SortOrder.LayoutOrder }, scroll)
 	UiKit.make("UIPadding", { PaddingRight = UDim.new(0, 8), PaddingBottom = UDim.new(0, 4) }, scroll)
 
+	-- what a farm needs to go in (the server checks it too): slimes and the village level, shown only while one is short
+	local needs = wrapRow(scroll, "Needs", -1)
+	local needSlimes = dropChip(needs, "slimes", "00/00", 1)
+	local needVillage = dropChip(needs, "home", "Lv 00/00", 2)
+	local function setNeed(chip: Frame, low: boolean, text: string)
+		local value = chip:FindFirstChild("Value", true)
+		if value and value:IsA("TextLabel") then
+			value.Text = text
+			value.TextColor3 = UiKit.colour(if low then "Red" else "Brown")
+		end
+	end
+	local function short(): boolean
+		local own = c.own()
+		local folder = if own then own:FindFirstChild("Slimes") else nil
+		local slimes = if folder then #folder:GetChildren() else 0
+		local village = if own then own:GetAttribute("VillageLevel") else nil
+		local villageLevel = if type(village) == "number" then village else 1
+		local fewSlimes = slimes < D.EnterMinSlimes
+		local lowVillage = villageLevel < D.EnterMinVillageLevel
+		setNeed(needSlimes, fewSlimes, slimes .. "/" .. D.EnterMinSlimes)
+		setNeed(needVillage, lowVillage, "Lv " .. villageLevel .. "/" .. D.EnterMinVillageLevel)
+		needs.Visible = fewSlimes or lowVillage
+		return needs.Visible
+	end
+
 	-- what the dungeon gives: a picture and a short number each
 	local drops = wrapRow(scroll, "Drops", 0)
 	local ranges = dropRanges()
@@ -524,7 +550,8 @@ local function openGate(point: Vector3)
 		levelLabel.Text = "Lv " .. level
 		UiKit.setEnabled(lower, level > D.FirstLevel)
 		UiKit.setEnabled(higher, level < top)
-		UiKit.setEnabled(enter, next(selected) ~= nil and not busyEnter)
+		local blocked = short()
+		UiKit.setEnabled(enter, next(selected) ~= nil and not busyEnter and not blocked)
 	end
 	tick()
 end

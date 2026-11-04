@@ -719,6 +719,11 @@ Config.Dungeon = {
 	LuckPerLevel = 0.05,
 	-- The first dungeon level, and the best one that must be cleared before the next opens.
 	FirstLevel = 1,
+	-- The Dungeon is not for new players (the owner, 2026-11-04): a farm enters only with at least EnterMinSlimes slimes
+	-- (eggs not counted) and a village of level EnterMinVillageLevel or more (15: the first level whose population limit
+	-- holds 20 slimes, Config.Village.PopulationProgression).
+	EnterMinSlimes = 20,
+	EnterMinVillageLevel = 15,
 
 	-- ===== Loot (docs/SMITHY.md §2) =====
 	-- Every line of a monster's `drops` (Maps above) is rolled on its own: a roll r in [0, 1) under the line's `chance` pays

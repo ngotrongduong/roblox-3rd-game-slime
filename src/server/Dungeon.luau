@@ -865,8 +865,11 @@ local function enter(player: Player, data: any, farm: any): { ok: boolean, reaso
 		return fail("IN_RUN")
 	end
 	local plot = Plots.of(player)
+	local blocked = DungeonRules.entryBlock(farm)
 	if not plot then
 		return fail("NO_PLOT")
+	elseif blocked then
+		return fail(blocked)
 	elseif not DungeonRules.canEnter(farm, data.level) then
 		return fail("LEVEL_LOCKED")
 	elseif not characterAlive(player) then
