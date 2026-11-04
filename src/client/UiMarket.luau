@@ -23,6 +23,7 @@ local travelReasons: { [string]: string } = {
 	DEAD = "Not right now.",
 	NOT_READY = "Village is loading.",
 	NO_PLOT = "No home yet.",
+	IN_DUNGEON = "Leave the Dungeon first.",
 }
 local travelling = false
 

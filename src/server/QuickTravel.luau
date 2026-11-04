@@ -8,6 +8,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Config = require(ReplicatedStorage.Shared.Config)
 local Travel = require(ReplicatedStorage.Shared.Travel)
+local Dungeon = require(script.Parent.Dungeon)
 local PlayerData = require(script.Parent.PlayerData)
 local Plots = require(script.Parent.Plots)
 
@@ -22,6 +23,10 @@ local function request(player: Player, data: any): { ok: boolean, reason: string
 	local action: string = data.action
 	if not PlayerData.isReady(player) then
 		return { ok = false, reason = "NOT_READY" }
+	end
+	-- (the arena keeps its player in: a move out of a run was pulled back a moment later)
+	if Dungeon.inRun(player) then
+		return { ok = false, reason = "IN_DUNGEON" }
 	end
 	local now = workspace:GetServerTimeNow()
 	if Travel.cooldownLeft(lastAt[player], now) > 0 then
