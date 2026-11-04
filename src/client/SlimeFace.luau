@@ -206,6 +206,8 @@ local function newPlate(folder: Folder, name: string, u: number, v: number, w: n
 	gui.CanvasSize = Vector2.new(math.ceil(w * C.CanvasPerUnit), math.ceil(h * C.CanvasPerUnit))
 	gui.LightInfluence = 0
 	gui.AlwaysOnTop = false
+	-- Three face canvases a slime: beyond FarStuds the face no longer moves and is a few pixels, so it is not drawn.
+	gui.MaxDistance = C.FarStuds
 	gui.Parent = part
 	local content = Instance.new("Frame")
 	content.Name = "Content"
