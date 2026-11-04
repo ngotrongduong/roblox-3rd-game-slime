@@ -701,6 +701,11 @@ local function onStart(teamIndex: number, event: { [string]: any })
 		fight.fighters[id] = { id = id, fallen = false }
 		table.insert(fight.order, id)
 	end
+	for _, id in members do
+		-- (the fighters stand where the march ended before the first move is worked out from their places)
+		homes[id], targets[id] = nil, nil
+		ZombieMarch.settle(id)
+	end
 	sync(fight)
 	syncLoop()
 end

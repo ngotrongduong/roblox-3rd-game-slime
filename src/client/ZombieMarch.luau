@@ -39,8 +39,12 @@ export type Body = {
 	mode: string,
 	key: string,
 	face: string,
+	-- where it fights: the end of its leg (known from the start of the march, so a fight that begins before the team's
+	-- state arrives still finds its fighters here)
 	stand: Vector3,
 	facing: Vector3,
+	-- the leg (its LegStart) whose end the body has been put at by ZombieMarch.settle, nil while it marches
+	settled: number?,
 }
 -- A team that is out, with the village it belongs to and how far it is from the camera.
 type Candidate = { village: Folder, team: ZombieTeams.Team, distance: number }
@@ -114,6 +118,10 @@ end
 
 -- The leg's piece the body is on now, set as its travel (the actor does the hopping and the ground under its feet).
 local function travel(body: Body, team: ZombieTeams.Team, now: number)
+	if body.settled == team.legStart then
+		-- (the fight has begun for this leg, though the team's state has not reached us yet: the body stays where it stands)
+		return
+	end
 	local gait = Z.MarchGait
 	local offset = offsetOf(team, body.slot, body.count)
 	local fromPoint, toPoint = team.from + offset, team.to + offset
@@ -137,6 +145,7 @@ local function travel(body: Body, team: ZombieTeams.Team, now: number)
 	end
 	body.mode, body.key = "travel", key
 	body.facing = lead(team)
+	body.stand = ground(team.to + offset)
 	SlimeActor.setTravel(
 		body.actor,
 		ground(fromPoint:Lerp(toPoint, a)),
@@ -234,8 +243,9 @@ local function build(
 		mode = "",
 		key = "",
 		face = "normal",
-		stand = start,
+		stand = ground(team.to + offsetOf(team, slot, count)),
 		facing = facing,
+		settled = nil,
 	}
 	bodies[body.id] = body
 	if team.state == "fighting" then
@@ -341,6 +351,17 @@ local function check()
 end
 
 -- ===== Who is where, for the fight =====
+
+-- The fight has begun for this slime (the server's "start" event can reach us before the team's state does): its body is put
+-- at the end of the leg at once, where the fight takes it from, and stays there until the leg changes.
+function ZombieMarch.settle(id: string)
+	local body = ZombieMarch.body(id)
+	local team = if body then snapshot[teamKey(body.village, body.team)] else nil
+	if body and team then
+		stand(body, team)
+		body.settled = team.legStart
+	end
+end
 
 -- The body of one of the viewer's own slimes (by its slime id), nil when it is not drawn.
 function ZombieMarch.body(id: string): Body?
