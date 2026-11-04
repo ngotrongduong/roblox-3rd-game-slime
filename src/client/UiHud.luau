@@ -20,6 +20,7 @@ local villageFill: Frame? = nil
 local chips: { [string]: UiKit.Chip } = {}
 local lastOwn: Folder? = nil
 local rewardsButton: ImageButton? = nil
+local bagButton: ImageButton? = nil
 local badge: TextLabel? = nil
 -- Whether the coins were at the cap at the last look; nil until the vault's cap is known.
 local coinsFull: boolean? = nil
@@ -45,7 +46,13 @@ local function item(name: string): Instance?
 	return found
 end
 
-function UiHud.start(root: Frame, onBook: () -> (), onTravel: (place: string) -> (), onRewards: () -> ())
+function UiHud.start(
+	root: Frame,
+	onBook: () -> (),
+	onTravel: (place: string) -> (),
+	onRewards: () -> (),
+	onBag: () -> ()
+)
 	-- The strip shares the line of Roblox's own buttons: its own ScreenGui in the free space the engine leaves in the topbar.
 	local host = root:FindFirstAncestorOfClass("ScreenGui") :: ScreenGui
 	local top = UiKit.make("ScreenGui", {
@@ -142,7 +149,14 @@ function UiHud.start(root: Frame, onBook: () -> (), onTravel: (place: string) ->
 		ZIndex = 6,
 	})
 	rewardsButton = trophy
-	UiKit.roundButton(group, "slimes", U.BookButton, onBook, { LayoutOrder = 4 })
+	local book = UiKit.roundButton(group, "slimes", U.BookButton, onBook, { LayoutOrder = 4 })
+	-- The bag (UiBag) sits in the book's row, just left of it (a child of the book button, so the column stays as tall as it
+	-- was and the tutorial's pointer still finds the book). Shown with the trophy, once the tutorial is over.
+	bagButton = UiKit.roundButton(book, "bag", U.Bag.Button, onBag, {
+		AnchorPoint = Vector2.new(1, 0.5),
+		Position = UDim2.new(0, -U.Gap, 0.5, 0),
+		Visible = false,
+	})
 	edge = group
 
 	-- Last in the strip: the village's level over a bar of the upgrades done towards the next one.
@@ -183,6 +197,9 @@ function UiHud.rewards(own: Folder?)
 		return
 	end
 	button.Visible = own:GetAttribute("RewardsOpen") == true
+	if bagButton then
+		bagButton.Visible = button.Visible
+	end
 	local ready = own:GetAttribute("RewardsReady")
 	local count = if type(ready) == "number" then ready else 0
 	local dot = label.Parent :: GuiObject

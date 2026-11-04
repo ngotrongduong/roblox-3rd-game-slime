@@ -40,7 +40,8 @@ Essence and 2.2 Horns: iron gear after one or two runs, core gear after a few, b
 
 ## 3. Gear
 
-Three slots on every slime: **Hand** (a weapon: attack), **Head** (a helm: defence and health), **Tail** (a charm: speed).
+Three slots on every slime: **Weapon** (attack), **Head** (a helm: defence and health), **Charm** (speed). (Shown as Weapon and
+Charm since the owner's word, 2026-11-04; the saved ids stay `hand`, `head`, `tail`.)
 Gear adds flat points to the slime's stats in every fight (dungeon and zombies); it never changes the slime's own stats,
 its level or its price. Four tiers, the rarity colour shown only on screens (the original's veto: no glow in the world).
 
@@ -98,7 +99,7 @@ negative counts; the migration from 9 adds an empty bag.
 A stall in the Market built after the owner's `blacksmith-01.png` (honey wood frame with rope lashings, blue and cream
 awning with the money-bag emblem, a stone furnace with fire, an anvil, a weapon rack, an armour stand, a water barrel,
 banners) with the blacksmith slime of `npc.blacksmith.png` (navy bandana, brass goggles, leather apron, hammer) at the
-anvil. Prompt "Blacksmith" opens the **Smithy** sheet: tabs Hand / Head / Tail, each a grid of its four pieces (picture,
+anvil. Prompt "Blacksmith" opens the **Smithy** sheet: tabs Weapon / Head / Charm, each a grid of its four pieces (picture,
 name, rarity colour, stats as +numbers); a piece's card shows its materials (picture, have/need) and coins, and Craft
 (greyed with "Missing materials" or "Not enough coins"). The bag's count shows on each piece. Gear is worn from the slime's
 card (three slots; tap one, pick a piece from the bag, or take it off).

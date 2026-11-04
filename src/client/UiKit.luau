@@ -594,6 +594,30 @@ function UiKit.openModal(id: string, props: Props): Modal
 	return { header = header, content = content }
 end
 
+-- The open modal's greatest height in points: `height` sets it, nil puts back the one it opened with (`props.Height`).
+-- (A page that needs less room than its sheet, like the slime page on a wide screen, shrinks it to fit.)
+function UiKit.setModalHeight(height: number?)
+	local panel = if modal then modal.panel else nil
+	local limit = if panel then panel:FindFirstChildOfClass("UISizeConstraint") else nil
+	if not (panel and limit) then
+		return
+	end
+	local opened = panel:GetAttribute("OpenedHeight")
+	if type(opened) ~= "number" then
+		opened = limit.MaxSize.Y
+		panel:SetAttribute("OpenedHeight", opened)
+	end
+	local nextHeight = math.min(height or opened :: number, opened :: number)
+	if math.abs(limit.MaxSize.Y - nextHeight) > 0.5 then
+		limit.MaxSize = Vector2.new(limit.MaxSize.X, nextHeight)
+	end
+end
+
+-- The open modal's height in points as it is drawn now (0 when none is open).
+function UiKit.modalHeight(): number
+	return if modal then UiKit.units(modal.panel).Y else 0
+end
+
 -- A short message under the resource strip; a new one replaces the old.
 function UiKit.toast(text: string)
 	local parent = UiKit.root()

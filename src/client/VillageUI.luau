@@ -8,6 +8,7 @@ local HttpService = game:GetService("HttpService")
 
 local Config = require(ReplicatedStorage.Shared.Config)
 local FarmState = require(ReplicatedStorage.Shared.FarmState)
+local UiBag = require(script.Parent.UiBag)
 local UiBook = require(script.Parent.UiBook)
 local UiFood = require(script.Parent.UiFood)
 local UiGuide = require(script.Parent.UiGuide)
@@ -806,6 +807,7 @@ local function refreshAll()
 		if UiBook.isOpen() then
 			UiBook.refresh()
 		end
+		UiBag.refresh()
 		local shown = UiKit.modalId()
 		UiFood.refreshDish()
 		if pick and pickView and (shown == "pick" or shown == "sheet") then
@@ -1045,7 +1047,7 @@ local function bind(root: Folder?)
 			end)
 		)
 	end
-	for _, attribute in { "Work", "Pairs", "Areas", "Box", "GearBag" } do
+	for _, attribute in { "Work", "Pairs", "Areas", "Box", "GearBag", "Materials" } do
 		table.insert(
 			rootConnections,
 			root:GetAttributeChangedSignal(attribute):Connect(function()
@@ -1093,6 +1095,12 @@ function VillageUI.start()
 		UiMarket.travel(place)
 	end, function()
 		UiRewards.open()
+	end, function()
+		UiBag.open({
+			own = function()
+				return own
+			end,
+		})
 	end)
 
 	-- the daily check-in, quests and online gifts: the trophy's badge, the luck chip and the open sheet's clocks

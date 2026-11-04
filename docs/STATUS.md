@@ -1,5 +1,28 @@
 # Status
 
+## 2026-11-04 — one Dungeon portal in the Market, a Bag, and the slime's page as an RPG sheet
+
+The owner: Hand becomes Weapon and Tail becomes Charm; one portal for everyone in the Market, each player sent to their own
+dungeon, a lock on it for a player who may not enter; the gate sheet without the two needs rows, only the drops as a plain list;
+an inventory for each player, well sorted; and a slime page in the style of an RPG.
+- Slot names: `Config.Smithy.SlotNames` (Weapon / Head / Charm) on every screen; the saved ids (hand, head, tail) stay.
+- Portal: `Layout.marketPortal()` (`Config.Dungeon.Portal.Market`, behind the VIP stall across from the Blacksmith, facing the
+  fountain), built once by `server/DungeonPortal`; entering still makes a private arena per player, leaving lands at the portal.
+  The client puts a lock picture (`Config.Ui.Icons.lock`) over it and the prompt reads "Locked" (a tap says why) while
+  `Dungeon.entryBlock` says no. Studio's screen capture never draws BillboardGuis, so the lock was checked by its state (shown at
+  8 slimes / village 1, gone with 22 / village 15), not by a picture.
+- Gate sheet: the needs row is gone; the drops are a two-column list (icon, name, amount) without frames.
+- The Bag (`client/UiBag`, a round button beside the book's, once the Rewards are open): Materials as a grid of slots (empty ones
+  faint, `Config.Ui.Bag.MaterialSlots`), Gear grouped Weapon / Head / Charm with the tier colour, "xN" and a badge for pieces a
+  slime wears; a tap shows the item and what it makes or gives. Read-only.
+- The slime's page (`client/UiSlimeSheet`, after a ChatGPT concept, `docs/ui/slime-sheet/concept.webp`): the slime on a
+  pedestal with Weapon, Head and Charm slots round it, its needs under it, the four stats with the gear bonus in green, trait,
+  Stop work. A slot opens a small picker (Take off, or a piece from the bag). The book takes the sheet's height on a wide screen
+  (`UiKit.setModalHeight`). New icons by ChatGPT: lock, bag, the three empty slots.
+- Seen in a MapWork play test (`docs/ui/slime-sheet/*.jpg`): the page, the picker, swapping a wooden sword for an iron one
+  (+1 → +2 ATK, the wooden one back in the bag), both Bag tabs and the details strip; on the 844 x 350 phone frame both screens
+  fit. Not done: the lock seen in a real client, the pedestal is plain parts of the frame (no art yet).
+
 ## 2026-11-04 — the Dungeon is for grown farms: 20 slimes and village level 15
 
 The owner: a starter team losing is right, the Dungeon is not for new players; entering needs at least 20 slimes and a village

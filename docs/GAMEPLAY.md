@@ -351,12 +351,14 @@ strength rising). Numbers from the original (`docs/reference/02-battle.md` §5-7
 `shared/Dungeon` (Lune tests `tests/spec/dungeon.luau`, `dungeon_arena.luau`), the run in `server/Dungeon`, the portal in
 `server/DungeonPortal`, screens in `client/UiDungeon`, the fight drawn by `client/DungeonFight` with the zombie fight's code.
 
-- **The portal**: Egg Heist's portal (the owner, 2026-11-04: use the portal we have), rebuilt by the server from its kit meshes beside
-  every plot's gate, outside the fence, its opening toward the path (`Layout.plotPortal`). Only the owner of the plot can use it.
-- **The sheet**: the map (Sunny Meadow) with its drops as pictures and ranges, the teams that are home and have members (several can
-  go), the level from 1 to the best cleared + 1, Enter.
+- **The portal**: Egg Heist's portal (the owner, 2026-11-04: use the portal we have), rebuilt by the server from its kit meshes.
+  ONE portal for everyone, in the Market across the square from the Blacksmith, its opening toward the fountain
+  (`Layout.marketPortal`, `Config.Dungeon.Portal.Market`); whoever goes in fights in their own private arena.
 - **Who may go** (the owner, 2026-11-04: not for new players): a farm with at least 20 slimes and a village of level 15
-  (`EnterMinSlimes`, `EnterMinVillageLevel`). Until then the sheet shows the two needs in red at the top and Enter stays off.
+  (`EnterMinSlimes`, `EnterMinVillageLevel`). Until then a golden lock hangs in the ring for that player (drawn by their own
+  client) and the prompt says what is missing in one line; the server checks the same.
+- **The sheet**: the map (Sunny Meadow) with its drops as a plain two-column list (picture, name, how many), the teams that are
+  home and have members (several can go), the level from 1 to the best cleared + 1, Enter.
 - **A run**: 10 waves. A wave's crowd has a budget (6, 9, 12, 15, then x1.3 from wave 6, at most 40) filled from the map's monsters by
   cost; wave 5 is the mini-boss Bloomshell alone, wave 10 the boss Bramblehorn alone. One monster comes in every 0.8 s while fewer than
   8 stand, at the arena's rim. HP and attack are x`StatScale` (0.3), x1.12 each wave and x1.6 each level; the shown level is the

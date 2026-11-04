@@ -4,10 +4,10 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Config = require(ReplicatedStorage.Shared.Config)
-local UiGearSlots = require(script.Parent.UiGearSlots)
 local UiIndex = require(script.Parent.UiIndex)
 local UiKit = require(script.Parent.UiKit)
 local UiSlimeList = require(script.Parent.UiSlimeList)
+local UiSlimeSheet = require(script.Parent.UiSlimeSheet)
 local UiSlimes = require(script.Parent.UiSlimes)
 
 local U = Config.Ui
@@ -24,8 +24,7 @@ local filter = U.BookFilters[1]
 local page = "slimes"
 local detail: string? = nil
 local view: UiSlimeList.List? = nil
-local detailCard: UiSlimes.Card? = nil
-local detailGear: UiGearSlots.Slots? = nil
+local detailSheet: UiSlimeSheet.Sheet? = nil
 local countLabel: TextLabel? = nil
 local content: Frame? = nil
 local header: Frame? = nil
@@ -56,8 +55,7 @@ end
 
 local function clearDetail()
 	detail = nil
-	detailCard = nil
-	detailGear = nil
+	detailSheet = nil
 end
 
 local render: () -> ()
@@ -72,63 +70,15 @@ local function drawDetail(id: string)
 		render()
 		return
 	end
-	local request = context.request
 	UiSlimes.releaseAll()
 	UiKit.clear(host)
 	UiKit.clear(bar)
 	view = nil
-	UiKit.button(bar, {
-		Name = "Back",
-		Icon = "back",
-		Style = "secondary",
-		Size = UDim2.fromOffset(U.Touch, U.Touch),
-		AnchorPoint = Vector2.new(0, 0.5),
-		Position = UDim2.fromScale(0, 0.5),
-		OnClick = function()
-			clearDetail()
-			render()
-		end,
-	})
-	local card = UiSlimes.card(host, { slime = slime }, nil)
-	card.root.Size = UDim2.new(1, -8, 0, U.CardHeight)
-	card.show()
-	detailCard = card
-	local trait = slime:GetAttribute("Trait")
-	if type(trait) == "string" and trait ~= "" then
-		UiKit.label(host, trait, U.TextNormal, "BrownSoft", {
-			Position = UDim2.fromOffset(4, U.CardHeight + U.Gap),
-			Size = UDim2.new(1, -8, 0, U.TextNormal + 6),
-		})
-	end
-	local actionsY = U.CardHeight + U.Gap * 2 + U.TextNormal + 6
-	local actions = UiKit.make("Frame", {
-		BackgroundTransparency = 1,
-		Position = UDim2.fromOffset(0, actionsY),
-		Size = UDim2.new(1, 0, 0, U.Touch),
-	}, host)
-	UiKit.make("UIListLayout", {
-		FillDirection = Enum.FillDirection.Horizontal,
-		Padding = UDim.new(0, U.Gap),
-		SortOrder = Enum.SortOrder.LayoutOrder,
-	}, actions)
-	local gearY = actionsY
-	if UiSlimes.job(slime) then
-		gearY += U.Touch + U.Gap
-		UiKit.button(actions, {
-			Text = "Stop work",
-			Style = "secondary",
-			Size = UDim2.fromOffset(U.Touch * 2 + 20, U.Touch),
-			LayoutOrder = 1,
-			OnClick = function()
-				request({ action = "Unassign", slimeId = id }, function() end)
-			end,
-		})
-	end
-	-- the three gear slots (Hand, Head, Tail) under the card, filling the rest of the page
-	detailGear = UiGearSlots.new(host, slime, {
-		Position = UDim2.fromOffset(0, gearY),
-		Size = UDim2.new(1, 0, 1, -gearY),
-	})
+	-- the RPG character sheet: header, slime on its pedestal, gear slots, needs, stats, trait, Stop work
+	detailSheet = UiSlimeSheet.new(host, bar, slime, context.request, function()
+		clearDetail()
+		render()
+	end)
 end
 
 render = function()
@@ -144,7 +94,9 @@ render = function()
 	UiIndex.release()
 	UiKit.clear(host)
 	UiKit.clear(bar)
-	detailCard = nil
+	detailSheet = nil
+	-- (the slime page may have shrunk the book to its own height)
+	UiKit.setModalHeight(nil)
 	-- The two pages of the book: the player's own slimes, and the Index of every kind there is.
 	UiKit.segmented(
 		bar,
@@ -223,11 +175,8 @@ function UiBook.refresh()
 		if not (folder and folder:FindFirstChild(detail)) then
 			clearDetail()
 			render()
-		elseif detailCard then
-			detailCard.update({ slime = detailCard.slime })
-			if detailGear then
-				detailGear.refresh()
-			end
+		elseif detailSheet then
+			detailSheet.refresh()
 		end
 	elseif view then
 		view.refresh()
@@ -256,8 +205,7 @@ function UiBook.open(context: Context)
 		OnClose = function()
 			UiSlimes.releaseAll()
 			UiIndex.release()
-			view, detailCard, countLabel, content, header = nil, nil, nil, nil, nil
-			detailGear = nil
+			view, detailSheet, countLabel, content, header = nil, nil, nil, nil, nil
 			detail = nil
 		end,
 	})

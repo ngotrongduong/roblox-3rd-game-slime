@@ -1,11 +1,11 @@
 --!strict
--- The Dungeon Portal beside every village gate (the owner, 2026-11-04: "we already have a portal in the assets, use it and
--- put it near the village gate"). It is Egg Heist's mount-realm portal (C:\roblox 2nd game\tools\realm\portal.luau and its
--- reference picture there), rebuilt from the same kit meshes, which the owner's account published (Config.Dungeon.Portal
--- .Pieces): an upright ring of grey-purple stones with glowing runes, a crystal on top, two pillars with crystals, a round
--- slab platform and a swirling vortex drawn by particles (no script turns it). It is built once at full size beside plot
--- 1's gate (the runes are fitted by rays at the stones), scaled down, and cloned beside every other gate
--- (Layout.plotPortal). PortalTrigger, the opening, carries the plot's number and the prompt that opens the Dungeon.
+-- The one Dungeon Portal, in the Market (the owner, 2026-11-04: "use the portal we have"; then: one portal in the shopping
+-- area for everyone, each player going to their own arena). It is Egg Heist's mount-realm portal
+-- (C:\roblox 2nd game\tools\realm\portal.luau and its reference picture there), rebuilt from the same kit meshes, which the
+-- owner's account published (Config.Dungeon.Portal.Pieces): an upright ring of grey-purple stones with glowing runes, a
+-- crystal on top, two pillars with crystals, a round slab platform and a swirling vortex drawn by particles (no script
+-- turns it). It is built at full size where it stands (the runes are fitted by rays at the stones) and scaled down about
+-- its foot (Layout.marketPortal). PortalTrigger, the opening, carries the prompt that opens the Dungeon.
 local InsertService = game:GetService("InsertService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
@@ -312,23 +312,6 @@ local function build(base: CFrame): Model
 	return root
 end
 
--- A copy beside plot `plot`'s gate, its opening carrying the plot's number and the prompt.
-local function place(template: Model, folder: Folder, plot: number)
-	local portal = template:Clone()
-	portal.Name = "Portal" .. plot
-	portal:PivotTo(Layout.plotPortal(plot))
-	local trigger = portal:FindFirstChild("PortalTrigger") :: BasePart
-	trigger:SetAttribute("Plot", plot)
-	local prompt = Instance.new("ProximityPrompt")
-	prompt.Name = "DungeonPrompt"
-	prompt.ActionText = "Enter"
-	prompt.ObjectText = "Slime Dungeon"
-	prompt.MaxActivationDistance = P.PromptRangeStuds
-	prompt.RequiresLineOfSight = false
-	prompt.Parent = trigger
-	portal.Parent = folder
-end
-
 function DungeonPortal.start()
 	task.spawn(function()
 		if not load() then
@@ -337,16 +320,19 @@ function DungeonPortal.start()
 		local folder = Instance.new("Folder")
 		folder.Name = "DungeonPortals"
 		folder.Parent = workspace
-		-- built in the world (the rune rays need it there), then scaled and kept out of it as the template
-		local template = build(Layout.plotPortal(1))
-		template.Parent = workspace
-		template:ScaleTo(P.Scale)
-		template.Parent = nil
-		for plot = 1, Config.Map.PlotCount do
-			place(template, folder, plot)
-		end
-		template:Destroy()
-		print(Config.LogPrefix, "dungeon portals placed:", Config.Map.PlotCount)
+		-- built in the world (the rune rays need it there), then scaled about its foot
+		local portal = build(Layout.marketPortal())
+		portal.Name = "Portal"
+		portal.Parent = folder
+		portal:ScaleTo(P.Scale)
+		local prompt = Instance.new("ProximityPrompt")
+		prompt.Name = "DungeonPrompt"
+		prompt.ActionText = "Enter"
+		prompt.ObjectText = "Slime Dungeon"
+		prompt.MaxActivationDistance = P.PromptRangeStuds
+		prompt.RequiresLineOfSight = false
+		prompt.Parent = portal:FindFirstChild("PortalTrigger")
+		print(Config.LogPrefix, "dungeon portal placed in the Market")
 	end)
 end
 

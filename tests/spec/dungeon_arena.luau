@@ -83,20 +83,24 @@ return function(T: any)
 		end
 	end)
 
-	T.test("a player who leaves lands ExitOut studs in front of their portal's opening, facing away", function()
-		for plot = 1, M.PlotCount do
-			local frame = Layout.plotPortal(plot)
-			local portal = frame.Position
-			local landing = Layout.portalLanding(plot)
-			local flat = landing.Position - portal
-			T.near(math.sqrt(flat.X ^ 2 + flat.Z ^ 2), D.ExitOut, 0.01, "plot " .. plot)
-			T.ok(frame:VectorToObjectSpace(Vector3.new(flat.X, 0, flat.Z)).Z > 0, "the opening's side, plot " .. plot)
-			T.ok(
-				landing.LookVector:Dot(Vector3.new(flat.X, 0, flat.Z).Unit) > 0.99,
-				"facing away from the portal, plot " .. plot
-			)
-			T.near(landing.Position.Y, M.GroundY + D.ExitLift, 1e-6)
-		end
+	T.test("the one portal stands in the Market, its opening turned to the square's middle", function()
+		local frame = Layout.marketPortal()
+		local market = Layout.marketFrame().Position
+		local toward = Vector3.new(market.X - frame.Position.X, 0, market.Z - frame.Position.Z)
+		T.ok(toward.Magnitude < M.PlotSize / 2, "inside the Market's slice")
+		T.ok(frame:VectorToObjectSpace(toward).Z > 0.99 * toward.Magnitude, "the opening (+Z) faces the middle")
+		T.near(frame.Position.Y, M.GroundY, 1e-6)
+	end)
+
+	T.test("a player who leaves lands ExitOut studs in front of the portal's opening, facing away", function()
+		local frame = Layout.marketPortal()
+		local portal = frame.Position
+		local landing = Layout.portalLanding()
+		local flat = landing.Position - portal
+		T.near(math.sqrt(flat.X ^ 2 + flat.Z ^ 2), D.ExitOut, 0.01)
+		T.ok(frame:VectorToObjectSpace(Vector3.new(flat.X, 0, flat.Z)).Z > 0, "the opening's side")
+		T.ok(landing.LookVector:Dot(Vector3.new(flat.X, 0, flat.Z).Unit) > 0.99, "facing away from the portal")
+		T.near(landing.Position.Y, M.GroundY + D.ExitLift, 1e-6)
 	end)
 
 	T.test("Dungeon requests have the shape the server checks", function()

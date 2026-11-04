@@ -149,20 +149,21 @@ function Layout.plotMuster(plot: number): CFrame
 	return Layout.plotGate(plot) * CFrame.new(Z.MusterAcross, M.GroundY, Z.MusterIn) * CFrame.Angles(0, math.pi, 0)
 end
 
--- The Dungeon Portal of a plot, beside its gate outside the fence (Config.Dungeon.Portal): its foot on the ground, its
--- opening turned toward the path out of the gate.
-function Layout.plotPortal(plot: number): CFrame
-	local P = Config.Dungeon.Portal
-	return Layout.plotGate(plot)
-		* CFrame.new(P.Across, M.GroundY, -P.Out)
-		* CFrame.Angles(0, math.rad(P.TurnDegrees), 0)
+-- The one Dungeon Portal, in the Market (Config.Dungeon.Portal.Market): its foot on the ground, its opening (+Z) turned to
+-- the square's middle.
+function Layout.marketPortal(): CFrame
+	local at = Layout.marketPoint(Config.Dungeon.Portal.Market)
+	local centre = Layout.marketFrame().Position
+	local toward = Vector3.new(centre.X - at.X, 0, centre.Z - at.Z)
+	-- (yaw by hand: a yaw's LookVector is (-sin, 0, -cos), so this one's +Z looks along `toward`)
+	return CFrame.new(at) * CFrame.Angles(0, math.atan2(toward.X, toward.Z), 0)
 end
 
--- Where a player is put when they leave the Dungeon: Config.Dungeon.ExitOut studs in front of their portal's opening (its
--- +Z, which faces the path; its back stands by the fence), ExitLift up, turned away from the portal.
-function Layout.portalLanding(plot: number): CFrame
+-- Where a player is put when they leave the Dungeon: Config.Dungeon.ExitOut studs in front of the portal's opening (its
+-- +Z), ExitLift up, turned away from the portal.
+function Layout.portalLanding(): CFrame
 	local D = Config.Dungeon
-	local portal = Layout.plotPortal(plot)
+	local portal = Layout.marketPortal()
 	local at = (portal * CFrame.new(0, 0, D.ExitOut)).Position
 	local away = at - portal.Position
 	-- (yaw by hand, as slotFrame does: a yaw's LookVector is (-sin, 0, -cos))

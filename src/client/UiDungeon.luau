@@ -111,10 +111,9 @@ end
 -- ===== Pictures of the drops =====
 
 -- A drop as a picture: coins and food with the owner's pictures, a material with its own `icon` once it exists. A material
--- without one yet gets a plain rounded tile with its short name (a stand-in, never the final look). (`slimes` and `home`
--- are the gate sheet's entry needs on the same plates.)
+-- without one yet gets a plain rounded tile with its short name (a stand-in, never the final look).
 function UiDungeon.dropIcon(parent: Instance?, item: string, size: number, props: UiKit.Props?): GuiObject
-	if item == "coins" or item == "food" or item == "slimes" or item == "home" then
+	if item == "coins" or item == "food" then
 		return UiKit.icon(parent, item, size, props)
 	end
 	local entry: any = (D.Materials :: any)[item]
@@ -197,23 +196,6 @@ local function fillDrops(host: Frame, drops: { [string]: number })
 			dropChip(host, item, tostring(amount), index)
 		end
 	end
-end
-
-local function wrapRow(parent: Instance, name: string, order: number): Frame
-	local row = UiKit.make("Frame", {
-		Name = name,
-		BackgroundTransparency = 1,
-		Size = UDim2.new(1, -8, 0, 0),
-		AutomaticSize = Enum.AutomaticSize.Y,
-		LayoutOrder = order,
-	}, parent)
-	UiKit.make("UIListLayout", {
-		FillDirection = Enum.FillDirection.Horizontal,
-		Wraps = true,
-		Padding = UDim.new(0, U.Gap),
-		SortOrder = Enum.SortOrder.LayoutOrder,
-	}, row)
-	return row
 end
 
 -- What a run of this map can drop, as a range for each item (from the drop lines of its monsters).
@@ -330,37 +312,39 @@ local function openGate(point: Vector3)
 	UiKit.make("UIListLayout", { Padding = UDim.new(0, U.Gap), SortOrder = Enum.SortOrder.LayoutOrder }, scroll)
 	UiKit.make("UIPadding", { PaddingRight = UDim.new(0, 8), PaddingBottom = UDim.new(0, 4) }, scroll)
 
-	-- what a farm needs to go in (the server checks it too): slimes and the village level, shown only while one is short
-	local needs = wrapRow(scroll, "Needs", -1)
-	local needSlimes = dropChip(needs, "slimes", "00/00", 1)
-	local needVillage = dropChip(needs, "home", "Lv 00/00", 2)
-	local function setNeed(chip: Frame, low: boolean, text: string)
-		local value = chip:FindFirstChild("Value", true)
-		if value and value:IsA("TextLabel") then
-			value.Text = text
-			value.TextColor3 = UiKit.colour(if low then "Red" else "Brown")
-		end
-	end
-	local function short(): boolean
-		local own = c.own()
-		local folder = if own then own:FindFirstChild("Slimes") else nil
-		local slimes = if folder then #folder:GetChildren() else 0
-		local village = if own then own:GetAttribute("VillageLevel") else nil
-		local villageLevel = if type(village) == "number" then village else 1
-		local fewSlimes = slimes < D.EnterMinSlimes
-		local lowVillage = villageLevel < D.EnterMinVillageLevel
-		setNeed(needSlimes, fewSlimes, slimes .. "/" .. D.EnterMinSlimes)
-		setNeed(needVillage, lowVillage, "Lv " .. villageLevel .. "/" .. D.EnterMinVillageLevel)
-		needs.Visible = fewSlimes or lowVillage
-		return needs.Visible
-	end
-
-	-- what the dungeon gives: a picture and a short number each
-	local drops = wrapRow(scroll, "Drops", 0)
+	-- what the dungeon gives, as a plain list in two columns: picture, name, how many (the owner, 2026-11-04: a list,
+	-- not a framed plate each)
+	local drops = UiKit.make("Frame", {
+		Name = "Drops",
+		BackgroundTransparency = 1,
+		Size = UDim2.new(1, -8, 0, 0),
+		AutomaticSize = Enum.AutomaticSize.Y,
+		LayoutOrder = 0,
+	}, scroll)
+	UiKit.make("UIGridLayout", {
+		CellSize = UDim2.new(0.5, -U.Gap / 2, 0, P.DropRow),
+		CellPadding = UDim2.fromOffset(U.Gap, 2),
+		SortOrder = Enum.SortOrder.LayoutOrder,
+	}, drops)
 	local ranges = dropRanges()
 	for order, item in D.DropOrder do
 		if ranges[item] then
-			dropChip(drops, item, ranges[item], order)
+			local entry: any = (D.Materials :: any)[item]
+			local line = UiKit.make("Frame", { Name = item, BackgroundTransparency = 1, LayoutOrder = order }, drops)
+			UiDungeon.dropIcon(line, item, P.DropIcon, {
+				AnchorPoint = Vector2.new(0, 0.5),
+				Position = UDim2.fromScale(0, 0.5),
+			})
+			UiKit.label(line, if entry then entry.name else item, U.TextSmall, "Brown", {
+				Position = UDim2.fromOffset(P.DropIcon + 6, 0),
+				Size = UDim2.new(1, -P.DropIcon - 6 - P.DropRangeWidth, 1, 0),
+			})
+			UiKit.label(line, ranges[item], U.TextSmall, "BrownSoft", {
+				AnchorPoint = Vector2.new(1, 0),
+				Position = UDim2.fromScale(1, 0),
+				Size = UDim2.new(0, P.DropRangeWidth, 1, 0),
+				TextXAlignment = Enum.TextXAlignment.Right,
+			})
 		end
 	end
 
@@ -550,23 +534,37 @@ local function openGate(point: Vector3)
 		levelLabel.Text = "Lv " .. level
 		UiKit.setEnabled(lower, level > D.FirstLevel)
 		UiKit.setEnabled(higher, level < top)
-		local blocked = short()
-		UiKit.setEnabled(enter, next(selected) ~= nil and not busyEnter and not blocked)
+		UiKit.setEnabled(enter, next(selected) ~= nil and not busyEnter)
 	end
 	tick()
 end
 
 -- ===== The portals =====
 
--- The prompt of the viewer's own portal opens the gate sheet; the others are switched off for this client (they stay on the
--- server for whoever owns them). Called every GateWatchSeconds: the portals stream in with the map.
+-- Why this player may not go in yet (Dungeon.entryBlock, read from what the village folder shows): "FEW_SLIMES",
+-- "VILLAGE_LEVEL" or nil. The server checks the same.
+local function entryBlock(): string?
+	local own = context().own()
+	local folder = if own then own:FindFirstChild("Slimes") else nil
+	local level = if own then own:GetAttribute("VillageLevel") else nil
+	if not folder or #folder:GetChildren() < D.EnterMinSlimes then
+		return "FEW_SLIMES"
+	elseif type(level) ~= "number" or level < D.EnterMinVillageLevel then
+		return "VILLAGE_LEVEL"
+	end
+	return nil
+end
+
+-- The one portal in the Market (everyone's; each player goes to their own arena): its prompt opens the gate sheet, or says
+-- in one line what is missing while a lock hangs over the ring. Called every GateWatchSeconds: the portal streams in with
+-- the map.
 local function watchPortals()
 	local folder = workspace:FindFirstChild("DungeonPortals")
 	if not folder then
 		return
 	end
-	local plot = ZombieTeams.plot()
 	local free = phase() == ""
+	local locked = entryBlock() ~= nil
 	for _, portal in folder:GetChildren() do
 		local trigger = portal:FindFirstChild("PortalTrigger")
 		local prompt = if trigger then trigger:FindFirstChild("DungeonPrompt") else nil
@@ -574,10 +572,30 @@ local function watchPortals()
 			if not bound[prompt] then
 				bound[prompt] = true
 				prompt.Triggered:Connect(function()
-					openGate(trigger.Position)
+					local why = entryBlock()
+					if why then
+						UiKit.toast(context().reason(why))
+					else
+						openGate(trigger.Position)
+					end
 				end)
 			end
-			prompt.Enabled = free and plot ~= nil and trigger:GetAttribute("Plot") == plot
+			prompt.Enabled = free
+			prompt.ActionText = if locked then "Locked" else "Enter"
+			-- the lock: a picture over the ring, drawn for this player only (a client-made billboard)
+			local lock = trigger:FindFirstChild("DungeonLock")
+			if locked and not lock then
+				local board = Instance.new("BillboardGui")
+				board.Name = "DungeonLock"
+				board.Size = UDim2.fromOffset(D.Portal.LockPixels, D.Portal.LockPixels)
+				board.AlwaysOnTop = false
+				board.LightInfluence = 0
+				board.MaxDistance = D.Portal.LockShowStuds
+				UiKit.icon(board, "lock", D.Portal.LockPixels, { Size = FULL })
+				board.Parent = trigger
+			elseif lock and not locked then
+				lock:Destroy()
+			end
 		end
 	end
 end

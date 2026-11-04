@@ -207,8 +207,8 @@ local function worldTarget(target: string): Vector3?
 		return breedingPosition()
 	elseif kind == "banner" and type(plot) == "number" then
 		return Layout.plotMuster(plot).Position
-	elseif kind == "portal" and type(plot) == "number" then
-		return Layout.plotPortal(plot).Position
+	elseif kind == "portal" then
+		return Layout.marketPortal().Position
 	elseif kind == "market" then
 		return Layout.marketPoint(Config.Market.Buyer)
 	elseif kind == "group" then

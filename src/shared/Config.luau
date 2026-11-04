@@ -928,6 +928,9 @@ Config.Dungeon = {
 		TeamRowHeight = 56,
 		TeamPortrait = 40,
 		DropIcon = 22,
+		-- the drops list: a line's height and the width of its "1-5" at the right
+		DropRow = 26,
+		DropRangeWidth = 44,
 		StepperButton = 48,
 		StepperLabel = 70,
 		EnterWidth = 110,
@@ -986,11 +989,13 @@ Config.Dungeon = {
 		GateWatchSeconds = 1,
 	},
 
-	-- ===== The portal (server/DungeonPortal, Layout.plotPortal) =====
-	-- Egg Heist's portal (the owner, 2026-11-04: "use the portal we have, near the village gate"), rebuilt from its kit
-	-- meshes, which the owner's account published (InsertService ids). It stands Across studs to the side of the gate's
-	-- middle and Out studs outside the fence, turned TurnDegrees so its opening faces the path out of the gate, at Scale of
-	-- its full size (about 29 x 23 studs when scaled). The prompt that opens the Dungeon works from PromptRangeStuds.
+	-- ===== The portal (server/DungeonPortal, Layout.marketPortal) =====
+	-- Egg Heist's portal (the owner, 2026-11-04: "use the portal we have"), rebuilt from its kit meshes, which the owner's
+	-- account published (InsertService ids). ONE portal for everyone in the Market (the owner, 2026-11-04: in the shopping
+	-- area, shared; whoever steps in goes to their own arena), at Market (a Config.Market-style spot, across the square
+	-- from the Blacksmith), its opening turned to the square's middle, at Scale of its full size (about 29 x 23 studs). The
+	-- prompt that opens the Dungeon works from PromptRangeStuds; a lock of LockPixels hangs in the ring for a player who may
+	-- not go in yet (EnterMinSlimes, EnterMinVillageLevel), seen from LockShowStuds.
 	Portal = {
 		Pieces = {
 			bush_tall_grass = 86818606224653,
@@ -1001,11 +1006,11 @@ Config.Dungeon = {
 			rock_cracked_split = 74245328366319,
 			rock_flat_slab = 120446354505612,
 		},
-		Across = -34,
-		Out = 22,
-		TurnDegrees = 150,
+		Market = { x = -58, z = 34 },
 		Scale = 0.55,
 		PromptRangeStuds = 14,
+		LockPixels = 72,
+		LockShowStuds = 160,
 	},
 }
 
@@ -1017,7 +1022,8 @@ Config.Smithy = {
 	IdMaxLength = 40,
 	-- The slots in the order the sheet shows them, and what each piece of a slot is called on screen.
 	Slots = { "hand", "head", "tail" },
-	SlotNames = { hand = "Hand", head = "Head", tail = "Tail" },
+	-- (the owner, 2026-11-04: the hand slot shows as Weapon, the tail slot as Charm; the saved ids stay)
+	SlotNames = { hand = "Weapon", head = "Head", tail = "Charm" },
 	-- Tiers from the weakest. The rarity colour is only for screens (the original's veto: no glow in the world).
 	TierOrder = { "wood", "iron", "core", "bramble" },
 	Tiers = {
@@ -2800,6 +2806,13 @@ Config.Ui = {
 		collection = 91176780566160,
 		-- The Slime Dungeon's gate sheet header: a stone portal ring with a blue swirl (ChatGPT, 2026-11-04, art/icons/dg_dungeon.png).
 		dungeon = 136488942687177,
+		-- The lock over the Dungeon portal and the bag of the inventory (ChatGPT, 2026-11-04).
+		lock = 91241912398933,
+		bag = 124936043377188,
+		-- the faint pictures of an empty gear slot on the slime's page
+		slotWeapon = 72608277069089,
+		slotHead = 87341761427328,
+		slotCharm = 129687119015421,
 		-- (drawn from the 3D items instead: docs/GAMEPLAY.md, the food chip)
 		fish = 0,
 		carrot = 0,
@@ -2902,6 +2915,72 @@ Config.Ui = {
 		SlotCell = 92,
 		PickerRow = 48,
 		PickerTile = 36,
+	},
+	-- The slime's page in the book (UiSlimeSheet, UiGearSlots), an RPG character sheet after docs/ui/slime-sheet/concept.webp.
+	-- It is drawn on a fixed stage of DesignWidth x DesignHeight pixels (a landscape phone's book content, about 728 x 244) and
+	-- shrunk to fit a smaller one (never grown past ScaleMax). The left column holds the slime on its pedestal, the three gear
+	-- slots round it and the need bars under it; the right one the stats, the trait and the Stop work button.
+	SlimeSheet = {
+		DesignWidth = 720,
+		DesignHeight = 244,
+		ScaleMax = 1.25,
+		LeftWidth = 440,
+		ColumnGap = 12,
+		-- a gear slot: its framed square, the name plate over its top edge (width, height, how far it dips onto the square),
+		-- how far the Weapon and Charm stand from the slime's centre, and the top of their cells
+		Slot = 60,
+		PlateWidth = 72,
+		PlateHeight = 18,
+		PlateOverlap = 6,
+		SideOffset = 146,
+		SideTop = 74,
+		-- the slime's picture (a square viewport; the body fills about 60% of it) and the pedestal under it
+		SlimeSize = 116,
+		SlimeTop = 53,
+		PedestalWidth = 150,
+		PedestalHeight = 26,
+		PedestalTop = 140,
+		-- the need bars' plate
+		NeedsWidth = 340,
+		NeedsTop = 176,
+		NeedsHeight = 62,
+		NeedRow = 19,
+		NeedIcon = 18,
+		NeedNameWidth = 50,
+		-- the stats panel: its height, a row and the gap between rows, the stat's picture, the name's, value's and bonus pill's widths
+		StatsHeight = 156,
+		StatRow = 32,
+		StatGap = 3,
+		StatIcon = 24,
+		StatNameWidth = 96,
+		StatValueWidth = 52,
+		BonusWidth = 44,
+		TraitTop = 162,
+		TraitHeight = 28,
+		ButtonTop = 196,
+		-- the header: the small portrait and the level pill
+		HeaderPortrait = 44,
+		LevelPillHeight = 26,
+		-- the list of pieces that opens beside a tapped slot
+		PopoverWidth = 216,
+		PopoverMaxHeight = 236,
+	},
+	-- The Bag (UiBag): a modal with a Materials tab and a Gear tab, read-only. Its size, a tile and the gap between tiles, a
+	-- material's picture, a group header, the small worn badge, a "used in" piece's picture and the details strip's height.
+	Bag = {
+		Width = 560,
+		Height = 440,
+		Tile = 64,
+		Gap = 8,
+		MaterialIcon = 44,
+		-- the Materials tab is drawn as a grid of at least this many slots, the empty ones faint, like an RPG bag
+		MaterialSlots = 28,
+		HeaderHeight = 24,
+		WornIcon = 16,
+		NeedTile = 28,
+		DetailHeight = 64,
+		-- the round edge button, a little under the book's
+		Button = 48,
 	},
 	BookWidth = 760,
 	BookHeight = 560,

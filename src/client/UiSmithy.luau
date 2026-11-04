@@ -1,5 +1,5 @@
 --!strict
--- The Blacksmith (docs/SMITHY.md §6): its prompt in the Market and the Smithy sheet. Tabs Hand / Head / Tail, a card for each
+-- The Blacksmith (docs/SMITHY.md §6): its prompt in the Market and the Smithy sheet. Tabs Weapon / Head / Charm, a card for each
 -- piece of the tab (its picture on the rarity colour, name, the points it adds, how many wait in the bag, the materials as
 -- picture and have/need, the coins, and Craft). It reads what the server publishes (the root's Materials, GearBag and Coins
 -- attributes) and asks through Remotes.Village (SmithyCraft); the server decides and checks the distance, so a button it

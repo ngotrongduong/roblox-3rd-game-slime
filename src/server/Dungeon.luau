@@ -851,7 +851,7 @@ local function leave(run: Run, why: string, quiet: boolean)
 	sendHome(run)
 	if not quiet then
 		fire(run, { { kind = "end", winner = "left", level = run.level, wave = run.wave }, { kind = "leave" } })
-		moveCharacter(run.player, Layout.portalLanding(run.plot))
+		moveCharacter(run.player, Layout.portalLanding())
 		clearPlayerAttributes(run.player)
 	end
 	run.arena:Destroy()
@@ -875,7 +875,7 @@ local function enter(player: Player, data: any, farm: any): { ok: boolean, reaso
 	elseif not characterAlive(player) then
 		return fail("DEAD")
 	elseif
-		not ZombieFights.near(player, Layout.plotPortal(plot).Position, D.Portal.PromptRangeStuds + D.EnterSlackStuds)
+		not ZombieFights.near(player, Layout.marketPortal().Position, D.Portal.PromptRangeStuds + D.EnterSlackStuds)
 	then
 		return fail("TOO_FAR")
 	end
