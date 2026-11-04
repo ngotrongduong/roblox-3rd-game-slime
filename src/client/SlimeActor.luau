@@ -435,9 +435,8 @@ end
 -- on the screen): the failing slime is skipped and the error printed once per slime.
 local warned: { [Slime]: boolean } = {}
 local function safeTick(a: Slime, dt: number, write: boolean)
-	local ok, err = pcall(function()
-		tick(a, dt, write)
-	end)
+	-- (no closure a slime a frame: that was thousands of short-lived functions a second for the garbage collector)
+	local ok, err = pcall(tick :: any, a, dt, write)
 	if not ok and not warned[a] then
 		warned[a] = true
 		warn(Config.LogPrefix, "slime motion error:", err)
