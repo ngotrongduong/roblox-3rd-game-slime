@@ -9,6 +9,7 @@ local ProgressClock = require(script.Parent.ProgressClock)
 local SlimeActor = require(script.Parent.SlimeActor)
 local SlimeLook = require(script.Parent.SlimeLook)
 local VillagePath = require(ReplicatedStorage.Shared.VillagePath)
+local WorkMoves = require(script.Parent.WorkMoves)
 
 local C = Config.VillageClient
 type Entry = {
@@ -39,6 +40,8 @@ type Entry = {
 	popAt: number,
 	-- the progress clock over the head while a work cycle or a courtship runs
 	clock: ProgressClock.Clock?,
+	-- a cook's tossed ingredient, a trainee's beat and target (WorkMoves)
+	moves: WorkMoves.State,
 }
 type Village = {
 	root: Folder,
@@ -145,6 +148,7 @@ local function dropBody(entry: Entry)
 	end
 	entry.tool, entry.bobber, entry.flight = nil, nil, nil
 	entry.toolName, entry.flightKey, entry.castKey = "", "", ""
+	WorkMoves.drop(entry.moves)
 	ProgressClock.drop(entry.clock)
 	entry.clock = nil
 	entry.signature = ""
@@ -246,6 +250,7 @@ local function refreshLook(entry: Entry)
 		entry.tool = nil
 	end
 	entry.toolName = ""
+	WorkMoves.stopCook(entry.moves)
 end
 
 local function actionMotion(action: string, working: string): string?
@@ -302,6 +307,14 @@ local function pondMarker(village: Village, slot: number): BasePart?
 	local stage = pondStage(village)
 	local marker = if stage then stage:FindFirstChild("WorkSpot" .. math.floor(slot)) else nil
 	return if marker and marker:IsA("BasePart") then marker else nil
+end
+
+-- The village's training ground (its dummy, punching bag and archery target are a trainee's targets).
+local function trainingGround(village: Village): Instance?
+	local plotNumber = number(village.root, "Plot", 0)
+	local map = workspace:FindFirstChild("Map")
+	local plot = if map and plotNumber >= 1 then map:FindFirstChild("Plot" .. plotNumber) else nil
+	return if plot then plot:FindFirstChild("TrainingL1") else nil
 end
 
 -- The rod resting in the stand nearest a fishing place.
@@ -539,6 +552,25 @@ local function animate(village: Village, entry: Entry, now: number)
 		drawTo += shift
 		pos += shift
 	end
+	-- Working and its clock running: a cook at its pan, a trainee at its target.
+	local working = stringAttr(entry.config, "Working", "")
+	local busy = not moving
+		and stringAttr(entry.config, "Action", "") == "work"
+		and stringAttr(entry.config, "Carry", "") == ""
+		and working ~= ""
+		and stringAttr(entry.config, "ClockKind", "") == working
+	local workSlot = math.floor(number(entry.config, "WorkSlot", 1))
+	local trainFace: Vector3? = nil
+	if actor and busy and working == "training" then
+		local stat = WorkMoves.trainStat(village.root, workSlot)
+		local shift, point = WorkMoves.train(entry.moves, actor, trainingGround(village), to, stat, now)
+		drawFrom += shift
+		drawTo += shift
+		pos += shift
+		trainFace = point
+	elseif entry.moves.beat >= 0 then
+		WorkMoves.stopTrain(entry.moves)
+	end
 	if actor then
 		SlimeActor.setTravel(actor, drawFrom, drawTo, start, finish, ghost, gait)
 		SlimeActor.setSeated(actor, entry.config:GetAttribute("Seated") == true)
@@ -558,7 +590,8 @@ local function animate(village: Village, entry: Entry, now: number)
 			then "eating"
 			else if not moving and action == "sleep" then "sleep" else emotion
 	if actor then
-		if entry.lastEmotion ~= face or entry.lastAction ~= action or entry.lastPhase ~= phase then
+		local phaseKey = if busy then phase .. "|" .. working else phase
+		if entry.lastEmotion ~= face or entry.lastAction ~= action or entry.lastPhase ~= phaseKey then
 			SlimeActor.setEmotion(actor, face)
 			local motion = if action == "work"
 					and (
@@ -571,11 +604,13 @@ local function animate(village: Village, entry: Entry, now: number)
 						or phase == "harvest"
 					)
 				then "work" .. string.upper(string.sub(phase, 1, 1)) .. string.sub(phase, 2)
-				else actionMotion(action, stringAttr(entry.config, "Working", ""))
+				elseif busy and working == "kitchen" then "workCook"
+				elseif busy and working == "training" then "workTrain"
+				else actionMotion(action, working)
 			if motion then
 				SlimeActor.playMotion(actor, motion)
 			end
-			entry.lastEmotion, entry.lastAction, entry.lastPhase = face, action, phase
+			entry.lastEmotion, entry.lastAction, entry.lastPhase = face, action, phaseKey
 		end
 	end
 	local hand = stringAttr(entry.config, "Hand", "")
@@ -616,6 +651,7 @@ local function animate(village: Village, entry: Entry, now: number)
 		then
 			bodyFace = partnerPosition(village, entry) or bodyFace
 		end
+		bodyFace = trainFace or bodyFace
 		SlimeActor.face(actor, if moving then nil else bodyFace)
 		if moving then
 			SlimeActor.lookAt(actor, to)
@@ -684,7 +720,11 @@ local function animate(village: Village, entry: Entry, now: number)
 		else (if action == "work"
 				and not moving
 				and carryName == ""
-			then (if phase == "hoe" then "Hoe" elseif phase == "water" then "WateringCan" else "")
+			then (if phase == "hoe"
+				then "Hoe"
+				elseif phase == "water" then "WateringCan"
+				elseif busy and working == "kitchen" then "FryingPan"
+				else "")
 			else "")
 	if tool ~= entry.toolName then
 		entry.toolName = tool
@@ -696,10 +736,13 @@ local function animate(village: Village, entry: Entry, now: number)
 			entry.tool = nil
 		end
 		clearLine(entry)
+		WorkMoves.stopCook(entry.moves)
 		if tool ~= "" and actor then
-			local toolModel = asset(tool)
+			local toolModel = if tool == "FryingPan" then WorkMoves.pan() else asset(tool)
 			local scale = actor.scale
-			if tool == "FishingRod" then
+			if tool == "FryingPan" then
+				toolModel:ScaleTo(C.Cook.PanScale * scale / C.BodyHeight)
+			elseif tool == "FishingRod" then
 				-- The kit rod hangs its own short line; the held rod casts a real one.
 				for _, name in { "Line", "BobberTop", "BobberBottom" } do
 					local piece = toolModel:FindFirstChild(name)
@@ -717,10 +760,14 @@ local function animate(village: Village, entry: Entry, now: number)
 			toolModel.Parent = renderFolder
 			entry.tool = toolModel
 			local config = entry.config
+			local moves = entry.moves
 			SlimeActor.hold(actor, toolModel, function(clock: number): CFrame
-				return toolPose(config, tool, clock)
+				return if tool == "FryingPan" then WorkMoves.panPose(moves, clock) else toolPose(config, tool, clock)
 			end)
 		end
+	end
+	if actor and entry.tool and entry.toolName == "FryingPan" then
+		WorkMoves.cook(entry.moves, actor, entry.tool, village.root, workSlot, now, asset, renderFolder)
 	end
 	updateLine(entry, actor, if fishing then water else nil, phase, now)
 
@@ -859,6 +906,7 @@ local function addSlime(village: Village, child: Instance)
 		flightKey = "",
 		popAt = 0,
 		clock = nil,
+		moves = WorkMoves.new(child.Name),
 	}
 	village.slimes[child] = entry
 	for _, name in { "Look", "Colour", "Material", "DualId", "SecretId", "Ghost", "Scale", "OutOnSquad" } do

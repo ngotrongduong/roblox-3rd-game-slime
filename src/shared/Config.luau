@@ -2401,6 +2401,54 @@ Config.VillageClient = {
 	CanPourDegrees = 30,
 	CanPourWobble = 8,
 	CanPourHz = 0.9,
+	-- The cook's frying pan (src/client/WorkMoves.luau; the owner, 2026-11-04: cooks get a pan, trainees a dummy): its
+	-- size against the built pan (about 2.4 studs long), its handle's end in front of the body (studs for a full-size
+	-- slime: up, forward); one toss every TossSeconds, the pan flicking up this many degrees and the ingredient flying
+	-- this high, turning over, for TossAirShare of the toss; the pan jiggles in between; the ingredient is this big.
+	Cook = {
+		PanScale = 1.25,
+		PanUp = 0.6,
+		PanForward = 1.35,
+		TossSeconds = 1.6,
+		FlickDegrees = 28,
+		FlickShare = 0.12,
+		TossAirShare = 0.55,
+		TossStuds = 1.6,
+		JiggleDegrees = 3,
+		JiggleHz = 6,
+		FoodStuds = 1,
+		TossLeanKick = -1.4,
+		TossSquashKick = 1,
+		-- the steam off the pan (Roblox's own smoke picture), a few puffs a second
+		SteamRate = 4,
+	},
+	-- The trainee at the training ground's dummy or punching bag (whichever stands nearest its spot): every BeatSeconds a
+	-- windup, a lunge to the target's skin and back, a mark in the style of the stat it trains (FightFx, the battle art),
+	-- every HeavyEvery-th blow a heavy one; the target rocks from its foot. A target farther than MaxLungeStuds (the
+	-- archery target) is spat at with goo instead.
+	Train = {
+		BeatSeconds = 1.5,
+		WindupShare = 0.3,
+		ContactShare = 0.42,
+		HoldShare = 0.52,
+		BackShare = 0.85,
+		WindupStuds = 0.4,
+		WindupSquash = -2.2,
+		LungeHop = 0.18,
+		SlimeRadius = 1.3,
+		MaxLungeStuds = 9,
+		HeavyEvery = 4,
+		-- the dummy: its pieces within this far of the post (flat) and this far above its foot rock with it
+		DummyRadius = 3,
+		DummyFootClear = 0.5,
+		RockDegrees = 7,
+		HeavyRock = 1.8,
+		RockHz = 2.2,
+		RockDamp = 3.5,
+		RockSeconds = 1.6,
+		-- the goo spat at a far target
+		Shot = "gooBlob",
+	},
 	GhostFloat = 0.35,
 	GhostFloatHz = 0.35,
 	-- A dungeon monster drawn by its pieces walks (its legs swing in full) while it moves faster than this, studs a second.

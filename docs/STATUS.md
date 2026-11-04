@@ -1,5 +1,19 @@
 # Status
 
+## 2026-11-04 — cooks work a pan, trainees hit the dummy
+
+The owner: a pan and a stove for the cooks, a dummy for the trainees. `client/WorkMoves` (client only, from what the server
+publishes: Working, ClockKind, the village's Work slots), while the place's clock runs:
+- cook: a frying pan built from parts like the rod and the hoe, steaming (Roblox's smoke picture); every `Cook.TossSeconds` the
+  pan flicks and one of the dish's ingredients (their kit models, in turn) flies up, turns over and lands in it; motion
+  `workCook`.
+- trainee: every `Train.BeatSeconds` a windup, a lunge to the skin of the nearest dummy or punching bag and back, a mark in
+  the style of the stat the place trains (FightFx, the battle art), every 4th blow heavy; the dummy rocks from its foot
+  (client side, restored after). A target out of reach (the archery target) is spat at with goo. Motion `workTrain`.
+Numbers in `Config.VillageClient.Cook` / `.Train`. Seen in a play test: the lunge measured 6.6 -> 2.1 studs from the dummy
+and back each beat (`docs/work/train-dummy.jpg`, `docs/work/cook-pan.jpg`). Not yet seen: the punching bag (from training
+level 21) and the archery spot (level 31).
+
 ## 2026-11-04 — "Best" on the Teams sheet
 
 The owner: a button that fills a team with the best slimes that can fight. `client/UiTeams`: "Best" (gold, beside Repeat) puts

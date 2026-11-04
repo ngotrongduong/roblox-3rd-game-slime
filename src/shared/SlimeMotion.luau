@@ -212,6 +212,20 @@ drivers.workHarvest = function(st)
 	st.sq.to = Config.Work.WorkBobStuds * math.sin(TAU * Config.Work.WorkShakeHz * st.motionT)
 end
 
+-- A cook over its pan: leaning in, swaying a little; each toss kicks it from the client (WorkMoves).
+drivers.workCook = function(st)
+	st.lf.to = math.rad(Config.Work.WorkShakeDegrees) * 0.5
+	st.ls.to = Config.Work.WorkBobStuds * 0.4 * math.sin(TAU * Config.Work.WorkBobHz * 0.5 * st.motionT + st.phase)
+	breathe(st, Config.Work.WorkBobStuds * 0.3, Config.Work.WorkBobHz)
+end
+
+-- A trainee in its stance, crouched and leaning at the target; the lunges are kicks and hops from the client.
+drivers.workTrain = function(st)
+	st.lf.to = math.rad(Config.Work.WorkShakeDegrees) * 0.6
+	st.sq.to = -Config.Work.WorkBobStuds * 0.5
+	breathe(st, Config.Work.WorkBobStuds * 0.4, Config.Work.WorkShakeHz * 0.5)
+end
+
 drivers.idle = function(st)
 	breathe(st, 0.028, 0.55)
 end
