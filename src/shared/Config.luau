@@ -27,13 +27,10 @@ Config.Stats = {
 }
 
 Config.Breeding = {
-	-- Incubation: max(Min, Base - min(MaxLevel, upgradeLevel) * Step) → 60 s, 35 s at level 5.
+	-- Incubation: (Base + a second a baby level above IncubationLevelBase) * IncubationAreaFactor per area level.
 	IncubationSeconds = 60,
 	-- An egg left in its nest hatches too, this many times slower than in an incubator (the owner, 2026-10-29).
 	NestSlowFactor = 2,
-	IncubationStepSeconds = 5,
-	IncubationMinSeconds = 5,
-	IncubationMaxLevel = 5,
 	-- Parent rest: round((Base + max(0, bestParentLevel - 1) * PerLevel) * Factor ^ min(MaxLevel, upgradeLevel)).
 	CooldownSeconds = 60,
 	CooldownPerLevelSeconds = 1,
@@ -61,11 +58,19 @@ Config.Breeding = {
 	-- Two places at level 1, one extra at each milestone.
 	SlotLevels = { 21, 41 },
 	BasePlaces = 2,
+	-- Each level of the breeding area above the first speeds a courtship and an incubation by these factors, down to
+	-- their floors, and lifts the chance of a rare baby (secret, dual, material) by RareChancePerLevel of its base (the
+	-- owner, 2026-11-04: an upgrade should breed faster, hatch faster and give more rare mutations, not only more
+	-- nests). Level 10: courtship 42 s, hatch 42 s, rare x1.18; level 20: 28 s, 28 s, x1.38; level 50: x1.98.
 	CourtshipSeconds = 60,
+	CourtshipAreaFactor = 0.96,
+	CourtshipMinSeconds = 15,
 	LayEnergy = 30,
 	IncubationPerBabyLevel = 1,
 	IncubationLevelBase = 4,
-	IncubationAreaFactor = 0.98,
+	IncubationAreaFactor = 0.96,
+	IncubationFloorSeconds = 10,
+	RareChancePerLevel = 0.02,
 }
 
 Config.Mutation = {

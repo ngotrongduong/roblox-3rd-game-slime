@@ -75,9 +75,17 @@ function Breeding.incubationSeconds(babyLevel: number, breedingLevel: number?, t
 		return b.TutorialHatchSeconds
 	end
 	local base = b.IncubationSeconds + math.max(0, babyLevel - b.IncubationLevelBase) * b.IncubationPerBabyLevel
-	return math.round(
-		base * b.IncubationAreaFactor ^ ((breedingLevel or Config.Village.StartLevel) - Config.Village.StartLevel)
+	return math.max(
+		b.IncubationFloorSeconds,
+		math.round(
+			base * b.IncubationAreaFactor ^ ((breedingLevel or Config.Village.StartLevel) - Config.Village.StartLevel)
+		)
 	)
+end
+
+-- What the breeding area's level does to the odds of a rare baby (secret, dual, material): a factor on luck.
+function Breeding.rareFactor(breedingLevel: number): number
+	return 1 + math.max(0, breedingLevel - Config.Village.StartLevel) * Config.Breeding.RareChancePerLevel
 end
 
 -- Both parents rest this long: 63 s for level-4 starters, less with Quicker Breeding.
@@ -248,7 +256,7 @@ function Breeding.createEgg(farm: Farm, idA: string, idB: string, now: number, r
 	local b = FarmState.findSlime(farm, idB) :: Slime
 
 	local luck = Luck.multiplier(farm, now)
-	local outcome = Mutations.resolveOffspring(a, b, rng, luck)
+	local outcome = Mutations.resolveOffspring(a, b, rng, luck * Breeding.rareFactor(farm.areas.breeding.level))
 	if outcome.appearance.type == "none" and farm.breedsSinceMutation + 1 >= Config.Mutation.PityThreshold then
 		outcome = Mutations.applyPity(outcome, a, b, rng)
 	end
@@ -388,14 +396,20 @@ end
 function Breeding.startCourtship(farm: Farm, index: number, now: number): CheckResult
 	local ready = Breeding.pairReady(farm, index, now)
 	if ready.ok then
-		farm.breeding.pairs[index].courtingUntil = now + Breeding.courtshipSeconds(farm.tutorialDone == false)
+		farm.breeding.pairs[index].courtingUntil = now
+			+ Breeding.courtshipSeconds(farm.tutorialDone == false, farm.areas.breeding.level)
 	end
 	return ready
 end
 
--- A courtship is short while the tutorial runs.
-function Breeding.courtshipSeconds(tutorial: boolean?): number
-	return if tutorial then Config.Breeding.TutorialCourtshipSeconds else Config.Breeding.CourtshipSeconds
+-- A courtship is short while the tutorial runs, and shorter as the breeding area grows.
+function Breeding.courtshipSeconds(tutorial: boolean?, breedingLevel: number?): number
+	local b = Config.Breeding
+	if tutorial then
+		return b.TutorialCourtshipSeconds
+	end
+	local steps = (breedingLevel or Config.Village.StartLevel) - Config.Village.StartLevel
+	return math.max(b.CourtshipMinSeconds, math.round(b.CourtshipSeconds * b.CourtshipAreaFactor ^ steps))
 end
 
 function Breeding.layEgg(farm: Farm, index: number, now: number, rng: Rng, newId: IdFn): BreedResult
