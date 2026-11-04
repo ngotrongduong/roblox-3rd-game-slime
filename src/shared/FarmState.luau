@@ -2,6 +2,8 @@
 -- The schema-six living village: load-safe slimes, area levels, jobs, food and breeding.
 -- All clocks are server epoch seconds, and repairs keep valid unrelated progress intact.
 
+local ArenaQuests = if script then require(script.Parent.ArenaQuests) else require("./ArenaQuests")
+local ArenaSeason = if script then require(script.Parent.ArenaSeason) else require("./ArenaSeason")
 local Colours = if script then require(script.Parent.Colours) else require("./Colours")
 local Config = if script then require(script.Parent.Config) else require("./Config")
 local Genetics = if script then require(script.Parent.Genetics) else require("./Genetics")
@@ -126,6 +128,52 @@ export type Rewards = {
 -- The Slime Dungeon (shared/Dungeon): the highest dungeon level cleared, 0 for none (level best + 1 is the next to open).
 export type Dungeon = { best: number }
 
+-- The Arena (shared/ArenaRules; schema 11). Times are server seconds, days and weeks ArenaSeason.dayOf / weekOf numbers,
+-- seasons ArenaSeason.seasonOf numbers (yyyymm). The match in flight: who was attacked, at which rank (0 for a champion),
+-- the fight's result and seed, when it began and was last sent, and the client's request id; it is cleared only when the
+-- ladder shows its outcome (points granted) or it is void.
+export type ArenaPending = {
+	matchId: string,
+	seq: number,
+	season: number,
+	defender: string,
+	defenderName: string,
+	defenderRank: number,
+	above: boolean,
+	stronger: boolean,
+	won: boolean,
+	power: number,
+	seed: number,
+	at: number,
+	sentAt: number,
+	requestId: string,
+}
+-- One finished season: the final rank (0 for none), its badge and the wins in it.
+export type ArenaSeasonRecord = { season: number, rank: number, badge: string?, wins: number }
+export type ArenaQuestState = typeof(ArenaQuests.new(0))
+-- points: the Arena's currency; team: slime ids; day/used: the tickets used that UTC day; seq: the last match number
+-- (never below the ladder's); claimed: season rewards taken, by tostring(season); season/seasonWins/bestRank: this season's
+-- counters (bestRank 0 for none); defense: defences won, the current and the best run; week/bought: the shop's week and what
+-- was bought in it, by item id; snapshotAt: when the defence team was last published.
+export type Arena = {
+	points: number,
+	team: { string },
+	day: number,
+	used: number,
+	seq: number,
+	pending: ArenaPending?,
+	claimed: { [string]: boolean },
+	history: { ArenaSeasonRecord },
+	quests: ArenaQuestState,
+	season: number,
+	seasonWins: number,
+	bestRank: number,
+	defense: { wins: number, streak: number, best: number },
+	week: number,
+	bought: { [string]: number },
+	snapshotAt: number,
+}
+
 -- kind: "INVENTORY", "EQUIPPED_TO_SLIME" (with slimeId and slot), "BATTLE_ESCROW", "PENDING_RETURN".
 export type ItemOwnership = { kind: string, slimeId: string?, slot: string? }
 export type Item = { id: string, definitionId: string, ownership: ItemOwnership }
@@ -194,6 +242,7 @@ export type Farm = {
 	guide: Guide,
 	rewards: Rewards,
 	dungeon: Dungeon,
+	arena: Arena,
 	luckPotionUntil: number?,
 	lastSiegeTeam: { string }?,
 	wbKingSlain: boolean?,
@@ -272,6 +321,27 @@ end
 
 function FarmState.newDungeon(): Dungeon
 	return { best = 0 }
+end
+
+function FarmState.newArena(now: number): Arena
+	return {
+		points = 0,
+		team = {},
+		day = ArenaSeason.dayOf(now),
+		used = 0,
+		seq = 0,
+		pending = nil,
+		claimed = {},
+		history = {},
+		quests = ArenaQuests.new(now),
+		season = ArenaSeason.seasonOf(now),
+		seasonWins = 0,
+		bestRank = 0,
+		defense = { wins = 0, streak = 0, best = 0 },
+		week = ArenaSeason.weekOf(now),
+		bought = {},
+		snapshotAt = 0,
+	}
 end
 
 function FarmState.newTeams(): { Team }
@@ -404,6 +474,14 @@ function FarmState.removeSlime(farm: Farm, id: string): boolean
 		local inTeam = table.find(team.members, id)
 		if inTeam then
 			table.remove(team.members, inTeam)
+		end
+	end
+	-- (farms built by hand in older specs may have no arena)
+	local arena = (farm :: any).arena
+	if type(arena) == "table" and type(arena.team) == "table" then
+		local inArena = table.find(arena.team, id)
+		if inArena then
+			table.remove(arena.team, inArena)
 		end
 	end
 	return true
@@ -545,6 +623,7 @@ function FarmState.newFarm(now: number): Farm
 		guide = FarmState.newGuide(false),
 		rewards = FarmState.newRewards(),
 		dungeon = FarmState.newDungeon(),
+		arena = FarmState.newArena(now),
 		luckPotionUntil = nil,
 		lastSiegeTeam = nil,
 		wbKingSlain = nil,
@@ -1266,6 +1345,148 @@ local function validateDungeon(raw: any, warnings: { string }): Dungeon
 	return { best = nonNegInt(raw.best, 0) }
 end
 
+-- The keys of a { [tostring(season)]: true } map, newest kept, at most Config.Arena.KeepSeasons.
+local function validateClaimed(raw: any): { [string]: boolean }
+	local seasons: { number } = {}
+	if type(raw) == "table" then
+		for key, value in raw do
+			local season = if type(key) == "string" and string.match(key, "^%d+$") then tonumber(key) else nil
+			if value == true and season then
+				table.insert(seasons, season)
+			end
+		end
+	end
+	table.sort(seasons, function(a, b)
+		return a > b
+	end)
+	local out: { [string]: boolean } = {}
+	for i = 1, math.min(#seasons, Config.Arena.KeepSeasons) do
+		out[tostring(seasons[i])] = true
+	end
+	return out
+end
+
+local function validateArenaQuests(raw: any, now: number): ArenaQuestState
+	local out = ArenaQuests.new(now)
+	if type(raw) ~= "table" then
+		return out
+	end
+	out.day = nonNegInt(raw.day, out.day)
+	out.week = nonNegInt(raw.week, out.week)
+	out.season = nonNegInt(raw.season, out.season)
+	for _, quest in Config.Arena.Quests do
+		if type(raw.counts) == "table" and isNum(raw.counts[quest.id]) then
+			out.counts[quest.id] = math.min(nonNegInt(raw.counts[quest.id], 0), quest.wins)
+		end
+		if type(raw.done) == "table" and raw.done[quest.id] == true then
+			out.done[quest.id] = true
+		end
+	end
+	return out
+end
+
+-- A match in flight is kept whenever what finds its outcome is readable (its number, season, defender and start); a
+-- damaged detail gets a neutral default. Dropping it would lose the match's points.
+local function validatePending(raw: any, warnings: { string }): ArenaPending?
+	if raw == nil then
+		return nil
+	end
+	if
+		type(raw) ~= "table"
+		or not (isNum(raw.seq) and raw.seq >= 1 and raw.seq % 1 == 0)
+		or not (isNum(raw.season) and raw.season >= 0)
+		or not isText(raw.matchId)
+		or not isText(raw.defender)
+		or not isNum(raw.at)
+	then
+		table.insert(warnings, "arena: match in flight unreadable, dropped")
+		return nil
+	end
+	return {
+		matchId = raw.matchId,
+		seq = raw.seq,
+		season = math.floor(raw.season),
+		defender = raw.defender,
+		defenderName = if type(raw.defenderName) == "string" then raw.defenderName else "",
+		defenderRank = nonNegInt(raw.defenderRank, 0),
+		above = raw.above == true,
+		stronger = raw.stronger == true,
+		won = raw.won == true,
+		power = if isNum(raw.power) and raw.power >= 0 then raw.power else 0,
+		seed = if isNum(raw.seed) then raw.seed else 0,
+		at = raw.at,
+		sentAt = if isNum(raw.sentAt) then raw.sentAt else raw.at,
+		requestId = if type(raw.requestId) == "string" then raw.requestId else "",
+	}
+end
+
+-- Each part of the Arena is repaired alone; a team keeps only own slimes, at most TeamSize, once each.
+local function validateArena(raw: any, slimeIds: { [string]: boolean }, now: number, warnings: { string }): Arena
+	local out = FarmState.newArena(now)
+	if type(raw) ~= "table" then
+		if raw ~= nil then
+			table.insert(warnings, "arena: not a table, reset")
+		end
+		return out
+	end
+	out.points = nonNegInt(raw.points, 0)
+	local team = stringList(raw.team, function(s)
+		return slimeIds[s] == true
+	end)
+	for i = #team, Config.Arena.TeamSize + 1, -1 do
+		team[i] = nil
+	end
+	out.team = team
+	out.day = nonNegInt(raw.day, out.day)
+	out.used = math.min(nonNegInt(raw.used, 0), Config.Arena.TicketsPerDay)
+	out.pending = validatePending(raw.pending, warnings)
+	-- (the farm's number never falls behind its match in flight, or the next match would read as old)
+	out.seq = math.max(nonNegInt(raw.seq, 0), if out.pending then out.pending.seq else 0)
+	out.claimed = validateClaimed(raw.claimed)
+	local history: { ArenaSeasonRecord } = {}
+	local seen: { [number]: boolean } = {}
+	if type(raw.history) == "table" then
+		for _, entry in raw.history do
+			if type(entry) == "table" and isNum(entry.season) and entry.season % 1 == 0 and not seen[entry.season] then
+				seen[entry.season] = true
+				table.insert(history, {
+					season = entry.season,
+					rank = nonNegInt(entry.rank, 0),
+					badge = if isText(entry.badge) then entry.badge else nil,
+					wins = nonNegInt(entry.wins, 0),
+				})
+			end
+		end
+	end
+	table.sort(history, function(a, b)
+		return a.season < b.season
+	end)
+	while #history > Config.Arena.KeepSeasons do
+		table.remove(history, 1)
+	end
+	out.history = history
+	out.quests = validateArenaQuests(raw.quests, now)
+	out.season = nonNegInt(raw.season, out.season)
+	out.seasonWins = nonNegInt(raw.seasonWins, 0)
+	out.bestRank = nonNegInt(raw.bestRank, 0)
+	local defense = if type(raw.defense) == "table" then raw.defense else {}
+	out.defense = {
+		wins = nonNegInt(defense.wins, 0),
+		streak = nonNegInt(defense.streak, 0),
+		best = nonNegInt(defense.best, 0),
+	}
+	out.week = nonNegInt(raw.week, out.week)
+	if type(raw.bought) == "table" then
+		for id, count in raw.bought do
+			if isText(id) and isNum(count) and count >= 1 then
+				out.bought[id] = math.floor(count)
+			end
+		end
+	end
+	out.snapshotAt = if isNum(raw.snapshotAt) and raw.snapshotAt >= 0 then raw.snapshotAt else 0
+	return out
+end
+
 -- Gear bookkeeping: an item is equipped only while a loadout names it. A loadout slot naming a
 -- missing item (or one already claimed; the avatar claims first) is cleared; item ownership is
 -- then re-stamped from the claims. Returns how many fixes were made.
@@ -1562,6 +1783,7 @@ function FarmState.repair(data: any, now: number): (Farm, { string }, boolean)
 		guide = guide,
 		rewards = validateRewards(data.rewards, warnings),
 		dungeon = validateDungeon(data.dungeon, warnings),
+		arena = validateArena(data.arena, slimeIds, now, warnings),
 		luckPotionUntil = if isNum(data.luckPotionUntil) and data.luckPotionUntil >= 0
 			then data.luckPotionUntil
 			else nil,

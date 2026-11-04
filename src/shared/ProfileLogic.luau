@@ -7,6 +7,8 @@
 
 local Config = if script then require(script.Parent.Config) else require("./Config")
 
+local ArenaQuests = if script then require(script.Parent.ArenaQuests) else require("./ArenaQuests")
+local ArenaSeason = if script then require(script.Parent.ArenaSeason) else require("./ArenaSeason")
 local Colours = if script then require(script.Parent.Colours) else require("./Colours")
 local Genetics = if script then require(script.Parent.Genetics) else require("./Genetics")
 local GardenPlots = if script then require(script.Parent.GardenPlots) else require("./GardenPlots")
@@ -380,6 +382,33 @@ function ProfileLogic.migrateGear(data: any, _now: number): any
 			end
 		end
 	end
+	return out
+end
+
+-- A farm saved before the Arena: no points, no team, every ticket left, nothing in flight or claimed; this season's
+-- counters start at the load.
+function ProfileLogic.migrateArena(data: any, now: number): any
+	if type(data) ~= "table" then
+		return data
+	end
+	local out = ProfileLogic.deepCopy(data)
+	out.arena = {
+		points = 0,
+		team = {},
+		day = ArenaSeason.dayOf(now),
+		used = 0,
+		seq = 0,
+		claimed = {},
+		history = {},
+		quests = ArenaQuests.new(now),
+		season = ArenaSeason.seasonOf(now),
+		seasonWins = 0,
+		bestRank = 0,
+		defense = { wins = 0, streak = 0, best = 0 },
+		week = ArenaSeason.weekOf(now),
+		bought = {},
+		snapshotAt = 0,
+	}
 	return out
 end
 

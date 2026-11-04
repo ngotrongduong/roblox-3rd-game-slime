@@ -2335,7 +2335,8 @@ Config.Save = {
 	-- 8: the daily check-in, quests and online gifts (`rewards`), lifetime counts of slimes sold and meals eaten.
 	-- 9: the Slime Dungeon's best level cleared (`dungeon`).
 	-- 10: gear: the bag (`gear` on the farm) and what each slime wears (`gear` on the slime).
-	SchemaVersion = 10,
+	-- 11: the Arena (`arena`: points, team, tickets, the match in flight, season rewards claimed, quests, shop).
+	SchemaVersion = 11,
 	-- A stored envelope without a version is this one.
 	FirstSchemaVersion = 1,
 
@@ -3498,6 +3499,42 @@ Config.Arena = {
 	},
 	NameStarts = { "Bram", "Clover", "Dew", "Fern", "Glim", "Moss", "Pebble", "Pip", "Sprout", "Willow" },
 	NameEnds = { "bell", "brook", "bud", "drop", "leaf", "ling", "pool", "root", "shine", "wick" },
+
+	-- The farm's side (shared/ArenaRules, farm.arena): attacks a UTC day; how many seasons the claimed map and the history
+	-- keep; how many past seasons a login looks through for an unclaimed reward.
+	TicketsPerDay = 10,
+	KeepSeasons = 12,
+	ClaimLookback = 3,
+	-- An attack whose outcome has not shown in the ladder this long is sent again (safe: the ladder applies a seq once).
+	ResendSeconds = 60,
+
+	-- The global stores (server/ArenaStore). One DataStore holds Ladder_<season>, Def_<userId> and Log_<userId>; match
+	-- results travel through one MemoryStore queue to the one server holding the leader lease, the only ladder writer.
+	-- A test switch, off in anything committed: a Studio play test uses the real stores only when on.
+	StudioUsesRealStore = false,
+	StoreName = "GooLineage_Arena_v1",
+	QueueName = "ArenaResults",
+	LeaseMapName = "ArenaLeader",
+	LeaseKey = "leader",
+	-- The lease outlives two missed ticks; a leader renews it every tick.
+	LeaseSeconds = 30,
+	TickSeconds = 15,
+	-- One leader tick reads up to ReadsPerTick batches of ReadBatch items (100 is MemoryStore's most a read).
+	ReadBatch = 100,
+	ReadsPerTick = 20,
+	-- An item read and not removed comes back after this long (the leader then waits this long before reading again, so
+	-- the items come back in their order).
+	InvisibleSeconds = 30,
+	-- A queued result is kept this long before MemoryStore drops it.
+	QueueItemSeconds = 3 * 86400,
+	-- Ladder writes stay within this many bytes a minute: a document over 250 KB (WriteBytesPerMinute / 4 writes a
+	-- minute) is written less often than every tick. Never two writes of one key closer than MinWriteSeconds (DataStore's
+	-- limit is one write a key every 6 s). A document past WarnDocBytes logs a warning (the DataStore limit is 4 MB).
+	WriteBytesPerMinute = 1000000,
+	MinWriteSeconds = 6,
+	WarnDocBytes = 1000000,
+	-- A defender's log (Log_<userId>) keeps its last LogKeep entries.
+	LogKeep = 10,
 }
 
 return Config

@@ -287,7 +287,7 @@ return function(T: any)
 	)
 
 	T.test("a schema 9 save migrates to 10 with an empty bag and bare slimes, keeping everything else", function()
-		T.eq(Config.Save.SchemaVersion, 10)
+		T.ok(Config.Save.SchemaVersion >= 10)
 		local old: any = FarmState.newFarm(NOW)
 		old.gear = nil
 		for _, slime in old.slimes do
