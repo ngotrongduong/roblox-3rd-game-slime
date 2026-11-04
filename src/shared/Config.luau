@@ -552,16 +552,15 @@ Config.Zombies = {
 -- a set number of them, stronger from wave to wave and from dungeon level to dungeon level. The numbers are the original's
 -- (docs/reference/02-battle.md §5 waves, §6 level ladder, §7 roster, §13 loot); the rules are shared/Dungeon.
 Config.Dungeon = {
-	-- The maps in the order they open; only the first so far. `material` is the map's own drop (a boss gives
-	-- BossMapMaterial of it, a mini-boss or an elite MapMaterialChance of one). A monster: its budget `cost` (none for a
-	-- mini-boss or boss, which come alone), its level-1 stats (the same kind of numbers a slime has), its `role`, and
-	-- `kind`: the way it fights in Config.Combat (melee strikes anyone; ranged keeps its distance; hunter goes for the
-	-- slime with the least health and stings it slow; healer mends its wounded team-mates; bloomshell and bramblehorn are
-	-- the two bosses with a skill of their own).
+	-- The maps in the order they open; only the first so far. A monster: its budget `cost` (none for a mini-boss or boss,
+	-- which come alone), its level-1 stats (the same kind of numbers a slime has), its `role`, and `kind`: the way it
+	-- fights in Config.Combat (melee strikes anyone; ranged keeps its distance; hunter goes for the slime with the least
+	-- health and stings it slow; healer mends its wounded team-mates; bloomshell and bramblehorn are the two bosses with a
+	-- skill of their own). `drops` (docs/SMITHY.md §2): a list of lines { item, chance, min, max }, each rolled on its own
+	-- when the monster falls (see "Loot" below); an item is a key of Materials.
 	Maps = {
 		meadow = {
 			name = "Sunny Meadow",
-			material = "boar_tusk",
 			monsters = {
 				{
 					id = "green_sprout",
@@ -573,6 +572,11 @@ Config.Dungeon = {
 					speed = 3,
 					hp = 13,
 					kind = "melee",
+					drops = {
+						{ item = "coins", chance = 0.25, min = 2, max = 4 },
+						{ item = "food", chance = 0.15, min = 3, max = 5 },
+						{ item = "wood", chance = 0.35, min = 1, max = 1 },
+					},
 				},
 				{
 					id = "green_bee",
@@ -584,6 +588,12 @@ Config.Dungeon = {
 					speed = 5,
 					hp = 18,
 					kind = "hunter",
+					drops = {
+						{ item = "coins", chance = 0.25, min = 2, max = 5 },
+						{ item = "food", chance = 0.10, min = 3, max = 5 },
+						{ item = "wood", chance = 0.15, min = 1, max = 1 },
+						{ item = "ore", chance = 0.10, min = 1, max = 1 },
+					},
 				},
 				{
 					id = "green_dandelion",
@@ -595,6 +605,11 @@ Config.Dungeon = {
 					speed = 2,
 					hp = 16,
 					kind = "ranged",
+					drops = {
+						{ item = "coins", chance = 0.25, min = 2, max = 5 },
+						{ item = "food", chance = 0.15, min = 3, max = 5 },
+						{ item = "wood", chance = 0.30, min = 1, max = 1 },
+					},
 				},
 				{
 					id = "green_moth",
@@ -606,6 +621,12 @@ Config.Dungeon = {
 					speed = 2.5,
 					hp = 20,
 					kind = "healer",
+					drops = {
+						{ item = "coins", chance = 0.25, min = 2, max = 5 },
+						{ item = "food", chance = 0.10, min = 3, max = 5 },
+						{ item = "ore", chance = 0.15, min = 1, max = 1 },
+						{ item = "rare_part", chance = 0.05, min = 1, max = 1 },
+					},
 				},
 				{
 					id = "green_snail",
@@ -617,6 +638,12 @@ Config.Dungeon = {
 					speed = 0.7,
 					hp = 38,
 					kind = "melee",
+					drops = {
+						{ item = "coins", chance = 0.30, min = 3, max = 6 },
+						{ item = "food", chance = 0.10, min = 3, max = 5 },
+						{ item = "ore", chance = 0.45, min = 1, max = 2 },
+						{ item = "rare_part", chance = 0.12, min = 1, max = 1 },
+					},
 				},
 				{
 					id = "green_turtle",
@@ -627,6 +654,13 @@ Config.Dungeon = {
 					speed = 1.5,
 					hp = 140,
 					kind = "bloomshell",
+					drops = {
+						{ item = "coins", chance = 1, min = 6, max = 11 },
+						{ item = "ore", chance = 1, min = 2, max = 3 },
+						{ item = "rare_part", chance = 0.60, min = 1, max = 2 },
+						{ item = "monster_core", chance = 0.30, min = 1, max = 1 },
+						{ item = "boar_tusk", chance = 0.20, min = 1, max = 1 },
+					},
 				},
 				{
 					id = "green_boar",
@@ -637,6 +671,15 @@ Config.Dungeon = {
 					speed = 2,
 					hp = 280,
 					kind = "bramblehorn",
+					drops = {
+						{ item = "coins", chance = 1, min = 12, max = 20 },
+						{ item = "ore", chance = 1, min = 3, max = 5 },
+						{ item = "rare_part", chance = 1, min = 2, max = 3 },
+						{ item = "monster_core", chance = 0.50, min = 1, max = 1 },
+						{ item = "boss_essence", chance = 0.25, min = 1, max = 1 },
+						-- the map's trophy: two horns, never fewer
+						{ item = "boar_tusk", chance = 1, min = 2, max = 2 },
+					},
 				},
 			} :: { any },
 		},
@@ -677,46 +720,10 @@ Config.Dungeon = {
 	-- The first dungeon level, and the best one that must be cleared before the next opens.
 	FirstLevel = 1,
 
-	-- ===== Loot (§13) =====
-	-- One regular drop a monster: a roll r in [0, 1) lands in the first window whose `upTo` is above it. The first window of
-	-- a row is scaled by the level's luck: `luck = "times"` (a rarer prize that luck makes likelier) or `"over"` (a window
-	-- of nothing that luck makes smaller); a window without an `item` is nothing. The amount is min..max.
-	-- LootClass: a monster's row by its role (any role left out is "normal").
-	LootClass = { boss = "boss", miniboss = "miniboss", armoured = "elite" },
-	Loot = {
-		boss = {
-			{ upTo = 0.05, item = "boss_essence", min = 1, max = 1, luck = "times" },
-			{ upTo = 0.50, item = "coins", min = 12, max = 20 },
-			{ upTo = 0.78, item = "ore", min = 2, max = 3 },
-			{ upTo = 1, item = "rare_part", min = 1, max = 2 },
-		} :: { any },
-		miniboss = {
-			{ upTo = 0.10, item = "monster_core", min = 1, max = 1, luck = "times" },
-			{ upTo = 0.55, item = "coins", min = 6, max = 11 },
-			{ upTo = 0.85, item = "ore", min = 1, max = 2 },
-			{ upTo = 1, item = "rare_part", min = 1, max = 1 },
-		} :: { any },
-		elite = {
-			{ upTo = 0.25, luck = "over" },
-			{ upTo = 0.45, item = "rare_part", min = 1, max = 1 },
-			{ upTo = 0.70, item = "ore", min = 1, max = 2 },
-			{ upTo = 0.85, item = "wood", min = 1, max = 2 },
-			{ upTo = 1, item = "food", min = 3, max = 5 },
-		} :: { any },
-		normal = {
-			{ upTo = 0.40, luck = "over" },
-			{ upTo = 0.55, item = "coins", min = 2, max = 5 },
-			{ upTo = 0.75, item = "food", min = 3, max = 5 },
-			{ upTo = 0.84, item = "common_part", min = 1, max = 1 },
-			{ upTo = 0.91, item = "cloth", min = 1, max = 1 },
-			{ upTo = 0.96, item = "wood", min = 1, max = 1 },
-			{ upTo = 1, item = "ore", min = 1, max = 1 },
-		} :: { any },
-	},
-	-- The map's own drop, a separate roll: these roles have MapMaterialChance of one; a boss always gives BossMapMaterial.
-	MapMaterialRoles = { miniboss = true, armoured = true },
-	MapMaterialChance = 0.18,
-	BossMapMaterial = 2,
+	-- ===== Loot (docs/SMITHY.md §2) =====
+	-- Every line of a monster's `drops` (Maps above) is rolled on its own: a roll r in [0, 1) under the line's `chance` pays
+	-- min..max of its item. The level's luck (1 + LuckPerLevel x (level - 1)) multiplies a chance below 1 and never takes
+	-- one past 1; a line at 1 never fails (the boss's two horns).
 	-- A "food" drop is this raw food in the storehouse (Config.Food.Raw); what does not fit the pantry is lost.
 	FoodItem = "carrot",
 	-- What a drop is. `kind`: coins go to the purse, food to the storehouse, a material to farm.materials. The screens
@@ -728,21 +735,21 @@ Config.Dungeon = {
 		food = { name = "Slime Snacks", kind = "food" },
 		-- (the pictures: ChatGPT in the game's icon style, 2026-11-04, art/icons/dg_*.png)
 		wood = { name = "Hardwood", short = "Wood", kind = "material", icon = 105540459123913 },
+		-- (cloth and common_part no longer drop, but saves hold them: the entries stay, and a later map may take them back)
 		cloth = { name = "Linen Cloth", short = "Cloth", kind = "material", icon = 128498997412713 },
 		ore = { name = "Iron Ore", short = "Ore", kind = "material", icon = 107577459785586 },
 		common_part = { name = "Slime Residue", short = "Residue", kind = "material", icon = 109902889353186 },
-		rare_part = { name = "Gooey Core Fragment", short = "Fragment", kind = "material", icon = 104963871301466 },
+		rare_part = { name = "Core Fragment", short = "Fragment", kind = "material", icon = 104963871301466 },
 		monster_core = { name = "Monster Core", short = "Core", kind = "material", icon = 118559273498942 },
 		boss_essence = { name = "Boss Essence", short = "Essence", kind = "material", icon = 135452085949250 },
-		boar_tusk = { name = "Boar Tusk", short = "Tusk", kind = "material", icon = 97935793546139 },
+		-- the id stays (saves, the picture); only the name on screen is the Meadow's trophy "Bramble Horn"
+		boar_tusk = { name = "Bramble Horn", short = "Horn", kind = "material", icon = 97935793546139 },
 	},
 	DropOrder = {
 		"coins",
 		"food",
 		"wood",
-		"cloth",
 		"ore",
-		"common_part",
 		"rare_part",
 		"monster_core",
 		"boss_essence",
@@ -994,6 +1001,156 @@ Config.Dungeon = {
 		TurnDegrees = 150,
 		Scale = 0.55,
 		PromptRangeStuds = 14,
+	},
+}
+
+-- Gear and the Smithy (the owner, 2026-11-04; docs/SMITHY.md): three slots on every slime, four tiers, a piece each crafted
+-- from dungeon drops at the Blacksmith. Gear adds flat points to a slime's stats in every fight (shared/Gear.bonus); it
+-- never changes the slime's own stats, level or price. Rules: shared/Gear; requests: shared/VillageRequests.
+Config.Smithy = {
+	-- A gear, recipe or slot id sent by a client is at most this many characters (a request longer than that is refused).
+	IdMaxLength = 40,
+	-- The slots in the order the sheet shows them, and what each piece of a slot is called on screen.
+	Slots = { "hand", "head", "tail" },
+	SlotNames = { hand = "Hand", head = "Head", tail = "Tail" },
+	-- Tiers from the weakest. The rarity colour is only for screens (the original's veto: no glow in the world).
+	TierOrder = { "wood", "iron", "core", "bramble" },
+	Tiers = {
+		wood = { rarity = "Common", colour = "#8f97a0" },
+		iron = { rarity = "Uncommon", colour = "#3a9b3a" },
+		core = { rarity = "Epic", colour = "#8a4fd0" },
+		bramble = { rarity = "Mythic", colour = "#f08a24" },
+	},
+	-- Every piece of gear: its name, slot, tier and the flat points it adds (stat keys of shared/Stats; a stat left out adds
+	-- nothing). A hand piece is a weapon, a head piece a helm, a tail piece a charm.
+	GearOrder = {
+		"sword-wood",
+		"helm-wood",
+		"charm-wood",
+		"sword-iron",
+		"helm-iron",
+		"charm-iron",
+		"sword-core",
+		"helm-core",
+		"charm-core",
+		"sword-bramble",
+		"helm-bramble",
+		"charm-bramble",
+	},
+	Gear = {
+		-- (`icon`: ChatGPT, 2026-11-04, in the style of the drop icons; art/icons/gear_*.png)
+		["sword-wood"] = {
+			name = "Wooden Sword",
+			slot = "hand",
+			tier = "wood",
+			stats = { attack = 1 },
+			icon = "rbxassetid://80279447540538",
+		},
+		["helm-wood"] = {
+			name = "Wooden Helm",
+			slot = "head",
+			tier = "wood",
+			stats = { defence = 1 },
+			icon = "rbxassetid://109171481258060",
+		},
+		["charm-wood"] = {
+			name = "Twig Charm",
+			slot = "tail",
+			tier = "wood",
+			stats = { speed = 1 },
+			icon = "rbxassetid://85641589605360",
+		},
+		["sword-iron"] = {
+			name = "Iron Sword",
+			slot = "hand",
+			tier = "iron",
+			stats = { attack = 2 },
+			icon = "rbxassetid://73489897072784",
+		},
+		["helm-iron"] = {
+			name = "Iron Helm",
+			slot = "head",
+			tier = "iron",
+			stats = { defence = 2, hp = 10 },
+			icon = "rbxassetid://115651104665931",
+		},
+		["charm-iron"] = {
+			name = "Iron Charm",
+			slot = "tail",
+			tier = "iron",
+			stats = { speed = 1, hp = 10 },
+			icon = "rbxassetid://99177471454710",
+		},
+		["sword-core"] = {
+			name = "Core Blade",
+			slot = "hand",
+			tier = "core",
+			stats = { attack = 4, speed = 1 },
+			icon = "rbxassetid://96392644637640",
+		},
+		["helm-core"] = {
+			name = "Core Helm",
+			slot = "head",
+			tier = "core",
+			stats = { defence = 3, hp = 30 },
+			icon = "rbxassetid://76647945648082",
+		},
+		["charm-core"] = {
+			name = "Core Charm",
+			slot = "tail",
+			tier = "core",
+			stats = { attack = 1, speed = 3 },
+			icon = "rbxassetid://105675835742715",
+		},
+		["sword-bramble"] = {
+			name = "Bramble Sword",
+			slot = "hand",
+			tier = "bramble",
+			stats = { attack = 5, speed = 1, hp = 20 },
+			icon = "rbxassetid://133843312835996",
+		},
+		["helm-bramble"] = {
+			name = "Bramble Crown",
+			slot = "head",
+			tier = "bramble",
+			stats = { attack = 2, defence = 4, hp = 40 },
+			icon = "rbxassetid://93917438503786",
+		},
+		["charm-bramble"] = {
+			name = "Bramble Charm",
+			slot = "tail",
+			tier = "bramble",
+			stats = { defence = 2, speed = 3, hp = 30 },
+			icon = "rbxassetid://131165304696818",
+		},
+	},
+	-- One recipe a piece (the recipe's id is the piece's id): `materials` are keys of Config.Dungeon.Materials with how many,
+	-- `coins` the price. A craft takes them once and adds one piece to the bag (an all-or-nothing step).
+	Recipes = {
+		["sword-wood"] = { gear = "sword-wood", materials = { wood = 3 }, coins = 0 },
+		["helm-wood"] = { gear = "helm-wood", materials = { wood = 4 }, coins = 0 },
+		["charm-wood"] = { gear = "charm-wood", materials = { wood = 2 }, coins = 0 },
+		["sword-iron"] = { gear = "sword-iron", materials = { ore = 4, wood = 2 }, coins = 25 },
+		["helm-iron"] = { gear = "helm-iron", materials = { ore = 5 }, coins = 25 },
+		["charm-iron"] = { gear = "charm-iron", materials = { ore = 3, wood = 2 }, coins = 25 },
+		["sword-core"] = { gear = "sword-core", materials = { ore = 8, rare_part = 6, monster_core = 1 }, coins = 150 },
+		["helm-core"] = { gear = "helm-core", materials = { ore = 8, rare_part = 6, monster_core = 1 }, coins = 150 },
+		["charm-core"] = { gear = "charm-core", materials = { wood = 6, rare_part = 6, monster_core = 1 }, coins = 150 },
+		["sword-bramble"] = {
+			gear = "sword-bramble",
+			materials = { boar_tusk = 4, rare_part = 12, monster_core = 2, boss_essence = 1 },
+			coins = 400,
+		},
+		["helm-bramble"] = {
+			gear = "helm-bramble",
+			materials = { boar_tusk = 4, rare_part = 12, monster_core = 2, boss_essence = 1 },
+			coins = 400,
+		},
+		["charm-bramble"] = {
+			gear = "charm-bramble",
+			materials = { boar_tusk = 4, rare_part = 12, monster_core = 2, boss_essence = 1 },
+			coins = 400,
+		},
 	},
 }
 
@@ -1794,14 +1951,20 @@ Config.Market = {
 	Vip = { x = -55, z = -8 },
 	-- The leaderboard, at the back in the middle.
 	Board = { x = 0, z = 62 },
+	-- The Blacksmith (docs/SMITHY.md §6), behind the buyer on the way to the board, facing the fountain (tools/map/build_smithy.luau).
+	Smithy = { x = 58, z = 34 },
 	-- What the scene artist names things in workspace.Map.Market (the board's picture goes on its part ScreenName).
 	Model = "Market",
 	BuyerModel = "SlimeBuyer",
 	VipModel = "VipStall",
 	BoardModel = "Leaderboard",
+	SmithyModel = "Blacksmith",
 	ScreenName = "Screen",
 	-- How close the VIP counter's prompt shows and its sheet stays open (the buyer's are Zombies.ShopRangeStuds).
 	VipRangeStuds = 40,
+	-- How close the Blacksmith's prompt shows and its sheet stays open; the server takes a craft within this plus Slack.
+	SmithyRangeStuds = 30,
+	SmithyRangeSlackStuds = 12,
 }
 
 -- Quick travel (src/server/QuickTravel.luau): the HUD's Home and Market buttons.
@@ -2114,7 +2277,8 @@ Config.Save = {
 	-- 7: the tutorial's step and the intros seen (`guide`).
 	-- 8: the daily check-in, quests and online gifts (`rewards`), lifetime counts of slimes sold and meals eaten.
 	-- 9: the Slime Dungeon's best level cleared (`dungeon`).
-	SchemaVersion = 9,
+	-- 10: gear: the bag (`gear` on the farm) and what each slime wears (`gear` on the slime).
+	SchemaVersion = 10,
 	-- A stored envelope without a version is this one.
 	FirstSchemaVersion = 1,
 
@@ -2721,6 +2885,19 @@ Config.Ui = {
 	SheetHeight = 440,
 	-- The VIP sheet (UiMarket): short while it only says "Opening soon".
 	VipSheetHeight = 260,
+	-- The Smithy sheet and the slime card's gear slots (UiSmithy, UiGearSlots), pixels: the sheet's height, a piece's card, its
+	-- picture, a cost's picture, a stat tag, a worn slot's picture and cell, a row of the picker.
+	Gear = {
+		SheetHeight = 520,
+		CardHeight = 150,
+		Tile = 52,
+		CostIcon = 24,
+		PillHeight = 22,
+		Slot = 56,
+		SlotCell = 92,
+		PickerRow = 48,
+		PickerTile = 36,
+	},
 	BookWidth = 760,
 	BookHeight = 560,
 	CardWidth = 250,

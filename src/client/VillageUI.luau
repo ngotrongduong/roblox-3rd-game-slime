@@ -77,6 +77,7 @@ local watched: { [string]: boolean } = {
 	Reserve = true,
 	PairIndex = true,
 	AutoDish = true,
+	Gear = true,
 }
 local statAttributes: { [string]: string } = { attack = "Attack", defence = "Defence", speed = "Speed", hp = "Hp" }
 local areaTitles: { [string]: string } = {
@@ -1044,7 +1045,7 @@ local function bind(root: Folder?)
 			end)
 		)
 	end
-	for _, attribute in { "Work", "Pairs", "Areas", "Box" } do
+	for _, attribute in { "Work", "Pairs", "Areas", "Box", "GearBag" } do
 		table.insert(
 			rootConnections,
 			root:GetAttributeChangedSignal(attribute):Connect(function()

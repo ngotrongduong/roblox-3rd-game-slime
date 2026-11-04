@@ -5,6 +5,7 @@ local Config = if script then require(script.Parent.Config) else require("./Conf
 local FarmState = if script then require(script.Parent.FarmState) else require("./FarmState")
 local Food = if script then require(script.Parent.Food) else require("./Food")
 local Gaits = if script then require(script.Parent.Gaits) else require("./Gaits")
+local Gear = if script then require(script.Parent.Gear) else require("./Gear")
 local Growth = if script then require(script.Parent.Growth) else require("./Growth")
 local Mutations = if script then require(script.Parent.Mutations) else require("./Mutations")
 local Needs = if script then require(script.Parent.Needs) else require("./Needs")
@@ -344,6 +345,11 @@ function Zombies.fighter(
 	local buff = slime.buff
 	if buff and buff.untilTime > now and (stats :: any)[buff.stat] then
 		(stats :: any)[buff.stat] *= 1 + buff.percent / 100
+	end
+	-- the gear it wears adds flat points on top (the slime's own stats, level and price do not change)
+	local bonus = Gear.bonus(slime)
+	for key, points in bonus do
+		(stats :: any)[key] += points
 	end
 	return {
 		id = slime.id,

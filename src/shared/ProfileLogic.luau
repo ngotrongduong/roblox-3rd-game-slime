@@ -366,6 +366,23 @@ function ProfileLogic.migrateDungeon(data: any, _now: number): any
 	return out
 end
 
+-- A farm saved before the Smithy: an empty gear bag, and no slime wears anything.
+function ProfileLogic.migrateGear(data: any, _now: number): any
+	if type(data) ~= "table" then
+		return data
+	end
+	local out = ProfileLogic.deepCopy(data)
+	out.gear = {}
+	if type(out.slimes) == "table" then
+		for _, slime in out.slimes do
+			if type(slime) == "table" then
+				slime.gear = {}
+			end
+		end
+	end
+	return out
+end
+
 -- Runs the steps from `fromVersion` to `toVersion`, each found by its `from`, so the list may be in
 -- any order. Refuses data from a newer version instead of guessing at it.
 function ProfileLogic.migrate(

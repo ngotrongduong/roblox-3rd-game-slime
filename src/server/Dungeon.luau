@@ -622,13 +622,10 @@ end
 local function dropsOf(run: Run, foe: Foe): { any }
 	local drops: { any } = {}
 	local id = foe.monster.id
-	local roll = DungeonRules.rollDrop(foe.def, run.level, id, run.seed)
-	if roll and DungeonRules.addDrop(run.ledger, run.wave, roll) then
-		table.insert(drops, { item = roll.item, amount = roll.amount })
-	end
-	local amount, material = DungeonRules.rollMapMaterial(foe.def, id, run.seed, run.mapId)
-	if amount > 0 and DungeonRules.addDrop(run.ledger, run.wave, { item = material, amount = amount }) then
-		table.insert(drops, { item = material, amount = amount })
+	for _, roll in DungeonRules.rollDrops(foe.def, run.level, id, run.seed) do
+		if DungeonRules.addDrop(run.ledger, run.wave, roll) then
+			table.insert(drops, { item = roll.item, amount = roll.amount })
+		end
 	end
 	return drops
 end

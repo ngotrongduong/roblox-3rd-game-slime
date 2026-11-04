@@ -215,23 +215,20 @@ local function wrapRow(parent: Instance, name: string, order: number): Frame
 	return row
 end
 
--- What a run of this map can drop, as a range for each item (from the loot windows and the map's own material).
+-- What a run of this map can drop, as a range for each item (from the drop lines of its monsters).
 local function dropRanges(): { [string]: string }
 	local found: { [string]: { number } } = {}
-	for _, row in D.Loot :: any do
-		for _, window in row do
-			if window.item then
-				local seen = found[window.item]
-				if seen then
-					seen[1], seen[2] = math.min(seen[1], window.min), math.max(seen[2], window.max)
-				else
-					found[window.item] = { window.min, window.max }
-				end
+	local map: any = (D.Maps :: any)[D.MapOrder[1]]
+	for _, def in map.monsters do
+		for _, line in def.drops do
+			local seen = found[line.item]
+			if seen then
+				seen[1], seen[2] = math.min(seen[1], line.min), math.max(seen[2], line.max)
+			else
+				found[line.item] = { line.min, line.max }
 			end
 		end
 	end
-	local map: any = (D.Maps :: any)[D.MapOrder[1]]
-	found[map.material] = { 1, D.BossMapMaterial }
 	local out: { [string]: string } = {}
 	for item, range in found do
 		out[item] = if range[1] == range[2] then tostring(range[1]) else range[1] .. "-" .. range[2]

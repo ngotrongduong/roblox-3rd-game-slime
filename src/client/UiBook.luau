@@ -4,6 +4,7 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Config = require(ReplicatedStorage.Shared.Config)
+local UiGearSlots = require(script.Parent.UiGearSlots)
 local UiIndex = require(script.Parent.UiIndex)
 local UiKit = require(script.Parent.UiKit)
 local UiSlimeList = require(script.Parent.UiSlimeList)
@@ -24,6 +25,7 @@ local page = "slimes"
 local detail: string? = nil
 local view: UiSlimeList.List? = nil
 local detailCard: UiSlimes.Card? = nil
+local detailGear: UiGearSlots.Slots? = nil
 local countLabel: TextLabel? = nil
 local content: Frame? = nil
 local header: Frame? = nil
@@ -55,6 +57,7 @@ end
 local function clearDetail()
 	detail = nil
 	detailCard = nil
+	detailGear = nil
 end
 
 local render: () -> ()
@@ -97,9 +100,10 @@ local function drawDetail(id: string)
 			Size = UDim2.new(1, -8, 0, U.TextNormal + 6),
 		})
 	end
+	local actionsY = U.CardHeight + U.Gap * 2 + U.TextNormal + 6
 	local actions = UiKit.make("Frame", {
 		BackgroundTransparency = 1,
-		Position = UDim2.fromOffset(0, U.CardHeight + U.Gap * 2 + U.TextNormal + 6),
+		Position = UDim2.fromOffset(0, actionsY),
 		Size = UDim2.new(1, 0, 0, U.Touch),
 	}, host)
 	UiKit.make("UIListLayout", {
@@ -107,7 +111,9 @@ local function drawDetail(id: string)
 		Padding = UDim.new(0, U.Gap),
 		SortOrder = Enum.SortOrder.LayoutOrder,
 	}, actions)
+	local gearY = actionsY
 	if UiSlimes.job(slime) then
+		gearY += U.Touch + U.Gap
 		UiKit.button(actions, {
 			Text = "Stop work",
 			Style = "secondary",
@@ -118,6 +124,11 @@ local function drawDetail(id: string)
 			end,
 		})
 	end
+	-- the three gear slots (Hand, Head, Tail) under the card, filling the rest of the page
+	detailGear = UiGearSlots.new(host, slime, {
+		Position = UDim2.fromOffset(0, gearY),
+		Size = UDim2.new(1, 0, 1, -gearY),
+	})
 end
 
 render = function()
@@ -214,6 +225,9 @@ function UiBook.refresh()
 			render()
 		elseif detailCard then
 			detailCard.update({ slime = detailCard.slime })
+			if detailGear then
+				detailGear.refresh()
+			end
 		end
 	elseif view then
 		view.refresh()
@@ -243,6 +257,7 @@ function UiBook.open(context: Context)
 			UiSlimes.releaseAll()
 			UiIndex.release()
 			view, detailCard, countLabel, content, header = nil, nil, nil, nil, nil
+			detailGear = nil
 			detail = nil
 		end,
 	})

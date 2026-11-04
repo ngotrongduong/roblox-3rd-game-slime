@@ -41,8 +41,10 @@ if not root then
 	root.Name = C.Model
 	root.Parent = workspace.Map
 end
+-- (the Blacksmith is tools/map/build_smithy.luau's)
+local SMITHY = C.Smithy or { x = 58, z = 34 }
 for _, child in root:GetChildren() do
-	if child.Name ~= "Spawn" then
+	if child.Name ~= "Spawn" and child.Name ~= (C.SmithyModel or "Blacksmith") then
 		child:Destroy()
 	end
 end
@@ -727,6 +729,7 @@ local function yardValue(x: number, z: number): number
 	local d = math.sqrt(x * x + z * z) - 50
 	d = math.min(d, math.sqrt((x - C.Buyer.x) ^ 2 + (z - C.Buyer.z) ^ 2) - 25)
 	d = math.min(d, math.sqrt((x - C.Vip.x) ^ 2 + (z - C.Vip.z) ^ 2) - 25)
+	d = math.min(d, math.sqrt((x - SMITHY.x) ^ 2 + (z - SMITHY.z) ^ 2) - 22)
 	d = math.min(d, math.sqrt((x / 1.5) ^ 2 + (z - 54) ^ 2) - 20)
 	d = math.min(d, wayDistance(FRONT_WAY, x, z))
 	d = math.min(d, wayDistance(SIDE_ROAD, x, z))
@@ -990,7 +993,7 @@ for _, s in { -1, 1 } do
 	bed(s * 40, 12, 4, 6)
 	bed(s * 62, -40, 5, 8)
 end
-for _, b in { { 96, -44, 8 }, { -98, -40, 8 }, { 96, 56, 8 }, { -88, 62, 7 }, { 46, 74, 8 }, { -18, 78, 7 }, { 62, -96, 7 }, { -60, -98, 7 }, { 66, 12, 9 }, { 76, 2, 9 }, { -66, 12, 9 }, { -76, 2, 9 }, { 50, 18, 8 }, { -50, 18, 8 }, { 24, 58, 8 }, { -24, 58, 8 } } do
+for _, b in { { 96, -44, 8 }, { -98, -40, 8 }, { 96, 56, 8 }, { -88, 62, 7 }, { 46, 74, 8 }, { -18, 78, 7 }, { 62, -96, 7 }, { -60, -98, 7 }, { 66, 12, 9 }, { 76, 2, 9 }, { -66, 12, 9 }, { -76, 2, 9 }, { -50, 18, 8 }, { 24, 58, 8 }, { -24, 58, 8 } } do
 	outdoor(WildKit, "QtBush_Common_Green", b[1], b[2], b[3], true)
 end
 for _, b in { { 86, 70, 7 }, { -76, 48, 7 }, { 28, 76, 7 } } do

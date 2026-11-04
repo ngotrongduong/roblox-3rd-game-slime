@@ -38,6 +38,7 @@ function FarmKit.slime(id: string, opts: { [string]: any }?): any
 		createdAt = o.createdAt or 0,
 		breedReadyAt = o.breedReadyAt or 0,
 		loadout = {},
+		gear = {},
 	}
 end
 

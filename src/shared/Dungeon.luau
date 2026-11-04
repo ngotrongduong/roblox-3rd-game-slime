@@ -171,50 +171,27 @@ local function stream(enemyId: string, seed: number): Rng
 	return Rng.new(Rng.hash(enemyId) + seed)
 end
 
--- The row of windows a def rolls on, by its role.
-local function lootRow(def: any): { any }
-	local class = (D.LootClass :: any)[def.role] or "normal"
-	return (D.Loot :: any)[class]
+-- A line's chance on this dungeon level: luck multiplies a chance below 1, and nothing goes past 1.
+function Dungeon.chance(line: any, level: number): number
+	if line.chance >= 1 then
+		return 1
+	end
+	return math.min(1, line.chance * Dungeon.luck(level))
 end
 
--- A monster's one regular drop (nil for nothing): the first window the roll falls in; the first window of its row is
--- stretched or shrunk by the level's luck (never past the next window).
-function Dungeon.rollDrop(def: any, level: number, enemyId: string, seed: number): Drop?
-	local row = lootRow(def)
+-- Every drop of a fallen monster, in the order of its def's lines (docs/SMITHY.md §2): each line is rolled on its own. A
+-- line always spends its two numbers from the monster's stream, hit or not, so one line's luck never moves another's roll.
+function Dungeon.rollDrops(def: any, level: number, enemyId: string, seed: number): { Drop }
+	local out: { Drop } = {}
 	local rng = stream(enemyId, seed)
-	local r = rng:next()
-	local luck = Dungeon.luck(level)
-	for index, window in row do
-		local upTo = window.upTo
-		if index == 1 and window.luck == "times" then
-			upTo *= luck
-		elseif index == 1 and window.luck == "over" then
-			upTo /= luck
-		end
-		local nextUpTo = if row[index + 1] then row[index + 1].upTo else 1
-		if r < math.min(upTo, nextUpTo) or index == #row then
-			if not window.item then
-				return nil
-			end
-			return { item = window.item, amount = rng:int(window.min, window.max) }
+	for _, line in def.drops or {} do
+		local r = rng:next()
+		local amount = rng:int(line.min, line.max)
+		if r < Dungeon.chance(line, level) then
+			table.insert(out, { item = line.item, amount = amount })
 		end
 	end
-	return nil
-end
-
--- The map's own material from a monster: a boss always gives BossMapMaterial, a mini-boss or an elite has a
--- MapMaterialChance of one, any other nothing. Returns the amount and the material's id.
-function Dungeon.rollMapMaterial(def: any, enemyId: string, seed: number, mapId: string): (number, string)
-	local material = map(mapId).material
-	if def.role == "boss" then
-		return D.BossMapMaterial, material
-	end
-	if not (D.MapMaterialRoles :: any)[def.role] then
-		return 0, material
-	end
-	-- (the original's seed XOR 0x5bd1e995 for this roll)
-	local salted = bit32.bxor(math.floor(seed) % 4294967296, 0x5bd1e995)
-	return if Rng.new(Rng.hash(enemyId) + salted):next() < D.MapMaterialChance then 1 else 0, material
+	return out
 end
 
 -- ===== the ledger =====

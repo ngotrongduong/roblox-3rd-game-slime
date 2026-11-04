@@ -118,82 +118,102 @@ return function(T: any)
 		end
 	)
 
-	T.test("every drop window of every role is hit, with amounts in range", function()
-		local roles = { normal = "green_sprout", elite = "green_snail", miniboss = "green_turtle", boss = "green_boar" }
-		for class, id in roles do
-			local seen: { [string]: boolean } = {}
-			local nothing = false
-			for n = 1, 4000 do
-				local drop = Dungeon.rollDrop(def(id), 1, "m1-" .. n, 77)
-				if drop then
-					seen[drop.item] = true
-					local window
-					for _, each in (D.Loot :: any)[class] do
-						if each.item == drop.item then
-							window = each
+	T.test("every drop line of every monster can hit, with amounts in range, at about its chance", function()
+		for _, each in (D.Maps :: any).meadow.monsters do
+			local hits: { [string]: number } = {}
+			local tries = 4000
+			for n = 1, tries do
+				for _, drop in Dungeon.rollDrops(each, 1, "m1-" .. n, 77) do
+					hits[drop.item] = (hits[drop.item] or 0) + 1
+					local line
+					for _, candidate in each.drops do
+						if candidate.item == drop.item then
+							line = candidate
 						end
 					end
-					T.ok(drop.amount >= window.min and drop.amount <= window.max, class .. " " .. drop.item)
-				else
-					nothing = true
+					T.ok(line ~= nil, each.id .. " drops only what its list says: " .. drop.item)
+					T.ok(drop.amount >= line.min and drop.amount <= line.max, each.id .. " " .. drop.item)
 				end
 			end
-			for _, window in (D.Loot :: any)[class] do
-				if window.item then
-					T.ok(seen[window.item], class .. " drops " .. window.item)
-				else
-					T.ok(nothing, class .. " sometimes drops nothing")
+			for _, line in each.drops do
+				T.ok((hits[line.item] or 0) > 0, each.id .. " drops " .. line.item)
+				T.near((hits[line.item] or 0) / tries, line.chance, 0.03, each.id .. " " .. line.item)
+				T.ok(D.Materials[line.item] ~= nil, line.item .. " is a known drop")
+			end
+		end
+		T.same(
+			Dungeon.rollDrops(def("green_boar"), 1, "m10-1", 3),
+			Dungeon.rollDrops(def("green_boar"), 1, "m10-1", 3),
+			"the same monster and seed give the same drops"
+		)
+	end)
+
+	T.test("the boss always pays 2 Bramble Horns; no monster drops cloth or common_part", function()
+		for n = 1, 200 do
+			local horns = 0
+			for _, drop in Dungeon.rollDrops(def("green_boar"), 1, "m10-" .. n, n) do
+				if drop.item == "boar_tusk" then
+					horns += drop.amount
 				end
 			end
+			T.eq(horns, 2)
 		end
-		T.same(Dungeon.rollDrop(def("green_boar"), 1, "m10-1", 3), Dungeon.rollDrop(def("green_boar"), 1, "m10-1", 3))
-	end)
-
-	T.test("the map material: always 2 from the boss, 18% from a mini-boss or an elite, none from the rest", function()
-		for n = 1, 50 do
-			local amount, item = Dungeon.rollMapMaterial(def("green_boar"), "m10-" .. n, n, "meadow")
-			T.eq(amount, 2)
-			T.eq(item, "boar_tusk")
-			T.eq((Dungeon.rollMapMaterial(def("green_sprout"), "m1-" .. n, n, "meadow")), 0)
-			T.eq((Dungeon.rollMapMaterial(def("green_bee"), "m1-" .. n, n, "meadow")), 0)
-		end
-		for _, id in { "green_turtle", "green_snail" } do
-			local hits, tries = 0, 5000
-			for n = 1, tries do
-				local amount = Dungeon.rollMapMaterial(def(id), "m5-" .. n, 11, "meadow")
-				T.ok(amount == 0 or amount == 1)
-				hits += amount
+		for _, each in (D.Maps :: any).meadow.monsters do
+			for _, line in each.drops do
+				T.ok(line.item ~= "cloth" and line.item ~= "common_part", each.id .. " drops neither")
 			end
-			T.near(hits / tries, D.MapMaterialChance, 0.03, id)
 		end
+		T.eq(table.find(D.DropOrder, "cloth"), nil)
+		T.eq(table.find(D.DropOrder, "common_part"), nil)
+		T.ok(D.Materials.cloth ~= nil and D.Materials.common_part ~= nil, "saves still hold them")
+		T.eq(D.Materials.boar_tusk.name, "Bramble Horn")
+		T.eq(D.Materials.boar_tusk.short, "Horn")
+		T.eq(D.Materials.rare_part.name, "Core Fragment")
+		T.eq(D.Materials.rare_part.short, "Fragment")
 	end)
 
-	T.test("luck makes a boss drop boss essence more often at a higher dungeon level", function()
+	T.test("luck raises a chance below 1 but never past 1, and leaves a sure line alone", function()
+		T.near(Dungeon.luck(1), 1, 1e-9)
+		T.near(Dungeon.luck(21), 2, 1e-9)
+		T.near(Dungeon.chance({ chance = 0.25 }, 1), 0.25, 1e-9)
+		T.near(Dungeon.chance({ chance = 0.25 }, 21), 0.5, 1e-9)
+		T.eq(Dungeon.chance({ chance = 0.5 }, 41), 1)
+		T.eq(Dungeon.chance({ chance = 0.9 }, 1000), 1)
+		T.eq(Dungeon.chance({ chance = 1 }, 1000), 1)
 		local function essence(level: number): number
 			local count = 0
 			for n = 1, 6000 do
-				local drop = Dungeon.rollDrop(def("green_boar"), level, "m10-" .. n, 5)
-				if drop and drop.item == "boss_essence" then
-					count += 1
+				for _, drop in Dungeon.rollDrops(def("green_boar"), level, "m10-" .. n, 5) do
+					if drop.item == "boss_essence" then
+						count += 1
+					end
 				end
 			end
 			return count
 		end
-		T.near(Dungeon.luck(1), 1, 1e-9)
-		T.near(Dungeon.luck(21), 2, 1e-9)
 		local low, high = essence(1), essence(21)
 		T.ok(high > low * 1.5, "level 21 has twice the luck: " .. low .. " -> " .. high)
-		-- and a normal monster drops nothing less often
-		local function nothing(level: number): number
+		-- and a Twigling pays wood more often
+		local function wood(level: number): number
 			local count = 0
 			for n = 1, 4000 do
-				if not Dungeon.rollDrop(def("green_sprout"), level, "m1-" .. n, 5) then
-					count += 1
+				for _, drop in Dungeon.rollDrops(def("green_sprout"), level, "m1-" .. n, 5) do
+					if drop.item == "wood" then
+						count += 1
+					end
 				end
 			end
 			return count
 		end
-		T.ok(nothing(21) < nothing(1) * 0.7, "luck shrinks the window of nothing")
+		T.ok(wood(21) > wood(1) * 1.5, "luck makes a plain drop likelier")
+		-- a line that is sure keeps paying at any level
+		for n = 1, 100 do
+			local got = {}
+			for _, drop in Dungeon.rollDrops(def("green_boar"), 200, "m10-" .. n, n) do
+				got[drop.item] = true
+			end
+			T.ok(got.coins and got.ore and got.rare_part and got.monster_core and got.boar_tusk, "sure lines pay")
+		end
 	end)
 
 	T.test("a wave pays once when it clears; a second commit pays nothing", function()

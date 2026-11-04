@@ -6,6 +6,7 @@ local Breeding = if script then require(script.Parent.Breeding) else require("./
 local Config = if script then require(script.Parent.Config) else require("./Config")
 local FarmState = if script then require(script.Parent.FarmState) else require("./FarmState")
 local Food = if script then require(script.Parent.Food) else require("./Food")
+local Gear = if script then require(script.Parent.Gear) else require("./Gear")
 local Guide = if script then require(script.Parent.Guide) else require("./Guide")
 local Rewards = if script then require(script.Parent.Rewards) else require("./Rewards")
 local Shop = if script then require(script.Parent.Shop) else require("./Shop")
@@ -16,6 +17,8 @@ local Zombies = if script then require(script.Parent.Zombies) else require("./Zo
 export type Env = {
 	isOut: (slimeId: string) -> boolean,
 	atMarket: () -> boolean,
+	-- The Blacksmith's stall: within Config.Market.SmithyRangeStuds plus its slack.
+	atSmithy: () -> boolean,
 	nearGate: () -> boolean,
 	teamOut: (team: number) -> boolean,
 	attack: (farm: any, team: number, groupId: string, now: number) -> (boolean, string?),
@@ -29,6 +32,11 @@ local VillageRequests = {}
 
 local function integer(n: any): boolean
 	return type(n) == "number" and n == n and n ~= math.huge and n ~= -math.huge and n % 1 == 0
+end
+
+-- An id sent by a client: text no longer than Config.Smithy.IdMaxLength (what it names is checked when it runs).
+local function shortText(value: any): boolean
+	return type(value) == "string" and value ~= "" and #value <= Config.Smithy.IdMaxLength
 end
 
 -- A team number: a whole number from 1 to the number of teams.
@@ -109,6 +117,12 @@ function VillageRequests.valid(data: any, hasPlot: boolean): boolean
 			and type(data.groupId) == "string"
 			and #data.groupId <= Config.Zombies.TargetIdMaxLength
 			and hasPlot
+	elseif action == "SmithyCraft" then
+		return shortText(data.recipeId)
+	elseif action == "GearEquip" then
+		return shortText(data.slimeId) and shortText(data.gearId)
+	elseif action == "GearUnequip" then
+		return shortText(data.slimeId) and shortText(data.slot)
 	elseif action == "GuideSeen" or action == "GuideNext" then
 		return type(data.step) == "string" and #data.step <= Config.Guide.IdMaxLength
 	elseif action == "GuideSkip" or action == "ClaimDaily" or action == "ClaimQuestBonus" or action == "IndexSeen" then
@@ -215,6 +229,25 @@ function VillageRequests.run(farm: any, data: any, now: number, env: Env): (bool
 		end
 		local value, why = Shop.sell(farm, data.slimeId, now)
 		return value ~= nil, why, value
+	elseif action == "SmithyCraft" then
+		if not env.atSmithy() then
+			return false, "FAR"
+		end
+		local gearId, why = Gear.craft(farm, data.recipeId)
+		return gearId ~= nil, why
+	elseif action == "GearEquip" then
+		-- (a slime that is out on a march or in the dungeon keeps the gear it set out with)
+		if env.isOut(data.slimeId) then
+			return false, "OUT"
+		end
+		local slot, why = Gear.equip(farm, data.slimeId, data.gearId)
+		return slot ~= nil, why
+	elseif action == "GearUnequip" then
+		if env.isOut(data.slimeId) then
+			return false, "OUT"
+		end
+		local gearId, why = Gear.unequip(farm, data.slimeId, data.slot)
+		return gearId ~= nil, why
 	elseif action == "GuideSeen" then
 		return Guide.seen(farm, data.step, now)
 	elseif action == "GuideNext" then

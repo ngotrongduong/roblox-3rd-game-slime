@@ -362,10 +362,11 @@ strength rising). Numbers from the original (`docs/reference/02-battle.md` §5-7
 - **Monsters of Sunny Meadow**: Sproutling (melee), Honey Bee (goes for the weakest, its sting slows 70% for 2 s), Puffdandy (ranged),
   Glowmoth (heals the most wounded monster), Clover Snail (armoured elite), Bloomshell (Pollen Shockwave: hits every slime, a short
   stun), Bramblehorn (Thorn Charge: a heavy blow that splashes).
-- **Drops**: each monster rolls once by its role (normal, elite, mini-boss, boss; luck +5% a level) and the map's own Boar Tusk (2 from
-  the boss, 18% from the mini-boss and elites). Coins go to the purse (the vault limit holds), "food" is carrots in the storehouse, the
-  rest to `farm.materials` (for the Smithy later). A wave's drops are paid when it clears; the wave in play is lost on a defeat or a
-  leave.
+- **Drops**: each monster has its own list in `Config.Dungeon.Maps.meadow.monsters[].drops` (`docs/SMITHY.md` §2); every line is
+  rolled on its own (chance, amount min..max), luck (+5% a level) multiplies a chance below 1 and never takes it past 1, and the boss's
+  two Bramble Horns never fail. Coins go to the purse (the vault limit holds), "food" is carrots in the storehouse, the rest to
+  `farm.materials` (the Smithy's recipes). Cloth and Residue no longer drop (saves still hold them). A wave's drops are paid when it
+  clears; the wave in play is lost on a defeat or a leave.
 - **Slimes**: a slime that falls is a ghost (the village's rule, revived with food); wounds carry from wave to wave and home. A run
   costs every slime that went energy 8 and fullness 2, once.
 - **End**: Victory raises the best level and offers Next Level, Replay or Leave; Defeat offers Replay or Leave. Leave puts the player in
@@ -373,3 +374,24 @@ strength rising). Numbers from the original (`docs/reference/02-battle.md` §5-7
 
 Saved in the farm as `dungeon = { best }` (schema 9). Requests through the Village remote (`DungeonEnter`, `DungeonNext`,
 `DungeonReplay`, `DungeonLeave`), each checked on the server (who, where, which teams, the level, the rate).
+
+## Gear and the Smithy
+
+Three slots on every slime (Hand, Head, Tail), four tiers (wood, iron, core, bramble), twelve pieces crafted from dungeon drops
+and coins at the Blacksmith; all numbers and the reasoning are in `docs/SMITHY.md`, the numbers in `Config.Smithy`. Worn gear adds
+flat points to a slime's stats in every fight (`Zombies.fighter`, so the dungeon and the zombie fights both) and never changes the
+slime's own stats, level or price. Rules in `shared/Gear` (`bonus`, `canCraft`, `craft`, `equip`, `unequip`, `returnAll`; tests
+`tests/spec/gear.luau`). A crafted piece waits in the bag (`farm.gear = { [gearId] = count }`); a worn one is on the slime
+(`slime.gear = { hand?, head?, tail? }`); a slime that is sold or lost gives its gear back to the bag. Saved as schema 10.
+Requests through the Village remote: `SmithyCraft { recipeId }` (refused with `FAR` unless the character stands within
+`SmithyRangeStuds + SmithyRangeSlackStuds` of the Blacksmith's spot, horizontal distance; `env.atSmithy`),
+`GearEquip { slimeId, gearId }`, `GearUnequip { slimeId, slot }`. The client reads the root's `Materials` and `GearBag`
+attributes (JSON `{ id = count }`) and each slime's `Gear` attribute (JSON `{ hand?, head?, tail? }`).
+
+Screens (`client/UiSmithy`, `client/UiGearSlots`): the Blacksmith's prompt (F, "Blacksmith") stands at `Config.Market.Smithy` with or
+without the stall's model and opens the **Smithy** sheet: tabs Hand / Head / Tail, a card per piece with its picture on the rarity
+colour (an optional `icon` in `Config.Smithy.Gear[id]`; none yet, so a plain colour square), its name, the points it adds as tags
+("+2 ATK"), the count in the bag ("x2"), each material as picture and have/need (red when short), the coins and a Craft button that
+reads "Missing materials" or "Not enough coins" when greyed. In the slime book, a slime's page has three slots under its card: tap one
+to list the pieces of that slot in the bag (tap a piece to wear it) or "Take off"; the points all its gear adds show as green tags
+under the slots, and the card's own numbers stay the slime's own.

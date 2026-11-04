@@ -24,6 +24,8 @@ export type Buff = { stat: string, percent: number, untilTime: number, dish: str
 
 -- Gear is kept for the future fight phase; the fallen state is replaced by a timed ghost.
 export type Loadout = { head: string?, hand: string?, tail: string? }
+-- The Smithy's gear a slime wears (Config.Smithy.Gear ids, one a slot; shared/Gear). Not the old `loadout` above.
+export type WornGear = { hand: string?, head: string?, tail: string? }
 export type Slime = {
 	id: string,
 	name: string,
@@ -45,6 +47,7 @@ export type Slime = {
 	createdAt: number,
 	breedReadyAt: number,
 	loadout: Loadout,
+	gear: WornGear,
 }
 
 export type Embryo = {
@@ -180,6 +183,8 @@ export type Farm = {
 	coins: number,
 	items: { Item },
 	materials: { [string]: number },
+	-- The gear bag: crafted pieces nobody wears, by gear id (schema 10; shared/Gear).
+	gear: { [string]: number },
 
 	lifetime: Lifetime,
 	avatar: Avatar,
@@ -316,6 +321,25 @@ function FarmState.emptyLoadout(): Loadout
 	return {}
 end
 
+function FarmState.emptyGear(): WornGear
+	return {}
+end
+
+-- Every piece the slime wears goes back to the farm's bag (it is sold, lost or released).
+function FarmState.returnGear(farm: Farm, slime: Slime)
+	local worn: any = slime.gear
+	if type(worn) ~= "table" then
+		return
+	end
+	for _, slot in Config.Smithy.Slots do
+		local id = worn[slot]
+		if type(id) == "string" then
+			farm.gear[id] = (farm.gear[id] or 0) + 1
+			worn[slot] = nil
+		end
+	end
+end
+
 function FarmState.emptyDiscoveries(): Discoveries
 	return { base = {}, dual = {}, secret = {}, material = {} }
 end
@@ -353,10 +377,12 @@ end
 
 -- Takes a slime out of the farm and out of every place that names it. Returns whether it was there.
 function FarmState.removeSlime(farm: Farm, id: string): boolean
-	local _, at = FarmState.findSlime(farm, id)
-	if not at then
+	local found, at = FarmState.findSlime(farm, id)
+	if not found or not at then
 		return false
 	end
+	-- (what it wore is not lost with it)
+	FarmState.returnGear(farm, found)
 	table.remove(farm.slimes, at)
 	for _, areaId in Config.Work.Areas do
 		for _, slot in (farm.work :: any)[areaId].slots do
@@ -466,6 +492,7 @@ function FarmState.newStarters(now: number): { Slime }
 			createdAt = createdAt,
 			breedReadyAt = 0,
 			loadout = FarmState.emptyLoadout(),
+			gear = FarmState.emptyGear(),
 		})
 	end
 	return out
@@ -498,6 +525,7 @@ function FarmState.newFarm(now: number): Farm
 		coins = f.StartingCoins,
 		items = items,
 		materials = {},
+		gear = {},
 		lifetime = {
 			coinsEarned = 0,
 			foodFarmed = 0,
@@ -629,7 +657,70 @@ local function validateBuff(raw: any): Buff?
 	return nil
 end
 
-local function validateSlime(raw: any, index: number, now: number, warnings: { string }): Slime?
+-- The gear a slime wears: a known piece in the slot it belongs to stays; a known piece in the wrong slot goes back to the
+-- bag (`returned`); an unknown id is dropped.
+local function validateWornGear(
+	raw: any,
+	returned: { [string]: number },
+	warnings: { string },
+	prefix: string
+): WornGear
+	local out: { [string]: string } = {}
+	if type(raw) ~= "table" then
+		if raw ~= nil then
+			table.insert(warnings, prefix .. ": invalid gear, emptied")
+		end
+		return out
+	end
+	for _, slot in Config.Smithy.Slots do
+		local id = raw[slot]
+		if id ~= nil then
+			local piece = if type(id) == "string" then (Config.Smithy.Gear :: any)[id] else nil
+			if piece and piece.slot == slot then
+				out[slot] = id
+			elseif piece then
+				returned[id] = (returned[id] or 0) + 1
+				table.insert(warnings, prefix .. ": " .. id .. " was in the wrong slot, back in the bag")
+			else
+				table.insert(warnings, prefix .. ": unknown gear " .. tostring(id) .. " dropped")
+			end
+		end
+	end
+	return out :: WornGear
+end
+
+-- The gear bag: known pieces with whole counts above zero; anything else is dropped.
+local function validateBag(raw: any, warnings: { string }): { [string]: number }
+	local out: { [string]: number } = {}
+	if type(raw) ~= "table" then
+		if raw ~= nil then
+			table.insert(warnings, "gear bag: not a table, emptied")
+		end
+		return out
+	end
+	for id, count in raw do
+		if
+			type(id) == "string"
+			and (Config.Smithy.Gear :: any)[id]
+			and isNum(count)
+			and count % 1 == 0
+			and count > 0
+		then
+			out[id] = count
+		else
+			table.insert(warnings, "gear bag: " .. tostring(id) .. " dropped")
+		end
+	end
+	return out
+end
+
+local function validateSlime(
+	raw: any,
+	index: number,
+	now: number,
+	warnings: { string },
+	returned: { [string]: number }
+): Slime?
 	if type(raw) ~= "table" then
 		table.insert(warnings, "slime[" .. index .. "]: not a table, dropped")
 		return nil
@@ -693,6 +784,7 @@ local function validateSlime(raw: any, index: number, now: number, warnings: { s
 		createdAt = createdAt,
 		breedReadyAt = breedReadyAt,
 		loadout = validateLoadout(raw.loadout, FarmState.SlimeSlots, warnings, id) :: Loadout,
+		gear = validateWornGear(raw.gear, returned, warnings, id),
 	}
 end
 
@@ -1244,19 +1336,25 @@ function FarmState.repair(data: any, now: number): (Farm, { string }, boolean)
 
 	local slimes: { Slime } = {}
 	local slimeIds: { [string]: boolean } = {}
+	-- pieces a slime wore in a slot they do not fit, back to the bag
+	local returnedGear: { [string]: number } = {}
 	for i, raw in data.slimes do
 		if type(i) == "number" then
 			if #slimes >= slimeCap then
 				table.insert(warnings, "slimes beyond " .. slimeCap .. " dropped")
 				break
 			end
-			local slime = validateSlime(raw, i, now, warnings)
+			local scratch: { [string]: number } = {}
+			local slime = validateSlime(raw, i, now, warnings, scratch)
 			if slime then
 				if slimeIds[slime.id] then
 					table.insert(warnings, slime.id .. ": duplicate id, dropped")
 				else
 					slimeIds[slime.id] = true
 					table.insert(slimes, slime)
+					for id, count in scratch do
+						returnedGear[id] = (returnedGear[id] or 0) + count
+					end
 				end
 			end
 		end
@@ -1356,6 +1454,11 @@ function FarmState.repair(data: any, now: number): (Farm, { string }, boolean)
 
 	local items = validateItems(data.items, warnings)
 
+	local gearBag = validateBag(data.gear, warnings)
+	for id, count in returnedGear do
+		gearBag[id] = (gearBag[id] or 0) + count
+	end
+
 	-- Lifetime counters: each field repaired alone; a legacy save gets honest floors.
 	local liveBest = 0
 	for _, s in slimes do
@@ -1451,6 +1554,7 @@ function FarmState.repair(data: any, now: number): (Farm, { string }, boolean)
 		coins = coins,
 		items = items,
 		materials = materials,
+		gear = gearBag,
 		lifetime = lifetime,
 		avatar = validateAvatar(data.avatar, now, warnings),
 		tutorialDone = tutorialDone,

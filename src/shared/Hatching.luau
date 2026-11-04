@@ -158,6 +158,7 @@ function Hatching.babyFromEgg(farm: Farm, egg: Egg, now: number): Slime
 		-- Rested at once; the baby rule still keeps it from breeding until it grows up.
 		breedReadyAt = now,
 		loadout = FarmState.emptyLoadout(),
+		gear = FarmState.emptyGear(),
 	}
 end
 

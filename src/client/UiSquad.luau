@@ -16,6 +16,7 @@ local UiFood = require(script.Parent.UiFood)
 local UiKit = require(script.Parent.UiKit)
 local UiMarket = require(script.Parent.UiMarket)
 local UiSlimeList = require(script.Parent.UiSlimeList)
+local UiSmithy = require(script.Parent.UiSmithy)
 local UiSlimes = require(script.Parent.UiSlimes)
 local UiTeams = require(script.Parent.UiTeams)
 
@@ -549,6 +550,8 @@ function UiSquad.start(own: () -> Folder?)
 
 	-- the Market: the VIP counter's prompt and sheet (UiMarket), and one prompt where the slime buyer stands
 	UiMarket.start({ open = openSheet, anchor = anchorAt })
+	-- the Blacksmith's prompt and the Smithy sheet (UiSmithy); it also lends its request to the slime card's gear slots
+	UiSmithy.start({ open = openSheet, anchor = anchorAt, own = own, ask = ask })
 	local buyer = Layout.marketPoint(Config.Market.Buyer)
 	local anchor = anchorAt(Vector3.new(buyer.X, Config.Map.GroundY + V.AnchorLift, buyer.Z), "BuyerPrompt")
 	local prompt = Instance.new("ProximityPrompt")

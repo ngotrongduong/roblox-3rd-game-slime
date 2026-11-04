@@ -51,6 +51,14 @@ local function envOf(player: Player): VillageRequests.Env
 		atMarket = function(): boolean
 			return ZombieFights.near(player, Layout.marketPoint(Config.Market.Buyer), Config.Zombies.ShopRangeStuds)
 		end,
+		-- The Blacksmith's stall in the Market: the sheet stays open within SmithyRangeStuds, a craft takes the slack too.
+		atSmithy = function(): boolean
+			return ZombieFights.near(
+				player,
+				Layout.marketPoint(Config.Market.Smithy),
+				Config.Market.SmithyRangeStuds + Config.Market.SmithyRangeSlackStuds
+			)
+		end,
 		nearGate = function(): boolean
 			return ZombieFights.nearGate(player)
 		end,
@@ -125,6 +133,15 @@ local function request(player: Player, data: any): { ok: boolean, reason: string
 		print(Config.LogPrefix, "zombies: team", data.team, "repeat", if data.on then "on" else "off")
 	elseif action == "Revive" then
 		print(Config.LogPrefix, "zombies: revived", data.slimeId)
+	elseif action == "SmithyCraft" then
+		print(Config.LogPrefix, "smithy:", player.Name, "crafted", data.recipeId)
+		PlayerData.markKeyMoment(player, "smithy craft")
+	elseif action == "GearEquip" then
+		print(Config.LogPrefix, "gear:", player.Name, "put", data.gearId, "on", data.slimeId)
+		PlayerData.markKeyMoment(player, "gear equip")
+	elseif action == "GearUnequip" then
+		print(Config.LogPrefix, "gear:", player.Name, "took", data.slot, "off", data.slimeId)
+		PlayerData.markKeyMoment(player, "gear unequip")
 	elseif action == "GuideSkip" or action == "GuideSeen" or action == "GuideNext" then
 		print(Config.LogPrefix, "guide:", player.Name, action, data.step or "")
 		PlayerData.markKeyMoment(player, "guide")

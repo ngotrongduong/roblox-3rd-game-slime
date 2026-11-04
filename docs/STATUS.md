@@ -1,5 +1,33 @@
 # Status
 
+## 2026-11-04 — fewer drops, gear crafted at the Blacksmith in the Market
+
+The owner: few kinds of drops shared by the monsters (only the rate differs), a few rare things from the mini-boss and boss,
+recipes for gear from them, and a Blacksmith in the Market. The design is `docs/SMITHY.md`.
+- Drops: six materials (Hardwood, Iron Ore, Core Fragment, Monster Core, Boss Essence, Bramble Horn) plus coins and food, one
+  `drops` list a monster in `Config.Dungeon.Maps`, each line rolled on its own, luck capped at 1 (`Dungeon.rollDrops`). Cloth and
+  common parts no longer drop; held ones stay.
+- Gear: 12 pieces in 3 slots (hand, head, tail) and 4 tiers, one recipe each (`Config.Smithy`, `shared/Gear`). Flat points in every
+  fight (`Zombies.fighter`), never the slime's own stats. Save schema 10: `farm.gear` (the bag) and `slime.gear`; a sold or lost slime
+  hands its gear back. Requests `SmithyCraft` (only near the stall, "FAR" otherwise), `GearEquip`, `GearUnequip`.
+- Screens: the "Blacksmith" prompt opens the Smithy sheet (`client/UiSmithy`: tabs Hand/Head/Tail, have/need, Craft); the slime's
+  page in the book has three gear slots (`client/UiGearSlots`). Icons by ChatGPT in the drop icons' style (`art/icons/gear_*.png`);
+  `tools/chatgpt/prepare_icons.py` now keeps a violet gem that sits inside an outline.
+- The stall: `tools/map/build_smithy.luau` after the owner's `blacksmith-01.png` (honey wood frame, blue and cream awning, crest
+  board, stone furnace with fire, anvil, weapon rack, armour stand, water barrel, tools, blue banner), at `Config.Market.Smithy`
+  facing the fountain; `build_market.luau` keeps it, paints its yard and lost the bush in front of it. No keeper slime: its spot
+  is kept (`KeeperSpot`) for the owner.
+- Seen in a MapWork play test: a dungeon run dropping by the new lists, the stall at the real camera, a craft (materials and coins
+  taken once, "x1" in the bag), a second equip of the same piece refused, the slot on the slime's page with "+2 ATK"
+  (`docs/ui/smithy/*.jpg`).
+
+Not done or not known
+- MapWork needs the owner's Ctrl+S for the stall; then `build_publish`.
+- Not seen on a phone frame; the "x1" moved 12 px in from the card's edge after the shot, not seen again.
+- The Market is now about 96,000 triangles (the stall 13,000) against a 60,000 target.
+- MapWork has no `MonsterKit`: its play test draws stand-ins for the monsters (Publish.rbxl has it).
+- Starter slimes lose level 1 at wave 3: balance not looked at.
+
 ## 2026-11-04 — the dungeon's monsters are the owner's Egg Heist creatures
 
 The owner: "Egg Heist already has many monster models; use them to save effort." The seven Sunny Meadow roles are now his Egg
