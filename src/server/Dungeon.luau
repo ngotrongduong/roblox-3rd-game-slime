@@ -975,7 +975,13 @@ local function again(run: Run, level: number, farm: any): { ok: boolean, reason:
 	if not ids then
 		return fail(why or "NO_FIT")
 	end
-	startRun(run, farm, level, ids, now)
+	-- (as enter does: a run half reset by an error is ended, not left standing)
+	local started, err = pcall(startRun :: any, run, farm, level, ids, now)
+	if not started then
+		warn(Config.LogPrefix, "dungeon: the next run of", run.player.Name, "did not start:", err)
+		leave(run, "error", false)
+		return fail("SERVER_ERROR")
+	end
 	return { ok = true, reason = nil }
 end
 

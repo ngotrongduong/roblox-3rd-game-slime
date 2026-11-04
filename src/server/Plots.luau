@@ -250,15 +250,22 @@ local function build(state: PlotState, player: Player, epoch: number)
 		turn = Layout.plotTurn(state.plot, Config.Plots.TemplatePlot)
 	end
 	local done = true
-	if source then
-		for _, child in source:GetChildren() do
-			if not copyUnit(child, state.container, turn, alive) then
-				done = false
-				break
+	-- (an error in the copy must still free the plot: a busy flag left on held every later build and clear of it forever)
+	local copied, err = pcall(function()
+		if source then
+			for _, child in source:GetChildren() do
+				if not copyUnit(child, state.container, turn, alive) then
+					done = false
+					break
+				end
 			end
 		end
-	end
+	end)
 	state.busy = false
+	if not copied then
+		warn(Config.LogPrefix, "plots: the copy for plot", state.plot, "failed:", err)
+		return
+	end
 	if not done or not alive() then
 		print(Config.LogPrefix, "plots: the copy for plot", state.plot, "stopped, its player left")
 		return

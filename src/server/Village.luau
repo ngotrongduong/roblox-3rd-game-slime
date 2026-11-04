@@ -2226,16 +2226,18 @@ function Village.start()
 				task.wait(Config.Village.TickSeconds)
 				if session.active and sessions[player] == session then
 					-- One bad tick must not stop this player's village for the rest of the session.
-					local ok, err = pcall(tick :: any, player, session)
+					local ok, err = pcall(function()
+						tick(player, session)
+						-- (stock comes and goes as the slimes work: a prompt shows only while there is something to take)
+						local clock = os.clock()
+						if clock - (session.promptsChecked or 0) >= Config.Village.CarryPromptRefreshSeconds then
+							session.promptsChecked = clock
+							refreshPrompts(player, session)
+						end
+					end)
 					if not ok and not session.tickWarned then
 						session.tickWarned = true
 						warn(Config.LogPrefix, "village tick failed for", player.Name, err)
-					end
-					-- (stock comes and goes as the slimes work: a prompt shows only while there is something to take)
-					local clock = os.clock()
-					if clock - (session.promptsChecked or 0) >= Config.Village.CarryPromptRefreshSeconds then
-						session.promptsChecked = clock
-						refreshPrompts(player, session)
 					end
 				end
 			end

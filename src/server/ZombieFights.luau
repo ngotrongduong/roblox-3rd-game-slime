@@ -106,6 +106,8 @@ type Session = {
 
 local ZombieFights = {}
 local sessions: { [Player]: Session } = {}
+-- (a failing fight frame is warned once a player, not 60 times a second)
+local frameWarned: { [Player]: boolean } = {}
 local fightRemote: RemoteEvent? = nil
 -- the camps of the whole server
 local groups: { [string]: Group } = {}
@@ -970,8 +972,13 @@ function ZombieFights.start()
 				end
 			end
 		end
-		for _, session in sessions do
-			frame(session :: any, dt)
+		-- (one player's broken fight must not stop the marches and fights of everyone after them in the list)
+		for player, session in sessions do
+			local ok, err = pcall(frame :: any, session, dt)
+			if not ok and not frameWarned[player] then
+				frameWarned[player] = true
+				warn(Config.LogPrefix, "zombies: fight frame failed for", player.Name, err)
+			end
 		end
 		-- (with nobody in the server the camps do not run)
 		if next(sessions) ~= nil then
@@ -986,6 +993,7 @@ function ZombieFights.start()
 	-- already paid stay, dead slimes stay dead with their time, the teams and their repeat option stay saved). The groups
 	-- their teams held stand free again, whole.
 	PlayerData.onLeaving(function(player: Player, _data: any)
+		frameWarned[player] = nil
 		local session = sessions[player]
 		if session then
 			sessions[player] = nil
