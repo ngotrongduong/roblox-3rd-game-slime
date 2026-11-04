@@ -65,8 +65,13 @@ Config.Breeding = {
 	CourtshipSeconds = 60,
 	CourtshipAreaFactor = 0.96,
 	CourtshipMinSeconds = 15,
+	-- A courtship takes this much longer for each level of the stronger parent above LevelBase: a little, while an
+	-- incubation grows by IncubationPerBabyLevel a level (the owner, 2026-11-04: the higher the slime, the longer the
+	-- hatch; courting is not slowed much).
+	CourtshipPerLevelSeconds = 0.5,
+	CourtshipLevelBase = 4,
 	LayEnergy = 30,
-	IncubationPerBabyLevel = 1,
+	IncubationPerBabyLevel = 2,
 	IncubationLevelBase = 4,
 	IncubationAreaFactor = 0.96,
 	IncubationFloorSeconds = 10,
@@ -1817,11 +1822,12 @@ Config.UpgradeFx = {
 	RevealSeconds = 1.35,
 	RevealStaggerSeconds = 0.95,
 	OutlineSeconds = 2.2,
-	MessageSeconds = 2.6,
+	-- (long enough to read the line of what the level gives, Config.Pads.Gives)
+	MessageSeconds = 3.6,
 	MessageHeightStuds = 5,
 	MessageRiseStuds = 3,
-	MessageWidthPixels = 310,
-	MessageHeightPixels = 100,
+	MessageWidthPixels = 340,
+	MessageHeightPixels = 130,
 	ScreenBaseY = 900,
 	ScreenMin = 0.7,
 	ScreenMax = 1.3,
@@ -1878,6 +1884,18 @@ Config.Pads = {
 		kitchen = { 10.5, -20 }, -- (the kitchen and training ground spread inside too, 2026-10-30)
 		training = { 8.5, -24.5 },
 		breeding = { 15, -24 },
+	},
+	-- What an upgrade of each area does, shown under the pad's price and with the level-up title (the owner,
+	-- 2026-11-04: players should know why they upgrade). Workers come at Config.Work.SlotLevels, nests at
+	-- Config.Breeding.SlotLevels; work is CycleLevelFactor faster a level; rarer fish and vegetables from Food.roll.
+	Gives = {
+		-- (short enough for one line over a pad at the play camera, seen 2026-11-04)
+		fishing = "Faster fishing, rarer fish",
+		garden = "Faster crops, rarer veggies",
+		kitchen = "Faster cooking, new recipes",
+		training = "Faster training, bigger gains",
+		pantry = "More storage, bigger vault",
+		breeding = "Faster eggs, rarer babies",
 	},
 }
 

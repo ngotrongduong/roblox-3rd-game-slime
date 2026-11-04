@@ -600,7 +600,12 @@ local function show(session: Session, farm: Farm, epoch: number)
 		if clockKind == "" and courting and courting > epoch then
 			clockKind = "court"
 			clockEnd = courting
-			clockStart = clockEnd - Breeding.courtshipSeconds(farm.tutorialDone == false, farm.areas.breeding.level)
+			clockStart = clockEnd
+				- Breeding.courtshipSeconds(
+					farm.tutorialDone == false,
+					farm.areas.breeding.level,
+					Breeding.pairLevel(farm, pairIndex)
+				)
 		end
 		-- the simulation advances once a second: keep the published times while they still agree to a fraction of
 		-- a second, so a running clock does not rewrite its attributes every tick

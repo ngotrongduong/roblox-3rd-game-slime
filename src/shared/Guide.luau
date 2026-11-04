@@ -212,7 +212,7 @@ local steps: { [string]: Step } = {
 			return env.atHome
 		end,
 	},
-	pads = { line = "Coins upgrade your farm: step on a pad.", target = "pad", tip = true },
+	pads = { line = "Step on a pad to upgrade: each pad says what it gives.", target = "pad", tip = true },
 	team = {
 		line = "Make a team at the banner by the gate.",
 		target = "banner",
@@ -300,7 +300,7 @@ local intros: { [string]: Intro } = {
 		end,
 	},
 	upgrade = {
-		line = "You have the coins! Step on a pad to upgrade.",
+		line = "You have the coins! Upgrades work faster and find rarer things.",
 		target = "pad",
 		when = function(farm)
 			return farm.coins >= cheapestUpgrade(farm)

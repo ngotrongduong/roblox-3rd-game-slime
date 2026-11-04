@@ -397,19 +397,39 @@ function Breeding.startCourtship(farm: Farm, index: number, now: number): CheckR
 	local ready = Breeding.pairReady(farm, index, now)
 	if ready.ok then
 		farm.breeding.pairs[index].courtingUntil = now
-			+ Breeding.courtshipSeconds(farm.tutorialDone == false, farm.areas.breeding.level)
+			+ Breeding.courtshipSeconds(
+				farm.tutorialDone == false,
+				farm.areas.breeding.level,
+				Breeding.pairLevel(farm, index)
+			)
 	end
 	return ready
 end
 
--- A courtship is short while the tutorial runs, and shorter as the breeding area grows.
-function Breeding.courtshipSeconds(tutorial: boolean?, breedingLevel: number?): number
+-- The level of the stronger slime of a set pair (0 while a place is empty).
+function Breeding.pairLevel(farm: Farm, index: number): number
+	local pair = farm.breeding.pairs[index]
+	local best = 0
+	for _, id in { pair and pair.a, pair and pair.b } do
+		local slime = if id then FarmState.findSlime(farm, id) else nil
+		if slime then
+			best = math.max(best, Stats.level(slime.stats))
+		end
+	end
+	return best
+end
+
+-- A courtship is short while the tutorial runs. Like an incubation it takes a second longer for each level the
+-- stronger parent has above CourtshipLevelBase, and the whole of it is shorter as the breeding area grows.
+function Breeding.courtshipSeconds(tutorial: boolean?, breedingLevel: number?, parentLevel: number?): number
 	local b = Config.Breeding
 	if tutorial then
 		return b.TutorialCourtshipSeconds
 	end
+	local base = b.CourtshipSeconds
+		+ math.max(0, (parentLevel or 0) - b.CourtshipLevelBase) * b.CourtshipPerLevelSeconds
 	local steps = (breedingLevel or Config.Village.StartLevel) - Config.Village.StartLevel
-	return math.max(b.CourtshipMinSeconds, math.round(b.CourtshipSeconds * b.CourtshipAreaFactor ^ steps))
+	return math.max(b.CourtshipMinSeconds, math.round(base * b.CourtshipAreaFactor ^ steps))
 end
 
 function Breeding.layEgg(farm: Farm, index: number, now: number, rng: Rng, newId: IdFn): BreedResult

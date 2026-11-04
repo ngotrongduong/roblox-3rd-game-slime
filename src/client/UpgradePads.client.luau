@@ -1,7 +1,8 @@
 --!strict
 -- The price over each upgrade pad (src/server/UpgradePads.luau): "$cost" in green when this player has enough
--- coins, red when not, grey MAX at the top level. Every client colours its own view; the pad only carries
--- Level, MaxLevel and Cost attributes, and the coins are read from workspace.Villages.<UserId>.
+-- coins, red when not, grey MAX at the top level, and under it what the upgrade does. Every client colours its own
+-- view; the pad only carries AreaId, Level, MaxLevel and Cost attributes, and the coins are read from
+-- workspace.Villages.<UserId>.
 local CollectionService = game:GetService("CollectionService")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -31,7 +32,7 @@ local function draw(pad: BasePart): () -> ()
 	-- (it hangs from the pad's own anchor point, 4.4 studs up: clear of the signs and lamps beside a path)
 	local anchor = if pad.Parent then pad.Parent:WaitForChild("PriceAnchor", 3) else nil
 	gui.Adornee = if anchor and anchor:IsA("BasePart") then anchor else pad
-	gui.Size = UDim2.fromOffset(190, 90)
+	gui.Size = UDim2.fromOffset(220, 118)
 	gui.AlwaysOnTop = false
 	gui.MaxDistance = 70
 	gui.LightInfluence = 0
@@ -40,7 +41,7 @@ local function draw(pad: BasePart): () -> ()
 	scale.Parent = gui
 	local price = Instance.new("TextLabel")
 	price.BackgroundTransparency = 1
-	price.Size = UDim2.fromScale(1, 0.62)
+	price.Size = UDim2.fromScale(1, 0.48)
 	price.Font = Enum.Font.FredokaOne
 	price.TextScaled = true
 	price.TextStrokeTransparency = 0
@@ -48,14 +49,27 @@ local function draw(pad: BasePart): () -> ()
 	price.Parent = gui
 	local level = Instance.new("TextLabel")
 	level.BackgroundTransparency = 1
-	level.Position = UDim2.fromScale(0, 0.62)
-	level.Size = UDim2.fromScale(1, 0.3)
+	level.Position = UDim2.fromScale(0, 0.48)
+	level.Size = UDim2.fromScale(1, 0.23)
 	level.Font = Enum.Font.FredokaOne
 	level.TextScaled = true
 	level.TextColor3 = Color3.fromRGB(255, 244, 214)
 	level.TextStrokeTransparency = 0.2
 	level.TextStrokeColor3 = Color3.fromRGB(40, 28, 20)
 	level.Parent = gui
+	-- what the upgrade does (Config.Pads.Gives), so a player knows why to buy it
+	local gives = Instance.new("TextLabel")
+	gives.BackgroundTransparency = 1
+	gives.Position = UDim2.fromScale(0, 0.73)
+	gives.Size = UDim2.fromScale(1, 0.27)
+	gives.Font = Enum.Font.FredokaOne
+	gives.TextScaled = true
+	gives.TextColor3 = Color3.fromRGB(255, 226, 150)
+	gives.TextStrokeTransparency = 0.2
+	gives.TextStrokeColor3 = Color3.fromRGB(40, 28, 20)
+	local areaId = pad:GetAttribute("AreaId")
+	gives.Text = if type(areaId) == "string" then (Config.Pads.Gives :: any)[areaId] or "" else ""
+	gives.Parent = gui
 
 	local function refresh()
 		local rawCost, rawLevel, rawMax =

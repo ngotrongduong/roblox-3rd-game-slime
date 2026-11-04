@@ -130,7 +130,7 @@ local function flash(parts: { BasePart }, focus: Vector3, area: string, level: n
 
 	local title = Instance.new("TextLabel")
 	title.Name = "Area"
-	title.Size = UDim2.fromScale(1, 0.58)
+	title.Size = UDim2.fromScale(1, 0.45)
 	title.BackgroundTransparency = 1
 	title.Font = Enum.Font.FredokaOne
 	title.TextScaled = true
@@ -142,8 +142,8 @@ local function flash(parts: { BasePart }, focus: Vector3, area: string, level: n
 
 	local subtitle = Instance.new("TextLabel")
 	subtitle.Name = "Level"
-	subtitle.Position = UDim2.fromScale(0, 0.55)
-	subtitle.Size = UDim2.fromScale(1, 0.4)
+	subtitle.Position = UDim2.fromScale(0, 0.43)
+	subtitle.Size = UDim2.fromScale(1, 0.31)
 	subtitle.BackgroundTransparency = 1
 	subtitle.Font = Enum.Font.FredokaOne
 	subtitle.TextScaled = true
@@ -153,12 +153,26 @@ local function flash(parts: { BasePart }, focus: Vector3, area: string, level: n
 	subtitle.Text = if newEra then "NEW ERA! LEVEL " .. tostring(level) else "LEVEL " .. tostring(level) .. " UNLOCKED!"
 	subtitle.Parent = gui
 
+	-- what the new level does (Config.Pads.Gives)
+	local gives = Instance.new("TextLabel")
+	gives.Name = "Gives"
+	gives.Position = UDim2.fromScale(0, 0.75)
+	gives.Size = UDim2.fromScale(1, 0.25)
+	gives.BackgroundTransparency = 1
+	gives.Font = Enum.Font.FredokaOne
+	gives.TextScaled = true
+	gives.TextColor3 = rgb(Fx.Cream)
+	gives.TextStrokeColor3 = rgb(Fx.Shadow)
+	gives.TextStrokeTransparency = 0
+	gives.Text = (Config.Pads.Gives :: any)[area] or ""
+	gives.Parent = gui
+
 	TweenService:Create(
 		gui,
 		TweenInfo.new(Fx.MessageSeconds, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
 		{ StudsOffsetWorldSpace = Vector3.new(0, above + Fx.MessageRiseStuds, 0) }
 	):Play()
-	for _, label in { title, subtitle } do
+	for _, label in { title, subtitle, gives } do
 		TweenService:Create(
 			label,
 			TweenInfo.new(Fx.MessageSeconds, Enum.EasingStyle.Quad, Enum.EasingDirection.In),
