@@ -30,7 +30,7 @@ export type Unit = {
 }
 -- `open`: more foes are still to come (the dungeon's queue), so the fight does not end when the foes in it are down; a
 -- squad wiped out ends it all the same.
-export type Fight = { units: { Unit }, rng: Rng, seconds: number, winner: string?, open: boolean? }
+export type Fight = { units: { Unit }, rng: Rng, seconds: number, winner: string?, open: boolean?, fair: boolean? }
 -- `skill` is the way of fighting whose skill struck (a key of Config.Combat.Skills); `n` the blow's number in a
 -- several-blow skill; `splash` a blow that struck beside the target; `guard` the guard that took a blow aimed elsewhere;
 -- `ranged` a blow from a fighter that keeps its distance; `slow` a sting that slowed its target. A "heal" event carries
@@ -124,7 +124,7 @@ local function unit(fighter: Fighter, side: string, rng: Rng): Unit
 	}
 end
 
-function Combat.new(squad: { Fighter }, foes: { Fighter }, rng: Rng): Fight
+function Combat.new(squad: { Fighter }, foes: { Fighter }, rng: Rng, opts: { fair: boolean? }?): Fight
 	local units: { Unit } = {}
 	for _, fighter in squad do
 		table.insert(units, unit(fighter, "squad", rng))
@@ -132,7 +132,7 @@ function Combat.new(squad: { Fighter }, foes: { Fighter }, rng: Rng): Fight
 	for _, fighter in foes do
 		table.insert(units, unit(fighter, "foe", rng))
 	end
-	return { units = units, rng = rng, seconds = 0 }
+	return { units = units, rng = rng, seconds = 0, fair = if opts then opts.fair else nil }
 end
 
 -- A fighter joins a fight that is going on (the dungeon's next monster): it opens at its own moment, as at the start.
@@ -224,7 +224,7 @@ local function blow(
 	end
 	local defence = struck.defence * (if guard then (c.Skills :: any).defence.defence else 1)
 	local amount = Combat.damage(attacker.attack, defence) * factor
-	local crit = attacker.side == "squad"
+	local crit = (attacker.side == "squad" or fight.fair == true)
 		and fight.rng:next() < math.min(c.CritCap, c.CritBase + attacker.speed * c.CritPerSpeed)
 	if crit then
 		amount *= c.CritFactor

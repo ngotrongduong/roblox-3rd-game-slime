@@ -3443,4 +3443,61 @@ Config.Ui = {
 	},
 }
 
+-- Asynchronous Arena: a broad beginner ladder, with a small summit for established teams.
+Config.Arena = {
+	-- Version the JSON ladder independently of farm saves; bots keep a fresh season populated.
+	Version = 1,
+	Bots = 1000,
+	TeamSize = 4,
+	-- ECONOMY.md / balance/income_model: starter 4, strongest slimes 40 at village level 50 (still assumed).
+	BotLevelMin = 4,
+	BotLevelMax = 40,
+	-- A cubic curve leaves many approachable rivals and few near the summit.
+	BotLevelExponent = 3,
+	-- Small level variation and one favoured stat give teams different roles at the same bot strength.
+	BotLevelSpread = 0.1,
+	BotFavouriteWeight = 2,
+	-- Champions offer a challenge beyond the ladder; 60 is the upper fight_sim comparison level.
+	ChampionLevel = function(_season: number): number
+		return 60
+	end,
+	-- The upper quarter of the ranks above is reachable; one hard, two middle, the rest nearby.
+	AboveShare = 0.75,
+	OpponentBands = 3,
+	HardOpponents = 1,
+	MiddleOpponents = 2,
+	-- Bound replay size and resolve stalemates as successful defences.
+	MaxFightSeconds = 120,
+	-- Stop new attacks five minutes before rollover; allow fifteen minutes for results to settle.
+	LockSeconds = 300,
+	FinalizeSeconds = 900,
+	-- Participation pays a little; climbing pays more, with a cap against very large rank gaps.
+	LossPoints = 5,
+	WinPoints = 20,
+	BelowShare = 0.6,
+	ClimbBonusPerStep = 1,
+	ClimbBonusCap = 20,
+	-- Monthly awards favour the summit while giving every ranked participant a modest reward.
+	SeasonRewards = {
+		{ upTo = 1, points = 1000, badge = "Champion" },
+		{ upTo = 3, points = 750, badge = "Podium" },
+		{ upTo = 10, points = 500, badge = "Elite" },
+		{ upTo = 50, points = 300, badge = "Contender" },
+		{ upTo = 100, points = 200, badge = "Challenger" },
+		{ upTo = 500, points = 100, badge = "Rival" },
+		{ upTo = math.huge, points = 50, badge = "Participant" },
+	},
+	-- Short goals reward returning and improving without an uncapped grind bonus.
+	Quests = {
+		{ id = "daily_win", period = "day", wins = 1, points = 20, stronger = false },
+		{ id = "weekly_wins", period = "week", wins = 5, points = 50, stronger = false },
+		{ id = "weekly_stronger", period = "week", wins = 1, points = 30, stronger = true },
+		{ id = "season_10", period = "season", wins = 10, points = 50, stronger = false },
+		{ id = "season_25", period = "season", wins = 25, points = 100, stronger = false },
+		{ id = "season_50", period = "season", wins = 50, points = 150, stronger = false },
+	},
+	NameStarts = { "Bram", "Clover", "Dew", "Fern", "Glim", "Moss", "Pebble", "Pip", "Sprout", "Willow" },
+	NameEnds = { "bell", "brook", "bud", "drop", "leaf", "ling", "pool", "root", "shine", "wick" },
+}
+
 return Config
