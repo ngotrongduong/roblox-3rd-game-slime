@@ -18,7 +18,8 @@ local targets = {
 	Server = folder(ServerScriptService, "Server"),
 	Client = folder(StarterPlayerScripts, "Client"),
 }
-local counts = { Shared = 0, Server = 0, Client = 0 }
+targets.Creatures = folder(targets.Shared, "Creatures")
+local counts = { Shared = 0, Server = 0, Client = 0, Creatures = 0 }
 for _, f in FILES do
 	local parent = targets[f[1]]
 	local old = parent:FindFirstChild(f[2])

@@ -90,6 +90,19 @@ The coordinator judged `sheet.png`: renders olive and muddy against bright, satu
   A hash-mottled torso looked like a checkerboard and was dropped.
 - Glowmoth, HoneyBee, Sproutling: palette only (same shapes, IoU unchanged).
 
+## Boar redesign round (Bramblehorn only; the ox/cow read was the problem)
+
+- r9 (round 1): rebuilt as a low heavy moss-covered wild boar. Torso = shoulder hump (higher) + lower rump, bark bands, glowing core, spikes,
+  shingled leaves and flowers over the back; head = pitched wedge sloping to a flat DARK brown snout disc with two nostrils, small eyes under a
+  heavy brow, short pointed leaf ears, moss/leaf face, clover crest with gem, small gold forehead spikes; gold tusks from the lower jaw curving
+  up and back (no sideways horns); short thick legs with dark hooves and gold tips; height 11.1. First builds were 4175-4627 tris, over budget;
+  cut with fewer shingle leaves, coarser torso spheres (14x8, 12x7), two leg-plate rows instead of three, 6-sided band tubes: 3983 tris.
+- r10 (round 2): tusks thicker (radius 0.55 -> 0.72) and taller, leaf cuff wider, cream chin beard leaves larger (no extra tris).
+  3983 tris, IoU 0.753 (az -30, el 8), aspect err 1.5 %, height 11.10.
+- Still differs: the painting's beard and cheek ruff are fuller and cream (ours: three small cream leaves, barely visible); painted head is
+  broader with leaf-clad cheeks; painting has a stronger eye glare; legs in the painting are gnarled bark. No second judge subagent was available,
+  so both rounds were self-judged against the painting overlays.
+
 ## Budgets (final)
 
 | Monster | Tris (budget) | Pieces | Height studs (target) | IoU | Camera | Score (self) |
@@ -100,7 +113,7 @@ The coordinator judged `sheet.png`: renders olive and muddy against bright, satu
 | Glowmoth | 1852 (800-2000) | 7 | 3.98 (4.0) | 0.743 | 0, 12 | 7 |
 | CloverSnail | 2476 (up to 2500) | 4 | 4.75 (5.0) | 0.748 | -46, 28 | 7 |
 | Bloomshell | 3636 (up to 4000) | 7 | 7.98 (8.0) | 0.785 | 10, 24 | 7 |
-| Bramblehorn | 3933 (up to 4000) | 9 | 10.96 (11.0) | 0.724 | -10, 16 | 7 |
+| Bramblehorn | 3983 (up to 4000) | 9 | 11.10 (11.0) | 0.753 | -30, 8 | 7 (boar redesign, see below) |
 
 Every monster: one 256 px palette png (nearest sampling, no baked light), at most one material, rigid pieces with the
 origin at the joint, Body root at the ground centre, no armature.

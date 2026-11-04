@@ -12,6 +12,7 @@ $sb = New-Object System.Text.StringBuilder
 [void]$sb.AppendLine("local FILES = {")
 $groups = @(
 	@{ Dir = "src\shared"; Dest = "Shared" },
+	@{ Dir = "src\shared\Creatures"; Dest = "Creatures" },
 	@{ Dir = "src\server"; Dest = "Server" },
 	@{ Dir = "src\client"; Dest = "Client" }
 )

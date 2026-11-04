@@ -1,196 +1,268 @@
-# Bramblehorn (BOSS, wave 10): a big mossy boar with gold spiked tusks, a clover crest with a glowing gem, wooden bark
-# bands, white and blue flowers, a glowing amber core on its back, dark hooves with gold tips and a leafy tail.
-# Painting: reference/goo-lineage-web/assets/enemy-green-boar.png (1254 px, a 3/4 front view from above, head low).
-# Measured from it (px): whole x 64..1191, y 17..1226; head x 430..1000, y 640..1100; tusks to y 1050; back bands
-# x 490..720; back core x 610..850, y 130..290; tail x 60..330, y 20..250; hooves down to y 1226. Built LEVEL, facing -Y,
-# head forward and slightly low, in px units (B frame). Inferred: the right/back sides of the torso, the rear legs and
-# their bark cuffs (one rear hoof shows), the underside, the third band's far end, which side the side core is on.
+# Bramblehorn (BOSS, wave 10): a huge moss-covered wild BOAR: low heavy body with a hunched shoulder hump higher than the
+# hips, short thick legs with dark hooves and gold tips, a long wedge head sloping down to a flat dark snout disc, small
+# amber eyes under a heavy brow, short pointed ears, a clover crest with a glowing gem and two gold horn spikes on the
+# forehead, short thick gold tusks rising from the lower jaw, wooden bark armour bands, a glowing amber core on the back,
+# white and blue flowers, leaf clusters everywhere and a leafy tail.
+# Painting: reference/goo-lineage-web/assets/enemy-green-boar.png (1254 px, a 3/4 front view from above, head low,
+# charging at the viewer). Round 9 rebuild after the owner saw it read as an ox in game: the cream face mask, pink cow
+# muzzle, long sideways horns and tall boxy body on stilts are gone.
+# Measured from the painting (px): head wedge x 430..1000, y 640..1100; snout disc x 590..750, y 920..1010 (dark pink-brown);
+# tusks from the lower jaw, curving up and out, y 750..1050; crest plate with a 4-leaf clover and an amber gem on the
+# forehead; ears short and pink inside; back bands x 490..720; back core x 610..850, y 130..290; tail x 60..330, y 20..250.
+# Built LEVEL, facing -Y, in STUDS (Blender metres); the painting's 3/4 charge is only approximated by the fit camera.
+# Inferred: the far side of everything, the rump and the rear legs (one rear hoof shows), the belly, the third band's far end.
 import math
 import sys
 
 sys.path.insert(0, "C:/Roblox 3rd game/tools/blender/monsters")
 import common as C
-from common import Frame, Piece, eye, leaf_broad, on_surface, sq, two_tone
+import numpy as np
+from common import Piece, eye, leaf_broad, sq, two_tone
 from mathutils import Vector
 
 SPEC = dict(name="Bramblehorn", painting="enemy-green-boar.png", kind="boss", height=11.0, budget="up to 4000",
-	cam=(-10, 16))
-S = 0.0096
-fr0 = Frame(S, 0, 0, 0.0)
+	az_range=range(-30, 11, 10), el_range=range(8, 31, 8))
+TSQ = 2.2
 
 
-def B(x, y, z):
-	return Vector((x * S, y * S, z * S))
-
-
-def L(v):
-	return v * S
+def V(x, y, z):
+	return Vector((x, y, z))
 
 
 def palette(P):
-	P.add(moss="#5E8E1E", moss_light="#88BA28", moss_dark="#3E6A16", cream="#F0E2B8", bark="#90522A", bark_dark="#5E381A",
-		bark_light="#AE7442", amber="#F29A12", core="#FFD22E", gold="#FFC428", hoof="#2B2010", snout="#D07C88",
-		ear_in="#D07C88", blue="#4AA0F0", white="#FAF6E8", yellow="#F8CC24", clover="#3EAE3C", clover_light="#80D840",
-		leaf="#54A220", leaf_light="#94D22C", leaf_dark="#2E7A22", eye="#F2A820", dark="#241208", glint="#FFFFFF",
+	P.add(moss="#62881E", moss_light="#86B428", moss_dark="#4A6A18", cream="#E8D4A8", bark="#8C5428", bark_dark="#5A3416",
+		bark_light="#A87040", amber="#F89A10", core="#FFD02A", gold="#FBB721", hoof="#2B1E14", snout="#5C3E2C",
+		ear_in="#C4706E", blue="#4AA0F0", white="#FAF6E8", yellow="#F8CC24", clover="#3EAE3C", clover_light="#80D840",
+		leaf="#4E9A24", leaf_light="#8CCB2C", leaf_dark="#2E6A1C", eye="#F2A820", dark="#241208", glint="#FFFFFF",
 		plate="#62AA2E")
+
+
+# ---- the torso: a shoulder hump (high, heavy) and a lower rump, two superellipsoids that overlap
+SHO = dict(c=V(0, -1.0, 6.2), r=(3.7, 3.4, 3.5))
+RUMP = dict(c=V(0, 3.1, 5.3), r=(3.2, 3.4, 2.7))
+
+
+def se_point(e, d):
+	"""The point and outward normal of superellipsoid `e` in the direction of unit vector d."""
+	u = np.array([d[0], d[1], d[2]], float)
+	u /= np.linalg.norm(u)
+	k = (np.abs(u) ** TSQ).sum() ** (1 / TSQ)
+	loc = u / k * np.array(e["r"])
+	g = np.sign(loc) * (np.abs(loc / np.array(e["r"])) ** (TSQ - 1)) / np.array(e["r"])
+	n = Vector((float(g[0]), float(g[1]), float(g[2]))).normalized()
+	return e["c"] + Vector((float(loc[0]), float(loc[1]), float(loc[2]))), n
+
+
+def top_z(x, y):
+	"""Height of the torso's upper surface at (x, y) (the higher of the two masses), or None outside."""
+	best = None
+	for e in (SHO, RUMP):
+		ux, uy = (x - e["c"].x) / e["r"][0], (y - e["c"].y) / e["r"][1]
+		q = 1 - abs(ux) ** TSQ - abs(uy) ** TSQ
+		if q > 0.02:
+			z = e["c"].z + e["r"][2] * q ** (1 / TSQ)
+			best = z if best is None else max(best, z)
+	return best
+
+
+def rotx(v, deg):
+	a = math.radians(deg)
+	return V(v.x, v.y * math.cos(a) - v.z * math.sin(a), v.y * math.sin(a) + v.z * math.cos(a))
+
+
+HEAD_C, HEAD_R, HEAD_PITCH = V(0, -5.3, 4.3), (2.2, 2.85, 2.05), 22.0
+
+
+def hp(u, push=0.0):
+	"""A point on the (pitched) boar-head ellipsoid in local direction u, and its normal."""
+	u = V(*u).normalized()
+	loc = V(u.x * HEAD_R[0], u.y * HEAD_R[1], u.z * HEAD_R[2])
+	n = V(u.x / HEAD_R[0], u.y / HEAD_R[1], u.z / HEAD_R[2]).normalized()
+	n = rotx(n, HEAD_PITCH)
+	return HEAD_C + rotx(loc, HEAD_PITCH) + n * push, n
+
+
+def slope_axis(n):
+	"""Down-slope direction along a surface with outward normal n (outward horizontal on the very top)."""
+	d = V(0, 0, -1) - n * (-n.z)
+	if d.length < 0.25:
+		d = V(n.x, n.y, 0) if (n.x or n.y) else V(0, 1, 0)
+	return d.normalized()
 
 
 def build(P):
 	pieces = []
-	# ---- Body: mossy torso, cream chest fur, bark bands, glowing cores, spikes, flowers and leaves
+	# ================================================================ Body
 	body = Piece("Body", (0, 0, 0), "Root. Heavy breathing (scale Y 1.02 at 0.6 Hz), stomp dip 0.3 stud per step, rear-up lean on the charge wind-up; origin on the ground under the middle.")
-	tc, tr = B(0, 250, 570), (L(400), L(580), L(330))
-	TSQ = 2.4
 
-	def mottle(c, n):  # mossy fur: patches of light moss, dark moss and leaf green (a hash of the face position), cream underneath
-		if n[2] < -0.5:
+	def skin(c, n):
+		if n[2] < -0.65:
 			return "cream"
-		return "moss_light" if n[2] > 0.7 else ("moss_dark" if n[2] < -0.1 else "moss")
+		if n[2] > 0.78:
+			return "moss_light"
+		return "moss" if n[2] > 0.25 else "moss_dark"
 
-	body.sphere(tc, tr, mottle, seg=14, rings=8, fn=sq(tr, TSQ))
+	body.sphere(SHO["c"], SHO["r"], skin, seg=14, rings=8, fn=sq(SHO["r"], TSQ))
+	body.sphere(RUMP["c"], RUMP["r"], skin, seg=12, rings=7, fn=sq(RUMP["r"], TSQ))
 
-	def top(y):  # z of the torso's top line at y (px)
-		d = (y - 250) / 580
-		return 570 + 330 * max(1 - abs(d) ** TSQ, 0.01) ** (1 / TSQ)
-
-	def width(y):
-		d = (y - 250) / 580
-		return 400 * max(1 - abs(d) ** TSQ, 0.01) ** (1 / TSQ)
-
-	for i, y in enumerate((40, 265, 500)):  # the three bark bands over the back
-		pts = []
-		for k in range(9):
-			a = math.radians(-78 + k * 19.5)
-			pts.append(B(width(y) * math.sin(a) * 1.05, y, 570 + (top(y) - 570) * math.cos(a) * 1.06))
-		body.tube(pts, [L(44)] * 9, "bark" if i != 1 else "bark_dark", seg=6, caps=(True, True))
-	cp = B(0, 385, top(385) + 10)  # the glowing core on the back, in a bark ring
-	body.dome(cp - B(0, 0, 25), (0, 0, 1), L(150), L(60), "amber", seg=10)
-	body.dome(cp, (0, 0, 1), L(92), L(80), "core", seg=8)
-	ring = [cp + B(175 * math.cos(2 * math.pi * k / 9), 175 * math.sin(2 * math.pi * k / 9), -20) for k in range(10)]
-	body.tube(ring, [L(30)] * 10, "bark", seg=5, caps=(True, True))
-	sp, sn = Vector((-tr[0] * 0.93, tc[1] + L(40), tc[2] + L(70))), Vector((-1, 0, 0))  # the side core (the painting's left flank)
-	body.dome(sp, tuple(sn), L(105), L(55), "amber", seg=8)
-	body.dome(sp + sn * L(25), tuple(sn), L(60), L(60), "core", seg=6)
-	for y in (-30, 140, 330, 520, 680):  # gold spikes along the spine
-		z0 = top(y) - 12
-		body.cone(B(0, y, z0), B(0, y + 30, z0 + 165), L(40), "gold", seg=5)
-	for sx in (1, -1):  # shoulder and hip spikes
-		for y, z in ((-60, 780), (620, 700)):
-			p = B(sx * width(y) * 0.85, y, z)
-			body.cone(p, p + B(sx * 95, 10, 90), L(38), "gold", seg=5)
-	for x, y, r in ((130, 60, 90), (-150, 180, 80), (230, 380, 85), (-110, 560, 80), (60, 450, 95), (-250, 330, 85)):  # flowers: white daisies, blue forget-me-nots
-		z0 = top(y) * 0.98 - (abs(x) / 400) ** 2 * 120
-		body.dome(B(x, y, z0), (x * 0.002, 0, 1), L(r), L(26), "white", seg=6, smooth=False)
-		body.dome(B(x, y, z0 + 10), (x * 0.002, 0, 1), L(r * 0.38), L(30), "yellow", seg=5, smooth=False)
-	for x, y in ((-60, 250), (160, 220), (-210, 80), (80, 640), (-250, 420), (300, 600), (-80, 130), (200, 520), (-190, 600), (30, 330)):
-		z0 = top(y) * 0.98 - (abs(x) / 400) ** 2 * 120
-		body.dome(B(x, y, z0), (x * 0.002, 0, 1), L(42), L(22), "blue", seg=5, smooth=False)
-	for x, y, ang in ((60, 150, 30), (-120, 300, 150), (200, 450, 80), (-60, 520, 200), (140, 20, 330), (-230, 160, 110), (260, 280, 20), (-150, 640, 250),
-		(-20, 80, 100), (110, 330, 200), (-200, 450, 20), (20, 600, 310), (-250, 300, 60), (230, 150, 140), (-100, 400, 270), (180, 560, 220)):  # leaf clusters over the back
-		z0 = top(y) - (abs(x) / 400) ** 2 * 140
-		a = math.radians(ang)
-		body.leaf(B(x, y, z0), (math.cos(a), math.sin(a), -0.05), (0, 0, 1), L(260), L(140), two_tone("leaf_light" if ang % 20 else "leaf", "leaf_dark", (0, 0, 1)), K=2, bend=L(-12), wfn=leaf_broad)
-	for row, z in enumerate((480, 600, 720)):  # the leaf ruff over the shoulders and chest (seen head-on, like the painting)
-		for k, x in enumerate((-300, -180, -60, 60, 180, 300) if row != 1 else (-240, -120, 0, 120, 240)):
-			dx, dz = x / 400.0, (z - 570) / 330.0
-			q = max(1 - dx * dx - dz * dz, 0.02) ** 0.5
-			p = B(x * 0.97, 250 - 580 * q * 0.98, z)
-			n = Vector((dx / 400, -q / 580, dz / 330)).normalized()
-			down = Vector((0, 0, -1)) - n * (-n[2])
-			body.leaf(p + n * L(8), tuple(down.normalized()), tuple(n), L(250), L(170), two_tone(("leaf_light", "leaf", "plate")[(k + row) % 3], "leaf_dark", tuple(n)), K=2, bend=L(-10), wfn=leaf_broad)
-	for sx in (1, -1):  # the leafy fur shingles down both flanks (the painting's flanks are covered in leaves)
-		for k, (y, z) in enumerate(((20, 520), (200, 470), (380, 520), (560, 480), (110, 360), (300, 340), (480, 360))):
-			dy, dz = (y - 250) / 580, (z - 570) / 330
-			q = max(1 - dy * dy - dz * dz, 0.02) ** 0.5
-			p = B(sx * 400 * q * 0.98, y, z)
-			n = Vector((sx * q / 400, dy / 580, dz / 330)).normalized()
-			down = Vector((0, 0, -1)) - n * (-n[2])
-			body.leaf(p + n * L(6), tuple(down.normalized()), tuple(n), L(230), L(150), two_tone("leaf_light" if k % 2 else "leaf", "leaf_dark", tuple(n)), K=3, bend=L(-10), wfn=leaf_broad)
+	# the three bark armour bands over the hump and the back
+	for i, y in enumerate((-2.5, -0.3, 2.7)):
+		e = SHO if (top_z(0, y) == SHO["c"].z + SHO["r"][2] * max(1 - abs((y - SHO["c"].y) / SHO["r"][1]) ** TSQ, 0.02) ** (1 / TSQ)) else RUMP
+		ry = (y - e["c"].y) / e["r"][1]
+		q = max(1 - abs(ry) ** TSQ, 0.02) ** (1 / TSQ)
+		pts = [V(e["r"][0] * q * math.sin(a) * 1.04, y, e["c"].z + e["r"][2] * q * math.cos(a) * 1.04) for a in [math.radians(-80 + k * 20) for k in range(9)]]
+		body.tube(pts, [0.42] * 9, "bark" if i != 1 else "bark_dark", seg=6, caps=(True, True))
+	# the glowing core on the back in a bark ring
+	cy = 1.1
+	cz = top_z(0, cy)
+	body.dome(V(0, cy, cz - 0.2), (0, 0, 1), 1.45, 0.6, "amber", seg=10)
+	body.dome(V(0, cy, cz), (0, 0, 1), 0.9, 0.8, "core", seg=8)
+	ring = [V(1.85 * math.cos(2 * math.pi * k / 9), cy + 1.85 * math.sin(2 * math.pi * k / 9), (top_z(1.85 * math.cos(2 * math.pi * k / 9), cy + 1.85 * math.sin(2 * math.pi * k / 9)) or cz) - 0.1) for k in range(10)]
+	body.tube(ring, [0.3] * 10, "bark", seg=5, caps=(True, True))
+	# the side core on the monster's right flank (the painting's left)
+	sp, sn = se_point(RUMP, (-1, 0.1, 0.12))
+	body.dome(sp, tuple(sn), 1.0, 0.5, "amber", seg=8)
+	body.dome(sp + sn * 0.25, tuple(sn), 0.6, 0.6, "core", seg=6)
+	# gold spikes down the spine and on the shoulders and hips
+	for y in (-2.9, -1.2, 0.0, 2.6, 4.2, 5.4):
+		z0 = top_z(0, y) - 0.15
+		body.cone(V(0, y, z0), V(0, y + 0.3, z0 + 1.55), 0.38, "gold", seg=5)
+	for sx in (1, -1):
+		for e, d in ((SHO, (sx * 0.85, -0.2, 0.5)), (SHO, (sx * 0.95, 0.35, 0.25)), (RUMP, (sx * 0.85, 0.1, 0.55)), (RUMP, (sx * 0.9, 0.6, 0.2))):
+			p, n = se_point(e, d)
+			body.cone(p - n * 0.1, p + n * 1.0, 0.34, "gold", seg=4)
+	# leaf shingles smothering the hump, the back and the flanks (a bumpy silhouette)
+	cols = ("leaf_light", "leaf", "plate", "leaf_light", "moss_light")
+	k = 0
+	for e, rows, naz in ((SHO, (74, 52, 30, 8), 8), (RUMP, (62, 38, 14), 7)):
+		for ri, el in enumerate(rows):
+			for j in range(naz):
+				ph = (j + (0.5 if ri % 2 else 0)) * 2 * math.pi / naz
+				d = (math.cos(math.radians(el)) * math.cos(ph), math.cos(math.radians(el)) * math.sin(ph), math.sin(math.radians(el)))
+				p, n = se_point(e, d)
+				if p.y < -3.6 and p.z < 7.2:
+					continue  # the neck: the head sits here
+				if abs(p.x) < 1.9 and abs(p.y - 1.1) < 2.1 and p.z > 8.0:
+					continue  # keep the glowing core clear
+				k += 1
+				ln = 2.1 if el > 40 else 1.8
+				body.leaf(p + n * 0.1, tuple(slope_axis(n)), tuple(n), ln, 1.4, two_tone(cols[k % 5], "leaf_dark", tuple(n)), K=2, bend=-0.12, wfn=leaf_broad)
+	# moss clumps: small domes for lumps
+	for x, y in ((-1.6, -2.6), (1.7, -2.2), (0.4, -3.2), (-2.3, 0.2), (2.4, 0.6), (-1.4, 3.6), (1.6, 3.9), (0.2, 5.1)):
+		z0 = top_z(x, y) or 6
+		body.dome(V(x, y, z0 - 0.15), (x * 0.12, 0, 1), 0.85, 0.5, "moss_light" if int(x * 10) % 2 else "leaf", seg=5, smooth=False)
+	# flowers: white daisies and blue forget-me-nots
+	for x, y, r in ((1.0, -2.2, 0.95), (-1.9, -1.0, 0.9), (2.4, 1.6, 0.9), (-0.7, 4.4, 0.85), (1.9, 3.6, 0.8), (-2.5, 2.2, 0.85)):
+		z0 = (top_z(x, y) or 6.0) - 0.1 - (abs(x) / 3.7) ** 2 * 0.6
+		body.dome(V(x, y, z0), (x * 0.1, 0, 1), r, 0.3, "white", seg=6, smooth=False)
+		body.dome(V(x, y, z0 + 0.1), (x * 0.1, 0, 1), r * 0.4, 0.34, "yellow", seg=5, smooth=False)
+	for x, y in ((-0.6, -1.9), (1.6, -0.9), (-2.1, -2.3), (0.5, 3.2), (-1.8, 3.9), (2.6, 3.0), (-0.9, 0.3), (2.2, -1.8)):
+		z0 = (top_z(x, y) or 6.0) - 0.1 - (abs(x) / 3.7) ** 2 * 0.6
+		body.dome(V(x, y, z0), (x * 0.1, 0, 1), 0.46, 0.26, "blue", seg=5, smooth=False)
 	pieces.append(body)
 
-	# ---- Head: low, wide, cream-and-moss with the clover crest, amber eyes, pink snout and gold tusks
-	hj = B(0, -330, 400)
+	# ================================================================ Head: long wedge sloping to a flat dark snout disc
+	hj = V(0, -3.7, 5.3)
 	head = Piece("Head", hj, "Look/turn about the neck (yaw +-30 deg); head-butt: dip 20 deg and thrust 1.5 studs; roar: lift 12 deg.")
-	hc, hr = B(0, -620, 360), (L(275), L(300), L(235))
-	head.sphere(hc, hr, lambda c, n: "moss" if n[2] > 0.35 else "cream", seg=12, rings=8, fn=sq(hr, 2.3))
-	snc, snr = B(0, -915, 275), (L(135), L(110), L(95))
-	head.sphere(snc, snr, "snout", seg=10, rings=6)
+	head.sphere(HEAD_C, HEAD_R, lambda c, n: "moss" if n[2] > -0.1 else "moss_dark", seg=11, rings=7, rot=(HEAD_PITCH, 0, 0))
+	# the muzzle: a tapering bridge and the flat dark snout disc at its tip
+	mc = V(0, -7.3, 3.55)
+	head.sphere(mc, (1.15, 1.25, 0.95), "moss", seg=10, rings=6, rot=(HEAD_PITCH, 0, 0))
+	axis = V(0, -0.92, -0.38)
+	disc_c = V(0, -8.35, 3.1)
+	head.lathe(disc_c, [(1.05, 0.0), (1.05, 0.45)], "snout", seg=10, axis=tuple(axis), cap=True)
+	for sx in (1, -1):  # nostrils
+		head.dome(disc_c + axis * 0.5 + V(sx * 0.4, 0, 0.05), tuple(axis), 0.26, 0.12, "dark", seg=6)
+	# small eyes under a heavy brow
 	for sx in (1, -1):
-		p, n = on_surface(fr0, snc, snr, sx * 52, -300, 2.0)
-		head.dome(p, n, L(20), L(8), "dark", seg=5)
-		p, n = on_surface(fr0, hc, hr, sx * 150, -440, 2.3)
-		eye(head, p + n * L(5), n, L(58), iris="eye", up=(0, 0, 1), tall=0.9, tilt=-sx * 22, seg=10)
-		# tusk: a gold tapering horn curling up and out, with two spikes and a leaf cuff at the base
-		path = [B(sx * 190, -750, 210), B(sx * 300, -855, 235), B(sx * 365, -920, 370), B(sx * 345, -945, 540), B(sx * 290, -930, 700)]
-		head.tube(path, [L(88), L(76), L(60), L(38), L(8)], "gold", seg=6, caps=(False, True))
-		for t, ci in ((0.5, 1), (0.6, 2)):
-			q = path[ci] + (path[ci + 1] - path[ci]) * t
-			head.cone(q, q + B(sx * 80, -45, 30), L(24), "gold", seg=4)
-		head.lathe(path[0] + B(0, 20, -5), [(L(88), 0), (L(70), L(70))], "leaf", seg=6, axis=tuple(path[1] - path[0]), cap=True)
-	cp2, cn2 = on_surface(fr0, hc, hr, 0, -520, 2.3)  # the clover crest on the brow
-	head.dome(cp2, cn2, L(175), L(60), "plate", seg=6, smooth=False)
-	up2 = Vector((0, 0, 1)) - cn2 * cn2.z
+		p, n = hp((sx * 0.62, -0.62, 0.34), 0.06)
+		eye(head, p, n, 0.36, iris="eye", up=(0, 0, 1), tall=0.9, tilt=-sx * 24, seg=10)
+		a, an = hp((sx * 0.22, -0.88, 0.46), 0.1)
+		b, bn = hp((sx * 0.86, -0.38, 0.52), 0.1)
+		head.tube([a, b], [0.3, 0.38], "moss_dark", seg=5, caps=(True, True))
+		# cheek tufts and moss leaves round the face
+		for u, ang in (((sx * 0.9, -0.2, 0.1), 20), ((sx * 0.5, 0.2, 0.8), 60)):
+			p2, n2 = hp(u, 0.05)
+			head.leaf(p2, (sx * math.cos(math.radians(ang)), -0.3, math.sin(math.radians(ang))), tuple(n2), 1.25, 0.8, two_tone("leaf_light", "leaf_dark", tuple(n2)), K=2, bend=-0.1, wfn=leaf_broad)
+		# gold horn spike on the forehead beside the crest
+		hs, hn = hp((sx * 0.42, -0.3, 0.93), 0.0)
+		head.cone(hs - hn * 0.1, hs + hn * 1.0 + V(sx * 0.2, 0, 0), 0.26, "gold", seg=5)
+		# the tusk: short, thick, rising from the lower jaw near the snout, curving up and back
+		path = [V(sx * 0.85, -7.2, 2.3), V(sx * 1.4, -7.55, 2.7), V(sx * 1.7, -7.3, 3.7), V(sx * 1.5, -6.6, 4.6)]
+		head.tube(path, [0.72, 0.64, 0.44, 0.06], "gold", seg=6, caps=(False, True))
+		head.lathe(path[0] + V(0, 0.15, -0.05), [(0.9, 0), (0.74, 0.55)], "leaf", seg=6, axis=tuple(path[1] - path[0]), cap=True)
+		q = path[1] + (path[2] - path[1]) * 0.45
+		head.cone(q, q + V(sx * 0.5, -0.3, 0.2), 0.16, "gold", seg=4)
+	# the clover crest with its gem on the brow
+	cp2, cn2 = hp((0, -0.3, 0.97), 0.0)
+	head.dome(cp2, tuple(cn2), 1.15, 0.4, "plate", seg=6, smooth=False)
+	up2 = V(0, 0, 1) - cn2 * cn2.z
 	up2.normalize()
 	sd2 = cn2.cross(up2)
 	for i in range(4):
 		a = math.pi / 4 + i * math.pi / 2
 		d = up2 * math.cos(a) + sd2 * math.sin(a)
-		head.dome(cp2 + cn2 * L(26) + d * L(58), tuple(cn2), L(60), L(34), "clover", seg=6, smooth=False)
-	head.dome(cp2 + cn2 * L(34), tuple(cn2), L(36), L(46), "core", seg=6, smooth=False)
-	for sx in (1, -1):  # leaf mane round the cheeks and brow
-		for k, (x, z, ang) in enumerate(((235, 470, 30), (255, 360, -20), (205, 560, 70))):
-			p, n = on_surface(fr0, hc, hr, sx * x, -z, 2.3)
-			head.leaf(p, (sx * math.cos(math.radians(ang)), -0.2, math.sin(math.radians(ang))), tuple(n), L(210), L(110), two_tone("leaf_light" if k % 2 else "leaf", "leaf_dark", tuple(n)), K=3, bend=L(-8), wfn=leaf_broad)
+		head.dome(cp2 + cn2 * 0.2 + d * 0.42, tuple(cn2), 0.46, 0.28, "clover", seg=6, smooth=False)
+	head.dome(cp2 + cn2 * 0.3, tuple(cn2), 0.28, 0.34, "core", seg=6, smooth=False)
+	# a few cream whiskers under the chin (the painting's pale beard) and a leaf mane at the back of the head
+	for sx in (-0.5, 0.0, 0.5):
+		p, n = hp((sx, -0.5, -0.78), 0.0)
+		head.leaf(p, (0, -0.4, -1.0), tuple(n), 1.3, 0.8, "cream", K=2, bend=0.05, wfn=leaf_broad)
+	for sx in (1, -1):
+		for u in ((sx * 0.7, 0.65, 0.5), (sx * 0.3, 0.8, 0.6)):
+			p, n = hp(u, 0.05)
+			head.leaf(p, (sx * 0.5, 0.3, 0.8), tuple(n), 1.4, 0.9, two_tone("leaf", "leaf_dark", tuple(n)), K=2, bend=-0.1, wfn=leaf_broad)
 	pieces.append(head)
 
-	# ---- Ears: a moss leaf with a pink inside; EarL is the monster's left
+	# ================================================================ Ears: short, pointed, pink inside
 	for name, sx in (("EarL", 1), ("EarR", -1)):
-		j = B(sx * 215, -500, 550)
+		j, _ = hp((sx * 0.8, 0.1, 0.62), 0.0)
 		ear = Piece(name, j, "Flick: rotate about the root +-15 deg at 2.5 Hz, pin back when it charges.")
-		d = Vector((sx * 0.45, 0.1, 1.0)).normalized()
-		n = Vector((sx * 0.5, -1.0, 0.1))
-		ear.leaf(j, tuple(d), tuple(n), L(270), L(190), two_tone("moss_light", "leaf_dark", tuple(n)), K=3, bend=L(15), wfn=leaf_broad)
-		ear.dome(j + d * L(60) + n.normalized() * L(16), tuple(n), L(75), L(24), "ear_in", seg=6, up=tuple(d), sx=1.5)
+		d = V(sx * 0.55, 0.15, 1.0).normalized()
+		n = V(sx * 0.4, -1.0, 0.2)
+		ear.leaf(j, tuple(d), tuple(n), 1.5, 1.05, two_tone("moss_light", "leaf_dark", tuple(n)), K=2, bend=0.2, wfn=leaf_broad)
+		ear.dome(j + d * 0.4 + n.normalized() * 0.1, tuple(n), 0.5, 0.16, "ear_in", seg=6, up=tuple(d), sx=1.4)
 		pieces.append(ear)
 
-	# ---- Legs: a thick cream-furred leg, a bark cuff, a dark hoof with two gold tips and a leaf; flowers on the front ones
-	def leg(name, sx, y, hip_x, reach, flowers):
-		j = B(sx * hip_x, y, 540)
+	# ================================================================ Legs: short, thick, moss-furred, bark cuff, dark hoof with gold tips
+	def leg(name, sx, y, hip_x, flowers):
+		j = V(sx * hip_x, y, 4.3)
 		lg = Piece(name, j, "Swing +-22 deg about the hip, diagonal pairs together (walk 1.0 Hz); stamp (+-30 deg) on the slam.")
-		kn, an = B(sx * (hip_x + 25), y - reach * 0.3, 300), B(sx * (hip_x + 30), y - reach * 0.5, 150)
-		lg.tube([j, kn, an], [L(135), L(115), L(100)], lambda c, n: "moss_light" if c[2] > 400 * S else "moss", seg=7, caps=(False, False))
-		lg.lathe(an + B(0, 0, 25), [(L(132), 0), (L(132), L(60))], "bark", seg=7, cap=True)
-		hp = B(sx * (hip_x + 30), y - reach * 0.5, 0)
-		lg.lathe(hp, [(L(128), 0), (L(118), L(150))], "hoof", seg=7, cap=True)
+		kn, an = V(sx * (hip_x + 0.2), y - 0.2, 2.5), V(sx * (hip_x + 0.25), y - 0.45, 1.25)
+		lg.tube([j, kn, an], [1.4, 1.2, 1.05], lambda c, n: "moss_dark" if c[2] < 2.2 else "moss", seg=6, caps=(False, False))
+		lg.lathe(an + V(0, 0, 0.1), [(1.2, 0), (1.2, 0.5)], "bark", seg=7, cap=True)
+		hp_ = V(sx * (hip_x + 0.25), y - 0.5, 0.0)
+		lg.lathe(hp_, [(1.15, 0), (1.05, 1.35)], "hoof", seg=7, cap=True)
 		for i in (-1, 1):
-			base = hp + B(i * 52, -105, 60)
-			lg.cone(base, base + B(i * 6, -70, -45), L(40), "gold", seg=5)
-		lg.leaf(an + B(0, -60, 70), (0.1 * sx, -0.4, -1.0), (sx * 0.4, -1.0, 0.0), L(210), L(130), two_tone("leaf_light", "leaf_dark", (0, -1, 0)), K=3, bend=L(-8), wfn=leaf_broad)
+			base = hp_ + V(i * 0.5, -0.95, 0.6)
+			lg.cone(base, base + V(i * 0.05, -0.65, -0.45), 0.38, "gold", seg=5)
+		for t, (dz, wd) in enumerate(((3.5, 1.6), (2.4, 1.5))):  # leaf plates on the front of the leg
+			lg.leaf(V(sx * (hip_x + 0.1 * t), y - 0.2 - 0.12 * t - 1.0, dz), (sx * 0.1, -0.25, -1.0), (sx * 0.2, -1.0, 0.3), 1.35, wd, two_tone(("leaf_light", "leaf", "plate")[t], "leaf_dark", (0, -1, 0)), K=2, bend=-0.1, wfn=leaf_broad)
 		if flowers:
-			lg.dome(an + B(sx * 90, -80, 90), (sx * 0.5, -1, 0.2), L(48), L(18), "blue", seg=5, smooth=False)
-			lg.dome(an + B(sx * 60, -110, 110), (sx * 0.4, -1, 0.3), L(34), L(16), "white", seg=5, smooth=False)
+			lg.dome(an + V(sx * 0.9, -0.8, 0.9), (sx * 0.5, -1, 0.2), 0.46, 0.2, "blue", seg=5, smooth=False)
+			lg.dome(an + V(sx * 0.6, -1.1, 1.1), (sx * 0.4, -1, 0.3), 0.34, 0.16, "white", seg=5, smooth=False)
 		return lg
 
-	pieces.append(leg("LegFL", 1, -200, 270, 100, True))
-	pieces.append(leg("LegFR", -1, -200, 270, 100, True))
-	pieces.append(leg("LegBL", 1, 560, 280, 0, False))
-	pieces.append(leg("LegBR", -1, 560, 280, 0, False))
+	pieces.append(leg("LegFL", 1, -2.7, 2.5, True))
+	pieces.append(leg("LegFR", -1, -2.7, 2.5, True))
+	pieces.append(leg("LegBL", 1, 3.9, 2.4, False))
+	pieces.append(leg("LegBR", -1, 3.9, 2.4, False))
 
-	# ---- Tail: a mossy stem in a bark wrap ending in a leaf bunch with two flowers
-	tj = B(0, 800, 650)
+	# ================================================================ Tail: a mossy stem in a bark wrap ending in a leaf bunch with two flowers
+	tj = V(0, 6.2, 6.3)
 	tail = Piece("Tail", tj, "Swish: rotate about the root +-25 deg at 1.4 Hz with a travelling wave (the leaves lag).")
-	path = [tj, B(25, 900, 760), B(-10, 985, 900), B(-90, 1030, 990)]
-	tail.tube(path, [L(52), L(44), L(36), L(30)], "moss", seg=5, caps=(False, True))
-	tail.lathe(path[1] + B(0, 0, -20), [(L(60), 0), (L(60), L(70))], "bark", seg=6, axis=tuple(path[2] - path[1]), cap=True)
+	path = [tj, V(0.25, 7.0, 7.1), V(-0.1, 7.5, 8.2), V(-0.8, 7.7, 9.0)]
+	tail.tube(path, [0.55, 0.46, 0.38, 0.32], "moss", seg=5, caps=(False, True))
+	tail.lathe(path[1] + V(0, 0, -0.15), [(0.62, 0), (0.62, 0.55)], "bark", seg=6, axis=tuple(path[2] - path[1]), cap=True)
 	end = path[-1]
-	for tip, wd in ((B(-250, 1040, 1100), 150), (B(-120, 1120, 1130), 160), (B(-60, 1080, 850), 130), (B(-230, 1000, 900), 120)):
+	for tip, wd in ((V(-2.4, 8.0, 9.6), 1.3), (V(-1.2, 8.7, 9.9), 1.35), (V(-0.6, 8.3, 7.7), 1.1), (V(-2.1, 7.7, 8.0), 1.0)):
 		a = tip - end
-		tail.leaf(end, tuple(a), (0, -0.3, 1.0), a.length, L(wd), two_tone("leaf_light", "leaf_dark", (0, -0.3, 1.0)), K=3, bend=L(15), wfn=leaf_broad)
-	tail.dome(end + B(-60, -30, 70), (0, -1, 0.3), L(60), L(22), "white", seg=5, smooth=False)
-	tail.dome(end + B(-110, -20, 20), (0, -1, 0.2), L(40), L(20), "blue", seg=5, smooth=False)
+		tail.leaf(end, tuple(a), (0, -0.3, 1.0), a.length, wd, two_tone("leaf_light", "leaf_dark", (0, -0.3, 1.0)), K=2, bend=0.15, wfn=leaf_broad)
+	tail.dome(end + V(-0.6, -0.3, 0.6), (0, -1, 0.3), 0.55, 0.2, "white", seg=5, smooth=False)
+	tail.dome(end + V(-1.0, -0.2, 0.2), (0, -1, 0.2), 0.36, 0.18, "blue", seg=5, smooth=False)
 	pieces.append(tail)
 	return pieces
 
 
 if __name__ == "__main__":
-	C.run(__file__, sys.argv[sys.argv.index("--") + 1] if "--" in sys.argv else "r1")
+	C.run(__file__, "r9")

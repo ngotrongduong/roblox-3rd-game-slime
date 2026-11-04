@@ -110,19 +110,19 @@ The Bud swells and glows before a big attack; Head lunges forward on a bite.
 
 ## Bramblehorn (boss, wave 10)
 
-Painting `enemy-green-boar.png`; 3933 tris, 9 pieces, 10.96 studs tall (target 11.0); walks on four legs, charges.
-Bounding box (Blender metres): x -4.39..4.83, y -9.82..10.68, z 0.00..10.96.
+Painting `enemy-green-boar.png`; 3983 tris, 9 pieces, 11.10 studs tall (target 11.0); walks on four legs, charges.
+Bounding box (Blender metres): x -4.38..4.38, y -9.17..8.63, z 0.00..11.10.
 
 Glowing amber cores (back and one flank) are in the palette as bright colours: a Neon part or an emission pulse in game makes them glow.
 
 | Piece | Tris | Joint, Blender (x, y, z) | Joint, Roblox (x, y, z) | Motion |
 |---|---|---|---|---|
-| Body | 2074 | 0.00, 0.00, 0.00 | -0.00, 0.00, 0.00 | Root. Heavy breathing (scale Y 1.02 at 0.6 Hz), stomp dip 0.3 stud per step, rear-up lean on the charge wind-up; origin on the ground under the middle. |
-| Head | 978 | 0.00, -3.17, 3.84 | -0.00, 3.84, -3.17 | Look/turn about the neck (yaw +-30 deg); head-butt: dip 20 deg and thrust 1.5 studs; roar: lift 12 deg. |
-| EarL | 46 | 2.06, -4.80, 5.28 | -2.06, 5.28, -4.80 | Flick: rotate about the root +-15 deg at 2.5 Hz, pin back when it charges. |
-| EarR | 46 | -2.06, -4.80, 5.28 | 2.06, 5.28, -4.80 | Flick: rotate about the root +-15 deg at 2.5 Hz, pin back when it charges. |
-| LegFL | 162 | 2.59, -1.92, 5.18 | -2.59, 5.18, -1.92 | Swing +-22 deg about the hip, diagonal pairs together (walk 1.0 Hz); stamp (+-30 deg) on the slam. |
-| LegFR | 162 | -2.59, -1.92, 5.18 | 2.59, 5.18, -1.92 | Swing +-22 deg about the hip, diagonal pairs together (walk 1.0 Hz); stamp (+-30 deg) on the slam. |
-| LegBL | 132 | 2.69, 5.38, 5.18 | -2.69, 5.18, 5.38 | Swing +-22 deg about the hip, diagonal pairs together (walk 1.0 Hz); stamp (+-30 deg) on the slam. |
-| LegBR | 132 | -2.69, 5.38, 5.18 | 2.69, 5.18, 5.38 | Swing +-22 deg about the hip, diagonal pairs together (walk 1.0 Hz); stamp (+-30 deg) on the slam. |
-| Tail | 201 | 0.00, 7.68, 6.24 | -0.00, 6.24, 7.68 | Swish: rotate about the root +-25 deg at 1.4 Hz with a travelling wave (the leaves lag). |
+| Body | 2158 | 0.00, 0.00, 0.00 | -0.00, 0.00, 0.00 | Root. Heavy breathing (scale Y 1.02 at 0.6 Hz), stomp dip 0.3 stud per step, rear-up lean on the charge wind-up; origin on the ground under the middle. |
+| Head | 1016 | 0.00, -3.70, 5.30 | -0.00, 5.30, -3.70 | Look/turn about the neck (yaw +-30 deg); head-butt: dip 20 deg and thrust 1.5 studs; roar: lift 12 deg. |
+| EarL | 34 | 1.73, -5.51, 5.56 | -1.73, 5.56, -5.51 | Flick: rotate about the root +-15 deg at 2.5 Hz, pin back when it charges. |
+| EarR | 34 | -1.73, -5.51, 5.56 | 1.73, 5.56, -5.51 | Flick: rotate about the root +-15 deg at 2.5 Hz, pin back when it charges. |
+| LegFL | 162 | 2.50, -2.70, 4.30 | -2.50, 4.30, -2.70 | Swing +-22 deg about the hip, diagonal pairs together (walk 1.0 Hz); stamp (+-30 deg) on the slam. |
+| LegFR | 162 | -2.50, -2.70, 4.30 | 2.50, 4.30, -2.70 | Swing +-22 deg about the hip, diagonal pairs together (walk 1.0 Hz); stamp (+-30 deg) on the slam. |
+| LegBL | 132 | 2.40, 3.90, 4.30 | -2.40, 4.30, 3.90 | Swing +-22 deg about the hip, diagonal pairs together (walk 1.0 Hz); stamp (+-30 deg) on the slam. |
+| LegBR | 132 | -2.40, 3.90, 4.30 | 2.40, 4.30, 3.90 | Swing +-22 deg about the hip, diagonal pairs together (walk 1.0 Hz); stamp (+-30 deg) on the slam. |
+| Tail | 153 | 0.00, 6.20, 6.30 | -0.00, 6.30, 6.20 | Swish: rotate about the root +-25 deg at 1.4 Hz with a travelling wave (the leaves lag). |

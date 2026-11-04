@@ -25,6 +25,7 @@ local VillagePath = require(ReplicatedStorage.Shared.VillagePath)
 local Gaits = require(ReplicatedStorage.Shared.Gaits)
 local SlimeShape = require(ReplicatedStorage.Shared.SlimeShape)
 local MonsterMotion = require(ReplicatedStorage.Shared.MonsterMotion)
+local CreatureRig = require(script.Parent.CreatureRig)
 local SlimeFace = require(script.Parent.SlimeFace)
 
 local C = Config.Slime
@@ -98,6 +99,10 @@ export type Creature = {
 	lean: number,
 	attackGain: number,
 	last: Vector3?,
+	-- an Egg Heist creature: its one skinned part is posed by its own motion (CreatureRig), not by pieces; `air` 1
+	-- flies it aloft
+	rig: CreatureRig.Rig?,
+	air: number,
 }
 
 local Actor = {}
@@ -365,10 +370,16 @@ local function tick(a: Slime, dt: number, write: boolean)
 		-- this frame walks (its legs swing in full); leaning forward is its attack.
 		local now = workspace:GetServerTimeNow()
 		local at = a.root.Position
-		local moving = creature.last ~= nil and (at - (creature.last :: Vector3)).Magnitude > dt * VC.CreatureWalkSpeed
+		local step = if creature.last
+			then Vector3.new(at.X - creature.last.X, 0, at.Z - creature.last.Z).Magnitude
+			else 0
+		local moving = step > dt * VC.CreatureWalkSpeed
 		creature.last = at
 		local attack = math.clamp(pose.leanFwd * creature.attackGain, 0, 1)
-		local rise = pose.lift * s + MonsterMotion.lift(creature.hover, creature.bob, creature.bobHz, now)
+		local rig = creature.rig
+		-- (a creature with legs walks on them: it does not hop like the jelly under it)
+		local hop = if rig then 0 else pose.lift * s
+		local rise = hop + MonsterMotion.lift(creature.hover, creature.bob, creature.bobHz, now)
 		local middle = (creature.top - creature.hover) / 2
 		local base = a.root
 			* CFrame.new(0, rise, 0)
@@ -377,11 +388,19 @@ local function tick(a: Slime, dt: number, write: boolean)
 			* CFrame.new(0, middle, 0)
 			* CFrame.Angles(creature.tilt, 0, 0)
 			* CFrame.new(0, -middle, 0)
-		for i, part in creature.parts do
-			local rx, ry, rz = MonsterMotion.angles(creature.specs[i], now, moving, attack)
+		if rig then
+			local place = base * creature.fromJoints[1]
 			n += 1
-			parts[n] = part
-			cfs[n] = base * creature.joints[i] * CFrame.Angles(rx, ry, rz) * creature.fromJoints[i]
+			parts[n] = creature.parts[1]
+			cfs[n] = place
+			CreatureRig.step(rig, dt, now, base, if dt > 0 then step / dt else 0, creature.air)
+		else
+			for i, part in creature.parts do
+				local rx, ry, rz = MonsterMotion.angles(creature.specs[i], now, moving, attack)
+				n += 1
+				parts[n] = part
+				cfs[n] = base * creature.joints[i] * CFrame.Angles(rx, ry, rz) * creature.fromJoints[i]
+			end
 		end
 	end
 	local heldPose = a.heldPose

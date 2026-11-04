@@ -1,5 +1,21 @@
 # Status
 
+## 2026-11-04 — the dungeon's monsters are the owner's Egg Heist creatures
+
+The owner: "Egg Heist already has many monster models; use them to save effort." The seven Sunny Meadow roles are now his Egg
+Heist creatures, picked to fit a meadow and each role: Twigling (swarmer), Parrot (flying hunter), Bloom Sprite (ranged), Aurora Owl
+(flying healer), Hedgehog (armoured), Mossback Gorilla (mini-boss, the gorilla with moss and blossoms) and Bramblehorn (boss, the
+flower-frilled Triceratops). Names in `Config.Dungeon.Maps.meadow` follow the models; ids, stats and skills are unchanged.
+`tools/kit/eggheist_models.luau` reads Egg Heist's `assets/Pets/*.rbxm` (read only) and writes `assets/MonsterKit.rbxm` (`kit`), or a
+script that rebuilds them in an open Studio place from the owner's uploaded meshes (`studio`). They move by Egg Heist's own motion:
+`shared/MotionKit`, `shared/Creature` and the seven `shared/Creatures/pet_*` modules are copied from Egg Heist, played by
+`client/CreatureRig` (feet planted, wings beating, head looking about), on the same unseen slime body as before
+(`Config.Dungeon.Looks`: `motion`, `height`, `hover`). `tools/map/sync_all.ps1` now syncs `src/shared/Creatures`. A spec checks that
+every look's model is in the kit and its motion fits its bones and walks. Seen in a play test: all seven walking at the real camera,
+a run in the arena with Parrots, Hedgehogs and Bloom Sprites fighting, no console errors (`docs/ui/dungeon/eggheist-*.jpg`). The
+Blender builds stay in `art/models/monsters/` (a look with `pieces` still works). Not seen live: the mini-boss and the boss in a
+run (seen walking in the lineup), a phone screen. The map's drop is still "Boar Tusk".
+
 ## 2026-11-04 — the Slime Dungeon's art: the Sunny Meadow arena and the seven monsters in 3D
 
 The arena is built by the server from the kit after the owner's painting `battle.map.meadow.png` (`server/DungeonArena`, placed
