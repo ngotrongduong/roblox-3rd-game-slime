@@ -16,7 +16,7 @@
 -- balls until the art step brings their models.
 --
 --   workspace.DungeonArenas.<name>   the arena of one run, a Model (ServerStorage's Config.Dungeon.ArenaTemplate when it
---                     exists, else a greybox of parts). Attributes: Owner (UserId), Plot, MapId, Phase ("COUNTDOWN" |
+--                     exists, else the Sunny Meadow of server/DungeonArena, else a greybox of parts). Attributes: Owner (UserId), Plot, MapId, Phase ("COUNTDOWN" |
 --                     "WAVE_ACTIVE" | "WAVE_CLEARED" | "VICTORY" | "DEFEAT"), Wave (1..Waves; the wave in play, or the
 --                     last one cleared), Waves, Level (the dungeon level), Left (monsters left this wave, the queue
 --                     included), Best (the best level cleared), Ledger (JSON text, "{"coins":5,"wood":1}": what the
@@ -48,6 +48,7 @@ local Layout = require(ReplicatedStorage.Shared.Layout)
 local Rng = require(ReplicatedStorage.Shared.Rng)
 local Zombies = require(ReplicatedStorage.Shared.Zombies)
 local PlayerData = require(script.Parent.PlayerData)
+local DungeonArena = require(script.Parent.DungeonArena)
 local Plots = require(script.Parent.Plots)
 local Village = require(script.Parent.Village)
 local ZombieFights = require(script.Parent.ZombieFights)
@@ -156,8 +157,9 @@ local function box(model: Model, name: string, size: Vector3, cf: CFrame, color:
 	return part
 end
 
--- STAND-IN until the art step: a round flat floor with a low rim, in the classic stud look. It is replaced, not changed, by
--- a model named Config.Dungeon.ArenaTemplate in ServerStorage (the Sunny Meadow clearing built in Studio).
+-- FALLBACK: a round flat floor with a low rim, in the classic stud look, for when the kit lacks a model the Sunny Meadow
+-- needs (server/DungeonArena warns which). A model named Config.Dungeon.ArenaTemplate in ServerStorage (built by hand in
+-- Studio) wins over both; otherwise the Sunny Meadow of server/DungeonArena is cloned.
 local function greybox(frame: CFrame): Model
 	local model = Instance.new("Model")
 	local radius = D.ArenaRadius
@@ -188,9 +190,10 @@ end
 local function buildArena(plot: number): Model
 	local frame = Layout.arenaFrame(plot)
 	local template = ServerStorage:FindFirstChild(D.ArenaTemplate)
+	local meadow = if template and template:IsA("Model") then template else DungeonArena.template()
 	local arena: Model
-	if template and template:IsA("Model") then
-		arena = template:Clone()
+	if meadow then
+		arena = meadow:Clone()
 		arena:PivotTo(frame)
 	else
 		arena = greybox(frame)
@@ -1036,6 +1039,8 @@ function Dungeon.start()
 	end
 	assert(remote:IsA("RemoteEvent"), "Fight remote must be a RemoteEvent")
 	fightRemote = remote
+	-- the Sunny Meadow is built now, once, so the first run does not wait for it
+	task.spawn(DungeonArena.template)
 	PlayerData.onReady(function(player: Player, data: any)
 		if player.Parent == Players then
 			set(player, "DungeonBest", if data and data.dungeon then data.dungeon.best else 0)

@@ -791,6 +791,95 @@ Config.Dungeon = {
 	FoeFadeSeconds = 1.2,
 	-- How long the server waits for the client to stream the arena in before it moves the player there.
 	StreamSeconds = 6,
+	-- The Sunny Meadow clearing, built once from the kit (server/DungeonArena, placed by shared/DungeonArenaPlan) after the
+	-- owner's painting reference/goo-lineage-web/assets/battle.map.meadow.png: a round bright clearing, four dirt paths coming
+	-- in on the four axes and fading out before the middle, rocks, flower clumps and bushes round the rim, round trees packed in
+	-- each corner, pines beside the left and right paths, a ring of woods behind. Studs from the arena's middle; angles in degrees from +X toward +Z.
+	Arena = {
+		Seed = 20261104,
+		-- The grass floor (a stud-look block, the village's look) reaches FloorHalf each way, past the backdrop, so the world
+		-- never shows its edge; FloorColour is the village lawn's, a little brighter like the painting.
+		FloorHalf = 150,
+		FloorColour = "#62ae3c",
+		-- The invisible wall round the fight: slimes and players cannot leave; the rim scenery stands outside it.
+		WallRadius = 68,
+		WallHeight = 40,
+		WallThickness = 2,
+		WallSegments = 24,
+		-- Nothing at all stands inside FightClear (the fight's centre); tiny flowers and pebbles lie from TinyFrom to TinyTo.
+		FightClear = 35,
+		TinyFrom = 37,
+		TinyTo = 62,
+		TinyFlowers = 14,
+		TinyTufts = 6,
+		TinyPebbles = 7,
+		TinyApart = 7,
+		-- The rim band that holds the scenery (outside the wall), and the far ring of trees that hides the floor's edge.
+		RimInner = 71,
+		RimOuter = 100,
+		BackdropInner = 104,
+		BackdropOuter = 132,
+		BackdropCount = 30,
+		BackdropBushes = 44,
+		BushRowDepth = 6,
+		-- Four dirt paths on the axes, from PathOuter in to PathInner: PathSegments overlapping flat blocks that narrow from
+		-- PathWidthOuter to PathWidthInner and drift sideways by up to PathWobble; the colour fades PathFade of the way to the
+		-- grass at the inner end. Each lies PathLift over the floor (so the two never flicker) and is PathThick thick.
+		PathColour = "#b9894f",
+		PathOuter = 118,
+		PathInner = 28,
+		PathSegments = 7,
+		PathWidthOuter = 15,
+		PathWidthInner = 6,
+		PathWobble = 0.6,
+		PathFade = 0.55,
+		PathLift = 0.05,
+		PathThick = 0.1,
+		-- ...and each segment sits PathStep over the one outside it, so the places where two overlap never flicker.
+		PathStep = 0.01,
+		-- The scenery keeps this far from an axis (plus half its own width) so the four path mouths stay open.
+		MouthHalf = 11,
+		-- Space between two pieces of scenery, over their two footprints' radii.
+		Gap = 1.5,
+		-- Per corner (the quadrant between two paths): round trees, rock pairs, single rocks, bushes, flower clumps; tries a
+		-- piece gets.
+		PerCorner = { Trees = 3, RockPairs = 1, Rocks = 1, Bushes = 3, Clumps = 4 },
+		-- The two trees past each path's outer end: how far past it, and how far apart from the path's line.
+		MouthBehind = 6,
+		MouthTreeApart = 7,
+		Tries = 80,
+		-- Heights (trees) or widths (the rest), studs: { low, high }. Backdrop trees are taller than the rim's.
+		Round = { 22, 26 },
+		Pine = { 22, 28 },
+		BackdropRound = { 26, 32 },
+		BackdropPine = { 28, 36 },
+		RockBig = { 7, 9 },
+		RockSmall = { 3.8, 5 },
+		RockSingle = { 4.5, 8 },
+		Bush = { 4.8, 6.4 },
+		BackdropBush = { 10, 14 },
+		Flower = { 3.6, 5 },
+		Tuft = { 2.8, 4 },
+		TinyFlower = { 1.3, 1.9 },
+		TinyTuft = { 1.5, 2.1 },
+		TinyPebble = { 1, 1.6 },
+		-- Kit models (ServerStorage.Kit.WildKit) by kind, and the tints a kind may wear (a tint only multiplies, so these are
+		-- the village's: it keeps the arena in the same world).
+		Models = {
+			round = { "QtCommonTree_1", "QtCommonTree_3", "QtCommonTree_5" },
+			pine = { "QtPine_1", "QtPine_5" },
+			rock = { "QtRock_Medium_1", "QtRock_Medium_2", "QtRock_Medium_3" },
+			bush = { "QtBush_Common_Green", "QtBush_Common_Flowers" },
+			flower = { "QtFlower_3_Group", "QtFlower_4_Group" },
+			tuft = { "QtGrass_Common_Short", "QtGrass_Common_Tall" },
+			pebble = { "QtPebble_Round_1", "QtPebble_Square_2" },
+		},
+		Tints = {
+			round = { "#ffffff", "#f0ffc8", "#e1fabe" },
+			pine = { "#ffffff", "#d2ebe1" },
+			tuft = { "#f0ffc8", "#e1fabe" },
+		},
+	},
 	-- The stand-in for a monster until its model exists (the art step): a ball whose colour follows its kind, as big as its
 	-- role. Not a final look.
 	StandIn = {
