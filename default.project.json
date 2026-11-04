@@ -10,6 +10,9 @@
 			"ClientKit": {
 				"$path": "assets/ClientKit.rbxm"
 			},
+			"MonsterKit": {
+				"$path": "assets/MonsterKit.rbxm"
+			},
 			"Remotes": {
 				"$className": "Folder"
 			}

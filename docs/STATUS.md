@@ -1,5 +1,21 @@
 # Status
 
+## 2026-11-04 — the Slime Dungeon's art: the Sunny Meadow arena and the seven monsters in 3D
+
+The arena is built by the server from the kit after the owner's painting `battle.map.meadow.png` (`server/DungeonArena`, placed
+by the pure, tested `shared/DungeonArenaPlan`, numbers in `Config.Dungeon.Arena`): stud grass, four dirt paths, rocks, flowers,
+bushes, tree clumps in the corners, pines by the side paths, and a ring of woods behind that is NOT in the painting (it hides the
+floor's edge; `BackdropCount` 0 removes it). About 330 parts. Shots: `docs/ui/dungeon/arena-meadow-*.jpg`.
+
+The seven monsters were built in Blender from the owner's paintings by `tools/blender/monsters` (two rounds against the paintings,
+`art/models/monsters/sheet.png`, `rounds.md`) as rigid pieces with their origins at the joints; the owner imported the FBX files
+and they live in `assets/MonsterKit.rbxm` (ReplicatedStorage.MonsterKit; `tools/kit/export_monsters.luau` writes it from a saved
+place). No animation is uploaded: `shared/MonsterMotion` turns each piece about its joint and `SlimeActor.dress` puts the pieces
+on an unseen slime body, so the fight code is unchanged; joints and swings in `Config.Dungeon.Looks`. Seen in a play test: all
+seven in the arena at the real camera, flyers hovering, a run with the models, no console errors (`docs/ui/dungeon/monsters-*.jpg`).
+Weak still: Bramblehorn reads more ox than mossy boar, the bee flies level (the painting dives), the flyers' health bars may sit
+low, the kit's flowers lack the painting's blue and white.
+
 ## 2026-11-04 — the Slime Dungeon (Sunny Meadow), first playable
 
 The owner: an arena where monsters come in waves, more each wave, their level and strength rising. `docs/GAMEPLAY.md` §14.
