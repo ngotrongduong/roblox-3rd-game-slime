@@ -1,5 +1,34 @@
 # Status
 
+## 2026-11-05 — smoother on phones, server loops that survive an error
+
+Measured in a `Publish.rbxl` play test (repo code synced in, one player). The server holds 60 Hz with a 0.12 ms heartbeat, and
+remote traffic is near 0 kbps. DataStore use is within budget (autosave every 5 min, key moments merged into one write every
+4 s, leaderboard reads every 60 s). The cost is in drawing, at the home plot:
+- the Market's Dungeon portal was outside `EffectsLod`, so its 10 emitters and 4 lights stayed on from every plot. Now
+  managed: 55 -> 45 emitters and 21 -> 17 lights on at home (none past their range), and 10/10 come on at the portal. Its 14
+  rune canvases stop at 170 studs;
+- every face (slimes, zombies, monsters) has 3 SurfaceGuis, all drawn at any distance. They now stop at
+  `Config.Slime.FarStuds`, where a face no longer moves. SurfaceGuis drawn: 125 -> 25 at home, most of them from roaming
+  zombies across the valley;
+- the slime loop no longer makes a closure per slime per frame (pressure on the garbage collector).
+
+Bugs fixed:
+- five client scripts logged "Infinite yield possible" on `Villages` at every join: the server now makes the folder at
+  start;
+- an error in a player's village tick, or in its carry-prompt refresh, stopped that player's village for the whole
+  session;
+- one player's broken fight frame stopped the fights of every player after them;
+- an error while a plot was being copied left it busy, so it could never be built or cleared again;
+- Next level and Replay in the Dungeon could leave a run half reset;
+- Home and Market travel worked inside a Dungeon run, and then the arena pulled the player back. It now says "Leave the
+  Dungeon first."
+
+Not seen live: the Dungeon travel refusal (a run needs 20 slimes and village level 15), a real phone, and 8 players. With 8
+players the villages next door (342 studs away) are drawn too. From a read-only review, left as they are: a window in
+`AreaUpgrade` where an upgrade that finishes while the plot is attaching may not show; leaderboard loops without pcall; no
+length cap on some request ids (they are rejected later).
+
 ## 2026-11-04 — smoother frames, a faster first hour
 
 The owner: the game stutters, and new players get bored waiting.
