@@ -47,6 +47,7 @@ function FarmSave.hooks(log: ((string) -> ())?)
 			{ from = 8, to = 9, migrate = ProfileLogic.migrateDungeon },
 			{ from = 9, to = 10, migrate = ProfileLogic.migrateGear },
 			{ from = 10, to = 11, migrate = ProfileLogic.migrateArena },
+			{ from = 11, to = 12, migrate = ProfileLogic.migrateWheel },
 		},
 		newData = function(now: number): any
 			return FarmState.newFarm(now)

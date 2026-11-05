@@ -117,13 +117,22 @@ export type Team = { members: { string }, repeatOn: boolean, target: string? }
 export type Guide = { step: string, mark: number, intro: string?, introMark: number, seen: { [string]: boolean } }
 -- Rewards for coming back (shared/Rewards). Days are UTC day numbers, 0 for never. daily: the day of the run last taken
 -- and when; a quest: its kind, how many it asks, the lifetime count it is measured from, whether its reward was taken;
--- online: seconds played that day and the gifts taken. indexSeen: the Index was opened (its intro is done).
+-- online: seconds played that day and the gifts taken. indexSeen: the Index was opened (its intro is done). Schema 12:
+-- quests.rerolls/freeUsed: redraws of today's list (all, and the free ones among them); checkins: check-ins taken in all,
+-- milestones: the Config.Rewards.CheckinMilestones indexes taken; weekly: the UTC week (ArenaSeason.weekOf) the five weekly
+-- quests were made for, and whether the Weekly Chest was taken; goals: Config.Goals ids taken; wheel (shared/Wheel): the UTC
+-- day of the free spins, how many were used that day, and the bank of spins that never expires.
 export type Quest = { kind: string, need: number, mark: number, claimed: boolean }
 export type Rewards = {
 	daily: { streak: number, day: number },
-	quests: { day: number, list: { Quest }, bonus: boolean },
+	quests: { day: number, list: { Quest }, bonus: boolean, rerolls: number, freeUsed: number },
 	online: { day: number, secs: number, claimed: { number } },
 	indexSeen: boolean,
+	checkins: number,
+	milestones: { number },
+	weekly: { week: number, list: { Quest }, chest: boolean },
+	goals: { [string]: boolean },
+	wheel: { day: number, used: number, bank: number },
 }
 -- The Slime Dungeon (shared/Dungeon): the highest dungeon level cleared, 0 for none (level best + 1 is the next to open).
 export type Dungeon = { best: number }
@@ -191,6 +200,15 @@ export type Lifetime = {
 	bestRaidKillSec: number,
 	slimesSold: number,
 	meals: number,
+	-- Schema 12: what the quests and goals measure (shared/Rewards.count).
+	dungeonWaves: number,
+	arenaAttacks: number,
+	gearCrafted: number,
+	dishesCooked: number,
+	fishCaught: number,
+	cropsHarvested: number,
+	wheelSpins: number,
+	secsPlayed: number,
 }
 
 export type AvatarLoadout = {
@@ -313,9 +331,14 @@ end
 function FarmState.newRewards(): Rewards
 	return {
 		daily = { streak = 0, day = 0 },
-		quests = { day = 0, list = {}, bonus = false },
+		quests = { day = 0, list = {}, bonus = false, rerolls = 0, freeUsed = 0 },
 		online = { day = 0, secs = 0, claimed = {} },
 		indexSeen = false,
+		checkins = 0,
+		milestones = {},
+		weekly = { week = 0, list = {}, chest = false },
+		goals = {},
+		wheel = { day = 0, used = 0, bank = 0 },
 	}
 end
 
@@ -616,6 +639,14 @@ function FarmState.newFarm(now: number): Farm
 			bestRaidKillSec = 0,
 			slimesSold = 0,
 			meals = 0,
+			dungeonWaves = 0,
+			arenaAttacks = 0,
+			gearCrafted = 0,
+			dishesCooked = 0,
+			fishCaught = 0,
+			cropsHarvested = 0,
+			wheelSpins = 0,
+			secsPlayed = 0,
 		},
 		avatar = FarmState.newAvatar(now),
 		tutorialDone = false,
@@ -1284,14 +1315,18 @@ local function validateRewards(raw: any, warnings: { string }): Rewards
 			day = nonNegInt(daily.day, 0),
 		}
 	end
-	local quests = raw.quests
-	if type(quests) == "table" and type(quests.list) == "table" then
+	-- A list of quests, kept only whole (nil when any is damaged or the list is longer than `most`).
+	local function questList(rawList: any, most: number, kindAt: (number, string) -> boolean): { Quest }?
+		if type(rawList) ~= "table" or #rawList > most then
+			return nil
+		end
 		local list: { Quest } = {}
-		local whole = #quests.list <= Config.Rewards.QuestCount
-		for _, q in quests.list do
+		for index, q in rawList do
 			if
-				type(q) == "table"
-				and table.find(Config.Rewards.QuestKinds, q.kind)
+				type(index) == "number"
+				and type(q) == "table"
+				and type(q.kind) == "string"
+				and kindAt(index, q.kind)
 				and isNum(q.need)
 				and q.need >= 1
 				and isNum(q.mark)
@@ -1301,14 +1336,65 @@ local function validateRewards(raw: any, warnings: { string }): Rewards
 					{ kind = q.kind, need = math.floor(q.need), mark = q.mark, claimed = q.claimed == true }
 				)
 			else
-				whole = false
+				return nil
 			end
 		end
-		if whole then
-			out.quests = { day = nonNegInt(quests.day, 0), list = list, bonus = quests.bonus == true }
+		return list
+	end
+	local quests = raw.quests
+	if type(quests) == "table" and type(quests.list) == "table" then
+		local list = questList(quests.list, Config.Rewards.QuestCount, function(_, kind)
+			return table.find(Config.Rewards.QuestKinds, kind) ~= nil
+		end)
+		if list then
+			out.quests = {
+				day = nonNegInt(quests.day, 0),
+				list = list,
+				bonus = quests.bonus == true,
+				rerolls = nonNegInt(quests.rerolls, 0),
+				freeUsed = nonNegInt(quests.freeUsed, 0),
+			}
 		else
 			table.insert(warnings, "rewards: quests damaged, made again")
 		end
+	end
+	local weekly = raw.weekly
+	if type(weekly) == "table" then
+		local list = questList(weekly.list, #Config.Rewards.Weekly, function(index, kind)
+			return Config.Rewards.Weekly[index].kind == kind
+		end)
+		if list and (#list == #Config.Rewards.Weekly or #list == 0) then
+			out.weekly = { week = nonNegInt(weekly.week, 0), list = list, chest = weekly.chest == true }
+		else
+			table.insert(warnings, "rewards: weekly quests damaged, made again")
+		end
+	end
+	out.checkins = nonNegInt(raw.checkins, 0)
+	if type(raw.milestones) == "table" then
+		for _, index in raw.milestones do
+			if
+				isNum(index)
+				and index % 1 == 0
+				and Config.Rewards.CheckinMilestones[index] ~= nil
+				and not table.find(out.milestones, index)
+			then
+				table.insert(out.milestones, index)
+			end
+		end
+	end
+	if type(raw.goals) == "table" then
+		for _, goal in Config.Goals.List do
+			if raw.goals[goal.id] == true then
+				out.goals[goal.id] = true
+			end
+		end
+	end
+	if type(raw.wheel) == "table" then
+		out.wheel = {
+			day = nonNegInt(raw.wheel.day, 0),
+			used = nonNegInt(raw.wheel.used, 0),
+			bank = math.min(nonNegInt(raw.wheel.bank, 0), Config.Wheel.BankCap),
+		}
 	end
 	local online = raw.online
 	if type(online) == "table" then
@@ -1700,6 +1786,14 @@ function FarmState.repair(data: any, now: number): (Farm, { string }, boolean)
 			bestRaidKillSec = nonNegInt(lt.bestRaidKillSec, 0),
 			slimesSold = nonNegInt(lt.slimesSold, 0),
 			meals = nonNegInt(lt.meals, 0),
+			dungeonWaves = nonNegInt(lt.dungeonWaves, 0),
+			arenaAttacks = nonNegInt(lt.arenaAttacks, 0),
+			gearCrafted = nonNegInt(lt.gearCrafted, 0),
+			dishesCooked = nonNegInt(lt.dishesCooked, 0),
+			fishCaught = nonNegInt(lt.fishCaught, 0),
+			cropsHarvested = nonNegInt(lt.cropsHarvested, 0),
+			wheelSpins = nonNegInt(lt.wheelSpins, 0),
+			secsPlayed = nonNegInt(lt.secsPlayed, 0),
 		}
 	else
 		lifetime = {
@@ -1714,6 +1808,14 @@ function FarmState.repair(data: any, now: number): (Farm, { string }, boolean)
 			bestRaidKillSec = 0,
 			slimesSold = 0,
 			meals = 0,
+			dungeonWaves = 0,
+			arenaAttacks = 0,
+			gearCrafted = 0,
+			dishesCooked = 0,
+			fishCaught = 0,
+			cropsHarvested = 0,
+			wheelSpins = 0,
+			secsPlayed = 0,
 		}
 	end
 

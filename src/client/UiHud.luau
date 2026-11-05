@@ -233,6 +233,11 @@ function UiHud.rewards(own: Folder?)
 	end
 	local ready = own:GetAttribute("RewardsReady")
 	local count = if type(ready) == "number" then ready else 0
+	-- (RewardsReady does not count the Lucky Wheel: a spin waiting lights the dot too, as one)
+	local spins = own:GetAttribute("WheelSpins")
+	if type(spins) == "number" and spins > 0 then
+		count += 1
+	end
 	local dot = label.Parent :: GuiObject
 	dot.Visible = count > 0
 	label.Text = if count > 9 then "9+" else tostring(count)

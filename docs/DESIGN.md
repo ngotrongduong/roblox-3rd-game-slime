@@ -44,7 +44,7 @@ grind** (drops rare, epic ≈ 10 runs, mythic ≈ 20); **never lose progress**; 
 | World Boss | single player, local leaderboard | co-op raid (each player brings a squad) and a global leaderboard |
 | UI | DOM panels for PC | mobile-first ScreenGuis, touch targets ≥ 48 px, one modal at a time, the owner's cream/brown parchment style and their button art |
 | Text | en + a little ja | Roblox localisation tables (en first, vi and ja next) |
-| Money | none | Robux later (passes and products), never pay-to-win against the grind the owner wants; decided with the owner at that phase |
+| Money | none | Robux passes and products as the owner approved on 2026-11-06 (VIP, Perm Luck, gold, spins, potions, team slots): `docs/MONETIZATION.md` |
 
 ## 3. Look: how the owner's 2D art lives in a 3D engine
 

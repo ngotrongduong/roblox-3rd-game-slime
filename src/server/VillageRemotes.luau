@@ -75,6 +75,15 @@ local function envOf(player: Player): VillageRequests.Env
 		unsavedPlay = function(): number
 			return Rewards.unsavedPlay(player)
 		end,
+		userId = player.UserId,
+		-- (the wheel's roll: every spin its own random seed, rolled on the server)
+		seed = function(): number
+			return Random.new():NextInteger(1, 2147483646)
+		end,
+		-- (no VIP pass is on sale yet; the Robux code answers here later)
+		isVip = function(): boolean
+			return Rewards.isVip(player)
+		end,
 	}
 end
 
@@ -147,8 +156,25 @@ local function request(player: Player, data: any): { ok: boolean, reason: string
 	elseif action == "GuideSkip" or action == "GuideSeen" or action == "GuideNext" then
 		print(Config.LogPrefix, "guide:", player.Name, action, data.step or "")
 		PlayerData.markKeyMoment(player, "guide")
+	elseif action == "WheelSpin" then
+		local slice = Config.Wheel.Slices[value or 0]
+		print(Config.LogPrefix, "wheel:", player.Name, "spun, slice", value or 0, slice and slice.id or "?")
+		PlayerData.markKeyMoment(player, "wheel spin")
+		task.spawn(Rewards.refresh, player)
+	elseif action == "RerollQuest" then
+		print(Config.LogPrefix, "rewards:", player.Name, "redrew daily quest", data.index)
+		PlayerData.markKeyMoment(player, "rewards")
+		task.spawn(Rewards.refresh, player)
 	elseif string.sub(action, 1, 5) == "Claim" or action == "IndexSeen" then
-		print(Config.LogPrefix, "rewards:", player.Name, action, data.index or data.step or "", "paid", value or 0)
+		print(
+			Config.LogPrefix,
+			"rewards:",
+			player.Name,
+			action,
+			data.index or data.step or data.id or "",
+			"paid",
+			value or 0
+		)
 		PlayerData.markKeyMoment(player, "rewards")
 		task.spawn(Rewards.refresh, player)
 	end

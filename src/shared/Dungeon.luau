@@ -231,6 +231,8 @@ function Dungeon.commitWave(farm: Farm, ledger: Ledger, wave: number): Paid?
 		return nil
 	end
 	page.state = "committed"
+	-- (the quests and goals of Rewards count the waves cleared)
+	farm.lifetime.dungeonWaves += 1
 	local paid: Paid = { coins = 0, food = 0, lost = 0, materials = {} }
 	for item, amount in page.drops do
 		local kind = (D.Materials :: any)[item].kind

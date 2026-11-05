@@ -102,6 +102,7 @@ local function doWork(
 						if slot.task == "plant" then Food.roll("veg", rng, farm.areas.garden.level) else ""
 					)
 					if crop then
+						farm.lifetime.cropsHarvested += 1
 						if Food.add(workArea.box, crop, 1, Config.Work.BoxCapacity) == 0 then
 							slot.pending = crop
 						end
@@ -199,6 +200,7 @@ local function doWork(
 							if action == "plant" then Food.roll("veg", rng, farm.areas.garden.level) else ""
 						)
 						if crop then
+							farm.lifetime.cropsHarvested += 1
 							Food.add(workArea.box, crop, 1, Config.Work.BoxCapacity)
 							table.insert(
 								events,
@@ -236,6 +238,7 @@ local function doWork(
 				if areaId == "fishing" then
 					-- Which fish bites is rolled here, by rarity weight (Config.Food.Kinds).
 					local caught = Food.roll("fish", rng, farm.areas.fishing.level)
+					farm.lifetime.fishCaught += Config.Work.FishingYield
 					if workReady then
 						-- Online the catch is held until the fish reaches the visible bin.
 						slot.pending = caught
@@ -261,6 +264,7 @@ local function doWork(
 						Food.take(farm.counter, item, count)
 					end
 					Food.add(workArea.box, id, Config.Work.KitchenYield, Config.Work.BoxCapacity)
+					farm.lifetime.dishesCooked += Config.Work.KitchenYield
 					table.insert(events, { kind = "cooked", item = id })
 				elseif areaId == "training" then
 					local statKey = slot.stat

@@ -412,6 +412,51 @@ function ProfileLogic.migrateArena(data: any, now: number): any
 	return out
 end
 
+-- A farm saved before the Lucky Wheel and the richer rewards (schema 11): everything it took stays taken (the check-in run,
+-- today's quests, the online gifts). The check-in total starts at the run it has now, no spin is banked, the weekly quests
+-- and goals start empty (the next look makes this week's quests; a goal is claimed when its count is there), and the new
+-- lifetime counts start at nought.
+function ProfileLogic.migrateWheel(data: any, _now: number): any
+	if type(data) ~= "table" then
+		return data
+	end
+	local out = ProfileLogic.deepCopy(data)
+	if type(out.rewards) == "table" then
+		local rewards = out.rewards
+		if type(rewards.quests) == "table" then
+			rewards.quests.rerolls = rewards.quests.rerolls or 0
+			rewards.quests.freeUsed = rewards.quests.freeUsed or 0
+		end
+		if rewards.checkins == nil then
+			local streak = if type(rewards.daily) == "table" and type(rewards.daily.streak) == "number"
+				then rewards.daily.streak
+				else 0
+			rewards.checkins = streak
+		end
+		rewards.milestones = rewards.milestones or {}
+		rewards.weekly = rewards.weekly or { week = 0, list = {}, chest = false }
+		rewards.goals = rewards.goals or {}
+		rewards.wheel = rewards.wheel or { day = 0, used = 0, bank = 0 }
+	end
+	if type(out.lifetime) == "table" then
+		for _, key in
+			{
+				"dungeonWaves",
+				"arenaAttacks",
+				"gearCrafted",
+				"dishesCooked",
+				"fishCaught",
+				"cropsHarvested",
+				"wheelSpins",
+				"secsPlayed",
+			}
+		do
+			out.lifetime[key] = out.lifetime[key] or 0
+		end
+	end
+	return out
+end
+
 -- Runs the steps from `fromVersion` to `toVersion`, each found by its `from`, so the list may be in
 -- any order. Refuses data from a newer version instead of guessing at it.
 function ProfileLogic.migrate(

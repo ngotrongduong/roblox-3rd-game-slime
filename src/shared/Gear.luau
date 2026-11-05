@@ -83,6 +83,8 @@ function Gear.craft(farm: Farm, recipeId: any): (string?, string?)
 	end
 	farm.coins -= recipe.coins
 	Gear.give(farm, recipe.gear, 1)
+	-- (the quests and goals of Rewards count the pieces made)
+	farm.lifetime.gearCrafted += 1
 	return recipe.gear, nil
 end
 

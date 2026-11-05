@@ -2341,7 +2341,9 @@ Config.Save = {
 	-- 9: the Slime Dungeon's best level cleared (`dungeon`).
 	-- 10: gear: the bag (`gear` on the farm) and what each slime wears (`gear` on the slime).
 	-- 11: the Arena (`arena`: points, team, tickets, the match in flight, season rewards claimed, quests, shop).
-	SchemaVersion = 11,
+	-- 12: the Lucky Wheel (`rewards.wheel`), weekly quests, goals, check-in totals and milestones, redraws of the day's quests,
+	--     and lifetime counts of waves, Arena attacks, gear made, dishes, fish, crops, wheel spins and seconds played.
+	SchemaVersion = 12,
 	-- A stored envelope without a version is this one.
 	FirstSchemaVersion = 1,
 
@@ -3027,23 +3029,80 @@ Config.Guide = {
 -- A day is the UTC day. Coins in a reward are `coins` times the price of the village's cheapest next upgrade (so a reward
 -- keeps its worth as the farm grows), rounded to two figures, never under CoinFloor. `luck` is minutes of the luck
 -- potion (Config.Luck.Potion): it adds to the time left, up to LuckMaxMinutes. Paid coins are not held by the vault.
+-- A reward (docs/MONETIZATION.md §4) is { coins = share, luck = minutes, spins = n, items = { { kind, id, count } } }; an
+-- item's kind is "food" (a raw food, into the storehouse), "dish" (into the fridge), "material" (farm.materials, an id of
+-- Config.Dungeon.Materials) or "gear" (the gear bag, an id of Config.Smithy.Gear). Food and dishes that do not fit the
+-- storehouse or the fridge are lost, as the Dungeon's food drop is.
+type RewardItem = { kind: string, id: string, count: number }
+type Reward = { coins: number?, luck: number?, spins: number?, items: { RewardItem }? }
+type Gift = { minutes: number, coins: number?, luck: number?, spins: number?, items: { RewardItem }? }
+type Milestone = { total: number, coins: number?, luck: number?, spins: number?, items: { RewardItem }? }
+type Goal = {
+	id: string,
+	kind: string,
+	need: number,
+	coins: number?,
+	luck: number?,
+	spins: number?,
+	items: { RewardItem }?,
+}
+type WeeklyQuest = { kind: string, need: number, reward: Reward }
+type WheelSlice = { id: string, name: string, weight: number, reward: Reward }
+
+local function food(id: string, count: number): RewardItem
+	return { kind = "food", id = id, count = count }
+end
+local function material(id: string, count: number): RewardItem
+	return { kind = "material", id = id, count = count }
+end
+-- The food basket: a few of the farm's ordinary foods.
+local FoodBasket = { food("fish", 3), food("carrot", 3), food("cabbage", 3) }
+
 Config.Rewards = {
 	CoinFloor = 100,
 	LuckMaxMinutes = 120,
+	FoodBasket = FoodBasket,
 	-- The daily check-in: day n of a run of days in a row, then day 1 again. A day missed starts the run over.
 	Daily = {
-		{ coins = 0.5 },
-		{ coins = 0.75 },
-		{ coins = 1 },
-		{ coins = 0.5, luck = 15 },
-		{ coins = 1.5 },
-		{ coins = 2 },
-		{ coins = 3, luck = 30 },
+		{ coins = 0.5, items = FoodBasket },
+		{ coins = 0.75, spins = 1 },
+		{ coins = 1, items = { material("ore", 5) } },
+		{ luck = 30, items = { material("rare_part", 2) } },
+		{ coins = 1.5, spins = 2 },
+		{ coins = 2, items = { material("monster_core", 1) } },
+		{ coins = 3, luck = 60, spins = 3, items = { material("monster_core", 2) } },
+	} :: { Reward },
+	-- Milestones of the total check-ins taken (a run broken does not lose them): each is claimed once, by hand.
+	CheckinMilestones = {
+		{ total = 14, coins = 4, spins = 3 },
+		{ total = 30, coins = 6, spins = 5, items = { { kind = "gear", id = "charm-core", count = 1 } } },
+		{ total = 60, coins = 10, spins = 8, items = { material("monster_core", 3) } },
+		{ total = 100, coins = 16, spins = 12, luck = 60, items = { material("boss_essence", 2) } },
+	} :: { Milestone },
+	-- Daily quests: QuestCount a day (easy, medium, medium, hard), drawn from the kinds that fit the farm by a dice of the
+	-- player and the day; quest n asks the n-th share of its kind's { least, most } and pays QuestRewards[n]. All of them
+	-- claimed: QuestBonus once. FreeRerolls redraws a day are free; more come from Robux (Rewards.rerollQuest, paid).
+	-- The kinds are measured by a lifetime count (shared/Rewards.count): wave = Slime Dungeon waves cleared, arena =
+	-- Arena attacks settled, craft = gear made at the Smithy, cook = dishes cooked, fish = fish caught, harvest = crops
+	-- harvested, find = kinds of slime found, spin = Lucky Wheel spins, play = minutes played.
+	QuestCount = 4,
+	QuestKinds = {
+		"breed",
+		"hatch",
+		"sell",
+		"feed",
+		"win",
+		"upgrade",
+		"wave",
+		"arena",
+		"craft",
+		"cook",
+		"fish",
+		"harvest",
+		"find",
+		"spin",
+		"play",
 	},
-	-- Daily quests: QuestCount a day, drawn from the kinds that fit the farm by a dice of the player and the day; quest n
-	-- asks the n-th share of its kind's { least, most } and pays QuestCoins[n]. All of them claimed: QuestBonus once.
-	QuestCount = 3,
-	QuestKinds = { "breed", "hatch", "sell", "feed", "win", "upgrade" },
 	QuestNeed = {
 		breed = { 1, 3 },
 		hatch = { 1, 3 },
@@ -3051,23 +3110,57 @@ Config.Rewards = {
 		feed = { 10, 30 },
 		win = { 4, 12 },
 		upgrade = { 1, 2 },
+		wave = { 2, 6 },
+		arena = { 1, 3 },
+		craft = { 1, 2 },
+		cook = { 2, 6 },
+		fish = { 4, 12 },
+		harvest = { 4, 12 },
+		find = { 1, 2 },
+		spin = { 1, 1 },
+		play = { 5, 20 },
 	},
-	QuestCoins = { 0.4, 0.7, 1 },
-	QuestBonus = { luck = 20 },
+	QuestRewards = {
+		{ coins = 0.3, items = FoodBasket },
+		{ coins = 0.5, items = { material("ore", 2) } },
+		{ coins = 0.7, items = { material("rare_part", 1) } },
+		{ coins = 1, items = { material("monster_core", 1) } },
+	} :: { Reward },
+	QuestBonus = { luck = 20, spins = 1 } :: Reward,
+	FreeRerolls = 1,
 	-- "sell" is drawn only for a village of at least this many slimes (the last ones cannot be sold).
 	QuestSellMinSlimes = 6,
+	-- These kinds are drawn only for a village of at least this level (the Dungeon's own door, Config.Dungeon.EnterMinVillageLevel,
+	-- is 15: the waves, the Smithy's materials and a team for the Arena all come from there). cook, fish and harvest are drawn
+	-- only while a slime works in that area.
+	QuestMinVillage = { wave = 15, arena = 15, craft = 15 },
+	QuestWorkArea = { cook = "kitchen", fish = "fishing", harvest = "garden" },
+	-- Weekly quests (a UTC week from Monday 00:00, as the Arena's): these five every week, each measured from the week's
+	-- start. All five claimed: the Weekly Chest, once. Kept to what any village can do.
+	Weekly = {
+		{ kind = "hatch", need = 15, reward = { spins = 2 } },
+		{ kind = "feed", need = 150, reward = { coins = 2, items = { material("ore", 5) } } },
+		{ kind = "win", need = 100, reward = { items = { material("monster_core", 1) } } },
+		{ kind = "breed", need = 20, reward = { coins = 1.5, items = { material("rare_part", 3) } } },
+		{ kind = "play", need = 120, reward = { spins = 3 } },
+	} :: { WeeklyQuest },
+	WeeklyChest = {
+		coins = 8,
+		spins = 5,
+		items = { material("monster_core", 2), material("boss_essence", 1) },
+	} :: Reward,
 	-- Online gifts: minutes played this UTC day (earlier visits count); each taken once a day.
 	Online = {
 		{ minutes = 1, coins = 0.2 },
-		{ minutes = 3, coins = 0.3 },
+		{ minutes = 3, items = FoodBasket },
 		{ minutes = 5, coins = 0.4 },
-		{ minutes = 10, coins = 0, luck = 5 },
-		{ minutes = 15, coins = 0.6 },
+		{ minutes = 10, luck = 10 },
+		{ minutes = 15, items = { material("ore", 3) } },
 		{ minutes = 20, coins = 0.8 },
-		{ minutes = 30, coins = 0.5, luck = 10 },
-		{ minutes = 45, coins = 1 },
-		{ minutes = 60, coins = 1.5, luck = 15 },
-	},
+		{ minutes = 30, luck = 10, items = { material("rare_part", 1) } },
+		{ minutes = 45, coins = 1, items = { { kind = "dish", id = "grilledFish", count = 1 } } },
+		{ minutes = 60, coins = 1.5, spins = 1 },
+	} :: { Gift },
 	-- The server writes the minutes played into the save this often (and when the player leaves).
 	OnlineFlushSeconds = 60,
 	-- The server looks at every player's rewards this often.
@@ -3079,7 +3172,16 @@ Config.Rewards = {
 	TileWidth = 108,
 	OnlineTileWidth = 148,
 	TileHeight = 112,
-	QuestRowHeight = 80,
+	-- a row of the Quests, Weekly and Goals lists: its height (a touch button inside), the one for a narrow screen where the
+	-- buttons go on a second line, the reward's width, a picture in a tile and in a row, the Claim button's width, the red dot
+	-- on a tab
+	QuestRowHeight = 64,
+	QuestRowHeightNarrow = 98,
+	RewardWidth = 116,
+	TilePartIcon = 22,
+	RowPartIcon = 20,
+	ClaimWidth = 76,
+	TabDot = 14,
 	IndexCell = 96,
 	IndexCellHeight = 118,
 	-- An Index card whose slime is not found yet shows the slime's own picture, darkened: the only light on it is this
@@ -3092,6 +3194,94 @@ Config.Rewards = {
 	IndexPicturesPerFrame = 2,
 	-- The red dot on the Rewards button while something waits.
 	BadgeSize = 18,
+}
+
+-- ===== Goals: permanent milestones, each paid once (shared/Rewards, the Goals tab of the Rewards sheet) =====
+-- A goal is claimed by hand once its count (shared/Rewards.goalCount) reaches `need`; the reward is Config.Rewards' kind of
+-- reward. kind: hatch (eggs hatched), find (kinds of slime found), village (the village level), sell (slimes sold), dungeon
+-- (the best Slime Dungeon level cleared), arena (Arena attacks), craft (gear made), wave (Dungeon waves cleared). The list
+-- order is the order the tab shows. An id is saved when claimed: never rename one.
+Config.Goals = {
+	List = {
+		{ id = "hatch10", kind = "hatch", need = 10, coins = 1 },
+		{ id = "hatch50", kind = "hatch", need = 50, coins = 2, spins = 1 },
+		{ id = "hatch200", kind = "hatch", need = 200, coins = 4, spins = 2, items = { material("rare_part", 3) } },
+		{
+			id = "hatch1000",
+			kind = "hatch",
+			need = 1000,
+			coins = 12,
+			spins = 5,
+			items = { material("monster_core", 2) },
+		},
+		{ id = "find10", kind = "find", need = 10, coins = 1 },
+		{ id = "find25", kind = "find", need = 25, coins = 2, spins = 1 },
+		{ id = "find50", kind = "find", need = 50, coins = 4, spins = 2 },
+		{ id = "find100", kind = "find", need = 100, coins = 8, spins = 4, items = { material("monster_core", 1) } },
+		{ id = "find150", kind = "find", need = 150, coins = 15, spins = 8, items = { material("boss_essence", 1) } },
+		{ id = "village10", kind = "village", need = 10, coins = 2 },
+		{ id = "village20", kind = "village", need = 20, coins = 4, spins = 2 },
+		{
+			id = "village30",
+			kind = "village",
+			need = 30,
+			coins = 6,
+			spins = 3,
+			items = { material("monster_core", 1) },
+		},
+		{ id = "village40", kind = "village", need = 40, coins = 8, spins = 4 },
+		{
+			id = "village50",
+			kind = "village",
+			need = 50,
+			coins = 12,
+			spins = 6,
+			items = { material("boss_essence", 1) },
+		},
+		{ id = "sell10", kind = "sell", need = 10, coins = 0.5 },
+		{ id = "sell100", kind = "sell", need = 100, coins = 2, spins = 1 },
+		{ id = "sell500", kind = "sell", need = 500, coins = 5, spins = 3 },
+		{ id = "dungeon3", kind = "dungeon", need = 3, spins = 1, items = { material("ore", 5) } },
+		{ id = "dungeon10", kind = "dungeon", need = 10, spins = 2, items = { material("rare_part", 5) } },
+		{ id = "dungeon25", kind = "dungeon", need = 25, spins = 4, items = { material("monster_core", 2) } },
+		{ id = "wave10", kind = "wave", need = 10, items = { material("ore", 3) } },
+		{ id = "wave50", kind = "wave", need = 50, spins = 2 },
+		{ id = "wave200", kind = "wave", need = 200, spins = 5, items = { material("monster_core", 1) } },
+		{ id = "arena10", kind = "arena", need = 10, spins = 1 },
+		{ id = "arena50", kind = "arena", need = 50, coins = 3, spins = 3 },
+		{ id = "arena200", kind = "arena", need = 200, spins = 6, items = { material("monster_core", 2) } },
+		{ id = "craft1", kind = "craft", need = 1, coins = 1, spins = 1 },
+		{ id = "craft5", kind = "craft", need = 5, spins = 2, items = { material("rare_part", 3) } },
+		{ id = "craft20", kind = "craft", need = 20, spins = 5, items = { material("boss_essence", 1) } },
+	} :: { Goal },
+}
+
+-- ===== The Lucky Wheel (docs/MONETIZATION.md §3; rules in shared/Wheel, the screen in client) =====
+-- Spins: FreePerDay a UTC day, lost if not used (VipFreePerDay more for a VIP), and a bank of spins that never expires (check-in
+-- days, quests, the 60-minute online gift, the wheel itself and Robux fill it; BankCap is only a sanity ceiling for a damaged
+-- save). The server rolls the slice by Weight (the odds are shown on the wheel's screen as Weight / the sum); `reward` is a
+-- Config.Rewards reward (coins as a share of Rewards.coinBase). Never reorder the slices without the screen: the client draws
+-- them in this order and turns the wheel to the index the server answers.
+Config.Wheel = {
+	FreePerDay = 1,
+	VipFreePerDay = 1,
+	BankCap = 9999,
+	Slices = {
+		{ id = "coinsSmall", name = "Coins", weight = 26, reward = { coins = 0.5 } },
+		{ id = "coinsBig", name = "Big Coins", weight = 14, reward = { coins = 1.5 } },
+		{ id = "food", name = "Food Basket", weight = 14, reward = { items = FoodBasket } },
+		{ id = "luck", name = "Luck Potion", weight = 12, reward = { luck = 20 } },
+		{ id = "ore", name = "Iron Ore", weight = 10, reward = { items = { material("ore", 5) } } },
+		{ id = "fragment", name = "Core Fragments", weight = 9, reward = { items = { material("rare_part", 3) } } },
+		{ id = "spin", name = "Free Spin", weight = 7, reward = { spins = 1 } },
+		{ id = "core", name = "Monster Core", weight = 5, reward = { items = { material("monster_core", 1) } } },
+		{
+			id = "jackpot",
+			name = "JACKPOT",
+			weight = 3,
+			reward = { coins = 5, luck = 60, items = { material("boss_essence", 1) } },
+		},
+	} :: { WheelSlice },
 }
 
 -- ===== The Index pays for finding (shared/Hatching, server/Rewards, client toast) =====
@@ -3143,6 +3333,31 @@ Config.Ui = {
 		daily = 128691395639891,
 		quests = 128098601387106,
 		online = 115129814887456,
+		-- The Lucky Wheel, the Weekly and Goals tabs, the Robux shop's pictures and the wheel's three pieces (ChatGPT, 2026-11-06,
+		-- art/icons/): the wheel's face has nine equal slices, slice 1 centred at 12 o'clock then clockwise
+		spin = 113070167027120,
+		food_basket = 112205796398834,
+		jackpot = 103747008318854,
+		weekly_chest = 97855134024590,
+		goals = 90398853365240,
+		vip = 113820035966136,
+		gold_pouch = 133246189222197,
+		gold_sack = 112351319056692,
+		gold_chest = 132669366872117,
+		gold_vault = 87274028358915,
+		potion_luck = 125363840422006,
+		potion_gold = 88033178692091,
+		potion_hatch = 72802531338833,
+		energy_drink = 136065314924947,
+		team_slot = 97132569434412,
+		ranch_slot = 129313087934866,
+		hatch_now = 113945569456522,
+		quest_reroll = 133105941736416,
+		streak_saver = 123803458623825,
+		starter_pack = 135427122864978,
+		wheel_face = 103726425683178,
+		wheel_pointer = 107372263242685,
+		wheel_hub = 113956074271568,
 		luck = 76165751061122,
 		rewards = 92181600961063,
 		collection = 91176780566160,
@@ -3390,6 +3605,40 @@ Config.Ui = {
 		DetailHeight = 64,
 		-- the round edge button, a little under the book's
 		Button = 48,
+	},
+	-- The Lucky Wheel tab of the rewards sheet (UiRewards): drawn on a stage of Design points that is scaled to fit (never past
+	-- ScaleMax). Fractions are of the wheel's size: how far from the middle a slice's prize picture sits and how big it is, the
+	-- hub (the SPIN button) and the pointer (its tip touches this far down from the top). The wheel takes Share of the sheet's
+	-- width (NarrowShare on a narrow screen), the rest is the spin counts and the Odds button. A spin turns SpinTurns times in
+	-- SpinSeconds and stops Landing (0..1) of half a slice off the slice's middle. SliceIcons: slices whose picture is not their
+	-- first item's. The jackpot celebration (the hatch reveal's own sunburst and star pictures, Config.HatchFx.Textures): how
+	-- many stars, how long, the sunburst's size and how far the stars fly (both in wheel sizes), a star's size in points.
+	Wheel = {
+		Design = 232,
+		ScaleMax = 1.5,
+		Share = 0.5,
+		NarrowShare = 0.62,
+		SliceIconRadius = 0.265,
+		SliceIconSize = 0.165,
+		HubSize = 0.34,
+		PointerSize = 0.2,
+		PointerTip = 0.155,
+		SpinTurns = 4,
+		SpinSeconds = 4,
+		Landing = 0.7,
+		PrizeSeconds = 3.2,
+		OddsButtonWidth = 100,
+		OddsRow = 48,
+		SliceIcons = {
+			coinsSmall = "gold_pouch",
+			coinsBig = "gold_sack",
+			food = "food_basket",
+			luck = "potion_luck",
+			spin = "spin",
+			jackpot = "jackpot",
+		},
+		JackpotId = "jackpot",
+		Jackpot = { Stars = 12, Seconds = 1.5, SunSize = 2, SunTurn = 80, StarSize = 28, StarReach = 1.3 },
 	},
 	BookWidth = 760,
 	BookHeight = 560,

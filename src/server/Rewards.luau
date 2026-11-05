@@ -4,8 +4,9 @@
 -- publishes on the player's village folder what the client draws: Rewards (JSON of Rewards.view), RewardsReady (how many
 -- wait), RewardsOpen (after the tutorial), OnlineSince (the server time today's clock would have started), LuckUntil (the
 -- luck potion's end, 0 for none), Found (JSON of the kinds of slime found, for the Index) and IndexGift (the coins the Index
--- just paid for a new find, for a toast). Claims come through the
--- Village remote (shared/VillageRequests).
+-- just paid for a new find, for a toast). The Lucky Wheel (shared/Wheel) is published as Wheel (JSON of Wheel.view: the free
+-- spins, the bank, the slices with their odds) and WheelSpins (free + bank, for a badge). Claims, quest redraws and wheel
+-- spins come through the Village remote (shared/VillageRequests). Also makes the week's quests when a new UTC week starts.
 local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -13,10 +14,17 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Config = require(ReplicatedStorage.Shared.Config)
 local Hatching = require(ReplicatedStorage.Shared.Hatching)
 local RewardRules = require(ReplicatedStorage.Shared.Rewards)
+local Wheel = require(ReplicatedStorage.Shared.Wheel)
 local PlayerData = require(script.Parent.PlayerData)
 local Village = require(script.Parent.Village)
 
 local Rewards = {}
+
+-- Whether the player is a VIP (one more free wheel spin a day). No VIP pass is on sale yet (docs/MONETIZATION.md §5, step 3):
+-- the Robux code answers here once it exists.
+function Rewards.isVip(_player: Player): boolean
+	return false
+end
 
 -- The server time each player's play was last written into the save.
 local flushedAt: { [Player]: number } = {}
@@ -95,15 +103,14 @@ function Rewards.refresh(player: Player)
 	end
 	local now = os.time()
 	local due = now - (flushedAt[player] or now) >= Config.Rewards.OnlineFlushSeconds
-	local fresh = farm.tutorialDone ~= false
-		and (farm.rewards.quests.day ~= RewardRules.dayOf(now) or #farm.rewards.quests.list == 0)
+	local fresh = RewardRules.stale(farm, now)
 	if due or fresh then
 		PlayerData.update(player, function(live: any)
 			if due then
 				RewardRules.addPlayed(live, now, Rewards.unsavedPlay(player))
 			end
 			if RewardRules.ensureQuests(live, player.UserId, now) then
-				print(Config.LogPrefix, "rewards:", player.Name, "has new quests")
+				print(Config.LogPrefix, "rewards:", player.Name, "has new daily or weekly quests")
 			end
 		end)
 		farm = PlayerData.get(player)
@@ -115,6 +122,9 @@ function Rewards.refresh(player: Player)
 	local played = RewardRules.played(farm, now) + unsaved
 	set(root, "Rewards", HttpService:JSONEncode(RewardRules.view(farm, now)))
 	set(root, "RewardsReady", RewardRules.ready(farm, now, unsaved))
+	local vip = Rewards.isVip(player)
+	set(root, "Wheel", HttpService:JSONEncode(Wheel.view(farm, now, vip)))
+	set(root, "WheelSpins", Wheel.spinsLeft(farm, now, vip))
 	set(root, "RewardsOpen", farm.tutorialDone ~= false)
 	set(root, "IndexSeen", farm.rewards.indexSeen)
 	set(root, "OnlineSince", now - played)

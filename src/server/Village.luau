@@ -1632,6 +1632,7 @@ local function tick(player: Player, session: Session)
 										else ""
 								)
 								if harvested then
+									data.lifetime.cropsHarvested += 1
 									slot.pending = harvested
 									actor.workItem = harvested
 								end

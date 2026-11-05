@@ -148,7 +148,8 @@ local function pump()
 			end
 			if ok and type(answer) == "table" and answer.ok then
 				if job.onSuccess then
-					job.onSuccess()
+					-- (a few askers want what the server answered, e.g. the wheel's slice: they take it as an argument)
+					job.onSuccess(answer.value)
 				end
 			else
 				UiKit.toast(if ok and type(answer) == "table" then failure(answer.reason) else "Please try again.")
@@ -163,6 +164,12 @@ end
 
 local function request(data: { [string]: any }, onSuccess: (() -> ())?, onFail: (() -> ())?)
 	table.insert(queue, { data = data, onSuccess = onSuccess, onFail = onFail })
+	pump()
+end
+
+-- The same, for an asker that wants the server's answer (`value`) in its success callback.
+local function ask(data: { [string]: any }, onSuccess: (value: any) -> (), onFail: (() -> ())?)
+	table.insert(queue, { data = data, onSuccess = onSuccess :: any, onFail = onFail })
 	pump()
 end
 
@@ -1065,7 +1072,7 @@ local function bind(root: Folder?)
 			end)
 		)
 	end
-	for _, attribute in { "Rewards", "RewardsReady", "LuckUntil", "RewardsOpen" } do
+	for _, attribute in { "Rewards", "RewardsReady", "LuckUntil", "RewardsOpen", "Wheel", "WheelSpins" } do
 		table.insert(
 			rootConnections,
 			root:GetAttributeChangedSignal(attribute):Connect(function()
@@ -1159,6 +1166,7 @@ function VillageUI.start()
 			return own
 		end,
 		request = request,
+		ask = ask,
 	})
 	task.spawn(function()
 		while gui.Parent do

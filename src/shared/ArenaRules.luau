@@ -257,6 +257,8 @@ function ArenaRules.confirm(farm: Farm, now: number, out: any): (number, { Grant
 	if pending.season > arena.season then
 		ArenaRules.newSeason(farm, pending.season)
 	end
+	-- (the quests and goals of Rewards count the attacks the ladder settled)
+	farm.lifetime.arenaAttacks += 1
 	local points = if type(out.points) == "number" then math.max(0, math.floor(out.points)) else 0
 	-- (the quests count the fight's own day, week and season)
 	local grants = ArenaQuests.record(arena.quests, pending.at, { won = out.won == true, stronger = pending.stronger })

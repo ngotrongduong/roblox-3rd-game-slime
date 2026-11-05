@@ -329,7 +329,7 @@ return function(T)
 	end)
 
 	T.test("a schema 10 save migrates to 11 with an empty Arena, keeping everything else", function()
-		T.eq(Config.Save.SchemaVersion, 11)
+		T.ok(Config.Save.SchemaVersion >= 11)
 		local old: any = FarmState.newFarm(NOW)
 		old.arena = nil
 		old.coins = 4242

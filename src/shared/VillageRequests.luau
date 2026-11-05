@@ -12,6 +12,7 @@ local Rewards = if script then require(script.Parent.Rewards) else require("./Re
 local Shop = if script then require(script.Parent.Shop) else require("./Shop")
 local Stations = if script then require(script.Parent.Stations) else require("./Stations")
 local Village = if script then require(script.Parent.Village) else require("./Village")
+local Wheel = if script then require(script.Parent.Wheel) else require("./Wheel")
 local Zombies = if script then require(script.Parent.Zombies) else require("./Zombies")
 
 export type Env = {
@@ -26,6 +27,11 @@ export type Env = {
 	freeUpgrades: boolean,
 	-- Seconds played since the server last wrote the online clock into the save; asking takes them (server/Rewards).
 	unsavedPlay: () -> number,
+	-- The player's user id (the dice of the day's quests), a fresh random seed for a wheel spin, and whether the player is a
+	-- VIP (one more free wheel spin a day; no VIP pass exists yet, so the server says false).
+	userId: number,
+	seed: () -> number,
+	isVip: () -> boolean,
 }
 
 local VillageRequests = {}
@@ -143,10 +149,23 @@ function VillageRequests.valid(data: any, hasPlot: boolean): boolean
 		return shortText(data.slimeId) and shortText(data.slot)
 	elseif action == "GuideSeen" or action == "GuideNext" then
 		return type(data.step) == "string" and #data.step <= Config.Guide.IdMaxLength
-	elseif action == "GuideSkip" or action == "ClaimDaily" or action == "ClaimQuestBonus" or action == "IndexSeen" then
+	elseif
+		action == "GuideSkip"
+		or action == "ClaimDaily"
+		or action == "ClaimQuestBonus"
+		or action == "ClaimWeeklyChest"
+		or action == "IndexSeen"
+		or action == "WheelSpin"
+	then
 		return true
-	elseif action == "ClaimQuest" then
+	elseif action == "ClaimQuest" or action == "RerollQuest" then
 		return integer(data.index) and data.index >= 1 and data.index <= Config.Rewards.QuestCount
+	elseif action == "ClaimWeekly" then
+		return integer(data.index) and data.index >= 1 and data.index <= #Config.Rewards.Weekly
+	elseif action == "ClaimMilestone" then
+		return integer(data.index) and data.index >= 1 and data.index <= #Config.Rewards.CheckinMilestones
+	elseif action == "ClaimGoal" then
+		return shortText(data.id)
 	elseif action == "ClaimOnline" then
 		return integer(data.step) and data.step >= 1 and data.step <= #Config.Rewards.Online
 	end
@@ -293,6 +312,21 @@ function VillageRequests.run(farm: any, data: any, now: number, env: Env): (bool
 		-- (the time played since the server last wrote it counts first)
 		Rewards.addPlayed(farm, now, env.unsavedPlay())
 		return Rewards.claimOnline(farm, data.step, now)
+	elseif action == "RerollQuest" then
+		-- (the free redraw of the day; a paid one is the Robux code's own call)
+		return Rewards.rerollQuest(farm, data.index, env.userId, now, false)
+	elseif action == "ClaimWeekly" then
+		return Rewards.claimWeekly(farm, data.index, now)
+	elseif action == "ClaimWeeklyChest" then
+		return Rewards.claimChest(farm, now)
+	elseif action == "ClaimMilestone" then
+		return Rewards.claimMilestone(farm, data.index, now)
+	elseif action == "ClaimGoal" then
+		return Rewards.claimGoal(farm, data.id, now)
+	elseif action == "WheelSpin" then
+		-- (the value answered is the slice's index on the wheel; the prize is already paid)
+		local ok, why, slice = Wheel.spin(farm, env.seed(), now, env.isVip())
+		return ok, why, slice
 	elseif action == "IndexSeen" then
 		if farm.rewards.indexSeen then
 			return false, "TAKEN"
