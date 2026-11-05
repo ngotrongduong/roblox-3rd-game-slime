@@ -98,6 +98,8 @@ function ArenaLadder.opponents(doc: Doc, id: string, rng: Rng, count: number): {
 	local r = ArenaLadder.rankOf(doc, id) or (#doc.order + 1)
 	local lo, hi = math.max(1, math.floor(r * c.AboveShare)), r - 1
 	local out: { Opponent } = {}
+	-- ranks above fill all but the slots kept for the teams just below (a winnable fight once a team has settled)
+	local room = count - math.clamp(#doc.order - r, 0, c.BelowOpponents)
 	local pools: { { number } } = {}
 	for band = 1, c.OpponentBands do
 		pools[band] = {}
@@ -108,17 +110,17 @@ function ArenaLadder.opponents(doc: Doc, id: string, rng: Rng, count: number): {
 	end
 	local function take(band: number, wanted: number)
 		local pool = pools[band]
-		for _ = 1, math.min(wanted, #pool, count - #out) do
+		for _ = 1, math.min(wanted, #pool, room - #out) do
 			local rank = table.remove(pool, rng:int(1, #pool)) :: number
 			table.insert(out, { id = doc.order[rank], rank = rank, above = true })
 		end
 	end
 	take(1, c.HardOpponents)
 	take(2, c.MiddleOpponents)
-	take(c.OpponentBands, count - #out)
+	take(c.OpponentBands, room - #out)
 	-- Small windows can exhaust a band; use every remaining rank above before offering a defence below.
 	for band = c.OpponentBands, 1, -1 do
-		take(band, count - #out)
+		take(band, room - #out)
 	end
 	for rank = r + 1, #doc.order do
 		if #out >= count then

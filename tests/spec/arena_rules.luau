@@ -157,15 +157,19 @@ return function(T)
 		T.same({ Rules.confirm(f, NOW, nil) }, { 0, {} })
 		T.ok(f.arena.pending ~= nil)
 		local granted, grants = Rules.confirm(f, NOW + 20, out(1, 40))
-		-- daily_win 20 and weekly_stronger 30 finish on the first win
+		-- daily_win and weekly_stronger finish on the first win
+		local quest = {}
+		for _, q in A.Quests do
+			quest[q.id] = q.points
+		end
 		T.eq(#grants, 2)
-		T.eq(granted, 40 + 20 + 30)
-		T.eq(f.arena.points, 90)
+		T.eq(granted, 40 + quest.daily_win + quest.weekly_stronger)
+		T.eq(f.arena.points, granted)
 		T.eq(f.arena.seasonWins, 1)
 		T.eq(f.arena.bestRank, 900)
 		T.eq(f.arena.pending, nil)
 		T.same({ Rules.confirm(f, NOW + 21, out(1, 40)) }, { 0, {} }, "the same outcome twice grants once")
-		T.eq(f.arena.points, 90)
+		T.eq(f.arena.points, granted)
 		-- a loss: participation points, no win, best rank kept when lower is not reached
 		Rules.beginAttack(f, NOW + 30, info({ requestId = "req-2", won = false }))
 		T.eq(Rules.confirm(f, NOW + 40, out(2, A.LossPoints, { won = false, rankAfter = 950 })), A.LossPoints)

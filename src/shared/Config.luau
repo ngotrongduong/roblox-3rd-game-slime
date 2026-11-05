@@ -3454,31 +3454,39 @@ Config.Arena = {
 	Version = 1,
 	Bots = 1000,
 	TeamSize = 4,
-	-- ECONOMY.md / balance/income_model: starter 4, strongest slimes 40 at village level 50 (still assumed).
-	BotLevelMin = 4,
-	BotLevelMax = 40,
+	-- Calibrated with tools/balance/arena_sim.luau (2026-11-05, a plain player at 1.5 h a day on ECONOMY.md's road). The
+	-- bottom is a team of about an hour and a half's play (power 40: wins 55-70% of its first five rivals, a bare starter
+	-- team wins none); the top is a month-3 team with a full set of Bramble gear and then some (power 480 settles near
+	-- rank 30; rank 1 is power 600). The late levels past village 50 are assumed (0.5 a level an hour): move the top with them.
+	BotLevelMin = 8.75,
+	BotLevelMax = 150,
 	-- A cubic curve leaves many approachable rivals and few near the summit.
 	BotLevelExponent = 3,
 	-- Small level variation and one favoured stat give teams different roles at the same bot strength.
 	BotLevelSpread = 0.1,
 	BotFavouriteWeight = 2,
-	-- Champions offer a challenge beyond the ladder; 60 is the upper fight_sim comparison level.
+	-- Champions offer a challenge beyond the ladder: a quarter above the rank 1 bot, a stretch even for a near-maxed team.
 	ChampionLevel = function(_season: number): number
-		return 60
+		return 190
 	end,
 	-- The upper quarter of the ranks above is reachable; one hard, two middle, the rest nearby.
 	AboveShare = 0.75,
 	OpponentBands = 3,
 	HardOpponents = 1,
 	MiddleOpponents = 2,
+	-- One card is a team just below (beating it pays BelowShare and moves no rank): rivals above are all stronger, so a
+	-- settled team would otherwise lose almost every fight (balance/arena_sim: 2-3% wins).
+	BelowOpponents = 1,
 	-- Bound replay size and resolve stalemates as successful defences.
 	MaxFightSeconds = 120,
 	-- Stop new attacks five minutes before rollover; allow fifteen minutes for results to settle.
 	LockSeconds = 300,
 	FinalizeSeconds = 900,
-	-- Participation pays a little; climbing pays more, with a cap against very large rank gaps.
-	LossPoints = 5,
-	WinPoints = 20,
+	-- Participation pays a little; climbing pays more, with a cap against very large rank gaps. A fight is nearly decided by
+	-- power and every rival offered is stronger, so a player at their rank wins only a few a day: the loss pays enough that
+	-- ten tickets make about 150-180 points a day (arena_sim).
+	LossPoints = 12,
+	WinPoints = 30,
 	BelowShare = 0.6,
 	ClimbBonusPerStep = 1,
 	ClimbBonusCap = 20,
@@ -3494,9 +3502,9 @@ Config.Arena = {
 	},
 	-- Short goals reward returning and improving without an uncapped grind bonus.
 	Quests = {
-		{ id = "daily_win", period = "day", wins = 1, points = 20, stronger = false },
+		{ id = "daily_win", period = "day", wins = 1, points = 30, stronger = false },
 		{ id = "weekly_wins", period = "week", wins = 5, points = 50, stronger = false },
-		{ id = "weekly_stronger", period = "week", wins = 1, points = 30, stronger = true },
+		{ id = "weekly_stronger", period = "week", wins = 1, points = 40, stronger = true },
 		{ id = "season_10", period = "season", wins = 10, points = 50, stronger = false },
 		{ id = "season_25", period = "season", wins = 25, points = 100, stronger = false },
 		{ id = "season_50", period = "season", wins = 50, points = 150, stronger = false },
@@ -3577,18 +3585,20 @@ Config.Arena = {
 	PromptStuds = 16,
 	PromptLift = 3,
 
-	-- The Arena shop (ArenaRules.buy / shop): points buy dungeon materials and one piece of gear the Smithy cannot sell.
+	-- The Arena shop (ArenaRules.buy / shop): points buy dungeon materials and one piece of gear (also a Smithy recipe; here a shortcut).
 	-- In list order. `kind` "material" -> farm.materials[item] (an id of Config.Dungeon.Materials); "gear" -> the bag
 	-- (farm.gear[item], an id of Config.Smithy.Gear). `count` is what one buy gives, `price` its Arena points, `weeklyLimit`
 	-- how many buys a UTC week (Monday 00:00) allow. Cheap staples sell often and the rare drops sell rarely so the Arena
-	-- eases the dungeon grind without replacing it. First numbers; the owner tunes them by playing.
+	-- eases the dungeon grind without replacing it. Calibrated with tools/balance/arena_sim.luau: a player makes about 1,100
+	-- points a week; the rare rows at their limits are worth about 8 dungeon runs of drops a week (a quarter of what a player
+	-- who spends a fifth of 1.5 h a day in the dungeon finds), the staples about 11.
 	Shop = {
 		{ id = "ore5", kind = "material", item = "ore", count = 5, price = 40, weeklyLimit = 10 },
 		{ id = "fragment2", kind = "material", item = "rare_part", count = 2, price = 60, weeklyLimit = 10 },
-		{ id = "core1", kind = "material", item = "monster_core", count = 1, price = 150, weeklyLimit = 5 },
-		{ id = "horn2", kind = "material", item = "boar_tusk", count = 2, price = 200, weeklyLimit = 3 },
-		{ id = "essence1", kind = "material", item = "boss_essence", count = 1, price = 400, weeklyLimit = 2 },
-		{ id = "charm_core", kind = "gear", item = "charm-core", count = 1, price = 900, weeklyLimit = 1 },
+		{ id = "core1", kind = "material", item = "monster_core", count = 1, price = 200, weeklyLimit = 2 },
+		{ id = "horn2", kind = "material", item = "boar_tusk", count = 2, price = 250, weeklyLimit = 2 },
+		{ id = "essence1", kind = "material", item = "boss_essence", count = 1, price = 600, weeklyLimit = 1 },
+		{ id = "charm_core", kind = "gear", item = "charm-core", count = 1, price = 450, weeklyLimit = 1 },
 	},
 
 	-- The client's side (client/UiArena, ArenaReplay, ArenaTitles). Sizes are points / pixels, times are seconds.

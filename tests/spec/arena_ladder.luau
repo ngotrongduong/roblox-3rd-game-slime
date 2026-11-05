@@ -157,20 +157,31 @@ return function(T)
 					T.ok(pick.rank == nil or pick.rank > rank)
 				end
 				if rank == 50 then
-					T.ok(pick.rank >= 37 and pick.rank <= 49)
+					T.ok(pick.rank >= 37 and pick.rank <= 49 or pick.rank == 51)
 				end
 			end
 			T.same(picks, Ladder.opponents(doc, id, Rng.new(123), 5))
 		end)
 	end
-	T.test("large windows choose one hard, two middle and the rest easy", function()
+	T.test("large windows choose one hard, two middle, the rest easy and one team just below", function()
 		local picks = Ladder.opponents(Ladder.new(202611), "b50", Rng.new(1), 5)
 		local bands = { 0, 0, 0 }
+		local below = {}
 		for _, pick in picks do
-			local band = math.floor((pick.rank - 37) * 3 / 13) + 1
-			bands[band] += 1
+			if pick.above then
+				local band = math.floor((pick.rank - 37) * 3 / 13) + 1
+				bands[band] += 1
+			else
+				table.insert(below, pick.rank)
+			end
 		end
-		T.same(bands, { 1, 2, 2 })
+		T.same(bands, { 1, 2, 1 })
+		T.same(below, { 51 })
+		-- the last rank has nobody below: every card is above
+		local last = Ladder.opponents(Ladder.new(202611), "b1000", Rng.new(1), 5)
+		for _, pick in last do
+			T.ok(pick.above)
+		end
 	end)
 	T.test("short windows use every rank above then below then champions", function()
 		local doc = small()
