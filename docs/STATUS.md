@@ -2,8 +2,9 @@
 
 ## 2026-11-05 — The Market square tidied, the old Arena building removed (start here)
 
-The owner: remove the arena built beside the Market, make the shopping area tidy and prettier. Done in the open MapWork
-place, **it reaches the game only after the owner presses Ctrl+S there** (then rebuild StudioTest):
+The owner: remove the arena built beside the Market, make the shopping area tidy and prettier. Done and saved in MapWork
+(2026-11-06), seen in a StudioTest play test (`art/concept/review/market-tidy-r5-eye.png`, `-r5-play.jpg`): every prompt
+and the portal at their new spots, no new errors in the log.
 - `workspace.Map.Arena` deleted (the Arena is its own client scene since this morning).
 - `tools/map/build_market.luau` rewritten: a round flagstone plaza on the fountain, five places on one circle facing it
   (`Config.Market`: Buyer 48,-28; Vip -48,-28; Smithy 48,28; Board 0,62; `Config.Dungeon.Portal.Market` -51,30), one
@@ -11,8 +12,7 @@ place, **it reaches the game only after the owner presses Ctrl+S there** (then r
   chimney. `check_market.luau` MARKET OK. The MCP builders cannot `require` Config, so each keeps a copy of the numbers
   marked EQUAL to Config: change them together. `tools/map/preview_portal.luau` shows the portal in Edit shots (remove it
   before a save).
-- Judged from ray pictures (`art/concept/review/market-tidy-r4-eye-rays.png`, `-r2-top-rays.png`); Studio was minimised
-  while the owner played another game. Open: a real shot and a play test at the game camera after the save.
+- Open: the owner's own look; a phone-frame look.
 
 ## 2026-11-05 — The Arena scene rebuilt in high detail
 
