@@ -1,5 +1,21 @@
 # Status
 
+## 2026-11-05 — Arena stages 1 and 2, the owner's Studio debug menu
+
+The owner asked for an asynchronous PVP Arena (plan v2: `C:\Users\ngotr\.claude\plans\sorted-meandering-stearns.md`) and
+a debug menu only he sees while testing.
+- Debug menu (`OwnerDebug`, `UiDebug`, `DebugPresets`): Studio only, stripped from the published place by
+  `tools/build_publish.luau`, which fails if either module is left. `lune run tools/build_publish.luau studio` builds
+  `assets/raw/StudioTest.rbxl` with the menu, because Studio's MCP scripts cannot add modules to `Shared`.
+- Arena logic (`Arena*` in `src/shared`), save schema 11 (`farm.arena`), `ArenaStore` (one ladder document a season,
+  written only by the MemoryStore-elected leader; results on a MemoryStore queue; idempotent by seq), `Arena` service
+  and `Remotes.Arena`. Points and rank count only once the ladder holds the match's outcome.
+- Seen in a StudioTest play test: attack, apply, confirm (+60, rank 759); five fake servers with the real leader paused,
+  88 attacks, 88 confirmed, 0 void, 0 left; End season, with the reward claimed once.
+- Not seen: real MemoryStore and DataStore on a published server (the publish shuts old servers down: schema 11).
+- Next: stage 3 (the Arena screen with 5 tabs, replay viewer, shop, top-10 titles, the 3D arena, then balance, review and
+  security audit).
+
 ## 2026-11-05 — smoother on phones, server loops that survive an error
 
 Measured in a `Publish.rbxl` play test (repo code synced in, one player). The server holds 60 Hz with a 0.12 ms heartbeat, and
