@@ -487,3 +487,29 @@ was left there (this game has none); read it there if a cave is ever wanted.
   (`fire_main`) against a bright sky: LightEmission 1 washes white, 0.35 reads as grey smoke, 0.55 with deep orange/red reads
   as flame. A client copy of a scene must `PreloadAsync` its Decals when it is made, or the pictures pop in after the fade.
   Gold caps on a foreground block at the frame's edge read as bare yellow boxes: give them the gate's own colour.
+- 2026-11-05 (the Arena DETAIL pass, 5 rounds, 1,426 -> 3,743 parts). Stone that reads as built, cheaply: a core block in a dark
+  mortar colour and, 0.15 proud of it, offset course blocks in three creams with a 0.14 gap between them, so the core shows
+  as mortar lines (one `courses(F, x0, x1, y0, y1, rowH, blockW)` helper on a face frame whose -Z points at the viewer).
+- A round arch from parts without unions: n voussoirs (blocks tangent at the middle radius, every other one 0.05 prouder so
+  their overlapping ends do not flicker, the middle one a gold keystone) plus 4 stepped spandrel slices kept outside the
+  ring's MIDDLE circle (outside the inner circle leaves slivers; inside it cuts the opening). Two rings (gold in orange) make
+  the gate's layered frame; a portcullis follows the arch with bar tops at ys + sqrt(R^2 - x^2).
+- An X lattice is one crossed pair of thin bars a cell (the pair 0.04 apart in depth); about 2.5-3.4 studs a cell reads
+  from 100 studs. Light-blue panel + blue bars for rails, bare cream bars for a balustrade over a red back.
+- Roblox Ball parts are ALWAYS spheres of the smallest size: a "6 x 1.9 x 0.7 swag ball" is a 0.7 dot. Swags = a disc (a
+  Cylinder turned to face the viewer) behind the valance with only its lower curve showing; handles = discs; tassels = a
+  thin cylinder and a ball.
+- Under this game's bright sun creams read white: the sandstone that matched the paintings was (234,200,146) /
+  (222,184,128) / (242,214,164) with mortar (168,126,82). Lantern Neon (255,150,50) read yellow; (232,92,22) reads lamp.
+- Spend parts where the fixed camera looks: ring pieces within 50 degrees of the seat's side are never in frame and are
+  built plain (`DETAIL_FROM`); towers lose their courses there too. Decide what is in frame from the FOV, not by eye.
+- Seats lost to aisles, planters and banners: plan them (each aisle ~2 seats a tier, a planter 1-2, a riser banner 1)
+  and recover the count with the cull angle, not by squeezing the spacing.
+- A tall front (royal box) must fit under the camera's top edge: top y <= camY + dist * tan(FOV/2 - pitch); here the
+  pediment and crown were lowered (floor 15.5, crown top ~33) instead of moving the camera.
+- (Arena round 7, ChatGPT art-director review) A PointLight at a gate's mouth plus full lights on small torches washed a
+  solid orange gate to fluorescent yellow: put the glow deep in the tunnel (0.9, range 11) and scale torch lights with
+  the flame. Openings that show the land read as flat bright panels in full grass green or saturated blue: a hazy green
+  (136,178,112) and a blue-grey back (112,128,172) set at the arch's far face read as depth. One unbroken lattice band
+  reads as a busy zigzag: alternate lattice and stone courses. A gold bowl against the sky reads as a yellow disc:
+  bronze bowl, gold rim. Anything poking into the frame's corners from under the camera reads as a stray block: cut it.

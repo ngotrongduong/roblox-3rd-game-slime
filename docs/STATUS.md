@@ -1,6 +1,17 @@
 # Status
 
-## 2026-11-05 — The Arena is its own scene, seen by the attacker only (start here)
+## 2026-11-05 — The Arena scene rebuilt in high detail (start here)
+
+The owner after playing: spectators must face the middle (fixed: `ringCF`, never Lune's `CFrame.lookAt`), no player
+in the arena (fixed), and the design was far too plain. Rebuilt from four ChatGPT close-ups
+(`art/concept/arena-detail-*.webp`) plus a ChatGPT art-director review of the play shot: stone in offset courses, blue
+rails with gold-capped posts, four aisle stairs, round arches with keystones and pilasters, eight towers with bronze
+braziers and fire, a royal box with columns, drapes, trophy, crown and medallion, an orange gate with a deep tunnel,
+portcullis and torches. 3,748 parts, 111 seats. Latest play shot `art/concept/review/arena-detail-r7-play.jpg`.
+- Not taken from the review: more crowd density, a bigger trophy, a wider fighter formation (left for the owner's look).
+- Open: the owner's own look in Studio; a phone-frame look.
+
+## 2026-11-05 — The Arena is its own scene, seen by the attacker only
 
 The owner: the building was too plain and must not be on the main map; only the attacking player sees a fight; many
 attacks on one server at once must work. Done, details in `docs/ARENA.md`:
