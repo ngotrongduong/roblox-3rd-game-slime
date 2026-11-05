@@ -23,6 +23,11 @@ function ArenaSeason.weekOf(now: number): number
 	return math.floor((ArenaSeason.dayOf(now) + 3) / 7)
 end
 
+-- The second the given week ends (the next Monday 00:00 UTC).
+function ArenaSeason.weekEnd(week: number): number
+	return ((week + 1) * 7 - 3) * SECONDS_PER_DAY
+end
+
 function ArenaSeason.seasonOf(now: number): number
 	local days = ArenaSeason.dayOf(now) + 719468
 	local era = math.floor(days / 146097)

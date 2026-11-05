@@ -7,6 +7,7 @@ local ArenaQuests = if script then require(script.Parent.ArenaQuests) else requi
 local ArenaSeason = if script then require(script.Parent.ArenaSeason) else require("./ArenaSeason")
 local Config = if script then require(script.Parent.Config) else require("./Config")
 local FarmState = if script then require(script.Parent.FarmState) else require("./FarmState")
+local Gear = if script then require(script.Parent.Gear) else require("./Gear")
 
 type Farm = typeof(FarmState.newFarm(0))
 type Arena = typeof(FarmState.newArena(0))
@@ -346,6 +347,91 @@ function ArenaRules.claimSeason(farm: Farm, season: number, rank: number?): (num
 	end
 	arena.points += points
 	return points, badge
+end
+
+-- ===== the shop =====
+
+export type ShopRow = {
+	id: string,
+	kind: string,
+	item: string,
+	count: number,
+	price: number,
+	weeklyLimit: number,
+	left: number,
+	affordable: boolean,
+}
+
+local function offerOf(itemId: any): any
+	if type(itemId) ~= "string" then
+		return nil
+	end
+	for _, offer in A.Shop do
+		if offer.id == itemId then
+			return offer
+		end
+	end
+	return nil
+end
+
+-- What was bought of an item this UTC week (a farm still on an older week has bought nothing yet).
+local function boughtThisWeek(farm: Farm, now: number, itemId: string): number
+	local arena = farm.arena
+	if arena.week ~= ArenaSeason.weekOf(now) then
+		return 0
+	end
+	return arena.bought[itemId] or 0
+end
+
+-- The shop for the screen, in order: each row with how many buys are left this week and whether the points reach it.
+function ArenaRules.shop(farm: Farm, now: number): { ShopRow }
+	local rows: { ShopRow } = {}
+	for _, offer in A.Shop do
+		local left = math.max(0, offer.weeklyLimit - boughtThisWeek(farm, now, offer.id))
+		table.insert(rows, {
+			id = offer.id,
+			kind = offer.kind,
+			item = offer.item,
+			count = offer.count,
+			price = offer.price,
+			weeklyLimit = offer.weeklyLimit,
+			left = left,
+			affordable = left > 0 and farm.arena.points >= offer.price,
+		})
+	end
+	return rows
+end
+
+-- One buy: the points are taken and the item given in this one call. A new week first clears what was bought. (ok, reason?)
+-- with reason "UNKNOWN_ITEM", "SOLD_OUT" (the week's limit is reached) or "NO_POINTS"; a refusal changes nothing but that
+-- week reset.
+function ArenaRules.buy(farm: Farm, now: number, itemId: any): (boolean, string?)
+	local arena = farm.arena
+	local week = ArenaSeason.weekOf(now)
+	if arena.week ~= week then
+		arena.week, arena.bought = week, {}
+	end
+	local offer = offerOf(itemId)
+	if not offer then
+		return false, "UNKNOWN_ITEM"
+	end
+	local bought = arena.bought[offer.id] or 0
+	if bought >= offer.weeklyLimit then
+		return false, "SOLD_OUT"
+	end
+	if arena.points < offer.price then
+		return false, "NO_POINTS"
+	end
+	if offer.kind == "gear" then
+		if not Gear.give(farm, offer.item, offer.count) then
+			return false, "UNKNOWN_ITEM"
+		end
+	else
+		farm.materials[offer.item] = (farm.materials[offer.item] or 0) + offer.count
+	end
+	arena.points -= offer.price
+	arena.bought[offer.id] = bought + 1
+	return true, nil
 end
 
 return ArenaRules

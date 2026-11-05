@@ -10,9 +10,12 @@
 --   "opponents" { refresh? }      -> the opponents this server offers (a new list at most every Config.Arena.RefreshSeconds)
 --   "attack"    { target, requestId } -> the fight's replay; the match stays "confirming" until the ladder holds it
 --   "log"                         -> the player's own Log_<userId>
+--   "buy"       { itemId, requestId } -> one Config.Arena.Shop buy: { itemId, points, shop, weekEndsAt }; the same requestId
+--                                    again answers the first answer and buys nothing
+-- ("state" also holds shop = ArenaRules.shop rows and weekEndsAt, the second the shop's week ends.)
 -- Reason codes: NOT_READY, RATE_LIMIT, BAD_REQUEST, NO_ACCOUNT, BUSY, SERVER_ERROR, NO_LADDER, NO_LOG, IN_DUNGEON, NO_TEAM,
--- NO_TICKETS, SEASON_ENDING, NOT_OFFERED, PENDING, DONE, and ArenaRules.setTeam's BAD_TEAM, TEAM_SIZE, DUPLICATE,
--- NOT_OWNED, GHOST.
+-- NO_TICKETS, SEASON_ENDING, NOT_OFFERED, PENDING, DONE, ArenaRules.setTeam's BAD_TEAM, TEAM_SIZE, DUPLICATE,
+-- NOT_OWNED, GHOST, and ArenaRules.buy's UNKNOWN_ITEM, SOLD_OUT, NO_POINTS.
 -- Player attribute ArenaRank: the rank on this season's ladder (0 = not on it), every Config.Arena.LadderRefreshSeconds.
 -- Arena.debug is the Studio debug menu's way in (server/OwnerDebug); every one of its calls refuses outside Studio.
 local Players = game:GetService("Players")
@@ -57,6 +60,8 @@ local doneRequest: { [Player]: string } = {}
 local published: { [Player]: { key: string, power: number } } = {}
 local publishing: { [Player]: boolean } = {}
 local logs: { [Player]: { at: number, list: { any } } } = {}
+-- per player: the last shop buys' request ids with their answers (a re-sent buy answers again and buys nothing)
+local buys: { [Player]: { { requestId: string, reply: Reply } } } = {}
 local warned: { [string]: boolean } = {}
 
 local function clock(): number
@@ -489,6 +494,15 @@ end
 
 -- ===== the remote's actions =====
 
+-- What the shop screen draws: the points, the rows (ArenaRules.shop) and when the week's limits start over.
+local function shopReply(farm: any, now: number): { [string]: any }
+	return {
+		points = farm.arena.points,
+		shop = ArenaRules.shop(farm, now),
+		weekEndsAt = ArenaSeason.weekEnd(ArenaSeason.weekOf(now)),
+	}
+end
+
 local function stateOf(player: Player): Reply
 	local s = store :: ArenaStore.Store
 	local now = clock()
@@ -500,10 +514,13 @@ local function stateOf(player: Player): Reply
 	end
 	local mine = ArenaPlay.snapshotDoc(farm, ArenaPlay.fightTeam(farm, now), "")
 	local defense = farm.arena.defense
+	local shop = shopReply(farm, now)
 	return {
 		ok = true,
 		now = now,
 		points = farm.arena.points,
+		shop = shop.shop,
+		weekEndsAt = shop.weekEndsAt,
 		tickets = ArenaRules.ticketsLeft(farm, now),
 		ticketsPerDay = A.TicketsPerDay,
 		rank = if doc then ArenaLadder.rankOf(doc, tostring(player.UserId)) else nil,
@@ -676,6 +693,56 @@ local function attack(player: Player, data: any): Reply
 	return reply
 end
 
+-- The lock is held by the caller. One PlayerData.update runs ArenaRules.buy; the materials and the gear bag reach the
+-- client the way every other purchase does (the village publishes the farm's Materials and GearBag each tick).
+local function buy(player: Player, data: any): Reply
+	local requestId = data.requestId
+	if not ArenaPlay.validRequestId(requestId) or type(data.itemId) ~= "string" then
+		return fail("BAD_REQUEST")
+	end
+	local kept = buys[player]
+	if kept then
+		for _, entry in kept do
+			if entry.requestId == requestId then
+				return entry.reply
+			end
+		end
+	end
+	local now = clock()
+	local ok, why = false, nil :: string?
+	local updated = PlayerData.update(player, function(live: any)
+		ok, why = ArenaRules.buy(live, now, data.itemId)
+	end)
+	if not updated then
+		return fail("NOT_READY")
+	end
+	local farm = PlayerData.get(player)
+	if not farm then
+		return fail("NOT_READY")
+	end
+	local reply: Reply
+	if ok then
+		reply = { ok = true, itemId = data.itemId }
+		for key, value in shopReply(farm, now) do
+			reply[key] = value
+		end
+		print(PREFIX, string.format("arena: %s bought %s, %d points left", player.Name, data.itemId, farm.arena.points))
+		PlayerData.markKeyMoment(player, "arena buy")
+	else
+		reply = fail(why or "SERVER_ERROR")
+		print(PREFIX, "arena:", player.Name, "buy of", data.itemId, "refused:", reply.reason)
+	end
+	if not kept then
+		kept = {}
+		buys[player] = kept
+	end
+	table.insert(kept, { requestId = requestId, reply = reply })
+	while #kept > A.BuyRequestsKept do
+		table.remove(kept, 1)
+	end
+	return reply
+end
+
 local function logOf(player: Player): Reply
 	local s = store :: ArenaStore.Store
 	local now = clock()
@@ -716,6 +783,10 @@ local function request(player: Player, data: any): Reply
 	elseif action == "attack" then
 		return withLock(player, function(): any
 			return attack(player, data)
+		end) or fail("BUSY")
+	elseif action == "buy" then
+		return withLock(player, function(): any
+			return buy(player, data)
 		end) or fail("BUSY")
 	elseif action == "log" then
 		return logOf(player)
@@ -775,6 +846,7 @@ function Arena.start()
 			doneRequest[player] = nil
 			published[player] = nil
 			logs[player] = nil
+			buys[player] = nil
 		end)
 	end)
 

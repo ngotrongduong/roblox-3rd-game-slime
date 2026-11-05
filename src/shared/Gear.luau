@@ -42,6 +42,16 @@ function Gear.bonus(slime: Slime): typeof(Stats.starter())
 	return out
 end
 
+-- Puts `count` pieces of a gear id into the bag (the one place that adds to it: a craft and the Arena shop both come
+-- here). False, and nothing added, for an id that is none or a count below 1.
+function Gear.give(farm: Farm, gearId: any, count: number): boolean
+	if Gear.get(gearId) == nil or count < 1 then
+		return false
+	end
+	farm.gear[gearId] = (farm.gear[gearId] or 0) + count
+	return true
+end
+
 -- Can this recipe be made now? True, or false and why: "RECIPE_NOT_FOUND", "INSUFFICIENT_MATERIALS" or "INSUFFICIENT_COINS".
 function Gear.canCraft(farm: Farm, recipeId: any): (boolean, string?)
 	local recipe = if type(recipeId) == "string" then (S.Recipes :: any)[recipeId] else nil
@@ -72,7 +82,7 @@ function Gear.craft(farm: Farm, recipeId: any): (string?, string?)
 		farm.materials[item] = if left > 0 then left else nil
 	end
 	farm.coins -= recipe.coins
-	farm.gear[recipe.gear] = (farm.gear[recipe.gear] or 0) + 1
+	Gear.give(farm, recipe.gear, 1)
 	return recipe.gear, nil
 end
 

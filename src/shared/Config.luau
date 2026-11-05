@@ -3559,6 +3559,23 @@ Config.Arena = {
 	SnapshotDebounceSeconds = 300,
 	SnapshotReadSeconds = 300,
 	LogReadSeconds = 10,
+
+	-- A player's last BuyRequestsKept shop buys are remembered by request id, so a re-sent one buys nothing twice.
+	BuyRequestsKept = 8,
+
+	-- The Arena shop (ArenaRules.buy / shop): points buy dungeon materials and one piece of gear the Smithy cannot sell.
+	-- In list order. `kind` "material" -> farm.materials[item] (an id of Config.Dungeon.Materials); "gear" -> the bag
+	-- (farm.gear[item], an id of Config.Smithy.Gear). `count` is what one buy gives, `price` its Arena points, `weeklyLimit`
+	-- how many buys a UTC week (Monday 00:00) allow. Cheap staples sell often and the rare drops sell rarely so the Arena
+	-- eases the dungeon grind without replacing it. First numbers; the owner tunes them by playing.
+	Shop = {
+		{ id = "ore5", kind = "material", item = "ore", count = 5, price = 40, weeklyLimit = 10 },
+		{ id = "fragment2", kind = "material", item = "rare_part", count = 2, price = 60, weeklyLimit = 10 },
+		{ id = "core1", kind = "material", item = "monster_core", count = 1, price = 150, weeklyLimit = 5 },
+		{ id = "horn2", kind = "material", item = "boar_tusk", count = 2, price = 200, weeklyLimit = 3 },
+		{ id = "essence1", kind = "material", item = "boss_essence", count = 1, price = 400, weeklyLimit = 2 },
+		{ id = "charm_core", kind = "gear", item = "charm-core", count = 1, price = 900, weeklyLimit = 1 },
+	},
 }
 
 return Config
