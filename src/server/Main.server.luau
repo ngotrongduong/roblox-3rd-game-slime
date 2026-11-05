@@ -13,6 +13,7 @@ local Guide = require(script.Parent.Guide)
 local Leaderboard = require(script.Parent.Leaderboard)
 local PlayerData = require(script.Parent.PlayerData)
 local Plots = require(script.Parent.Plots)
+local Purchases = require(script.Parent.Purchases)
 local QuickTravel = require(script.Parent.QuickTravel)
 local Rewards = require(script.Parent.Rewards)
 local Village = require(script.Parent.Village)
@@ -40,6 +41,9 @@ Dungeon.start()
 PlayerData.start(FarmSave.hooks(function(line: string)
 	warn(line)
 end))
+
+-- Robux: receipts, game passes and the shop's prompts (after the profiles it grants into; its onReady joins the loaded ones).
+Purchases.start()
 
 -- The Market's leaderboard reads the loaded farms and sends the best slime of each player to its stores.
 Leaderboard.start()

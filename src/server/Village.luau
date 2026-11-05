@@ -656,18 +656,13 @@ local function show(session: Session, farm: Farm, epoch: number)
 		set(model, "HatchAt", egg.hatchAt or 0)
 		-- the baby this egg becomes (its id only: what it is stays secret until it hatches); the clients' hatch reveal looks it up
 		set(model, "Offspring", egg.offspringId)
-		-- The hatch clock: it ends at hatchAt and took the whole time of the place the egg is in now (a nest takes
-		-- NestSlowFactor times longer than an incubator, and a move keeps the progress made).
+		-- The hatch clock: it runs from the egg's stored start (hatchStart, kept by retimeEgg when a potion or a move changes
+		-- the time, so the bar never jumps) to hatchAt. (hatchAt is unix seconds; the server clock the clients read is unix
+		-- time too.) The simulation stores the start of an egg that has none, at its next step.
 		local eggEnd, eggStart = 0, 0
 		if egg.hatchAt then
-			local span = Breeding.incubationSeconds(
-				Stats.level(egg.embryo.stats),
-				farm.areas.breeding.level,
-				farm.tutorialDone == false
-			) * (if egg.place == "nest" then Config.Breeding.NestSlowFactor else 1)
-			-- (hatchAt is unix seconds; the server clock the clients read is unix time too)
 			eggEnd = egg.hatchAt
-			eggStart = eggEnd - math.max(span, egg.hatchAt - epoch)
+			eggStart = egg.hatchStart or math.min(epoch, egg.hatchAt)
 		end
 		set(model, "ClockStart", eggStart)
 		set(model, "ClockEnd", eggEnd)

@@ -9,6 +9,7 @@
 -- count now minus the mark, so nothing else in the game has to report to it. Coins are a share of the price of the
 -- village's cheapest next upgrade.
 local ArenaSeason = if script then require(script.Parent.ArenaSeason) else require("./ArenaSeason")
+local Boosts = if script then require(script.Parent.Boosts) else require("./Boosts")
 local Config = if script then require(script.Parent.Config) else require("./Config")
 local FarmState = if script then require(script.Parent.FarmState) else require("./FarmState")
 local Food = if script then require(script.Parent.Food) else require("./Food")
@@ -103,16 +104,21 @@ local function payItem(farm: Farm, item: Item): number
 	return 0
 end
 
--- Pays a grant: coins (not held by the vault, like a sale), luck potion minutes added to what is left, spins into the
--- wheel's bank and the items. Returns how many food or dishes did not fit.
-function Rewards.pay(farm: Farm, grant: Grant, now: number): number
+-- Pays a grant: coins (not held by the vault, like a sale; coins EARNED, so VIP and a Gold Potion multiply them), luck
+-- potion minutes added to what is left, spins into the wheel's bank and the items. Returns how many food or dishes did not fit,
+-- and the coins actually credited (with the boosts on them).
+function Rewards.pay(farm: Farm, grant: Grant, now: number): (number, number)
+	local credited = 0
 	if grant.coins > 0 then
-		farm.coins += grant.coins
-		farm.lifetime.coinsEarned += grant.coins
+		credited = Boosts.earn(farm, grant.coins, now)
+		farm.coins += credited
+		farm.lifetime.coinsEarned += credited
 	end
 	if grant.luck > 0 then
 		local from = math.max(now, farm.luckPotionUntil or 0)
-		farm.luckPotionUntil = math.min(from + grant.luck * 60, now + R.LuckMaxMinutes * 60)
+		local capped = math.min(from + grant.luck * 60, now + R.LuckMaxMinutes * 60)
+		-- A potion bought with Robux may run longer than the reward cap: a reward never shortens it.
+		farm.luckPotionUntil = math.max(capped, farm.luckPotionUntil or 0)
 	end
 	local spins = grant.spins or 0
 	if spins > 0 then
@@ -124,7 +130,14 @@ function Rewards.pay(farm: Farm, grant: Grant, now: number): number
 	for _, item in items do
 		lost += payItem(farm, item)
 	end
-	return lost
+	return lost, credited
+end
+
+-- Rewards.grant as the screens show it: the coins with the boosts on them, the factor Rewards.pay will use (at view time).
+function Rewards.shown(spec: any, farm: Farm, now: number): Grant
+	local grant = Rewards.grant(spec, farm)
+	grant.coins = Boosts.earn(farm, grant.coins, now)
+	return grant
 end
 
 -- ===== the daily check-in =====
@@ -141,16 +154,37 @@ function Rewards.dailyDay(farm: Farm, now: number): (number, boolean)
 	return 1, false
 end
 
+-- Whether the check-in run was broken by EXACTLY one missed day (the last check-in was the day before yesterday): the only
+-- case a Streak Saver mends. A run missing more days, one taken today or yesterday, or none at all is not mendable.
+function Rewards.mendable(farm: Farm, now: number): boolean
+	local daily = farm.rewards.daily
+	return daily.streak > 0 and daily.day == Rewards.dayOf(now) - 2
+end
+
+-- Mends the run as if yesterday had been taken: today's check-in is then the next day of the run. (ok, reason?): "NOT_BROKEN".
+-- It spends nothing itself; the caller (a Streak Saver bought, or one banked) pays for it.
+function Rewards.mendStreak(farm: Farm, now: number): (boolean, string?)
+	if not Rewards.mendable(farm, now) then
+		return false, "NOT_BROKEN"
+	end
+	farm.rewards.daily.day = Rewards.dayOf(now) - 1
+	return true, nil
+end
+
 function Rewards.claimDaily(farm: Farm, now: number): (boolean, string?, number?)
+	-- A Streak Saver bought too late to use at once (the day turned first) mends the run now, as its owner paid for.
+	if farm.robux.savers > 0 and Rewards.mendStreak(farm, now) then
+		farm.robux.savers -= 1
+	end
 	local day, taken = Rewards.dailyDay(farm, now)
 	if taken then
 		return false, "TAKEN"
 	end
 	local grant = Rewards.grant(R.Daily[day], farm)
-	Rewards.pay(farm, grant, now)
+	local _, coins = Rewards.pay(farm, grant, now)
 	farm.rewards.daily = { streak = day, day = Rewards.dayOf(now) }
 	farm.rewards.checkins += 1
-	return true, nil, grant.coins
+	return true, nil, coins
 end
 
 -- 0: not enough check-ins yet; 1: it waits; 2: taken.
@@ -175,9 +209,9 @@ function Rewards.claimMilestone(farm: Farm, index: number, now: number): (boolea
 		return false, "NOT_DONE"
 	end
 	local grant = Rewards.grant(R.CheckinMilestones[index], farm)
-	Rewards.pay(farm, grant, now)
+	local _, coins = Rewards.pay(farm, grant, now)
 	table.insert(farm.rewards.milestones, index)
-	return true, nil, grant.coins
+	return true, nil, coins
 end
 
 -- ===== daily quests =====
@@ -390,6 +424,21 @@ function Rewards.rerollQuest(farm: Farm, index: number, seed: number, now: numbe
 	return true, nil
 end
 
+-- What a player's redraw request does: the free one of the day first, then one paid with Robux and banked (`robux.rerolls`;
+-- one is spent only when the redraw happened). Same answers as rerollQuest.
+function Rewards.reroll(farm: Farm, index: number, seed: number, now: number): (boolean, string?)
+	if Rewards.freeRerollLeft(farm, now) then
+		return Rewards.rerollQuest(farm, index, seed, now, false)
+	elseif farm.robux.rerolls > 0 then
+		local ok, why = Rewards.rerollQuest(farm, index, seed, now, true)
+		if ok then
+			farm.robux.rerolls -= 1
+		end
+		return ok, why
+	end
+	return false, "NO_REROLL"
+end
+
 -- How far a quest is: never more than its need.
 function Rewards.progress(farm: Farm, quest: Quest): number
 	return math.clamp(Rewards.count(farm, quest.kind) - quest.mark, 0, quest.need)
@@ -451,9 +500,9 @@ function Rewards.claimQuest(farm: Farm, index: number, now: number): (boolean, s
 		return false, "NOT_DONE"
 	end
 	local grant = Rewards.grant(questReward(index), farm)
-	Rewards.pay(farm, grant, now)
+	local _, coins = Rewards.pay(farm, grant, now)
 	quest.claimed = true
-	return true, nil, grant.coins
+	return true, nil, coins
 end
 
 -- 0: not every quest is claimed yet; 1: the bonus waits; 2: taken.
@@ -480,9 +529,9 @@ function Rewards.claimBonus(farm: Farm, now: number): (boolean, string?, number?
 		return false, "NOT_DONE"
 	end
 	local grant = Rewards.grant(R.QuestBonus, farm)
-	Rewards.pay(farm, grant, now)
+	local _, coins = Rewards.pay(farm, grant, now)
 	farm.rewards.quests.bonus = true
-	return true, nil, grant.coins
+	return true, nil, coins
 end
 
 -- ===== weekly quests =====
@@ -501,9 +550,9 @@ function Rewards.claimWeekly(farm: Farm, index: number, now: number): (boolean, 
 		return false, "NOT_DONE"
 	end
 	local grant = Rewards.grant(R.Weekly[index].reward, farm)
-	Rewards.pay(farm, grant, now)
+	local _, coins = Rewards.pay(farm, grant, now)
 	quest.claimed = true
-	return true, nil, grant.coins
+	return true, nil, coins
 end
 
 -- 0: not every weekly quest is claimed yet; 1: the Weekly Chest waits; 2: taken.
@@ -530,9 +579,9 @@ function Rewards.claimChest(farm: Farm, now: number): (boolean, string?, number?
 		return false, "NOT_DONE"
 	end
 	local grant = Rewards.grant(R.WeeklyChest, farm)
-	Rewards.pay(farm, grant, now)
+	local _, coins = Rewards.pay(farm, grant, now)
 	farm.rewards.weekly.chest = true
-	return true, nil, grant.coins
+	return true, nil, coins
 end
 
 -- ===== online gifts =====
@@ -571,9 +620,9 @@ function Rewards.claimOnline(farm: Farm, step: number, now: number): (boolean, s
 		return false, "NOT_YET"
 	end
 	local grant = Rewards.grant(gift :: any, farm)
-	Rewards.pay(farm, grant, now)
+	local _, coins = Rewards.pay(farm, grant, now)
 	table.insert(farm.rewards.online.claimed, step)
-	return true, nil, grant.coins
+	return true, nil, coins
 end
 
 -- ===== goals =====
@@ -634,9 +683,9 @@ function Rewards.claimGoal(farm: Farm, id: string, now: number): (boolean, strin
 		return false, "NOT_DONE"
 	end
 	local grant = Rewards.grant(goal, farm)
-	Rewards.pay(farm, grant, now)
+	local _, coins = Rewards.pay(farm, grant, now)
 	farm.rewards.goals[id] = true
-	return true, nil, grant.coins
+	return true, nil, coins
 end
 
 -- ===== what waits =====
@@ -714,8 +763,8 @@ local function stateRow(state: number, grant: Grant): { any }
 end
 
 -- A quest as a row: { text, progress, need, claimed, coins, kind, luck, spins, items }.
-local function questRow(farm: Farm, quest: Quest, spec: any): { any }
-	local grant = Rewards.grant(spec, farm)
+local function questRow(farm: Farm, quest: Quest, spec: any, now: number): { any }
+	local grant = Rewards.shown(spec, farm, now)
 	return {
 		Rewards.questText(quest),
 		Rewards.progress(farm, quest),
@@ -735,7 +784,8 @@ end
 --   daily               { coins, luck, spins, items } for each of the seven days
 --   milestones          { { total, state (0 wait, 1 ready, 2 taken), coins, luck, spins, items } } (named)
 --   quests              { text, progress, need, claimed, coins, kind, luck, spins, items } for each of today's quests
---   rerollFree          the free redraw of today is still there
+--   rerollFree          the free redraw of today is still there; rerollBank: redraws bought with Robux and not used yet
+--   mendable            the check-in run is broken by exactly one missed day (a Streak Saver can mend it)
 --   bonus               { state, coins, luck, spins, items }
 --   online              { minutes, coins, luck, taken, spins, items }
 --   weekly              { quests = rows as quests, chest = as bonus, reset = server time of Monday 00:00 }
@@ -745,11 +795,11 @@ function Rewards.view(farm: Farm, now: number): { [string]: any }
 	local day, taken = Rewards.dailyDay(farm, now)
 	local daily = {}
 	for _, spec in R.Daily do
-		table.insert(daily, paysOf(Rewards.grant(spec, farm)))
+		table.insert(daily, paysOf(Rewards.shown(spec, farm, now)))
 	end
 	local milestones = {}
 	for index, milestone in R.CheckinMilestones do
-		local grant = Rewards.grant(milestone, farm)
+		local grant = Rewards.shown(milestone, farm, now)
 		table.insert(milestones, {
 			total = milestone.total,
 			state = Rewards.milestoneState(farm, index),
@@ -762,12 +812,12 @@ function Rewards.view(farm: Farm, now: number): { [string]: any }
 	local quests: { { any } } = {}
 	if todays(farm, now) then
 		for index, quest in farm.rewards.quests.list do
-			table.insert(quests, questRow(farm, quest, questReward(index)))
+			table.insert(quests, questRow(farm, quest, questReward(index), now))
 		end
 	end
 	local online: { { any } } = {}
 	for step, gift in R.Online do
-		local grant = Rewards.grant(gift :: any, farm)
+		local grant = Rewards.shown(gift :: any, farm, now)
 		local row: { any } = {
 			gift.minutes,
 			grant.coins,
@@ -781,13 +831,13 @@ function Rewards.view(farm: Farm, now: number): { [string]: any }
 	local weeklyRows: { { any } } = {}
 	if thisWeek(farm, now) then
 		for index, quest in farm.rewards.weekly.list do
-			table.insert(weeklyRows, questRow(farm, quest, R.Weekly[index].reward))
+			table.insert(weeklyRows, questRow(farm, quest, R.Weekly[index].reward, now))
 		end
 	end
-	local chest = Rewards.grant(R.WeeklyChest, farm)
+	local chest = Rewards.shown(R.WeeklyChest, farm, now)
 	local goals = {}
 	for _, goal in Config.Goals.List do
-		local grant = Rewards.grant(goal, farm)
+		local grant = Rewards.shown(goal, farm, now)
 		table.insert(goals, {
 			id = goal.id,
 			kind = goal.kind,
@@ -801,7 +851,7 @@ function Rewards.view(farm: Farm, now: number): { [string]: any }
 			items = grant.items,
 		})
 	end
-	local bonus = Rewards.grant(R.QuestBonus, farm)
+	local bonus = Rewards.shown(R.QuestBonus, farm, now)
 	return {
 		day = day,
 		taken = taken,
@@ -810,6 +860,8 @@ function Rewards.view(farm: Farm, now: number): { [string]: any }
 		milestones = milestones,
 		quests = quests,
 		rerollFree = Rewards.freeRerollLeft(farm, now),
+		rerollBank = farm.robux.rerolls,
+		mendable = Rewards.mendable(farm, now),
 		bonus = stateRow(Rewards.bonusState(farm, now), bonus),
 		online = online,
 		weekly = {

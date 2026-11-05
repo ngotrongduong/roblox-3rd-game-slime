@@ -1,5 +1,22 @@
 # Status
 
+## 2026-11-06 — Rewards with items, the Lucky Wheel, the VIP Shop and the Robux core (start here)
+
+The owner approved the list and the prices in `docs/MONETIZATION.md` (VIP 249, Luck x2/x4/x8 19/59/159, two team passes,
+Bigger Ranch, gold packs, spins, potions, Starter Pack...) and asked for a daily Lucky Wheel and richer rewards.
+- Rewards pay spins, food, dishes, materials and gear; 7-day check-in with milestones 14/30/60/100; 4 daily quests with a
+  free redraw; weekly quests and chest; 27 Goals; the 60-minute online gift gives a spin. The Lucky Wheel: 1 free spin a
+  day (VIP +1), a bank of spins, 9 slices with odds shown. Schema 12. Art by ChatGPT (`art/icons/`: wheel, 20 icons).
+- Robux core: catalog `Config.Robux` (every id 0, the shop shows SOON), `server/Purchases` (receipts granted once, saved
+  before PurchaseGranted), `shared/Products`, `shared/Boosts`, the luck curve (label -> real 1 + 0.4 log2), VIP and potion
+  effects, 6 teams, the VIP chat tag and head crown, the VIP Shop with 4 tabs at the VIP counter. Schema 13. A reviewer
+  read it; its 7 findings are fixed.
+- Seen in StudioTest play tests: the Rewards sheet with item pictures, a wheel spin landing on its slice and paying once,
+  the VIP Shop's VIP and Gold tabs. Not seen: Spins tab (PolicyService restricts in Studio), a real purchase, teams 5-6,
+  the crown, the phone frame.
+- Next: create the products on the Creator Hub (skill `robux-products`), fill the ids, the owner's test buys; a publish
+  must shut down old servers (schema 13). Then the shared VFX library and the slime cosmetics (`MONETIZATION.md` §6).
+
 ## 2026-11-05 — The Market square tidied, the old Arena building removed (start here)
 
 The owner: remove the arena built beside the Market, make the shopping area tidy and prettier. Done and saved in MapWork

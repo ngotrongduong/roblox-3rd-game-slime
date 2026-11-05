@@ -224,7 +224,7 @@ end
 local function teamsOpen(): number
 	local own = context().own()
 	local level = if own then own:GetAttribute("VillageLevel") else nil
-	return ZombieRules.teamsOpen(if type(level) == "number" then level else 1)
+	return ZombieRules.teamsOpen(if type(level) == "number" then level else 1, ZombieTeams.extra())
 end
 
 local function slimeById(id: string): Configuration?

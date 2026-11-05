@@ -187,6 +187,19 @@ function PlayerData.markKeyMoment(player: Player, reason: string)
 	end
 end
 
+-- Writes the player's data to the store NOW and waits for the answer (it yields). For the one thing that must not be lost
+-- to a crash a minute later: a Robux purchase is told to Roblox as granted only after this returns true. False when the data
+-- is not loaded, was lost to another server, or the store did not answer (the change stays in memory and is retried).
+function PlayerData.saveNow(player: Player): boolean
+	local s = store
+	local profile = profiles[player]
+	if s == nil or profile == nil or profile.lost then
+		return false
+	end
+	local ok = s.save(profile)
+	return ok
+end
+
 -- Starts profiles with the farm rules' hooks. Called once by Main.
 function PlayerData.start(hooks: ProfileLogic.Hooks)
 	assert(store == nil, "PlayerData.start called twice")

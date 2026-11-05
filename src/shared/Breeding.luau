@@ -4,6 +4,7 @@
 -- every id comes from the injected id function, and the result carries the new farm (the input
 -- farm is never changed). Failures are returned, never thrown.
 
+local Boosts = if script then require(script.Parent.Boosts) else require("./Boosts")
 local Config = if script then require(script.Parent.Config) else require("./Config")
 local Colours = if script then require(script.Parent.Colours) else require("./Colours")
 local FarmState = if script then require(script.Parent.FarmState) else require("./FarmState")
@@ -68,8 +69,14 @@ local function roundMs(seconds: number): number
 	return math.round(seconds * 1000) / 1000
 end
 
--- Incubation begins only after an egg has entered a free incubator. While the tutorial runs it is short.
-function Breeding.incubationSeconds(babyLevel: number, breedingLevel: number?, tutorial: boolean?): number
+-- Incubation begins only after an egg has entered a free incubator. While the tutorial runs it is short. `speed` is how many
+-- times faster the farm hatches now (Boosts.hatchFactor: VIP, a Hatch Potion); the floor stays whatever the speed.
+function Breeding.incubationSeconds(
+	babyLevel: number,
+	breedingLevel: number?,
+	tutorial: boolean?,
+	speed: number?
+): number
 	local b = Config.Breeding
 	if tutorial then
 		return b.TutorialHatchSeconds
@@ -78,7 +85,9 @@ function Breeding.incubationSeconds(babyLevel: number, breedingLevel: number?, t
 	return math.max(
 		b.IncubationFloorSeconds,
 		math.round(
-			base * b.IncubationAreaFactor ^ ((breedingLevel or Config.Village.StartLevel) - Config.Village.StartLevel)
+			base
+				* b.IncubationAreaFactor ^ ((breedingLevel or Config.Village.StartLevel) - Config.Village.StartLevel)
+				/ math.max(1, speed or 1)
 		)
 	)
 end
@@ -140,7 +149,7 @@ function Breeding.check(farm: Farm, idA: string, idB: string, now: number): Chec
 		return fail("PARENT_ON_COOLDOWN")
 	end
 	-- Each egg holds a slot for its baby.
-	if #farm.slimes + #farm.eggs + 1 > FarmState.populationLimit(farm.areas) then
+	if #farm.slimes + #farm.eggs + 1 > FarmState.capacity(farm) then
 		return fail("SLIME_CAP_REACHED")
 	end
 	local used: { [number]: boolean } = {}
@@ -292,7 +301,14 @@ function Breeding.createEgg(farm: Farm, idA: string, idB: string, now: number, r
 		status = "incubating",
 	}
 	-- The egg starts hatching in the nest at once, at the nest's slower rate (the owner, 2026-10-29).
-	egg.hatchAt = now + Breeding.nestSeconds(egg, farm.areas.breeding.level, farm.tutorialDone == false)
+	egg.hatchAt = now
+		+ Breeding.nestSeconds(
+			egg,
+			farm.areas.breeding.level,
+			farm.tutorialDone == false,
+			Boosts.hatchFactor(farm, now)
+		)
+	egg.hatchStart = now
 	local occupied: { [number]: boolean } = {}
 	for _, e in farm.eggs do
 		if e.place == "nest" then
@@ -456,16 +472,16 @@ end
 
 -- An egg hatches in its nest too, but NestSlowFactor times slower than in an incubator (the owner, 2026-10-29):
 -- the whole time it takes in a nest.
-function Breeding.nestSeconds(egg: Egg, breedingLevel: number, tutorial: boolean?): number
-	return Breeding.incubationSeconds(Stats.level(egg.embryo.stats), breedingLevel, tutorial)
+function Breeding.nestSeconds(egg: Egg, breedingLevel: number, tutorial: boolean?, speed: number?): number
+	return Breeding.incubationSeconds(Stats.level(egg.embryo.stats), breedingLevel, tutorial, speed)
 		* Config.Breeding.NestSlowFactor
 end
 
 -- The hatch time of a nest egg moved into an incubator: the progress made is kept, the rest runs at the
 -- incubator's rate (an egg with no clock yet starts a full incubation).
-function Breeding.toIncubator(egg: Egg, now: number, breedingLevel: number, tutorial: boolean?): number
+function Breeding.toIncubator(egg: Egg, now: number, breedingLevel: number, tutorial: boolean?, speed: number?): number
 	if egg.hatchAt == nil then
-		return now + Breeding.incubationSeconds(Stats.level(egg.embryo.stats), breedingLevel, tutorial)
+		return now + Breeding.incubationSeconds(Stats.level(egg.embryo.stats), breedingLevel, tutorial, speed)
 	end
 	return now + math.max(0, egg.hatchAt - now) / Config.Breeding.NestSlowFactor
 end
@@ -494,7 +510,17 @@ function Breeding.placeInIncubator(farm: Farm, eggId: string, now: number, reque
 	for slot = 1, limit do
 		if not occupied[slot] and (requestedSlot == nil or slot == requestedSlot) then
 			egg.place, egg.slot = "incubator", slot
-			egg.hatchAt = Breeding.toIncubator(egg, now, farm.areas.breeding.level, farm.tutorialDone == false)
+			FarmState.retimeEgg(
+				egg,
+				now,
+				Breeding.toIncubator(
+					egg,
+					now,
+					farm.areas.breeding.level,
+					farm.tutorialDone == false,
+					Boosts.hatchFactor(farm, now)
+				)
+			)
 			egg.status = FarmState.eggStatus(egg, now)
 			return true, nil
 		end

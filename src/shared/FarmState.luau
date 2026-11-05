@@ -4,6 +4,7 @@
 
 local ArenaQuests = if script then require(script.Parent.ArenaQuests) else require("./ArenaQuests")
 local ArenaSeason = if script then require(script.Parent.ArenaSeason) else require("./ArenaSeason")
+local Boosts = if script then require(script.Parent.Boosts) else require("./Boosts")
 local Colours = if script then require(script.Parent.Colours) else require("./Colours")
 local Config = if script then require(script.Parent.Config) else require("./Config")
 local Genetics = if script then require(script.Parent.Genetics) else require("./Genetics")
@@ -62,6 +63,8 @@ export type Egg = {
 	parentIds: { string },
 	createdAt: number,
 	hatchAt: number?,
+	-- When the hatch clock started (its bar runs from here to hatchAt); kept in step when hatchAt moves (retimeEgg).
+	hatchStart: number?,
 	place: string,
 	slot: number,
 	offspringId: string,
@@ -136,6 +139,23 @@ export type Rewards = {
 }
 -- The Slime Dungeon (shared/Dungeon): the highest dungeon level cleared, 0 for none (level best + 1 is the next to open).
 export type Dungeon = { best: number }
+
+-- What Robux sells (schema 13; shared/Boosts, shared/Products, server/Purchases). boosts: when the Gold and the Hatch Potion
+-- run out (the luck potion's end is farm.luckPotionUntil, which the rewards also pay), 0 for never. robux: receipts = the
+-- ids of the purchases already granted, newest last, at most Config.Robux.ReceiptsKept (a receipt is never granted twice);
+-- passes = the game passes Roblox said the player owns, by key (asked again at every join); starterBought = the Starter Pack
+-- was bought (once an account); rerolls / savers = quest redraws and Streak Savers paid for and not used yet; drinks /
+-- hatchAlls = Energy Drinks and Hatch All Nows that did nothing when the receipt came (nobody tired, no egg growing).
+export type Boosts = { gold: number, hatch: number }
+export type Robux = {
+	receipts: { string },
+	passes: { [string]: boolean },
+	starterBought: boolean,
+	rerolls: number,
+	savers: number,
+	drinks: number,
+	hatchAlls: number,
+}
 
 -- The Arena (shared/ArenaRules; schema 11). Times are server seconds, days and weeks ArenaSeason.dayOf / weekOf numbers,
 -- seasons ArenaSeason.seasonOf numbers (yyyymm). The match in flight: who was attacked, at which rank (0 for a champion),
@@ -261,6 +281,8 @@ export type Farm = {
 	rewards: Rewards,
 	dungeon: Dungeon,
 	arena: Arena,
+	boosts: Boosts,
+	robux: Robux,
 	luckPotionUntil: number?,
 	lastSiegeTeam: { string }?,
 	wbKingSlain: boolean?,
@@ -344,6 +366,14 @@ end
 
 function FarmState.newDungeon(): Dungeon
 	return { best = 0 }
+end
+
+function FarmState.newBoosts(): Boosts
+	return { gold = 0, hatch = 0 }
+end
+
+function FarmState.newRobux(): Robux
+	return { receipts = {}, passes = {}, starterBought = false, rerolls = 0, savers = 0, drinks = 0, hatchAlls = 0 }
 end
 
 function FarmState.newArena(now: number): Arena
@@ -445,6 +475,16 @@ function FarmState.eggStatus(egg: Egg, now: number): string
 	return if egg.place == "incubator" and egg.hatchAt ~= nil then "incubating" else "nest"
 end
 
+-- Moves an egg's hatch time to `hatchAt` and moves its clock start with it, so the hatch bar keeps the fraction it had (a
+-- potion starting or ending, a move between nest and incubator). An egg with no start stays without one.
+function FarmState.retimeEgg(egg: Egg, now: number, hatchAt: number)
+	local old, start = egg.hatchAt, egg.hatchStart
+	if old ~= nil and start ~= nil and old > now and start < now then
+		egg.hatchStart = now - (now - start) * (hatchAt - now) / (old - now)
+	end
+	egg.hatchAt = hatchAt
+end
+
 function FarmState.villageLevel(areas: Areas): number
 	local total = 0
 	for _, id in Config.Village.Areas do
@@ -508,6 +548,12 @@ function FarmState.removeSlime(farm: Farm, id: string): boolean
 		end
 	end
 	return true
+end
+
+-- The slimes (and the eggs that will be slimes) a farm can hold: what its village allows (populationLimit) plus the
+-- slots of the Bigger Ranch pass.
+function FarmState.capacity(farm: Farm): number
+	return FarmState.populationLimit(farm.areas) + Boosts.extraSlots(farm)
 end
 
 function FarmState.populationLimit(areas: Areas): number
@@ -655,6 +701,8 @@ function FarmState.newFarm(now: number): Farm
 		rewards = FarmState.newRewards(),
 		dungeon = FarmState.newDungeon(),
 		arena = FarmState.newArena(now),
+		boosts = FarmState.newBoosts(),
+		robux = FarmState.newRobux(),
 		luckPotionUntil = nil,
 		lastSiegeTeam = nil,
 		wbKingSlain = nil,
@@ -948,6 +996,11 @@ local function validateEgg(raw: any, now: number, warnings: { string }): Egg?
 		parentIds = { parents[1], parents[2] },
 		createdAt = raw.createdAt,
 		hatchAt = hatchAt,
+		hatchStart = if hatchAt ~= nil
+				and isNum(raw.hatchStart)
+				and raw.hatchStart < hatchAt
+			then raw.hatchStart
+			else nil,
 		place = place,
 		slot = if isNum(raw.slot) and raw.slot >= 1 then math.floor(raw.slot) else 1,
 		offspringId = raw.offspringId,
@@ -1431,6 +1484,42 @@ local function validateDungeon(raw: any, warnings: { string }): Dungeon
 	return { best = nonNegInt(raw.best, 0) }
 end
 
+-- The Gold and Hatch Potion end times: a time or 0 each.
+local function validateBoosts(raw: any): Boosts
+	local out = FarmState.newBoosts()
+	if type(raw) == "table" then
+		out.gold = nonNegInt(raw.gold, 0)
+		out.hatch = nonNegInt(raw.hatch, 0)
+	end
+	return out
+end
+
+-- The Robux part of the save, each field repaired alone. Receipts keep their order (newest last) and are cut to the newest
+-- Config.Robux.ReceiptsKept; passes keep only the keys of Config.Robux.Products of kind "pass".
+local function validateRobux(raw: any): Robux
+	local out = FarmState.newRobux()
+	if type(raw) ~= "table" then
+		return out
+	end
+	out.receipts = stringList(raw.receipts)
+	while #out.receipts > Config.Robux.ReceiptsKept do
+		table.remove(out.receipts, 1)
+	end
+	if type(raw.passes) == "table" then
+		for _, product in Config.Robux.Products do
+			if product.kind == "pass" and raw.passes[product.key] == true then
+				out.passes[product.key] = true
+			end
+		end
+	end
+	out.starterBought = raw.starterBought == true
+	out.rerolls = nonNegInt(raw.rerolls, 0)
+	out.savers = nonNegInt(raw.savers, 0)
+	out.drinks = nonNegInt(raw.drinks, 0)
+	out.hatchAlls = nonNegInt(raw.hatchAlls, 0)
+	return out
+end
+
 -- The keys of a { [tostring(season)]: true } map, newest kept, at most Config.Arena.KeepSeasons.
 local function validateClaimed(raw: any): { [string]: boolean }
 	local seasons: { number } = {}
@@ -1716,7 +1805,11 @@ function FarmState.repair(data: any, now: number): (Farm, { string }, boolean)
 					egg.place = "nest"
 					-- (back in a nest, the rest of its time runs at the nest's slower rate)
 					if egg.hatchAt then
-						egg.hatchAt = now + math.max(0, egg.hatchAt - now) * Config.Breeding.NestSlowFactor
+						FarmState.retimeEgg(
+							egg,
+							now,
+							now + math.max(0, egg.hatchAt - now) * Config.Breeding.NestSlowFactor
+						)
 					end
 				end
 			end
@@ -1886,6 +1979,8 @@ function FarmState.repair(data: any, now: number): (Farm, { string }, boolean)
 		rewards = validateRewards(data.rewards, warnings),
 		dungeon = validateDungeon(data.dungeon, warnings),
 		arena = validateArena(data.arena, slimeIds, now, warnings),
+		boosts = validateBoosts(data.boosts),
+		robux = validateRobux(data.robux),
 		luckPotionUntil = if isNum(data.luckPotionUntil) and data.luckPotionUntil >= 0
 			then data.luckPotionUntil
 			else nil,

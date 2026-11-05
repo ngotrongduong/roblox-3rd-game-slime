@@ -3,6 +3,7 @@
 -- and quick travel to the Market and Home).
 -- The middle stays empty. All food is ONE button (the owner, 2026-10-30): a 3D bowl and the total; tapping it opens the
 -- food panel (UiFood). Its picture is the 3D item itself (ClientKit.Items in a ViewportFrame).
+local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 
@@ -24,6 +25,8 @@ local rewardsButton: ImageButton? = nil
 local bagButton: ImageButton? = nil
 local arenaButton: ImageButton? = nil
 local badge: TextLabel? = nil
+-- The small VIP crown after the slime count, shown while the player owns the VIP pass (the Player attribute Vip).
+local vipCrown: GuiObject? = nil
 -- Whether the coins were at the cap at the last look; nil until the vault's cap is known.
 local coinsFull: boolean? = nil
 -- Whether a Slime Dungeon run is on (the village's edge buttons stay put away).
@@ -115,6 +118,8 @@ function UiHud.start(
 			UiFood.open(lastOwn)
 		end)
 	add("slimes", "slimes")
+	vipCrown =
+		UiKit.icon(bar, "vip", U.VipBadge.HudSize, { Name = "VipCrown", LayoutOrder = order + 1, Visible = false })
 
 	-- Round buttons hug the right edge above the jump button: Market and Home (quick travel) over the slime book, in one
 	-- column, so the view stays open on a short phone screen.
@@ -190,7 +195,7 @@ function UiHud.start(
 	-- Last in the strip: the village's level over a bar of the upgrades done towards the next one.
 	local _, body = UiKit.skin(bar, "Wood", "Card", {
 		Name = "VillageBar",
-		LayoutOrder = order + 1,
+		LayoutOrder = order + 2,
 		Size = UDim2.fromOffset(U.VillageBarWidth, U.ChipHeight),
 	})
 	local track = UiKit.make("Frame", {
@@ -213,13 +218,16 @@ function UiHud.start(
 		ZIndex = 3,
 	})
 	-- The luck potion's time left, only while one runs.
-	chips.luck = UiKit.chip(bar, "luck", "", order + 2)
+	chips.luck = UiKit.chip(bar, "luck", "", order + 3)
 	chips.luck.root.Visible = false
 end
 
 -- The trophy button and the luck chip, from the village folder (called every second): the trophy shows once the tutorial is
 -- over, its badge counts the rewards that wait; the chip counts the luck potion down.
 function UiHud.rewards(own: Folder?)
+	if vipCrown then
+		vipCrown.Visible = Players.LocalPlayer:GetAttribute("Vip") == true
+	end
 	local button, label = rewardsButton, badge
 	if not (button and label and own) then
 		return

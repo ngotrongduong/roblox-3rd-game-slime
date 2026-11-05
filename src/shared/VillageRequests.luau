@@ -8,6 +8,7 @@ local FarmState = if script then require(script.Parent.FarmState) else require("
 local Food = if script then require(script.Parent.Food) else require("./Food")
 local Gear = if script then require(script.Parent.Gear) else require("./Gear")
 local Guide = if script then require(script.Parent.Guide) else require("./Guide")
+local Products = if script then require(script.Parent.Products) else require("./Products")
 local Rewards = if script then require(script.Parent.Rewards) else require("./Rewards")
 local Shop = if script then require(script.Parent.Shop) else require("./Shop")
 local Stations = if script then require(script.Parent.Stations) else require("./Stations")
@@ -166,6 +167,8 @@ function VillageRequests.valid(data: any, hasPlot: boolean): boolean
 		return integer(data.index) and data.index >= 1 and data.index <= #Config.Rewards.CheckinMilestones
 	elseif action == "ClaimGoal" then
 		return shortText(data.id)
+	elseif action == "UseBanked" then
+		return shortText(data.key)
 	elseif action == "ClaimOnline" then
 		return integer(data.step) and data.step >= 1 and data.step <= #Config.Rewards.Online
 	end
@@ -226,7 +229,7 @@ function VillageRequests.run(farm: any, data: any, now: number, env: Env): (bool
 		elseif data.count > Food.fridgeCapacity(farm.areas.kitchen.level) then
 			return false, "INVALID_ARGUMENT"
 		end
-		local value, why = Shop.sellDish(farm, data.dish, data.count)
+		local value, why = Shop.sellDish(farm, data.dish, data.count, now)
 		return value ~= nil, why, value
 	elseif action == "UpgradeArea" then
 		return Village.upgrade(farm, data.areaId, env.freeUpgrades)
@@ -313,8 +316,8 @@ function VillageRequests.run(farm: any, data: any, now: number, env: Env): (bool
 		Rewards.addPlayed(farm, now, env.unsavedPlay())
 		return Rewards.claimOnline(farm, data.step, now)
 	elseif action == "RerollQuest" then
-		-- (the free redraw of the day; a paid one is the Robux code's own call)
-		return Rewards.rerollQuest(farm, data.index, env.userId, now, false)
+		-- (the free redraw of the day, then the ones bought with Robux and banked)
+		return Rewards.reroll(farm, data.index, env.userId, now)
 	elseif action == "ClaimWeekly" then
 		return Rewards.claimWeekly(farm, data.index, now)
 	elseif action == "ClaimWeeklyChest" then
@@ -323,6 +326,9 @@ function VillageRequests.run(farm: any, data: any, now: number, env: Env): (bool
 		return Rewards.claimMilestone(farm, data.index, now)
 	elseif action == "ClaimGoal" then
 		return Rewards.claimGoal(farm, data.id, now)
+	elseif action == "UseBanked" then
+		-- (an Energy Drink or Hatch All Now that did nothing when it was paid: Products.useBanked)
+		return Products.useBanked(farm, data.key, now)
 	elseif action == "WheelSpin" then
 		-- (the value answered is the slice's index on the wheel; the prize is already paid)
 		local ok, why, slice = Wheel.spin(farm, env.seed(), now, env.isVip())

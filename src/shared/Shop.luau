@@ -1,6 +1,7 @@
 --!strict
 -- Selling a slime at the Market (docs/reference/01-core-farm.md §8.1): by its level and rarity. A slime at a job or a
 -- nest, a favourite, a dead one or one of the last two is refused, and nothing changes on a refusal.
+local Boosts = if script then require(script.Parent.Boosts) else require("./Boosts")
 local Config = if script then require(script.Parent.Config) else require("./Config")
 local FarmState = if script then require(script.Parent.FarmState) else require("./FarmState")
 local Food = if script then require(script.Parent.Food) else require("./Food")
@@ -37,7 +38,8 @@ function Shop.sell(farm: Farm, slimeId: string, now: number): (number?, string?)
 		return nil, why
 	end
 	local slime = FarmState.findSlime(farm, slimeId) :: any
-	local value = Mutations.sellValue(slime.appearanceMutation, Stats.level(slime.stats))
+	-- Coins earned: VIP and a Gold Potion multiply them (the value answered is what was paid).
+	local value = Boosts.earn(farm, Mutations.sellValue(slime.appearanceMutation, Stats.level(slime.stats)), now)
 	FarmState.removeSlime(farm, slimeId)
 	farm.coins += value
 	farm.lifetime.coinsEarned += value
@@ -73,8 +75,9 @@ function Shop.sellMany(farm: Farm, slimeIds: { string }, now: number): (number?,
 	return total, nil
 end
 
--- Dish sales are not limited by the combat coin vault.
-function Shop.sellDish(farm: Farm, dishId: string, count: number): (number?, string?)
+-- Dish sales are not limited by the combat coin vault. `now` (server seconds) lets VIP and a Gold Potion multiply the coins;
+-- left out, the sale is paid unboosted (tools that have no clock).
+function Shop.sellDish(farm: Farm, dishId: string, count: number, now: number?): (number?, string?)
 	local dish = (Config.Food.Dishes :: any)[dishId]
 	if not dish then
 		return nil, "UNKNOWN_DISH"
@@ -88,7 +91,7 @@ function Shop.sellDish(farm: Farm, dishId: string, count: number): (number?, str
 	end
 	local sold = math.min(count, held)
 	local price = (Config.Food.DishRarities :: any)[dish.rarity].price
-	local value = price * sold
+	local value = if now then Boosts.earn(farm, price * sold, now) else price * sold
 	Food.take(farm.fridge, dishId, sold)
 	farm.coins += value
 	farm.lifetime.coinsEarned += value

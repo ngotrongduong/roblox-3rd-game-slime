@@ -71,6 +71,13 @@ function ZombieTeams.level(): number
 	return if type(level) == "number" then level else 0
 end
 
+-- How many teams the Extra Team passes add on top of the village's own (the Player attribute ExtraTeams the server publishes;
+-- Zombies.teamsOpen takes it as its second argument).
+function ZombieTeams.extra(): number
+	local value = Players.LocalPlayer:GetAttribute("ExtraTeams")
+	return if type(value) == "number" then math.max(0, math.floor(value)) else 0
+end
+
 -- One team of a village: the player's own unless another village folder is given.
 function ZombieTeams.get(index: number, village: Folder?): Team?
 	local root = village or ZombieTeams.root()

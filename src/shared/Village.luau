@@ -11,8 +11,9 @@ function Village.level(farm: Farm): number
 	return FarmState.villageLevel(farm.areas)
 end
 
+-- What the farm can hold: the village's limit plus the Bigger Ranch pass's slots.
 function Village.populationLimit(farm: Farm): number
-	return FarmState.populationLimit(farm.areas)
+	return FarmState.capacity(farm)
 end
 
 function Village.upgradeCost(level: number): number

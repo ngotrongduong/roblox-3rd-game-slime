@@ -681,7 +681,7 @@ local function clearWave(run: Run, fight: Fight)
 	local paid: any = nil
 	local newBest = false
 	local done = PlayerData.update(run.player, function(farm: any)
-		paid = DungeonRules.commitWave(farm, run.ledger, wave)
+		paid = DungeonRules.commitWave(farm, run.ledger, wave, os.time())
 		if last then
 			newBest = DungeonRules.recordClear(farm, run.level)
 		end

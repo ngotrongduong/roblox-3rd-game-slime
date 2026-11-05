@@ -11,6 +11,7 @@ local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
+local Boosts = require(ReplicatedStorage.Shared.Boosts)
 local Config = require(ReplicatedStorage.Shared.Config)
 local Hatching = require(ReplicatedStorage.Shared.Hatching)
 local RewardRules = require(ReplicatedStorage.Shared.Rewards)
@@ -20,10 +21,10 @@ local Village = require(script.Parent.Village)
 
 local Rewards = {}
 
--- Whether the player is a VIP (one more free wheel spin a day). No VIP pass is on sale yet (docs/MONETIZATION.md §5, step 3):
--- the Robux code answers here once it exists.
-function Rewards.isVip(_player: Player): boolean
-	return false
+-- Whether the player is a VIP (one more free wheel spin a day): the save's mirror of the pass (server/Purchases keeps it).
+function Rewards.isVip(player: Player): boolean
+	local farm = PlayerData.get(player)
+	return farm ~= nil and Boosts.isVip(farm)
 end
 
 -- The server time each player's play was last written into the save.

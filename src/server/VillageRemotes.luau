@@ -13,6 +13,7 @@ local Dungeon = require(script.Parent.Dungeon)
 local Guide = require(script.Parent.Guide)
 local PlayerData = require(script.Parent.PlayerData)
 local Plots = require(script.Parent.Plots)
+local Purchases = require(script.Parent.Purchases)
 local Rewards = require(script.Parent.Rewards)
 local Village = require(script.Parent.Village)
 local ZombieFights = require(script.Parent.ZombieFights)
@@ -161,6 +162,10 @@ local function request(player: Player, data: any): { ok: boolean, reason: string
 		print(Config.LogPrefix, "wheel:", player.Name, "spun, slice", value or 0, slice and slice.id or "?")
 		PlayerData.markKeyMoment(player, "wheel spin")
 		task.spawn(Rewards.refresh, player)
+	elseif action == "UseBanked" then
+		print(Config.LogPrefix, "purchases:", player.Name, "used a banked", data.key)
+		PlayerData.markKeyMoment(player, "robux banked use")
+		task.spawn(Purchases.refresh, player)
 	elseif action == "RerollQuest" then
 		print(Config.LogPrefix, "rewards:", player.Name, "redrew daily quest", data.index)
 		PlayerData.markKeyMoment(player, "rewards")

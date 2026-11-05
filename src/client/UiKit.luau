@@ -58,6 +58,8 @@ local glyphs: { [string]: string } = {
 	plus = "+",
 	cross = "x",
 	again = "R",
+	-- (Roblox's own fonts draw the Robux symbol at this private code point: the real symbol, not a stand-in)
+	robux = utf8.char(0xE002),
 }
 
 local function merge(base: Props, extra: Props?): Props

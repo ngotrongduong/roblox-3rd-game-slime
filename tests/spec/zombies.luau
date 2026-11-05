@@ -31,7 +31,7 @@ local function openTeams(farm: any)
 			farm.areas[id].level = Config.Village.MaxLevel
 		end
 	end
-	assert(Zombies.teamsOpen(FarmState.villageLevel(farm.areas)) == Config.Zombies.Teams, "every team open")
+	assert(Zombies.teamsOpen(FarmState.villageLevel(farm.areas)) == #Config.Zombies.TeamOpensAt, "every team open")
 end
 
 local function winRate(playerLevel: number, camp: number): number
@@ -233,7 +233,7 @@ return function(T: any)
 	T.test("the player's level is the average of the strongest slimes a trip can send", function()
 		local farm = FarmKit.farm(NOW, FarmKit.many(20))
 		T.eq(Zombies.playerLevel(farm, NOW), 4)
-		for index = 1, Config.Zombies.Teams * Config.Zombies.TeamSize do
+		for index = 1, Config.Zombies.LevelTeams * Config.Zombies.TeamSize do
 			farm.slimes[index].stats = { attack = 5, defence = 5, speed = 5, hp = 50 }
 		end
 		T.eq(Zombies.playerLevel(farm, NOW), 20, "weak slimes kept at home change nothing")
@@ -353,8 +353,8 @@ return function(T: any)
 		T.eq(Zombies.teamsOpen(1), 1)
 		T.eq(Zombies.teamsOpen(opens[2] - 1), 1)
 		T.eq(Zombies.teamsOpen(opens[2]), 2)
-		T.eq(Zombies.teamsOpen(opens[#opens]), Config.Zombies.Teams)
-		T.eq(Zombies.teamsOpen(Config.Village.MaxLevel), Config.Zombies.Teams)
+		T.eq(Zombies.teamsOpen(opens[#opens]), #opens)
+		T.eq(Zombies.teamsOpen(Config.Village.MaxLevel), #opens)
 		local farm = FarmKit.farm(NOW, FarmKit.many(8))
 		T.eq(FarmState.villageLevel(farm.areas) < opens[2], true, "a new village")
 		T.ok(Zombies.setTeam(farm, 1, { "s1" }, NOW))
@@ -366,6 +366,27 @@ return function(T: any)
 		openTeams(farm)
 		T.ok(Zombies.teamOpen(farm, 4))
 		T.ok(Zombies.setTeam(farm, 2, { "s2" }, NOW))
+	end)
+	T.test("the Extra Team passes add teams on top of the village's, six at most", function()
+		local opens = Config.Zombies.TeamOpensAt
+		T.eq(Config.Zombies.Teams, 6)
+		T.eq(Zombies.teamsOpen(1, 1), 2, "one extra on a new village")
+		T.eq(Zombies.teamsOpen(Config.Village.MaxLevel, 1), #opens + 1)
+		T.eq(Zombies.teamsOpen(Config.Village.MaxLevel, 2), Config.Zombies.Teams)
+		T.eq(Zombies.teamsOpen(Config.Village.MaxLevel, 9), Config.Zombies.Teams, "never above six")
+		local farm = FarmKit.farm(NOW, FarmKit.many(30))
+		openTeams(farm)
+		T.eq(#farm.teams, Config.Zombies.Teams, "a farm holds six teams")
+		T.ok(not Zombies.teamOpen(farm, #opens + 1), "the fifth team waits for its pass")
+		T.eq(select(2, Zombies.setTeam(farm, #opens + 1, { "s20" }, NOW)), "LOCKED")
+		farm.robux.passes.team5 = true
+		T.ok(Zombies.teamOpen(farm, #opens + 1))
+		T.ok(not Zombies.teamOpen(farm, #opens + 2))
+		T.ok(Zombies.setTeam(farm, #opens + 1, { "s20" }, NOW))
+		farm.robux.passes.team6 = true
+		T.ok(Zombies.teamOpen(farm, Config.Zombies.Teams))
+		T.ok(Zombies.setTeam(farm, Config.Zombies.Teams, { "s21", "s22" }, NOW))
+		T.eq(#farm.teams[Config.Zombies.Teams].members, 2)
 	end)
 	T.test("one job at a time: a team slime cannot work or breed, a worker or parent cannot join a team", function()
 		local farm = FarmKit.farm(NOW, FarmKit.many(6))

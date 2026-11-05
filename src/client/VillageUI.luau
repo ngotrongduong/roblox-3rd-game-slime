@@ -18,6 +18,7 @@ local UiKit = require(script.Parent.UiKit)
 local UiMarket = require(script.Parent.UiMarket)
 local UiRecipes = require(script.Parent.UiRecipes)
 local UiRewards = require(script.Parent.UiRewards)
+local UiShop = require(script.Parent.UiShop)
 local UiSlimeList = require(script.Parent.UiSlimeList)
 local UiSlimes = require(script.Parent.UiSlimes)
 local UiSpots = require(script.Parent.UiSpots)
@@ -1167,6 +1168,9 @@ function VillageUI.start()
 		end,
 		request = request,
 		ask = ask,
+		shop = function(tab: string)
+			UiShop.open(tab)
+		end,
 	})
 	task.spawn(function()
 		while gui.Parent do

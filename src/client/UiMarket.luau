@@ -1,12 +1,13 @@
 --!strict
 -- The Market's screens that are not the sell sheet (UiSquad): the VIP counter's prompt and sheet, and the quick-travel ask
--- behind the HUD's Home and Market buttons. The VIP sheet lists Config.Robux.Products, which stays empty until the owner
--- approves a list and prices: then it says "Opening soon". Nothing is bought here, there is no purchase code yet.
+-- behind the HUD's Home and Market buttons. The VIP counter's sheet is the VIP Shop (UiShop); here it only opens it inside
+-- the counter's range, as the other counters' sheets are.
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Config = require(ReplicatedStorage.Shared.Config)
 local Layout = require(ReplicatedStorage.Shared.Layout)
 local UiKit = require(script.Parent.UiKit)
+local UiShop = require(script.Parent.UiShop)
 
 local U = Config.Ui
 
@@ -31,56 +32,7 @@ local travelling = false
 
 local function openVip(context: Context, point: Vector3)
 	local modal = context.open("vip", U.VipSheetHeight, function() end, point, Config.Market.VipRangeStuds * 1.3)
-	UiKit.label(modal.header, "VIP Shop", U.TextHeader, "Brown", {
-		Size = UDim2.fromScale(1, 1),
-		TextYAlignment = Enum.TextYAlignment.Center,
-	})
-	local products = Config.Robux.Products
-	if #products == 0 then
-		UiKit.label(modal.content, "Opening soon", U.TextHeader, "BrownSoft", {
-			Size = UDim2.fromScale(1, 1),
-			TextXAlignment = Enum.TextXAlignment.Center,
-			TextYAlignment = Enum.TextYAlignment.Center,
-		})
-		return
-	end
-	local list = UiKit.make("ScrollingFrame", {
-		Name = "Products",
-		BackgroundTransparency = 1,
-		BorderSizePixel = 0,
-		Size = UDim2.fromScale(1, 1),
-		AutomaticCanvasSize = Enum.AutomaticSize.Y,
-		CanvasSize = UDim2.new(),
-		ScrollBarThickness = 4,
-	}, modal.content)
-	UiKit.make("UIListLayout", {
-		FillDirection = Enum.FillDirection.Vertical,
-		Padding = UDim.new(0, U.Gap),
-		SortOrder = Enum.SortOrder.LayoutOrder,
-	}, list)
-	for index, product in products do
-		local _, body = UiKit.card(list, {
-			Name = product.key,
-			LayoutOrder = index,
-			Size = UDim2.new(1, -8, 0, U.RowHeight),
-		})
-		UiKit.make("UIListLayout", {
-			FillDirection = Enum.FillDirection.Horizontal,
-			VerticalAlignment = Enum.VerticalAlignment.Center,
-			Padding = UDim.new(0, U.Gap),
-			SortOrder = Enum.SortOrder.LayoutOrder,
-		}, body)
-		UiKit.icon(body, product.icon, U.Touch - 12, { LayoutOrder = 1 })
-		UiKit.label(body, product.name, U.TextNormal, "Brown", {
-			LayoutOrder = 2,
-			Size = UDim2.new(1, -(U.Touch + 100), 1, 0),
-		})
-		UiKit.label(body, tostring(product.price), U.TextHeader, "Brown", {
-			LayoutOrder = 3,
-			Size = UDim2.fromOffset(80, U.Touch),
-			TextXAlignment = Enum.TextXAlignment.Right,
-		})
-	end
+	UiShop.fill(modal, nil)
 end
 
 -- Called once by UiSquad: the VIP counter's prompt, at its Config spot (it works with or without the scene artist's model).

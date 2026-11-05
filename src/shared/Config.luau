@@ -202,7 +202,11 @@ Config.Flag = {
 
 -- The zombie slimes outside the village (the owner, 2026-11-02, docs/ECONOMY.md).
 Config.Zombies = {
-	Teams = 4,
+	-- Teams a farm can ever have (docs/MONETIZATION.md §2): the village opens the first #TeamOpensAt of them, each Extra Team
+	-- pass adds one on top (shared/Boosts.extraTeams), never above this.
+	Teams = 6,
+	-- The strongest slimes of this many teams (of TeamSize) set the zombies' level, so a team pass never changes the world.
+	LevelTeams = 4,
 	TeamSize = 4,
 	-- A village never dies out: its last slimes come back by themselves when their time runs out.
 	MinSlimes = 2,
@@ -251,7 +255,7 @@ Config.Zombies = {
 	MusterIn = 10,
 	MusterHeight = 10,
 	-- Team n can be set and sent from village level TeamOpensAt[n] (the owner, 2026-11-03: more teams as the village
-	-- grows, 4 at most).
+	-- grows, 4 at most); team 5 and 6 come from the Extra Team passes only.
 	TeamOpensAt = { 1, 10, 20, 30 },
 	-- The longest group id a saved team may name as its target (ids look like "c3g4").
 	TargetIdMaxLength = 16,
@@ -1197,14 +1201,18 @@ Config.Growth = {
 }
 
 Config.Luck = {
-	-- New-player luck after the tutorial ends: ×First for one window, ×Second for the next, then ×1.
+	-- New-player luck after the tutorial ends: ×First for one window, ×Second for the next, then ×1. It is a REAL factor on
+	-- the chances, outside the curve below.
 	WindowSeconds = 30 * 60,
 	First = 5,
 	Second = 3,
 	ServerBonus = 1,
-	-- Reserved for a future potion; not sold yet.
+	-- Luck LABELS (docs/MONETIZATION.md §1), each multiplying the others: a Luck Potion (30 minutes, sold), VIP, the highest
+	-- Perm Luck pass (Config.Robux.Products, field `luck`) and the server's bonus. The label becomes the real factor on the
+	-- chances by a falling curve, real = 1 + PerDoubling * log2(label): each doubling adds this share of the base chance.
 	Potion = 2,
-	Vip = 1,
+	Vip = 1.5,
+	PerDoubling = 0.4,
 }
 
 Config.Farm = {
@@ -2039,11 +2047,224 @@ Config.Travel = {
 	HomeInsideStuds = 12,
 }
 
--- Robux goods of the VIP counter. EMPTY on purpose: the owner approves the list and the prices first (skill
--- robux-products), and nothing is sold before he has. Later a product is { key, name, icon, price }: a short id for
--- the code, the name shown, a Config.Ui.Icons name, the price in Robux. No product ids, no purchase code yet.
+-- Robux goods of the VIP counter (docs/MONETIZATION.md §2: the owner approved this list and these prices on 2026-11-06; a
+-- new product or a changed price is asked again, skill robux-products). ONE table holds everything sold: `kind` is "pass"
+-- (a game pass, owned for ever, asked of Roblox) or "product" (a developer product, bought again and again, delivered on its
+-- receipt). `id` is the Creator Hub id; 0 means it does not exist there yet: the shop shows SOON and the server refuses to
+-- prompt for it. `name` is the Hub name (no digits: they are filtered); `label` is the card's title when it may hold digits.
+-- What a good does is read from its own fields (shared/Products.grant, shared/Boosts):
+--   luck = n        Perm Luck label x n (only the highest owned counts)         teams = n   Extra Team passes: +n team
+--   vip = true      the VIP pass                                                slots = n   Bigger Ranch: +n slime slots
+--   requires = key  can be bought only with that pass owned
+--   gold = n        coins = n x Rewards.coinBase (the village's cheapest next upgrade); never multiplied by a boost
+--   spins = n       n wheel spins into the bank (a paid random item: hidden where PolicyService restricts them)
+--   potion = kind, minutes   "luck" | "gold" | "hatch" potion for that long, added to the time left
+--   effect = "energy" | "hatchAll" | "reroll" | "saver"   an act on the farm
+--   starter = { gold, spins, luckMinutes, items }        the Starter Pack, once an account
+export type Product = {
+	key: string,
+	name: string,
+	label: string?,
+	icon: string,
+	price: number,
+	kind: string,
+	id: number,
+	luck: number?,
+	vip: boolean?,
+	teams: number?,
+	slots: number?,
+	requires: string?,
+	gold: number?,
+	spins: number?,
+	potion: string?,
+	minutes: number?,
+	effect: string?,
+	starter: { gold: number, spins: number, luckMinutes: number, items: { { kind: string, id: string, count: number } } }?,
+}
+
 Config.Robux = {
-	Products = {} :: { { key: string, name: string, icon: string, price: number } },
+	-- A test switch, OFF in anything committed. Studio only: a "buy" request hands the good out through the same function as
+	-- a real receipt (shared/Products.redeem, server/Purchases.deliver), without Roblox and for any id, and logs the grant.
+	TestGrant = false,
+	-- A client may ask for a purchase prompt this often (seconds).
+	PromptGapSeconds = 1.5,
+	-- A receipt that arrives while the save is still loading waits this long for it before Roblox is told to ask again.
+	ReceiptWaitSeconds = 20,
+	-- A save keeps the last this many receipt ids (Roblox repeats a receipt only until it is granted, so old ones go).
+	ReceiptsKept = 200,
+	-- Game passes are asked of Roblox at joining: PassTries times, PassRetrySeconds apart (UserOwnsGamePassAsync can fail); a
+	-- bought pass is confirmed the same way before it is granted.
+	PassTries = 3,
+	PassRetrySeconds = 4,
+	-- What the server publishes on each player (attributes) is looked at this often.
+	RefreshSeconds = 2,
+	-- The boosts (docs/MONETIZATION.md §2). VIP pays 1.5 x on coins EARNED (fights, slime and dish sales, rewards; never
+	-- Robux gold), the Gold Potion 2 x; they multiply. Eggs hatch VIP x faster and Hatch Potion x faster (incubation time,
+	-- its floor kept). The luck labels are Config.Luck.
+	CoinFactorVip = 1.5,
+	CoinFactorPotion = 2,
+	HatchFactorVip = 1.5,
+	HatchFactorPotion = 2,
+	-- The gold [VIP] chat tag and the small VIP badge (the Player attribute Vip, client/VipTag).
+	VipTag = { Text = "[VIP]", Colour = "FFC83D" },
+	Products = {
+		-- ===== game passes =====
+		{ key = "vip", name = "VIP", icon = "vip", price = 249, kind = "pass", id = 0, vip = true },
+		{
+			key = "luck2",
+			name = "Lucky Clover",
+			label = "Luck x2",
+			icon = "potion_luck",
+			price = 19,
+			kind = "pass",
+			id = 0,
+			luck = 2,
+		},
+		{
+			key = "luck4",
+			name = "Lucky Horseshoe",
+			label = "Luck x4",
+			icon = "potion_luck",
+			price = 59,
+			kind = "pass",
+			id = 0,
+			luck = 4,
+		},
+		{
+			key = "luck8",
+			name = "Lucky Star",
+			label = "Luck x8",
+			icon = "potion_luck",
+			price = 159,
+			kind = "pass",
+			id = 0,
+			luck = 8,
+		},
+		{ key = "team5", name = "Extra Team", icon = "team_slot", price = 99, kind = "pass", id = 0, teams = 1 },
+		{
+			key = "team6",
+			name = "Extra Team Plus",
+			icon = "team_slot",
+			price = 149,
+			kind = "pass",
+			id = 0,
+			teams = 1,
+			requires = "team5",
+		},
+		{ key = "ranch", name = "Bigger Ranch", icon = "ranch_slot", price = 79, kind = "pass", id = 0, slots = 50 },
+		-- ===== developer products =====
+		{
+			key = "goldPouch",
+			name = "Pouch of Gold",
+			icon = "gold_pouch",
+			price = 29,
+			kind = "product",
+			id = 0,
+			gold = 2,
+		},
+		{ key = "goldSack", name = "Sack of Gold", icon = "gold_sack", price = 89, kind = "product", id = 0, gold = 7 },
+		{
+			key = "goldChest",
+			name = "Chest of Gold",
+			icon = "gold_chest",
+			price = 199,
+			kind = "product",
+			id = 0,
+			gold = 18,
+		},
+		{
+			key = "goldVault",
+			name = "Vault of Gold",
+			icon = "gold_vault",
+			price = 499,
+			kind = "product",
+			id = 0,
+			gold = 50,
+		},
+		{ key = "spin1", name = "Lucky Spin", icon = "spin", price = 25, kind = "product", id = 0, spins = 1 },
+		{ key = "spin5", name = "Spin Bundle", icon = "spin", price = 99, kind = "product", id = 0, spins = 5 },
+		{ key = "spin12", name = "Spin Crate", icon = "spin", price = 199, kind = "product", id = 0, spins = 12 },
+		{
+			key = "luckPotion",
+			name = "Luck Potion",
+			icon = "potion_luck",
+			price = 29,
+			kind = "product",
+			id = 0,
+			potion = "luck",
+			minutes = 30,
+		},
+		{
+			key = "goldPotion",
+			name = "Gold Potion",
+			icon = "potion_gold",
+			price = 29,
+			kind = "product",
+			id = 0,
+			potion = "gold",
+			minutes = 30,
+		},
+		{
+			key = "hatchPotion",
+			name = "Hatch Potion",
+			icon = "potion_hatch",
+			price = 19,
+			kind = "product",
+			id = 0,
+			potion = "hatch",
+			minutes = 30,
+		},
+		{
+			key = "energyDrink",
+			name = "Energy Drink",
+			icon = "energy_drink",
+			price = 19,
+			kind = "product",
+			id = 0,
+			effect = "energy",
+		},
+		{
+			key = "hatchAll",
+			name = "Hatch All Now",
+			icon = "hatch_now",
+			price = 19,
+			kind = "product",
+			id = 0,
+			effect = "hatchAll",
+		},
+		{
+			key = "questReroll",
+			name = "Quest Reroll",
+			icon = "quest_reroll",
+			price = 9,
+			kind = "product",
+			id = 0,
+			effect = "reroll",
+		},
+		{
+			key = "streakSaver",
+			name = "Streak Saver",
+			icon = "streak_saver",
+			price = 19,
+			kind = "product",
+			id = 0,
+			effect = "saver",
+		},
+		{
+			key = "starterPack",
+			name = "Starter Pack",
+			icon = "starter_pack",
+			price = 49,
+			kind = "product",
+			id = 0,
+			starter = {
+				gold = 7,
+				spins = 5,
+				luckMinutes = 60,
+				items = { { kind = "material", id = "ore", count = 5 } },
+			},
+		},
+	} :: { Product },
 }
 
 -- The leaderboard of the Market (src/server/Leaderboard.luau, LeaderboardStore, shared/Leaderboard, and the client's
@@ -2343,7 +2564,10 @@ Config.Save = {
 	-- 11: the Arena (`arena`: points, team, tickets, the match in flight, season rewards claimed, quests, shop).
 	-- 12: the Lucky Wheel (`rewards.wheel`), weekly quests, goals, check-in totals and milestones, redraws of the day's quests,
 	--     and lifetime counts of waves, Arena attacks, gear made, dishes, fish, crops, wheel spins and seconds played.
-	SchemaVersion = 12,
+	-- 13: what Robux sells (docs/MONETIZATION.md): `boosts` (Gold and Hatch Potion end times), `robux` (receipts granted,
+	--     the passes Roblox said the player owns, the Starter Pack flag, quest redraws and Streak Savers bought and not
+	--     used yet), and six teams in place of four.
+	SchemaVersion = 13,
 	-- A stored envelope without a version is this one.
 	FirstSchemaVersion = 1,
 
@@ -3355,6 +3579,8 @@ Config.Ui = {
 		quest_reroll = 133105941736416,
 		streak_saver = 123803458623825,
 		starter_pack = 135427122864978,
+		-- The Robux symbol on every price of the VIP Shop: NOT DRAWN YET (ChatGPT), a short stand-in shows until it is.
+		robux = 0,
 		wheel_face = 103726425683178,
 		wheel_pointer = 107372263242685,
 		wheel_hub = 113956074271568,
@@ -3501,8 +3727,36 @@ Config.Ui = {
 	SheetWidth = 460,
 	-- (tall enough for the slime list under its sort row)
 	SheetHeight = 440,
-	-- The VIP sheet (UiMarket): short while it only says "Opening soon".
-	VipSheetHeight = 260,
+	-- The VIP Shop's sheet (UiMarket opens it at the counter, UiShop draws it): as tall as the other bottom sheets.
+	VipSheetHeight = 440,
+	-- The VIP Shop (UiShop), pixels: a good's card (its height, picture, the Buy button's size, the little picture in the
+	-- effect line and its height) and the wheel's odds strip on the Spins tab (its height, a slice's picture).
+	Shop = {
+		RowHeight = 60,
+		Icon = 40,
+		ButtonWidth = 96,
+		ButtonHeight = 44,
+		-- the "Use (n)" button of a good bought while it could do nothing (an Energy Drink, a Hatch All Now), left of Buy
+		UseWidth = 76,
+		EffectIcon = 16,
+		EffectHeight = 18,
+		OddsHeight = 58,
+		OddsIcon = 26,
+		-- the pill that says "+14%" or "Save 21%": how wide a letter is, the room round the word, its height
+		PillLetter = 7,
+		PillPad = 16,
+		PillHeight = 20,
+		-- the Robux symbol on a Buy button
+		PriceIcon = 18,
+	},
+	-- The small VIP crown (Icons.vip) over a VIP's head (client/VipBadge: the Arena title's budget, size and lift, see
+	-- Config.Arena.View.Title) and in the resource strip (UiHud): the head crown's size and its gap to an Arena title, in
+	-- pixels, and the strip's.
+	VipBadge = { Size = 40, Gap = 8, HudSize = 30 },
+	-- The team tabs of the gate sheet narrow to this when the header is short, so six fit (never under it), and the team
+	-- chips on the left edge stand this many to a column before they start a second one.
+	TabMin = 34,
+	TeamChipRows = 3,
 	-- The Smithy sheet and the slime card's gear slots (UiSmithy, UiGearSlots), pixels: the sheet's height, a piece's card, its
 	-- picture, a cost's picture, a stat tag, a worn slot's picture and cell, a row of the picker.
 	Gear = {
@@ -3628,6 +3882,8 @@ Config.Ui = {
 		Landing = 0.7,
 		PrizeSeconds = 3.2,
 		OddsButtonWidth = 100,
+		-- the "Get spins" button that opens the VIP Shop on its Spins tab
+		ShopButtonWidth = 112,
 		OddsRow = 48,
 		SliceIcons = {
 			coinsSmall = "gold_pouch",

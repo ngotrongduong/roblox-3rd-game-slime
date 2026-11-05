@@ -108,13 +108,6 @@ return function(T)
 		T.eq(whyElse, "BAD_REQUEST")
 	end)
 
-	T.test("the VIP list is empty and holds no ids (the owner has not approved any)", function()
-		T.eq(#Config.Robux.Products, 0)
-		for key in Config.Robux do
-			T.eq(key, "Products", "nothing else about Robux is in Config yet")
-		end
-	end)
-
 	T.test("the travel icons have their pictures", function()
 		T.ok(Config.Ui.Icons.home > 0)
 		T.ok(Config.Ui.Icons.market > 0)

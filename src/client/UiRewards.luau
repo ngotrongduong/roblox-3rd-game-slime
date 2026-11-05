@@ -7,6 +7,7 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Debris = game:GetService("Debris")
 local HttpService = game:GetService("HttpService")
+local Players = game:GetService("Players")
 
 local Config = require(ReplicatedStorage.Shared.Config)
 local UiDungeon = require(script.Parent.UiDungeon)
@@ -23,6 +24,8 @@ export type Context = {
 	request: (data: { [string]: any }, onSuccess: (() -> ())?, onFail: (() -> ())?) -> (),
 	-- like request, but the success callback gets what the server answered (the wheel's slice)
 	ask: (data: { [string]: any }, onSuccess: (value: any) -> (), onFail: (() -> ())?) -> (),
+	-- opens the VIP Shop (UiShop) on a tab ("spins", "boost"): this sheet cannot require it, UiShop draws the wheel's odds from here
+	shop: (tab: string) -> (),
 }
 
 type Item = { kind: string, id: string, count: number }
@@ -152,6 +155,16 @@ end
 
 local function num(value: any): number
 	return if type(value) == "number" then value else 0
+end
+
+-- The Streak Saver's price in Robux (Config.Robux), shown on the check-in tile that offers it.
+local function saverPrice(): number
+	for _, product in Config.Robux.Products do
+		if product.effect == "saver" then
+			return product.price
+		end
+	end
+	return 0
 end
 
 -- 1234 -> "1.2K"; small numbers stay whole.
@@ -625,18 +638,64 @@ local function drawDaily(host: Frame, data: { [string]: any })
 			claim({ action = "ClaimDaily" }, reward)
 		end)
 	end
-	-- the cell after the seventh day: how many check-ins in all (the milestones below count them)
-	local _, body = UiKit.skin(area, "Wood", "Card", { Name = "Checkins", LayoutOrder = #rows + 1 })
-	UiKit.icon(body, "daily", R.TileHeight - 56, {
+	-- the cell after the seventh day: how many check-ins in all (the milestones below count them). While the run is broken by
+	-- one missed day it shows the Streak Saver instead: "Mend" when one is banked (the next claim uses it), else its price,
+	-- and a tap opens the shop on it.
+	local box, body = UiKit.skin(area, "Wood", "Card", { Name = "Checkins", LayoutOrder = #rows + 1 })
+	local mendable = data.mendable == true
+	local savers = num(Players.LocalPlayer:GetAttribute("StreakSavers"))
+	UiKit.icon(body, if mendable then "streak_saver" else "daily", R.TileHeight - 56, {
 		AnchorPoint = Vector2.new(0.5, 0),
 		Position = UDim2.new(0.5, 0, 0, 6),
 	})
-	UiKit.label(body, tostring(num(data.checkins)), U.TextHeader, "Brown", {
-		AnchorPoint = Vector2.new(0, 1),
-		Position = UDim2.fromScale(0, 1),
-		Size = UDim2.new(1, 0, 0, U.TextHeader + 6),
-		TextXAlignment = Enum.TextXAlignment.Center,
-	})
+	if mendable and savers == 0 then
+		local price = UiKit.make("Frame", {
+			Name = "Price",
+			BackgroundTransparency = 1,
+			AnchorPoint = Vector2.new(0, 1),
+			Position = UDim2.fromScale(0, 1),
+			Size = UDim2.new(1, 0, 0, U.TextHeader + 6),
+		}, body)
+		UiKit.make("UIListLayout", {
+			FillDirection = Enum.FillDirection.Horizontal,
+			HorizontalAlignment = Enum.HorizontalAlignment.Center,
+			VerticalAlignment = Enum.VerticalAlignment.Center,
+			Padding = UDim.new(0, 4),
+			SortOrder = Enum.SortOrder.LayoutOrder,
+		}, price)
+		UiKit.icon(price, "robux", U.IconNormal - 6, { LayoutOrder = 1 })
+		UiKit.label(price, tostring(saverPrice()), U.TextNormal, "Brown", {
+			LayoutOrder = 2,
+			Size = UDim2.fromScale(0, 1),
+			AutomaticSize = Enum.AutomaticSize.X,
+			TextTruncate = Enum.TextTruncate.None,
+		})
+		local press = UiKit.make("TextButton", {
+			Name = "Buy",
+			Text = "",
+			BackgroundTransparency = 1,
+			Size = UDim2.fromScale(1, 1),
+			ZIndex = 10,
+		}, box)
+		press.Activated:Connect(function()
+			if ctx then
+				ctx.shop("boost")
+			end
+		end)
+	else
+		UiKit.label(
+			body,
+			if mendable then "Mend" else tostring(num(data.checkins)),
+			U.TextHeader,
+			if mendable then "GreenDark" else "Brown",
+			{
+				AnchorPoint = Vector2.new(0, 1),
+				Position = UDim2.fromScale(0, 1),
+				Size = UDim2.new(1, 0, 0, U.TextHeader + 6),
+				TextXAlignment = Enum.TextXAlignment.Center,
+			}
+		)
+	end
 	for index, milestone in data.milestones or {} do
 		local reward = fromObject(milestone)
 		local state = if milestone.state == 1 then "ready" elseif milestone.state == 2 then "taken" else "later"
@@ -662,9 +721,10 @@ local function drawQuests(host: Frame, data: { [string]: any })
 		})
 	end
 	for index, row in quests do
-		-- (the free redraw: the server says whether the day's one is still there; a quest already done keeps its claim)
+		-- (the free redraw, or a bought one waiting in the bank: the server says; a quest already done keeps its claim)
 		local reroll: (() -> ())? = nil
-		if data.rerollFree == true and row[4] ~= true and (tonumber(row[2]) or 0) < (tonumber(row[3]) or 0) then
+		local redraws = data.rerollFree == true or num(data.rerollBank) > 0
+		if redraws and row[4] ~= true and (tonumber(row[2]) or 0) < (tonumber(row[3]) or 0) then
 			reroll = function()
 				if ctx then
 					ctx.request({ action = "RerollQuest", index = index })
@@ -1111,6 +1171,22 @@ local function drawWheel(host: Frame)
 			render()
 		end,
 	})
+	-- spins for Robux: only where paid random items are allowed (the server's PaidRandomRestricted says, false once it knows)
+	if Players.LocalPlayer:GetAttribute("PaidRandomRestricted") == false then
+		UiKit.button(side, {
+			Name = "GetSpins",
+			Text = "Get spins",
+			Style = "good",
+			Enabled = not spinning,
+			LayoutOrder = 5,
+			Size = UDim2.fromOffset(W.ShopButtonWidth, U.Touch),
+			OnClick = function()
+				if ctx then
+					ctx.shop("spins")
+				end
+			end,
+		})
+	end
 end
 
 -- ===== the sheet =====
@@ -1320,5 +1396,11 @@ end
 function UiRewards.start(context: Context)
 	ctx = context
 end
+
+-- What the VIP Shop (UiShop) borrows to draw the wheel's odds and a coin amount the way this sheet does.
+UiRewards.short = short
+UiRewards.clock = clock
+UiRewards.percent = percent
+UiRewards.slicePicture = slicePicture
 
 return UiRewards

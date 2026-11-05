@@ -71,7 +71,9 @@ function Wheel.spin(
 		wheel.bank -= 1
 	end
 	local grant = Rewards.grant(slice.reward, farm)
-	Rewards.pay(farm, grant, now)
+	local _, credited = Rewards.pay(farm, grant, now)
+	-- (what the grant says is what was credited, with the boosts on it)
+	grant.coins = credited
 	farm.lifetime.wheelSpins += 1
 	return true, nil, index, grant
 end
@@ -83,7 +85,7 @@ function Wheel.view(farm: Farm, now: number, isVip: boolean?): { [string]: any }
 	local total = Wheel.totalWeight()
 	local slices = {}
 	for _, slice in W.Slices do
-		local grant = Rewards.grant(slice.reward, farm)
+		local grant = Rewards.shown(slice.reward, farm, now)
 		table.insert(slices, {
 			id = slice.id,
 			name = slice.name,

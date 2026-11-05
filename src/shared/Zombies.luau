@@ -1,6 +1,7 @@
 --!strict
 -- The zombie slimes outside the village (the owner, 2026-11-02): groups a little around the player's own level, rarer
 -- kinds worth more, and coins for every slime killed on either side, by its level and rarity.
+local Boosts = if script then require(script.Parent.Boosts) else require("./Boosts")
 local Config = if script then require(script.Parent.Config) else require("./Config")
 local FarmState = if script then require(script.Parent.FarmState) else require("./FarmState")
 local Food = if script then require(script.Parent.Food) else require("./Food")
@@ -61,7 +62,7 @@ function Zombies.playerLevel(farm: Farm, now: number): number
 	table.sort(levels, function(a: number, b: number): boolean
 		return a > b
 	end)
-	local count = math.min(#levels, Config.Zombies.Teams * Config.Zombies.TeamSize)
+	local count = math.min(#levels, Config.Zombies.LevelTeams * Config.Zombies.TeamSize)
 	local sum = 0
 	for index = 1, count do
 		sum += levels[index]
@@ -203,9 +204,15 @@ function Zombies.deathReward(slime: Slime): number
 	return Mutations.sellValue(slime.appearanceMutation, Stats.level(slime.stats))
 end
 
-function Zombies.pay(farm: Farm, amount: number): number
+-- Coins won in a fight, up to what the vault holds. `now` (server seconds) lets VIP and a Gold Potion multiply the win before
+-- the vault is looked at; left out (tools without a clock), the win is paid unboosted.
+function Zombies.pay(farm: Farm, amount: number, now: number?): number
 	local room = math.max(0, VillageRules.coinCap(farm.areas.pantry.level) - farm.coins)
-	local paid = math.min(math.max(0, amount), room)
+	local won = math.max(0, amount)
+	if now then
+		won = Boosts.earn(farm, won, now)
+	end
+	local paid = math.min(won, room)
 	farm.coins += paid
 	farm.lifetime.coinsEarned += paid
 	return paid
@@ -220,20 +227,21 @@ function Zombies.canSend(farm: Farm, slime: Slime, now: number): boolean
 	return not Stations.isBusy(farm, slime.id) and not FarmState.inPair(farm, slime.id)
 end
 
--- How many teams a village of this level can set and send (Config.Zombies.TeamOpensAt): teams 1..this.
-function Zombies.teamsOpen(villageLevel: number): number
+-- How many teams a village of this level can set and send (Config.Zombies.TeamOpensAt), plus the `extra` the Extra Team passes
+-- add (Boosts.extraTeams), never above Config.Zombies.Teams: teams 1..this.
+function Zombies.teamsOpen(villageLevel: number, extra: number?): number
 	local open = 1
 	for index, level in Config.Zombies.TeamOpensAt do
 		if villageLevel >= level then
 			open = math.max(open, index)
 		end
 	end
-	return math.min(open, Config.Zombies.Teams)
+	return math.min(open + (extra or 0), Config.Zombies.Teams)
 end
 
 -- Whether team `teamIndex` of this farm is open yet.
 function Zombies.teamOpen(farm: Farm, teamIndex: number): boolean
-	return teamIndex <= Zombies.teamsOpen(FarmState.villageLevel(farm.areas))
+	return teamIndex <= Zombies.teamsOpen(FarmState.villageLevel(farm.areas), Boosts.extraTeams(farm))
 end
 
 -- Sets the line-up of team `teamIndex` to these slimes (none empties it). A slime already in another team moves here.
@@ -380,7 +388,7 @@ function Zombies.fall(farm: Farm, slimeId: string, now: number): number
 		return 0
 	end
 	local reward = Zombies.deathReward(slime)
-	return Zombies.pay(farm, reward)
+	return Zombies.pay(farm, reward, now)
 end
 
 function Zombies.reviveCost(level: number): number

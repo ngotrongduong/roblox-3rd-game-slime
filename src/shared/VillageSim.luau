@@ -1,5 +1,6 @@
 --!strict
 -- One deterministic simulation for online ticks and offline catch-up. No services or wall clock.
+local Boosts = if script then require(script.Parent.Boosts) else require("./Boosts")
 local Breeding = if script then require(script.Parent.Breeding) else require("./Breeding")
 local Config = if script then require(script.Parent.Config) else require("./Config")
 local FarmState = if script then require(script.Parent.FarmState) else require("./FarmState")
@@ -290,8 +291,25 @@ function VillageSim.step(input: Farm, now: number, seconds: number, rng: Rng, op
 	-- clock yet and starts now, at the nest's rate.
 	for _, egg in farm.eggs do
 		if egg.place == "nest" and egg.hatchAt == nil then
-			egg.hatchAt = now + Breeding.nestSeconds(egg, farm.areas.breeding.level, farm.tutorialDone == false)
+			egg.hatchAt = now
+				+ Breeding.nestSeconds(
+					egg,
+					farm.areas.breeding.level,
+					farm.tutorialDone == false,
+					Boosts.hatchFactor(farm, now)
+				)
 			egg.status = FarmState.eggStatus(egg, now)
+		end
+		-- The hatch bar runs from the egg's stored start; an egg saved without one gets it now, from the time its stage takes
+		-- at the present speed (the bar then never moves when a potion ends).
+		if egg.hatchAt ~= nil and egg.hatchStart == nil then
+			local span = Breeding.incubationSeconds(
+				Stats.level(egg.embryo.stats),
+				farm.areas.breeding.level,
+				farm.tutorialDone == false,
+				Boosts.hatchFactor(farm, now)
+			) * (if egg.place == "nest" then Config.Breeding.NestSlowFactor else 1)
+			egg.hatchStart = egg.hatchAt - math.max(span, egg.hatchAt - now)
 		end
 	end
 	local duration = math.max(0, seconds)

@@ -48,11 +48,12 @@ local function context(): Context
 	return ctx
 end
 
--- How many teams the village has opened (Config.Zombies.TeamOpensAt), by the level it publishes: only those show.
+-- How many teams the village has opened (Config.Zombies.TeamOpensAt), by the level it publishes, and the Extra Team passes
+-- (the Player attribute ExtraTeams): only those show.
 local function teamsOpen(): number
 	local own = context().own()
 	local level = if own then own:GetAttribute("VillageLevel") else nil
-	return Zombies.teamsOpen(if type(level) == "number" then level else 1)
+	return Zombies.teamsOpen(if type(level) == "number" then level else 1, ZombieTeams.extra())
 end
 
 local function slimeById(id: string): Configuration?
@@ -179,6 +180,19 @@ local function openTeams(point: Vector3)
 		tabButtons[index] = button
 		tabStates[index] = cornerIcon(button, 18)
 	end
+	-- six tabs: they narrow (never under U.TabMin) when the header is short, so all of them fit on a phone
+	local function fitTabs()
+		local room = UiKit.units(modal.header).X
+		if room <= 0 then
+			return
+		end
+		local width = math.clamp(math.floor((room - (Z.Teams - 1) * U.Gap) / Z.Teams), U.TabMin, U.Touch)
+		for _, button in tabButtons do
+			button.Size = UDim2.fromOffset(width, U.Touch)
+		end
+	end
+	modal.header:GetPropertyChangedSignal("AbsoluteSize"):Connect(fitTabs)
+	fitTabs()
 
 	-- the four slots, Best and the Repeat toggle
 	local bestWidth = U.Touch + 24
@@ -930,10 +944,16 @@ function UiTeams.start(context_: Context)
 		BackgroundTransparency = 1,
 		AnchorPoint = Vector2.new(0, 1),
 		Position = UDim2.new(0, U.Edge, 0.5, -V.ChipLift),
-		Size = UDim2.fromOffset(U.ChipHeight + 30, (U.ChipHeight + U.Gap) * Z.Teams),
+		-- (a column holds U.TeamChipRows chips, the rest start a second one: six would not fit above the middle of a phone)
+		Size = UDim2.fromOffset(
+			(U.ChipHeight + 30) * math.ceil(Z.Teams / U.TeamChipRows)
+				+ U.Gap * (math.ceil(Z.Teams / U.TeamChipRows) - 1),
+			(U.ChipHeight + U.Gap) * U.TeamChipRows
+		),
 	}, UiKit.root())
 	UiKit.make("UIListLayout", {
 		FillDirection = Enum.FillDirection.Vertical,
+		Wraps = true,
 		VerticalAlignment = Enum.VerticalAlignment.Bottom,
 		Padding = UDim.new(0, U.Gap),
 		SortOrder = Enum.SortOrder.LayoutOrder,

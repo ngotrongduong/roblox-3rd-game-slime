@@ -457,6 +457,35 @@ function ProfileLogic.migrateWheel(data: any, _now: number): any
 	return out
 end
 
+-- A farm saved before Robux sold anything (schema 12): no potion running, no receipt, no pass, nothing bought and unused; and
+-- the two teams the passes can add are empty (the first four keep their line-ups, repair would pad them too).
+function ProfileLogic.migrateRobux(data: any, _now: number): any
+	if type(data) ~= "table" then
+		return data
+	end
+	local out = ProfileLogic.deepCopy(data)
+	if type(out.boosts) ~= "table" then
+		out.boosts = { gold = 0, hatch = 0 }
+	end
+	if type(out.robux) ~= "table" then
+		out.robux = {
+			receipts = {},
+			passes = {},
+			starterBought = false,
+			rerolls = 0,
+			savers = 0,
+			drinks = 0,
+			hatchAlls = 0,
+		}
+	end
+	if type(out.teams) == "table" then
+		for index = #out.teams + 1, Config.Zombies.Teams do
+			out.teams[index] = { members = {}, repeatOn = false }
+		end
+	end
+	return out
+end
+
 -- Runs the steps from `fromVersion` to `toVersion`, each found by its `from`, so the list may be in
 -- any order. Refuses data from a newer version instead of guessing at it.
 function ProfileLogic.migrate(
