@@ -1235,6 +1235,11 @@ function ZombieFight.setDungeon(handler: ((events: { any }) -> ())?)
 	dungeonHandler = handler
 end
 
+-- The Arena replay's door (client/ArenaReplay): a batch of events for the field team 0 holds, drawn like any other.
+function ZombieFight.feed(events: { any })
+	onEvents({ team = 0, events = events })
+end
+
 -- A body of the Dungeon joins the fight under `id` (the id the events name); a new run reuses ids, so what the last run
 -- left under it is forgotten.
 function ZombieFight.adopt(id: string, extra: Extra)

@@ -582,9 +582,11 @@ DebugPresets.Menu = {
 		},
 	},
 	{
-		-- (kind "arena": server/OwnerDebug hands it to server/Arena's Studio-only debug calls)
+		-- (kind "arena": server/OwnerDebug hands it to server/Arena's Studio-only debug calls; kind "client": the menu opens the
+		-- screen itself, the server is never asked)
 		group = "Arena",
 		items = {
+			{ id = "arena_open", text = "Open Arena", kind = "client" },
 			{ id = "arena_team", text = "Team: best 4", kind = "arena" },
 			{ id = "arena_opponents", text = "Opponents", kind = "arena" },
 			{ id = "arena_attack", text = "Attack 1st", kind = "arena" },

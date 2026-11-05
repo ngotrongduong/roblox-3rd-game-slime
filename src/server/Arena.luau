@@ -683,8 +683,19 @@ local function attack(player: Player, data: any): Reply
 		seconds = replay.seconds,
 		steps = replay.steps,
 		sides = {
-			attacker = { name = name, power = mine.power, looks = mine.looks },
-			defender = { name = entry.name, power = entry.power, looks = entry.looks, rank = entry.rank },
+			attacker = {
+				name = name,
+				power = mine.power,
+				looks = mine.looks,
+				fighters = ArenaFight.view(mine.fighters, "a:"),
+			},
+			defender = {
+				name = entry.name,
+				power = entry.power,
+				looks = entry.looks,
+				rank = entry.rank,
+				fighters = ArenaFight.view(entry.fighters, "d:"),
+			},
 		},
 		matchId = match.matchId,
 		status = "confirming",

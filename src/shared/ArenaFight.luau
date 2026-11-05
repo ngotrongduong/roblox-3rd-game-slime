@@ -103,4 +103,20 @@ function ArenaFight.simulate(attackers: { Fighter }, defenders: { Fighter }, see
 	return { won = fight.winner == "squad", seconds = fight.seconds, steps = steps }
 end
 
+-- What the replay needs of one side, in team order (the order of its looks): the event id simulate gives each fighter
+-- (prefix "a:" or "d:"), its role and its health.
+function ArenaFight.view(
+	fighters: { Fighter },
+	prefix: string
+): { { id: string, role: string?, hp: number, maxHp: number } }
+	local out = {}
+	for _, fighter in fighters do
+		table.insert(
+			out,
+			{ id = prefix .. fighter.id, role = fighter.role, hp = fighter.hp, maxHp = fighter.maxHp or fighter.hp }
+		)
+	end
+	return out
+end
+
 return ArenaFight

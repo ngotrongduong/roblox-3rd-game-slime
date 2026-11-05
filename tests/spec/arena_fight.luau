@@ -95,6 +95,23 @@ return function(T)
 			end
 		end
 	end)
+	T.test("view names each fighter by the id the replay's events use, in team order", function()
+		local team = Bots.team(202611, "b500")
+		local view = ArenaFight.view(team.fighters, "d:")
+		T.eq(#view, #team.fighters)
+		local ids = {}
+		for _, step in ArenaFight.simulate(team.fighters, team.fighters, 5).steps do
+			for _, event in step.events do
+				ids[event.to] = true
+			end
+		end
+		for index, entry in view do
+			T.eq(entry.id, "d:" .. team.fighters[index].id)
+			T.eq(entry.role, team.fighters[index].role)
+			T.ok(entry.maxHp >= entry.hp and entry.hp > 0)
+			T.ok(ids[entry.id])
+		end
+	end)
 	T.test("timeout is a defender win at exactly the configured deadline", function()
 		local tank = { id = "same", attack = 0, defence = 0, speed = 0, hp = 1e9 }
 		local replay = ArenaFight.simulate({ tank }, { tank }, 123)

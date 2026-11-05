@@ -9,6 +9,7 @@ local RunService = game:GetService("RunService")
 
 local Config = require(ReplicatedStorage.Shared.Config)
 local DebugPresets = require(ReplicatedStorage.Shared.DebugPresets)
+local UiArena = require(script.Parent.UiArena)
 local UiKit = require(script.Parent.UiKit)
 
 local U = Config.Ui
@@ -114,6 +115,13 @@ local function open()
 						if label and label:IsA("TextLabel") then
 							label.Text = item.text
 						end
+					end
+					if item.kind == "client" then
+						-- (a screen of the game: opened here, the server is not asked)
+						if item.id == "arena_open" then
+							UiArena.open()
+						end
+						return
 					end
 					ask(item.id, item.args)
 				end,

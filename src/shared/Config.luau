@@ -3146,6 +3146,10 @@ Config.Ui = {
 		-- The lock over the Dungeon portal and the bag of the inventory (ChatGPT, 2026-11-04).
 		lock = 91241912398933,
 		bag = 124936043377188,
+		-- the Arena's, made by ChatGPT in the owner's style (art/icons/arena*.png, arena_points.png, arena_ticket.png)
+		arenaPoints = 115001232698763, -- the gold slime medal coin: the Arena points
+		arenaTicket = 110984086281837, -- the attack ticket
+		arena = 113759764912682, -- the emblem: shield, crown, crossed swords
 		-- the faint pictures of an empty gear slot on the slime's page
 		slotWeapon = 72608277069089,
 		slotHead = 87341761427328,
@@ -3575,6 +3579,107 @@ Config.Arena = {
 		{ id = "horn2", kind = "material", item = "boar_tusk", count = 2, price = 200, weeklyLimit = 3 },
 		{ id = "essence1", kind = "material", item = "boss_essence", count = 1, price = 400, weeklyLimit = 2 },
 		{ id = "charm_core", kind = "gear", item = "charm-core", count = 1, price = 900, weeklyLimit = 1 },
+	},
+
+	-- The client's side (client/UiArena, ArenaReplay, ArenaTitles). Sizes are points / pixels, times are seconds.
+	View = {
+		-- the Arena sheet (a bottom sheet on a phone)
+		SheetWidth = 520,
+		SheetHeight = 480,
+		ClockSeconds = 1,
+		DaySeconds = 86400,
+		-- a request that got no answer is sent again once, with the same request id, after RetrySeconds; the state is looked at
+		-- again on a tab change when it is older than FreshSeconds
+		RetrySeconds = 1.5,
+		FreshSeconds = 5,
+		-- Battle: a rival's card, its small portraits (one built a frame), and how a rival's power reads against yours
+		-- (above DangerRatio times yours = danger, below FairRatio = easy, between = close)
+		CardHeight = 92,
+		Portrait = 38,
+		PortraitsPerFrame = 1,
+		DangerRatio = 1.15,
+		FairRatio = 0.85,
+		RankWidth = 44,
+		PowerWidth = 62,
+		-- a match is looked at every PollSeconds until the ladder holds it, for at most PollMaxSeconds
+		PollSeconds = 3,
+		PollMaxSeconds = 60,
+		-- the result card
+		ResultWidth = 340,
+		ResultHeight = 300,
+		ResultTextSize = 34,
+		-- Team: a seat on the strip
+		SlotSize = 52,
+		-- Ranking: a row, the rank badge, the gold / silver / bronze of the first three
+		RowHeight = 46,
+		BadgeWidth = 44,
+		BadgeHeight = 28,
+		PointsWidth = 72,
+		Medals = { "#f2b630", "#c9d2dc", "#c9854a" },
+		-- Shop: a card and its picture
+		ShopCard = 84,
+		ShopIcon = 52,
+		BuyWidth = 84,
+		-- Records: a quest row, the log's rows and how many it shows
+		QuestRow = 56,
+		LogRow = 40,
+		LogShown = 10,
+		StatBlock = 76,
+		-- The replay on the Pit (or in front of the player): the round field, how far each side stands from the middle, the
+		-- spacing and stagger of a side (the Dungeon squad's), the distance in front of the player, the lead-in and the hold
+		-- at the end, the speed of the x2 button, the ray that finds the ground, the side label
+		Replay = {
+			FieldRadius = 22,
+			SideGap = 6.5,
+			Spacing = 4.2,
+			Stagger = 1.4,
+			FrontStuds = 14,
+			LeadSeconds = 1.2,
+			EndHoldSeconds = 2.4,
+			SkipHoldSeconds = 2,
+			FastSpeed = 2,
+			StepSeconds = 0.03,
+			RayUp = 20,
+			RayDown = 80,
+			LabelWidth = 200,
+			LabelHeight = 30,
+			LabelLift = 6,
+			LabelDistance = 150,
+			ButtonWidth = 64,
+			-- a body that fell is faded to this transparency
+			FadeTransparency = 0.6,
+			FadeSeconds = 0.5,
+			-- hit points shown when the server does not say them: the share of the damage taken a survivor's full health is
+			SurvivorShare = 1.6,
+		},
+		-- The title over the head of a player in the top 10 (client/ArenaTitles): size in pixels, studs above the head, how far
+		-- it shows, text size, the ranks that sparkle and how (rate, studs the sparkle shows within, size), how often distances
+		-- are looked at, the shimmer's period and share of it that sweeps, and the colours of gold / silver / bronze / top 10
+		Title = {
+			Width = 240,
+			Height = 46,
+			Lift = 3.4,
+			-- studs kept clear above the tallest hat or wings
+			HatClearance = 1.6,
+			MaxDistance = 100,
+			TextSize = 32,
+			Top = 10,
+			SparkleRanks = 3,
+			SparkleRate = 3,
+			SparkleStuds = 60,
+			SparkleSize = 0.7,
+			SparkleLife = 1.3,
+			CheckSeconds = 0.5,
+			ShimmerHz = 30,
+			ScaleReference = 900,
+			ScaleMin = 0.7,
+			ScaleMax = 1.3,
+			ShimmerSeconds = 2.8,
+			ShimmerSweep = 0.55,
+			ShimmerLift = 0.55,
+			Colours = { "#ffd34e", "#e4ebf3", "#e0955a", "#5fbfff" },
+			Names = { "No.1 Arena", "No.2 Arena", "No.3 Arena", "Top 10 Arena" },
+		},
 	},
 }
 
