@@ -22,6 +22,7 @@ local UiSlimeList = require(script.Parent.UiSlimeList)
 local UiSlimes = require(script.Parent.UiSlimes)
 local UiSpots = require(script.Parent.UiSpots)
 local UiSquad = require(script.Parent.UiSquad)
+local ZombieTeams = require(script.Parent.ZombieTeams)
 
 local C = Config.VillageClient
 local U = Config.Ui
@@ -202,9 +203,19 @@ end
 
 -- ===== Picker =====
 
--- Only slimes that can be used are listed: grown, alive, with no job and not in the breeding program.
-local function available(slime: Configuration, spec: Pick, claimed: { [string]: boolean }): boolean
-	return UiSlimes.isFree(slime) and slime.Name ~= spec.exclude and not claimed[slime.Name]
+-- Why a grown, living slime cannot take the seat (the server refuses the same: Stations / Breeding), or nil when it can.
+-- The owner, 2026-11-06: the usable slimes first, the busy ones greyed at the end of the list.
+local function busyWhy(slime: Configuration, teams: { ZombieTeams.Team }): string?
+	if ZombieTeams.teamOf(slime.Name, teams) then
+		return "In a team."
+	elseif UiSlimes.job(slime) then
+		return "At work."
+	elseif UiSlimes.pair(slime) > 0 then
+		return "In a breeding pair."
+	elseif slime:GetAttribute("OutOnSquad") == true then
+		return reasons.OUT
+	end
+	return nil
 end
 
 -- Higher is better. Work: the fastest. Training: the weakest in the chosen stat. Pairing: the highest level, fed and rested.
@@ -220,7 +231,8 @@ local function score(slime: Configuration, spec: Pick): number?
 	return if fed and rested then UiSlimes.number(slime, "Level") else nil
 end
 
--- The usable slimes for the open seat; the best one for the job is marked (the list sorts the rest as the player chose).
+-- The slimes for the open seat: the usable ones, the best for the job marked (the list sorts them as the player chose), then
+-- the busy ones greyed with what they are doing (the list puts blocked entries last).
 local function pickEntries(): { UiSlimeList.Entry }
 	local spec = pick
 	if not spec then
@@ -233,13 +245,28 @@ local function pickEntries(): { UiSlimeList.Entry }
 	for id in pendingIds() do
 		claimed[id] = true
 	end
+	local teams = ZombieTeams.all()
 	for _, slime in UiSlimes.slimes(own) do
-		if available(slime, spec, claimed) then
+		if
+			not UiSlimes.isBaby(slime)
+			and not UiSlimes.isGhost(slime)
+			and slime.Name ~= spec.exclude
+			and not claimed[slime.Name]
+		then
 			local entry: UiSlimeList.Entry = { slime = slime }
 			table.insert(free, entry)
-			local value = score(slime, spec)
-			if value and value > bestScore then
-				best, bestScore = entry, value
+			local why = busyWhy(slime, teams)
+			if why then
+				local team = ZombieTeams.teamOf(slime.Name, teams)
+				entry.blocked, entry.why = true, why
+				entry.mark = if team
+					then { text = tostring(team), colour = "GoldLight" }
+					else UiSlimeList.stateMark(slime)
+			else
+				local value = score(slime, spec)
+				if value and value > bestScore then
+					best, bestScore = entry, value
+				end
 			end
 		end
 	end
