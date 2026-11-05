@@ -526,7 +526,7 @@ local function drawOpponents(list: ScrollingFrame, token: number)
 			end
 		end
 		local power = num(entry.power, 0)
-		stat(body, "speed", short(power), { AnchorPoint = Vector2.new(1, 0), Position = UDim2.fromScale(1, 0) })
+		stat(body, "arenaPower", short(power), { AnchorPoint = Vector2.new(1, 0), Position = UDim2.fromScale(1, 0) })
 		local style = if mine <= 0
 			then "primary"
 			elseif power > mine * W.DangerRatio then "danger"
@@ -724,7 +724,7 @@ local function drawTeam(host: Frame, token: number)
 		Padding = UDim.new(0, U.Gap * 2),
 		SortOrder = Enum.SortOrder.LayoutOrder,
 	}, strip)
-	local _, powerLabel = stat(strip, "speed", short(num(if s then s.power else nil, 0)), { LayoutOrder = 1 })
+	local _, powerLabel = stat(strip, "arenaPower", short(num(if s then s.power else nil, 0)), { LayoutOrder = 1 })
 	powerLabel.TextSize = U.TextNormal
 	local count = UiKit.label(strip, "", U.TextNormal, "BrownSoft", {
 		LayoutOrder = 2,
@@ -833,23 +833,28 @@ local function rankRow(
 		UiKit.setFill(box, "GoldLight")
 	end
 	local place = if type(rank) == "number" then rank else 0
-	local medals: { string } = W.Medals :: any
-	local medal = medals[place]
-	local badge = UiKit.make("Frame", {
-		Name = "Badge",
-		AnchorPoint = Vector2.new(0, 0.5),
-		Position = UDim2.fromScale(0, 0.5),
-		Size = UDim2.fromOffset(W.BadgeWidth, W.BadgeHeight),
-		BackgroundColor3 = if medal then Color3.fromHex(medal) else UiKit.colour("CardDeep"),
-		BorderSizePixel = 0,
-	}, body)
-	UiKit.make("UICorner", { CornerRadius = UDim.new(0.5, 0) }, badge)
-	local number = UiKit.label(badge, rankText(rank), U.TextSmall, "Brown", {
-		Size = UDim2.fromScale(1, 1),
-		TextXAlignment = Enum.TextXAlignment.Center,
-	})
-	if medal then
-		UiKit.outline(number, true)
+	if place >= 1 and place <= 3 then
+		-- ranks 1-3 are their medal's picture
+		local size = math.min(W.BadgeWidth, W.RowHeight)
+		UiKit.icon(body, "arenaMedal" .. place, size, {
+			Name = "Badge",
+			AnchorPoint = Vector2.new(0, 0.5),
+			Position = UDim2.new(0, (W.BadgeWidth - size) / 2, 0.5, 0),
+		})
+	else
+		local badge = UiKit.make("Frame", {
+			Name = "Badge",
+			AnchorPoint = Vector2.new(0, 0.5),
+			Position = UDim2.fromScale(0, 0.5),
+			Size = UDim2.fromOffset(W.BadgeWidth, W.BadgeHeight),
+			BackgroundColor3 = UiKit.colour("CardDeep"),
+			BorderSizePixel = 0,
+		}, body)
+		UiKit.make("UICorner", { CornerRadius = UDim.new(0.5, 0) }, badge)
+		UiKit.label(badge, rankText(rank), U.TextSmall, "Brown", {
+			Size = UDim2.fromScale(1, 1),
+			TextXAlignment = Enum.TextXAlignment.Center,
+		})
 	end
 	local rightWidth = W.PowerWidth + W.PointsWidth + U.Gap
 	UiKit.label(body, name, U.TextSmall, "Brown", {
@@ -870,7 +875,7 @@ local function rankRow(
 		Padding = UDim.new(0, U.Gap),
 		SortOrder = Enum.SortOrder.LayoutOrder,
 	}, group)
-	stat(group, "speed", short(num(power, 0)), { LayoutOrder = 1 })
+	stat(group, "arenaPower", short(num(power, 0)), { LayoutOrder = 1 })
 	-- (rivals never earn season points: a column of zeros says nothing, so only a real score shows)
 	if num(points, 0) > 0 then
 		stat(group, "arenaPoints", short(num(points, 0)), { LayoutOrder = 2 })
@@ -1072,7 +1077,7 @@ local function drawRecords(host: Frame, token: number)
 		})
 		UiKit.icon(
 			body,
-			"attack",
+			if done then "arenaQuest" else "attack",
 			U.IconNormal,
 			{ AnchorPoint = Vector2.new(0, 0.5), Position = UDim2.fromScale(0, 0.5) }
 		)
@@ -1100,14 +1105,6 @@ local function drawRecords(host: Frame, token: number)
 			"+" .. num(quest.points, 0),
 			{ AnchorPoint = Vector2.new(1, 0), Position = UDim2.fromScale(1, 0) }
 		)
-		if done then
-			UiKit.label(body, "Done", U.TextSmall, "GreenDark", {
-				AnchorPoint = Vector2.new(1, 1),
-				Position = UDim2.fromScale(1, 1),
-				Size = UDim2.fromOffset(rightWidth, U.TextSmall + 6),
-				TextXAlignment = Enum.TextXAlignment.Right,
-			})
-		end
 	end
 	-- the log
 	local logBox = UiKit.make("Frame", {

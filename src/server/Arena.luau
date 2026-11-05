@@ -246,7 +246,6 @@ local function settleOne(player: Player): string
 	if action == "confirm" and outcome then
 		doneRequest[player] = pending.requestId
 		lastReply[player] = nil
-		logs[player] = nil
 		print(
 			PREFIX,
 			string.format(
@@ -264,6 +263,8 @@ local function settleOne(player: Player): string
 		PlayerData.markKeyMoment(player, "arena match")
 		local mine, theirs = ArenaPlay.logEntries(pending, outcome, tostring(userId), nameOf(player), granted, now)
 		s.appendLog(userId, mine)
+		-- (the cached log is dropped only now: a log asked for between the confirm and the append would miss this match)
+		logs[player] = nil
 		if theirs then
 			s.appendLog(tonumber(pending.defender) :: number, theirs)
 		end
@@ -282,12 +283,16 @@ local function settleOne(player: Player): string
 	elseif action == "resend" then
 		local live = PlayerData.get(player)
 		local result = if live then ArenaRules.result(live, userId, nameOf(player)) else nil
-		if result and result.seq == pending.seq and s.submit(result) then
+		if result and result.seq == pending.seq then
+			-- (marked sent even when the queue refused it: the next try waits ResendSeconds, not one settle tick)
+			local sent = s.submit(result)
 			local sentAt = clock()
 			PlayerData.update(player, function(l: any)
 				ArenaRules.markSent(l, sentAt)
 			end)
-			print(PREFIX, "arena:", player.Name, "match", pending.matchId, "sent again")
+			if sent then
+				print(PREFIX, "arena:", player.Name, "match", pending.matchId, "sent again")
+			end
 		end
 	end
 	return action
@@ -1088,6 +1093,10 @@ function Arena.debug.endSeason(): (boolean, string)
 	if not studio() then
 		return false, NOT_STUDIO
 	end
+	-- (never on the real stores: it would close the live season's ladder for every player)
+	if not ArenaStore.memoryStores() then
+		return false, "Only on the Studio memory ladder"
+	end
 	local season = ArenaSeason.seasonOf(clock())
 	local s = store
 	-- (the results in flight reach the ladder first: their queue items would expire in the jump)
@@ -1113,15 +1122,15 @@ function Arena.debug.clockReset(): (boolean, string)
 	if not studio() then
 		return false, NOT_STUDIO
 	end
+	local deps = ArenaStore.memoryStores()
+	if not deps then
+		return false, "Only on the Studio memory ladder"
+	end
 	if offset == 0 then
 		return true, "The clock is already real"
 	end
 	offset = 0
 	table.clear(offered)
-	local deps = ArenaStore.memoryStores()
-	if not deps then
-		return true, "Clock reset"
-	end
 	local season = ArenaSeason.seasonOf(clock())
 	local lease = deps.memory:GetHashMap(A.LeaseMapName)
 	pcall(function()
@@ -1152,6 +1161,9 @@ end
 function Arena.debug.pauseLeader(): (boolean, string)
 	if not studio() then
 		return false, NOT_STUDIO
+	end
+	if not ArenaStore.memoryStores() then
+		return false, "Only on the Studio memory ladder"
 	end
 	leaderPaused = not leaderPaused
 	print(PREFIX, "arena: debug leader ticks", if leaderPaused then "paused" else "back on")

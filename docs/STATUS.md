@@ -1,5 +1,23 @@
 # Status
 
+## 2026-11-05 — Arena stage 3: the screen, replay, titles, shop, the building, balance, review (start here)
+
+Everything about the Arena is in `docs/ARENA.md`.
+- Screen `UiArena` (Battle, Team, Ranking, Shop, Records), the replay on the Arena's sand (`ArenaReplay`, no camera
+  effects), the "No.1 Arena" / "Top 10 Arena" title over heads (`ArenaTitles`), the shop on the server.
+- The building (`tools/map/build_arena.luau`): beside the Market, in the lane towards plot 1 (the only flat ground big
+  enough); Quick Travel "Arena", a gate prompt, the ranking board. **It is in MapWork only after the owner presses Ctrl+S
+  there** (it was built and checked in StudioTest).
+- Balance by simulated fights (`tools/balance/arena_sim.luau`): bots 8.75..150, every rival list keeps one team just
+  below so a settled team still wins fights; a growing player earns ~160-230 points a day.
+- Review and security audit: no way found for a client to cheat or count anything twice. Fixed: debug season tools only
+  on the memory ladder, the publish check covers `Config.Arena.StudioUsesRealStore`, resend backs off, a shorter queue
+  life, fewer ladder reads, a log race that could show "Match cancelled" for a confirmed match, a replay could clear a
+  dungeon run's field.
+- Open: the ladder's scale work before thousands of players a month (`docs/ARENA.md`, "Not yet proven"); the
+  building's missing pictures (crests, numerals, lettering); a phone-frame look at the screen; real stores only after a
+  publish (schema 11: shut down old servers).
+
 ## 2026-11-05 — Arena stages 1 and 2, the owner's Studio debug menu
 
 The owner asked for an asynchronous PVP Arena (plan v2: `C:\Users\ngotr\.claude\plans\sorted-meandering-stearns.md`) and

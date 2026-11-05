@@ -161,7 +161,12 @@ for _, service in place:GetChildren() do
 	end
 end
 
-if Config.Save.StudioUsesRealStore or Config.Pads.FreeUpgrades or Config.Leaderboard.StudioUsesRealStore then
+if
+	Config.Save.StudioUsesRealStore
+	or Config.Pads.FreeUpgrades
+	or Config.Leaderboard.StudioUsesRealStore
+	or Config.Arena.StudioUsesRealStore
+then
 	problem("a test switch in Config is on")
 end
 

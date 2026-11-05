@@ -12,6 +12,7 @@ local TweenService = game:GetService("TweenService")
 
 local Config = require(ReplicatedStorage.Shared.Config)
 local Layout = require(ReplicatedStorage.Shared.Layout)
+local ArenaReplay = require(script.Parent.ArenaReplay)
 local FightFx = require(script.Parent.FightFx)
 local MonsterLook = require(script.Parent.MonsterLook)
 local SlimeActor = require(script.Parent.SlimeActor)
@@ -375,6 +376,8 @@ end
 -- The run begins: the field is made ready, the squad stands in a row across the middle (a little towards the player, facing
 -- away from them into the arena).
 local function onStart(event: { [string]: any })
+	-- (an Arena replay still playing shares ZombieFight's field: it ends first, so its finish cannot clear the run's)
+	ArenaReplay.stop()
 	clearAll()
 	local plot = ZombieTeams.plot()
 	if not plot or type(event.members) ~= "table" then

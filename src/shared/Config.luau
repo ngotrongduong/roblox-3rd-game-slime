@@ -3150,6 +3150,12 @@ Config.Ui = {
 		arenaPoints = 115001232698763, -- the gold slime medal coin: the Arena points
 		arenaTicket = 110984086281837, -- the attack ticket
 		arena = 113759764912682, -- the emblem: shield, crown, crossed swords
+		-- the Arena's ranks 1-3 (slime-face medals), a team's power (the jelly fist), a quest done (the green tick)
+		arenaMedal1 = 137250655789281,
+		arenaMedal2 = 105851393851815,
+		arenaMedal3 = 75198332250507,
+		arenaPower = 117470476798117,
+		arenaQuest = 86809844247366,
 		-- the faint pictures of an empty gear slot on the slime's page
 		slotWeapon = 72608277069089,
 		slotHead = 87341761427328,
@@ -3537,8 +3543,9 @@ Config.Arena = {
 	-- An item read and not removed comes back after this long (the leader then waits this long before reading again, so
 	-- the items come back in their order).
 	InvisibleSeconds = 30,
-	-- A queued result is kept this long before MemoryStore drops it.
-	QueueItemSeconds = 3 * 86400,
+	-- A queued result is kept this long before MemoryStore drops it (short: a lost item is sent again after ResendSeconds,
+	-- and a stalled leader must not let copies fill the MemoryStore quota the lease shares).
+	QueueItemSeconds = 2 * 3600,
 	-- Ladder writes stay within this many bytes a minute: a document over 250 KB (WriteBytesPerMinute / 4 writes a
 	-- minute) is written less often than every tick. Never two writes of one key closer than MinWriteSeconds (DataStore's
 	-- limit is one write a key every 6 s). A document past WarnDocBytes logs a warning (the DataStore limit is 4 MB).
@@ -3558,8 +3565,10 @@ Config.Arena = {
 	-- Matches in flight are looked at every SettleSeconds against a ladder at most SettleReadSeconds old; ranks follow the
 	-- ladder every LadderRefreshSeconds; a past season's ladder is read for its reward at most every ClaimReadSeconds. A past
 	-- season with no ladder written (nobody played it) is closed with no reward ClaimGraceSeconds after its final time.
+	-- (SettleReadSeconds = TickSeconds: the leader writes no oftener, and every server reading the one ladder key every 5 s
+	-- would reach DataStore's per-key read limit with a few busy servers)
 	SettleSeconds = 5,
-	SettleReadSeconds = 5,
+	SettleReadSeconds = 15,
 	LadderRefreshSeconds = 60,
 	ClaimReadSeconds = 300,
 	ClaimGraceSeconds = 3600,

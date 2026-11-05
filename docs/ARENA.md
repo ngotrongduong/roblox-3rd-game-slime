@@ -83,7 +83,9 @@ changed under the attacker, and 50 servers' load.
 ## Testing in Studio
 
 - `lune run tools/build_publish.luau studio` builds `assets/raw/StudioTest.rbxl` with the owner's debug menu (`OwnerDebug`,
-  `UiDebug`, `DebugPresets`); the publish build removes them and checks they are gone.
+  `UiDebug`, with the pure list `DebugPresets`); the publish build removes `OwnerDebug` and `UiDebug` and checks they are
+  gone (`DebugPresets` stays: nothing else requires it). The season tools (End season, Clock reset, Pause leader) refuse
+  unless the Arena runs on the in-memory stores.
 - In Studio the Arena uses in-memory stores unless `StudioUsesRealStore` is on (off in anything committed).
 - The debug menu's Arena group: Open Arena, Team: best 4, Opponents, Attack 1st, Arena state, Tickets 10, Rank 1 / 7 / 50,
   +1000 Arena points, End season, Clock reset, Fake servers x5, Pause leader.
@@ -91,7 +93,12 @@ changed under the attacker, and 50 servers' load.
 
 ## Not yet proven
 
+- **Scale** (review, 2026-11-05). Every server reads the one `Ladder_<season>` key (at most every `SettleReadSeconds`), and
+  the document grows ~165 bytes per player who sets a team that month. Before the Arena has thousands of players a month:
+  the leader writes each outcome to a small MemoryStore map that settling reads instead of the whole ladder, and players
+  who never attacked leave the document well before DataStore's 4 MB a key (`WarnDocBytes` warns at 1 MB, ~6,000 players).
+  The defence snapshot cache in `ArenaStore` is never trimmed (grows over a server's life).
 - Real DataStore and MemoryStore with several live servers: only after a publish. That publish changes the save shape
   (schema 11), so it must shut down all old servers.
-- Missing pictures (ordered from ChatGPT): medals 1-3, the quest tick, the power icon, the sand crest, the shield crests,
-  the podium numerals, the ARENA and RANKING lettering.
+- Missing pictures for the building: the sand crest, the shield crests, the podium numerals, the ARENA and RANKING
+  lettering (the screen's medals, power and quest icons came from ChatGPT on 2026-11-05).
