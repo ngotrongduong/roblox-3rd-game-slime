@@ -3567,6 +3567,16 @@ Config.Arena = {
 	-- A player's last BuyRequestsKept shop buys are remembered by request id, so a re-sent one buys nothing twice.
 	BuyRequestsKept = 8,
 
+	-- The Arena building (tools/map/build_arena.luau, workspace.Map.Arena): its pit's centre in the Market's frame (x across,
+	-- z along the radius, as Config.Market's spots), in the lane between the Market and plot 1, the only flat ground big
+	-- enough near the Market. Quick travel lands LandingZ studs south of the pit's centre (on the path, 10 past the arch),
+	-- facing the arch. The gate's prompt (PromptLift studs over the arch's floor) opens the Arena screen within PromptStuds,
+	-- so it shows from the landing.
+	Site = { x = -205, z = 78 },
+	LandingZ = 72,
+	PromptStuds = 16,
+	PromptLift = 3,
+
 	-- The Arena shop (ArenaRules.buy / shop): points buy dungeon materials and one piece of gear the Smithy cannot sell.
 	-- In list order. `kind` "material" -> farm.materials[item] (an id of Config.Dungeon.Materials); "gear" -> the bag
 	-- (farm.gear[item], an id of Config.Smithy.Gear). `count` is what one buy gives, `price` its Arena points, `weeklyLimit`
@@ -3583,6 +3593,9 @@ Config.Arena = {
 
 	-- The client's side (client/UiArena, ArenaReplay, ArenaTitles). Sizes are points / pixels, times are seconds.
 	View = {
+		-- the Arena building's ranking board (client/ArenaHall): pixels per stud of its face, how many rows, how often it is
+		-- asked again while the player is within NearStuds of it
+		Board = { PixelsPerStud = 50, Rows = 8, RefreshSeconds = 60, NearStuds = 90 },
 		-- the Arena sheet (a bottom sheet on a phone)
 		SheetWidth = 520,
 		SheetHeight = 480,
@@ -3634,6 +3647,11 @@ Config.Arena = {
 			Spacing = 4.2,
 			Stagger = 1.4,
 			FrontStuds = 14,
+			-- the Arena's Pit is the field only for a player within PitStuds of it (one far away watches in front of them)
+			PitStuds = 120,
+			-- a player farther out steps onto the sand WatchStuds from the middle on the orange gate's side, WatchLift up
+			WatchStuds = 24,
+			WatchLift = 3,
 			LeadSeconds = 1.2,
 			EndHoldSeconds = 2.4,
 			SkipHoldSeconds = 2,

@@ -22,6 +22,7 @@ local chips: { [string]: UiKit.Chip } = {}
 local lastOwn: Folder? = nil
 local rewardsButton: ImageButton? = nil
 local bagButton: ImageButton? = nil
+local arenaButton: ImageButton? = nil
 local badge: TextLabel? = nil
 -- Whether the coins were at the cap at the last look; nil until the vault's cap is known.
 local coinsFull: boolean? = nil
@@ -132,9 +133,18 @@ function UiHud.start(
 		Padding = UDim.new(0, U.Gap),
 		SortOrder = Enum.SortOrder.LayoutOrder,
 	}, group)
-	UiKit.roundButton(group, "market", U.TravelButton, function()
+	local market = UiKit.roundButton(group, "market", U.TravelButton, function()
 		onTravel("Market")
 	end, { LayoutOrder = 1 })
+	-- Quick travel to the Arena sits in the Market's row, just left of it (the Arena stands beside the Market; a child of the
+	-- Market button, so the column stays as tall as it was). Shown with the trophy, once the tutorial is over.
+	arenaButton = UiKit.roundButton(market, "arena", U.TravelButton, function()
+		onTravel("Arena")
+	end, {
+		AnchorPoint = Vector2.new(1, 0.5),
+		Position = UDim2.new(0, -U.Gap, 0.5, 0),
+		Visible = false,
+	})
 	UiKit.roundButton(group, "home", U.TravelButton, function()
 		onTravel("Home")
 	end, { LayoutOrder = 2 })
@@ -217,6 +227,9 @@ function UiHud.rewards(own: Folder?)
 	button.Visible = own:GetAttribute("RewardsOpen") == true
 	if bagButton then
 		bagButton.Visible = button.Visible
+	end
+	if arenaButton then
+		arenaButton.Visible = button.Visible
 	end
 	local ready = own:GetAttribute("RewardsReady")
 	local count = if type(ready) == "number" then ready else 0

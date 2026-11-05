@@ -1324,4 +1324,9 @@ function UiArena.close()
 	end
 end
 
+-- The server's Arena state (the same answer the screen draws), for the Arena building's ranking board (client/ArenaHall).
+function UiArena.state(): Json
+	return call({ action = "state" })
+end
+
 return UiArena

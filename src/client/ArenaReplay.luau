@@ -184,7 +184,25 @@ local function field(): (Vector3, Vector3)
 	elseif pit and pit:IsA("Model") then
 		centre = pit:GetPivot().Position
 	end
-	if centre then
+	if centre and (here - centre).Magnitude <= R.PitStuds then
+		-- A player outside the stands cannot see the sand past the arch: they step onto the sand on the orange gate's side
+		-- (WatchStuds from the middle, facing it), so their team lines up between them and the rivals. Their own character
+		-- moves; the camera is left alone (no camera effects in fights).
+		local spot = zone and zone:FindFirstChild("OrangeSpot")
+		if character and spot and spot:IsA("BasePart") and flat(here - centre).Magnitude > R.WatchStuds + 2 then
+			local side = flat(spot.Position - centre)
+			side = if side.Magnitude > 1e-3 then side.Unit else Vector3.zAxis
+			local watch = centre + side * R.WatchStuds + Vector3.new(0, R.WatchLift, 0)
+			character:PivotTo(CFrame.lookAt(watch, Vector3.new(centre.X, watch.Y, centre.Z)))
+			here = watch
+			-- (once, as quick travel does: the camera comes round behind the character, keeping its distance and height)
+			local camera = workspace.CurrentCamera
+			if camera then
+				local offset = camera.CFrame.Position - camera.Focus.Position
+				local away = flat(watch - centre).Unit * Vector3.new(offset.X, 0, offset.Z).Magnitude
+				camera.CFrame = CFrame.lookAt(watch + away + Vector3.new(0, offset.Y, 0), watch)
+			end
+		end
 		local toward = flat(here - centre)
 		return centre, if toward.Magnitude > 1e-3 then toward.Unit else Vector3.zAxis
 	end

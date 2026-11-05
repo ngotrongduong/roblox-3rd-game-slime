@@ -436,3 +436,27 @@ was left there (this game has none); read it there if a cave is ever wanted.
   a reason, spread over the area, one of a kind, mounted things centred and even; export the kit after his Ctrl+S.
 - 2026-10-28. The owner often plays in the same Studio: generate_mesh fails in Play ("only from the server"), so stop
   Play only after watching his character stand still 20-40 s, and write code while he plays.
+- 2026-11-05 (the Arena, `tools/map/build_arena.luau`, `check_arena.luau`). An MCP `run` script cannot always `require` the
+  shared Config/Layout ("Capabilities property: Network"): wrap it in `pcall` and keep the few numbers (GroundY, the market
+  frame) as fallbacks. `run` prints only what the script returns, never `print`. `shot` works on a Studio you open yourself
+  with `Start-Process` on the .rbxlx.
+- 2026-11-05. `generate_mesh` for a gold crown came back peach and jagged (two tries, one failed outright). A flat symbol
+  that must be a clean gold is quicker and truer from parts: a block band, three wedge-pair points with ball tips, a ball
+  gem. Take a bad generated model OUT of the kit again, and do not index it.
+- 2026-11-05. The kit's `CrownCrest` is the VIP's purple shield: never reuse it as "a crown".
+- 2026-11-05. A white sticker plaque round a transparent emblem decal looks pasted on: make the plaque the colour of what it
+  hangs on (blue on a blue banner, cream on the cream lintel). `Config.Ui.Icons.arena` (shield, crown, swords) works as a
+  Decal id for the Arena's emblem until the slime-face crest exists.
+- 2026-11-05. Neon over-brightens: a (96,178,255) glow read cyan and (255,150,112) read yellow from far. Pick the glow
+  colour 40-60 darker and more saturated than the painting ((36,96,255) blue, (255,84,60) orange).
+- 2026-11-05. Lilac ambient greys cream: use a warmer cream ((255,238,196) / (244,224,178)) and a more saturated sand
+  ((230,188,118)) than the painting's own values, and judge from a shot, not from the numbers.
+- 2026-11-05. A round pit from studs: a stack of 2-stud-thick rows of one block each, clipped to the circle, keeps the
+  Roblox stud look (a cylinder cannot take studs). Ring pieces (stands, rim) as blocks laid tangent with their length from
+  `2*r*tan(dA/2)`.
+- 2026-11-05. A check that walks a 3-wide body needs a margin: the free circle of a 30-stud pit is radius 28 for the body's
+  centre, else it reports the rim. Measure "how far out" from the 8 corners of each part (a long fence rail's half-length
+  added to its centre overshoots by tens of studs).
+- 2026-11-05. The flat floor behind the Market is only 690 studs across and hills rise at once: a 110 x 130 stud site fits
+  only in the lane between the Market and plot 1, and plot 1's edge (a rotated square) must be kept 25 studs from every item.
+- 2026-11-05. The Edit tool fails on multi-line `old_string` in the .luau builders (CRLF line ends): replace one line at a time.
