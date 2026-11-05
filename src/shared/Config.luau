@@ -3631,8 +3631,6 @@ Config.Arena = {
 		CheerLoss = { Height = 0.6, Seconds = 1.5 },
 		-- The ray that finds the Pit's top (studs up from its middle, and down past it).
 		PitRayUp = 20,
-		-- The look-alike's idle: the Animate script's idle animation is played on it when the character has one.
-		AvatarIdle = "idle",
 	},
 
 	-- The Arena shop (ArenaRules.buy / shop): points buy dungeon materials and one piece of gear (also a Smithy recipe; here a shortcut).

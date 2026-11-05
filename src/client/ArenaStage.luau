@@ -2,15 +2,14 @@
 -- The Arena as its own scene, drawn on THIS client only (docs/ARENA.md). `ReplicatedStorage.ArenaStage` is a model (the
 -- scene artist builds it in MapWork; its named parts are listed below). When the player attacks, `enter` fades the screen, puts
 -- this client's own copy of the model far from the map (Config.Arena.Stage.Origin), points a still camera at the pit from the
--- stands, switches the player's controls off, stands a look-alike of their character in the front row and hands the pit's
--- middle to the replay (ArenaReplay). `leave` fades again, takes everything away and gives the camera and controls back exactly
+-- stands, switches the player's controls off and hands the pit's middle to the replay (ArenaReplay). The player is not in the
+-- scene, only the camera (the owner, 2026-11-05). `leave` fades again, takes everything away and gives the camera and controls back exactly
 -- as they were. Nobody else sees any of it, so many players on one server can watch their own fights at once. No camera effects.
 --
 -- The model's children (found by name, anywhere below it):
 --   Pit (BasePart)         the round sand; its top surface's middle is the field's middle.
 --   BlueSpot / OrangeSpot  parts on the sand: the player's side and the rival's side.
 --   View (BasePart)        its CFrame is the camera's seat in the stands behind the blue side.
---   Avatar (BasePart)      optional: where a look-alike of the player's character stands, facing the pit.
 --   Crowd (Folder)         optional: invisible parts named Spot, one a seat (CFrame = the slime's feet, facing the pit). This client
 --                          fills them with the game's own slimes (SlimeLook, a still face) in the background (`prepare`); a few
 --                          of them hop a little and all cheer when the fight ends.
@@ -56,8 +55,6 @@ local state = "out"
 -- bumped by every enter / leave: a fade that finishes after a newer one began does nothing
 local epoch = 0
 local stage: Model? = nil
-local avatar: Model? = nil
-local avatarTrack: AnimationTrack? = nil
 local saved: Saved? = nil
 local controlsOff: any = nil
 local spectators: { Spectator } = {}
@@ -236,91 +233,6 @@ local function switchControlsOn()
 	controlsOff = nil
 	if controls then
 		controls:Enable()
-	end
-end
-
--- ===== The look-alike =====
-
-local function makeAvatar(spot: BasePart, centre: Vector3)
-	local character = player.Character
-	if not character then
-		return
-	end
-	local was = character.Archivable
-	character.Archivable = true
-	local copy = character:Clone()
-	character.Archivable = was
-	if not copy then
-		return
-	end
-	copy.Name = "ArenaAvatar"
-	-- The idle pose comes from the character's own Animate script (its `idle` folder), read before the scripts go.
-	local idleId: string? = nil
-	local animate = copy:FindFirstChild("Animate")
-	local idle = if animate then animate:FindFirstChild(S.AvatarIdle) else nil
-	local clip = if idle then idle:FindFirstChildWhichIsA("Animation") else nil
-	if clip then
-		idleId = clip.AnimationId
-	end
-	for _, inst in copy:GetDescendants() do
-		if inst:IsA("LuaSourceContainer") then
-			inst:Destroy()
-		end
-	end
-	for _, inst in copy:GetDescendants() do
-		if inst:IsA("BasePart") then
-			inst.Anchored = true
-			inst.CanCollide = false
-			inst.CanTouch = false
-			inst.CanQuery = false
-		end
-	end
-	local humanoid = copy:FindFirstChildOfClass("Humanoid")
-	if humanoid then
-		humanoid.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.None
-		humanoid.HealthDisplayType = Enum.HumanoidHealthDisplayType.AlwaysOff
-		humanoid.BreakJointsOnDeath = false
-		for _, kind in Enum.HumanoidStateType:GetEnumItems() do
-			if kind ~= Enum.HumanoidStateType.None then
-				pcall(function()
-					humanoid:SetStateEnabled(kind, false)
-				end)
-			end
-		end
-	end
-	-- Facing the pit, feet on the spot's top surface.
-	local top = Vector3.new(spot.Position.X, spot.Position.Y + spot.Size.Y / 2, spot.Position.Z)
-	copy:PivotTo(CFrame.lookAt(top, Vector3.new(centre.X, top.Y, centre.Z)))
-	local box, size = copy:GetBoundingBox()
-	copy:PivotTo(copy:GetPivot() + Vector3.new(0, top.Y - (box.Position.Y - size.Y / 2), 0))
-	copy.Parent = stage
-	avatar = copy
-	local animator = if humanoid then humanoid:FindFirstChildOfClass("Animator") else nil
-	if animator and idleId then
-		local animation = Instance.new("Animation")
-		animation.AnimationId = idleId
-		local ok, track = pcall(function(): AnimationTrack
-			return animator:LoadAnimation(animation)
-		end)
-		if ok then
-			track.Looped = true
-			track:Play()
-			avatarTrack = track
-		end
-		animation:Destroy()
-	end
-end
-
-local function removeAvatar()
-	if avatarTrack then
-		pcall(function()
-			(avatarTrack :: AnimationTrack):Stop(0)
-		end)
-		avatarTrack = nil
-	end
-	if avatar then
-		avatar:Destroy()
-		avatar = nil
 	end
 end
 
@@ -568,7 +480,6 @@ end
 -- Everything this client put up, taken down; each step on its own so one failing leaves the rest done. Safe at any time.
 local function takeDown()
 	safe("crowd", stopCrowd)
-	safe("avatar", removeAvatar)
 	if stage then
 		stage.Parent = nil
 	end
@@ -617,12 +528,6 @@ local function putUp(template: Model): (Vector3, Vector3)
 	local toPlayer = if toward.Magnitude > 1e-3 then toward.Unit else Vector3.zAxis
 	takeCamera(view.CFrame, centre)
 	switchControlsOff()
-	local spot = find(scene, "Avatar")
-	if spot then
-		safe("avatar", function()
-			makeAvatar(spot, centre)
-		end)
-	end
 	safe("crowd", function()
 		startCrowd()
 	end)

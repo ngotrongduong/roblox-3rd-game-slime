@@ -70,18 +70,18 @@ The Arena is not a building on the farm map. It is a separate scene drawn on eac
 1. The player attacks (Arena round button beside the Market button, then Battle). The screen fades to the game's dark brown.
 2. While covered, `ArenaStage.enter` copies `ReplicatedStorage.ArenaStage` (once per session, kept) into `workspace.ArenaStageClient`
    at `Config.Arena.Stage.Origin` (0, 500, 9000: far beyond the map's rim, high above any roof), sets the camera Scriptable at the
-   model's `View` (still: no camera effects in fights), switches the player's controls off and stands a look-alike of their
-   character at `Avatar`. The server only simulates the fight; nobody else sees the scene, so any number of players on one server
+   model's `View` (still: no camera effects in fights) and switches the player's controls off. The player is not in the scene,
+   only the camera (the owner, 2026-11-05). The server only simulates the fight; nobody else sees the scene, so any number of players on one server
    watch their own fights at once.
 3. `ArenaReplay` stands both teams on the Pit (blue side towards `BlueSpot`) and replays the fight. The crowd hops now and then
    and cheers when it ends (more for a win), at most `Stage.CrowdMax` spectators moving.
-4. When it ends the screen fades, the scene goes (parent nil), the look-alike is destroyed, the camera (type, subject, CFrame,
+4. When it ends the screen fades, the scene goes (parent nil), the camera (type, subject, CFrame,
    focus) and controls are given back exactly, the screen fades in on the farm and the result card shows.
    `ArenaReplay.stop()` (a dungeon run starts, the screen closes) does the same at once, with no fade.
 
 The model's children, found by name anywhere below it: `Pit` (BasePart, the round sand; its top is the field's middle), `BlueSpot`
 and `OrangeSpot` (BaseParts on the sand), `View` (invisible BasePart: the camera's seat in the stands behind the blue side, looking at
-the pit), `Avatar` (invisible BasePart, optional: the player's look-alike stands there facing the pit), `Crowd` (Folder, optional: invisible
+the pit), `Crowd` (Folder, optional: invisible
 parts named `Spot`, one a seat, CFrame = the slime's feet facing the pit, attribute `Tier` 1..3). Each client fills the spots with the
 game's own slimes (`SlimeLook.build`, a still face from `SlimeFace.still`; a few looks built, the rest cloned) in the background,
 `ArenaStage.prepare()` (the Arena screen opening, or `enter`), `Stage.CrowdPerFrame` steps a frame. The model's WorldPivot is the Pit's centre. With no model in ReplicatedStorage `enter` changes nothing and the fight is

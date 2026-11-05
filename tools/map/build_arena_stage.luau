@@ -449,14 +449,11 @@ do
 			ball(deckF, "Ball", Vector3.new(sx * 33, 4.7, z), 1.8, 1.8, 1.8, COL.gold, { reflect = 0.08 })
 		end
 	end
-	-- the camera's seat, and where the player's look-alike stands (feet on the top of this part)
+	-- the camera's seat (the player is not in the scene, only the camera: the owner, 2026-11-05)
 	-- (the play test: from z 62 the blue gate's roof filled the lower half and the fighters were specks; from here, with
 	-- Config.Arena.Stage.FieldOfView 50, the sand fills the frame under the royal box and the gate is below the frame)
 	local view = mk(model, "View", Vector3.new(1, 1, 1), CFrame.new(0, 26.9, 50) * CFrame.Angles(-math.atan(18 / 58), 0, 0), COL.white, { trans = 1, shadow = false })
-	-- (on the sand behind the blue team, low left in the frame: the player stands with their slimes like a coach)
-	local avatar = mk(model, "Avatar", Vector3.new(2, 0.2, 2), CFrame.new(-14, -0.1, 17), COL.white, { trans = 1, shadow = false })
 	view.Name = "View"
-	avatar.Name = "Avatar"
 end
 
 -- ===== the royal box above the orange gate =====
@@ -649,8 +646,8 @@ local FLAGS = { COL.blue, COL.orange }
 local flagF = folder(model, "CrowdFlags")
 local seatCount = 0
 local function seat(tier: any, rr: number, aDeg: number, t: number)
-	local pos = polar(rr, aDeg, tier.floor)
-	local cf = CFrame.lookAt(pos, Vector3.new(0, tier.floor, 0))
+	-- (ringCF's look vector points at the middle; Lune's CFrame.lookAt turned the seats every which way)
+	local cf = ringCF(rr, aDeg, tier.floor)
 	local spot = mk(crowd, "Spot", Vector3.new(0.4, 0.4, 0.4), cf, COL.white, { trans = 1, shadow = false })
 	spot:SetAttribute("Tier", t)
 	seatCount += 1

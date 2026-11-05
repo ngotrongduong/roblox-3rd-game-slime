@@ -8,7 +8,7 @@ attacks on one server at once must work. Done, details in `docs/ARENA.md`:
   rounds): a colosseum with sand, crest, team gates, royal box, three tiers, braziers, bunting. Rojo ships it to
   ReplicatedStorage; `build_publish` copies it.
 - `client/ArenaStage`: on Attack the screen fades, this client's own copy stands far from the map, the camera sits in the
-  stands (FOV 50), controls are off, a look-alike of the player stands by the blue team; fade back afterwards. The
+  stands (FOV 50), controls are off; the player is not in the scene, only the camera; fade back afterwards. The
   server only simulates, so concurrent attacks cost nothing extra. The old building, its travel stop and prompt are gone.
 - The stands hold 127 of the game's REAL slimes (owner's wish): `Crowd` spots filled by `ArenaStage.prepare()` with
   SlimeLook bodies and a still face (`SlimeFace.still`), 6 a frame, some hop and all cheer at the end.
