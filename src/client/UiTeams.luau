@@ -347,6 +347,7 @@ local function openTeams(point: Vector3)
 						true, c.reason("OUT"), { text = tostring(owner), colour = "GoldLight" }
 				elseif owner then
 					entry.selected = mine ~= nil and owner == mine.index
+					entry.busy = not entry.selected
 					entry.mark = { text = tostring(owner), colour = if entry.selected then "Green" else "GoldLight" }
 				else
 					entry.mark = UiSlimeList.stateMark(slime)

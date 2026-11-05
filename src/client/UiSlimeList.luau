@@ -21,6 +21,9 @@ export type Entry = {
 	-- greyed and not tappable; a tap shows `why` instead
 	blocked: boolean?,
 	why: string?,
+	-- tappable but taken elsewhere (another team's member); like a blocked one it sorts after the free slimes (the owner,
+	-- 2026-11-06: the slimes that can be used come first, the busy ones at the end)
+	busy: boolean?,
 	mark: Mark?,
 	-- the best free slime for the job: pinned first, marked
 	suggested: boolean?,
@@ -303,6 +306,10 @@ end
 local function before(left: Entry, right: Entry): boolean
 	if (left.suggested == true) ~= (right.suggested == true) then
 		return left.suggested == true
+	end
+	local leftLate = left.blocked == true or left.busy == true
+	if leftLate ~= (right.blocked == true or right.busy == true) then
+		return not leftLate
 	end
 	local attribute = (U.SortAttributes :: any)[sortKey]
 	local x, y = UiSlimes.number(left.slime, attribute), UiSlimes.number(right.slime, attribute)
