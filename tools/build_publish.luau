@@ -57,6 +57,16 @@ if shared then
 	shared:Destroy()
 end
 code:GetService("ReplicatedStorage").Shared:Clone().Parent = place:GetService("ReplicatedStorage")
+-- The Arena scene is built by tools/map/build_arena_stage.luau into assets/ArenaStage.rbxm (the Rojo build carries it), so
+-- it comes from the code build like Shared, and a copy left in the work place never goes along.
+local oldStage = place:GetService("ReplicatedStorage"):FindFirstChild("ArenaStage")
+if oldStage then
+	oldStage:Destroy()
+end
+local newStage = code:GetService("ReplicatedStorage"):FindFirstChild("ArenaStage")
+if newStage then
+	newStage:Clone().Parent = place:GetService("ReplicatedStorage")
+end
 
 -- The owner's debug menu is for Studio only: these two modules (and nothing else) never reach players. The game finds them
 -- by name and runs without them (Main.server.luau, UiHud.luau). The check below fails the build if either is still here.
@@ -134,6 +144,10 @@ if not (map and map:FindFirstChild("Market")) then
 end
 if not place:GetService("ReplicatedStorage"):FindFirstChild("ClientKit") then
 	problem("no ReplicatedStorage.ClientKit")
+end
+-- The Arena scene (client/ArenaStage): without it a fight is replayed in front of the player.
+if not place:GetService("ReplicatedStorage"):FindFirstChild("ArenaStage") then
+	problem("no ReplicatedStorage.ArenaStage (run lune run tools/map/build_arena_stage.luau, then tools/check.ps1)")
 end
 
 -- The debug menu must be gone (a second look at the finished place, not a trust in the step above).

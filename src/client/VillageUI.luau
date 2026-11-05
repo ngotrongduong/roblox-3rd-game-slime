@@ -8,6 +8,7 @@ local HttpService = game:GetService("HttpService")
 
 local Config = require(ReplicatedStorage.Shared.Config)
 local FarmState = require(ReplicatedStorage.Shared.FarmState)
+local UiArena = require(script.Parent.UiArena)
 local UiBag = require(script.Parent.UiBag)
 local UiBook = require(script.Parent.UiBook)
 local UiFood = require(script.Parent.UiFood)
@@ -1121,6 +1122,8 @@ function VillageUI.start()
 				return own
 			end,
 		})
+	end, function()
+		UiArena.open()
 	end)
 
 	-- the daily check-in, quests and online gifts: the trophy's badge, the luck chip and the open sheet's clocks

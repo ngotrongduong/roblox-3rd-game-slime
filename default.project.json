@@ -13,6 +13,9 @@
 			"MonsterKit": {
 				"$path": "assets/MonsterKit.rbxm"
 			},
+			"ArenaStage": {
+				"$path": "assets/ArenaStage.rbxm"
+			},
 			"Remotes": {
 				"$className": "Folder"
 			}

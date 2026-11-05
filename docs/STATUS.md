@@ -1,6 +1,21 @@
 # Status
 
-## 2026-11-05 — Arena stage 3: the screen, replay, titles, shop, the building, balance, review (start here)
+## 2026-11-05 — The Arena is its own scene, seen by the attacker only (start here)
+
+The owner: the building was too plain and must not be on the main map; only the attacking player sees a fight; many
+attacks on one server at once must work. Done, details in `docs/ARENA.md`:
+- `assets/ArenaStage.rbxm` (built by `lune run tools/map/build_arena_stage.luau`, from ChatGPT concept art, 8 review
+  rounds): a colosseum with sand, crest, team gates, royal box, three tiers, braziers, bunting. Rojo ships it to
+  ReplicatedStorage; `build_publish` copies it.
+- `client/ArenaStage`: on Attack the screen fades, this client's own copy stands far from the map, the camera sits in the
+  stands (FOV 50), controls are off, a look-alike of the player stands by the blue team; fade back afterwards. The
+  server only simulates, so concurrent attacks cost nothing extra. The old building, its travel stop and prompt are gone.
+- The stands hold 127 of the game's REAL slimes (owner's wish): `Crowd` spots filled by `ArenaStage.prepare()` with
+  SlimeLook bodies and a still face (`SlimeFace.still`), 6 a frame, some hop and all cheer at the end.
+- Gate shields and the royal medallion are ChatGPT art (`art/icons/arena_shield_*.png`, `arena_emblem.png`).
+- Open: a phone-frame look at the scene; the owner's own look in Studio.
+
+## 2026-11-05 — Arena stage 3: the screen, replay, titles, shop, the building, balance, review
 
 Everything about the Arena is in `docs/ARENA.md`.
 - Screen `UiArena` (Battle, Team, Ranking, Shop, Records), the replay on the Arena's sand (`ArenaReplay`, no camera

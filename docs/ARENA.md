@@ -60,8 +60,32 @@ Champion 190. A fight is nearly decided by power (10% stronger wins about every 
 | Save | `farm.arena` (schema 11, `ProfileLogic.migrateArena`, checked in `FarmState.repair`) |
 | Stores | `src/server/ArenaStore` (DataStore `StoreName`: `Ladder_<season>`, `Def_<userId>`, `Log_<userId>`; MemoryStore queue `QueueName`, lease `LeaseMapName`); `ArenaMemory` is the in-memory MemoryStore used by Studio and the tests |
 | Service | `src/server/Arena` (`Remotes.Arena`: `state`, `setTeam`, `opponents`, `attack`, `buy`, `log`) |
-| Screens | `src/client/UiArena` (tabs Battle, Team, Ranking, Shop, Records), `ArenaReplay` (the fight on the sand, x2 and Skip, no camera effects), `ArenaTitles` |
-| Building | `tools/map/build_arena.luau` (built live in MapWork, checked by `check_arena.luau`), `src/client/ArenaHall` (gate prompt, ranking board), Quick Travel "Arena" (`Layout.arenaLanding`) |
+| Screens | `src/client/UiArena` (tabs Battle, Team, Ranking, Shop, Records; opened by the Arena round button of `UiHud`), `ArenaReplay` (the fight on the sand, x2 and Skip, no camera effects), `ArenaTitles` |
+| Scene | `src/client/ArenaStage` and the model `ReplicatedStorage.ArenaStage` (see "The Arena scene"); `Config.Arena.Stage` |
+
+## The Arena scene (owner's decision, 2026-11-05)
+
+The Arena is not a building on the farm map. It is a separate scene drawn on each player's own client:
+
+1. The player attacks (Arena round button beside the Market button, then Battle). The screen fades to the game's dark brown.
+2. While covered, `ArenaStage.enter` copies `ReplicatedStorage.ArenaStage` (once per session, kept) into `workspace.ArenaStageClient`
+   at `Config.Arena.Stage.Origin` (0, 500, 9000: far beyond the map's rim, high above any roof), sets the camera Scriptable at the
+   model's `View` (still: no camera effects in fights), switches the player's controls off and stands a look-alike of their
+   character at `Avatar`. The server only simulates the fight; nobody else sees the scene, so any number of players on one server
+   watch their own fights at once.
+3. `ArenaReplay` stands both teams on the Pit (blue side towards `BlueSpot`) and replays the fight. The crowd hops now and then
+   and cheers when it ends (more for a win), at most `Stage.CrowdMax` spectators moving.
+4. When it ends the screen fades, the scene goes (parent nil), the look-alike is destroyed, the camera (type, subject, CFrame,
+   focus) and controls are given back exactly, the screen fades in on the farm and the result card shows.
+   `ArenaReplay.stop()` (a dungeon run starts, the screen closes) does the same at once, with no fade.
+
+The model's children, found by name anywhere below it: `Pit` (BasePart, the round sand; its top is the field's middle), `BlueSpot`
+and `OrangeSpot` (BaseParts on the sand), `View` (invisible BasePart: the camera's seat in the stands behind the blue side, looking at
+the pit), `Avatar` (invisible BasePart, optional: the player's look-alike stands there facing the pit), `Crowd` (Folder, optional: invisible
+parts named `Spot`, one a seat, CFrame = the slime's feet facing the pit, attribute `Tier` 1..3). Each client fills the spots with the
+game's own slimes (`SlimeLook.build`, a still face from `SlimeFace.still`; a few looks built, the rest cloned) in the background,
+`ArenaStage.prepare()` (the Arena screen opening, or `enter`), `Stage.CrowdPerFrame` steps a frame. The model's WorldPivot is the Pit's centre. With no model in ReplicatedStorage `enter` changes nothing and the fight is
+replayed in front of the player, as before; `tools/build_publish.luau` prints a warning for it until the scene is built.
 
 ## Why results never get lost or counted twice
 
@@ -89,7 +113,7 @@ changed under the attacker, and 50 servers' load.
 - In Studio the Arena uses in-memory stores unless `StudioUsesRealStore` is on (off in anything committed).
 - The debug menu's Arena group: Open Arena, Team: best 4, Opponents, Attack 1st, Arena state, Tickets 10, Rank 1 / 7 / 50,
   +1000 Arena points, End season, Clock reset, Fake servers x5, Pause leader.
-- MapWork holds the building only once `tools/map/build_arena.luau` was run there and the owner pressed Ctrl+S.
+- The scene is not built yet: until `ReplicatedStorage.ArenaStage` exists a fight plays in front of the player.
 
 ## Not yet proven
 
@@ -100,5 +124,5 @@ changed under the attacker, and 50 servers' load.
   The defence snapshot cache in `ArenaStore` is never trimmed (grows over a server's life).
 - Real DataStore and MemoryStore with several live servers: only after a publish. That publish changes the save shape
   (schema 11), so it must shut down all old servers.
-- Missing pictures for the building: the sand crest, the shield crests, the podium numerals, the ARENA and RANKING
-  lettering (the screen's medals, power and quest icons came from ChatGPT on 2026-11-05).
+- The scene model itself (`ReplicatedStorage.ArenaStage`, a scene artist's job) and a way to carry it into the game like
+  `ClientKit` (the screen's medals, power and quest icons came from ChatGPT on 2026-11-05).

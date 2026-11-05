@@ -1,16 +1,18 @@
 --!strict
 -- The Arena fight replayed on this client only (nobody else sees it). The server runs the fight and answers an attack with its
--- steps ({ t, events }, src/shared/ArenaFight.luau); this file stands both teams on a flat round field (the Arena's Pit, else a
--- spot in front of the player), hands the bodies to ZombieFight (ZombieFight.adopt, as DungeonFight does for the Slime Dungeon)
+-- steps ({ t, events }, src/shared/ArenaFight.luau); this file enters the Arena scene (ArenaStage: the screen fades, this client's
+-- own copy of the stage is shown far from the map and the player watches from the stands; with no scene, a spot in front of the
+-- player), stands both teams on the round field it gives, hands the bodies to ZombieFight (ZombieFight.adopt, as DungeonFight does for the Slime Dungeon)
 -- and feeds it the steps at their time (ZombieFight.feed), so the blows, dodges, healing and falls are the ones every fight
 -- shows. Attackers are the ones with green bars, defenders red. A small x2 button and a Skip button sit on the right edge; one name
--- label per side hangs over its team. Everything made here is destroyed when the replay ends. No camera effects.
-local Players = game:GetService("Players")
+-- label per side hangs over its team. Everything made here is destroyed when the replay ends, then the screen fades back to
+-- where the player was. No camera effects.
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
 
 local Config = require(ReplicatedStorage.Shared.Config)
+local ArenaStage = require(script.Parent.ArenaStage)
 local FightFx = require(script.Parent.FightFx)
 local SlimeActor = require(script.Parent.SlimeActor)
 local SlimeLook = require(script.Parent.SlimeLook)
@@ -66,10 +68,6 @@ local function safe(label: string, work: () -> ())
 		warned[label] = true
 		warn(Config.LogPrefix, "arena replay", label, "error:", err)
 	end
-end
-
-local function flat(delta: Vector3): Vector3
-	return Vector3.new(delta.X, 0, delta.Z)
 end
 
 local function screenScale(): number
@@ -158,65 +156,8 @@ local function gather(answer: any, prefix: string, side: any, mine: boolean): { 
 	return units
 end
 
--- ===== The field =====
-
-local function floorY(point: Vector3, ignore: { Instance }): number
-	local params = RaycastParams.new()
-	params.FilterType = Enum.RaycastFilterType.Exclude
-	params.FilterDescendantsInstances = ignore
-	local hit = workspace:Raycast(point + Vector3.new(0, R.RayUp, 0), Vector3.new(0, -(R.RayUp + R.RayDown), 0), params)
-	return if hit then hit.Position.Y else point.Y
-end
-
--- The middle of the field (at the floor's top) and the direction from it towards the player.
-local function field(): (Vector3, Vector3)
-	local character = Players.LocalPlayer.Character
-	local root = if character then character:FindFirstChild("HumanoidRootPart") else nil
-	local here = if root and root:IsA("BasePart") then root.Position else Vector3.zero
-	local map = workspace:FindFirstChild("Map")
-	local zone = if map then map:FindFirstChild("Arena") else nil
-	local pit = if zone then zone:FindFirstChild("Pit") else nil
-	local centre: Vector3? = nil
-	if pit and pit:IsA("BasePart") then
-		centre = Vector3.new(pit.Position.X, pit.Position.Y + pit.Size.Y / 2, pit.Position.Z)
-	elseif pit and pit:IsA("Attachment") then
-		centre = pit.WorldPosition
-	elseif pit and pit:IsA("Model") then
-		centre = pit:GetPivot().Position
-	end
-	if centre and (here - centre).Magnitude <= R.PitStuds then
-		-- A player outside the stands cannot see the sand past the arch: they step onto the sand on the orange gate's side
-		-- (WatchStuds from the middle, facing it), so their team lines up between them and the rivals. Their own character
-		-- moves; the camera is left alone (no camera effects in fights).
-		local spot = zone and zone:FindFirstChild("OrangeSpot")
-		if character and spot and spot:IsA("BasePart") and flat(here - centre).Magnitude > R.WatchStuds + 2 then
-			local side = flat(spot.Position - centre)
-			side = if side.Magnitude > 1e-3 then side.Unit else Vector3.zAxis
-			local watch = centre + side * R.WatchStuds + Vector3.new(0, R.WatchLift, 0)
-			character:PivotTo(CFrame.lookAt(watch, Vector3.new(centre.X, watch.Y, centre.Z)))
-			here = watch
-			-- (once, as quick travel does: the camera comes round behind the character, keeping its distance and height)
-			local camera = workspace.CurrentCamera
-			if camera then
-				local offset = camera.CFrame.Position - camera.Focus.Position
-				local away = flat(watch - centre).Unit * Vector3.new(offset.X, 0, offset.Z).Magnitude
-				camera.CFrame = CFrame.lookAt(watch + away + Vector3.new(0, offset.Y, 0), watch)
-			end
-		end
-		local toward = flat(here - centre)
-		return centre, if toward.Magnitude > 1e-3 then toward.Unit else Vector3.zAxis
-	end
-	local look = if root and root:IsA("BasePart") then flat(root.CFrame.LookVector) else Vector3.zAxis
-	look = if look.Magnitude > 1e-3 then look.Unit else Vector3.zAxis
-	local ahead = here + look * R.FrontStuds
-	local ignore: { Instance } = { actorsFolder() }
-	if character then
-		table.insert(ignore, character)
-	end
-	return Vector3.new(ahead.X, floorY(ahead, ignore), ahead.Z), -look
-end
-
 -- ===== The session =====
+-- (the field itself, its middle and which way the player's side lies, comes from ArenaStage.enter)
 
 local function healthNode(maxHp: number): Configuration
 	local node = Instance.new("Configuration")
@@ -251,18 +192,8 @@ local function fadeOut(model: Model)
 	end
 end
 
-local function finish(session: Session, quiet: boolean)
-	if session.done then
-		return
-	end
-	session.done = true
-	if current == session then
-		current = nil
-	end
-	if session.connection then
-		session.connection:Disconnect()
-		session.connection = nil
-	end
+-- Everything the replay made on the field, destroyed.
+local function teardown(session: Session)
 	for id, body in session.bodies do
 		ZombieFight.release(id)
 		SlimeActor.destroy(body.actor)
@@ -276,11 +207,36 @@ local function finish(session: Session, quiet: boolean)
 		inst:Destroy()
 	end
 	table.clear(session.extras)
+end
+
+-- The replay is over. Quiet (stop): everything goes at once and no one is told. Otherwise the screen fades, the field is
+-- cleared while it is covered, the player is back where they were, and then `onDone` runs (the result card).
+local function finish(session: Session, quiet: boolean)
+	if session.done then
+		return
+	end
+	session.done = true
+	if current == session then
+		current = nil
+	end
+	if session.connection then
+		session.connection:Disconnect()
+		session.connection = nil
+	end
 	local onDone = session.onDone
 	session.onDone = nil
-	if onDone and not quiet then
-		safe("onDone", onDone)
+	if quiet then
+		teardown(session)
+		ArenaStage.leaveNow()
+		return
 	end
+	ArenaStage.leave(function()
+		if onDone then
+			safe("onDone", onDone)
+		end
+	end, function()
+		teardown(session)
+	end)
 end
 
 -- One name over one side, in pixels (scaled with the screen), hung on a hidden anchor over the side's middle.
@@ -426,6 +382,7 @@ local function skipRest(session: Session)
 	end
 	session.ended = true
 	feed(endEvent(session))
+	ArenaStage.cheer(session.won)
 	session.finishAt = os.clock() + R.SkipHoldSeconds
 end
 
@@ -454,6 +411,7 @@ local function tick(session: Session, dt: number)
 	if session.cursor > #session.steps then
 		session.ended = true
 		feed(endEvent(session))
+		ArenaStage.cheer(session.won)
 		session.finishAt = os.clock() + R.EndHoldSeconds
 	end
 end
@@ -500,11 +458,14 @@ local function controls(session: Session)
 	})
 end
 
--- Ends a replay that is still playing without calling its onDone (a new one begins, or the screen is closed).
+-- Ends a replay that is still playing without calling its onDone (a new one begins, a dungeon run starts, or the screen is
+-- closed), and puts the player back at once, no fade; a scene still fading out after a finished replay goes too.
 function ArenaReplay.stop()
 	local session = current
 	if session then
 		finish(session, true)
+	elseif ArenaStage.active() then
+		ArenaStage.leaveNow()
 	end
 end
 
@@ -539,26 +500,31 @@ function ArenaReplay.play(answer: any, onDone: (() -> ())?)
 		done = false,
 	}
 	current = session
-	local ok, err = pcall(function(): any
-		local centre, toPlayer = field()
-		setUp(session, answer, centre, toPlayer)
-		controls(session)
-		return nil
-	end)
-	if not ok then
-		warn(Config.LogPrefix, "arena replay could not begin:", err)
-		finish(session, false)
-		return
-	end
-	session.connection = RunService.Heartbeat:Connect(function(dt)
-		local alive, why = pcall(function(): any
-			tick(session, dt)
+	-- The screen fades, the scene is up, and then the teams are stood on its field (a stop() or a failure meanwhile ends it all).
+	ArenaStage.enter(function(centre: Vector3, toPlayer: Vector3)
+		if session.done then
+			return
+		end
+		local ok, err = pcall(function(): any
+			setUp(session, answer, centre, toPlayer)
+			controls(session)
 			return nil
 		end)
-		if not alive then
-			warn(Config.LogPrefix, "arena replay tick:", why)
+		if not ok then
+			warn(Config.LogPrefix, "arena replay could not begin:", err)
 			finish(session, false)
+			return
 		end
+		session.connection = RunService.Heartbeat:Connect(function(dt)
+			local alive, why = pcall(function(): any
+				tick(session, dt)
+				return nil
+			end)
+			if not alive then
+				warn(Config.LogPrefix, "arena replay tick:", why)
+				finish(session, false)
+			end
+		end)
 	end)
 end
 

@@ -4,7 +4,8 @@
 -- (quests, defence, the log). It asks the server through Remotes.Arena (a RemoteFunction: { action = ... } -> { ok, reason?, ... })
 -- and draws the answers; every rule is the server's, so a button it would refuse is greyed. An attack closes the sheet, plays the
 -- fight (ArenaReplay) and shows a result card; the points and the new rank appear only when a later `state` shows the match
--- confirmed. Opened from the debug menu now and from the Arena's gate later (UiArena.open). Every word is English.
+-- confirmed. Opened from the Arena round button on the HUD (UiHud) and from the debug menu (UiArena.open). The fight is
+-- drawn on the Arena scene each client copies for itself (ArenaStage). Every word is English.
 local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -12,6 +13,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Config = require(ReplicatedStorage.Shared.Config)
 local Gear = require(ReplicatedStorage.Shared.Gear)
 local ArenaReplay = require(script.Parent.ArenaReplay)
+local ArenaStage = require(script.Parent.ArenaStage)
 local UiDungeon = require(script.Parent.UiDungeon)
 local UiKit = require(script.Parent.UiKit)
 local UiSlimeList = require(script.Parent.UiSlimeList)
@@ -1236,6 +1238,8 @@ function UiArena.open()
 		UiKit.closeModal()
 		return
 	end
+	-- (the stands' slimes are made in the background while the player picks a rival: once per session)
+	ArenaStage.prepare()
 	drawToken += 1
 	local narrow = UiKit.units(UiKit.root()).X < W.SheetWidth + 2 * U.Edge
 	local modal = UiKit.openModal("arena", {
@@ -1319,11 +1323,6 @@ function UiArena.close()
 	if UiKit.modalId() == "arena" then
 		UiKit.closeModal()
 	end
-end
-
--- The server's Arena state (the same answer the screen draws), for the Arena building's ranking board (client/ArenaHall).
-function UiArena.state(): Json
-	return call({ action = "state" })
 end
 
 return UiArena

@@ -3584,15 +3584,56 @@ Config.Arena = {
 	-- A player's last BuyRequestsKept shop buys are remembered by request id, so a re-sent one buys nothing twice.
 	BuyRequestsKept = 8,
 
-	-- The Arena building (tools/map/build_arena.luau, workspace.Map.Arena): its pit's centre in the Market's frame (x across,
-	-- z along the radius, as Config.Market's spots), in the lane between the Market and plot 1, the only flat ground big
-	-- enough near the Market. Quick travel lands LandingZ studs south of the pit's centre (on the path, 10 past the arch),
-	-- facing the arch. The gate's prompt (PromptLift studs over the arch's floor) opens the Arena screen within PromptStuds,
-	-- so it shows from the landing.
-	Site = { x = -205, z = 78 },
-	LandingZ = 72,
-	PromptStuds = 16,
-	PromptLift = 3,
+	-- The Arena scene (client/ArenaStage): a model in ReplicatedStorage that each client copies far from the map while its own
+	-- fight is replayed; nobody else sees it. Sizes are studs, times seconds.
+	Stage = {
+		-- Where the copy's pivot (the Pit's centre) goes: 9000 studs out is far beyond the map's rim (under 1000), high up so
+		-- no ground or farm roof is ever in view, and still small enough that single-precision positions stay exact.
+		Origin = { x = 0, y = 500, z = 9000 },
+		-- The screen goes the game's dark brown (Ui.KitOutline) and back; the cover sits over every other screen.
+		FadeSeconds = 0.4,
+		FadeOrder = 50,
+		-- The seat's lens: at the default 70 the fighters were specks; 50 frames the sand with the stands and royal box round it.
+		FieldOfView = 50,
+		-- Only this many spectators move (a crowd of 60 hopping is a phone's cost for no gain).
+		CrowdMax = 24,
+		-- The stands hold the game's own slimes (SlimeLook), made ahead on this client with a budget: each frame at most
+		-- CrowdPerFrame steps (one look built, or one spectator cloned and placed), so no frame stalls and a phone never
+		-- sees a hitch; the stage copy itself is a step of its own frame. 6 keeps one frame near a millisecond.
+		CrowdPerFrame = 6,
+		-- A crowd slime is this many times the village's body height (3 studs): from the View seat the far stands are ~100
+		-- studs off, and at 1.0 a slime is a dozen pixels tall on a phone held wide; 1.15 reads and still fits one row a tier.
+		CrowdScale = 1.15,
+		-- Each seat's slime is this much bigger or smaller (a share), and turns this far (radians) off straight at the pit,
+		-- so the rows are not drilled. Seeded with CrowdSeed so a session always shows the same stands.
+		CrowdScaleJitter = 0.08,
+		CrowdYawJitter = 0.25,
+		CrowdSeed = 20261105,
+		-- The looks the crowd is cloned from (building every spectator on its own would cost a hundred times more): all 11
+		-- base colours, CrowdDuals Dual designs picked at random, and the materials named here; a Dual counts for
+		-- CrowdDualWeight of a plain look when a seat picks one, a material for CrowdMaterialWeight (they are the rarer ones in
+		-- the game too). Only materials that read well far off and cost nothing extra (no Neon / Force Field glow).
+		CrowdDuals = 4,
+		CrowdMaterials = { "gold", "silver", "ice", "marble" },
+		CrowdDualWeight = 0.5,
+		CrowdMaterialWeight = 0.4,
+		-- The faces a look may wear (Expressions ids, picked at random; "normal" twice because most slimes just look at you).
+		CrowdFaces = { "normal", "normal", "happy", "exciting", "admiring", "loved", "wink" },
+		-- A spectator now and then hops this high for this long, then waits a random time in IdleSeconds.
+		HopHeight = 0.5,
+		HopSeconds = 0.45,
+		IdleSeconds = { 1.5, 6 },
+		-- When the fight ends the crowd cheers: hops of this height and length, a new one after a short random wait, for this
+		-- long. A win is louder and longer than a loss.
+		CheerHopSeconds = 0.4,
+		CheerGapSeconds = 0.5,
+		CheerWin = { Height = 1.5, Seconds = 3 },
+		CheerLoss = { Height = 0.6, Seconds = 1.5 },
+		-- The ray that finds the Pit's top (studs up from its middle, and down past it).
+		PitRayUp = 20,
+		-- The look-alike's idle: the Animate script's idle animation is played on it when the character has one.
+		AvatarIdle = "idle",
+	},
 
 	-- The Arena shop (ArenaRules.buy / shop): points buy dungeon materials and one piece of gear (also a Smithy recipe; here a shortcut).
 	-- In list order. `kind` "material" -> farm.materials[item] (an id of Config.Dungeon.Materials); "gear" -> the bag
@@ -3612,9 +3653,6 @@ Config.Arena = {
 
 	-- The client's side (client/UiArena, ArenaReplay, ArenaTitles). Sizes are points / pixels, times are seconds.
 	View = {
-		-- the Arena building's ranking board (client/ArenaHall): pixels per stud of its face, how many rows, how often it is
-		-- asked again while the player is within NearStuds of it
-		Board = { PixelsPerStud = 50, Rows = 8, RefreshSeconds = 60, NearStuds = 90 },
 		-- the Arena sheet (a bottom sheet on a phone)
 		SheetWidth = 520,
 		SheetHeight = 480,
@@ -3642,12 +3680,11 @@ Config.Arena = {
 		ResultTextSize = 34,
 		-- Team: a seat on the strip
 		SlotSize = 52,
-		-- Ranking: a row, the rank badge, the gold / silver / bronze of the first three
+		-- Ranking: a row, the rank badge
 		RowHeight = 46,
 		BadgeWidth = 44,
 		BadgeHeight = 28,
 		PointsWidth = 72,
-		Medals = { "#f2b630", "#c9d2dc", "#c9854a" },
 		-- Shop: a card and its picture
 		ShopCard = 84,
 		ShopIcon = 52,
@@ -3657,20 +3694,16 @@ Config.Arena = {
 		LogRow = 40,
 		LogShown = 10,
 		StatBlock = 76,
-		-- The replay on the Pit (or in front of the player): the round field, how far each side stands from the middle, the
-		-- spacing and stagger of a side (the Dungeon squad's), the distance in front of the player, the lead-in and the hold
-		-- at the end, the speed of the x2 button, the ray that finds the ground, the side label
+		-- The replay on the Arena scene's Pit (or, with no scene, in front of the player): the round field, how far each side
+		-- stands from the middle, the spacing and stagger of a side (the Dungeon squad's), the distance in front of the player,
+		-- the lead-in and the hold at the end, the speed of the x2 button, the ray that finds the ground, the side label
+		-- (wider than the Dungeon squad's: on the stage camera, ~100 studs off, 4.2 and 6.5 piled eight slimes into one heap)
 		Replay = {
 			FieldRadius = 22,
-			SideGap = 6.5,
-			Spacing = 4.2,
+			SideGap = 8,
+			Spacing = 5.2,
 			Stagger = 1.4,
 			FrontStuds = 14,
-			-- the Arena's Pit is the field only for a player within PitStuds of it (one far away watches in front of them)
-			PitStuds = 120,
-			-- a player farther out steps onto the sand WatchStuds from the middle on the orange gate's side, WatchLift up
-			WatchStuds = 24,
-			WatchLift = 3,
 			LeadSeconds = 1.2,
 			EndHoldSeconds = 2.4,
 			SkipHoldSeconds = 2,

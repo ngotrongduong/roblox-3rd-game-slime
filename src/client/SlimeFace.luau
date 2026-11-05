@@ -531,13 +531,17 @@ local function mouthPlate(self: Face, plate: Plate)
 	end
 end
 
-local function frame(plate: Plate, bones: SlimeShape.Bones, scale: number, feet: CFrame): CFrame
-	local p = SlimeShape.plate(plate.u, plate.v, bones)
-	plate.scaleU, plate.scaleV = p.scaleU, p.scaleV
+local function skinFrame(p: SlimeShape.Plate, scale: number, feet: CFrame): CFrame
 	local off = C.PlateOffset
 	local pos = Vector3.new(p.px + p.nx * off, p.py + p.ny * off, p.pz + p.nz * off) * scale
 	-- the part's right is the viewer's left, so the GUI's +x runs toward the viewer's right (SlimeShape)
 	return feet * CFrame.fromMatrix(pos, Vector3.new(-p.rx, -p.ry, -p.rz), Vector3.new(p.ux, p.uy, p.uz))
+end
+
+local function frame(plate: Plate, bones: SlimeShape.Bones, scale: number, feet: CFrame): CFrame
+	local p = SlimeShape.plate(plate.u, plate.v, bones)
+	plate.scaleU, plate.scaleV = p.scaleU, p.scaleV
+	return skinFrame(p, scale, feet)
 end
 
 -- Advance the face by dt and place its parts: appends the parts and where they go to the two arrays (the caller
@@ -703,6 +707,50 @@ end
 
 function Face.destroy(self: Face)
 	self.folder:Destroy()
+end
+
+-- A face that never moves, for slimes that only stand and are looked at from far (the Arena's stands): the same owner sprites
+-- in the same places as the living face (rest pose, nothing blinks), but three Decals on three invisible plates in the
+-- model, no SurfaceGui and no per-frame work, so a hundred of them cost parts only. `model` stands at rest with its pivot at
+-- the feet and holds the body; `scale` is studs per body height; `id` names an Expression (its eyes and mouth are used,
+-- not its lids, brows or motion). The plates are in the model, so moving or scaling the model carries them.
+function Face.still(model: Model, scale: number, id: string)
+	local old = model:FindFirstChild("StillFace")
+	if old then
+		old:Destroy()
+	end
+	local e = Expressions.get(id) or Expressions.get("normal") :: Expressions.Expression
+	local bones = SlimeShape.bones({ sy = 1, sx = 1, leanFwd = 0, leanSide = 0 })
+	local feet = model:GetPivot()
+	local folder = Instance.new("Folder")
+	folder.Name = "StillFace"
+	local function plate(name: string, sprite: string, turned: boolean?, grow: number)
+		local spr = FaceArt.Sprites[sprite]
+		if not spr then
+			return
+		end
+		local part = Instance.new("Part")
+		part.Name = name
+		part.Anchored = true
+		part.CanCollide = false
+		part.CanQuery = false
+		part.CanTouch = false
+		part.CastShadow = false
+		part.Transparency = 1
+		part.Size = Vector3.new(spr.w * scale * grow, spr.h * scale * grow, 0.02)
+		-- (a sprite's centre is its place on the flat face, as the living face puts it)
+		local cf = skinFrame(SlimeShape.plate(spr.cx, spr.cy, bones), scale, feet)
+		part.CFrame = if turned then cf * CFrame.Angles(0, 0, math.pi) else cf
+		local decal = Instance.new("Decal")
+		decal.Face = Enum.NormalId.Front
+		decal.Texture = spriteUrl(sprite)
+		decal.Parent = part
+		part.Parent = folder
+	end
+	plate("EyeL", e.eyeL, e.eyeTurnedL, 1)
+	plate("EyeR", e.eyeR, e.eyeTurnedR, 1)
+	plate("Mouth", e.mouth, nil, e.mouthScale or 1)
+	folder.Parent = model
 end
 
 return Face

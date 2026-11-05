@@ -62,7 +62,8 @@ function UiHud.start(
 	onBook: () -> (),
 	onTravel: (place: string) -> (),
 	onRewards: () -> (),
-	onBag: () -> ()
+	onBag: () -> (),
+	onArena: () -> ()
 )
 	-- The strip shares the line of Roblox's own buttons: its own ScreenGui in the free space the engine leaves in the topbar.
 	local host = root:FindFirstAncestorOfClass("ScreenGui") :: ScreenGui
@@ -136,11 +137,10 @@ function UiHud.start(
 	local market = UiKit.roundButton(group, "market", U.TravelButton, function()
 		onTravel("Market")
 	end, { LayoutOrder = 1 })
-	-- Quick travel to the Arena sits in the Market's row, just left of it (the Arena stands beside the Market; a child of the
-	-- Market button, so the column stays as tall as it was). Shown with the trophy, once the tutorial is over.
-	arenaButton = UiKit.roundButton(market, "arena", U.TravelButton, function()
-		onTravel("Arena")
-	end, {
+	-- The Arena (UiArena, handed in as onArena: UiArena reaches UiHud through UiDungeon, so UiHud cannot require it) sits in
+	-- the Market's row, just left of it (a child of the Market button, so the column stays as tall as it was). It opens the
+	-- screen; the fight is shown on the Arena scene (ArenaStage). Shown with the trophy, once the tutorial is over.
+	arenaButton = UiKit.roundButton(market, "arena", U.TravelButton, onArena, {
 		AnchorPoint = Vector2.new(1, 0.5),
 		Position = UDim2.new(0, -U.Gap, 0.5, 0),
 		Visible = false,

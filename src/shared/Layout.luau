@@ -90,19 +90,6 @@ function Layout.marketLanding(lift: number): CFrame
 	return Layout.marketFrame() * CFrame.new(spot.x, M.GroundY + lift, spot.z) * CFrame.Angles(0, math.pi, 0)
 end
 
--- The Arena's pit centre on the ground (Config.Arena.Site), turned to the world: its arch lies south (+Z).
-function Layout.arenaHall(): CFrame
-	local site = Config.Arena.Site
-	local at = Layout.marketFrame():PointToWorldSpace(Vector3.new(site.x, 0, site.z))
-	return CFrame.new(at.X, M.GroundY, at.Z)
-end
-
--- Where quick travel puts a character at the Arena: on the path in front of the arch, `lift` studs up, facing the arch
--- (north, -Z: an unturned frame's LookVector).
-function Layout.arenaLanding(lift: number): CFrame
-	return Layout.arenaHall() * CFrame.new(0, lift, Config.Arena.LandingZ)
-end
-
 -- Where quick travel puts a character at home: in the plot's gate opening, `inside` studs in from its front edge, `lift`
 -- studs up, facing in. The gate looks at the valley centre, so a half turn faces into the plot.
 function Layout.homeLanding(plot: number, lift: number, inside: number): CFrame

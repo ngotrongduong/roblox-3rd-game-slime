@@ -460,3 +460,30 @@ was left there (this game has none); read it there if a cave is ever wanted.
 - 2026-11-05. The flat floor behind the Market is only 690 studs across and hills rise at once: a 110 x 130 stud site fits
   only in the lane between the Market and plot 1, and plot 1's edge (a rotated square) must be kept 25 studs from every item.
 - 2026-11-05. The Edit tool fails on multi-line `old_string` in the .luau builders (CRLF line ends): replace one line at a time.
+- 2026-11-05 (the Arena SCENE, `tools/map/build_arena_stage.luau` -> `assets/ArenaStage.rbxm`, 6 rounds). One Luau file that
+  runs in BOTH Studio (`run ... Edit`: model into ReplicatedStorage + a preview at the game's Origin) and Lune (`lune run`
+  from the repo root: writes the .rbxm with `roblox.serializeModel`) keeps the scene in git and the Rojo build; detect Lune
+  with `pcall(require, "@lune/roblox")`, shadow the Studio globals, avoid `Random` (use an LCG) and `PivotTo`.
+- The camera is composed FIRST, then the set: a gate that the camera looks over must be LOWER than the ray from the camera
+  to the near edge of what is behind it (camera y 26, 22 studs behind a gate: gate + shield top <= about 13 to show the
+  near team circle). Round 1 had a tall pedestal and shield (18 high) that hid the crest; round 4 cut it to 13.
+- A foreground that is not in frame is wasted: at 22 degrees down and FOV 70 the bottom edge is 57 degrees down, so with the
+  camera 26 up everything nearer than 17 studs is off screen. Put the front-row spectators and the player's stand-in at
+  13-18 studs from the camera, not under it, and drop a raised deck that only hides the gate's tunnel.
+- A Decal on a Top face reads with its top toward -Z of the part; turn the part half a turn (Angles(0, PI, 0)) when the
+  picture must read from the +Z side. Check the plan shot for crest and circle direction (crown toward the far gate).
+- A Decal draws on a part with Transparency 1, and `Decal.Color3` multiplies: it can darken or cool a picture, not turn
+  orange into tan. Darken with a bluish tint (170,190,255) plus alpha 0.15 so the sand shows through.
+- Spectators from two Balls (body, tip) and a face Decal beat a 2400-triangle skinned slime: 344 of them are about 1,000
+  parts. Give each Model a PrimaryPart (the body) so the client can hop it.
+- Plain cream walls with arch openings look empty without a trim: blue pilasters with caps at each bay, a blue band and a
+  45-degree chamfer diamond (2.4 stud) at each opening corner read as an arch from the camera for 5 parts a bay.
+- Flames (`ParticleEmitter`) do not show in an Edit-mode `shot`; judge them in Play or trust the village's known recipe, and
+  keep a Neon disc in the bowl so the brazier still reads lit.
+- The ground under a floating stage must be built into the stage (a big cylinder 46 below plus low Ball hills): at the
+  game's Origin (y 500) there is nothing below. A saturated lime ground overexposes under Brightness 2.6: use (92,154,68).
+- (rounds 7-8) The owner wants the game's REAL slimes as spectators, never a two-ball stand-in: the scene holds invisible
+  `Spot` parts and the client clones SlimeLook bodies onto them a few a frame (139 seats -> 127 with bay posts). Fire
+  (`fire_main`) against a bright sky: LightEmission 1 washes white, 0.35 reads as grey smoke, 0.55 with deep orange/red reads
+  as flame. A client copy of a scene must `PreloadAsync` its Decals when it is made, or the pictures pop in after the fade.
+  Gold caps on a foreground block at the frame's edge read as bare yellow boxes: give them the gate's own colour.

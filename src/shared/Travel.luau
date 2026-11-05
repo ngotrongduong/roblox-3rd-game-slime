@@ -6,7 +6,7 @@ local Layout = if script then require(script.Parent.Layout) else require("./Layo
 
 local Travel = {}
 
-Travel.Places = { "Market", "Home", "Arena" }
+Travel.Places = { "Market", "Home" }
 
 function Travel.isPlace(place: any): boolean
 	return type(place) == "string" and table.find(Travel.Places, place) ~= nil
@@ -30,8 +30,6 @@ function Travel.destination(place: string, plot: number?): (typeof(Layout.market
 			return nil, "NO_PLOT"
 		end
 		return Layout.homeLanding(plot, T.LiftStuds, T.HomeInsideStuds), nil
-	elseif place == "Arena" then
-		return Layout.arenaLanding(T.LiftStuds), nil
 	end
 	return nil, "BAD_REQUEST"
 end
