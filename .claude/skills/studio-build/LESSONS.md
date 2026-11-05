@@ -266,6 +266,28 @@ was left there (this game has none); read it there if a cave is ever wanted.
 - After a quick-travel move the camera keeps its old angle, so the player opens looking sideways: turn it behind the character on arrival.
 - The builder's triangle tally is rough both ways: primitives count high, and the Doki flowers count 0 (their mesh cannot be read), so more of them does not show in the total.
 - Shoot from the player's side: the frame's world z is -500 - local z, so the way in is at world z -425 and the board's back is at -584. A real pass that passes every check can still look wrong; see the Fabric line above.
+- 2026-11-05 (the square made tidy: five places on one circle, ring paving). An MCP `run` could not require ANY shared module (Config,
+  Layout: "Capabilities property: Network"), and a fresh ModuleScript made from their Source gets the same block (it cannot even be
+  parented to ServerStorage). Keep the numbers in each tool, marked "EQUAL to src/shared/Config.luau", and `slotFrame` by hand.
+- A tidy plaza from the valley's own pebble mesh: rings of equal stones (ring 4.2 wide, stones about 4.8 along, 0.4 joints, every other
+  ring turned half a stone), stones squared to their ring (`Angles(0, -a, 0)` with X radial), a half-turn at random for variety, a kerb
+  ring of Slate blocks open where each path leaves, paths as rows of 2-3 stones with a kerb along each side. It read as neat at once,
+  where the scattered stones of the first build read as a mess; 412 meshes cost 24k triangles.
+- Painting a round yard in 4-stud terrain: paint the plaza and the way in WITHOUT noise (only the pads round each place fray), and
+  let the paving's kerb sit on the circle's edge so the blurred voxel rim is hidden.
+- Places that face the fountain show their SIDES to the way in: accept it for stalls (the awning still reads), and dress for that view
+  (a stall's sign on its end toward the way in, goods mirrored by a per-stall `entry` sign so the pair stays a mirror).
+- Lamps at path mouths put on the side TOWARD the way in made a row of posts in the entrance view: put them on the far side.
+- Bunting strung down to a lamp beside a building hung its pennants across that building's front at head height (seen only in a close
+  ray picture from the side): string it high, from the banner post to the building's BACK post (16 up), and a matching mast for the
+  mirror place that has no post of its own.
+- A forge reads as a forge, not as a third stall, with a one-slope shingled roof in rust red (rows of Slate tiles over a dark deck), a
+  stone back wall, low stone side walls and a square chimney stack behind the wall; the owner's crest board and banner stay.
+- The game's portal is built at run time: `tools/map/preview_portal.luau` builds the same thing in the work place for pictures
+  (`REMOVE=<any file>` takes it away); its platform reaches about 14 studs in front of its spot, so a walk check ends 16 short.
+- Studio stayed minimised for the whole job: every round was judged by `market_raypreview.luau` pictures (layout, facing, clutter,
+  the bunting fault), and the report names the real shots still owed. A ray picture of 480 x 270 runs out of time and comes back with
+  its lower part black: 400 x 225 is the limit.
 
 ## Water and moving things
 

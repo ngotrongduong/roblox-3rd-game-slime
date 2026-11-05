@@ -3,9 +3,10 @@
 -- and orientation only; it says nothing of textures, light or water. Run in Edit mode with CAM, a text file "cx cy cz lx ly lz width height fov" in
 -- the market's local studs (y above the ground); it returns the picture, one line per row, RLE of "<count>.<3 hex digits>,":
 --   node tools/studio_mcp.js run tools/map/market_raypreview.luau <studio_id> Edit CAM=<file> > out.txt   then   node tools/map/market_rle_to_png.js out.txt out.png
+-- (the Dungeon portal shows if tools/map/preview_portal.luau has built its preview)
 -- CanQuery is set on the Market's parts for the pictures and put back at the end.
-local Layout = require(game:GetService("ReplicatedStorage").Shared.Layout)
-local F = Layout.marketFrame()
+-- (an MCP `run` cannot require the shared modules - "Capabilities: Network": Layout.marketFrame() by hand)
+local F = CFrame.new(0, 0, -500) * CFrame.Angles(0, math.pi, 0)
 local G = 2
 local nums = {}
 for n in string.gmatch(CAM, "[-%d%.]+") do
@@ -17,8 +18,8 @@ local tanV = math.tan(math.rad(fov) / 2)
 local tanH = tanV * W / H
 
 local changed = {}
-for _, folder in { workspace.Map.Market, workspace.Map:FindFirstChild("RimTrees"), workspace.Map:FindFirstChild("WildGarden") } do
-	if folder and folder ~= workspace.Map:FindFirstChild("WildGarden") then
+for _, folder in { workspace.Map.Market, workspace.Map:FindFirstChild("RimTrees"), workspace:FindFirstChild("PortalPreview") } do
+	if folder then
 		for _, d in folder:GetDescendants() do
 			if d:IsA("BasePart") and not d.CanQuery then
 				d.CanQuery = true
@@ -30,9 +31,11 @@ end
 local params = RaycastParams.new()
 params.FilterType = Enum.RaycastFilterType.Exclude
 local skip = {}
-for _, d in workspace.Map.Market:GetDescendants() do
-	if d:IsA("BasePart") and d.Transparency >= 1 then
-		table.insert(skip, d)
+for _, folder in { workspace.Map.Market, workspace:FindFirstChild("PortalPreview") } do
+	for _, d in if folder then folder:GetDescendants() else {} do
+		if d:IsA("BasePart") and d.Transparency >= 1 then
+			table.insert(skip, d)
+		end
 	end
 end
 table.insert(skip, workspace:FindFirstChild("KitViewer"))
@@ -47,6 +50,8 @@ local MESH = {
 	DryStoneWall = Color3.fromRGB(140, 140, 135), CoinBasket = Color3.fromRGB(210, 170, 90), CoinStack = Color3.fromRGB(245, 195, 70), MoneySack = Color3.fromRGB(246, 190, 56),
 	WoodLantern = Color3.fromRGB(70, 70, 74), MoneyBagCrest = Color3.fromRGB(50, 90, 190), CrownCrest = Color3.fromRGB(130, 60, 170), WoodBarrel = Color3.fromRGB(150, 100, 50),
 	PinkDaisies = Color3.fromRGB(240, 150, 190), WoodBench = Color3.fromRGB(190, 130, 66), RanchFence = Color3.fromRGB(130, 85, 50),
+	Flagstone = Color3.fromRGB(196, 192, 182), portal_crystal = Color3.fromRGB(110, 220, 240), bush_tall_grass = Color3.fromRGB(110, 180, 70),
+	WeaponRack = Color3.fromRGB(150, 110, 70), SwordBarrel = Color3.fromRGB(150, 100, 50), ArmorStand = Color3.fromRGB(140, 145, 155), ToolRack = Color3.fromRGB(150, 110, 70),
 }
 local TERRAIN = {
 	[Enum.Material.Grass] = Color3.fromRGB(112, 182, 66),

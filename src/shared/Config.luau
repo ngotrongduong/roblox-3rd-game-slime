@@ -1024,7 +1024,8 @@ Config.Dungeon = {
 			rock_cracked_split = 74245328366319,
 			rock_flat_slab = 120446354505612,
 		},
-		Market = { x = -58, z = 34 },
+		-- back right of the square, the Blacksmith's mirror (its middle, so a little further out than the Smithy's prompt spot)
+		Market = { x = -51, z = 30 },
 		Scale = 0.55,
 		PromptRangeStuds = 14,
 		LockPixels = 72,
@@ -2001,15 +2002,19 @@ Config.Perf = {
 -- back (towards the valley's edge); +x is the left of someone walking in from the valley. The prompts and the landing
 -- stand at these spots whether or not the scene artist's models are there yet. The square is Map.MarketWidth x MarketDepth.
 Config.Market = {
-	-- Where quick travel lands: a clear spot at the front of the square, facing the back.
+	-- The square (the owner, 2026-11-05: tidy): a round plaza on the fountain, five places on one circle of about 56 round it, each
+	-- facing the fountain: the buyer front left, the VIP counter front right, the Blacksmith back left, the Dungeon portal back right
+	-- (Config.Dungeon.Portal.Market), the board at the back in the middle; the way in at the front. tools/map/build_market.luau
+	-- keeps a copy of these numbers: change both.
+	-- Where quick travel lands: on the way in, in front of the plaza, facing the back.
 	Landing = { x = 0, z = -56 },
-	-- The slime buyer's counter (left) and the VIP counter (right), a little in front of the middle.
-	Buyer = { x = 55, z = -8 },
-	Vip = { x = -55, z = -8 },
+	-- The slime buyer's counter (left) and the VIP counter (right), 60 degrees either side of the way in.
+	Buyer = { x = 48, z = -28 },
+	Vip = { x = -48, z = -28 },
 	-- The leaderboard, at the back in the middle.
 	Board = { x = 0, z = 62 },
-	-- The Blacksmith (docs/SMITHY.md §6), behind the buyer on the way to the board, facing the fountain (tools/map/build_smithy.luau).
-	Smithy = { x = 58, z = 34 },
+	-- The Blacksmith (docs/SMITHY.md §6), back left, 120 degrees from the way in, facing the fountain (tools/map/build_smithy.luau).
+	Smithy = { x = 48, z = 28 },
 	-- What the scene artist names things in workspace.Map.Market (the board's picture goes on its part ScreenName).
 	Model = "Market",
 	BuyerModel = "SlimeBuyer",

@@ -1,38 +1,48 @@
 -- Builds the Market square of the valley (workspace.Map.Market) and dresses what stands round it, from the reference art/concept/market-1.jpg
--- and the owner's stall art (reference/goo-lineage-web/assets/map/other/shop-*.png, shape and colour only). Places come from Config.Market:
--- the frame's -Z looks at the valley centre, +x is the left of someone walking in. The code finds SlimeBuyer, VipStall, Leaderboard (with its
--- part Screen, whose Front face looks at the square); the prompts stand at Config.Market's spots whatever is built here.
+-- and the owner's stall art (reference/goo-lineage-web/assets/map/other/shop-*.png, shape and colour only).
+-- The plan (the owner, 2026-11-05: "rearrange the shopping area so it is tidy and more beautiful"): a round paved plaza on the fountain,
+-- its flagstones in neat rings inside a kerb; five places on one circle round it, each facing the fountain with a short paved path to its
+-- front: the Slime Buyer (front left) and the VIP stall (front right), the Blacksmith (back left, tools/map/build_smithy.luau) and the
+-- Dungeon portal (back right, placed by the game: src/server/DungeonPortal), the Leaderboard at the back in the middle. One straight paved
+-- way in from the valley road at the front (the Landing on it), a lamp each side of the entrance and low walls beside it. Dressing in
+-- mirror pairs: benches facing the fountain, flowers at the foot of each place, lamps at path mouths, trees behind, boulders outside.
+-- The frame's -Z looks at the valley centre, +x is the left of someone walking in. The code finds SlimeBuyer, VipStall, Leaderboard (with
+-- its part Screen, whose Front face looks at the square); the prompts stand at Config.Market's spots whatever is built here.
 -- Run in Edit mode, as often as wanted (it removes what it made and paints the ground again):
 --   node tools/studio_mcp.js run tools/map/build_market.luau <studio_id> Edit
--- Run it again after tools/map/build_wild_slices.luau, which resets the ground outside the ring road to grass. tools/map/market_kit_square.luau
--- ran once on the generated models. Then tools/map/check_market.luau must end MARKET OK.
+-- Run it again after tools/map/build_wild_slices.luau, which resets the ground outside the ring road to grass. Then
+-- tools/map/check_market.luau must end MARKET OK. tools/map/preview_portal.luau shows the portal for shots (remove it after).
 -- Kit models come from ServerStorage.PropKit and WildKit: nothing is read at run time, it travels with the owner's save.
--- The floor: real terrain earth (Sandstone = WildDirt, Asphalt = WildWorn, as the valley's roads) under flat flagstones of the valley's own
--- pebble mesh, not stud tiles: this is an open-air square of the valley, not a built floor, and the reference is a dirt yard with stones.
+-- The floor: real terrain earth (Sandstone = WildDirt, as the valley's roads) under flat flagstones of the valley's own pebble mesh.
 local ServerStorage = game:GetService("ServerStorage")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local AssetService = game:GetService("AssetService")
-local Config = require(ReplicatedStorage.Shared.Config)
-local Layout = require(ReplicatedStorage.Shared.Layout)
 
 local PropKit, WildKit = ServerStorage.PropKit, ServerStorage.WildKit
-local M = Config.Map
--- (the work place's copy of Config can be older than the repo: the same values as src/shared/Config.luau's Config.Market)
-local C = Config.Market
-	or {
-		Landing = { x = 0, z = -56 },
-		Buyer = { x = 55, z = -8 },
-		Vip = { x = -55, z = -8 },
-		Board = { x = 0, z = 62 },
-		Model = "Market",
-		BuyerModel = "SlimeBuyer",
-		VipModel = "VipStall",
-		BoardModel = "Leaderboard",
-		ScreenName = "Screen",
-	}
-local F = Layout.marketFrame()
+-- An MCP `run` cannot require the shared modules ("Capabilities: Network") and the work place's copy can be older than the repo, so
+-- the numbers are kept here, EQUAL to src/shared/Config.luau (Config.Map, Config.Market, Config.Dungeon.Portal.Market) and Layout.
+local M = { GroundY = 2, RingRoadRadius = 356, RingRoadWidth = 24, PlotSize = 228, RimRadius = 500, PlotCount = 8 }
+local C = {
+	Landing = { x = 0, z = -56 },
+	Buyer = { x = 48, z = -28 },
+	Vip = { x = -48, z = -28 },
+	Board = { x = 0, z = 62 },
+	Smithy = { x = 48, z = 28 },
+	Portal = { x = -51, z = 30 },
+	Model = "Market",
+	BuyerModel = "SlimeBuyer",
+	VipModel = "VipStall",
+	BoardModel = "Leaderboard",
+	SmithyModel = "Blacksmith",
+	ScreenName = "Screen",
+}
+-- Layout.slotFrame(slot): on the rim, looking at the valley centre (slot 0 is the Market, 1..8 the plots)
+local function slotFrame(slot: number): CFrame
+	local a = math.rad(slot * 360 / (M.PlotCount + 1))
+	return CFrame.new(math.sin(a) * M.RimRadius, 0, -math.cos(a) * M.RimRadius) * CFrame.Angles(0, math.pi - a, 0)
+end
+local F = slotFrame(0)
 local G = M.GroundY
-local rng = Random.new(20261102)
+local rng = Random.new(20261105)
 local Mat = Enum.Material
 
 local root = workspace.Map:FindFirstChild(C.Model)
@@ -42,12 +52,34 @@ if not root then
 	root.Parent = workspace.Map
 end
 -- (the Blacksmith is tools/map/build_smithy.luau's)
-local SMITHY = C.Smithy or { x = 58, z = 34 }
 for _, child in root:GetChildren() do
-	if child.Name ~= "Spawn" and child.Name ~= (C.SmithyModel or "Blacksmith") then
+	if child.Name ~= "Spawn" and child.Name ~= C.SmithyModel then
 		child:Destroy()
 	end
 end
+-- The places on their circle: each one's compass angle from the front axis (0 = the way in, pi = the board) and the middle of what is
+-- built there (the stalls and the smithy stand 3.5 behind their prompt, so the prompt is over the counter or the anvil).
+local function angleOf(spot: { x: number, z: number }): number
+	return math.atan2(spot.x, -spot.z)
+end
+local function pushedOut(spot: { x: number, z: number }, by: number): { x: number, z: number }
+	local len = math.sqrt(spot.x * spot.x + spot.z * spot.z)
+	return { x = spot.x * (1 + by / len), z = spot.z * (1 + by / len) }
+end
+local PLACES = {
+	{ name = "Buyer", spot = C.Buyer, centre = pushedOut(C.Buyer, 3.5), front = 53 },
+	{ name = "Vip", spot = C.Vip, centre = pushedOut(C.Vip, 3.5), front = 53 },
+	{ name = "Smithy", spot = C.Smithy, centre = pushedOut(C.Smithy, 3.5), front = 52.5 },
+	{ name = "Portal", spot = C.Portal, centre = C.Portal, front = 47 },
+	{ name = "Board", spot = C.Board, centre = { x = C.Board.x, z = C.Board.z + 2 }, front = 55.5 },
+}
+-- the plaza: flower ring on the fountain's step, paving rings, the kerb
+local PAVE_IN, PAVE_OUT, RING_W, JOINT = 21.6, 42.6, 4.2, 0.4
+local KERB_R, KERB_D = 43.7, 2.2
+local YARD_R = 46
+local WAY_W, PATH_W = 13.2, 9.6 -- the way in and the paths to the places, paving across
+local WAY_END = -124
+
 local function group(name: string, class: string?, parent: Instance?): Instance
 	local g = Instance.new(class or "Model")
 	g.Name = name
@@ -230,7 +262,8 @@ local W, D = 22, 12 -- between the posts, across and deep
 local STRIPES = 5
 local function buildStall(name: string, spot: { x: number, z: number }, style: Style): Model
 	local model = group(name) :: Model
-	local dx, dz = C.Landing.x - spot.x, C.Landing.z - spot.z
+	-- facing the fountain (the square's middle)
+	local dx, dz = -spot.x, -spot.z
 	local len = math.sqrt(dx * dx + dz * dz)
 	dx, dz = dx / len, dz / len
 	-- the prompt's spot stands over the counter's middle, 3.5 in from the stall's own centre line
@@ -328,13 +361,27 @@ local function buildStall(name: string, spot: { x: number, z: number }, style: S
 	return model
 end
 
--- The buyer: blue and cream, a hanging sign on its own tall post, sacks and a barrel beside the counter.
+-- The stall's frame, as buildStall's: -Z looks at the fountain. `entry` is the sign of the stall's own x that points to the way in (+1
+-- for the buyer on the left, -1 for the VIP stall on the right), so the two dress as a mirror pair.
 local function frameOf(spot: { x: number, z: number }): CFrame
-	local dx, dz = C.Landing.x - spot.x, C.Landing.z - spot.z
+	local dx, dz = -spot.x, -spot.z
 	local len = math.sqrt(dx * dx + dz * dz)
 	dx, dz = dx / len, dz / len
 	local px, pz = spot.x - dx * 3.5, spot.z - dz * 3.5
 	return facing(px, pz, px + dx, pz + dz)
+end
+local function entryOf(spot: { x: number, z: number }): number
+	return if frameOf(spot).RightVector:Dot(F.LookVector) > 0 then 1 else -1
+end
+-- what stands at a stall's feet, the same for both: a barrel at the far end, a coin basket and a sack in front of the counter, a bush
+-- behind the far end
+local function stallGoods(model: Model, spot: { x: number, z: number }, yawBarrel: number)
+	local frame = frameOf(spot)
+	local s = entryOf(spot)
+	kit(model, PropKit, "WoodBarrel", frame * CFrame.new(-s * (W / 2 + 2.4), 0, -5.6) * CFrame.Angles(0, yawBarrel, 0), 4.2, false, nil, true)
+	coinBasket(model, frame * CFrame.new(s * (W / 2 - 3.2), 0, -8.4) * CFrame.Angles(0, s * 0.25, 0), 5)
+	kit(model, PropKit, "MoneySack", frame * CFrame.new(-s * (W / 2 - 2.6), 0, -8.2) * CFrame.Angles(0, -s * 0.5, 0), 3)
+	kit(model, WildKit, "QtBush_Common_Green", frame * CFrame.new(-s * (W / 2 + 4.5), 0, 4), 7, true)
 end
 
 local buyer = buildStall(C.BuyerModel, C.Buyer, {
@@ -348,26 +395,24 @@ local buyer = buildStall(C.BuyerModel, C.Buyer, {
 })
 do
 	local frame = frameOf(C.Buyer)
-	-- the sign's own tall post stands at the stall's inner end (-X, towards the fountain), so the Landing's view holds it; its arm reaches over the awning
-	local x = W / 2 + 2.6
-	local base = frame * CFrame.new(-x, 0, -D / 2 - 3) * CFrame.Angles(0, math.pi, 0)
+	local s = entryOf(C.Buyer)
+	-- the hanging sign on its own tall post at the end toward the way in, its arm reaching in over the awning's front
+	local px, pz = s * (W / 2 + 2.6), -D / 2 - 3
+	local base = frame * CFrame.new(px, 0, pz)
 	post(buyer, base, 21, 1.8)
-	bar(buyer, "SignArm", (base * CFrame.new(-1, 19.6, 0)).Position, (base * CFrame.new(12, 19.6, 0)).Position, 1.1, 1.1, WOOD_LIGHT, Mat.Wood)
-	lashing(buyer, base * CFrame.new(0, 19.6, 0), 2.5, 1.3)
-	bar(buyer, "SignBrace", (base * CFrame.new(0, 15.8, 0)).Position, (base * CFrame.new(3.8, 19.4, 0)).Position, 0.7, 0.7, WOOD_DARK, Mat.Wood)
-	local sign = frame * CFrame.new(-x + 7.2, 15.6, -D / 2 - 3.1)
+	local armY = 19.6
+	bar(buyer, "SignArm", (frame * CFrame.new(px + s * 1, armY, pz)).Position, (frame * CFrame.new(px - s * 12, armY, pz)).Position, 1.1, 1.1, WOOD_LIGHT, Mat.Wood)
+	lashing(buyer, base * CFrame.new(0, armY, 0), 2.5, 1.3)
+	bar(buyer, "SignBrace", (frame * CFrame.new(px, armY - 3.8, pz)).Position, (frame * CFrame.new(px - s * 3.8, armY - 0.2, pz)).Position, 0.7, 0.7, WOOD_DARK, Mat.Wood)
+	local sign = frame * CFrame.new(px - s * 7.2, 15.6, pz - 0.1)
 	piece(buyer, "SignBoard", Vector3.new(8.6, 4.8, 0.5), sign, WOOD_LIGHT, Mat.Wood).CastShadow = true
 	piece(buyer, "SignEdgeTop", Vector3.new(9, 0.45, 0.7), sign * CFrame.new(0, 2.4, 0), WOOD_DARK, Mat.Wood)
 	piece(buyer, "SignEdgeLow", Vector3.new(9, 0.45, 0.7), sign * CFrame.new(0, -2.4, 0), WOOD_DARK, Mat.Wood)
 	for _, sx in { -3, 3 } do
-		cylinder(buyer, "SignRope", 0.2, 2, base * CFrame.new(7.2 + sx, 18.6, 0), ROPE, Mat.SmoothPlastic)
+		cylinder(buyer, "SignRope", 0.2, 1.8, frame * CFrame.new(px - s * 7.2 + sx, armY - 1, pz), ROPE, Mat.SmoothPlastic)
 	end
 	kit(buyer, PropKit, "MoneySack", sign * CFrame.new(0, -1.9, -0.32), 3.8, false, GOLD)
-	-- by the counter
-	kit(buyer, WildKit, "QtBush_Common_Green", frame * CFrame.new(x + 3, 0, 3), 7, true)
-	kit(buyer, PropKit, "WoodBarrel", frame * CFrame.new(W / 2 + 2.4, 0, -6.4) * CFrame.Angles(0, 1, 0), 4.2, false, nil, true)
-	kit(buyer, PropKit, "MoneySack", frame * CFrame.new(-W / 2 + 2.4, 0, -8.2) * CFrame.Angles(0, -0.6, 0), 3)
-	coinBasket(buyer, frame * CFrame.new(W / 2 - 3, 0, -8.4) * CFrame.Angles(0, 0.3, 0), 5)
+	stallGoods(buyer, C.Buyer, 1)
 end
 
 local vip = buildStall(C.VipModel, C.Vip, {
@@ -401,16 +446,12 @@ do
 		piece(vip, "CurtainTie", Vector3.new(3, 1, 1.3), tie, GOLD, Mat.SmoothPlastic)
 		ball(vip, "CurtainKnot", 0.9, tie * CFrame.new(0, 0, -0.9), GOLD)
 		cylinder(vip, "CurtainTassel", 0.45, 1.6, tie * CFrame.new(0, -1.3, -0.95), GOLD, Mat.SmoothPlastic)
-		-- gold knobs on the tall posts
 		ball(vip, "PostKnob", 1.5, frame * CFrame.new(side * W / 2, 18.2, D / 2), GOLD)
 	end
 	kit(vip, PropKit, "CrownCrest", frame * CFrame.new(0, 15.6, D / 2 - 0.4), 7)
 	local b = piece(vip, "CrestBar", Vector3.new(8, 0.6, 0.8), frame * CFrame.new(0, 15.9, D / 2 + 0.1), GOLD)
 	b.CastShadow = false
-	kit(vip, PropKit, "WoodBarrel", frame * CFrame.new(W / 2 + 2.6, 0, -6.8) * CFrame.Angles(0, 2, 0), 4.2, false, nil, true)
-	kit(vip, PropKit, "MoneySack", frame * CFrame.new(W / 2 - 1.8, 0, -8.4) * CFrame.Angles(0, 0.5, 0), 3)
-	coinBasket(vip, frame * CFrame.new(-W / 2 + 3, 0, -8.4) * CFrame.Angles(0, -0.3, 0), 5)
-	kit(vip, WildKit, "QtBush_Common_Green", frame * CFrame.new(-W / 2 - 4, 0, 3), 7, true)
+	stallGoods(vip, C.Vip, 2)
 end
 
 -- ===== the leaderboard =====
@@ -513,15 +554,6 @@ local function bunting(a: Vector3, b: Vector3, sag: number, count: number)
 		last = q
 	end
 end
-local function stallEnd(spot: { x: number, z: number }): Vector3
-	local f = frameOf(spot)
-	local p0, p1 = f * CFrame.new(W / 2, 17.4, D / 2), f * CFrame.new(-W / 2, 17.4, D / 2)
-	local target = at(C.Board.x, 0, C.Board.z).Position
-	local d0, d1 = (p0.Position - target).Magnitude, (p1.Position - target).Magnitude
-	return if d0 < d1 then p0.Position else p1.Position
-end
-bunting(at(23.5 + 4.2, 23.2, C.Board.z - 1).Position, stallEnd(C.Buyer), 4.5, 13)
-bunting(at(-23.5 - 4.2, 23.2, C.Board.z - 1).Position, stallEnd(C.Vip), 4.5, 13)
 
 -- ===== the fountain (the village fountain's recipe, VillageFountain.luau: engine-driven water, no script) =====
 local fountain = group("Fountain") :: Model
@@ -702,42 +734,29 @@ do
 	kit(fountain, WildKit, "QtFern_1", A(math.cos(1.4) * 6, wl + 6.2, math.sin(1.4) * 6), 3.4, true, TUFT)
 end
 
--- ===== the ground: dirt yard and road painted in the terrain, as the valley's =====
-local DIRT, WORN = Mat.Sandstone, Mat.Asphalt
-local function toSegment(px: number, pz: number, ax: number, az: number, bx: number, bz: number): number
-	local dx, dz = bx - ax, bz - az
-	local t = math.clamp(((px - ax) * dx + (pz - az) * dz) / (dx * dx + dz * dz), 0, 1)
-	local qx, qz = ax + dx * t - px, az + dz * t - pz
-	return math.sqrt(qx * qx + qz * qz)
-end
--- The ways, as polylines of { x, z, half width }: the front way from the ring road, the road winding off beside the board (as in the picture)
-local FRONT_WAY = { { 2, -116, 11 }, { -3, -96, 11 }, { 0, -70, 16 }, { 0, -44, 22 } }
-local SIDE_ROAD = { { -24, 38, 8 }, { -44, 62, 5 }, { -36, 88, 4.5 }, { -56, 110, 4.5 }, { -92, 124, 4.5 }, { -112, 160, 4.5 } }
-local function wayDistance(line, x: number, z: number): number
-	local best = 1e9
-	for k = 1, #line - 1 do
-		local a, b = line[k], line[k + 1]
-		local d = toSegment(x, z, a[1], a[2], b[1], b[2])
-		-- (a half width that eases from one point to the next)
-		local dx, dz = b[1] - a[1], b[2] - a[2]
-		local t = math.clamp(((x - a[1]) * dx + (z - a[2]) * dz) / (dx * dx + dz * dz), 0, 1)
-		best = math.min(best, d - (a[3] + (b[3] - a[3]) * t))
-	end
-	return best
+-- ===== the ground: a round dirt yard under the plaza, a pad under each place, the paths, painted in the terrain as the valley's roads =====
+local DIRT = Mat.Sandstone
+-- A strip from the plaza along a place's angle: below 0 inside (a box's distance, enough for painting).
+local function stripValue(x: number, z: number, theta: number, r0: number, r1: number, half: number): number
+	local along = x * math.sin(theta) - z * math.cos(theta)
+	local across = math.abs(x * math.cos(theta) + z * math.sin(theta))
+	return math.max(across - half, r0 - along, along - r1)
 end
 local function yardValue(x: number, z: number): number
-	local d = math.sqrt(x * x + z * z) - 50
-	d = math.min(d, math.sqrt((x - C.Buyer.x) ^ 2 + (z - C.Buyer.z) ^ 2) - 25)
-	d = math.min(d, math.sqrt((x - C.Vip.x) ^ 2 + (z - C.Vip.z) ^ 2) - 25)
-	d = math.min(d, math.sqrt((x - SMITHY.x) ^ 2 + (z - SMITHY.z) ^ 2) - 22)
-	d = math.min(d, math.sqrt((x / 1.5) ^ 2 + (z - 54) ^ 2) - 20)
-	d = math.min(d, wayDistance(FRONT_WAY, x, z))
-	d = math.min(d, wayDistance(SIDE_ROAD, x, z))
-	return d
+	local d = math.sqrt(x * x + z * z) - YARD_R
+	for _, p in PLACES do
+		local dx, dz = x - p.centre.x, z - p.centre.z
+		if p.name == "Board" then
+			d = math.min(d, math.sqrt((dx / 1.7) ^ 2 + dz * dz) - 13)
+		else
+			d = math.min(d, math.sqrt(dx * dx + dz * dz) - 16)
+		end
+		d = math.min(d, stripValue(x, z, angleOf(p.spot), 30, p.front + 2, PATH_W / 2 + 1.5))
+	end
+	return math.min(d, stripValue(x, z, 0, 30, -WAY_END + 2, WAY_W / 2 + 2))
 end
 local function paintTerrain()
 	local terrain = workspace.Terrain
-	-- the square's box in the world
 	local corners = { F:PointToWorldSpace(Vector3.new(-180, 0, -128)), F:PointToWorldSpace(Vector3.new(180, 0, 176)) }
 	local lo = Vector3.new(math.min(corners[1].X, corners[2].X), -8, math.min(corners[1].Z, corners[2].Z))
 	local hi = Vector3.new(math.max(corners[1].X, corners[2].X), 8, math.max(corners[1].Z, corners[2].Z))
@@ -755,19 +774,17 @@ local function paintTerrain()
 			-- the ground's own edges keep what the valley drew: only inside the box proper, and never on the ring road's side of the way
 			local r = math.sqrt(wx * wx + wz * wz)
 			if r > M.RingRoadRadius + M.RingRoadWidth / 2 + 6 and math.abs(x) <= 176 and z <= 172 then
-				local noise = math.noise(x / 9, z / 9, 41.7) * 5 + math.noise(x / 4, z / 4, 3.3) * 1.5
-				local v = yardValue(x, z) + noise
 				local target = Mat.Grass
-				if v < 0 then
-					target = if math.noise(x / 13, z / 13, 88.1) > 0.42 then WORN else DIRT
-					-- grass creeping in near the yard's rim
-					if v > -9 and math.noise(x / 6, z / 6, 19.4) > 0.3 then
-						target = Mat.Grass
-					end
-				end
-				-- a road is whole: cells on its core are always earth (noise that frays a thin road falls it into dashes)
-				if wayDistance(SIDE_ROAD, x, z) < -0.5 or wayDistance(FRONT_WAY, x, z) < -3 then
+				local v = yardValue(x, z)
+				if math.sqrt(x * x + z * z) < YARD_R - 1 or stripValue(x, z, 0, 30, -WAY_END, WAY_W / 2) < 0 then
+					-- the plaza and the way in are whole: no noise on them
 					target = DIRT
+				else
+					-- the pads' rims fray a little into the grass
+					v += math.noise(x / 7, z / 7, 41.7) * 2.5
+					if v < 0 then
+						target = DIRT
+					end
 				end
 				for iy = 1, mats.Size.Y do
 					local m = mats[ix][iy][iz]
@@ -788,15 +805,15 @@ end
 local paintedCells = paintTerrain()
 task.wait()
 
--- ===== flagstones: the valley's pebble mesh laid flat, tinted =====
+-- ===== the paving: flagstones of the valley's pebble mesh in even rings, a kerb of cut stone round them, paths of the same =====
 local court = group("Court", "Folder")
-local function flagstone(x: number, z: number, across: number, deep: number)
-	local names = { "QtPebble_Round_1", "QtPebble_Square_2", "QtPebble_Square_2" }
-	local src = WildKit:FindFirstChild(names[rng:NextInteger(1, #names)])
-	local mesh = src:FindFirstChildWhichIsA("MeshPart", true):Clone()
+local PEBBLE = WildKit.QtPebble_Square_2:FindFirstChildWhichIsA("MeshPart", true)
+local function flagstone(cf: CFrame, across: number, deep: number)
+	local mesh = PEBBLE:Clone()
 	mesh.Name = "Flagstone"
 	mesh.Size = Vector3.new(across, 0.45, deep)
-	mesh.CFrame = at(x, 0.05, z, rng:NextNumber(0, math.pi * 2))
+	-- (half a turn at random: the stones stay square to their ring but do not all look the same)
+	mesh.CFrame = cf * CFrame.Angles(0, if rng:NextNumber() < 0.5 then 0 else math.pi, 0)
 	mesh.Anchored = true
 	mesh.CanCollide = false
 	mesh.CanTouch = false
@@ -811,34 +828,72 @@ local function flagstone(x: number, z: number, across: number, deep: number)
 	end
 	mesh.Parent = court
 end
+local function kerbStone(cf: CFrame, size: Vector3)
+	piece(court, "Kerb", size, cf, STONE:Lerp(STONE_DARK, rng:NextNumber(0.2, 0.8)), Mat.Slate)
+end
+-- the paths: the way in (angle 0) and one to each place's front
+local PATHS = { { theta = 0, r1 = -WAY_END, w = WAY_W, across = 3 } }
+for _, p in PLACES do
+	table.insert(PATHS, { theta = angleOf(p.spot), r1 = p.front, w = PATH_W, across = 2 })
+end
 do
-	-- rings round the fountain
-	local r = 22.5
-	while r < 44 do
-		local n = math.floor(2 * math.pi * r / 7.2)
-		for k = 1, n do
-			if rng:NextNumber() < 0.94 - (r - 22) * 0.012 then
-				local a = (k + rng:NextNumber(-0.18, 0.18)) * math.pi * 2 / n + r
-				local rr = r + rng:NextNumber(-0.7, 0.7)
-				flagstone(math.cos(a) * rr, math.sin(a) * rr, rng:NextNumber(4.8, 6.8), rng:NextNumber(4, 5.4))
+	-- the rings (each ring's stones the same size, every other ring turned half a stone)
+	local ring = 0
+	local r = PAVE_IN
+	while r + RING_W <= PAVE_OUT + 0.01 do
+		local rc = r + RING_W / 2
+		local n = math.max(8, math.floor(2 * math.pi * rc / 4.8 + 0.5))
+		local span = 2 * math.pi * rc / n
+		for k = 0, n - 1 do
+			local a = (k + (ring % 2) * 0.5) * span / rc
+			flagstone(at(math.cos(a) * rc, 0.05, math.sin(a) * rc, -a), RING_W - JOINT, span - JOINT)
+		end
+		ring += 1
+		r += RING_W
+	end
+	-- the kerb, open where a path leaves
+	local n = math.floor(2 * math.pi * KERB_R / 3.6 + 0.5)
+	local span = 2 * math.pi * KERB_R / n
+	for k = 0, n - 1 do
+		local a = (k + 0.5) * span / KERB_R
+		local x, z = math.cos(a) * KERB_R, math.sin(a) * KERB_R
+		local open = false
+		for _, path in PATHS do
+			local ux, uz = math.sin(path.theta), -math.cos(path.theta)
+			local along = x * ux + z * uz
+			local across = math.abs(x * math.cos(path.theta) + z * math.sin(path.theta))
+			if along > 0 and across < path.w / 2 + 1.4 + span / 2 then
+				open = true
 			end
 		end
-		r += 5.6
-	end
-	-- wide stones up the front way and over to each stall and the board
-	local function line(ax: number, az: number, bx: number, bz: number, step: number, spread: number)
-		local len = math.sqrt((bx - ax) ^ 2 + (bz - az) ^ 2)
-		for d = 0, len, step do
-			local t = d / len
-			flagstone(ax + (bx - ax) * t + rng:NextNumber(-spread, spread), az + (bz - az) * t + rng:NextNumber(-spread * 0.4, spread * 0.4), rng:NextNumber(4.5, 6.8), rng:NextNumber(3.8, 5.2))
+		if not open then
+			kerbStone(at(x, 0.05, z, -a), Vector3.new(KERB_D, 0.9, span - 0.14))
 		end
 	end
-	line(-6, -48, -7, -94, 6.5, 2.5)
-	line(7, -50, 8, -92, 7, 2.5)
-	line(40, -22, 30, -20, 8, 1.5)
-	line(-40, -22, -30, -20, 8, 1.5)
-	line(-6, 46, -8, 54, 7, 2)
-	line(8, 46, 10, 54, 7, 2)
+	-- the paths: rows of stones across, a kerb along each side
+	for _, path in PATHS do
+		local ux, uz = math.sin(path.theta), -math.cos(path.theta)
+		local px, pz = math.cos(path.theta), math.sin(path.theta)
+		local r0 = KERB_R - KERB_D / 2 + 0.1
+		local rows = math.floor((path.r1 - r0) / RING_W + 0.5)
+		local cell = (path.w - path.across * JOINT) / path.across
+		for row = 0, rows - 1 do
+			local along = r0 + (row + 0.5) * RING_W
+			for k = 1, path.across do
+				local off = -path.w / 2 + (k - 0.5) * (cell + JOINT)
+				flagstone(at(ux * along + px * off, 0.05, uz * along + pz * off, -path.theta), cell, RING_W - JOINT)
+			end
+		end
+		local len = rows * RING_W
+		local segs = math.max(1, math.floor(len / 4.2 + 0.5))
+		for _, side in { -1, 1 } do
+			local off = side * (path.w / 2 + 0.8)
+			for k = 0, segs - 1 do
+				local along = r0 + (k + 0.5) * len / segs
+				kerbStone(at(ux * along + px * off, 0.05, uz * along + pz * off, -path.theta), Vector3.new(1.4, 0.9, len / segs - 0.14))
+			end
+		end
+	end
 end
 task.wait()
 
@@ -852,10 +907,14 @@ local function outdoor(from: Instance, name: string, x: number, z: number, size:
 	note(x, z)
 	return kit(round, from, name, at(x, -0.1, z, yaw or rng:NextNumber(0, math.pi * 2)), size, wide, tint, isSolid)
 end
+-- a spot on a place's circle: its angle from the way in, how far out, how far along the circle (+ toward +x)
+local function polar(theta: number, r: number): (number, number)
+	return math.sin(theta) * r, -math.cos(theta) * r
+end
 
--- big trees framing the square, none between the Landing and what it must see; only the trunk collides
-local function tree(name: string, x: number, z: number, height: number)
-	local t = outdoor(WildKit, name, x, z, height)
+-- big trees framing the square, in mirror pairs, behind the places; only the trunk collides
+local function tree(name: string, x: number, z: number, height: number, yaw: number)
+	local t = outdoor(WildKit, name, x, z, height, false, nil, false, yaw)
 	for _, d in t:GetDescendants() do
 		if d:IsA("BasePart") then
 			d.CastShadow = true
@@ -869,142 +928,171 @@ local function tree(name: string, x: number, z: number, height: number)
 		end
 	end
 end
--- (off the line from the Landing through each stall, or a trunk stands as a dark panel in the stall's opening)
-tree("QtCommonTree_5", 84, 62, 48)
-tree("QtCommonTree_1", -84, 62, 46)
-tree("QtCommonTree_3", 96, -4, 72) -- the big one, its crown over the buyer's outer side, as in the picture
-tree("QtCommonTree_1", -100, 20, 56)
-tree("QtCommonTree_3", -4, 118, 54)
+for _, s in { -1, 1 } do
+	local x, z = polar(s * math.rad(62), 92)
+	tree("QtCommonTree_1", x, z, 52, s * 0.8)
+	x, z = polar(s * math.rad(122), 92)
+	tree("QtCommonTree_5", x, z, 50, s * 1.9)
+	tree("QtCommonTree_3", s * 34, 104, 54, s * 2.4)
+	tree("QtCommonTree_3", s * 86, -92, 54, s * 0.3)
+end
 
--- dry-stone walls with gaps: a row of the kit's wall along a line
+-- the entrance: a lamp each side of the way in, a low dry-stone wall from each lamp along the square's front, a bench before each wall
 local WALL_H, WALL_LEN = 4.6, 4.6 * 12.3 / 6
-local function wall(ax: number, az: number, bx: number, bz: number)
-	local len = math.sqrt((bx - ax) ^ 2 + (bz - az) ^ 2)
-	local count = math.max(1, math.floor(len / WALL_LEN + 0.5))
-	local yaw = math.atan2(-(bz - az), bx - ax)
+local function arcWall(theta0: number, theta1: number, r: number)
+	local count = math.max(1, math.floor(math.abs(theta1 - theta0) * r / WALL_LEN + 0.5))
 	for k = 1, count do
-		local t = (k - 0.5) / count
-		local x, z = ax + (bx - ax) * t, az + (bz - az) * t
+		local th = theta0 + (theta1 - theta0) * (k - 0.5) / count
+		local x, z = polar(th, r)
 		note(x, z)
-		kit(round, PropKit, "DryStoneWall", at(x, -0.15 + (k % 2) * 0.1, z, yaw + (if k % 2 == 0 then math.pi else 0) + rng:NextNumber(-0.04, 0.04)), WALL_H, false, nil, true)
+		kit(round, PropKit, "DryStoneWall", at(x, -0.15, z, -th + (if k % 2 == 0 then math.pi else 0)), WALL_H, false, nil, true)
 	end
 end
--- front corners, on both sides of the way in, turning up the sides with gaps
-wall(26, -86, 56, -88)
-wall(-26, -86, -56, -88)
-
--- benches facing the fountain, a lantern post beside each; lantern posts at the way in
-local function lanternPost(x: number, z: number, lit: boolean)
+local function lanternPost(x: number, z: number, tx: number, tz: number, lit: boolean): Vector3
 	note(x, z)
-	local base = at(x, -0.1, z)
+	local base = facing(x, z, tx, tz, -0.1)
 	post(round, base, 10.5, 1.2)
 	bar(round, "LanternArm", (base * CFrame.new(0, 9.8, 0)).Position, (base * CFrame.new(0, 9.8, -2.2)).Position, 0.5, 0.5, WOOD_LIGHT, Mat.Wood)
 	lashing(round, base * CFrame.new(0, 8.4, 0), 1.8, 0.8)
 	lantern(round, base * CFrame.new(0, 9.5, -1.9), 2.8, lit)
-end
-lanternPost(-32, 36, false)
-lanternPost(32, 40, true)
-
--- a fence along the road winding off
-local function fence(ax: number, az: number, bx: number, bz: number)
-	local len = math.sqrt((bx - ax) ^ 2 + (bz - az) ^ 2)
-	local count = math.max(1, math.floor(len / 9 + 0.5))
-	local yaw = math.atan2(-(bz - az), bx - ax)
-	for k = 1, count do
-		local t = (k - 0.5) / count
-		local x, z = ax + (bx - ax) * t, az + (bz - az) * t
-		note(x, z)
-		kit(round, PropKit, "RanchFence", at(x, -0.1, z, yaw), 9, true, nil, true)
-	end
-end
-fence(-48, 72, -44, 92)
-fence(-54, 102, -86, 116)
-
--- mossy boulders at the edges, in twos and threes
-local function boulder(x: number, z: number, across: number)
-	outdoor(WildKit, "QtRock_Medium_" .. rng:NextInteger(1, 3), x, z, across, true, nil, across > 7)
-	if across >= 9 then
-		kit(round, WildKit, "QtClover_1", at(x, across * 0.45, z, rng:NextNumber(0, 6)), across * 0.55, true, Color3.fromRGB(170, 215, 110))
-	end
-end
-for _, b in { { 84, -94, 10 }, { 30, -100, 7 }, { -30, -102, 8 }, { -82, -96, 11 }, { -94, -88, 6 }, { 122, -14, 11 }, { -122, -4, 12 }, { 82, 92, 9 }, { -70, 92, 8 } } do
-	boulder(b[1], b[2], b[3])
+	return (base * CFrame.new(0, 10.6, 0)).Position
 end
 
--- beds of flowers and leaves, each round something
-local BED = {
-	{ WildKit, "DokiFlower3", 4, false },
+-- flowers in clumps: a big one and three small round it, the kinds taken in turn so neighbours differ
+local FLOWERS = {
+	{ WildKit, "DokiFlower3", 4.2, false },
 	{ PropKit, "PinkDaisies", 4.2, true },
-	{ WildKit, "DokiFlower4", 4.6, false },
-	{ WildKit, "DokiFlower1", 3.2, true },
-	{ WildKit, "DokiFlower2", 3.2, true },
-	{ WildKit, "DokiFlower3", 4.4, false },
-	{ WildKit, "DokiFlower4", 4, false },
-	{ WildKit, "DokiFlower1", 3, true },
-	{ WildKit, "DokiFlower2", 3, true },
-	{ WildKit, "DokiFlower3", 3.6, false },
-	{ WildKit, "QtFern_1", 5, true, TUFT },
+	{ WildKit, "DokiFlower1", 3.4, true },
+	{ WildKit, "DokiFlower4", 4.2, false },
+	{ WildKit, "DokiFlower2", 3.4, true },
 }
-local function bed(x: number, z: number, radius: number, count: number)
-	for k = 1, count do
-		local a, r = rng:NextNumber(0, math.pi * 2), radius * math.sqrt(rng:NextNumber())
-		local e = BED[rng:NextInteger(1, #BED)]
-		local px, pz = x + math.cos(a) * r, z + math.sin(a) * r
-		if not (math.abs(px - C.Landing.x) < 14 and math.abs(pz - C.Landing.z) < 14) then
-			kit(round, e[1], e[2], at(px, -0.1, pz, rng:NextNumber(0, 6.2)), e[3] * rng:NextNumber(0.95, 1.3), e[4], e[5])
+local clumpTurn = 0
+local function clump(x: number, z: number, scale: number?)
+	clumpTurn += 1
+	local k = scale or 1
+	for j = 0, 3 do
+		local e = FLOWERS[(clumpTurn + j) % #FLOWERS + 1]
+		local px, pz = x, z
+		if j > 0 then
+			local a = j * 2.1 + clumpTurn
+			px, pz = x + math.cos(a) * 1.9 * k, z + math.sin(a) * 1.9 * k
 		end
+		kit(round, e[1], e[2], at(px, -0.1, pz, rng:NextNumber(0, 6.2)), e[3] * k * (if j == 0 then 1.15 else 0.85), e[4])
 	end
+	note(x, z)
 end
-for _, f in { { 66, -70 }, { -66, -70 } } do
-	kit(round, WildKit, "QtFlower_3_Group", at(f[1], -0.1, f[2], rng:NextNumber(0, 6)), 4.2, true)
-end
+
 for _, s in { -1, 1 } do
-	-- each with its back to a low wall at the front corner of the court, as in the picture
-	local bx, bz = s * 30, -41
+	-- the way in
+	local lx, lz = s * 10.8, -62
+	lanternPost(lx, lz, 0, lz, true)
+	arcWall(s * math.rad(13), s * math.rad(31), 64)
+	-- a bench before each wall, facing the fountain, flowers between it and the wall
+	local bx, bz = polar(s * math.rad(26), 52)
 	note(bx, bz)
 	kit(round, PropKit, "WoodBench", facing(bx, bz, 0, 0, -0.1), 9.5, true, nil, true)
-	lanternPost(s * 41, -41, true)
-	wall(s * 24, -47, s * 44, -50)
-	bed(s * 34, -53, 7, 6)
-	boulder(s * 52, -52, 8)
-	kit(round, WildKit, "QtFlower_3_Group", at(s * 22, -0.1, -36, rng:NextNumber(0, 6)), 3.6, true)
-	lanternPost(s * 17, -96, s > 0)
+	for _, th in { 19, 33 } do
+		local fx, fz = polar(s * math.rad(th), 58.5)
+		clump(fx, fz)
+	end
+	-- boulders outside the walls and the places
+	local x, z = polar(s * math.rad(30), 76)
+	outdoor(WildKit, "QtRock_Medium_1", x, z, 9, true, nil, true, s * 0.7)
+	x, z = polar(s * math.rad(90), 84)
+	outdoor(WildKit, "QtRock_Medium_2", x, z, 10, true, nil, true, s * 1.4)
+	x, z = polar(s * math.rad(150), 92)
+	outdoor(WildKit, "QtRock_Medium_3", x, z, 8, true, nil, true, s * 2.2)
+	-- the side gap between the front place and the back one: a round flower bed in a ring of stones, a bush behind it
+	local gx, gz = polar(s * math.rad(90), 50.5)
+	for k = 0, 9 do
+		local a = k * math.pi * 2 / 10
+		kerbStone(at(gx + math.cos(a) * 4.4, 0.05, gz + math.sin(a) * 4.4, -a), Vector3.new(1.3, 0.9, 2.6))
+	end
+	clump(gx, gz, 1.2)
+	x, z = polar(s * math.rad(90), 64)
+	outdoor(WildKit, "QtBush_Common_Flowers", x, z, 8, true, nil, false, s)
 end
--- round the fountain's step, in arcs with gaps
-for _, a in { 0.4, 1.3, 2.3, 3.2, 4.2, 5.2 } do
-	bed(math.cos(a) * 20.2, math.sin(a) * 20.2, 3.5, 7)
+
+-- lamps at the path mouths, each on the side of its path away from the way in (toward the board for the back ones)
+local lampTop: { [string]: Vector3 } = {}
+for _, p in PLACES do
+	if p.name ~= "Board" then
+		local theta = angleOf(p.spot)
+		local ux, uz = math.sin(theta), -math.cos(theta)
+		local px, pz = math.cos(theta), math.sin(theta)
+		local off = PATH_W / 2 + 2.6
+		local along = KERB_R + 2.4
+		local ax, az = ux * along + px * off, uz * along + pz * off
+		local bx, bz = ux * along - px * off, uz * along - pz * off
+		local wantFront = p.spot.z < 0
+		local x, z = ax, az
+		-- (on the side away from the way in, so the view from it is not a row of posts: toward the side gap for the front places)
+		if bz > az then
+			x, z = bx, bz
+		end
+		-- (a light in every other lamp only: the front pair)
+		lampTop[p.name] = lanternPost(x, z, ux * along, uz * along, wantFront)
+	end
 end
--- at the board's foot, between the stone beds
-bed(-10, 54, 8, 7)
-bed(10, 54, 8, 7)
-bed(0, 50, 3, 3)
--- along the walls at the front, by the benches
-bed(40, -80, 5, 7)
-bed(-40, -80, 5, 7)
-bed(84, -68, 5, 6)
-bed(-84, -68, 5, 6)
--- beside the stalls, outward
-bed(88, -26, 6, 10)
-bed(-88, -24, 6, 10)
-bed(92, 22, 5, 4)
--- behind and between the stalls and along the yard's edge, so the square sits in greenery
-for _, s in { -1, 1 } do
-	bed(s * 70, 8, 6, 10)
-	bed(s * 40, 12, 4, 6)
-	bed(s * 62, -40, 5, 8)
+-- the bunting from the board's banner posts out to the back places, high over their backs (never across their fronts): on the left to
+-- the Blacksmith's back post on the board's side (build_smithy.luau: 24 wide, 14 deep, 16.6 tall at the back), on the right to a mast
+-- of the same height in the mirror spot behind the portal
+local smithyPost: Vector3
+do
+	local c = pushedOut(C.Smithy, 3.5)
+	local frame = facing(c.x, c.z, 0, 0)
+	local a = F:PointToObjectSpace((frame * CFrame.new(-12, 0, 7)).Position)
+	local b = F:PointToObjectSpace((frame * CFrame.new(12, 0, 7)).Position)
+	local p = if a.Z > b.Z then a else b
+	smithyPost = Vector3.new(p.X, 0, p.Z)
 end
-for _, b in { { 96, -44, 8 }, { -98, -40, 8 }, { 96, 56, 8 }, { -88, 62, 7 }, { 46, 74, 8 }, { -18, 78, 7 }, { 62, -96, 7 }, { -60, -98, 7 }, { 66, 12, 9 }, { 76, 2, 9 }, { -66, 12, 9 }, { -76, 2, 9 }, { -50, 18, 8 }, { 24, 58, 8 }, { -24, 58, 8 } } do
-	outdoor(WildKit, "QtBush_Common_Green", b[1], b[2], b[3], true)
+do
+	local x, z = -smithyPost.X, smithyPost.Z
+	note(x, z)
+	local base = at(x, -0.1, z)
+	post(round, base, 16.6, 1.7)
+	lashing(round, base * CFrame.new(0, 15.4, 0), 2.5, 1)
+	ball(round, "MastKnob", 1.6, base * CFrame.new(0, 17.1, 0), GOLD)
 end
-for _, b in { { 86, 70, 7 }, { -76, 48, 7 }, { 28, 76, 7 } } do
-	outdoor(WildKit, "QtBush_Common_Flowers", b[1], b[2], b[3], true)
+bunting(at(23.5 + 4.2, 23.2, C.Board.z - 1).Position, at(smithyPost.X, 16.4, smithyPost.Z).Position, 3, 11)
+bunting(at(-23.5 - 4.2, 23.2, C.Board.z - 1).Position, at(-smithyPost.X, 16.4, smithyPost.Z).Position, 3, 11)
+
+-- at the foot of each place: flowers at the stalls' near ends, either side of the smithy and the portal, and at the board
+for _, spot in { C.Buyer, C.Vip } do
+	local frame = frameOf(spot)
+	local s = entryOf(spot)
+	local p = F:PointToObjectSpace((frame * CFrame.new(s * (W / 2 + 5.5), 0, 1.5)).Position)
+	clump(p.X, p.Z)
+end
+for _, spot in { pushedOut(C.Smithy, 3.5), C.Portal } do
+	local theta = angleOf(spot)
+	local r = math.sqrt(spot.x * spot.x + spot.z * spot.z)
+	for _, side in { -1, 1 } do
+		local x, z = polar(theta, r + 1)
+		x += math.cos(theta) * side * 16
+		z += math.sin(theta) * side * 16
+		clump(x, z)
+	end
+	local x, z = polar(theta, r + 13)
+	outdoor(WildKit, "QtBush_Common_Green", x, z, 8, true)
+end
+clump(-10, 54.5)
+clump(10, 54.5)
+-- a ring of flowers on the fountain's step, kinds in turn
+for k = 0, 15 do
+	local a = (k + 0.5) * math.pi * 2 / 16
+	local e = FLOWERS[k % #FLOWERS + 1]
+	kit(round, e[1], e[2], at(math.cos(a) * 20.2, -0.1, math.sin(a) * 20.2, rng:NextNumber(0, 6.2)), e[3] * 0.8, e[4])
+	-- a leafy clump between each two flowers, so the ring reads as one green bed and not as sweets on bare earth
+	local b = a + math.pi / 16
+	kit(round, WildKit, "QtClover_1", at(math.cos(b) * 20.2, -0.1, math.sin(b) * 20.2, rng:NextNumber(0, 6.2)), 3.2, true, TUFT)
 end
 
 -- ===== the count, and what stands on a neighbour =====
 local function plotClash(): { string }
 	local clashes = {}
 	for _, plot in { 1, 8 } do
-		local frame = Layout.plotFrame(plot)
+		local frame = slotFrame(plot)
 		for _, spot in placedAt do
 			local p = frame:PointToObjectSpace(at(spot.x, 0, spot.z).Position)
 			if math.abs(p.X) < M.PlotSize / 2 + 10 and math.abs(p.Z) < M.PlotSize / 2 + 10 then
@@ -1069,3 +1157,4 @@ table.insert(lines, table.concat(sorted, ", "))
 local clashes = plotClash()
 table.insert(lines, if #clashes > 0 then "ON NEIGHBOURS: " .. table.concat(clashes, ", ") else "nothing within 10 of plots 1 and 8")
 return table.concat(lines, "\n")
+

@@ -1,6 +1,20 @@
 # Status
 
-## 2026-11-05 — The Arena scene rebuilt in high detail (start here)
+## 2026-11-05 — The Market square tidied, the old Arena building removed (start here)
+
+The owner: remove the arena built beside the Market, make the shopping area tidy and prettier. Done in the open MapWork
+place, **it reaches the game only after the owner presses Ctrl+S there** (then rebuild StudioTest):
+- `workspace.Map.Arena` deleted (the Arena is its own client scene since this morning).
+- `tools/map/build_market.luau` rewritten: a round flagstone plaza on the fountain, five places on one circle facing it
+  (`Config.Market`: Buyer 48,-28; Vip -48,-28; Smithy 48,28; Board 0,62; `Config.Dungeon.Portal.Market` -51,30), one
+  straight paved way in, dressing in mirror pairs. `build_smithy.luau`: the Blacksmith gets its own roof, walls and
+  chimney. `check_market.luau` MARKET OK. The MCP builders cannot `require` Config, so each keeps a copy of the numbers
+  marked EQUAL to Config: change them together. `tools/map/preview_portal.luau` shows the portal in Edit shots (remove it
+  before a save).
+- Judged from ray pictures (`art/concept/review/market-tidy-r4-eye-rays.png`, `-r2-top-rays.png`); Studio was minimised
+  while the owner played another game. Open: a real shot and a play test at the game camera after the save.
+
+## 2026-11-05 — The Arena scene rebuilt in high detail
 
 The owner after playing: spectators must face the middle (fixed: `ringCF`, never Lune's `CFrame.lookAt`), no player
 in the arena (fixed), and the design was far too plain. Rebuilt from four ChatGPT close-ups
@@ -175,7 +189,7 @@ The owner: Hand becomes Weapon and Tail becomes Charm; one portal for everyone i
 dungeon, a lock on it for a player who may not enter; the gate sheet without the two needs rows, only the drops as a plain list;
 an inventory for each player, well sorted; and a slime page in the style of an RPG.
 - Slot names: `Config.Smithy.SlotNames` (Weapon / Head / Charm) on every screen; the saved ids (hand, head, tail) stay.
-- Portal: `Layout.marketPortal()` (`Config.Dungeon.Portal.Market`, behind the VIP stall across from the Blacksmith, facing the
+- Portal: `Layout.marketPortal()` (`Config.Dungeon.Portal.Market`, back right of the square, the Blacksmith's mirror, facing the
   fountain), built once by `server/DungeonPortal`; entering still makes a private arena per player, leaving lands at the portal.
   The client puts a lock picture (`Config.Ui.Icons.lock`) over it and the prompt reads "Locked" (a tap says why) while
   `Dungeon.entryBlock` says no. Studio's screen capture never draws BillboardGuis, so the lock was checked by its state (shown at

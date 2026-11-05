@@ -1,10 +1,23 @@
--- Checks the Market square built by tools/map/build_market.luau: the names the code finds, the screen's face, the awnings' clearance, a free
--- walk for a 5-stud player from the Landing to the buyer, the VIP counter and the board, nothing of the square on the ring road or on plots 1
--- and 8. Ends MARKET OK, or lists what is wrong. Run in Edit mode: node tools/studio_mcp.js run tools/map/check_market.luau <studio_id> Edit
-local Layout = require(game:GetService("ReplicatedStorage").Shared.Layout)
-local Config = require(game:GetService("ReplicatedStorage").Shared.Config)
-local M = Config.Map
-local F = Layout.marketFrame()
+-- Checks the Market square built by tools/map/build_market.luau and build_smithy.luau: the names the code finds, the screen's face, the
+-- awnings' clearance, a free walk for a 5-stud player from the Landing round the plaza to the front of every place (the portal's too, from
+-- its spot), the Landing clear, nothing of the square on the ring road or on plots 1 and 8. Ends MARKET OK, or lists what is wrong.
+-- Run in Edit mode: node tools/studio_mcp.js run tools/map/check_market.luau <studio_id> Edit
+-- (an MCP `run` cannot require the shared modules - "Capabilities: Network" - so the numbers are kept here, EQUAL to
+-- src/shared/Config.luau's Config.Map, Config.Market and Config.Dungeon.Portal.Market)
+local M = { GroundY = 2, RingRoadRadius = 356, RingRoadWidth = 24, PlotSize = 228, RimRadius = 500, PlotCount = 8 }
+local K = {
+	Landing = { x = 0, z = -56 },
+	Buyer = { x = 48, z = -28 },
+	Vip = { x = -48, z = -28 },
+	Board = { x = 0, z = 62 },
+	Smithy = { x = 48, z = 28 },
+	Portal = { x = -51, z = 30 },
+}
+local function slotFrame(slot: number): CFrame
+	local a = math.rad(slot * 360 / (M.PlotCount + 1))
+	return CFrame.new(math.sin(a) * M.RimRadius, 0, -math.cos(a) * M.RimRadius) * CFrame.Angles(0, math.pi - a, 0)
+end
+local F = slotFrame(0)
 local G = M.GroundY
 local market = workspace.Map.Market
 local wrong = {}
@@ -14,7 +27,7 @@ local function fail(text: string)
 end
 
 -- the names
-for _, name in { "SlimeBuyer", "VipStall", "Leaderboard" } do
+for _, name in { "SlimeBuyer", "VipStall", "Leaderboard", "Blacksmith" } do
 	local m = market:FindFirstChild(name)
 	if not m or not m:IsA("Model") then
 		fail("no Model " .. name)
@@ -25,8 +38,7 @@ if not screen or not screen:IsA("BasePart") then
 	fail("no Part Screen in Leaderboard")
 else
 	-- its Front (LookVector) must look at the square, toward the frame's -Z, within a few degrees
-	local toSquare = F.LookVector
-	if screen.CFrame.LookVector:Dot(toSquare) < 0.99 then
+	if screen.CFrame.LookVector:Dot(F.LookVector) < 0.99 then
 		fail("the Screen's Front does not face the square")
 	end
 	table.insert(notes, string.format("screen %.0f x %.0f studs", screen.Size.X, screen.Size.Y))
@@ -78,25 +90,45 @@ local function walk(name: string, points: { { number } })
 		end
 	end
 end
-local function frontOf(spot: { x: number, z: number }, by: number): { number }
-	local dx, dz = 0 - spot.x, -56 - spot.z
-	local len = math.sqrt(dx * dx + dz * dz)
-	return { spot.x + dx / len * by, spot.z + dz / len * by }
+-- a point `r` from the fountain on the line to a spot, and the plaza's walking ring (radius 32, clear of the fountain's 19)
+local function toward(spot: { x: number, z: number }, r: number): { number }
+	local len = math.sqrt(spot.x * spot.x + spot.z * spot.z)
+	return { spot.x / len * r, spot.z / len * r }
 end
-walk("the buyer", { { 0, -56 }, frontOf({ x = 55, z = -8 }, 9) })
-walk("the VIP counter", { { 0, -56 }, frontOf({ x = -55, z = -8 }, 9) })
-walk("the board", { { 0, -56 }, { 22, -28 }, { 26, 20 }, { 12, 44 } })
-walk("the board, other side", { { 0, -56 }, { -22, -28 }, { -26, 20 }, { -12, 44 } })
-walk("in from the ring road", { { 0, -110 }, { 0, -56 } })
+local function ring(fromAngle: number, toAngle: number): { { number } }
+	local out = {}
+	local steps = math.max(1, math.ceil(math.abs(toAngle - fromAngle) / math.rad(15)))
+	for k = 0, steps do
+		local a = fromAngle + (toAngle - fromAngle) * k / steps
+		table.insert(out, { math.sin(a) * 32, -math.cos(a) * 32 })
+	end
+	return out
+end
+local function walkTo(name: string, spot: { x: number, z: number }, stopAt: number)
+	local points = { { K.Landing.x, K.Landing.z } }
+	for _, p in ring(0, math.atan2(spot.x, -spot.z)) do
+		table.insert(points, p)
+	end
+	table.insert(points, toward(spot, stopAt))
+	walk(name, points)
+end
+-- to the front of each counter (9 short of its spot), the smithy's anvil (8 short), the portal's opening and the board
+walkTo("the buyer", K.Buyer, math.sqrt(K.Buyer.x ^ 2 + K.Buyer.z ^ 2) - 9)
+walkTo("the VIP counter", K.Vip, math.sqrt(K.Vip.x ^ 2 + K.Vip.z ^ 2) - 9)
+walkTo("the Blacksmith", K.Smithy, math.sqrt(K.Smithy.x ^ 2 + K.Smithy.z ^ 2) - 8)
+-- (the portal's platform comes to about 14 short of its spot: the walk ends at its first step)
+walkTo("the portal", K.Portal, math.sqrt(K.Portal.x ^ 2 + K.Portal.z ^ 2) - 16)
+walkTo("the board", K.Board, 50)
+walk("in from the ring road", { { 0, -122 }, { K.Landing.x, K.Landing.z } })
 
 -- nothing on the Landing
-local clear = workspace:GetPartBoundsInBox(F * CFrame.new(0, G + 3, -56), Vector3.new(16, 5, 16), params)
+local clear = workspace:GetPartBoundsInBox(F * CFrame.new(K.Landing.x, G + 3, K.Landing.z), Vector3.new(16, 5, 16), params)
 if #clear > 0 then
 	fail("the Landing is not clear: " .. clear[1]:GetFullName())
 end
 
 -- what stands where it may not: every part's foot, in plan
-local plots = { Layout.plotFrame(1), Layout.plotFrame(8) }
+local plots = { slotFrame(1), slotFrame(8) }
 local parts, shadows, collide = 0, 0, 0
 local onRoad, onPlot = 0, 0
 for _, d in market:GetDescendants() do

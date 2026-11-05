@@ -94,6 +94,11 @@ royal-blue and cream awnings, money-bag emblems, gold trims, lanterns).
   Robux goods that says "Opening soon" until the owner approves a list), one **leaderboard** (model `Leaderboard`, a part
   `Screen`: the top 10 slimes of the whole game by level), and two round HUD buttons, Market and Home, that move the player
   (3 s apart). The rest of this list is the earlier plan; the other stalls wait.
+- **Tidied (the owner, 2026-11-05):** a round paved plaza on the fountain (flagstone rings, a kerb), and five places on one
+  circle of about 56 round it, each facing the fountain on its own pad and short path: Buyer front left, VIP front right,
+  Blacksmith back left (its own rust-red roof, stone walls, chimney), the Dungeon portal back right, the Board back centre.
+  One straight paved way in from the Landing with a lamp and a low wall each side; benches, flower beds, lamps, trees and
+  boulders in mirror pairs. The old Arena building beside the Market is gone (the Arena is its own scene, `docs/ARENA.md`).
 - **The Shop** (shopkeeper): sell slimes; buy seeds, bait, basic items. (Today: the slime buyer sells only.)
 - **The Smithy** (blacksmith, furnace and anvil): craft hand/head/tail gear from drops.
 - **The Travelling Merchant's stop:** his cart rolls in for 5 of every 15 minutes, the same for
