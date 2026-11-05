@@ -3,17 +3,27 @@
 -- handler checks it again, and tools/build_publish.luau strips this file from the published place (and fails if it stays).
 -- The client asks (Remotes.Debug, { action, args }); the server changes ONLY the asker's own farm through PlayerData.update
 -- (DebugPresets does the changing, in place, with the game's own rules), keeps one level of undo in memory, tells the world
--- (areas, village, guide, rewards) and saves soon. Answers { ok, text }.
+-- (areas, village, guide, rewards) and saves soon. Answers { ok, text }. The Arena items go to server/Arena's Studio-only
+-- debug calls (the same rules as its remote; only the points, tickets, rank and clock tools reach past them, and only on
+-- the Studio memory ladder for the rank); "Fake servers" runs more ladder servers on that memory ladder.
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 
+local ArenaFight = require(ReplicatedStorage.Shared.ArenaFight)
+local ArenaLadder = require(ReplicatedStorage.Shared.ArenaLadder)
+local ArenaPlay = require(ReplicatedStorage.Shared.ArenaPlay)
+local ArenaRules = require(ReplicatedStorage.Shared.ArenaRules)
+local ArenaSeason = require(ReplicatedStorage.Shared.ArenaSeason)
 local Config = require(ReplicatedStorage.Shared.Config)
 local DebugPresets = require(ReplicatedStorage.Shared.DebugPresets)
 local FarmState = require(ReplicatedStorage.Shared.FarmState)
 local Layout = require(ReplicatedStorage.Shared.Layout)
 local ProfileLogic = require(ReplicatedStorage.Shared.ProfileLogic)
+local Rng = require(ReplicatedStorage.Shared.Rng)
 local Travel = require(ReplicatedStorage.Shared.Travel)
+local Arena = require(script.Parent.Arena)
+local ArenaStore = require(script.Parent.ArenaStore)
 local Dungeon = require(script.Parent.Dungeon)
 local Guide = require(script.Parent.Guide)
 local PlayerData = require(script.Parent.PlayerData)
@@ -23,6 +33,16 @@ local ZombieFights = require(script.Parent.ZombieFights)
 
 -- Debug numbers (the owner's Config belongs to others, so they live here).
 local MIN_GAP = 0.25 -- seconds between two taps of one player (the menu is a person pressing buttons)
+-- the Arena tools
+local ARENA_POINTS = 1000 -- "+1000 Arena points"
+local FAKE_SERVERS = 5 -- "Fake servers x5": extra ladder servers on the Studio memory stores
+local FAKE_PLAYERS = 3 -- fake players a fake server
+local FAKE_SECONDS = 180 -- how long the fake players attack
+local FAKE_SETTLE_SECONDS = 90 -- then how long their matches in flight keep settling
+local FAKE_STEP = 5 -- seconds between two steps of the fakes (a leader tick every third step, as TickSeconds)
+local FAKE_GAP = { 15, 40 } -- seconds between two attacks of one fake player (random in this range)
+local FAKE_LEVELS = { 8, 45 } -- the level of a fake player's slimes (random in this range)
+local FAKE_ID = 7_000_000_000 -- fake players' UserIds are above this (a memory ladder only)
 
 local OwnerDebug = {}
 -- server time of each player's last tap
@@ -112,6 +132,239 @@ local function moveTo(player: Player, action: string): { ok: boolean, text: stri
 	return reply(true, "Moved to " .. action)
 end
 
+-- ===== the Arena: fake servers on the Studio memory ladder =====
+
+local fakeRunning = false
+
+-- One step of a fake player: its match in flight is settled as server/Arena does, or (while `attacking`) it attacks a
+-- random opponent of its list once its next attack time has come.
+local function fakeStep(p: any, now: number, attacking: boolean, random: Random, rng: any)
+	local farm = p.farm
+	local pending = farm.arena.pending
+	if pending then
+		local doc = p.store.readLadder(pending.season, Config.Arena.SettleReadSeconds)
+		local action, out = ArenaRules.settle(farm, doc, p.userId, now)
+		if action == "confirm" and out then
+			local points = ArenaRules.confirm(farm, now, out)
+			p.confirms += 1
+			print(
+				Config.LogPrefix,
+				string.format(
+					"arena: fake %s match %s confirmed: %s, +%d points, rank %d",
+					p.name,
+					pending.matchId,
+					if out.won then "won" else "lost",
+					points,
+					out.rankAfter or 0
+				)
+			)
+			local _, theirs = ArenaPlay.logEntries(pending, out, tostring(p.userId), p.name, points, now)
+			if theirs then
+				p.store.appendLog(tonumber(pending.defender) :: number, theirs)
+			end
+		elseif action == "void" then
+			ArenaRules.void(farm, now)
+			p.voids += 1
+			print(Config.LogPrefix, "arena: fake", p.name, "match", pending.matchId, "void")
+		elseif action == "resend" then
+			local result = ArenaRules.result(farm, p.userId, p.name)
+			if result and p.store.submit(result) then
+				ArenaRules.markSent(farm, now)
+				print(Config.LogPrefix, "arena: fake", p.name, "match", pending.matchId, "sent again")
+			end
+		end
+		return
+	end
+	if not attacking or now < p.nextAt then
+		return
+	end
+	p.nextAt = now + random:NextInteger(FAKE_GAP[1], FAKE_GAP[2])
+	local season = ArenaSeason.seasonOf(now)
+	local doc = p.store.readLadder(season, Config.Arena.SettleReadSeconds)
+	local mine = ArenaPlay.snapshotDoc(farm, ArenaPlay.fightTeam(farm, now), p.name)
+	if not doc or not mine then
+		return
+	end
+	local picks = ArenaLadder.opponents(doc, tostring(p.userId), rng, Config.Arena.Opponents)
+	local list = ArenaPlay.offer(doc, picks, season, function(userId: number): any
+		return ArenaPlay.cleanSnapshot(p.store.readSnapshot(userId, 60))
+	end)
+	local target = list[random:NextInteger(1, #list)]
+	local seed = random:NextInteger(1, 2 ^ 31 - 2)
+	local replay = ArenaFight.simulate(mine.fighters, target.fighters, seed)
+	local info = ArenaPlay.attackInfo(p.userId, target, replay.won, mine.power, seed, "fake-" .. (farm.arena.seq + 1))
+	local began, why = ArenaRules.beginAttack(farm, now, info)
+	if not began then
+		print(Config.LogPrefix, "arena: fake", p.name, "attack refused:", why)
+		return
+	end
+	p.attacks += 1
+	local result = ArenaRules.result(farm, p.userId, p.name)
+	if result then
+		p.store.submit(result)
+	end
+	print(
+		Config.LogPrefix,
+		string.format(
+			"arena: fake %s attacked %s (%s, rank %d): %s",
+			p.name,
+			target.name,
+			target.id,
+			target.rank or 0,
+			if replay.won then "won" else "lost"
+		)
+	)
+end
+
+-- FAKE_SERVERS more ladder servers on the same memory stores, each with FAKE_PLAYERS fake players that set teams, publish
+-- their defence and attack bots, champions, each other and the real players for FAKE_SECONDS, through the same rules and
+-- stores as server/Arena: leader hand-over and contention show in the log.
+local function fakeServers(): (boolean, string)
+	if fakeRunning then
+		return false, "Fake servers are already running"
+	end
+	local deps = Arena.debug.memory()
+	if not deps then
+		return false, "Only on the Studio memory ladder"
+	end
+	local A = Config.Arena
+	local clock = Arena.debug.clock
+	local random = Random.new()
+	local rng = Rng.fromSource(function(): number
+		return random:NextNumber()
+	end)
+	local queue = deps.memory:GetQueue(A.QueueName, A.InvisibleSeconds)
+	local lease = deps.memory:GetHashMap(A.LeaseMapName)
+	local start = clock()
+	local servers = {}
+	local fakes = {}
+	for i = 1, FAKE_SERVERS do
+		local id = "fake" .. i
+		local store = ArenaStore.new({
+			data = deps.data,
+			queue = queue,
+			lease = lease,
+			serverId = id,
+			clock = clock,
+			log = function(line: string)
+				print(line .. " [" .. id .. "]")
+			end,
+		})
+		table.insert(servers, store)
+		for j = 1, FAKE_PLAYERS do
+			local farm = FarmState.newFarm(start)
+			DebugPresets.addSlimes(farm, start, A.TeamSize, random:NextInteger(FAKE_LEVELS[1], FAKE_LEVELS[2]))
+			ArenaRules.setTeam(farm, ArenaPlay.bestTeam(farm, start), start)
+			table.insert(fakes, {
+				userId = FAKE_ID + i * 10 + j,
+				name = string.format("Fake %d-%d", i, j),
+				farm = farm,
+				store = store,
+				nextAt = start + random:NextInteger(0, FAKE_GAP[2]),
+				attacks = 0,
+				confirms = 0,
+				voids = 0,
+			})
+		end
+	end
+	fakeRunning = true
+	task.spawn(function()
+		local ok, err = pcall(function()
+			for _, p in fakes do
+				local doc = ArenaPlay.snapshotDoc(p.farm, ArenaRules.team(p.farm), p.name)
+				if doc and p.store.writeSnapshot(p.userId, doc) then
+					p.store.join(tostring(p.userId), p.name, doc.power)
+				end
+			end
+			local step = 0
+			while clock() - start < FAKE_SECONDS + FAKE_SETTLE_SECONDS do
+				task.wait(FAKE_STEP)
+				step += 1
+				local now = clock()
+				for i, store in servers do
+					if (step + i) % 3 == 0 then
+						store.leaderTick(now)
+					end
+				end
+				for _, p in fakes do
+					local stepped, why = pcall(fakeStep :: any, p, now, now - start < FAKE_SECONDS, random, rng)
+					if not stepped then
+						warn(Config.LogPrefix, "arena: fake", p.name, "step failed:", why)
+					end
+				end
+			end
+		end)
+		fakeRunning = false
+		if not ok then
+			warn(Config.LogPrefix, "arena: fake servers failed:", err)
+		end
+		local attacks, confirms, voids, waiting = 0, 0, 0, 0
+		for _, p in fakes do
+			attacks += p.attacks
+			confirms += p.confirms
+			voids += p.voids
+			waiting += if p.farm.arena.pending then 1 else 0
+		end
+		print(
+			Config.LogPrefix,
+			string.format(
+				"arena: fake servers done: %d attacks, %d confirmed, %d void, %d still in flight",
+				attacks,
+				confirms,
+				voids,
+				waiting
+			)
+		)
+	end)
+	return true,
+		string.format(
+			"%d fake servers, %d fake players, %d s of attacks: watch the log",
+			FAKE_SERVERS,
+			#fakes,
+			FAKE_SECONDS
+		)
+end
+
+-- An "arena" item of the menu: server/Arena's Studio-only debug calls.
+local function arenaDebug(player: Player, action: string, args: any): { ok: boolean, text: string }
+	local D = Arena.debug
+	local ok, text = false, "Unknown action"
+	if action == "arena_team" then
+		ok, text = D.team(player)
+	elseif action == "arena_opponents" then
+		ok, text = D.opponents(player)
+	elseif action == "arena_attack" then
+		ok, text = D.attackFirst(player)
+	elseif action == "arena_state" then
+		ok, text = D.state(player)
+	elseif action == "arena_tickets" then
+		ok, text = D.tickets(player)
+	elseif action == "arena_rank" then
+		local rank = if type(args) == "table"
+				and type(args.rank) == "number"
+				and args.rank == args.rank
+			then args.rank
+			else 1
+		ok, text = D.rank(player, rank)
+	elseif action == "arena_points" then
+		ok, text = D.points(player, ARENA_POINTS)
+	elseif action == "arena_end_season" or action == "arena_clock_reset" then
+		if fakeRunning then
+			return reply(false, "Wait for the fake servers to finish")
+		end
+		if action == "arena_end_season" then
+			ok, text = D.endSeason()
+		else
+			ok, text = D.clockReset()
+		end
+	elseif action == "arena_fake" then
+		ok, text = fakeServers()
+	elseif action == "arena_pause" then
+		ok, text = D.pauseLeader()
+	end
+	return reply(ok, text)
+end
+
 local function request(player: Player, data: any): { ok: boolean, text: string }
 	if not RunService:IsStudio() then
 		return reply(false, "Studio only")
@@ -143,6 +396,8 @@ local function request(player: Player, data: any): { ok: boolean, text: string }
 	print(Config.LogPrefix, "debug:", action, "(" .. player.Name .. ")")
 	if kind == "travel" then
 		return moveTo(player, action)
+	elseif kind == "arena" then
+		return arenaDebug(player, action, data.args)
 	end
 	-- Everything below changes the farm.
 	if Dungeon.inRun(player) then

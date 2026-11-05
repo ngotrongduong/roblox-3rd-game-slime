@@ -3535,6 +3535,30 @@ Config.Arena = {
 	WarnDocBytes = 1000000,
 	-- A defender's log (Log_<userId>) keeps its last LogKeep entries.
 	LogKeep = 10,
+
+	-- The server service (server/Arena, Remotes.Arena). Opponents offered at a time; a new list at most every RefreshSeconds;
+	-- requests a second a player; a client's request id is at most RequestIdMaxLength characters; the state's top rows.
+	Opponents = 5,
+	RefreshSeconds = 30,
+	RequestsPerSecond = 4,
+	RequestIdMaxLength = 40,
+	TopCount = 10,
+	-- Matches in flight are looked at every SettleSeconds against a ladder at most SettleReadSeconds old; ranks follow the
+	-- ladder every LadderRefreshSeconds; a past season's ladder is read for its reward at most every ClaimReadSeconds. A past
+	-- season with no ladder written (nobody played it) is closed with no reward ClaimGraceSeconds after its final time.
+	SettleSeconds = 5,
+	SettleReadSeconds = 5,
+	LadderRefreshSeconds = 60,
+	ClaimReadSeconds = 300,
+	ClaimGraceSeconds = 3600,
+	-- The defence snapshot (Def_<userId>): its shape's version; sent again when the team changed (at most every
+	-- PublishGapSeconds) or only its power did (at most every SnapshotDebounceSeconds); an opponent's is read at most every
+	-- SnapshotReadSeconds. A player's own log is read at most every LogReadSeconds.
+	SnapshotVersion = 1,
+	PublishGapSeconds = 10,
+	SnapshotDebounceSeconds = 300,
+	SnapshotReadSeconds = 300,
+	LogReadSeconds = 10,
 }
 
 return Config

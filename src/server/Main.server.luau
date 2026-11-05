@@ -5,6 +5,7 @@ local RunService = game:GetService("RunService")
 
 local Config = require(ReplicatedStorage.Shared.Config)
 local FarmSave = require(ReplicatedStorage.Shared.FarmSave)
+local Arena = require(script.Parent.Arena)
 local AreaUpgrade = require(script.Parent.AreaUpgrade)
 local Dungeon = require(script.Parent.Dungeon)
 local DungeonPortal = require(script.Parent.DungeonPortal)
@@ -42,6 +43,9 @@ end))
 
 -- The Market's leaderboard reads the loaded farms and sends the best slime of each player to its stores.
 Leaderboard.start()
+
+-- The Arena: its remote, the ladder's leader ticks and the matches in flight (after the profiles it reads).
+Arena.start()
 
 -- The owner's debug menu: Studio only. It is found by name and not required at the top, because the publish build removes
 -- the module (tools/build_publish.luau) and the published game must start without it.

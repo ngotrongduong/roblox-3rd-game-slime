@@ -539,6 +539,13 @@ function ArenaStore.new(deps: Deps): Store
 	return store
 end
 
+-- The memory stores the last open fell back to, so the Studio debug tools can run more "servers" on the same ladder (nil
+-- while the real stores are open: the debug tools never touch those).
+local memoryStores: { data: any, memory: any }? = nil
+function ArenaStore.memoryStores(): { data: any, memory: any }?
+	return memoryStores
+end
+
 -- The stores of a live server, or memory ones in a Studio play test (unless Config.Arena.StudioUsesRealStore), an
 -- unpublished place or when the real ones cannot be opened: never the real stores from Studio. Roblox only.
 function ArenaStore.open(clock: () -> number, log: ((message: string) -> ())?): Store
@@ -560,6 +567,7 @@ function ArenaStore.open(clock: () -> number, log: ((message: string) -> ())?): 
 	end
 	if data == nil then
 		data, memory = ArenaMemory.dataStore(), ArenaMemory.new(clock)
+		memoryStores = { data = data, memory = memory }
 	end
 	local queue = memory:GetQueue(A.QueueName, A.InvisibleSeconds)
 	local lease = memory:GetHashMap(A.LeaseMapName)

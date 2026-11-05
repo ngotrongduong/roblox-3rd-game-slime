@@ -402,7 +402,7 @@ return function(T: any)
 	end)
 
 	T.test("every item of the menu has an id and a text, and a farm item has a handler", function()
-		local kinds = { farm = true, undo = true, fresh = true, travel = true }
+		local kinds = { farm = true, undo = true, fresh = true, travel = true, arena = true }
 		local count = 0
 		for _, group in DebugPresets.Menu do
 			T.ok(group.group ~= "")

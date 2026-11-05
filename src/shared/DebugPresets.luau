@@ -534,7 +534,8 @@ end
 
 -- ===== the menu =====
 -- What the Studio panel shows, in order: groups of items. `kind`: "farm" runs here (DebugPresets.run); "undo", "fresh" and
--- "travel" are done by the server (OwnerDebug) because they need the stored copy, a new farm or the character. `args` are sent
+-- "travel" are done by the server (OwnerDebug) because they need the stored copy, a new farm or the character; "arena" goes
+-- to the Arena service's debug calls (server/Arena, through OwnerDebug). `args` are sent
 -- with the tap. `danger` draws the red button.
 DebugPresets.Menu = {
 	{
@@ -578,6 +579,25 @@ DebugPresets.Menu = {
 		items = {
 			{ id = "guide_skip", text = "Skip tutorial", kind = "farm" },
 			{ id = "guide_reset", text = "Reset tutorial", kind = "farm" },
+		},
+	},
+	{
+		-- (kind "arena": server/OwnerDebug hands it to server/Arena's Studio-only debug calls)
+		group = "Arena",
+		items = {
+			{ id = "arena_team", text = "Team: best 4", kind = "arena" },
+			{ id = "arena_opponents", text = "Opponents", kind = "arena" },
+			{ id = "arena_attack", text = "Attack 1st", kind = "arena" },
+			{ id = "arena_state", text = "Arena state", kind = "arena" },
+			{ id = "arena_tickets", text = "Tickets 10", kind = "arena" },
+			{ id = "arena_rank", text = "Rank 1", kind = "arena", args = { rank = 1 } },
+			{ id = "arena_rank", text = "Rank 7", kind = "arena", args = { rank = 7 } },
+			{ id = "arena_rank", text = "Rank 50", kind = "arena", args = { rank = 50 } },
+			{ id = "arena_points", text = "+1000 Arena points", kind = "arena" },
+			{ id = "arena_end_season", text = "End season", kind = "arena" },
+			{ id = "arena_clock_reset", text = "Clock reset", kind = "arena" },
+			{ id = "arena_fake", text = "Fake servers x5", kind = "arena" },
+			{ id = "arena_pause", text = "Pause leader", kind = "arena" },
 		},
 	},
 	{
