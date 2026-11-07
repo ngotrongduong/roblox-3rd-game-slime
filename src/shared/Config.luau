@@ -186,7 +186,8 @@ Config.LibraryKit = {
 	Textures = {
 		F = "rbxassetid://88131378238308", -- wood (T_Trim_Furniture, art/models/props/quaternius)
 		M = "rbxassetid://71855764790861", -- iron
-		P = "rbxassetid://79115972926298", -- the produce (apples, carrots)
+		-- the produce (apples, carrots) is painted in the mesh's own vertex colours: the trim sheet over them read black
+		P = "",
 		C = "rbxassetid://71397049359621", -- cloth
 	},
 	Props = {
