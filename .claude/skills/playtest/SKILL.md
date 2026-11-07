@@ -22,7 +22,10 @@ play test reports what to look at instead.
   `screen_capture`, `execute_luau` in the Server or Client datamodel. It does not take over the screen.
 - Test in `assets/raw/MapWork.rbxlx` (`village-playtest`): the built `GooLineage.rbxlx` has no world. To try what players
   would get, `lune run tools/build_publish.luau`, open `assets/raw/Publish.rbxl`, and pass `studio_id` to each Studio
-  tool. Never `open_application` Studio: it starts a second, empty Studio. Never take the mouse or keyboard while the
+  tool. With the Studio debug menu: `lune run tools/build_publish.luau studio` writes `assets/raw/StudioTest.rbxl`,
+  the ONE test copy (the owner, 2026-11-08: more copies made him edit the wrong file). Close it in Studio before
+  rebuilding instead of opening a renamed copy, and never build or save anything in it that must stay: map work goes in
+  MapWork + Ctrl+S. Never `open_application` Studio: it starts a second, empty Studio. Never take the mouse or keyboard while the
   owner is using the machine.
 - If the owner is playing in the Studio window, let him play and read the log instead of grabbing the mouse.
 - A Studio play test saves nothing and never touches real saves (the profile layer uses its in-memory store). Saving is
