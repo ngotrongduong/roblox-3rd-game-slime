@@ -1,6 +1,7 @@
 --!strict
 -- A fight between two sides, pure and seeded: the original's formulas (docs/reference/02-battle.md §8) without its
--- positions. Where units stand is for the client to draw; a hit lands when its cooldown ends.
+-- positions. Where units stand is for the client to draw; a hit lands when its cooldown ends. Only the Slime Dungeon
+-- turns on the positional mode (Combat.new's `moves`), where fighters walk into reach before they aim.
 local Config = if script then require(script.Parent.Config) else require("./Config")
 local Rng = if script then require(script.Parent.Rng) else require("./Rng")
 
@@ -27,14 +28,32 @@ export type Unit = {
 	-- stung slow: until this many seconds into the fight its beat runs at (1 - slowBy) speed
 	slowUntil: number,
 	slowBy: number,
+	-- positional mode only (Fight.moves): where it stands (flat, studs from the arena's middle), the place round its
+	-- target it walks to (its angle round the target, and whose), whether it was walking last step, and when its
+	-- walk was last sent
+	x: number,
+	z: number,
+	slotAngle: number,
+	slotOf: string,
+	walking: boolean,
+	sentAt: number,
 }
 -- `open`: more foes are still to come (the dungeon's queue), so the fight does not end when the foes in it are down; a
 -- squad wiped out ends it all the same.
-export type Fight = { units: { Unit }, rng: Rng, seconds: number, winner: string?, open: boolean?, fair: boolean? }
+export type Fight = {
+	units: { Unit },
+	rng: Rng,
+	seconds: number,
+	winner: string?,
+	open: boolean?,
+	fair: boolean?,
+	moves: boolean?,
+}
 -- `skill` is the way of fighting whose skill struck (a key of Config.Combat.Skills); `n` the blow's number in a
 -- several-blow skill; `splash` a blow that struck beside the target; `guard` the guard that took a blow aimed elsewhere;
 -- `ranged` a blow from a fighter that keeps its distance; `slow` a sting that slowed its target. A "heal" event carries
--- the health given back in `amount`.
+-- the health given back in `amount`. A "move" event (positional mode only) says a fighter walks: it stands at (x, z) and
+-- goes to (tx, tz), which it reaches in `seconds`.
 export type Event = {
 	kind: string,
 	from: string?,
@@ -47,6 +66,11 @@ export type Event = {
 	guard: string?,
 	ranged: boolean?,
 	slow: boolean?,
+	x: number?,
+	z: number?,
+	tx: number?,
+	tz: number?,
+	seconds: number?,
 }
 -- `maxHp` is the full health when the fighter starts wounded (hp below it); left out, hp is the full health.
 -- `role` is a slime's way of fighting (Combat.role), `kind` a zombie's kind; either sets whom it goes for.
@@ -59,9 +83,18 @@ export type Fighter = {
 	maxHp: number?,
 	role: string?,
 	kind: string?,
+	-- where it starts in the positional mode (flat, from the arena's middle)
+	x: number?,
+	z: number?,
 }
 
 local Combat = {}
+
+-- How fast a fighter walks, in studs a second, from its SPD (Config.Dungeon.Move).
+function Combat.walkSpeed(speed: number): number
+	local m = Config.Dungeon.Move
+	return math.min(m.MaxStuds, m.BaseStuds + m.PerSpeed * math.max(0, speed))
+end
 
 function Combat.damage(raw: number, defence: number): number
 	local c = Config.Combat
@@ -121,10 +154,19 @@ local function unit(fighter: Fighter, side: string, rng: Rng): Unit
 		guardUntil = 0,
 		slowUntil = 0,
 		slowBy = 0,
+		x = fighter.x or 0,
+		z = fighter.z or 0,
+		slotAngle = 0,
+		slotOf = "",
+		walking = false,
+		sentAt = 0,
 	}
 end
 
-function Combat.new(squad: { Fighter }, foes: { Fighter }, rng: Rng, opts: { fair: boolean? }?): Fight
+-- `moves` turns on the positional mode (only the dungeon does): each fighter has a place and walks toward its target at
+-- Combat.walkSpeed until it is in reach (Config.Dungeon.Move), and neither aims nor strikes before. Off, a blow lands when
+-- its cooldown ends, wherever the fighters are.
+function Combat.new(squad: { Fighter }, foes: { Fighter }, rng: Rng, opts: { fair: boolean?, moves: boolean? }?): Fight
 	local units: { Unit } = {}
 	for _, fighter in squad do
 		table.insert(units, unit(fighter, "squad", rng))
@@ -132,7 +174,13 @@ function Combat.new(squad: { Fighter }, foes: { Fighter }, rng: Rng, opts: { fai
 	for _, fighter in foes do
 		table.insert(units, unit(fighter, "foe", rng))
 	end
-	return { units = units, rng = rng, seconds = 0, fair = if opts then opts.fair else nil }
+	return {
+		units = units,
+		rng = rng,
+		seconds = 0,
+		fair = if opts then opts.fair else nil,
+		moves = if opts then opts.moves else nil,
+	}
 end
 
 -- A fighter joins a fight that is going on (the dungeon's next monster): it opens at its own moment, as at the start.
@@ -321,6 +369,108 @@ local function heal(fight: Fight, healer: Unit, events: { Event }): boolean
 	return true
 end
 
+-- ===== Walking (the positional mode) =====
+
+local function distance(a: Unit, b: Unit): number
+	return math.sqrt((a.x - b.x) ^ 2 + (a.z - b.z) ^ 2)
+end
+
+-- How near a fighter must be its target to strike: a ranged one keeps its distance.
+local function reachOf(attacker: Unit): number
+	local m = Config.Dungeon.Move
+	return if (Config.Combat.Ranged :: any)[attacker.role] then m.RangedStuds else m.MeleeStuds
+end
+
+-- Whether a blow may be aimed at or land on `target` now: always outside the positional mode.
+local function canStrike(fight: Fight, attacker: Unit, target: Unit): boolean
+	return not fight.moves or distance(attacker, target) <= reachOf(attacker) + Config.Dungeon.Move.BlowSlack
+end
+
+-- Nobody else (but the target) stands within MinApart of this place.
+local function free(fight: Fight, mover: Unit, target: Unit, x: number, z: number): boolean
+	local apart = Config.Dungeon.Move.MinApart
+	for _, other in fight.units do
+		if other ~= mover and other ~= target and other.hp > 0 then
+			if (other.x - x) ^ 2 + (other.z - z) ^ 2 < apart * apart then
+				return false
+			end
+		end
+	end
+	return true
+end
+
+-- A fighter with a target out of its reach walks toward the place it has picked round it, at its own speed (a stung one
+-- slowly), and stops where it is in reach. True when it is in reach now. A "move" event goes out when it sets off, changes
+-- its mind, or every SyncSeconds of a long walk.
+local function walk(fight: Fight, attacker: Unit, target: Unit, dt: number, events: { Event }): boolean
+	local m = Config.Dungeon.Move
+	local reach = reachOf(attacker)
+	local dx, dz = attacker.x - target.x, attacker.z - target.z
+	local d = math.sqrt(dx * dx + dz * dz)
+	-- (in reach: it stops, unless it is still on its way and has come within MinApart of somebody)
+	if d <= reach + 1e-4 and (not attacker.walking or free(fight, attacker, target, attacker.x, attacker.z)) then
+		attacker.walking = false
+		return true
+	end
+	local picked = attacker.slotOf == target.id
+	local slotX, slotZ = 0, 0
+	if picked then
+		slotX = target.x + math.cos(attacker.slotAngle) * reach
+		slotZ = target.z + math.sin(attacker.slotAngle) * reach
+	end
+	if not picked or not free(fight, attacker, target, slotX, slotZ) then
+		local bearing = if d > 1e-6 then math.atan2(dz, dx) else 0
+		local chosen = bearing
+		for _, degrees in m.SlotAngles do
+			local angle = bearing + math.rad(degrees)
+			if
+				free(fight, attacker, target, target.x + math.cos(angle) * reach, target.z + math.sin(angle) * reach)
+			then
+				chosen = angle
+				break
+			end
+		end
+		if not picked or chosen ~= attacker.slotAngle then
+			attacker.sentAt = -math.huge
+		end
+		attacker.slotAngle, attacker.slotOf = chosen, target.id
+		slotX = target.x + math.cos(chosen) * reach
+		slotZ = target.z + math.sin(chosen) * reach
+	end
+	local speed = Combat.walkSpeed(attacker.speed)
+		* (if attacker.slowUntil > fight.seconds then 1 - attacker.slowBy else 1)
+	speed = math.max(speed, 1e-3)
+	local gx, gz = slotX - attacker.x, slotZ - attacker.z
+	local left = math.sqrt(gx * gx + gz * gz)
+	local travel = math.min(speed * dt, left)
+	if left > 1e-6 then
+		attacker.x += gx / left * travel
+		attacker.z += gz / left * travel
+	end
+	local remaining = left - travel
+	-- (in reach part way along the walk: it stops there)
+	local near = distance(attacker, target) <= reach + 1e-4
+		and (remaining <= 1e-3 or free(fight, attacker, target, attacker.x, attacker.z))
+	if near then
+		remaining = 0
+	end
+	if remaining > 0.05 and (not attacker.walking or fight.seconds - attacker.sentAt >= m.SyncSeconds) then
+		attacker.sentAt = fight.seconds
+		table.insert(events, {
+			kind = "move",
+			from = attacker.id,
+			to = target.id,
+			x = attacker.x,
+			z = attacker.z,
+			tx = slotX,
+			tz = slotZ,
+			seconds = remaining / speed,
+		})
+	end
+	attacker.walking = remaining > 0.05
+	return near
+end
+
 -- Moves the fight on by one step and returns what happened in it. Nothing changes once there is a winner.
 function Combat.step(fight: Fight, dt: number): { Event }
 	local events: { Event } = {}
@@ -331,8 +481,27 @@ function Combat.step(fight: Fight, dt: number): { Event }
 	fight.seconds += dt
 	for _, attacker in fight.units do
 		if attacker.hp > 0 then
+			-- (positional mode: a fighter that has announced its blow stands still; any other walks toward its target, and
+			-- until it is in reach its beat stops short of the announcement)
+			local inReach = true
+			if fight.moves and not attacker.aimed then
+				local target = attacker.target
+				if not target or target.hp <= 0 then
+					target = pick(fight, attacker)
+					attacker.target = target
+				end
+				if target then
+					inReach = walk(fight, attacker, target, dt, events)
+				else
+					attacker.walking = false
+				end
+			end
+			local before = attacker.cooldown
 			-- (a stung fighter's beat runs slow)
 			attacker.cooldown -= dt * (if attacker.slowUntil > fight.seconds then 1 - attacker.slowBy else 1)
+			if not inReach then
+				attacker.cooldown = math.max(attacker.cooldown, math.min(before, c.WindupSeconds + 0.001))
+			end
 			-- the blow is announced a moment before it lands, so the client can show the wind-up (and the skill's name)
 			if not attacker.aimed and attacker.cooldown <= c.WindupSeconds then
 				local target = attacker.target
@@ -340,7 +509,10 @@ function Combat.step(fight: Fight, dt: number): { Event }
 					target = pick(fight, attacker)
 					attacker.target = target
 				end
-				if target then
+				if target and not canStrike(fight, attacker, target) then
+					-- (positional mode: a target picked just now is out of reach; it walks there first)
+					attacker.cooldown = c.WindupSeconds + 0.001
+				elseif target then
 					attacker.aimed = true
 					local s = (c.Skills :: any)[attacker.role]
 					attacker.skillNext = s ~= nil and (attacker.blows + 1) % s.every == 0
@@ -369,7 +541,11 @@ function Combat.step(fight: Fight, dt: number): { Event }
 					-- (no foe in the arena yet: it waits for the next one and opens at its own moment, as at the start)
 					attacker.cooldown = c.OpeningCooldown + fight.rng:next() * c.OpeningSpread
 				end
-				if target then
+				if target and not canStrike(fight, attacker, target) then
+					-- (positional mode: its target fell or went out of reach during the wind-up; it walks to it and aims again)
+					attacker.cooldown = c.WindupSeconds + 0.001
+					attacker.skillNext = false
+				elseif target then
 					attacker.blows += 1
 					if attacker.skillNext then
 						skill(fight, attacker, target, events)

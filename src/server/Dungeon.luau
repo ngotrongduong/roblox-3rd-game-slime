@@ -32,6 +32,12 @@
 --                     event kinds: "start" ({ members, roles, level, waves, best }), "wave" ({ wave, waves, count,
 --                     waveKind }), "spawn" ({ id, defId, name, role, foeKind, level, hp, x, z, wx, wy, wz }), the fight's
 --                     own "aim" "hit" "dodge" "guard" "heal" "fallen" (a monster's carries drops = { { item, amount } }),
+--                     "move" ({ from, to, x, z, tx, tz, seconds }: the fight is positional, so a fighter whose target is out
+--                     of reach walks; it stands at x, z (flat, from the arena's middle, as in "spawn"), goes to tx, tz and
+--                     is there in `seconds`; sent when it sets off, changes its goal, and every Move.SyncSeconds of a long
+--                     walk; one event a walker, in the step's batch; a squad slime starts where Dungeon.squadSpot says,
+--                     a monster at its "spawn" x, z; nothing else about a fighter's place is published, X and Z on
+--                     the stand-ins are where it came in),
 --                     "clear" ({ wave, coins, food, lost, materials }), "end" ({ winner = "squad" | "foe" | "left",
 --                     level, wave, best }), "leave"
 local HttpService = game:GetService("HttpService")
@@ -523,11 +529,12 @@ local function startRun(run: Run, farm: any, level: number, ids: { string }, now
 	setSquad(run, ids)
 	local fighters: { any } = {}
 	local roles: { [string]: string } = {}
-	for _, id in ids do
+	for index, id in ids do
 		local slime = FarmState.findSlime(farm, id)
 		if slime then
 			local fighter: any = Zombies.fighter(slime, now, 1 - ZombieFights.woundOf(run.player, id))
 			fighter.role = Combat.role(fighter, slime.seed)
+			fighter.x, fighter.z = DungeonRules.squadSpot(index, #ids)
 			table.insert(fighters, fighter)
 			roles[id] = fighter.role
 			local node = run.nodes[id]
@@ -537,7 +544,8 @@ local function startRun(run: Run, farm: any, level: number, ids: { string }, now
 			end
 		end
 	end
-	local fight = Combat.new(fighters, {}, run.rng)
+	-- (positional: the fighters walk into reach, at their own speed)
+	local fight = Combat.new(fighters, {}, run.rng, { moves = true })
 	-- (the queue brings monsters in one by one: the fight does not end when the monsters in it are down)
 	fight.open = true
 	run.fight = fight
@@ -577,7 +585,9 @@ local function spawnFoe(run: Run, fight: Fight)
 		end
 	end
 	local lx, lz = DungeonRules.spawnPoint(run.rng, taken)
-	local joined = Combat.add(fight, monster, "foe")
+	local fighter: any = table.clone(monster)
+	fighter.x, fighter.z = lx, lz
+	local joined = Combat.add(fight, fighter, "foe")
 	if not joined then
 		return
 	end

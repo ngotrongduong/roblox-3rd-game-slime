@@ -150,6 +150,22 @@ function Dungeon.spawnPoint(rng: Rng, taken: { { x: number, z: number } }): (num
 	return bestX, bestZ
 end
 
+-- Where squad member `index` of `count` starts, flat from the arena's middle: a row across the middle, SquadBack studs
+-- toward the player (the side PlayerSpot is on), every other slime a little further in. The server places the fighters
+-- here and the client stands the bodies here, so both agree.
+function Dungeon.squadSpot(index: number, count: number): (number, number)
+	local spot = D.PlayerSpot
+	local length = math.sqrt(spot.x * spot.x + spot.z * spot.z)
+	local toX, toZ = 0, 1
+	if length > 1e-3 then
+		toX, toZ = spot.x / length, spot.z / length
+	end
+	local view = Config.Zombies.View
+	local along = (index - (count + 1) / 2) * view.FormationSpacing
+	local back = D.View.SquadBack - (index % 2) * view.FormationStagger
+	return -toZ * along + toX * back, toX * along + toZ * back
+end
+
 -- The def of a monster by its id on a map (the plan's monsters carry the id only), nil when there is none.
 function Dungeon.defOf(mapId: string, defId: string): any
 	local defs: { any } = map(mapId).monsters

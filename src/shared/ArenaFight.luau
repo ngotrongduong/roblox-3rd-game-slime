@@ -16,6 +16,9 @@ export type Fighter = {
 	maxHp: number?,
 	role: string?,
 	kind: string?,
+	-- (where it starts in a positional fight, which the Arena never is: Combat.Fighter's fields, kept so the types agree)
+	x: number?,
+	z: number?,
 }
 -- The builder takes these exact attributes; plain rivals need only Colour (adult scale is its default).
 export type Look = { Colour: string, Material: string?, DualId: string?, SecretId: string? }

@@ -11,6 +11,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenService = game:GetService("TweenService")
 
 local Config = require(ReplicatedStorage.Shared.Config)
+local DungeonRules = require(ReplicatedStorage.Shared.Dungeon)
 local Layout = require(ReplicatedStorage.Shared.Layout)
 local ArenaReplay = require(script.Parent.ArenaReplay)
 local FightFx = require(script.Parent.FightFx)
@@ -389,13 +390,12 @@ local function onStart(event: { [string]: any })
 	ZombieFight.setArena(middle, D.ArenaRadius)
 	local toPlayer = flat(Layout.arenaPlayerSpot(plot).Position - middle)
 	toPlayer = if toPlayer.Magnitude > 1e-3 then toPlayer.Unit else Vector3.zAxis
-	local across = Vector3.new(-toPlayer.Z, 0, toPlayer.X)
 	local members: { string } = event.members
 	local roles: { [string]: string } = if type(event.roles) == "table" then event.roles else {}
 	for index, id in members do
-		local x = (index - (#members + 1) / 2) * V.FormationSpacing
-		local back = P.SquadBack - (index % 2) * V.FormationStagger
-		addSquad(id, roles[id] or "attack", middle + across * x + toPlayer * back, -toPlayer)
+		-- (the server puts the fighter at this same place: shared/Dungeon.squadSpot)
+		local lx, lz = DungeonRules.squadSpot(index, #members)
+		addSquad(id, roles[id] or "attack", middle + Vector3.new(lx, 0, lz), -toPlayer)
 	end
 	startPolling()
 end
@@ -436,6 +436,22 @@ local function onEvents(events: { any })
 				onStart(event)
 			elseif kind == "spawn" then
 				addMonster(event)
+			elseif kind == "move" then
+				-- a fighter walks: to the place the server says (flat from the middle), in the time it says
+				local floor = centre
+				if
+					floor
+					and type(event.from) == "string"
+					and type(event.tx) == "number"
+					and type(event.tz) == "number"
+					and type(event.seconds) == "number"
+				then
+					ZombieFight.walk(
+						event.from,
+						Vector3.new(floor.X + event.tx, floor.Y, floor.Z + event.tz),
+						event.seconds
+					)
+				end
 			elseif kind == "wave" then
 				pcall(UiDungeon.banner, event.waveKind, event.wave)
 			elseif kind == "hit" then

@@ -227,6 +227,54 @@ local function stepAnims()
 	end
 end
 
+-- Where each fighter stands now: it moves about the field during the fight (nil = where it began: the end of the march
+-- or its place in the group), and whom it last went for (from the "aim" events).
+local homes: { [string]: Vector3 } = {}
+local targets: { [string]: string } = {}
+
+-- The Slime Dungeon's walkers (ZombieFight.walk): a fighter that goes to a place the server picked, at the server's pace,
+-- hopping on the way. Its `homes` entry follows it, so anything that starts from where it stands starts from where it is.
+type Walk = {
+	id: string,
+	from: Vector3,
+	to: Vector3,
+	dir: Vector3,
+	start: number,
+	duration: number,
+	length: number,
+	hopAt: number,
+}
+local walks: { [SlimeActor.Slime]: Walk } = {}
+local walkLoop: RBXScriptConnection? = nil
+
+local function stepWalks()
+	local now = os.clock()
+	local P = Config.Dungeon.View
+	for actor, walk in walks do
+		if actor.destroyed then
+			walks[actor] = nil
+		else
+			local t = math.clamp((now - walk.start) / walk.duration, 0, 1)
+			local at = walk.from:Lerp(walk.to, t)
+			homes[walk.id] = at
+			safe("walk", function()
+				SlimeActor.setCFrame(actor, CFrame.lookAt(at, at + walk.dir))
+				if walk.length * t >= walk.hopAt then
+					walk.hopAt += P.WalkHopStuds
+					SlimeActor.hop(actor, P.WalkHop)
+				end
+			end)
+			if t >= 1 then
+				walks[actor] = nil
+			end
+		end
+	end
+	if next(walks) == nil and walkLoop then
+		walkLoop:Disconnect()
+		walkLoop = nil
+	end
+end
+
 local function play(
 	actor: SlimeActor.Slime,
 	home: Vector3,
@@ -237,6 +285,8 @@ local function play(
 	stay: boolean?
 )
 	stopAnim(actor)
+	-- (a lunge or a knock-back takes the body over from its walk; the next "move" from the server sets it going again)
+	walks[actor] = nil
 	table.insert(anims, {
 		actor = actor,
 		home = home,
@@ -254,11 +304,6 @@ end
 
 -- ===== Who is who =====
 
--- Where each fighter stands now: it moves about the field during the fight (nil = where it began: the end of the march
--- or its place in the group), and whom it last went for (from the "aim" events).
-local homes: { [string]: Vector3 } = {}
-local targets: { [string]: string } = {}
-
 local function fightOf(id: string): Fight?
 	for _, fight in fights do
 		if fight.fighters[id] then
@@ -273,7 +318,10 @@ end
 local function find(id: string): (SlimeActor.Slime?, Vector3?, boolean)
 	local extra = extras[id]
 	if extra then
-		return extra.actor, homes[id] or extra.stand, extra.foe
+		-- (a Dungeon fighter moves all the time: where its body really is, so nothing ever starts from somewhere else)
+		local base = homes[id] or extra.stand
+		local at = extra.actor.root.Position
+		return extra.actor, Vector3.new(at.X, base.Y, at.Z), extra.foe
 	end
 	if fightOf(id) then
 		local body = ZombieMarch.body(id)
@@ -733,7 +781,12 @@ local function onAim(event: { [string]: any })
 	local gap = flat(to - from).Magnitude - radius(attacker) - radius(target)
 	local shot = styleOf(event.from).shot ~= nil
 	local reaching = not (s and s.kind == "all")
-	if reaching and ((not shot and gap > V.Moves.Reach) or (shot and gap < V.Moves.TooClose)) then
+	-- (in the Dungeon the server walks the fighters and announces a blow only once its fighter is in reach: no dash)
+	if
+		extras[event.from] == nil
+		and reaching
+		and ((not shot and gap > V.Moves.Reach) or (shot and gap < V.Moves.TooClose))
+	then
 		reposition(event.from, Config.Combat.WindupSeconds * 0.8)
 		return
 	end
@@ -799,6 +852,10 @@ local function strike(event: { [string]: any }, style: FightFx.Style, land: () -
 		return
 	end
 	local reach = math.max(0, line.Magnitude - (radius(attacker) + radius(target)) * 0.85)
+	if extras[event.from] then
+		-- (the Dungeon's server strikes only in reach; a body still catching up its walk never lunges further than that)
+		reach = math.min(reach, Config.Dungeon.Move.MeleeStuds)
+	end
 	play(attacker, from, dir * reach, V.LungeSeconds, V.ContactShare, V.HitStopSeconds)
 	SlimeActor.hop(attacker, V.LungeHop)
 	task.delay(contactSeconds(style), land)
@@ -901,6 +958,10 @@ end
 
 -- After its blow, once back from the lunge, the attacker takes its place again (a fast one circles to a new flank).
 local function afterBlow(event: { [string]: any }, style: FightFx.Style)
+	if extras[event.from] then
+		-- (the Dungeon's fighters keep the place the server walked them to)
+		return
+	end
 	local back = if style.shot then 0 else V.LungeSeconds * (1 - V.ContactShare) + V.HitStopSeconds
 	if skillOf(event) then
 		back = math.max(back, V.Skill.CastSeconds + V.KnockSeconds)
@@ -1254,7 +1315,51 @@ function ZombieFight.adopt(id: string, extra: Extra)
 	end
 end
 
+-- A fighter of the Dungeon walks to `to` (the floor's top, in the world) and is there in `seconds`, as the server says:
+-- from where its body is now (a lunge or knock-back in progress is cut short where it is), hopping, facing where it goes. It
+-- never goes faster than Config.Dungeon.View.WalkCatchUp times the fastest walk, so a fighter that has fallen behind catches
+-- up smoothly and never jumps.
+function ZombieFight.walk(id: string, to: Vector3, seconds: number)
+	local extra = extras[id]
+	if not extra or extra.dead or extra.actor.destroyed then
+		return
+	end
+	local actor = extra.actor
+	-- (from where the body is this frame: mid-walk, mid-lunge or mid-knock alike)
+	local _, at = find(id)
+	local from: Vector3 = at or extra.stand
+	stopAnim(actor)
+	from = groundFor(from)
+	local spot = groundFor(to)
+	local line = flat(spot - from)
+	local length = line.Magnitude
+	if length < V.Moves.MinStuds * 0.25 then
+		return
+	end
+	local fastest = Config.Dungeon.Move.MaxStuds * Config.Dungeon.View.WalkCatchUp
+	local previous = walks[actor]
+	walks[actor] = {
+		id = id,
+		from = from,
+		to = spot,
+		dir = line.Unit,
+		start = os.clock(),
+		duration = math.max(seconds, length / fastest, 0.05),
+		length = length,
+		-- (a walk renewed on the way keeps its hop going rather than hopping at once)
+		hopAt = if previous then Config.Dungeon.View.WalkHopStuds * 0.5 else 0,
+	}
+	homes[id] = from
+	if not walkLoop then
+		walkLoop = RunService.RenderStepped:Connect(stepWalks)
+	end
+end
+
 function ZombieFight.release(id: string)
+	local extra = extras[id]
+	if extra then
+		walks[extra.actor] = nil
+	end
 	dropBar(id)
 	extras[id], homes[id], targets[id] = nil, nil, nil
 end
@@ -1267,6 +1372,7 @@ end
 
 -- The run is over: every body and bar is let go, and the field with it.
 function ZombieFight.endDungeon()
+	table.clear(walks)
 	for id in extras do
 		dropBar(id)
 		homes[id], targets[id] = nil, nil

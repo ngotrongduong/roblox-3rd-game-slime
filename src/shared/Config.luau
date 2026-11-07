@@ -880,6 +880,27 @@ Config.Dungeon = {
 	SpawnMinFromCentre = 50,
 	SpawnMinApart = 14,
 	SpawnTries = 12,
+	-- How fighters walk in the arena (the owner, 2026-11-08: they crossed it in a blink). The server moves them (shared/Combat,
+	-- positional mode, the dungeon only) at BaseStuds + PerSpeed x SPD studs a second, never above MaxStuds. SPD 1 gives 3.9
+	-- (a slime's village walking pace is about 2.7, a bit brisker for a fight), SPD 10 7.5, SPD 40 and up the cap of 16; the
+	-- meadow's monsters (SPD 0.7 to 5) walk at 3.8 to 5.5, so a Twigling crosses the 50 studs between its spawn and the
+	-- squad in about 10 s and a fast slime in 4. A fighter strikes from MeleeStuds (centre to centre; the lunge closes the
+	-- rest) or, when it keeps its distance (Config.Combat.Ranged), from RangedStuds. Fighters keep MinApart studs from each
+	-- other: a walker tries other places round its target (SlotAngles degrees off its own line, nearest first) until one
+	-- is free. A walker's goal is sent again to the clients every SyncSeconds.
+	Move = {
+		BaseStuds = 3.5,
+		PerSpeed = 0.4,
+		MaxStuds = 16,
+		MeleeStuds = 6,
+		RangedStuds = 16,
+		MinApart = 3.5,
+		SlotAngles = { 0, 25, -25, 50, -50, 80, -80, 110, -110, 145, -145, 180 },
+		SyncSeconds = 0.5,
+		-- A blow lands only on a target within reach plus this (its target may have stepped a little during the wind-up);
+		-- one further off, or a new target picked because the old one fell, is walked to first.
+		BlowSlack = 2,
+	},
 	-- The player stands PlayerSpot (flat, from the middle) PlayerLift up, facing the middle; leaving puts them ExitOut studs
 	-- in front of their portal's opening, ExitLift up. A player who strays StrayStuds past the rim (a
 	-- respawn, a fall) is put back.
@@ -1055,6 +1076,11 @@ Config.Dungeon = {
 		PollSeconds = 0.25,
 		-- The squad stands in a row across the arena's middle, SquadBack studs behind the centre line, facing the player.
 		SquadBack = 2,
+		-- A walking fighter (server "move" events) hops every WalkHopStuds studs of its way, WalkHop high.
+		WalkHopStuds = 3,
+		-- A drawn fighter that has fallen behind the server never goes faster than this many times the fastest walker.
+		WalkCatchUp = 1.25,
+		WalkHop = 0.35,
 		-- A fighter stays this far inside the rim.
 		EdgeMargin = 5,
 		-- A monster's name and level over its health bar (pixels); a stray body is cleared when the player's DungeonPhase has
