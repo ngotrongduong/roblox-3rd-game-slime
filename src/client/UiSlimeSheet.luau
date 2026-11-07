@@ -425,7 +425,7 @@ function UiSlimeSheet.new(
 	bigButton(stage, {
 		Name = "Equip",
 		Text = "Equip",
-		Icon = "attack",
+		Icon = "sword",
 		Style = "special",
 		AnchorPoint = Vector2.new(1, 0),
 		Position = UDim2.fromOffset(K.DesignWidth, K.ButtonTop),

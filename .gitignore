@@ -9,7 +9,10 @@ art/inbox/
 assets/raw/
 # Blender comparison renders of every round (tools/blender scripts make them again; the final sheets
 # are copied next to the model).
-art/models/*/review/
+art/models/**/review/
+# Textures FBX importers unpack next to a model (the originals sit beside the .fbx).
+*.fbm/
+__pycache__/
 *.rbxlx
 *.rbxl.lock
 *.rbxlx.lock
@@ -24,4 +27,6 @@ reference/goo-lineage-web/
 # (tools/map/prepare_quaternius.py makes the .glb files again from the author's own download).
 art/models/quaternius/
 art/models/GooLineage_Free_Asset_Library_Curated/
-art/models/GooLineage_Free_Asset_Library_Curated.zip
+# Whole free packs kept for later (Kenney, Quaternius; CC0): too big for the repo, taken into the game piece by piece.
+art/library/
+*.zip

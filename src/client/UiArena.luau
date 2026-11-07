@@ -536,7 +536,7 @@ local function drawOpponents(list: ScrollingFrame, token: number)
 			else "primary"
 		UiKit.button(body, {
 			Name = "Attack",
-			Icon = "attack",
+			Icon = "attack_order",
 			IconSize = U.IconNormal,
 			Style = style,
 			Enabled = canFight,

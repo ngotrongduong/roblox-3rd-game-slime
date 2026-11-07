@@ -555,7 +555,7 @@ Config.Zombies = {
 		ChipLift = 34,
 		ChipBarHeight = 4,
 		-- A team's state as one of the owner's pictures, and why a repeating team waits (picture and a short word).
-		StateIcons = { home = "slimes", going = "speed", fighting = "attack", returning = "back" },
+		StateIcons = { home = "slimes", going = "speed", fighting = "attack_order", returning = "back" },
 		WaitingIcons = { health = "hp", hungry = "food", tired = "energy", group = "skull" },
 		WaitingText = { health = "Healing", hungry = "Hungry", tired = "Tired", group = "Group busy" },
 		-- ===== The march: real slime bodies hop along the published leg, spread side by side =====
@@ -3526,7 +3526,11 @@ Config.Ui = {
 		food = 128780371839699, -- mat-food.png
 		fullness = 128780371839699, -- mat-food.png (the sack stands for being fed)
 		slimes = 120929268236217, -- slime.base.navy.png (the original's slime-count icon)
-		attack = 99675585132127, -- equip-sword.png (the owner's sword; his star read as luck, the owner 2026-11-03)
+		-- The attack stat is a flexed arm and the order to fight is two crossed swords (ChatGPT in the owner's style,
+		-- 2026-11-08, art/icons/stat_strength.png, attack_order.png): the owner said a sword read wrong for both.
+		attack = 79453032521763,
+		attack_order = 131910550995231,
+		sword = 99675585132127, -- equip-sword.png (the owner's sword: putting on gear)
 		defence = 74089620499791, -- equip-shield.png
 		speed = 96175650939419, -- stat-speed.png (the owner's bolt)
 		hp = 113610467784918, -- stat-hp.png (the owner's heart)

@@ -620,7 +620,7 @@ local function openAttack(groupId: string)
 		}, body)
 		local go = UiKit.button(body, {
 			Name = "Go",
-			Icon = "attack",
+			Icon = "attack_order",
 			Style = "primary",
 			Size = UDim2.fromOffset(U.Touch, U.Touch),
 			AnchorPoint = Vector2.new(1, 0.5),
