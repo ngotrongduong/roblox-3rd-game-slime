@@ -11,6 +11,7 @@ local Dungeon = require(script.Parent.Dungeon)
 local DungeonPortal = require(script.Parent.DungeonPortal)
 local Guide = require(script.Parent.Guide)
 local Leaderboard = require(script.Parent.Leaderboard)
+local LibraryKit = require(script.Parent.LibraryKit)
 local PlayerData = require(script.Parent.PlayerData)
 local Plots = require(script.Parent.Plots)
 local Purchases = require(script.Parent.Purchases)
@@ -21,8 +22,9 @@ local VillageRemotes = require(script.Parent.VillageRemotes)
 local WavingFlag = require(script.Parent.WavingFlag)
 local ZombieFights = require(script.Parent.ZombieFights)
 
--- The flag's meshes start loading before any plot needs one.
+-- The flag's and the library props' meshes start loading before any plot needs one.
 WavingFlag.start()
+LibraryKit.start()
 
 -- Register callbacks before profiles can load. The plots come first: a joining player is handed a plot (and spawns in it)
 -- before anything else looks at them, and the hand-built village leaves the world to become the template.

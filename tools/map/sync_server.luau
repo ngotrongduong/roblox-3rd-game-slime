@@ -14,6 +14,7 @@ end
 local sources = {
 	{ "AreaStages", AreaStages, "ModuleScript" },
 	{ "PantryStages", PantryStages, "ModuleScript" },
+	{ "LibraryKit", LibraryKit, "ModuleScript" },
 	{ "GardenStages", GardenStages, "ModuleScript" },
 	{ "BreedingStages", BreedingStages, "ModuleScript" },
 	{ "KitchenStages", KitchenStages, "ModuleScript" },

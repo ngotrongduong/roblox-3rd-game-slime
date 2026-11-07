@@ -16,6 +16,7 @@
 -- (ServerStorage PropKit / Kit.PropKit). Positions are in the pantry's own frame, y up from the ground.
 local CollectionService = game:GetService("CollectionService")
 local ServerStorage = game:GetService("ServerStorage")
+local LibraryKit = require(script.Parent.LibraryKit)
 local PondStages = require(script.Parent.PondStages)
 
 local PantryStages = {}
@@ -314,6 +315,8 @@ local function place(
 			src = k:FindFirstChild(key)
 		end
 	end
+	-- (then the props from the free library, which load from Roblox the first time)
+	src = src or LibraryKit.find(key)
 	if not src or not src:IsA("Model") then
 		return nil
 	end

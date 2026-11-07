@@ -15,6 +15,19 @@ Roblox inventory (Mue_you) as a "Roblox Generated Object" package with the id be
 inserted again from that id with the Studio MCP `insert_asset` tool, but then it has to be set square
 and fitted again, so the `.rbxm` files are the copy to use.
 
+## LibraryKit (the free library, built at run time)
+
+Props from `art/library` (Kenney and Quaternius, CC0). `tools/library/take_props.ps1` turns a pack's glTF props into small
+GLBs; the owner imports them (File > Import 3D); their mesh ids, trim-sheet pictures and part offsets go in
+`Config.LibraryKit`, and `src/server/LibraryKit.luau` puts each prop together when the server starts
+(`AssetService:CreateMeshPartAsync`, like the waving flag). `PantryStages.place` finds them by name after PropKit and
+OwnerKit, so every stage can `place`/`put` them. No `.rbxm` to export.
+
+| Model | From | Where it is used |
+|---|---|---|
+| FarmCrate_Apple, FarmCrate_Carrot, Barrel_Apples | Quaternius Fantasy Props MegaKit | village market, the stalls' stock |
+| Barrel, Bench, Bucket_Wooden_1, Cauldron, Crate_Wooden, FarmCrate_Empty, Lantern_Wall, Stall_Cart_Empty, Stall_Empty, Stool, Table_Large | the same | not placed yet |
+
 ## PropKit.rbxm (low poly, `generate_mesh`)
 
 | Model | Asset id | Where it is used |

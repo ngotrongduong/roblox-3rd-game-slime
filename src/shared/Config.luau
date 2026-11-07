@@ -178,6 +178,81 @@ Config.Combat = {
 	},
 }
 
+-- Props from the free library (art/library, CC0): Quaternius' Fantasy Props MegaKit, made small by tools/library/take_props.ps1,
+-- imported by the owner (2026-11-08); the server puts each together from its meshes (server/LibraryKit) and the stages place
+-- them by name like the kit's own models. Each part: its mesh, its picture (a trim sheet, Textures), its size and its centre
+-- from the prop's foot, in studs of the imported model (any size: `place` scales a prop to its slot).
+Config.LibraryKit = {
+	Textures = {
+		F = "rbxassetid://88131378238308", -- wood (T_Trim_Furniture, art/models/props/quaternius)
+		M = "rbxassetid://71855764790861", -- iron
+		P = "rbxassetid://79115972926298", -- the produce (apples, carrots)
+		C = "rbxassetid://71397049359621", -- cloth
+	},
+	Props = {
+		Barrel = {
+			{ mesh = 136375007718158, tex = "F", size = { 2.784, 3.592, 2.784 }, at = { 0, 1.796, 0 } },
+			{ mesh = 127037148208044, tex = "M", size = { 2.792, 2.334, 2.792 }, at = { 0, 1.751, 0 } },
+		},
+		Barrel_Apples = {
+			{ mesh = 132533726279302, tex = "F", size = { 2.784, 3.592, 2.784 }, at = { 0, 1.796, 0 } },
+			{ mesh = 131374859428781, tex = "M", size = { 2.792, 2.334, 2.792 }, at = { 0, 1.751, 0 } },
+			{ mesh = 78986540689423, tex = "P", size = { 1.733, 0.95, 1.773 }, at = { 0.002, 3.032, -0.014 } },
+		},
+		Bench = {
+			{ mesh = 82983925864215, tex = "F", size = { 11.107, 2.133, 2.137 }, at = { 0, 1.066, 0 } },
+			{ mesh = 140163533106589, tex = "M", size = { 7.356, 0.115, 1.409 }, at = { 0, 1.998, 0.025 } },
+		},
+		Bucket_Wooden_1 = {
+			{ mesh = 132508416890620, tex = "F", size = { 1.502, 1.171, 1.462 }, at = { 0.005, 0.586, -0.036 } },
+			{ mesh = 81812337491409, tex = "M", size = { 1.736, 0.135, 0.846 }, at = { 0, 1.041, 0.344 } },
+		},
+		Cauldron = {
+			{ mesh = 137876148545744, tex = "M", size = { 3.956, 3.262, 3.776 }, at = { 0, 1.631, 0 } },
+		},
+		Crate_Wooden = {
+			{ mesh = 131790322916575, tex = "F", size = { 3.369, 3.52, 3.425 }, at = { 0, 1.862, -0.008 } },
+			{ mesh = 105661159718332, tex = "M", size = { 3.253, 3.724, 3.633 }, at = { -0.019, 1.862, 0 } },
+		},
+		FarmCrate_Apple = {
+			{ mesh = 94764161420810, tex = "F", size = { 2.855, 0.975, 1.588 }, at = { 0, 0.488, 0 } },
+			{ mesh = 75018336870446, tex = "M", size = { 2.32, 0.755, 1.657 }, at = { 0.005, 0.51, 0 } },
+			{ mesh = 109037019181785, tex = "P", size = { 2.25, 0.784, 1.426 }, at = { -0.013, 0.411, -0.011 } },
+		},
+		FarmCrate_Carrot = {
+			{ mesh = 131712433745343, tex = "P", size = { 2.662, 0.942, 2.206 }, at = { 0.05, 1.175, 0.031 } },
+			{ mesh = 126065041271513, tex = "F", size = { 2.855, 0.975, 1.588 }, at = { 0, 0.488, -0.306 } },
+			{ mesh = 123714214047372, tex = "M", size = { 2.32, 0.755, 1.657 }, at = { 0.005, 0.51, -0.306 } },
+		},
+		FarmCrate_Empty = {
+			{ mesh = 100028304019085, tex = "F", size = { 2.855, 0.975, 1.588 }, at = { 0, 0.488, 0 } },
+			{ mesh = 109150201003884, tex = "M", size = { 2.32, 0.755, 1.657 }, at = { 0.005, 0.51, 0 } },
+		},
+		Lantern_Wall = {
+			{ mesh = 85249417263972, tex = "M", size = { 1.429, 5.348, 5.209 }, at = { 0, 2.674, 0 } },
+		},
+		Stall_Cart_Empty = {
+			{ mesh = 133346702422863, tex = "M", size = { 7.31, 7.868, 4.239 }, at = { -2.386, 3.934, 0 } },
+			{ mesh = 114639508008462, tex = "F", size = { 12.063, 10.297, 4.076 }, at = { 0.01, 5.156, 0 } },
+			{ mesh = 73567020016753, tex = "C", size = { 7.267, 3.324, 3.756 }, at = { -2.386, 8.865, -0.035 } },
+		},
+		Stall_Empty = {
+			{ mesh = 70775102318080, tex = "M", size = { 7.379, 2.449, 3.277 }, at = { 0, 2.219, 0.036 } },
+			{ mesh = 127707752377149, tex = "F", size = { 7.311, 10.308, 3.491 }, at = { 0, 5.154, 0.02 } },
+			{ mesh = 140105739714888, tex = "C", size = { 7.297, 6.588, 3.729 }, at = { 0, 7.215, 0 } },
+		},
+		Stool = {
+			{ mesh = 97282599980451, tex = "F", size = { 1.898, 2.355, 1.898 }, at = { 0, 1.177, 0 } },
+		},
+		Table_Large = {
+			{ mesh = 72020217389011, tex = "F", size = { 11.394, 3.246, 4.353 }, at = { 0, 1.623, 0.017 } },
+			{ mesh = 72743792577672, tex = "M", size = { 8.707, 0.318, 4.376 }, at = { 0, 3.095, -0.005 } },
+		},
+	},
+	-- how long a stage waits for the meshes before it leaves a library prop out (seconds)
+	WaitSeconds = 15,
+}
+
 -- The waving flag (the owner, 2026-11-03: "thin, flying softly like a real flag"): tools/blender/flag.py, imported by the
 -- owner; the server puts it together from these meshes (server/WavingFlag) and the client waves it (client/FlagWave).
 -- Offsets are from the pole's foot, in studs of the imported model (ModelHeight tall, cloth flying along -X).
