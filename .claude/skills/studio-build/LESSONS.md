@@ -564,3 +564,61 @@ was left there (this game has none); read it there if a cave is ever wanted.
   kind in line is the one that finds no room, so put the least important last.
 - Count the whole arena before calling it done: 273 models and about 70-75 thousand triangles is the Meadow's top; a
   first draft of flowers alone was 22 thousand.
+
+## Dungeon Mushroom Grove, phase A (2026-11-08)
+
+- A second map is a second config block, not a copy of the code: `Config.Dungeon.Arenas.<id>`, the plan and the builder take
+  the map id, and the tests loop over `MapOrder`. Keep the first map's numbers and output untouched (the plan test proves
+  it: "no map named is the Meadow").
+- The packs have no mushrooms, roots or flat stones: make them procedurally in Blender (`tools/library/make_grove.py`:
+  bevelled cylinders and cones, vertex colours, 130-200 triangles each) and pack them with the recoloured pack props into the
+  one GLB. Ruin pieces are the Ruins pack recoloured (mossy grey-green) and decimated to 450.
+- Things that are only flat colour need no upload at all: flagstones are stud-look slab Parts (a little pitch and roll, grey
+  by share, mossy ones, fading to the grass), rune circles a ring of stone blocks plus Neon marks (about 40 parts each),
+  glow is a PointLight in a hidden Part. Cheaper and sharper than a texture, and it needs no import.
+- A kind with an empty model list is left out; a kind whose library props are not imported falls back to the owner's own
+  models (`Fallback`), so the arena is complete before the import. A plan test that drops a kind must not assert the count
+  falls: freed room lets the other kinds grow.
+- Studio refuses a `Source` over 200000 characters: to sync a big module into the test place, strip whole-line comments and
+  indentation first (`make_sync2.py` in the scratchpad did it; Config was 202k with them, 120k without).
+- A map change in a run is cheap: build the next arena on the same plot frame, swap `run.arena/monsters/squad`, destroy the
+  old one, ask the client to stream there. The player stands on the same spot, so nothing moves.
+- A test place built before a kit existed lacks it (StudioTest had no `ReplicatedStorage.MonsterKit`). Without a rebuild: base64
+  the .rbxm in four 100k-char chunks into StringValues (one `run` each), decode in Luau, and
+  `SerializationService:DeserializeInstancesAsync(buffer)` gives the instances. HttpService to localhost is not on the
+  Assistant allowlist: do not look for a way round it.
+- Imported meshes read back from the Edit datamodel (`Workspace.Scene.<name>_Node.<name>`): MeshId and Size of each, written as
+  `tex "P", at {0, height/2, 0}`; Studio may crash during a long play session, so write the config before testing.
+- Mood belongs to the map's config and a client script (`DungeonLight`): tween Lighting, an Atmosphere and a colour grade
+  while the player attribute `DungeonMap` is set, and tween back to the place's own values when it clears.
+
+## Dungeon Mushroom Grove, phase B (2026-11-09)
+
+- The default sky is bright blue at ClockTime 17.2 and pitch black from about 18.3; the dusk is a narrow window (17.6 still
+  bright blue, 17.95 murky green-brown, 17.82 right). Brightness 2.6 with a mid-blue Ambient (#8a98b8, #9aaac8) keeps the
+  dark teal woods readable; Brightness 1.4 at night was unplayable. Find the window by direct Lighting changes in the Client
+  datamodel, then judge it through the real `DungeonLight` (attribute `DungeonMap`), since the eased values differ.
+- The stud-look floor multiplies its colour with the light: a bright green floor (#6f8c36) glows under dusk light, a dark one
+  (#566a2c) goes black and flat, a yellower olive (#7d8742) is what reads "mossy clearing at dusk" and lets the glow pools show.
+- A live run on the test copy (waves 4, weak monsters) needs: the debug menu's "Mid" preset (Remotes.Debug, `{action="mid"}`) to
+  give the farm slimes in the teams, the character moved beside the portal (`Layout.marketPortal()`, TOO_FAR otherwise), then
+  Remotes.Village `DungeonEnter` / `DungeonNext` / `DungeonReplay` / `DungeonLeave`. A run clears in about 15 s, so watch the
+  monsters with a server loop that logs each new child of `Arena.Monsters` (attributes MonsterName, Role) instead of timed shots.
+- A `run` script in the server datamodel has its own `require` cache: `PlayerData.get` through it returns nil. Ask through the
+  real remotes from a Client script instead.
+- Hiding UI by walking up from a label hides the whole root: close a debug sheet with its own `Modal_<id>` and `Backdrop`.
+- A scratchpad `inspect.py` shadows the standard library and makes Python (PIL) fail with `No module named 'bpy'`: never name
+  scratch files after stdlib modules.
+- Never `Write` over a lessons file to "append": use Edit with an anchor. (Restored from git here; nothing lost.)
+
+## Dungeon Mushroom Grove, round 3 (ChatGPT review, 2026-11-09)
+
+- A flat bright floor under dusk reads as "a green field": make the glow carry the magic instead. Neon runes in a light
+  mint (#8fffe5) with marks 1.1 x 2.2 studs read from the game camera; point lights at Brightness 2.2, Range 18 pool on the floor.
+- Lights asked for in the front of the view must be placed FIRST: the corners are full by the time the glow clusters come,
+  so only 3 of 8 lights existed. Place the lit clusters before the bushes and flowers, and check the plan's count and
+  position with a lune script before syncing. Every plan count (rocks, bushes...) is a test: more glow means a re-roll of the
+  seed (search seeds in lune and keep one that passes the tests with all lights placed).
+- Cooler ambient (#6f8a96) made the black backdrop pure black: halfway (#758f9c) kept the woods readable. Tinting only the far
+  woods (`BackdropTints`, by plan zone) separates near willows from the wall at no triangle cost.
+- A fight shot with no camera override (`shot` without coordinates) shows the game's own close camera: good for a live wave.

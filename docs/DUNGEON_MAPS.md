@@ -1,8 +1,20 @@
-# Slime Dungeon: the other three maps (plan only, nothing here is built yet)
+# Slime Dungeon: the other three maps (Mushroom: phase A built; Lava and Ice: plan only)
 
 Written 2026-11-08. The Sunny Meadow (`battle.map.meadow.png`) is built: `shared/DungeonArenaPlan`, `server/DungeonArena`,
-`Config.Dungeon.Arena`, props from `Config.LibraryKit`. This file plans Mushroom, Lava and Ice the same way, and the code
-that rotates the maps each level. The paintings are in `reference/goo-lineage-web/assets/` and are the owner's: shape and
+`Config.Dungeon.Arenas.meadow`, props from `Config.LibraryKit`. This file plans Mushroom, Lava and Ice the same way, and the
+code that rotates the maps each level.
+
+**Mushroom, phase B done (2026-11-09).** Real props in `Config.LibraryKit.Props`, dusk light tuned (ClockTime 17.82, see
+`Lighting` in the Config), olive floor `#7d8742`, a live Meadow -> Grove run and all six monsters seen; shots in
+`docs/ui/dungeon/mushroom-r2-*.png`. Open: thin dark roots, dark willow blobs, a phone view.
+
+**Mushroom, phase A done (2026-11-08).** Code: `Dungeon.mapForLevel`, `Config.Dungeon.Arenas.{meadow,mushroom}`, plan
+functions `stones`/`runes` and the kinds `ruin`, `root`, `glow` (`light` flag on a few), `DungeonArena.template(mapId)`,
+the arena swap in `server/Dungeon.again`, `client/DungeonLight`. Props: `art/library/converted/MushroomProps.glb` (52 props,
+`tools/library/build_grove.ps1`, procedural ones in `make_grove.py`); the owner imports it, then phase B copies MeshIds and
+sizes into `Config.LibraryKit.Props` and judges the arena from the player's camera. The Mushroom King became the Jungle
+Wyrm (the Quaternius one is unrigged); the healer is the Forest Deer. Differences from the plan below: runes and stones are
+script-built parts (no texture), the giant mushrooms use the `pine` slot. The paintings are in `reference/goo-lineage-web/assets/` and are the owner's: shape and
 colour only, never redrawn.
 
 ## 1. How the Meadow was done (the recipe each map repeats)

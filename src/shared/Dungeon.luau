@@ -124,6 +124,21 @@ function Dungeon.plan(mapId: string, level: number, wave: number, seed: number):
 	return out
 end
 
+-- ===== the maps =====
+
+-- The map a dungeon level is fought on: the maps of Config.Dungeon.MapOrder turn one step each level (the original's
+-- BATTLE_MAPS), starting from a first map the player's own `seed` (their UserId) picks, as the original seeds its first map
+-- (MapFirstRandom; off, every player starts on MapOrder[1]). Pure, so the server that builds the arena and the screens that name
+-- it agree without a word between them, and a save needs no new field.
+function Dungeon.mapForLevel(seed: number, level: number): string
+	local order = D.MapOrder
+	local first = 0
+	if D.MapFirstRandom and #order > 1 then
+		first = Rng.new(seed + D.MapSeedOffset):int(0, #order - 1)
+	end
+	return order[(first + level - D.FirstLevel) % #order + 1]
+end
+
 -- ===== the arena =====
 
 -- Where the next monster comes in, flat from the arena's middle: a random point of the edge band (SpawnMinFromCentre to

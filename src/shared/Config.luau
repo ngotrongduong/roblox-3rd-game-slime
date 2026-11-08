@@ -175,6 +175,10 @@ Config.Combat = {
 		-- the target, x0.6 beside it).
 		bloomshell = { kind = "all", name = "Pollen Shockwave", every = 5, factor = 0.5, stun = 0.6 },
 		bramblehorn = { kind = "splash", name = "Thorn Charge", every = 4, factor = 2, splash = 0.6, spread = 2 },
+		-- The two of the Mushroom Grove: the Jungle Wyrm bursts a cloud of spores over every slime, Mama Bear slams the ground
+		-- under her target and the slimes beside it.
+		sporeburst = { kind = "all", name = "Spore Burst", every = 4, factor = 0.5, stun = 0.5 },
+		bearslam = { kind = "splash", name = "Den Slam", every = 4, factor = 2.4, splash = 0.7, spread = 3 },
 	},
 }
 
@@ -328,6 +332,152 @@ Config.LibraryKit = {
 		},
 		WoodLog_Moss = {
 			{ mesh = 111123259457669, tex = "P", size = { 0.894, 0.688, 2.67 }, at = { 0, 0.344, 0 } },
+		},
+		-- The Mushroom Grove's scenery (tools/library/build_grove.ps1: the recoloured Quaternius pieces and the procedural
+		-- mushrooms, roots and stones, one file MushroomProps.glb, imported by the owner, 2026-11-08).
+		Arch_Round_Grove = {
+			{ mesh = 88178210630935, tex = "P", size = { 3.092, 3.533, 0.491 }, at = { 0, 1.766, 0 } },
+		},
+		Bricks_Grove = {
+			{ mesh = 107984017723307, tex = "P", size = { 1.824, 0.546, 1.610 }, at = { 0, 0.273, 0 } },
+		},
+		Bush_1_Grove = {
+			{ mesh = 93520277136821, tex = "P", size = { 1.332, 1.228, 1.690 }, at = { 0, 0.614, 0 } },
+		},
+		Bush_2_Grove = {
+			{ mesh = 130082336287283, tex = "P", size = { 1.346, 1.111, 1.328 }, at = { 0, 0.555, 0 } },
+		},
+		Column_Round_Grove = {
+			{ mesh = 100390927091504, tex = "P", size = { 0.659, 3.990, 0.659 }, at = { 0, 1.995, 0 } },
+		},
+		Column_Round_Short_Grove = {
+			{ mesh = 102096065413340, tex = "P", size = { 0.489, 1.830, 0.489 }, at = { 0, 0.915, 0 } },
+		},
+		CommonTree_2_Grove = {
+			{ mesh = 124286681619024, tex = "P", size = { 1.659, 3.092, 2.508 }, at = { 0, 1.546, 0 } },
+		},
+		CommonTree_Dead_3_Grove = {
+			{ mesh = 136066234974098, tex = "P", size = { 0.638, 3.002, 0.813 }, at = { 0, 1.501, 0 } },
+		},
+		CommonTree_Dead_4_Grove = {
+			{ mesh = 71567418145919, tex = "P", size = { 0.819, 2.369, 1.084 }, at = { 0, 1.185, 0 } },
+		},
+		Flowers_GroveBlue = {
+			{ mesh = 114126707411773, tex = "P", size = { 0.479, 0.828, 0.604 }, at = { 0, 0.414, 0 } },
+		},
+		Flowers_GrovePink = {
+			{ mesh = 114446490885346, tex = "P", size = { 0.479, 0.828, 0.604 }, at = { 0, 0.414, 0 } },
+		},
+		Flowers_GrovePurple = {
+			{ mesh = 136034666784827, tex = "P", size = { 0.479, 0.828, 0.604 }, at = { 0, 0.414, 0 } },
+		},
+		GroveBlock_1 = {
+			{ mesh = 136498865034717, tex = "P", size = { 1.704, 1.114, 1.456 }, at = { 0, 0.557, 0 } },
+		},
+		GroveBlock_2 = {
+			{ mesh = 107270301683421, tex = "P", size = { 1.239, 0.813, 1.181 }, at = { 0, 0.407, 0 } },
+		},
+		GroveRoot_1 = {
+			{ mesh = 130947608834036, tex = "P", size = { 5.393, 1.532, 1.876 }, at = { 0, 0.766, 0 } },
+		},
+		GroveRoot_2 = {
+			{ mesh = 82174900626929, tex = "P", size = { 7.019, 2.172, 2.459 }, at = { 0, 1.086, 0 } },
+		},
+		GroveRoot_3 = {
+			{ mesh = 129653513206045, tex = "P", size = { 4.356, 1.191, 1.554 }, at = { 0, 0.595, 0 } },
+		},
+		GroveRoot_4 = {
+			{ mesh = 72693051242033, tex = "P", size = { 8.033, 2.317, 2.749 }, at = { 0, 1.158, 0 } },
+		},
+		GroveRoot_5 = {
+			{ mesh = 124430086850497, tex = "P", size = { 3.672, 1.704, 1.581 }, at = { 0, 0.852, 0 } },
+		},
+		GroveSlab_1 = {
+			{ mesh = 105908454229057, tex = "P", size = { 1.054, 3.240, 0.589 }, at = { 0, 1.620, 0 } },
+		},
+		GroveSlab_2 = {
+			{ mesh = 100988617531247, tex = "P", size = { 1.311, 2.415, 0.774 }, at = { 0, 1.207, 0 } },
+		},
+		GroveSlab_3 = {
+			{ mesh = 71093832379376, tex = "P", size = { 0.967, 2.000, 0.962 }, at = { 0, 1.000, 0 } },
+		},
+		MushBig_Blue = {
+			{ mesh = 105249084598537, tex = "P", size = { 3.439, 4.350, 3.389 }, at = { 0, 2.175, 0 } },
+		},
+		MushBig_Purple = {
+			{ mesh = 84378256361786, tex = "P", size = { 3.752, 4.800, 3.867 }, at = { 0, 2.400, 0 } },
+		},
+		MushBig_Teal = {
+			{ mesh = 113976765253227, tex = "P", size = { 3.113, 4.050, 3.136 }, at = { 0, 2.025, 0 } },
+		},
+		MushGlow_Blue_1 = {
+			{ mesh = 113399732892887, tex = "P", size = { 1.004, 1.370, 0.980 }, at = { 0, 0.685, 0 } },
+		},
+		MushGlow_Blue_2 = {
+			{ mesh = 101534783014598, tex = "P", size = { 0.844, 0.940, 0.799 }, at = { 0, 0.470, 0 } },
+		},
+		MushGlow_Pink_1 = {
+			{ mesh = 107114224793779, tex = "P", size = { 1.004, 1.370, 0.980 }, at = { 0, 0.685, 0 } },
+		},
+		MushGlow_Pink_2 = {
+			{ mesh = 84776363110484, tex = "P", size = { 0.844, 0.940, 0.799 }, at = { 0, 0.470, 0 } },
+		},
+		MushGlow_Purple_1 = {
+			{ mesh = 103669983144973, tex = "P", size = { 1.004, 1.370, 0.980 }, at = { 0, 0.685, 0 } },
+		},
+		MushGlow_Purple_2 = {
+			{ mesh = 120063581041886, tex = "P", size = { 0.844, 0.940, 0.799 }, at = { 0, 0.470, 0 } },
+		},
+		Plant_1_Grove = {
+			{ mesh = 128405745871615, tex = "P", size = { 1.188, 0.505, 0.940 }, at = { 0, 0.252, 0 } },
+		},
+		Plant_3_Grove = {
+			{ mesh = 122612462968813, tex = "P", size = { 1.072, 0.941, 0.973 }, at = { 0, 0.470, 0 } },
+		},
+		Plant_4_Grove = {
+			{ mesh = 124134557917628, tex = "P", size = { 1.903, 0.800, 2.112 }, at = { 0, 0.400, 0 } },
+		},
+		Rock_6_Grove = {
+			{ mesh = 119017456110249, tex = "P", size = { 0.912, 0.708, 1.142 }, at = { 0, 0.354, 0 } },
+		},
+		Rock_7_Grove = {
+			{ mesh = 126785006935665, tex = "P", size = { 0.876, 0.849, 1.098 }, at = { 0, 0.425, 0 } },
+		},
+		Rock_Moss_1_Grove = {
+			{ mesh = 123370299800741, tex = "P", size = { 0.485, 0.950, 0.467 }, at = { 0, 0.475, 0 } },
+		},
+		Rock_Moss_2_Grove = {
+			{ mesh = 95410338686555, tex = "P", size = { 0.613, 0.692, 0.650 }, at = { 0, 0.346, 0 } },
+		},
+		Rock_Moss_4_Grove = {
+			{ mesh = 121138786250161, tex = "P", size = { 0.744, 0.784, 1.251 }, at = { 0, 0.392, 0 } },
+		},
+		Rock_Moss_5_Grove = {
+			{ mesh = 109806645878392, tex = "P", size = { 0.663, 0.577, 0.915 }, at = { 0, 0.288, 0 } },
+		},
+		Rock_Moss_7_Grove = {
+			{ mesh = 139912600194223, tex = "P", size = { 0.876, 0.774, 1.098 }, at = { 0, 0.387, 0 } },
+		},
+		Wall_Broken_Grove = {
+			{ mesh = 82561138554681, tex = "P", size = { 1.988, 1.947, 0.286 }, at = { 0, 0.974, 0 } },
+		},
+		Wall_Double_Broken_Grove = {
+			{ mesh = 103302874853166, tex = "P", size = { 1.989, 0.986, 0.566 }, at = { 0, 0.493, 0 } },
+		},
+		Wall_Half_Grove = {
+			{ mesh = 130165192026734, tex = "P", size = { 0.996, 2.001, 0.286 }, at = { 0, 1.000, 0 } },
+		},
+		Willow_1_Grove = {
+			{ mesh = 76034894423338, tex = "P", size = { 1.433, 2.830, 2.555 }, at = { 0, 1.415, 0 } },
+		},
+		Willow_3_Grove = {
+			{ mesh = 135483415854515, tex = "P", size = { 1.306, 2.347, 1.986 }, at = { 0, 1.173, 0 } },
+		},
+		Willow_Dead_1_Grove = {
+			{ mesh = 118235263036754, tex = "P", size = { 0.498, 2.692, 1.812 }, at = { 0, 1.346, 0 } },
+		},
+		Willow_Dead_3_Grove = {
+			{ mesh = 117932356743380, tex = "P", size = { 0.311, 1.906, 1.578 }, at = { 0, 0.953, 0 } },
 		},
 	},
 	-- how long a stage waits for the meshes before it leaves a library prop out (seconds)
@@ -730,7 +880,7 @@ Config.Zombies = {
 -- a set number of them, stronger from wave to wave and from dungeon level to dungeon level. The numbers are the original's
 -- (docs/reference/02-battle.md §5 waves, §6 level ladder, §7 roster, §13 loot); the rules are shared/Dungeon.
 Config.Dungeon = {
-	-- The maps in the order they open; only the first so far. A monster: its budget `cost` (none for a mini-boss or boss,
+	-- The maps (Sunny Meadow, Mushroom Grove; the order they turn in is MapOrder below). A monster: its budget `cost` (none for a mini-boss or boss,
 	-- which come alone), its level-1 stats (the same kind of numbers a slime has), its `role`, and `kind`: the way it
 	-- fights in Config.Combat (melee strikes anyone; ranged keeps its distance; hunter goes for the slime with the least
 	-- health and stings it slow; healer mends its wounded team-mates; bloomshell and bramblehorn are the two bosses with a
@@ -861,8 +1011,144 @@ Config.Dungeon = {
 				},
 			} :: { any },
 		},
+		-- The Mushroom Grove: the Meadow's roles again with the owner's other Egg Heist creatures and the dark forest's own
+		-- stats where the original has a fitting one (docs/DUNGEON_MAPS.md §2). The trophy is the Glow Spore (the original's
+		-- darkforest map drop): the boss pays two, never fewer; the mini-boss, the spitter and the healer sometimes one.
+		mushroom = {
+			name = "Mushroom Grove",
+			monsters = {
+				{
+					id = "dark_hare",
+					name = "Jackalope",
+					role = "swarmer",
+					cost = 1,
+					attack = 1,
+					defence = 0,
+					speed = 3,
+					hp = 14,
+					kind = "melee",
+					drops = {
+						{ item = "coins", chance = 0.25, min = 2, max = 4 },
+						{ item = "food", chance = 0.15, min = 3, max = 5 },
+						{ item = "wood", chance = 0.35, min = 1, max = 1 },
+					},
+				},
+				{
+					id = "dark_bat",
+					name = "Cave Bat",
+					role = "raider",
+					cost = 2,
+					attack = 3,
+					defence = 0,
+					speed = 4.5,
+					hp = 16,
+					kind = "hunter",
+					drops = {
+						{ item = "coins", chance = 0.25, min = 2, max = 5 },
+						{ item = "food", chance = 0.10, min = 3, max = 5 },
+						{ item = "wood", chance = 0.15, min = 1, max = 1 },
+						{ item = "ore", chance = 0.10, min = 1, max = 1 },
+					},
+				},
+				{
+					id = "dark_fox",
+					name = "Fairy Fox",
+					role = "spitter",
+					cost = 2,
+					attack = 2,
+					defence = 0,
+					speed = 2.2,
+					hp = 16,
+					kind = "ranged",
+					drops = {
+						{ item = "coins", chance = 0.25, min = 2, max = 5 },
+						{ item = "food", chance = 0.15, min = 3, max = 5 },
+						{ item = "wood", chance = 0.30, min = 1, max = 1 },
+						{ item = "glow_spore", chance = 0.10, min = 1, max = 1 },
+					},
+				},
+				{
+					id = "dark_deer",
+					name = "Forest Deer",
+					role = "shaman",
+					cost = 2,
+					attack = 1,
+					defence = 0,
+					speed = 2.5,
+					hp = 20,
+					kind = "healer",
+					drops = {
+						{ item = "coins", chance = 0.25, min = 2, max = 5 },
+						{ item = "food", chance = 0.10, min = 3, max = 5 },
+						{ item = "ore", chance = 0.15, min = 1, max = 1 },
+						{ item = "rare_part", chance = 0.05, min = 1, max = 1 },
+						{ item = "glow_spore", chance = 0.12, min = 1, max = 1 },
+					},
+				},
+				{
+					id = "dark_totem",
+					name = "Totem Golem",
+					role = "armoured",
+					cost = 3,
+					attack = 3,
+					defence = 8,
+					speed = 1,
+					hp = 38,
+					kind = "melee",
+					drops = {
+						{ item = "coins", chance = 0.30, min = 3, max = 6 },
+						{ item = "food", chance = 0.10, min = 3, max = 5 },
+						{ item = "ore", chance = 0.45, min = 1, max = 2 },
+						{ item = "rare_part", chance = 0.12, min = 1, max = 1 },
+					},
+				},
+				{
+					id = "dark_wyrm",
+					name = "Jungle Wyrm",
+					role = "miniboss",
+					attack = 6,
+					defence = 3,
+					speed = 3,
+					hp = 150,
+					kind = "sporeburst",
+					drops = {
+						{ item = "coins", chance = 1, min = 6, max = 11 },
+						{ item = "ore", chance = 1, min = 2, max = 3 },
+						{ item = "rare_part", chance = 0.60, min = 1, max = 2 },
+						{ item = "monster_core", chance = 0.30, min = 1, max = 1 },
+						{ item = "glow_spore", chance = 0.35, min = 1, max = 2 },
+					},
+				},
+				{
+					id = "dark_bear",
+					name = "Mama Bear",
+					role = "boss",
+					attack = 7,
+					defence = 5,
+					speed = 1.5,
+					hp = 300,
+					kind = "bearslam",
+					drops = {
+						{ item = "coins", chance = 1, min = 12, max = 20 },
+						{ item = "ore", chance = 1, min = 3, max = 5 },
+						{ item = "rare_part", chance = 1, min = 2, max = 3 },
+						{ item = "monster_core", chance = 0.50, min = 1, max = 1 },
+						{ item = "boss_essence", chance = 0.25, min = 1, max = 1 },
+						-- the map's trophy: two glow spores, never fewer
+						{ item = "glow_spore", chance = 1, min = 2, max = 2 },
+					},
+				},
+			} :: { any },
+		},
 	},
-	MapOrder = { "meadow" },
+	-- The maps turn one step each dungeon level (shared/Dungeon.mapForLevel), from a first map each player's UserId picks
+	-- (MapFirstRandom, the original's seeded first map; off, everyone starts on the first of the list). MapSeedOffset is the
+	-- original's seed + 77. Lava and Ice join the list when they are built.
+	MapOrder = { "meadow", "mushroom" },
+	MapFirstRandom = true,
+	MapSeedOffset = 77,
+	-- How long the lighting takes to come back to the place's own day when a run ends (client/DungeonLight).
+	LightBackSeconds = 1.5,
 
 	-- ===== Waves (§5) =====
 	-- A run is Waves waves: the mini-boss alone on MiniBossWave, the boss alone on BossWave, the others a crowd whose
@@ -927,6 +1213,8 @@ Config.Dungeon = {
 		boss_essence = { name = "Boss Essence", short = "Essence", kind = "material", icon = 135452085949250 },
 		-- the id stays (saves, the picture); only the name on screen is the Meadow's trophy "Bramble Horn"
 		boar_tusk = { name = "Bramble Horn", short = "Horn", kind = "material", icon = 97935793546139 },
+		-- the Mushroom Grove's trophy (no picture yet: a plain tile with "Spore" until ChatGPT's icon is in)
+		glow_spore = { name = "Glow Spore", short = "Spore", kind = "material", icon = 138882147682185 },
 	},
 	DropOrder = {
 		"coins",
@@ -937,6 +1225,7 @@ Config.Dungeon = {
 		"monster_core",
 		"boss_essence",
 		"boar_tusk",
+		"glow_spore",
 	},
 
 	-- ===== The run (server/Dungeon) =====
@@ -1006,131 +1295,350 @@ Config.Dungeon = {
 	-- owner's painting reference/goo-lineage-web/assets/battle.map.meadow.png: a round bright clearing, four dirt paths coming
 	-- in on the four axes and fading out before the middle, rocks, flower clumps and bushes round the rim, round trees packed in
 	-- each corner, pines beside the left and right paths, a ring of woods behind. Studs from the arena's middle; angles in degrees from +X toward +Z.
-	Arena = {
-		Seed = 20261104,
-		-- The grass floor (a stud-look block, the village's look) reaches FloorHalf each way, past the backdrop, so the world
-		-- never shows its edge; FloorColour is the village lawn's, a little brighter like the painting.
-		FloorHalf = 175,
-		FloorColour = "#62ae3c",
-		-- The invisible wall round the fight: slimes and players cannot leave; the rim scenery stands outside it.
-		WallRadius = 68,
-		WallHeight = 40,
-		WallThickness = 2,
-		WallSegments = 24,
-		-- Nothing at all stands inside FightClear (the fight's centre); tiny flowers and pebbles lie from TinyFrom to TinyTo.
-		FightClear = 35,
-		TinyFrom = 37,
-		TinyTo = 62,
-		TinyFlowers = 14,
-		TinyTufts = 6,
-		TinyPebbles = 7,
-		TinyApart = 7,
-		-- The rim band that holds the scenery (outside the wall), and the woods behind it that hide the floor's edge: BackdropRows
-		-- rows of trees (r from..to, count, height), their trunks only BackdropFoot of their height wide so the crowns overlap into
-		-- one wall of leaves, a row of big bushes behind (BackdropBushes), and a ring of Hills (flattened balls of grass, the
-		-- horizon the eye reads past the woods).
-		RimInner = 71,
-		RimOuter = 108,
-		BackdropInner = 112,
-		BackdropOuter = 140,
-		BackdropRows = {
-			{ from = 112, to = 123, count = 42, tall = { 30, 40 } },
-			{ from = 125, to = 140, count = 50, tall = { 38, 52 } },
+	-- One block a map of Maps (the key is the map id): the Meadow's here, the Mushroom Grove's after it (the owner's painting
+	-- battle.map.mushroom.png: the same ring plan, in a dark mossy wood with stone paths, rune circles, ruins, roots and glowing
+	-- mushrooms). A key only the Grove has is absent from the Meadow's block, which then simply has none of that.
+	Arenas = {
+		meadow = {
+			Seed = 20261104,
+			-- The grass floor (a stud-look block, the village's look) reaches FloorHalf each way, past the backdrop, so the world
+			-- never shows its edge; FloorColour is the village lawn's, a little brighter like the painting.
+			FloorHalf = 175,
+			FloorColour = "#62ae3c",
+			-- The invisible wall round the fight: slimes and players cannot leave; the rim scenery stands outside it.
+			WallRadius = 68,
+			WallHeight = 40,
+			WallThickness = 2,
+			WallSegments = 24,
+			-- Nothing at all stands inside FightClear (the fight's centre); tiny flowers and pebbles lie from TinyFrom to TinyTo.
+			FightClear = 35,
+			TinyFrom = 37,
+			TinyTo = 62,
+			TinyFlowers = 14,
+			TinyTufts = 6,
+			TinyPebbles = 7,
+			TinyApart = 7,
+			-- The rim band that holds the scenery (outside the wall), and the woods behind it that hide the floor's edge: BackdropRows
+			-- rows of trees (r from..to, count, height), their trunks only BackdropFoot of their height wide so the crowns overlap into
+			-- one wall of leaves, a row of big bushes behind (BackdropBushes), and a ring of Hills (flattened balls of grass, the
+			-- horizon the eye reads past the woods).
+			RimInner = 71,
+			RimOuter = 108,
+			BackdropInner = 112,
+			BackdropOuter = 140,
+			BackdropRows = {
+				{ from = 112, to = 123, count = 42, tall = { 30, 40 } },
+				{ from = 125, to = 140, count = 50, tall = { 38, 52 } },
+			},
+			BackdropFoot = 0.13,
+			BackdropPine = 0.35,
+			BackdropBushes = 44,
+			BushRowDepth = 10,
+			Hills = {
+				Count = 22,
+				Radius = 172,
+				Jitter = 10,
+				Wide = { 120, 160 },
+				Tall = { 46, 66 },
+				-- how much of a hill's height sinks under the floor
+				Sink = 0.4,
+				Colour = "#6aa35c",
+			},
+			-- Four dirt paths on the axes, from PathOuter in to PathInner: PathSegments overlapping flat blocks that narrow from
+			-- PathWidthOuter to PathWidthInner and drift sideways by up to PathWobble; the colour fades PathFade of the way to the
+			-- grass at the inner end. Each lies PathLift over the floor (so the two never flicker) and is PathThick thick.
+			PathColour = "#b9894f",
+			PathOuter = 124,
+			PathInner = 42,
+			PathSegments = 10,
+			PathWidthOuter = 11,
+			PathWidthInner = 4,
+			PathWobble = 0.6,
+			PathFade = 0.55,
+			PathLift = 0.05,
+			PathThick = 0.1,
+			-- ...and each segment sits PathStep over the one outside it, so the places where two overlap never flicker.
+			PathStep = 0.01,
+			-- The scenery keeps this far from an axis (plus half its own width) so the four path mouths stay open.
+			MouthHalf = 11,
+			-- Space between two pieces of scenery, over their two footprints' radii.
+			Gap = 1.5,
+			-- Per corner (the quadrant between two paths): round trees, rock pairs, single rocks, bushes, flower clumps; tries a
+			-- piece gets.
+			PerCorner = { Trees = 4, RockPairs = 2, Rocks = 3, Bushes = 6, Clumps = 7, Stumps = 1, Logs = 1 },
+			-- The two trees past each path's outer end: how far past it, and how far apart from the path's line.
+			MouthBehind = 8,
+			MouthTreeApart = 7,
+			Tries = 80,
+			-- Heights (trees) or widths (the rest), studs: { low, high }. Backdrop trees are taller than the rim's.
+			-- (bigger than the painting's share of the clearing: the game's camera stands at the rim and the scenery is 90-130 studs
+			-- off, so it must be large to read)
+			Round = { 26, 34 },
+			Pine = { 28, 36 },
+			BackdropRound = { 32, 40 },
+			RockBig = { 9, 12 },
+			RockSmall = { 5, 7 },
+			RockSingle = { 6, 10.5 },
+			Bush = { 7, 10 },
+			BackdropBush = { 12, 17 },
+			-- a flower clump is sized by its height (the library's Flowers stand on stalks)
+			Flower = { 5, 7 },
+			Stump = { 4.8, 6.5 },
+			Log = { 9, 12 },
+			Tuft = { 2.8, 4 },
+			TinyFlower = { 2, 2.8 },
+			TinyTuft = { 1.5, 2.1 },
+			TinyPebble = { 1, 1.6 },
+			-- Kit models (ServerStorage.Kit.WildKit) by kind, and the tints a kind may wear (a tint only multiplies, so these are
+			-- the village's: it keeps the arena in the same world).
+			-- Models: what the arena is built from, by kind. The meadow's own props are library props (Quaternius' Ultimate Nature
+			-- Pack, recoloured to the painting's palette by tools/library/fbx_to_glb.py; Config.LibraryKit, server/LibraryKit); a
+			-- kind whose library props are not all in yet is built from Fallback (the valley's WildKit models) instead, and a kind
+			-- with neither is left out. The tufts and pebbles are WildKit's (the library has none that suit).
+			Models = {
+				-- (BirchTree_1's white trunk read as a stray bone at the rim: the painting has no birches)
+				round = { "CommonTree_1", "CommonTree_2", "CommonTree_4", "CommonTree_5" },
+				pine = { "PineTree_2", "PineTree_4" },
+				rock = { "Rock_2", "Rock_3", "Rock_4", "Rock_5", "Rock_Moss_3" },
+				bush = { "Bush_1", "Bush_2", "BushBerries_1" },
+				flower = { "Flowers", "Flowers_Pink", "Flowers_White", "Flowers_Gold" },
+				stump = { "TreeStump", "TreeStump_Moss" },
+				log = { "WoodLog", "WoodLog_Moss" },
+				tuft = { "QtGrass_Common_Short", "QtGrass_Common_Tall" },
+				pebble = { "QtPebble_Round_1", "QtPebble_Square_2" },
+			},
+			Fallback = {
+				round = { "QtCommonTree_1", "QtCommonTree_3", "QtCommonTree_5" },
+				pine = { "QtPine_1", "QtPine_5" },
+				rock = { "QtRock_Medium_1", "QtRock_Medium_2", "QtRock_Medium_3" },
+				bush = { "QtBush_Common_Green", "QtBush_Common_Flowers" },
+				flower = { "QtFlower_3_Group", "QtFlower_4_Group" },
+				stump = {},
+				log = {},
+			},
+			Tints = {
+				-- (the imported leaves are brighter than the painting's: the tints take them down, and the pines to its deep
+				-- blue-green, seen 2026-11-08)
+				-- and darker than the grass, so the woods stand apart from the clearing (ChatGPT's review, 2026-11-08)
+				round = { "#b4bca4", "#a8b49c", "#9cac94" },
+				pine = { "#8cb4a8", "#7ca89c" },
+				bush = { "#ffffff", "#f0ffd2" },
+				tuft = { "#f0ffc8", "#e1fabe" },
+			},
 		},
-		BackdropFoot = 0.13,
-		BackdropPine = 0.35,
-		BackdropBushes = 44,
-		BushRowDepth = 10,
-		Hills = {
-			Count = 22,
-			Radius = 172,
-			Jitter = 10,
-			Wide = { 120, 160 },
-			Tall = { 46, 66 },
-			-- how much of a hill's height sinks under the floor
-			Sink = 0.4,
-			Colour = "#6aa35c",
-		},
-		-- Four dirt paths on the axes, from PathOuter in to PathInner: PathSegments overlapping flat blocks that narrow from
-		-- PathWidthOuter to PathWidthInner and drift sideways by up to PathWobble; the colour fades PathFade of the way to the
-		-- grass at the inner end. Each lies PathLift over the floor (so the two never flicker) and is PathThick thick.
-		PathColour = "#b9894f",
-		PathOuter = 124,
-		PathInner = 42,
-		PathSegments = 10,
-		PathWidthOuter = 11,
-		PathWidthInner = 4,
-		PathWobble = 0.6,
-		PathFade = 0.55,
-		PathLift = 0.05,
-		PathThick = 0.1,
-		-- ...and each segment sits PathStep over the one outside it, so the places where two overlap never flicker.
-		PathStep = 0.01,
-		-- The scenery keeps this far from an axis (plus half its own width) so the four path mouths stay open.
-		MouthHalf = 11,
-		-- Space between two pieces of scenery, over their two footprints' radii.
-		Gap = 1.5,
-		-- Per corner (the quadrant between two paths): round trees, rock pairs, single rocks, bushes, flower clumps; tries a
-		-- piece gets.
-		PerCorner = { Trees = 4, RockPairs = 2, Rocks = 3, Bushes = 6, Clumps = 7, Stumps = 1, Logs = 1 },
-		-- The two trees past each path's outer end: how far past it, and how far apart from the path's line.
-		MouthBehind = 8,
-		MouthTreeApart = 7,
-		Tries = 80,
-		-- Heights (trees) or widths (the rest), studs: { low, high }. Backdrop trees are taller than the rim's.
-		-- (bigger than the painting's share of the clearing: the game's camera stands at the rim and the scenery is 90-130 studs
-		-- off, so it must be large to read)
-		Round = { 26, 34 },
-		Pine = { 28, 36 },
-		BackdropRound = { 32, 40 },
-		RockBig = { 9, 12 },
-		RockSmall = { 5, 7 },
-		RockSingle = { 6, 10.5 },
-		Bush = { 7, 10 },
-		BackdropBush = { 12, 17 },
-		-- a flower clump is sized by its height (the library's Flowers stand on stalks)
-		Flower = { 5, 7 },
-		Stump = { 4.8, 6.5 },
-		Log = { 9, 12 },
-		Tuft = { 2.8, 4 },
-		TinyFlower = { 2, 2.8 },
-		TinyTuft = { 1.5, 2.1 },
-		TinyPebble = { 1, 1.6 },
-		-- Kit models (ServerStorage.Kit.WildKit) by kind, and the tints a kind may wear (a tint only multiplies, so these are
-		-- the village's: it keeps the arena in the same world).
-		-- Models: what the arena is built from, by kind. The meadow's own props are library props (Quaternius' Ultimate Nature
-		-- Pack, recoloured to the painting's palette by tools/library/fbx_to_glb.py; Config.LibraryKit, server/LibraryKit); a
-		-- kind whose library props are not all in yet is built from Fallback (the valley's WildKit models) instead, and a kind
-		-- with neither is left out. The tufts and pebbles are WildKit's (the library has none that suit).
-		Models = {
-			-- (BirchTree_1's white trunk read as a stray bone at the rim: the painting has no birches)
-			round = { "CommonTree_1", "CommonTree_2", "CommonTree_4", "CommonTree_5" },
-			pine = { "PineTree_2", "PineTree_4" },
-			rock = { "Rock_2", "Rock_3", "Rock_4", "Rock_5", "Rock_Moss_3" },
-			bush = { "Bush_1", "Bush_2", "BushBerries_1" },
-			flower = { "Flowers", "Flowers_Pink", "Flowers_White", "Flowers_Gold" },
-			stump = { "TreeStump", "TreeStump_Moss" },
-			log = { "WoodLog", "WoodLog_Moss" },
-			tuft = { "QtGrass_Common_Short", "QtGrass_Common_Tall" },
-			pebble = { "QtPebble_Round_1", "QtPebble_Square_2" },
-		},
-		Fallback = {
-			round = { "QtCommonTree_1", "QtCommonTree_3", "QtCommonTree_5" },
-			pine = { "QtPine_1", "QtPine_5" },
-			rock = { "QtRock_Medium_1", "QtRock_Medium_2", "QtRock_Medium_3" },
-			bush = { "QtBush_Common_Green", "QtBush_Common_Flowers" },
-			flower = { "QtFlower_3_Group", "QtFlower_4_Group" },
-			stump = {},
-			log = {},
-		},
-		Tints = {
-			-- (the imported leaves are brighter than the painting's: the tints take them down, and the pines to its deep
-			-- blue-green, seen 2026-11-08)
-			-- and darker than the grass, so the woods stand apart from the clearing (ChatGPT's review, 2026-11-08)
-			round = { "#b4bca4", "#a8b49c", "#9cac94" },
-			pine = { "#8cb4a8", "#7ca89c" },
-			bush = { "#ffffff", "#f0ffd2" },
-			tuft = { "#f0ffc8", "#e1fabe" },
+		-- The Mushroom Grove (battle.map.mushroom.png): the Meadow's ring plan with its own keys. A mossy olive clearing in dusk
+		-- light; four cracked flagstone paths (PathStyle "stones": Stones); four faint rune circles in the quarters (Runes);
+		-- the corners packed with mossy ruin stones (kind `ruin`, by height), thick twisting roots (`root`, by width) and
+		-- clusters of small glowing mushrooms (`glow`, by height) with a few point lights (Glow); giant mushrooms (kind `pine`,
+		-- the second tall kind) beside the left and right paths and among the dark woods behind. The props are
+		-- tools/library/build_grove.ps1's (MushroomProps.glb); a kind whose props are not all imported yet is built from
+		-- Fallback (the owner's own mushrooms and rocks, the valley's teal trees) and one warning names which.
+		mushroom = {
+			Seed = 20261124,
+			FloorHalf = 175,
+			FloorColour = "#6c7a40",
+			WallRadius = 68,
+			WallHeight = 40,
+			WallThickness = 2,
+			WallSegments = 24,
+			FightClear = 35,
+			TinyFrom = 37,
+			TinyTo = 62,
+			TinyFlowers = 9,
+			TinyTufts = 6,
+			TinyPebbles = 9,
+			TinyApart = 7,
+			RimInner = 71,
+			RimOuter = 108,
+			BackdropInner = 112,
+			BackdropOuter = 140,
+			BackdropRows = {
+				{ from = 112, to = 123, count = 42, tall = { 30, 40 } },
+				{ from = 125, to = 140, count = 50, tall = { 38, 52 } },
+			},
+			BackdropFoot = 0.13,
+			BackdropPine = 0.4,
+			BackdropBushes = 44,
+			BushRowDepth = 10,
+			Hills = {
+				Count = 22,
+				Radius = 172,
+				Jitter = 10,
+				Wide = { 120, 160 },
+				Tall = { 46, 66 },
+				Sink = 0.4,
+				Colour = "#1f4a3c",
+			},
+			-- The paths are flagstones: one stone every Step along each path, as many across as the path is wide (stones of
+			-- Size x Depth studs, Thick thick, Gap apart), skipped with a chance that grows to Skip at the inner end so the path
+			-- breaks up before the middle; Moss of them are mossy; Shade is how far each stone's grey may vary.
+			PathStyle = "stones",
+			Stones = {
+				Step = 5,
+				Size = { 2.8, 4.6 },
+				Depth = { 2.6, 4 },
+				Thick = 0.3,
+				Gap = 0.5,
+				Skip = 0.55,
+				Moss = 0.3,
+				Shade = 0.1,
+				Tilt = 0.3,
+				Colour = "#a8a38a",
+				MossColour = "#6f9a3a",
+			},
+			PathColour = "#a8a38a",
+			PathOuter = 124,
+			PathInner = 42,
+			PathSegments = 10,
+			PathWidthOuter = 12,
+			PathWidthInner = 6,
+			PathWobble = 0.6,
+			PathFade = 0.55,
+			PathLift = 0.05,
+			PathThick = 0.1,
+			PathStep = 0.01,
+			-- The four rune circles: in the middle of each quarter, At studs out, Radius wide; a flat stone ring (RingWidth wide,
+			-- Stone grey, Thick) with Marks glowing runes (Colour, Neon) set round it and a second ring of them inside.
+			Runes = {
+				At = 47,
+				Radius = 10,
+				RingWidth = 1.6,
+				Marks = 16,
+				Thick = 0.12,
+				Stone = "#8f9a78",
+				Colour = "#8fffe5",
+				MarkWidth = 1.1,
+				MarkLength = 2.2,
+			},
+			-- A glowing cluster's light: the first Lights clusters of each corner carry a point light of the colour of their
+			-- first mushroom (by the model's name), Lift above the floor, Range studs, never a particle.
+			Glow = {
+				Lights = { 2, 2, 1, 1 },
+				Lift = 2,
+				Range = 18,
+				Brightness = 2.2,
+				Colours = { Blue = "#4fc8ff", Purple = "#b36cf0", Pink = "#ff7fbf", Teal = "#3fe0c0" },
+			},
+			-- The light inside this map (client/DungeonLight eases the game's lighting to it while a run is on this map):
+			-- dusk, teal and cool, the glow brighter against it.
+			Lighting = {
+				Seconds = 1.5,
+				ClockTime = 17.82,
+				Brightness = 2.7,
+				Ambient = "#758f9c",
+				OutdoorAmbient = "#8ca7b1",
+				AtmosphereColour = "#7a8fb0",
+				AtmosphereDecay = "#33405e",
+				AtmosphereDensity = 0.42,
+				AtmosphereOffset = 0.2,
+				AtmosphereHaze = 2.2,
+				TintColour = "#d6e6ff",
+				Saturation = 0.05,
+				GradeBrightness = -0.03,
+				GradeContrast = 0.08,
+			},
+			MouthHalf = 11,
+			Gap = 1.5,
+			PerCorner = {
+				Trees = 4,
+				RockPairs = 1,
+				Rocks = 2,
+				Bushes = 5,
+				Clumps = 4,
+				Stumps = 0,
+				Logs = 0,
+				Ruins = 3,
+				Roots = 3,
+				Glows = 2,
+			},
+			MouthBehind = 8,
+			MouthTreeApart = 7,
+			Tries = 80,
+			Round = { 26, 34 },
+			Pine = { 20, 28 },
+			BackdropRound = { 32, 40 },
+			RockBig = { 9, 12 },
+			RockSmall = { 5, 7 },
+			RockSingle = { 6, 10.5 },
+			Bush = { 7, 10 },
+			BackdropBush = { 12, 17 },
+			Flower = { 5, 7 },
+			Stump = { 4.8, 6.5 },
+			Log = { 9, 12 },
+			Tuft = { 2.8, 4 },
+			TinyFlower = { 2, 2.8 },
+			TinyTuft = { 1.5, 2.1 },
+			TinyPebble = { 1.4, 2.2 },
+			-- the ruins stand 9 to 16 studs tall, a root lies 12 to 20 studs long, a glowing mushroom is 3 to 5 tall and a
+			-- cluster has GlowCount models spread over GlowSpread studs
+			Ruin = { 9, 16 },
+			Root = { 12, 20 },
+			GlowSize = { 3.2, 5.2 },
+			GlowCount = { 3, 5 },
+			GlowSpread = 2.6,
+			Models = {
+				round = { "Willow_1_Grove", "Willow_3_Grove", "CommonTree_2_Grove" },
+				pine = { "MushBig_Blue", "MushBig_Purple", "MushBig_Teal" },
+				rock = {
+					"Rock_6_Grove",
+					"Rock_7_Grove",
+					"Rock_Moss_1_Grove",
+					"Rock_Moss_2_Grove",
+					"Rock_Moss_4_Grove",
+					"Rock_Moss_5_Grove",
+					"Rock_Moss_7_Grove",
+					"GroveBlock_1",
+					"GroveBlock_2",
+				},
+				ruin = {
+					"GroveSlab_1",
+					"GroveSlab_2",
+					"GroveSlab_3",
+					"Column_Round_Grove",
+					"Column_Round_Short_Grove",
+					"Wall_Half_Grove",
+					"Wall_Broken_Grove",
+					"Wall_Double_Broken_Grove",
+					"Arch_Round_Grove",
+				},
+				root = { "GroveRoot_1", "GroveRoot_2", "GroveRoot_3", "GroveRoot_4", "GroveRoot_5" },
+				glow = {
+					"MushGlow_Blue_1",
+					"MushGlow_Blue_2",
+					"MushGlow_Purple_1",
+					"MushGlow_Purple_2",
+					"MushGlow_Pink_1",
+					"MushGlow_Pink_2",
+				},
+				bush = { "Bush_1_Grove", "Bush_2_Grove", "Plant_3_Grove", "Plant_4_Grove", "Plant_1_Grove" },
+				flower = { "Flowers_GroveBlue", "Flowers_GrovePurple", "Flowers_GrovePink" },
+				stump = {},
+				log = {},
+				tuft = { "QtGrass_Common_Short", "QtGrass_Common_Tall" },
+				pebble = { "Bricks_Grove" },
+			},
+			Fallback = {
+				round = { "QtCommonTree_1_Teal", "QtCommonTree_3_Teal", "QtCommonTree_5_Teal" },
+				pine = { "OwnMushBlue", "OwnMushPurple", "OwnMushPurpleSpotted", "OwnMushPink" },
+				rock = { "QtRock_Medium_1", "QtRock_Medium_2", "QtRock_Medium_3" },
+				ruin = { "OwnMossyRockStack", "OwnJungleStoneShelf" },
+				root = {},
+				glow = { "OwnMushBlue", "OwnMushPurple", "OwnMushPurpleSpotted", "OwnMushPink" },
+				bush = { "QtBush_Common_Green", "QtBush_Common_Flowers" },
+				flower = { "QtFlower_3_Group", "QtFlower_4_Group" },
+				pebble = { "QtPebble_Round_1", "QtPebble_Square_2" },
+				stump = {},
+				log = {},
+			},
+			Tints = {
+				round = { "#ffffff", "#e8e0ff", "#d8ecff" },
+				bush = { "#ffffff", "#e0f0ff" },
+				tuft = { "#a8c8b0", "#98bca4" },
+			},
+			-- the far woods stand a step darker than the near trees, so the near willows read against them
+			BackdropTints = {
+				round = { "#8f9fb0", "#8494b0", "#7f9cae" },
+			},
 		},
 	},
 	-- The stand-in for a monster until its model exists (the art step): a ball whose colour follows its kind, as big as its
@@ -1143,6 +1651,8 @@ Config.Dungeon = {
 			healer = "#b79cf0",
 			bloomshell = "#3f9a6a",
 			bramblehorn = "#8a5a3a",
+			sporeburst = "#9a6ae0",
+			bearslam = "#6a4a3a",
 		},
 		Sizes = { normal = 3, armoured = 4, miniboss = 7, boss = 10 },
 	},
@@ -1160,6 +1670,14 @@ Config.Dungeon = {
 		green_snail = { model = "Hedgehog", motion = "pet_Hedgehog", height = 4.6 },
 		green_turtle = { model = "Gorilla", motion = "pet_Gorilla", height = 8, shadow = true },
 		green_boar = { model = "Triceratops", motion = "pet_Triceratops", height = 10, shadow = true },
+		-- the Mushroom Grove's (heights are first guesses, set by eye at the fight camera)
+		dark_hare = { model = "Jackalope", motion = "pet_Jackalope", height = 4.4 },
+		dark_bat = { model = "CaveBat", motion = "pet_CaveBat", height = 3.6, hover = 3.5, bob = 0.2, bobHz = 1.6 },
+		dark_fox = { model = "FairyFox", motion = "pet_FairyFox", height = 4.2 },
+		dark_deer = { model = "Deer", motion = "pet_Deer", height = 6 },
+		dark_totem = { model = "TotemGolem", motion = "pet_TotemGolem", height = 5.5 },
+		dark_wyrm = { model = "JungleWyrm", motion = "pet_JungleWyrm", height = 7, shadow = true },
+		dark_bear = { model = "Woods", motion = "boss_Woods", height = 11, shadow = true },
 	},
 
 	-- ===== The client (client/UiDungeon, DungeonFight, MonsterLook): pixels, studs and seconds =====
@@ -1225,6 +1743,8 @@ Config.Dungeon = {
 			healer = "rotten",
 			bloomshell = "plague",
 			bramblehorn = "rotten",
+			sporeburst = "plague",
+			bearslam = "hp",
 		},
 		-- A monster's burst when it falls grows with its size, up to this many times a plain one's.
 		DeathBigness = 2,

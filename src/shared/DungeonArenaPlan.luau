@@ -1,24 +1,31 @@
 --!strict
--- Where everything of the Slime Dungeon's Sunny Meadow stands (the owner's painting, battle.map.meadow.png; numbers in
--- Config.Dungeon.Arena). Pure: the same plan every time, flat studs from the arena's middle (x, z; yaw turns about Y), so a
--- test can prove the fight's centre is clear, the four path mouths are open and nothing overlaps. server/DungeonArena turns
--- the plan into parts and models.
+-- Where everything of a Slime Dungeon map stands (the owner's paintings, battle.map.meadow.png and battle.map.mushroom.png;
+-- numbers in Config.Dungeon.Arenas.<map>, the Meadow's when no map is named). Pure: the same plan every time, flat studs from
+-- the arena's middle (x, z; yaw turns about Y), so a test can prove the fight's centre is clear, the four path mouths are open
+-- and nothing overlaps. server/DungeonArena turns the plan into parts and models. The Mushroom Grove is the same ring plan
+-- with ruins, roots, glowing clusters, flagstones (`stones`) and rune circles (`runes`) besides.
 --
--- The painting: a round bright clearing; four dirt paths on the four axes that fade out before the middle; round trees in the
+-- The Meadow's painting: a round bright clearing; four dirt paths on the four axes that fade out before the middle; round trees in the
 -- four corners; pines beside the left and right paths; rocks (single and in pairs), flower clumps, bushes, a stump and a log
 -- round the rim, thickest at the corners; a few tiny flowers in the open middle. Not in the painting but needed by the game's
 -- camera (it sits at the rim and looks across): two rows of woods behind the rim, a row of big bushes, a ring of hills.
 local Config = if script then require(script.Parent.Config) else require("./Config")
 local Rng = if script then require(script.Parent.Rng) else require("./Rng")
 
-local A = Config.Dungeon.Arena
 local DEG = math.pi / 180
 local HALF_PI = math.pi / 2
 
--- One model to stand: its kind (a key of Config.Dungeon.Arena.Models), the model picked, where, how big (the height of a
--- tree, tuft or flower clump, the width when `wide`), a tint (hex) when the kind wears one, and the group it belongs to (a
--- clump is several models) with the group's middle and footprint radius.
-type Item = {
+-- One map's block of numbers (Config.Dungeon.Arenas.<id>); the Meadow's when no map is named.
+local function arenaOf(mapId: string?): any
+	local found = (Config.Dungeon.Arenas :: any)[mapId or "meadow"]
+	assert(found, "unknown arena map " .. tostring(mapId))
+	return found
+end
+
+-- One model to stand: its kind (a key of Config.Dungeon.Arenas.<map>.Models), the model picked, where, how big (the height of
+-- a tree, tuft or flower clump, the width when `wide`), a tint (hex) when the kind wears one, whether it carries a point light
+-- (a glowing mushroom) and the group it belongs to (a clump is several models) with the group's middle and footprint radius.
+export type Item = {
 	kind: string,
 	model: string,
 	zone: string, -- "rim" | "backdrop" | "tiny" | "mouth"
@@ -28,6 +35,7 @@ type Item = {
 	size: number,
 	wide: boolean,
 	tint: string?,
+	light: boolean?,
 	group: number,
 	gx: number,
 	gz: number,
@@ -36,7 +44,7 @@ type Item = {
 
 -- One flat block of a dirt path: its middle, how long (along its axis) and wide it is, its yaw, how far it fades toward the
 -- grass (0 = full dirt), and its number along the path from the outside in (1 = outermost, to lift by).
-type Segment = {
+export type Segment = {
 	axis: number,
 	index: number,
 	x: number,
@@ -49,7 +57,28 @@ type Segment = {
 
 -- One hill of the far horizon: a flattened ball of grass, its middle, its width and its height (a part of it sinks under the
 -- floor).
-type Hill = { x: number, z: number, wide: number, tall: number }
+export type Hill = { x: number, z: number, wide: number, tall: number }
+
+-- One flagstone of a stone path: its middle, size, yaw, a little pitch and roll in radians (for it to sit uneven), how far its
+-- colour fades toward the grass (0 = full stone), whether it is mossy, its grey (a share, -1 to 1, darker to lighter) and its
+-- number along the path from the outside in.
+export type Stone = {
+	axis: number,
+	index: number,
+	x: number,
+	z: number,
+	wide: number,
+	deep: number,
+	yaw: number,
+	pitch: number,
+	roll: number,
+	fade: number,
+	mossy: boolean,
+	shade: number,
+}
+
+-- One rune circle: its middle and radius, and the yaw its marks start at.
+export type Circle = { x: number, z: number, radius: number, yaw: number }
 
 local ArenaPlan = {}
 
@@ -59,13 +88,15 @@ function ArenaPlan.lateral(x: number, z: number): number
 end
 
 -- Half the width of a path at `radius` from the middle.
-function ArenaPlan.pathHalf(radius: number): number
+function ArenaPlan.pathHalf(radius: number, mapId: string?): number
+	local A = arenaOf(mapId)
 	local t = math.clamp((radius - A.PathInner) / (A.PathOuter - A.PathInner), 0, 1)
 	return (A.PathWidthInner + (A.PathWidthOuter - A.PathWidthInner) * t) / 2
 end
 
 -- The blocks of the four paths.
-function ArenaPlan.paths(): { Segment }
+function ArenaPlan.paths(mapId: string?): { Segment }
+	local A = arenaOf(mapId)
 	local out: { Segment } = {}
 	local count = A.PathSegments
 	local span = A.PathOuter - A.PathInner
@@ -94,7 +125,8 @@ function ArenaPlan.paths(): { Segment }
 end
 
 -- The ring of hills behind the woods, round the whole circle (a path runs off into the woods and a hill, never into the sky).
-function ArenaPlan.hills(): { Hill }
+function ArenaPlan.hills(mapId: string?): { Hill }
+	local A = arenaOf(mapId)
 	local H = A.Hills
 	local rng = Rng.new(A.Seed + 7)
 	local out: { Hill } = {}
@@ -111,9 +143,83 @@ function ArenaPlan.hills(): { Hill }
 	return out
 end
 
--- Everything that stands on the meadow, in the order it was placed. `names` is the model list of each kind (default
--- Config.Dungeon.Arena.Models); a kind with no list or an empty one is left out.
-function ArenaPlan.build(names: { [string]: { string } }?): { Item }
+-- The flagstones of the four paths (a map whose PathStyle is "stones"; none for any other): one stone every Stones.Step along
+-- each path's length, as many across as the path is wide at that point, each a little off its line and turned; toward the inner
+-- end more of them are left out, so the path breaks up before the middle.
+function ArenaPlan.stones(mapId: string?): { Stone }
+	local A = arenaOf(mapId)
+	local S = A.Stones
+	local out: { Stone } = {}
+	if A.PathStyle ~= "stones" or not S then
+		return out
+	end
+	local rng = Rng.new(A.Seed + 11)
+	local span = A.PathOuter - A.PathInner
+	local rows = math.floor(span / S.Step)
+	for axis = 0, 3 do
+		local a = axis * HALF_PI
+		local ux, uz = math.cos(a), math.sin(a)
+		for k = 1, rows do
+			local t = (k - 0.5) / rows
+			local r = A.PathOuter - span * t
+			local half = ArenaPlan.pathHalf(r, mapId)
+			-- the same drift off the line the dirt path has
+			local drift = A.PathWobble * math.sin(k * 1.9 + axis * 2.3)
+			local across = math.max(1, math.floor(half * 2 / (S.Size[1] + S.Gap) + 0.5))
+			local cell = half * 2 / across
+			for c = 1, across do
+				if rng:next() >= S.Skip * t * t then
+					local side = (c - 0.5) * cell - half + (rng:next() - 0.5) * S.Gap * 2
+					local along = (rng:next() - 0.5) * S.Gap * 2
+					local wide = math.min(S.Size[1] + rng:next() * (S.Size[2] - S.Size[1]), cell - S.Gap * 0.5)
+					local deep = S.Depth[1] + rng:next() * (S.Depth[2] - S.Depth[1])
+					table.insert(out, {
+						axis = axis,
+						index = k,
+						x = ux * (r + along) - uz * (side + drift),
+						z = uz * (r + along) + ux * (side + drift),
+						wide = math.max(wide, 1.2),
+						deep = math.min(deep, S.Step * 1.1),
+						yaw = HALF_PI - a + (rng:next() - 0.5) * 0.7,
+						pitch = (rng:next() - 0.5) * 2 * S.Tilt * DEG,
+						roll = (rng:next() - 0.5) * 2 * S.Tilt * DEG,
+						fade = A.PathFade * t * t,
+						mossy = rng:next() < S.Moss,
+						shade = (rng:next() - 0.5) * 2,
+					})
+				end
+			end
+		end
+	end
+	return out
+end
+
+-- The rune circles, one in the middle of each quarter (none for a map without `Runes`), clear of the fight, the paths and
+-- each other.
+function ArenaPlan.runes(mapId: string?): { Circle }
+	local A = arenaOf(mapId)
+	local R = A.Runes
+	local out: { Circle } = {}
+	if not R then
+		return out
+	end
+	local rng = Rng.new(A.Seed + 13)
+	for q = 0, 3 do
+		local angle = (q + 0.5) * HALF_PI
+		table.insert(out, {
+			x = math.cos(angle) * R.At,
+			z = math.sin(angle) * R.At,
+			radius = R.Radius,
+			yaw = rng:next() * math.pi * 2,
+		})
+	end
+	return out
+end
+
+-- Everything that stands on the map, in the order it was placed. `names` is the model list of each kind (default the map's
+-- Config.Dungeon.Arenas.<map>.Models); a kind with no list or an empty one is left out.
+function ArenaPlan.build(names: { [string]: { string } }?, mapId: string?): { Item }
+	local A = arenaOf(mapId)
 	local list: { [string]: { string } } = names or (A.Models :: any)
 	local rng = Rng.new(A.Seed)
 	local items: { Item } = {}
@@ -146,11 +252,13 @@ function ArenaPlan.build(names: { [string]: { string } }?): { Item }
 		groups += 1
 		table.insert(placed, { x = x, z = z, foot = foot })
 		local id = groups
-		return function(kind: string, at_x: number, at_z: number, size: number, wide: boolean)
+		return function(kind: string, at_x: number, at_z: number, size: number, wide: boolean, light: boolean?)
 			if not has(kind) then
 				return
 			end
-			local tints = (A.Tints :: any)[kind]
+			-- (a map may tint its far woods apart from the near trees: BackdropTints, same kinds as Tints)
+			local far = (A :: any).BackdropTints
+			local tints = (if zone == "backdrop" and far and far[kind] then far else A.Tints :: any)[kind]
 			table.insert(items, {
 				kind = kind,
 				model = rng:pick(list[kind]),
@@ -161,6 +269,7 @@ function ArenaPlan.build(names: { [string]: { string } }?): { Item }
 				size = size,
 				wide = wide,
 				tint = if tints then rng:pick(tints) else nil,
+				light = light,
 				group = id,
 				gx = x,
 				gz = z,
@@ -183,9 +292,19 @@ function ArenaPlan.build(names: { [string]: { string } }?): { Item }
 		return nil, nil
 	end
 
-	local function tuftBeside(add: (string, number, number, number, boolean) -> (), x: number, z: number, away: number)
+	local function tuftBeside(
+		add: (string, number, number, number, boolean, boolean?) -> (),
+		x: number,
+		z: number,
+		away: number
+	)
 		local angle = rng:next() * math.pi * 2
 		add("tuft", x + math.cos(angle) * away, z + math.sin(angle) * away, between(A.Tuft), false)
+	end
+
+	-- 0. The rune circles are only floor, but nothing else may stand on them: their ground is claimed first.
+	for _, circle in ArenaPlan.runes(mapId) do
+		group("rune", circle.x, circle.z, circle.radius + 1)
 	end
 
 	-- 1. The two pines beside the left and right paths (first: their spots are narrow), then the first round tree in each
@@ -224,6 +343,28 @@ function ArenaPlan.build(names: { [string]: { string } }?): { Item }
 	local spread = 42 * DEG
 	for q = 0, 3 do
 		local centre = (q + 0.5) * HALF_PI
+		-- (the Grove's: the ruins first, the corner's great pieces, each with a root lying across its foot half the time)
+		for _ = 1, each.Ruins or 0 do
+			local size = between(A.Ruin)
+			local foot = size * 0.3 + 1.5
+			local x, z = spot(centre, spread, foot, A.RimInner, A.RimOuter)
+			if x and z then
+				local add = group("rim", x, z, foot)
+				add("ruin", x, z, size, false)
+				if rng:next() < 0.5 then
+					local turn = rng:next() * math.pi
+					add("root", x + math.cos(turn) * 3.5, z + math.sin(turn) * 3.5, between(A.Root) * 0.6, true)
+				end
+			end
+		end
+		for _ = 1, each.Roots or 0 do
+			local size = between(A.Root)
+			local foot = size * 0.3
+			local x, z = spot(centre, spread, foot, A.RimInner, A.RimOuter)
+			if x and z then
+				group("rim", x, z, foot)("root", x, z, size, true)
+			end
+		end
 		for _ = 1, each.RockPairs do
 			local foot = 9
 			local x, z = spot(centre, spread, foot, A.RimInner, A.RimOuter)
@@ -262,6 +403,29 @@ function ArenaPlan.build(names: { [string]: { string } }?): { Item }
 				local add = group("rim", x, z, foot)
 				add("rock", x, z, size, true)
 				tuftBeside(add, x, z, size * 0.5 + 0.4)
+			end
+		end
+		-- (the Grove's glowing clusters come after the ruins, roots and rocks and before the bushes and flowers: the first few
+		-- carry a light; Glow.Lights lists how many for each quarter, the two in front of the player's camera first)
+		local lit = 0
+		local lights = if A.Glow then A.Glow.Lights[q + 1] or 0 else 0
+		for _ = 1, each.Glows or 0 do
+			local reach = A.GlowSpread
+			local foot = reach + 1.2
+			local x, z = spot(centre, spread, foot, A.RimInner, A.RimOuter)
+			if x and z then
+				local add = group("rim", x, z, foot)
+				local count = rng:int(A.GlowCount[1], A.GlowCount[2])
+				local turn = rng:next() * math.pi * 2
+				for k = 1, count do
+					local angle = turn + k / count * math.pi * 2
+					local r = if k == 1 then 0 else reach * (0.5 + rng:next() * 0.5)
+					local light = k == 1 and lit < lights
+					add("glow", x + math.cos(angle) * r, z + math.sin(angle) * r, between(A.GlowSize), false, light)
+					if light then
+						lit += 1
+					end
+				end
 			end
 		end
 		for _ = 1, each.Bushes do
@@ -304,7 +468,9 @@ function ArenaPlan.build(names: { [string]: { string } }?): { Item }
 				local angle = rng:next() * math.pi * 2
 				local r = A.TinyFrom + rng:next() * (A.TinyTo - A.TinyFrom)
 				local x, z = math.cos(angle) * r, math.sin(angle) * r
-				if ArenaPlan.lateral(x, z) >= ArenaPlan.pathHalf(r) + A.PathWobble + 2 and free(x, z, tinyFoot) then
+				if
+					ArenaPlan.lateral(x, z) >= ArenaPlan.pathHalf(r, mapId) + A.PathWobble + 2 and free(x, z, tinyFoot)
+				then
 					group("tiny", x, z, tinyFoot)(kind, x, z, between(range), wide)
 					break
 				end

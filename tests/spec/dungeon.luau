@@ -15,8 +15,19 @@ local Rng = require("../../src/shared/Rng")
 local D = Config.Dungeon
 local NOW = 1_000_000
 
+-- every monster of every map
+local function everyDef(): { any }
+	local out: { any } = {}
+	for _, id in D.MapOrder do
+		for _, each in (D.Maps :: any)[id].monsters do
+			table.insert(out, each)
+		end
+	end
+	return out
+end
+
 local function def(id: string): any
-	for _, each in (D.Maps :: any).meadow.monsters do
+	for _, each in everyDef() do
 		if each.id == id then
 			return each
 		end
@@ -119,7 +130,7 @@ return function(T: any)
 	)
 
 	T.test("every drop line of every monster can hit, with amounts in range, at about its chance", function()
-		for _, each in (D.Maps :: any).meadow.monsters do
+		for _, each in everyDef() do
 			local hits: { [string]: number } = {}
 			local tries = 4000
 			for n = 1, tries do
@@ -158,7 +169,7 @@ return function(T: any)
 			end
 			T.eq(horns, 2)
 		end
-		for _, each in (D.Maps :: any).meadow.monsters do
+		for _, each in everyDef() do
 			for _, line in each.drops do
 				T.ok(line.item ~= "cloth" and line.item ~= "common_part", each.id .. " drops neither")
 			end
@@ -515,6 +526,111 @@ return function(T: any)
 			end
 		end
 		T.ok(heavy and splash, "a heavy blow and thorns beside it")
+	end)
+
+	T.test("the maps turn one step each level, from a first map the player's id picks; always the same", function()
+		local order = D.MapOrder
+		T.ok(#order >= 2, "more than one map")
+		local firsts: { [string]: boolean } = {}
+		for seed = 1, 60 do
+			local first = Dungeon.mapForLevel(seed, D.FirstLevel)
+			firsts[first] = true
+			T.ok(table.find(order, first) ~= nil, "a known map " .. first)
+			T.eq(Dungeon.mapForLevel(seed, D.FirstLevel), first, "the same ask, the same map")
+			local index = table.find(order, first) :: number
+			for step = 1, 7 do
+				local want = order[(index - 1 + step) % #order + 1]
+				T.eq(Dungeon.mapForLevel(seed, D.FirstLevel + step), want, "level step " .. step)
+			end
+		end
+		for _, id in order do
+			T.ok(firsts[id], "some player starts on " .. id)
+			T.ok(
+				(D.Maps :: any)[id] ~= nil and (Config.Dungeon.Arenas :: any)[id] ~= nil,
+				id .. " has monsters and an arena"
+			)
+		end
+	end)
+
+	T.test(
+		"every map has a full roster: a mini-boss on wave 5 and a boss on wave 10, drops that are known items",
+		function()
+			for _, id in D.MapOrder do
+				local mini = Dungeon.plan(id, 1, D.MiniBossWave, 99)
+				T.eq(#mini, 1)
+				T.eq(mini[1].defRole, "miniboss", id)
+				local boss = Dungeon.plan(id, 1, D.BossWave, 99)
+				T.eq(#boss, 1)
+				T.eq(boss[1].defRole, "boss", id)
+				for _, each in (D.Maps :: any)[id].monsters do
+					T.ok(
+						Config.Combat.Skills[each.kind] ~= nil or D.StandIn.Colours[each.kind] ~= nil,
+						id .. " " .. each.id .. " kind"
+					)
+					T.ok(D.Looks[each.id] ~= nil, each.id .. " has a look")
+					for _, line in each.drops do
+						T.ok(D.Materials[line.item] ~= nil, each.id .. " drops a known item: " .. line.item)
+						T.ok(table.find(D.DropOrder, line.item) ~= nil, line.item .. " is shown in the drop order")
+					end
+				end
+			end
+			-- the Grove's
+			T.eq(Dungeon.plan("mushroom", 1, D.MiniBossWave, 99)[1].defId, "dark_wyrm")
+			local bear = Dungeon.plan("mushroom", 1, D.BossWave, 99)[1]
+			T.eq(bear.defId, "dark_bear")
+			T.eq(bear.kind, "bearslam")
+			for n = 1, 100 do
+				local spores = 0
+				for _, drop in Dungeon.rollDrops(def("dark_bear"), 1, "m10-" .. n, n) do
+					if drop.item == "glow_spore" then
+						spores += drop.amount
+					end
+				end
+				T.eq(spores, 2, "the Grove's boss always pays 2 Glow Spores")
+			end
+			T.eq(D.Materials.glow_spore.name, "Glow Spore")
+		end
+	)
+
+	T.test("the Grove's bosses strike their skills: Spore Burst on all, Den Slam heavy with a splash", function()
+		local function squad(): { any }
+			local out = {}
+			for _, id in { "a", "b", "c" } do
+				table.insert(out, { id = id, attack = 0, defence = 0, speed = 0, hp = 1e6 })
+			end
+			return out
+		end
+		local function skillEvents(kind: string): { any }
+			local boss = { id = "boss", attack = 5, defence = 0, speed = 2, hp = 1e9, kind = kind }
+			local fight = Combat.new(squad(), { boss }, Rng.new(6))
+			local out = {}
+			for _ = 1, 600 do
+				for _, event in Combat.step(fight, 0.1) do
+					if event.skill == kind then
+						table.insert(out, event)
+					end
+				end
+			end
+			return out
+		end
+		T.eq(Config.Combat.Skills.sporeburst.name, "Spore Burst")
+		T.eq(Config.Combat.Skills.bearslam.name, "Den Slam")
+		local struck: { [string]: boolean } = {}
+		for _, event in skillEvents("sporeburst") do
+			if event.kind == "hit" then
+				struck[event.to] = true
+			end
+		end
+		T.ok(struck.a and struck.b and struck.c, "the burst reaches all three")
+		local heavy, splash = false, false
+		for _, event in skillEvents("bearslam") do
+			if event.kind == "hit" and event.splash then
+				splash = true
+			elseif event.kind == "hit" then
+				heavy = true
+			end
+		end
+		T.ok(heavy and splash, "a heavy blow and a splash beside it")
 	end)
 
 	T.test("the best dungeon level is saved, repaired and migrated from schema 8", function()

@@ -1,10 +1,14 @@
 --!strict
--- The Slime Dungeon's Sunny Meadow, built once from the owner's painting (reference/goo-lineage-web/assets/battle.map.meadow.png)
--- and kept as a template that Dungeon clones for every run. A Model whose pivot is the floor's top middle (Dungeon pivots a clone
--- onto Layout.arenaFrame). Where things stand is shared/DungeonArenaPlan; every number is Config.Dungeon.Arena.
+-- The Slime Dungeon's maps (the Sunny Meadow and the Mushroom Grove), each built once from the owner's painting
+-- (reference/goo-lineage-web/assets/battle.map.<id>.png) and kept as a template that Dungeon clones for every run on that map.
+-- A Model whose pivot is the floor's top middle (Dungeon pivots a clone onto Layout.arenaFrame). Where things stand is
+-- shared/DungeonArenaPlan; every number is Config.Dungeon.Arenas.<map>.
 --
 --   Floor     one grass block in the classic stud look (the village's), thick enough to stand on
---   Paths     the four dirt paths: flat stud-look blocks just over the grass, fading toward the grass at their inner ends
+--   Paths     the four paths: flat stud-look blocks (dirt) or loose flagstones just over the grass, fading toward the grass at
+--             their inner ends
+--   Runes     (the Grove) four flat stone rings with glowing marks in the quarters
+--   Lights    (the Grove) a few small point lights under the glowing mushroom clusters
 --   Wall      an invisible ring of tall blocks at the edge of the fight: the only thing besides the floor that collides
 --   Trees / Rocks / Bushes / Flowers   kit models (ServerStorage.Kit.WildKit): anchored, nothing collides or can be queried, only
 --             the trees cast a shadow; the clones of one kit model share one mesh
@@ -18,15 +22,14 @@ local Config = require(ReplicatedStorage.Shared.Config)
 local Plan = require(ReplicatedStorage.Shared.DungeonArenaPlan)
 local LibraryKit = require(script.Parent.LibraryKit)
 
-local A = Config.Dungeon.Arena
-
 -- a kit model made ready to clone: its foot at the origin, and the height and width it measures at scale 1
 type Proto = { model: Model, height: number, width: number }
 
 local DungeonArena = {}
 
-local cached: Model? = nil
-local tried = false
+-- the template of each map, once built (and whether it was tried: a map that cannot be built is not tried again)
+local cached: { [string]: Model } = {}
+local tried: { [string]: boolean } = {}
 
 local function wildKit(): Instance?
 	local kit = ServerStorage:FindFirstChild("WildKit")
@@ -45,6 +48,9 @@ local FOLDERS: { [string]: string } = {
 	pebble = "Flowers",
 	stump = "Rocks",
 	log = "Rocks",
+	ruin = "Rocks",
+	root = "Rocks",
+	glow = "Flowers",
 }
 
 local function prepare(source: Instance, tree: boolean): Proto?
@@ -110,7 +116,8 @@ local function slab(parent: Instance, name: string, size: Vector3, cf: CFrame, c
 	return part
 end
 
-local function build(kit: Instance): Model?
+local function build(kit: Instance, mapId: string): Model?
+	local A = (Config.Dungeon.Arenas :: any)[mapId]
 	-- every model of the plan, found and made ready: a kind is built from its library props, or from the valley's WildKit
 	-- models when some library prop is not in yet; one warning names what is missing
 	local protos: { [string]: Proto } = {}
@@ -171,18 +178,109 @@ local function build(kit: Instance): Model?
 	local paths = Instance.new("Folder")
 	paths.Name = "Paths"
 	paths.Parent = arena
-	local dirt = Color3.fromHex(A.PathColour)
-	for _, seg in Plan.paths() do
-		local y = A.PathLift + A.PathThick / 2 + (seg.index - 1) * A.PathStep
-		local part = slab(
-			paths,
-			"Path",
-			Vector3.new(seg.width, A.PathThick, seg.length),
-			CFrame.new(seg.x, y, seg.z) * CFrame.Angles(0, seg.yaw, 0),
-			dirt:Lerp(grass, seg.fade)
+	if A.PathStyle == "stones" then
+		-- loose flagstones, each a little uneven; some mossy; the inner ones fade toward the grass
+		local S = A.Stones
+		local stone = Color3.fromHex(S.Colour)
+		local moss = Color3.fromHex(S.MossColour)
+		for _, st in Plan.stones(mapId) do
+			local colour = stone
+			if st.shade >= 0 then
+				colour = colour:Lerp(Color3.new(1, 1, 1), st.shade * S.Shade)
+			else
+				colour = colour:Lerp(Color3.new(0, 0, 0), -st.shade * S.Shade)
+			end
+			if st.mossy then
+				colour = colour:Lerp(moss, 0.6)
+			end
+			local y = A.PathLift + S.Thick / 2 + (st.index - 1) * A.PathStep
+			local part = slab(
+				paths,
+				"Stone",
+				Vector3.new(st.wide, S.Thick, st.deep),
+				CFrame.new(st.x, y, st.z) * CFrame.Angles(0, st.yaw, 0) * CFrame.Angles(st.pitch, 0, st.roll),
+				colour:Lerp(grass, st.fade)
+			)
+			part.CanCollide = false
+			part.CanQuery = false
+		end
+	else
+		local dirt = Color3.fromHex(A.PathColour)
+		for _, seg in Plan.paths(mapId) do
+			local y = A.PathLift + A.PathThick / 2 + (seg.index - 1) * A.PathStep
+			local part = slab(
+				paths,
+				"Path",
+				Vector3.new(seg.width, A.PathThick, seg.length),
+				CFrame.new(seg.x, y, seg.z) * CFrame.Angles(0, seg.yaw, 0),
+				dirt:Lerp(grass, seg.fade)
+			)
+			part.CanCollide = false
+			part.CanQuery = false
+		end
+	end
+
+	-- the rune circles (a map with `Runes`): a flat ring of stones with glowing marks round it and a smaller ring inside
+	local R = A.Runes
+	if R then
+		local runes = Instance.new("Folder")
+		runes.Name = "Runes"
+		runes.Parent = arena
+		local stoneColour = Color3.fromHex(R.Stone)
+		local glowColour = Color3.fromHex(R.Colour)
+		local function ring(
+			circle: { x: number, z: number, radius: number, yaw: number },
+			count: number,
+			radius: number,
+			size: Vector3,
+			lift: number,
+			glow: boolean,
+			phase: number
 		)
-		part.CanCollide = false
-		part.CanQuery = false
+			for k = 1, count do
+				local angle = circle.yaw + phase + (k - 0.5) / count * math.pi * 2
+				local at = Vector3.new(
+					circle.x + math.cos(angle) * radius,
+					A.PathLift + lift,
+					circle.z + math.sin(angle) * radius
+				)
+				local part = slab(
+					runes,
+					if glow then "Mark" else "RingStone",
+					size,
+					CFrame.lookAt(at, at + Vector3.new(-math.sin(angle), 0, math.cos(angle))),
+					if glow then glowColour else stoneColour:Lerp(grass, 0.15 * (k % 3))
+				)
+				part.CanCollide = false
+				part.CanQuery = false
+				if glow then
+					part.Material = Enum.Material.Neon
+					part.TopSurface = Enum.SurfaceType.Smooth
+				end
+			end
+		end
+		for _, circle in Plan.runes(mapId) do
+			local arc = 2 * math.pi * circle.radius / R.Marks
+			ring(circle, R.Marks, circle.radius, Vector3.new(R.RingWidth, R.Thick, arc * 1.05), R.Thick / 2, false, 0)
+			ring(
+				circle,
+				R.Marks,
+				circle.radius - R.RingWidth * 1.6,
+				Vector3.new(R.MarkWidth, R.Thick, R.MarkLength),
+				R.Thick * 1.5,
+				true,
+				0.5 / R.Marks
+			)
+			ring(
+				circle,
+				R.Marks / 2,
+				circle.radius * 0.5,
+				Vector3.new(R.MarkWidth, R.Thick, R.MarkLength * 1.15),
+				R.Thick * 1.5,
+				true,
+				0
+			)
+		end
 	end
 
 	-- the wall: invisible, tall, a ring of overlapping blocks just outside the fight
@@ -213,7 +311,7 @@ local function build(kit: Instance): Model?
 	hills.Name = "Hills"
 	hills.Parent = arena
 	local hillGreen = Color3.fromHex(A.Hills.Colour)
-	for index, hill in Plan.hills() do
+	for index, hill in Plan.hills(mapId) do
 		local part = Instance.new("Part")
 		part.Name = "Hill"
 		part.Shape = Enum.PartType.Ball
@@ -233,7 +331,8 @@ local function build(kit: Instance): Model?
 	-- the scenery: kit models scaled to the plan's size (by height, or by width), feet on the floor
 	local folders: { [string]: Folder } = {}
 	local models = 0
-	for _, item in Plan.build(lists) do
+	local lights: Folder? = nil
+	for _, item in Plan.build(lists, mapId) do
 		local proto = protos[item.model]
 		local clone = proto.model:Clone()
 		clone:ScaleTo(item.size / (if item.wide then proto.width else proto.height))
@@ -254,6 +353,40 @@ local function build(kit: Instance): Model?
 		end
 		clone.Parent = folder
 		models += 1
+		if item.light then
+			-- a small point light under a glowing cluster, in the colour its mushroom's name gives
+			local G = A.Glow
+			local holder: Folder
+			if lights then
+				holder = lights
+			else
+				holder = Instance.new("Folder")
+				holder.Name = "Lights"
+				holder.Parent = arena
+				lights = holder
+			end
+			local spot = Instance.new("Part")
+			spot.Name = "GlowLight"
+			spot.Size = Vector3.one
+			spot.Transparency = 1
+			spot.Anchored = true
+			spot.CanCollide = false
+			spot.CanTouch = false
+			spot.CanQuery = false
+			spot.CastShadow = false
+			spot.Position = Vector3.new(item.x, G.Lift, item.z)
+			local light = Instance.new("PointLight")
+			light.Range = G.Range
+			light.Brightness = G.Brightness
+			light.Shadows = false
+			for key, hex in G.Colours do
+				if string.find(item.model, key, 1, true) then
+					light.Color = Color3.fromHex(hex)
+				end
+			end
+			light.Parent = spot
+			spot.Parent = holder
+		end
 		if item.zone == "backdrop" then
 			-- the far woods are too far for a shadow to read
 			for _, d in clone:GetDescendants() do
@@ -277,20 +410,29 @@ local function build(kit: Instance): Model?
 	return arena
 end
 
--- The Sunny Meadow as a Model with its pivot at the floor's top middle, built on the first ask and kept (clone it; never parent
--- it). nil when the kit lacks a model it needs.
-function DungeonArena.template(): Model?
-	if cached or tried then
-		return cached
+-- A map (the Meadow when none is named) as a Model with its pivot at the floor's top middle, built on the first ask and kept
+-- (clone it; never parent it). nil when the kit lacks a model it needs, or the map is unknown.
+function DungeonArena.template(mapId: string?): Model?
+	local id = mapId or "meadow"
+	if cached[id] or tried[id] then
+		return cached[id]
 	end
-	tried = true
+	tried[id] = true
+	if not (Config.Dungeon.Arenas :: any)[id] then
+		warn(Config.LogPrefix, "dungeon arena: no such map", id)
+		return nil
+	end
 	local kit = wildKit()
 	if not kit then
 		warn(Config.LogPrefix, "dungeon arena: ServerStorage.Kit.WildKit is missing (the greybox stands in)")
 		return nil
 	end
-	cached = build(kit)
-	return cached
+	local arena = build(kit, id)
+	if arena then
+		arena:SetAttribute("MapId", id)
+		cached[id] = arena
+	end
+	return arena
 end
 
 return DungeonArena

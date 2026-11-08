@@ -42,9 +42,15 @@ return function(T: any)
 		T.ok(calm == 0 and math.abs(flick - math.rad(25)) < 1e-6, "flick " .. flick)
 	end)
 
-	T.test("every Sunny Meadow monster's Egg Heist creature is in the kit and walks by its own motion", function()
+	T.test("every dungeon monster's Egg Heist creature is in the kit and walks by its own motion", function()
 		local kit = roblox.deserializeModel(fs.readFile("assets/MonsterKit.rbxm"))[1]
-		for _, def in D.Maps.meadow.monsters do
+		local defs: { any } = {}
+		for _, id in D.MapOrder do
+			for _, each in (D.Maps :: any)[id].monsters do
+				table.insert(defs, each)
+			end
+		end
+		for _, def in defs do
 			local look = D.Looks[def.id]
 			T.ok(look ~= nil, "a look for " .. def.id)
 			if look and look.motion then

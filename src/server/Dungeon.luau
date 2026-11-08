@@ -193,13 +193,19 @@ local function greybox(frame: CFrame): Model
 	return model
 end
 
-local function buildArena(plot: number): Model
+-- The arena of one map for one plot, with its Monsters and Squad folders. (A hand-built template in ServerStorage stands for
+-- the first map only.)
+local function buildArena(plot: number, mapId: string): (Model, Folder, Folder)
 	local frame = Layout.arenaFrame(plot)
 	local template = ServerStorage:FindFirstChild(D.ArenaTemplate)
-	local meadow = if template and template:IsA("Model") then template else DungeonArena.template()
+	local built = if template
+			and template:IsA("Model")
+			and mapId == D.MapOrder[1]
+		then template
+		else DungeonArena.template(mapId)
 	local arena: Model
-	if meadow then
-		arena = meadow:Clone()
+	if built then
+		arena = built:Clone()
 		arena:PivotTo(frame)
 	else
 		arena = greybox(frame)
@@ -207,7 +213,13 @@ local function buildArena(plot: number): Model
 	serial += 1
 	arena.Name = "Arena" .. plot .. "_" .. serial
 	arena.Parent = arenaFolder()
-	return arena
+	local monsters = Instance.new("Folder")
+	monsters.Name = "Monsters"
+	monsters.Parent = arena
+	local squad = Instance.new("Folder")
+	squad.Name = "Squad"
+	squad.Parent = arena
+	return arena, monsters, squad
 end
 
 local function standIn(run: Run, foe: Foe)
@@ -295,6 +307,8 @@ local function publish(run: Run)
 	set(player, "DungeonWave", run.wave)
 	set(player, "DungeonWaves", D.Waves)
 	set(player, "DungeonLevel", run.level)
+	-- (the map of this run: client/DungeonLight eases the lighting to it)
+	set(player, "DungeonMap", run.mapId)
 	set(player, "DungeonLeft", left)
 	set(player, "DungeonLedger", ledger)
 	set(player, "DungeonBest", best)
@@ -321,6 +335,7 @@ local function clearPlayerAttributes(player: Player)
 	set(player, "DungeonWave", 0)
 	set(player, "DungeonWaves", 0)
 	set(player, "DungeonLevel", 0)
+	set(player, "DungeonMap", "")
 	set(player, "DungeonLeft", 0)
 	set(player, "DungeonLedger", "{}")
 end
@@ -895,17 +910,13 @@ local function enter(player: Player, data: any, farm: any): { ok: boolean, reaso
 	if not ids then
 		return fail(why or "NO_FIT")
 	end
-	local arena = buildArena(plot)
-	local monsters = Instance.new("Folder")
-	monsters.Name = "Monsters"
-	monsters.Parent = arena
-	local squad = Instance.new("Folder")
-	squad.Name = "Squad"
-	squad.Parent = arena
+	-- (the map follows the level: a pure function of the player and the level)
+	local mapId = DungeonRules.mapForLevel(player.UserId, data.level)
+	local arena, monsters, squad = buildArena(plot, mapId)
 	local run: Run = {
 		player = player,
 		plot = plot,
-		mapId = D.MapOrder[1],
+		mapId = mapId,
 		level = data.level,
 		teams = teams,
 		members = {},
@@ -985,6 +996,21 @@ local function again(run: Run, level: number, farm: any): { ok: boolean, reason:
 	if not ids then
 		return fail(why or "NO_FIT")
 	end
+	-- The next level may lie on another map: its arena is built on the same ground and the old one goes (the player stands
+	-- on the same spot, so nothing moves; the squad's and monsters' folders are the new arena's, startRun fills them).
+	local mapId = DungeonRules.mapForLevel(run.player.UserId, level)
+	if mapId ~= run.mapId then
+		local old = run.arena
+		run.arena, run.monsters, run.squad = buildArena(run.plot, mapId)
+		run.nodes = {}
+		run.mapId = mapId
+		old:Destroy()
+		task.spawn(function()
+			pcall(function()
+				(run.player :: any):RequestStreamAroundAsync(Layout.arenaPlayerSpot(run.plot).Position, D.StreamSeconds)
+			end)
+		end)
+	end
 	-- (as enter does: a run half reset by an error is ended, not left standing)
 	local started, err = pcall(startRun :: any, run, farm, level, ids, now)
 	if not started then
@@ -1055,8 +1081,13 @@ function Dungeon.start()
 	end
 	assert(remote:IsA("RemoteEvent"), "Fight remote must be a RemoteEvent")
 	fightRemote = remote
-	-- the Sunny Meadow is built now, once, so the first run does not wait for it
-	task.spawn(DungeonArena.template)
+	-- every map is built now, once each, so the first run does not wait for it
+	task.spawn(function()
+		for _, id in D.MapOrder do
+			DungeonArena.template(id)
+			task.wait()
+		end
+	end)
 	PlayerData.onReady(function(player: Player, data: any)
 		if player.Parent == Players then
 			set(player, "DungeonBest", if data and data.dungeon then data.dungeon.best else 0)

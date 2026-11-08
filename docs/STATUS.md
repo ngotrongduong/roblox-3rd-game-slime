@@ -1,5 +1,45 @@
 # Status
 
+## 2026-11-09 — Mushroom Grove, round 3 (ChatGPT's review: the glow and runes carry the magic)
+
+Floor `#6c7a40` (darker, less yellow, studs kept); six lit glow clusters (`Glow.Lights = {2,2,1,1}` per quarter, front quarters
+first, Brightness 2.2, Range 18, Lift 2, no shadows) placed before the bushes so they find room (`Glows = 2` a corner, seed
+`20261124`, the first seed that kept every plan count); runes `#8fffe5` with wider, longer marks (`Runes.MarkWidth/MarkLength`);
+cooler shade (Ambient `#758f9c`, OutdoorAmbient `#8ca7b1`, Brightness 2.7, `GradeContrast 0.08` in `DungeonLight`, restored to 0
+on exit; the brief's `#6f8a96`/`#86a0aa` was a touch murky); far woods a step darker than the near trees
+(`BackdropTints`, zone-aware in the plan, Meadow untouched) so the near willows read against the wall. Seen: player, corner and
+a live wave shot, `docs/ui/dungeon/mushroom-r3-*.png`, JPEGs in `review/`. Fewer roots/rocks on the rim than before (the crowd
+was the price of six lights).
+
+## 2026-11-09 — Mushroom Grove, phase B done (real props, dusk light, live run seen)
+
+The owner's import of `MushroomProps.glb` is in: 46 Grove props are in `Config.LibraryKit.Props` (MeshId, `tex = "P"`,
+`size` from the imported mesh, `at = {0, height/2, 0}`), so the arena stands on its real meshes (631 parts, 268 kit models in
+the log). Light: `Config.Dungeon.Arenas.mushroom.Lighting` is dusk teal (ClockTime 17.82, Brightness 2.6, Ambient #8a98b8,
+OutdoorAmbient #9aaac8, cool Atmosphere, a faint blue grade); lower ClockTimes (18+) turned the engine sky pitch black and
+17.2 left it bright blue, the sunset window is narrow. The floor is a dusk olive (`FloorColour = #7d8742`).
+Seen in a StudioTest play test (test-copy Config only: 4 waves, weak monsters, no entry limits; `MapFirstRandom = true` stays
+in the repo): Meadow level 1 won, then Next level swapped to the Grove without a fall or flicker, the light eased in, and
+over the Next and Replay runs all six Grove monsters fought (Forest Deer, Totem Golem, Cave Bat x2, Fairy Fox, Jungle Wyrm
+on wave 3, Mama Bear on wave 4); the Victory panel shows the `glow_spore` chip (2 from the boss) with its own icon.
+Shots: `docs/ui/dungeon/mushroom-r2-player.png`, `-r2-corner.png`, `mushroom-live-*.png`, JPEGs in
+`docs/ui/dungeon/review/`. Not seen: a real phone, 8 players, the two-camera boss slam from close up, the light on the
+Lava/Ice maps (not built). Still plain: the roots read as thin dark strips and the willows as dark blobs at dusk.
+
+## 2026-11-08 — Mushroom Grove, phase A (code, props file, monsters; waits for the owner's import)
+
+Built: the map turns per level (`Dungeon.mapForLevel(UserId, level)`, `Config.Dungeon.MapOrder = meadow, mushroom`; the run's
+`mapId`, an arena swap on Next level, player attribute `DungeonMap`), per-map arenas (`Config.Dungeon.Arenas.<id>`,
+`DungeonArena.template(mapId)`, `DungeonArenaPlan` with flagstone paths, rune circles, ruins, roots, glowing clusters with
+a few point lights), the Grove's light (`client/DungeonLight`), seven monsters from Egg Heist (Jackalope, Cave Bat, Fairy
+Fox, Deer, Totem Golem, Jungle Wyrm miniboss, Woods boss "Mama Bear"; `assets/MonsterKit.rbxm`, `src/shared/Creatures/`),
+`glow_spore` as the map's trophy. The props are one file, `art/library/converted/MushroomProps.glb` (52 props, built by
+`tools/library/build_grove.ps1`): THE OWNER MUST File > Import 3D it once. Until then the arena stands on a fallback of the
+owner's own mushrooms and the valley's rocks and teal trees (seen at x=5000 in StudioTest, one warning in the log).
+Next (phase B): MeshIds and sizes into `Config.LibraryKit.Props`, a player-camera play test, fix rounds, shots
+`docs/ui/dungeon/mushroom-rN-*.png`. Not seen: the real props, the dusk light in a play test, the arena swap between maps
+in a live run, Cave Bat / Fairy Fox / Deer / Wyrm / Woods in a fight, the `glow_spore` icon (missing, needs ChatGPT).
+
 ## 2026-11-08 — the Dungeon's Sunny Meadow rebuilt with library props (start here for the dungeon maps)
 
 The owner asked for prettier dungeon maps from the downloaded packs and new monsters: Sunny Meadow first, then Mushroom,

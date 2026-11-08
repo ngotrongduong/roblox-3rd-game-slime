@@ -11,6 +11,7 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Config = require(ReplicatedStorage.Shared.Config)
+local DungeonRules = require(ReplicatedStorage.Shared.Dungeon)
 local ZombieRules = require(ReplicatedStorage.Shared.Zombies)
 local UiHud = require(script.Parent.UiHud)
 local UiKit = require(script.Parent.UiKit)
@@ -199,9 +200,8 @@ local function fillDrops(host: Frame, drops: { [string]: number })
 end
 
 -- What a run of this map can drop, as a range for each item (from the drop lines of its monsters).
-local function dropRanges(): { [string]: string }
+local function dropRanges(map: any): { [string]: string }
 	local found: { [string]: { number } } = {}
-	local map: any = (D.Maps :: any)[D.MapOrder[1]]
 	for _, def in map.monsters do
 		for _, line in def.drops do
 			local seen = found[line.item]
@@ -288,15 +288,17 @@ local function openGate(point: Vector3)
 		tick()
 	end, point, D.Portal.PromptRangeStuds * 1.3)
 
-	local map: any = (D.Maps :: any)[D.MapOrder[1]]
+	-- the map turns with the level (shared/Dungeon.mapForLevel: the same one the server builds), so the title and the list of
+	-- what drops follow the stepper
 	UiKit.icon(modal.header, "dungeon", U.Touch - 12, {
 		AnchorPoint = Vector2.new(0, 0.5),
 		Position = UDim2.fromScale(0, 0.5),
 	})
-	UiKit.label(modal.header, map.name, U.TextHeader, "Brown", {
+	local title = UiKit.label(modal.header, "", U.TextHeader, "Brown", {
 		Position = UDim2.fromOffset(U.Touch + U.Gap - 6, 0),
 		Size = UDim2.new(1, -U.Touch - U.Gap + 6, 0, U.Touch),
 	})
+	local shownMap = ""
 
 	local scroll = UiKit.make("ScrollingFrame", {
 		Name = "Scroll",
@@ -326,25 +328,32 @@ local function openGate(point: Vector3)
 		CellPadding = UDim2.fromOffset(U.Gap, 2),
 		SortOrder = Enum.SortOrder.LayoutOrder,
 	}, drops)
-	local ranges = dropRanges()
-	for order, item in D.DropOrder do
-		if ranges[item] then
-			local entry: any = (D.Materials :: any)[item]
-			local line = UiKit.make("Frame", { Name = item, BackgroundTransparency = 1, LayoutOrder = order }, drops)
-			UiDungeon.dropIcon(line, item, P.DropIcon, {
-				AnchorPoint = Vector2.new(0, 0.5),
-				Position = UDim2.fromScale(0, 0.5),
-			})
-			UiKit.label(line, if entry then entry.name else item, U.TextSmall, "Brown", {
-				Position = UDim2.fromOffset(P.DropIcon + 6, 0),
-				Size = UDim2.new(1, -P.DropIcon - 6 - P.DropRangeWidth, 1, 0),
-			})
-			UiKit.label(line, ranges[item], U.TextSmall, "BrownSoft", {
-				AnchorPoint = Vector2.new(1, 0),
-				Position = UDim2.fromScale(1, 0),
-				Size = UDim2.new(0, P.DropRangeWidth, 1, 0),
-				TextXAlignment = Enum.TextXAlignment.Right,
-			})
+	local function showMap(mapId: string)
+		shownMap = mapId
+		local map: any = (D.Maps :: any)[mapId]
+		title.Text = map.name
+		UiKit.clear(drops)
+		local ranges = dropRanges(map)
+		for order, item in D.DropOrder do
+			if ranges[item] then
+				local entry: any = (D.Materials :: any)[item]
+				local line =
+					UiKit.make("Frame", { Name = item, BackgroundTransparency = 1, LayoutOrder = order }, drops)
+				UiDungeon.dropIcon(line, item, P.DropIcon, {
+					AnchorPoint = Vector2.new(0, 0.5),
+					Position = UDim2.fromScale(0, 0.5),
+				})
+				UiKit.label(line, if entry then entry.name else item, U.TextSmall, "Brown", {
+					Position = UDim2.fromOffset(P.DropIcon + 6, 0),
+					Size = UDim2.new(1, -P.DropIcon - 6 - P.DropRangeWidth, 1, 0),
+				})
+				UiKit.label(line, ranges[item], U.TextSmall, "BrownSoft", {
+					AnchorPoint = Vector2.new(1, 0),
+					Position = UDim2.fromScale(1, 0),
+					Size = UDim2.new(0, P.DropRangeWidth, 1, 0),
+					TextXAlignment = Enum.TextXAlignment.Right,
+				})
+			end
 		end
 	end
 
@@ -533,6 +542,10 @@ local function openGate(point: Vector3)
 		end
 		top = numberAttribute("DungeonBest", 0) + D.FirstLevel
 		level = math.clamp(level, D.FirstLevel, top)
+		local mapId = DungeonRules.mapForLevel(player.UserId, level)
+		if mapId ~= shownMap then
+			showMap(mapId)
+		end
 		levelLabel.Text = "Lv " .. level
 		UiKit.setEnabled(lower, level > D.FirstLevel)
 		UiKit.setEnabled(higher, level < top)
