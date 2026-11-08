@@ -1,5 +1,16 @@
 # Status
 
+## 2026-11-08 — the Dungeon's Sunny Meadow rebuilt with library props (start here for the dungeon maps)
+
+The owner asked for prettier dungeon maps from the downloaded packs and new monsters: Sunny Meadow first, then Mushroom,
+Lava, Ice. Done: the Meadow arena (`server/DungeonArena`, `shared/DungeonArenaPlan`, `Config.Dungeon.Arena`) is built from
+25 Quaternius Ultimate Nature props recoloured to the painting (`tools/library/take_fbx.ps1`, `fbx_to_glb.py`), packed by
+`combine_glb.py` and imported by the owner with one File > Import 3D (`Config.LibraryKit.Props`): layered rim, two rows of
+backdrop woods, a ring of hills, four tapered paths, the 35-stud fight circle clear. 273 models, about 70k triangles.
+Reviewed with ChatGPT (darker woods, softer hills, paths fade before the fight); shots `docs/ui/dungeon/meadow-r9-*`.
+Next: `docs/DUNGEON_MAPS.md` (Mushroom, Lava, Ice: props, seven Egg Heist monsters each, the map turning per level).
+Not seen: a real phone's frame time with the 70k-triangle arena.
+
 ## 2026-11-06 — Rewards with items, the Lucky Wheel, the VIP Shop and the Robux core (start here)
 
 The owner approved the list and the prices in `docs/MONETIZATION.md` (VIP 249, Luck x2/x4/x8 19/59/159, two team passes,

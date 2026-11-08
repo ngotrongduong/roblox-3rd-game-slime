@@ -535,3 +535,32 @@ was left there (this game has none); read it there if a cave is ever wanted.
   (136,178,112) and a blue-grey back (112,128,172) set at the arch's far face read as depth. One unbroken lattice band
   reads as a busy zigzag: alternate lattice and stone courses. A gold bowl against the sky reads as a yellow disc:
   bronze bowl, gold rim. Anything poking into the frame's corners from under the camera reads as a stray block: cut it.
+
+## Dungeon Sunny Meadow rebuild (2026-11-08, Goo Lineage V2)
+
+- A flat-colour FBX pack (Quaternius Ultimate Nature) goes to the painting's palette by MATERIAL NAME: Blender script writes a
+  vertex colour per corner from a name -> hex table (`tools/library/fbx_to_glb.py`), then a Decimate (collapse) to 500 triangles
+  keeps blob-leaf trees and bushes chunky. Rocks need no more than ~130. Pines with thin spikes break under decimation
+  (black spot): leave that file out. Flowers at 400 triangles each were too heavy: 200 is plenty.
+- glTF COLOR_0 from Blender is a NORMALIZED integer accessor: dividing by 255 only when `normalized` is set, or the colours
+  come out blue and magenta.
+- `require` in the Edit VM keeps the first run's module and its cached template whatever `.Source` is set to afterwards:
+  a preview script must clone fresh copies of the modules (renamed) each run, or every round looks identical.
+- Without an upload, an imported mesh can be previewed with `AssetService:CreateEditableMesh` + `CreateMeshPartAsync`; it
+  does not draw vertex colours, so the preview part wears the dominant colour (the greenest one for trees and bushes).
+  Judge shape, density and silhouette from it, not final colour.
+- Open Cloud asset upload refuses any file outside a directory the creator approved for uploads, and a local place (not
+  saved to Roblox) cannot approve one: do not look for a way round it. What works: `tools/library/combine_glb.py` packs a
+  set's GLBs into ONE file (each prop its own object), the owner does a single File > Import 3D, and the MeshParts'
+  MeshIds and sizes are read back by script into `Config.LibraryKit.Props`. The vertex colours survive the import.
+- The imported Quaternius leaves are much brighter than the grass in game light: tints of about #a8b49c on round trees and
+  #7ca89c on pines make the woods read apart from the clearing (ChatGPT review r8 -> r9).
+- A camera at the rim sees scenery 90-130 studs away: it must be drawn about 1.4 times the painting's scale, and a
+  top-down shot misleads (it hides the gaps that the player's view shows). Judge from the player's camera first.
+- Backdrop trees need a small trunk footprint so their crowns overlap into one wall of woods; two rows (tall behind low)
+  plus a bush row at the foot closed every gap. Far trees get `CastShadow = false`.
+- A ring of hills = Ball parts, flattened, sunk 40 percent, Material Plastic (matte): SmoothPlastic made them glossy balls.
+- Place the items with a fixed claim order (pairs of rocks, logs, stumps, singles, bushes, then flower clumps); the last
+  kind in line is the one that finds no room, so put the least important last.
+- Count the whole arena before calling it done: 273 models and about 70-75 thousand triangles is the Meadow's top; a
+  first draft of flowers alone was 22 thousand.

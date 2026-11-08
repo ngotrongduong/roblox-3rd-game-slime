@@ -9,12 +9,14 @@
 --   Trees / Rocks / Bushes / Flowers   kit models (ServerStorage.Kit.WildKit): anchored, nothing collides or can be queried, only
 --             the trees cast a shadow; the clones of one kit model share one mesh
 --
--- Returns nil, with one warning naming what is missing, when the kit lacks a model: Dungeon then falls back to its greybox.
+-- Returns nil, with one warning, when there are no trees or rocks to be had at all: Dungeon then falls back to its greybox.
+-- (Library props not in yet: the kind is built from the valley's WildKit models, one warning names which.)
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerStorage = game:GetService("ServerStorage")
 
 local Config = require(ReplicatedStorage.Shared.Config)
 local Plan = require(ReplicatedStorage.Shared.DungeonArenaPlan)
+local LibraryKit = require(script.Parent.LibraryKit)
 
 local A = Config.Dungeon.Arena
 
@@ -41,6 +43,8 @@ local FOLDERS: { [string]: string } = {
 	flower = "Flowers",
 	tuft = "Flowers",
 	pebble = "Flowers",
+	stump = "Rocks",
+	log = "Rocks",
 }
 
 local function prepare(source: Instance, tree: boolean): Proto?
@@ -83,7 +87,8 @@ local function tint(model: Model, hex: string)
 			if appearance then
 				appearance.Color = colour
 			else
-				d.Color = colour
+				-- (a library prop's colour is white under its vertex colours, so this is the tint itself)
+				d.Color = Color3.new(d.Color.R * colour.R, d.Color.G * colour.G, d.Color.B * colour.B)
 			end
 		end
 	end
@@ -106,22 +111,47 @@ local function slab(parent: Instance, name: string, size: Vector3, cf: CFrame, c
 end
 
 local function build(kit: Instance): Model?
-	-- every kit model of the plan, found and made ready; one warning names all that are missing
+	-- every model of the plan, found and made ready: a kind is built from its library props, or from the valley's WildKit
+	-- models when some library prop is not in yet; one warning names what is missing
 	local protos: { [string]: Proto } = {}
+	local lists: { [string]: { string } } = {}
 	local missing: { string } = {}
-	for kind, names in A.Models :: any do
+	local function ready(kind: string, names: { string }): boolean
+		local found: { [string]: Proto } = {}
 		for _, name in names do
-			local source = kit:FindFirstChild(name)
-			local proto = if source then prepare(source, kind == "round" or kind == "pine") else nil
-			if proto then
-				protos[name] = proto
-			else
-				table.insert(missing, name)
+			if not protos[name] then
+				local source = LibraryKit.find(name) or kit:FindFirstChild(name)
+				local proto = if source then prepare(source, kind == "round" or kind == "pine") else nil
+				if not proto then
+					return false
+				end
+				found[name] = proto
 			end
+		end
+		for name, proto in found do
+			protos[name] = proto
+		end
+		return true
+	end
+	for kind, names in A.Models :: any do
+		if ready(kind, names) then
+			lists[kind] = names
+		else
+			local fallback: { string } = ((A.Fallback :: any)[kind] or {}) :: { string }
+			table.insert(missing, kind)
+			lists[kind] = if ready(kind, fallback) then fallback else {}
 		end
 	end
 	if #missing > 0 then
-		warn(Config.LogPrefix, "dungeon arena: the kit lacks", table.concat(missing, ", "), "(the greybox stands in)")
+		warn(
+			Config.LogPrefix,
+			"dungeon arena: the library lacks props of",
+			table.concat(missing, ", "),
+			"(the kit stands in)"
+		)
+	end
+	if #lists.round == 0 or #lists.rock == 0 then
+		warn(Config.LogPrefix, "dungeon arena: no trees or rocks at all (the greybox stands in)")
 		return nil
 	end
 
@@ -178,10 +208,32 @@ local function build(kit: Instance): Model?
 		part.TopSurface = Enum.SurfaceType.Smooth
 	end
 
+	-- the hills: flattened balls of grass behind the woods, the horizon the player's camera reads past the trees
+	local hills = Instance.new("Folder")
+	hills.Name = "Hills"
+	hills.Parent = arena
+	local hillGreen = Color3.fromHex(A.Hills.Colour)
+	for index, hill in Plan.hills() do
+		local part = Instance.new("Part")
+		part.Name = "Hill"
+		part.Shape = Enum.PartType.Ball
+		part.Size = Vector3.new(hill.wide, hill.tall, hill.wide)
+		part.Position = Vector3.new(hill.x, hill.tall * (0.5 - A.Hills.Sink), hill.z)
+		part.Anchored = true
+		part.CanCollide = false
+		part.CanTouch = false
+		part.CanQuery = false
+		part.CastShadow = false
+		-- (Plastic is matte; SmoothPlastic made the hills glossy balls)
+		part.Material = Enum.Material.Plastic
+		part.Color = hillGreen:Lerp(Color3.new(0, 0, 0), if index % 2 == 0 then 0.1 else 0)
+		part.Parent = hills
+	end
+
 	-- the scenery: kit models scaled to the plan's size (by height, or by width), feet on the floor
 	local folders: { [string]: Folder } = {}
 	local models = 0
-	for _, item in Plan.build() do
+	for _, item in Plan.build(lists) do
 		local proto = protos[item.model]
 		local clone = proto.model:Clone()
 		clone:ScaleTo(item.size / (if item.wide then proto.width else proto.height))
@@ -202,6 +254,14 @@ local function build(kit: Instance): Model?
 		end
 		clone.Parent = folder
 		models += 1
+		if item.zone == "backdrop" then
+			-- the far woods are too far for a shadow to read
+			for _, d in clone:GetDescendants() do
+				if d:IsA("BasePart") then
+					d.CastShadow = false
+				end
+			end
+		end
 	end
 
 	local parts, meshes = 0, 0

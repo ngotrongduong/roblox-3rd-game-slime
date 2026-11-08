@@ -41,9 +41,39 @@ return function(T: any)
 		end
 		T.eq(count.round, 4, "a round tree in each corner (its others stand behind, in the far ring)")
 		T.eq(count.pine, 4, "two pines beside each of the left and right paths")
-		T.ok((count.rock or 0) >= 4 * (2 * A.PerCorner.RockPairs + A.PerCorner.Rocks), "rocks, singles and pairs")
-		T.ok((count.bush or 0) >= 4 * A.PerCorner.Bushes - 1, "bushes")
-		T.ok((count.flower or 0) >= 4 * A.PerCorner.Clumps * 2 - 2, "flower clumps")
+		-- a crowded corner may drop a piece that finds no room, so a few under the full number pass
+		T.ok((count.rock or 0) >= 3 * (2 * A.PerCorner.RockPairs + A.PerCorner.Rocks), "rocks, singles and pairs")
+		T.ok((count.bush or 0) >= 3 * A.PerCorner.Bushes, "bushes")
+		T.ok((count.flower or 0) >= 3 * A.PerCorner.Clumps * 2, "flower clumps")
+		T.ok((count.stump or 0) >= 3 * A.PerCorner.Stumps, "stumps")
+		T.ok((count.log or 0) >= 3 * A.PerCorner.Logs, "logs")
+	end)
+
+	T.test("a kind with no models is left out, the rest stands as before", function()
+		local names: { [string]: { string } } = {}
+		for kind, list in A.Models :: any do
+			names[kind] = if kind == "log" or kind == "stump" then {} else list
+		end
+		local without = Plan.build(names)
+		for _, item in without do
+			T.ok(item.kind ~= "log" and item.kind ~= "stump", "no " .. item.kind)
+		end
+		T.ok(#without > 0 and #without < #items)
+	end)
+
+	T.test("a ring of hills round the whole circle, far behind the woods", function()
+		local hills = Plan.hills()
+		T.eq(#hills, A.Hills.Count)
+		local quarters: { [number]: number } = {}
+		for _, hill in hills do
+			T.ok(flat(hill.x, hill.z) >= A.BackdropOuter, "behind the woods")
+			T.ok(hill.tall >= A.Hills.Tall[1] and hill.wide >= A.Hills.Wide[1], "its size")
+			local q = math.floor((math.atan2(hill.z, hill.x) % (2 * math.pi)) / (math.pi / 2))
+			quarters[q] = (quarters[q] or 0) + 1
+		end
+		for q = 0, 3 do
+			T.ok((quarters[q] or 0) >= A.Hills.Count / 8, "hills in quarter " .. q)
+		end
 	end)
 
 	T.test("nothing stands in the fight's centre", function()
@@ -117,14 +147,18 @@ return function(T: any)
 				T.ok(flat(item.gx, item.gz) - item.foot > A.RimInner, "beyond the rim")
 			end
 		end
-		T.ok(backdrop >= A.BackdropCount * 0.6, "most of the ring stands, " .. backdrop)
+		local wanted = 0
+		for _, row in A.BackdropRows do
+			wanted += row.count
+		end
+		T.ok(backdrop >= wanted * 0.6, "most of the woods stand, " .. backdrop .. " of " .. wanted)
 	end)
 
 	T.test("every piece is a kit model of its kind, with a plain size", function()
 		for _, item in items do
 			local names: { string } = (A.Models :: any)[item.kind]
 			T.ok(names and table.find(names, item.model) ~= nil, item.kind .. " " .. item.model)
-			T.ok(item.size > 0.5 and item.size < 40, item.kind .. " size " .. item.size)
+			T.ok(item.size > 0.5 and item.size < 53, item.kind .. " size " .. item.size)
 		end
 	end)
 

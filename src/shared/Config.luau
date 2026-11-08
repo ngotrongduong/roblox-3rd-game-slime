@@ -249,6 +249,86 @@ Config.LibraryKit = {
 			{ mesh = 72020217389011, tex = "F", size = { 11.394, 3.246, 4.353 }, at = { 0, 1.623, 0.017 } },
 			{ mesh = 72743792577672, tex = "M", size = { 8.707, 0.318, 4.376 }, at = { 0, 3.095, -0.005 } },
 		},
+		-- The dungeon meadow's scenery (Quaternius' Ultimate Nature Pack, recoloured in its vertex colours by
+		-- tools/library/fbx_to_glb.py, packed into one file by combine_glb.py and imported by the owner, 2026-11-08).
+		BirchTree_1 = {
+			{ mesh = 139444343818531, tex = "P", size = { 1.702, 3.568, 2.428 }, at = { 0, 1.784, 0 } },
+		},
+		BushBerries_1 = {
+			{ mesh = 98755479798740, tex = "P", size = { 1.392, 1.266, 1.716 }, at = { 0, 0.633, 0 } },
+		},
+		Bush_1 = {
+			{ mesh = 115781284840420, tex = "P", size = { 1.328, 1.242, 1.69 }, at = { 0, 0.621, 0 } },
+		},
+		Bush_2 = {
+			{ mesh = 106685108364171, tex = "P", size = { 1.346, 1.111, 1.328 }, at = { 0, 0.555, 0 } },
+		},
+		CommonTree_1 = {
+			{ mesh = 103359265744370, tex = "P", size = { 1.886, 2.477, 2.741 }, at = { 0, 1.238, 0 } },
+		},
+		CommonTree_2 = {
+			{ mesh = 119490308149469, tex = "P", size = { 1.659, 3.092, 2.508 }, at = { 0, 1.546, 0 } },
+		},
+		CommonTree_3 = {
+			{ mesh = 126889590117941, tex = "P", size = { 1.277, 3.438, 1.521 }, at = { 0, 1.719, 0 } },
+		},
+		CommonTree_4 = {
+			{ mesh = 136184488317389, tex = "P", size = { 1.567, 2.781, 1.801 }, at = { 0, 1.39, 0 } },
+		},
+		CommonTree_5 = {
+			{ mesh = 137764274843200, tex = "P", size = { 1.28, 2.535, 2.246 }, at = { 0, 1.267, 0 } },
+		},
+		Flowers = {
+			{ mesh = 134067909108589, tex = "P", size = { 0.479, 0.828, 0.604 }, at = { 0, 0.414, 0 } },
+		},
+		Flowers_Gold = {
+			{ mesh = 127315168636363, tex = "P", size = { 0.479, 0.828, 0.604 }, at = { 0, 0.414, 0 } },
+		},
+		Flowers_Pink = {
+			{ mesh = 90565517534449, tex = "P", size = { 0.479, 0.828, 0.604 }, at = { 0, 0.414, 0 } },
+		},
+		Flowers_White = {
+			{ mesh = 83992252834730, tex = "P", size = { 0.479, 0.828, 0.604 }, at = { 0, 0.414, 0 } },
+		},
+		PineTree_2 = {
+			{ mesh = 70532459082860, tex = "P", size = { 1.784, 3.568, 1.955 }, at = { 0, 1.784, 0 } },
+		},
+		PineTree_4 = {
+			{ mesh = 114815845598921, tex = "P", size = { 1.248, 3.345, 1.38 }, at = { 0, 1.672, 0 } },
+		},
+		Rock_1 = {
+			{ mesh = 119572610685766, tex = "P", size = { 0.485, 0.878, 0.467 }, at = { 0, 0.439, 0 } },
+		},
+		Rock_2 = {
+			{ mesh = 115963105141504, tex = "P", size = { 0.561, 0.646, 0.565 }, at = { 0, 0.323, 0 } },
+		},
+		Rock_3 = {
+			{ mesh = 95882723669756, tex = "P", size = { 0.738, 0.676, 0.803 }, at = { 0, 0.338, 0 } },
+		},
+		Rock_4 = {
+			{ mesh = 116688203820067, tex = "P", size = { 0.744, 0.784, 1.251 }, at = { 0, 0.392, 0 } },
+		},
+		Rock_5 = {
+			{ mesh = 92356299110908, tex = "P", size = { 0.663, 0.653, 0.915 }, at = { 0, 0.326, 0 } },
+		},
+		Rock_Moss_1 = {
+			{ mesh = 120420035752313, tex = "P", size = { 0.485, 0.95, 0.467 }, at = { 0, 0.475, 0 } },
+		},
+		Rock_Moss_3 = {
+			{ mesh = 114892369901374, tex = "P", size = { 0.738, 0.557, 0.803 }, at = { 0, 0.278, 0 } },
+		},
+		TreeStump = {
+			{ mesh = 77391363848171, tex = "P", size = { 1.36, 0.622, 1.031 }, at = { 0, 0.311, 0 } },
+		},
+		TreeStump_Moss = {
+			{ mesh = 73489273110803, tex = "P", size = { 1.36, 0.622, 1.031 }, at = { 0, 0.311, 0 } },
+		},
+		WoodLog = {
+			{ mesh = 120837366948236, tex = "P", size = { 0.633, 0.748, 2.67 }, at = { 0, 0.374, 0 } },
+		},
+		WoodLog_Moss = {
+			{ mesh = 111123259457669, tex = "P", size = { 0.894, 0.688, 2.67 }, at = { 0, 0.344, 0 } },
+		},
 	},
 	-- how long a stage waits for the meshes before it leaves a library prop out (seconds)
 	WaitSeconds = 15,
@@ -930,7 +1010,7 @@ Config.Dungeon = {
 		Seed = 20261104,
 		-- The grass floor (a stud-look block, the village's look) reaches FloorHalf each way, past the backdrop, so the world
 		-- never shows its edge; FloorColour is the village lawn's, a little brighter like the painting.
-		FloorHalf = 150,
+		FloorHalf = 175,
 		FloorColour = "#62ae3c",
 		-- The invisible wall round the fight: slimes and players cannot leave; the rim scenery stands outside it.
 		WallRadius = 68,
@@ -945,23 +1025,41 @@ Config.Dungeon = {
 		TinyTufts = 6,
 		TinyPebbles = 7,
 		TinyApart = 7,
-		-- The rim band that holds the scenery (outside the wall), and the far ring of trees that hides the floor's edge.
+		-- The rim band that holds the scenery (outside the wall), and the woods behind it that hide the floor's edge: BackdropRows
+		-- rows of trees (r from..to, count, height), their trunks only BackdropFoot of their height wide so the crowns overlap into
+		-- one wall of leaves, a row of big bushes behind (BackdropBushes), and a ring of Hills (flattened balls of grass, the
+		-- horizon the eye reads past the woods).
 		RimInner = 71,
-		RimOuter = 100,
-		BackdropInner = 104,
-		BackdropOuter = 132,
-		BackdropCount = 30,
+		RimOuter = 108,
+		BackdropInner = 112,
+		BackdropOuter = 140,
+		BackdropRows = {
+			{ from = 112, to = 123, count = 42, tall = { 30, 40 } },
+			{ from = 125, to = 140, count = 50, tall = { 38, 52 } },
+		},
+		BackdropFoot = 0.13,
+		BackdropPine = 0.35,
 		BackdropBushes = 44,
-		BushRowDepth = 6,
+		BushRowDepth = 10,
+		Hills = {
+			Count = 22,
+			Radius = 172,
+			Jitter = 10,
+			Wide = { 120, 160 },
+			Tall = { 46, 66 },
+			-- how much of a hill's height sinks under the floor
+			Sink = 0.4,
+			Colour = "#6aa35c",
+		},
 		-- Four dirt paths on the axes, from PathOuter in to PathInner: PathSegments overlapping flat blocks that narrow from
 		-- PathWidthOuter to PathWidthInner and drift sideways by up to PathWobble; the colour fades PathFade of the way to the
 		-- grass at the inner end. Each lies PathLift over the floor (so the two never flicker) and is PathThick thick.
 		PathColour = "#b9894f",
-		PathOuter = 118,
-		PathInner = 28,
-		PathSegments = 7,
-		PathWidthOuter = 15,
-		PathWidthInner = 6,
+		PathOuter = 124,
+		PathInner = 42,
+		PathSegments = 10,
+		PathWidthOuter = 11,
+		PathWidthInner = 4,
 		PathWobble = 0.6,
 		PathFade = 0.55,
 		PathLift = 0.05,
@@ -974,40 +1072,64 @@ Config.Dungeon = {
 		Gap = 1.5,
 		-- Per corner (the quadrant between two paths): round trees, rock pairs, single rocks, bushes, flower clumps; tries a
 		-- piece gets.
-		PerCorner = { Trees = 3, RockPairs = 1, Rocks = 1, Bushes = 3, Clumps = 4 },
+		PerCorner = { Trees = 4, RockPairs = 2, Rocks = 3, Bushes = 6, Clumps = 7, Stumps = 1, Logs = 1 },
 		-- The two trees past each path's outer end: how far past it, and how far apart from the path's line.
-		MouthBehind = 6,
+		MouthBehind = 8,
 		MouthTreeApart = 7,
 		Tries = 80,
 		-- Heights (trees) or widths (the rest), studs: { low, high }. Backdrop trees are taller than the rim's.
-		Round = { 22, 26 },
-		Pine = { 22, 28 },
-		BackdropRound = { 26, 32 },
-		BackdropPine = { 28, 36 },
-		RockBig = { 7, 9 },
-		RockSmall = { 3.8, 5 },
-		RockSingle = { 4.5, 8 },
-		Bush = { 4.8, 6.4 },
-		BackdropBush = { 10, 14 },
-		Flower = { 3.6, 5 },
+		-- (bigger than the painting's share of the clearing: the game's camera stands at the rim and the scenery is 90-130 studs
+		-- off, so it must be large to read)
+		Round = { 26, 34 },
+		Pine = { 28, 36 },
+		BackdropRound = { 32, 40 },
+		RockBig = { 9, 12 },
+		RockSmall = { 5, 7 },
+		RockSingle = { 6, 10.5 },
+		Bush = { 7, 10 },
+		BackdropBush = { 12, 17 },
+		-- a flower clump is sized by its height (the library's Flowers stand on stalks)
+		Flower = { 5, 7 },
+		Stump = { 4.8, 6.5 },
+		Log = { 9, 12 },
 		Tuft = { 2.8, 4 },
-		TinyFlower = { 1.3, 1.9 },
+		TinyFlower = { 2, 2.8 },
 		TinyTuft = { 1.5, 2.1 },
 		TinyPebble = { 1, 1.6 },
 		-- Kit models (ServerStorage.Kit.WildKit) by kind, and the tints a kind may wear (a tint only multiplies, so these are
 		-- the village's: it keeps the arena in the same world).
+		-- Models: what the arena is built from, by kind. The meadow's own props are library props (Quaternius' Ultimate Nature
+		-- Pack, recoloured to the painting's palette by tools/library/fbx_to_glb.py; Config.LibraryKit, server/LibraryKit); a
+		-- kind whose library props are not all in yet is built from Fallback (the valley's WildKit models) instead, and a kind
+		-- with neither is left out. The tufts and pebbles are WildKit's (the library has none that suit).
 		Models = {
+			-- (BirchTree_1's white trunk read as a stray bone at the rim: the painting has no birches)
+			round = { "CommonTree_1", "CommonTree_2", "CommonTree_4", "CommonTree_5" },
+			pine = { "PineTree_2", "PineTree_4" },
+			rock = { "Rock_2", "Rock_3", "Rock_4", "Rock_5", "Rock_Moss_3" },
+			bush = { "Bush_1", "Bush_2", "BushBerries_1" },
+			flower = { "Flowers", "Flowers_Pink", "Flowers_White", "Flowers_Gold" },
+			stump = { "TreeStump", "TreeStump_Moss" },
+			log = { "WoodLog", "WoodLog_Moss" },
+			tuft = { "QtGrass_Common_Short", "QtGrass_Common_Tall" },
+			pebble = { "QtPebble_Round_1", "QtPebble_Square_2" },
+		},
+		Fallback = {
 			round = { "QtCommonTree_1", "QtCommonTree_3", "QtCommonTree_5" },
 			pine = { "QtPine_1", "QtPine_5" },
 			rock = { "QtRock_Medium_1", "QtRock_Medium_2", "QtRock_Medium_3" },
 			bush = { "QtBush_Common_Green", "QtBush_Common_Flowers" },
 			flower = { "QtFlower_3_Group", "QtFlower_4_Group" },
-			tuft = { "QtGrass_Common_Short", "QtGrass_Common_Tall" },
-			pebble = { "QtPebble_Round_1", "QtPebble_Square_2" },
+			stump = {},
+			log = {},
 		},
 		Tints = {
-			round = { "#ffffff", "#f0ffc8", "#e1fabe" },
-			pine = { "#ffffff", "#d2ebe1" },
+			-- (the imported leaves are brighter than the painting's: the tints take them down, and the pines to its deep
+			-- blue-green, seen 2026-11-08)
+			-- and darker than the grass, so the woods stand apart from the clearing (ChatGPT's review, 2026-11-08)
+			round = { "#b4bca4", "#a8b49c", "#9cac94" },
+			pine = { "#8cb4a8", "#7ca89c" },
+			bush = { "#ffffff", "#f0ffd2" },
 			tuft = { "#f0ffc8", "#e1fabe" },
 		},
 	},

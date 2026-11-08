@@ -27,6 +27,10 @@ OwnerKit, so every stage can `place`/`put` them. No `.rbxm` to export.
 |---|---|---|
 | FarmCrate_Apple, FarmCrate_Carrot, Barrel_Apples | Quaternius Fantasy Props MegaKit | village market, the stalls' stock |
 | Barrel, Bench, Bucket_Wooden_1, Cauldron, Crate_Wooden, FarmCrate_Empty, Lantern_Wall, Stall_Cart_Empty, Stall_Empty, Stool, Table_Large | the same | not placed yet |
+| CommonTree_1..5, BirchTree_1, PineTree_2, PineTree_4 (500 triangles each), Bush_1, Bush_2, BushBerries_1, Rock_1..5, Rock_Moss_1, Rock_Moss_3, TreeStump, TreeStump_Moss, WoodLog, WoodLog_Moss, Flowers, Flowers_Pink, Flowers_White, Flowers_Gold (199) | Quaternius Ultimate Nature Pack (FBX, flat colours remapped to the painting's palette) | the Sunny Meadow arena (`Config.Dungeon.Arena.Models`). GLBs are in `art/library/converted/meadow/`, NOT uploaded yet: until they are in `Config.LibraryKit.Props` (tex `"P"`, the mesh's own vertex colours) the arena falls back to the WildKit models |
+
+FBX-only packs go through `tools/library/take_fbx.ps1` (Blender headless: `fbx_to_glb.py` palette and decimate,
+`contact_sheet.py` pictures, `glb_to_luau.py` an Edit-mode preview without an upload).
 
 ## PropKit.rbxm (low poly, `generate_mesh`)
 
