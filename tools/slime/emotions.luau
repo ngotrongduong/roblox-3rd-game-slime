@@ -12,7 +12,7 @@
 --
 -- Assets as in showcase.luau: SlimeBody model 71117254607762, outline 99817746239640, white 71688274727636, flat
 -- normal 79029102102054, roughness 0.10 = 105770337560670.
--- Expects locals CONFIG_SRC, EXPRESSIONS_SRC, FACEART_SRC, SLIMESHAPE_SRC, SLIMEMOTION_SRC, SLIMEFACE_SRC,
+-- Expects locals CONFIG_SRC (and its parts CONFIGZOMBIES_SRC, CONFIGDUNGEON_SRC, CONFIGUI_SRC, CONFIGARENA_SRC), EXPRESSIONS_SRC, FACEART_SRC, SLIMESHAPE_SRC, SLIMEMOTION_SRC, SLIMEFACE_SRC,
 -- SLIMEACTOR_SRC, STAGE_SRC (the `NAME=file` arguments of studio_mcp.js run).
 
 local IS = game:GetService("InsertService")
@@ -54,6 +54,10 @@ if not shared then
 	shared.Parent = RS
 end
 install(shared, "ModuleScript", "Config", CONFIG_SRC)
+install(shared, "ModuleScript", "ConfigZombies", CONFIGZOMBIES_SRC)
+install(shared, "ModuleScript", "ConfigDungeon", CONFIGDUNGEON_SRC)
+install(shared, "ModuleScript", "ConfigUi", CONFIGUI_SRC)
+install(shared, "ModuleScript", "ConfigArena", CONFIGARENA_SRC)
 install(shared, "ModuleScript", "Expressions", EXPRESSIONS_SRC)
 install(shared, "ModuleScript", "FaceArt", FACEART_SRC)
 install(shared, "ModuleScript", "SlimeShape", SLIMESHAPE_SRC)

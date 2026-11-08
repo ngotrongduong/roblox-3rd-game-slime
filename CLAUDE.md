@@ -79,7 +79,9 @@ a script file, run with one command.
 
 - The server decides everything; clients draw and ask. Every remote handler checks who asks, what
   they own and how often. Times are server time (`os.time()` / `workspace:GetServerTimeNow()`).
-- Numbers live in `Config.luau`; nothing tunable is written into the logic.
+- Numbers live in `Config.luau`; nothing tunable is written into the logic. Its biggest blocks are files of their own
+  (`ConfigZombies`, `ConfigDungeon`, `ConfigUi`, `ConfigArena`), still read as `Config.Dungeon` and so on: Studio
+  refuses a script of 200000 characters or more, so a block that grows past ~30000 moves out the same way.
 - Logic that can be pure goes in `src/shared` with a check in `tests/run.luau`.
 - Every line the game prints starts with `[GooLineage]`.
 - Smooth on cheap phones: budget particles, stream the world, animate only what is on screen.

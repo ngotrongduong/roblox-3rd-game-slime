@@ -6,6 +6,10 @@ $id = ($studios | Where-Object { $_.name -like "MapWork*" } | Select-Object -Fir
 if (-not $id) { Write-Host "MapWork is not open in Studio"; exit 1 }
 node "$root\tools\studio_mcp.js" run "$root\tools\slime\emotions.luau" $id Edit `
     "CONFIG_SRC=$root\src\shared\Config.luau" `
+    "CONFIGZOMBIES_SRC=$root\src\shared\ConfigZombies.luau" `
+    "CONFIGDUNGEON_SRC=$root\src\shared\ConfigDungeon.luau" `
+    "CONFIGUI_SRC=$root\src\shared\ConfigUi.luau" `
+    "CONFIGARENA_SRC=$root\src\shared\ConfigArena.luau" `
     "EXPRESSIONS_SRC=$root\src\shared\Expressions.luau" `
     "FACEART_SRC=$root\src\shared\FaceArt.luau" `
     "SLIMESHAPE_SRC=$root\src\shared\SlimeShape.luau" `

@@ -13,7 +13,7 @@
 --
 -- Assets as in emotions.luau: SlimeBody model 71117254607762, outline 99817746239640, white 71688274727636, flat
 -- normal 79029102102054, roughness 0.10 = 105770337560670.
--- Expects locals CONFIG_SRC, EXPRESSIONS_SRC, FACEART_SRC, SLIMESHAPE_SRC, SLIMEFACE_SRC, LANES_SRC, LAB_SRC.
+-- Expects locals CONFIG_SRC (and its parts CONFIGZOMBIES_SRC, CONFIGDUNGEON_SRC, CONFIGUI_SRC, CONFIGARENA_SRC), EXPRESSIONS_SRC, FACEART_SRC, SLIMESHAPE_SRC, SLIMEFACE_SRC, LANES_SRC, LAB_SRC.
 
 local IS = game:GetService("InsertService")
 local RS = game:GetService("ReplicatedStorage")
@@ -54,6 +54,10 @@ if not shared then
 	shared.Parent = RS
 end
 install(shared, "ModuleScript", "Config", CONFIG_SRC, true)
+install(shared, "ModuleScript", "ConfigZombies", CONFIGZOMBIES_SRC, true)
+install(shared, "ModuleScript", "ConfigDungeon", CONFIGDUNGEON_SRC, true)
+install(shared, "ModuleScript", "ConfigUi", CONFIGUI_SRC, true)
+install(shared, "ModuleScript", "ConfigArena", CONFIGARENA_SRC, true)
 install(shared, "ModuleScript", "Expressions", EXPRESSIONS_SRC, true)
 install(shared, "ModuleScript", "FaceArt", FACEART_SRC, true)
 install(shared, "ModuleScript", "SlimeShape", SLIMESHAPE_SRC, true)
