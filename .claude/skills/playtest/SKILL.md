@@ -61,6 +61,11 @@ not.
 - `Authentication required` (401) lines all over the log mean Studio's session was revoked (it happened after the owner
   turned on 2-step verification); the owner signs out and in again. Nothing can be judged until then.
 - Windows Defender blocks PowerShell scripts that grab the screen. Do not work around it; use Studio's `screen_capture`.
+- A Studio window that is minimised or behind another Studio window draws no 3D: `screen_capture` returns the HUD on
+  plain white. `& "C:\Roblox 3rd game\tools\studio_front.ps1" StudioTest` brings it forward; afterwards bring back
+  the window the owner was using the same way (2026-11-08).
+- `tools/map/sync_all.ps1`: Studio refuses a script Source of 200000 characters or more; the sync blanks the whole-line
+  comments of a file that big (Config, 2026-11-08). Keep files under that if you can.
 - Studio dialogs (Asset Manager import, File > Publish As) are invisible to computer use: the owner clicks them.
 - The command bar runs a multi-line command with Ctrl+Enter; a command that touches `CurrentCamera` or destroys things
   in Edit mode asks "Dangerous Command Detected".

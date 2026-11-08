@@ -116,7 +116,13 @@ function SlimeLook.build(attrs: { [string]: any }): Model
 		map = "rbxassetid://" .. tostring(attrs.SkinImage)
 		surfaceColour = Color3.new(1, 1, 1)
 	elseif secret and secret ~= "" then
-		missing("missing Secret art " .. secret)
+		local image = SkinIds.get(secret)
+		if image then
+			map = "rbxassetid://" .. tostring(image)
+			surfaceColour = Color3.new(1, 1, 1)
+		else
+			missing("missing Secret skin " .. secret)
+		end
 	elseif material then
 		if material.colour then
 			drawn = tint(material.colour)

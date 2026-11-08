@@ -33,7 +33,8 @@ a script file, run with one command.
 
 **The owner's hard rule (2026-11-03): never make him click "Allow once".**
 - An inline command never contains `|`, `;`, `&&`, `Where-Object`, `Select-Object`, `Format-Table`, `ForEach-Object`, a
-  `{ }` script block or `$(...)`.
+  `{ }` script block or `$(...)`, nor a comma list (`2,3,1`) or a lone `-` as an argument: PowerShell reads those as
+  arrays and operators and asks too (2026-11-08). Arguments are plain words and numbers separated by spaces.
 - Finding files or folders is Glob, searching text is Grep, reading is Read.
 - Process lists, filtered output or anything with several steps go in a `.ps1` file in the scratchpad, run as
   `& "<path>.ps1"`.

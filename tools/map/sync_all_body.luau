@@ -22,13 +22,14 @@ targets.Creatures = folder(targets.Shared, "Creatures")
 local counts = { Shared = 0, Server = 0, Client = 0, Creatures = 0 }
 for _, f in FILES do
 	local parent = targets[f[1]]
+	-- The new copy is made before the old one goes, so a Source Studio refuses leaves the old script in place.
+	local s = Instance.new(f[3])
+	s.Name = f[2]
+	s.Source = f[4]
 	local old = parent:FindFirstChild(f[2])
 	if old then
 		old:Destroy()
 	end
-	local s = Instance.new(f[3])
-	s.Name = f[2]
-	s.Source = f[4]
 	s.Parent = parent
 	counts[f[1]] += 1
 end

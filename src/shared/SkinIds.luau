@@ -79,6 +79,80 @@ for kind, image in SkinIds.Zombies do
 	SkinIds.ById["zombie-" .. kind] = image
 end
 
+-- The Secret slimes' body skins (art/models/slime_body/skins/s_<file pair>.png, ChatGPT, 2026-11-08), keyed by recipe
+-- id; ears, wings, horns and tails come later as separate parts. tools/skins/map_secret_skins.py matches each picture
+-- to its recipe by name (the original art's file pairs do not always match the recipe colours) and prints these rows.
+SkinIds.Secrets = {
+	["secret-black-black"] = 91206608987673,
+	["secret-black-blue"] = 89884862489611,
+	["secret-black-gray"] = 111675631440031,
+	["secret-black-green"] = 128736684857681,
+	["secret-black-navy"] = 87592901200719,
+	["secret-black-orange"] = 77009648050923,
+	["secret-black-pink"] = 73579978741183,
+	["secret-black-purple"] = 103479170868887,
+	["secret-black-red"] = 109427183764030,
+	["secret-black-white"] = 136231808459841,
+	["secret-black-yellow"] = 107131463443154,
+	["secret-blue-blue"] = 79212561121957,
+	["secret-blue-gray"] = 91701587531180,
+	["secret-blue-green"] = 87023197915550,
+	["secret-blue-navy"] = 129474913363694,
+	["secret-blue-orange"] = 134088253960501,
+	["secret-blue-pink"] = 75829277961759,
+	["secret-blue-purple"] = 139688076253513,
+	["secret-blue-red"] = 81783739433146,
+	["secret-blue-white"] = 134646081211688,
+	["secret-blue-yellow"] = 97190261051183,
+	["secret-gray-gray"] = 79438925598393,
+	["secret-gray-navy"] = 129937385407954,
+	["secret-gray-orange"] = 114197395821720,
+	["secret-gray-pink"] = 82356097312530,
+	["secret-gray-purple"] = 87610306895982,
+	["secret-gray-red"] = 121852914845200,
+	["secret-gray-white"] = 108472135284309,
+	["secret-gray-yellow"] = 131089297850326,
+	["secret-green-green"] = 131782302709548,
+	["secret-green-navy"] = 78504244199951,
+	["secret-green-orange"] = 139835021216581,
+	["secret-green-pink"] = 135961896608268,
+	["secret-green-purple"] = 90937648048204,
+	["secret-green-red"] = 134183598663463,
+	["secret-green-white"] = 75001796606461,
+	["secret-green-yellow"] = 90401582276458,
+	["secret-navy-navy"] = 128956220130239,
+	["secret-navy-orange"] = 100960791556974,
+	["secret-navy-pink"] = 78939905986765,
+	["secret-navy-purple"] = 96108303150764,
+	["secret-navy-red"] = 127512335104425,
+	["secret-navy-white"] = 140063601868674,
+	["secret-navy-yellow"] = 111807714284968,
+	["secret-orange-orange"] = 108835797540103,
+	["secret-orange-pink"] = 97192950509509,
+	["secret-orange-purple"] = 116298992652302,
+	["secret-orange-red"] = 90726356271671,
+	["secret-orange-white"] = 135893911275047,
+	["secret-orange-yellow"] = 79735965460781,
+	["secret-pink-pink"] = 127009364254975,
+	["secret-pink-purple"] = 124657711020684,
+	["secret-pink-red"] = 98576024057113,
+	["secret-pink-white"] = 87100022105333,
+	["secret-pink-yellow"] = 92747602476876,
+	["secret-purple-purple"] = 121029917829951,
+	["secret-purple-red"] = 92681468815074,
+	["secret-purple-white"] = 126691717445039,
+	["secret-purple-yellow"] = 115499515678179,
+	["secret-red-red"] = 71562496788717,
+	["secret-red-white"] = 107204997150772,
+	["secret-red-yellow"] = 107912341409908,
+	["secret-white-white"] = 112685052448784,
+	["secret-white-yellow"] = 99024964036568,
+	["secret-yellow-yellow"] = 120337424212608,
+} :: { [string]: number }
+for id, image in SkinIds.Secrets do
+	SkinIds.ById[id] = image
+end
+
 function SkinIds.get(id: string): number?
 	return SkinIds.ById[id]
 end

@@ -23,6 +23,9 @@ foreach ($g in $groups) {
 		if ($name.EndsWith(".server")) { $class = "Script"; $name = $name.Substring(0, $name.Length - 7) }
 		elseif ($name.EndsWith(".client")) { $class = "LocalScript"; $name = $name.Substring(0, $name.Length - 7) }
 		$src = Get-Content $f.FullName -Raw -Encoding UTF8
+		# Studio refuses a Source of 200000 characters or more (Config passed that on 2026-11-08): the copy of a file
+		# that big loses its whole-line comments, blanked so error line numbers still match the repo.
+		if ($src.Length -ge 190000) { $src = [regex]::Replace($src, '(?m)^[ \t]*--[^\r\n]*', '') }
 		[void]$sb.AppendLine("{ `"$($g.Dest)`", `"$name`", `"$class`", [=====[$src]=====] },")
 	}
 }

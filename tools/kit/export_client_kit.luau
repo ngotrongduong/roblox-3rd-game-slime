@@ -90,7 +90,8 @@ take(props and props:FindFirstChild("Egg"), "Egg", kit)
 
 -- Looks: a game script may not set a SurfaceAppearance's maps (Plugin capability), only its Color, so every map the
 -- slimes use is made here once: Plain (the white map, tinted per slime), PlainFine (roughness 0.03: Ice, Jelly),
--- Mirror (the chrome map for Gold and Silver) and Skin_<image id> for each of the 55 Duals. SlimeLook clones them.
+-- Mirror (the chrome map for Gold and Silver) and Skin_<image id> for every skin in SkinIds.ById (the 55 Duals, the
+-- zombie kinds, the Secrets). SlimeLook clones them.
 local Config = require("../../src/shared/Config")
 local SkinIds = require("../../src/shared/SkinIds")
 local C = Config.VillageClient
