@@ -660,6 +660,15 @@ return {
 		-- A blow lands only on a target within reach plus this (its target may have stepped a little during the wind-up);
 		-- one further off, or a new target picked because the old one fell, is walked to first.
 		BlowSlack = 2,
+		-- Monsters walk FoeGain times a slime of the same SPD (the owner, 2026-11-10: they were too slow, twice as fast).
+		FoeGain = 2,
+		-- Blows that reach past the target (the owner, 2026-11-10: fighters far away were being hit): a splash lands only on
+		-- foes within SplashStuds of its target, an "all" skill only on foes within AreaStuds of the one using it (a ranged
+		-- fighter's reach plus the slack, so everyone fighting it is in), and a guard takes a team-mate's blow only within
+		-- GuardStuds of it.
+		SplashStuds = 8,
+		AreaStuds = 18,
+		GuardStuds = 8,
 	},
 	-- The player stands PlayerSpot (flat, from the middle) PlayerLift up, facing the middle; leaving puts them ExitOut studs
 	-- in front of their portal's opening, ExitLift up. A player who strays StrayStuds past the rim (a
@@ -671,6 +680,8 @@ return {
 	StrayStuds = 30,
 	-- Enter works within the portal prompt's range plus this much; the Enter, Next and Replay requests are this far apart.
 	EnterSlackStuds = 6,
+	-- How many teams one run takes in (the owner, 2026-11-10: one team only).
+	RunTeams = 1,
 	RequestSeconds = 1.5,
 	-- A wave that goes on this long is lost (nothing should reach it; it is a guard against a stuck fight).
 	WaveMaxSeconds = 240,

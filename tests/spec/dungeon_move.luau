@@ -60,7 +60,7 @@ return function(T: any)
 		local gap = math.sqrt((s.x - f.x) ^ 2 + (s.z - f.z) ^ 2)
 		T.ok(gap <= M.MeleeStuds + 1e-3, "in reach when it aims: " .. gap)
 		-- (the foe walks to meet it: they close the distance together)
-		local walked = (far - M.MeleeStuds) / (Combat.walkSpeed(1) + Combat.walkSpeed(0))
+		local walked = (far - M.MeleeStuds) / (Combat.walkSpeed(1) + Combat.walkSpeed(0, true))
 		T.ok(
 			math.abs((seconds :: number) - walked) < 0.5,
 			"arrived about on time: " .. tostring(seconds) .. " vs " .. walked
@@ -96,9 +96,9 @@ return function(T: any)
 			end
 		end
 		T.ok(struck ~= nil)
-		-- the two close the 60 studs between them at about 3.9 studs a second each: not before that
+		-- the two close the 60 studs between them at their walking speeds (the monster's FoeGain faster): not before that
 		T.ok(
-			(struck :: number) > (60 - M.MeleeStuds) / (2 * Combat.walkSpeed(1)) - 0.5,
+			(struck :: number) > (60 - M.MeleeStuds) / (Combat.walkSpeed(1) + Combat.walkSpeed(1, true)) - 0.5,
 			"struck at " .. tostring(struck)
 		)
 	end)
@@ -164,6 +164,37 @@ return function(T: any)
 			end
 		end
 		T.ok(blows >= 6, "blows were struck: " .. blows)
+	end)
+
+	T.test("a monster walks FoeGain times as fast as a slime of the same SPD", function()
+		T.eq(Combat.walkSpeed(2, true), Combat.walkSpeed(2) * M.FoeGain)
+	end)
+
+	T.test("skills that reach past the target spare foes far away", function()
+		-- a slime of the "hp" way (Belly Bounce, every foe at once) beside one foe, with another far off
+		local slime = fighter("s", 1, 0, 0)
+		slime.role = "hp"
+		slime.attack = 50
+		local fight = Combat.new(
+			{ slime },
+			{ fighter("near", 0, M.MeleeStuds - 1, 0), fighter("far", 0, 40, 0) },
+			Rng.new(4),
+			{ moves = true }
+		)
+		local far = unitOf(fight, "far")
+		far.speed, far.hp = 0, 1e6
+		-- (the far one is held in place: it would otherwise walk in)
+		local struckFar = false
+		for _ = 1, 3000 do
+			far.x, far.z = 40, 0
+			for _, event in Combat.step(fight, DT) do
+				if event.kind == "hit" and event.to == "far" and event.from == "s" then
+					local s = unitOf(fight, "s")
+					struckFar = struckFar or math.abs(s.x - far.x) > M.AreaStuds
+				end
+			end
+		end
+		T.ok(not struckFar, "an all-foes skill hit a foe beyond AreaStuds")
 	end)
 
 	T.test("the squad's start places match the client's row", function()

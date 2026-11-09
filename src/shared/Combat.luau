@@ -90,10 +90,10 @@ export type Fighter = {
 
 local Combat = {}
 
--- How fast a fighter walks, in studs a second, from its SPD (Config.Dungeon.Move).
-function Combat.walkSpeed(speed: number): number
+-- How fast a fighter walks, in studs a second, from its SPD (Config.Dungeon.Move); a monster (`foe`) FoeGain times that.
+function Combat.walkSpeed(speed: number, foe: boolean?): number
 	local m = Config.Dungeon.Move
-	return math.min(m.MaxStuds, m.BaseStuds + m.PerSpeed * math.max(0, speed))
+	return math.min(m.MaxStuds, m.BaseStuds + m.PerSpeed * math.max(0, speed)) * (if foe then m.FoeGain else 1)
 end
 
 function Combat.damage(raw: number, defence: number): number
@@ -231,10 +231,22 @@ local function pick(fight: Fight, attacker: Unit): Unit?
 	return alive[#alive]
 end
 
--- A guard of the target's side that covers it now (not the target itself), or nil.
+-- Whether `b` is within `studs` of `a`: always outside the positional mode, where nobody has a place.
+local function within(fight: Fight, a: Unit, b: Unit, studs: number): boolean
+	return not fight.moves or (a.x - b.x) ^ 2 + (a.z - b.z) ^ 2 <= studs * studs
+end
+
+-- A guard of the target's side that covers it now (not the target itself; in the positional mode only one standing
+-- near it), or nil.
 local function guardOf(fight: Fight, target: Unit): Unit?
 	for _, other in fight.units do
-		if other ~= target and other.side == target.side and other.hp > 0 and other.guardUntil > fight.seconds then
+		if
+			other ~= target
+			and other.side == target.side
+			and other.hp > 0
+			and other.guardUntil > fight.seconds
+			and within(fight, target, other, Config.Dungeon.Move.GuardStuds)
+		then
 			return other
 		end
 	end
@@ -310,10 +322,16 @@ local function skill(fight: Fight, attacker: Unit, target: Unit, events: { Event
 	local extra = { skill = attacker.role }
 	if s.kind == "splash" then
 		blow(fight, attacker, target, s.factor, events, extra)
-		local others = foesOf(fight, attacker)
+		-- (beside it: in the positional mode only foes near the target)
+		local others: { Unit } = {}
+		for _, other in foesOf(fight, attacker) do
+			if other ~= target and within(fight, target, other, Config.Dungeon.Move.SplashStuds) then
+				table.insert(others, other)
+			end
+		end
 		for index = 1, math.min(s.spread, #others) do
 			local other = others[index]
-			if other ~= target and other.hp > 0 then
+			if other.hp > 0 then
 				blow(fight, attacker, other, s.splash, events, { skill = attacker.role, splash = true })
 			end
 		end
@@ -329,8 +347,8 @@ local function skill(fight: Fight, attacker: Unit, target: Unit, events: { Event
 		blow(fight, attacker, target, s.factor, events, extra)
 	elseif s.kind == "all" then
 		for _, foe in foesOf(fight, attacker) do
-			-- (a guard may already have fallen taking an earlier foe's blow)
-			if foe.hp <= 0 then
+			-- (a guard may already have fallen taking an earlier foe's blow; in the positional mode it reaches only foes near)
+			if foe.hp <= 0 or not within(fight, attacker, foe, Config.Dungeon.Move.AreaStuds) then
 				continue
 			end
 			blow(fight, attacker, foe, s.factor, events, extra)
@@ -437,7 +455,7 @@ local function walk(fight: Fight, attacker: Unit, target: Unit, dt: number, even
 		slotX = target.x + math.cos(chosen) * reach
 		slotZ = target.z + math.sin(chosen) * reach
 	end
-	local speed = Combat.walkSpeed(attacker.speed)
+	local speed = Combat.walkSpeed(attacker.speed, attacker.side ~= "squad")
 		* (if attacker.slowUntil > fight.seconds then 1 - attacker.slowBy else 1)
 	speed = math.max(speed, 1e-3)
 	local gx, gz = slotX - attacker.x, slotZ - attacker.z

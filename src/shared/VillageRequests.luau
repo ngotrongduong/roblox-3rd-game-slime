@@ -82,9 +82,9 @@ local function sellList(value: any): boolean
 	return count == #value
 end
 
--- The teams a Dungeon run brings: a plain list of one team number up to every team, none twice.
+-- The teams a Dungeon run brings: a plain list of one team number up to Config.Dungeon.RunTeams, none twice.
 local function teamList(value: any): boolean
-	if type(value) ~= "table" or #value < 1 or #value > Config.Zombies.Teams then
+	if type(value) ~= "table" or #value < 1 or #value > math.min(Config.Dungeon.RunTeams, Config.Zombies.Teams) then
 		return false
 	end
 	local count = 0

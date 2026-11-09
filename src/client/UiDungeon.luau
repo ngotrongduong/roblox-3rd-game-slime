@@ -368,6 +368,14 @@ local function openGate(point: Vector3)
 				if selected[index] then
 					selected[index] = nil
 				else
+					-- (a run takes at most RunTeams: with one, a tap moves the pick to this team)
+					local count = 0
+					for _ in selected do
+						count += 1
+					end
+					if count >= D.RunTeams then
+						table.clear(selected)
+					end
 					selected[index] = true
 				end
 				tick()
