@@ -355,3 +355,66 @@ next map in the cycle.
 - Skill and shot effects (lavastomp, eruption, tuskcharge, blizzard, Phoenix and Frost Wisp shots, sporeburst, bearslam): not touched.
   The owner stopped that work to rebuild them from the VFX library, one set per monster group.
 - Not fixed: the village HUD's right pill ("Village 16") is clipped at the right edge of an 844 px screen (not a dungeon screen).
+
+## 9. Fight effects by map (2026-11-09)
+
+The owner: rebuild each group's skill set from the VFX library (`C:\roblox-vfx-library`). Every monster has its own design
+(one effect recoloured is not a new one), themed to its map. Config: `Config.Dungeon.Fx.Monsters[<monster id>]` (`blow`,
+`shot`, `heal`, `fall`, `skill = { windup, release, at }`); the client: `ZombieFight` (`impact`, `strike`, `onAim`,
+`release`, `onHeal`, `fall`). A monster's blow, shot and fall are ONE library effect `hit.<monster id>`: its pieces are
+the blow, its `projectile` the shot, its `death` variant the fall, its `skill` variant a boss's heavier skill blow. New
+library effects are marked *new*. Tiers: every blow, shot and fall is `mid` at the hit budget (at most 5 emitters,
+40 particles); heals `mid`; boss skills `mid` (wind-ups) or `heavy` (releases). No camera, no screen effects, no ambient
+layers. The slimes' blows and the village zombies keep their own art.
+
+Phases of a boss skill: **wind-up** plays on the caster when the server calls the skill (`onAim`, 0.3 s before it lands)
+and is cancelled when it goes off; **release** plays as it comes down (`cast`; the Mammoth's on its dash); **impact** is
+the boss's own hit effect, `skill` variant, on every slime it strikes.
+
+### Meadow: leaves, wind, pollen, earth
+
+| Monster | Blow (on the target) | Shot | Heal | Fall | Skill |
+|---|---|---|---|---|---|
+| Green Sprout | `hit.green_sprout` *new*: a flower bursts open, leaves flutter off | | | soft mint puffs, leaves and petals drift down, a green wave ring | |
+| Bee | `hit.green_bee` *new*: a yellow sting streak along the blow, honey glints | | | a yellow pop, honey drops fall, a thin honey ring | |
+| Dandelion | `hit.green_dandelion` *new*: a tuft of white seed fluff, pollen rises | a cream seed puff on a high soft arc | | seed clouds lift away, pollen motes float, a hazy ring | |
+| Moth | `hit.green_moth` *new*: a curl of wind, wing-dust sparkles | | `burst.moth_mend` *new*: flowers bloom in a mint glow, motes rise | a pale wisp, a scatter of wing scales, a wispy ring | |
+| Snail | `hit.green_snail` *new*: a moss-green slime splat, drops fall | | | a dust puff, pebbles thrown, the ground cracks | |
+| Turtle (Bloomshell, mini-boss) | `hit.green_turtle` *new*: a green comic bash, pollen rays | | | shell shards fly, a flat dust cloud, a ring of pollen specks | **Pollen Shockwave**: wind-up `skill.renewal_charge` (green life gathers); release `skill.pollen_shockwave` *new* on its feet (a bloom bursts, a pollen ring races over the field, petals and pollen fly, dust kicks up); impact `skill` variant: petals swirl off each slime |
+| Boar (Bramblehorn, boss) | `hit.green_boar` *new*: a zigzag gore across the blow, thorns spring up | | | boulders thrown, a big dust cloud, a star of ground cracks | **Thorn Charge**: wind-up `skill.bramble_rage` *new* (brown dust dragged in, thorns pushing up round the hooves); release `burst.rock_smash` on its target (a ground slam, rocks and a crater); impact `skill` variant: dust kicked up and a row of bramble spikes |
+
+### Mushroom: spores, toxic, violet arcane
+
+| Monster | Blow | Shot | Heal | Fall | Skill |
+|---|---|---|---|---|---|
+| Hare | `hit.dark_hare` *new*: violet tick marks, the owner's spores | | | a violet poison haze, dark puffs, a smoky ring | |
+| Bat | `hit.dark_bat` *new*: a lilac swoop along the blow, dark wisps | | | dark wisps writhe, dark sparks, a broken violet ring | |
+| Fox | `hit.dark_fox` *new*: a pink-violet ghost flame, tiny specks (glowing) | a violet foxfire flame on a low arc | | blue-violet smoke, a black-cored flame, an eclipse ring | |
+| Deer | `hit.dark_deer` *new*: two teal-lilac arcs, tiny glints | | `burst.deer_mend` *new*: tiny teal swirls in a soft glow, long twinkles rise | a lilac veil, floating orbs, a glow ring | |
+| Totem | `hit.dark_totem` *new*: violet impact spikes over dark rays | | | amethyst crystals thrown, dark dust, a ring of shreds | |
+| Wyrm (Sporeburst, mini-boss) | `hit.dark_wyrm` *new*: a toxic-green splash, bubbles | | | a toxic flame, dark splats, a toxic smoke ring | **Spore Burst**: wind-up `skill.void_charge` (violet pull); release `skill.spore_burst` *new* on its body (an arcane burst, spore clouds roll out, the owner's spores fly, an arcane ring); impact `skill` variant: toxic haze and a line of specks |
+| Bear (Den Slam, boss) | `hit.dark_bear` *new*: violet claw cups and a crack slit along the blow | | | dark spikes, dark smoke, a glowing violet crack | **Den Slam**: wind-up `skill.umbral_growl` *new* (dark violet gloom drawn in, an eclipse ring); release `skill.leap_slam` (lv2) where it lands; impact `skill` variant: a violet spike ring and cracked ground |
+
+### Lava: fire, magma, explosions
+
+| Monster | Blow | Shot | Heal | Fall | Skill |
+|---|---|---|---|---|---|
+| Newt | `hit.lava_newt` *new*: a small fire puff, fire specks | | | a fire puff turning to smoke, embers, a rough orange ring | |
+| Wolf | `hit.lava_wolf` *new*: a fire slash raked along the blow, ember streaks | | | a fire curl, ash cloud, a fringed ring | |
+| Phoenix | `hit.lava_phoenix` *new*: a fire burst, gold feathers | a fireball on a low arc | | wild flames, flying embers, a flare ring (a flash of light) | |
+| Drake | `hit.lava_drake` *new*: fire tongues, gold sparks | | `burst.drake_mend` *new*: a warm gold flame and core, soft rays rise | a fire cloud then billowing smoke, a double ring | |
+| Tortoise | `hit.lava_tortoise` *new*: a magma crack star, rocks | | | a dark fire cloud, boulders, the owner's ground crack | |
+| Bull (Lavastomp, mini-boss) | `hit.lava_bull` *new*: a fire shock, smoke chunks | | | a realistic fireball, ash puffs, a cracked orange ring | **Magma Stomp**: wind-up `skill.meteor_charge`; release `skill.meteor_crash` *new* on its feet (a fire burst, rocks, smoke, a glowing crater); impact `skill` variant: fire breaking up and dust curls |
+| Golem (Eruption, boss) | `hit.lava_golem` *new*: a fire blast, a spray of magma | | | big rolling fire, heavy smoke, a crisp ring | **Eruption**: wind-up `skill.phoenix_charge`; release `skill.flame_jet` rising straight up from the golem; impact `skill` variant: a fire curl and flame streaks raining |
+
+### Ice: frost, snow, crystal shards (bright snow: no added glows on the blows)
+
+| Monster | Blow | Shot | Heal | Fall | Skill |
+|---|---|---|---|---|---|
+| Fox | `hit.ice_fox` *new*: tiny frost bursts, flakes | | | frost mist, snow crystals, a thin ice ring | |
+| Leopard | `hit.ice_leopard` *new*: a shining ice crescent along the blow, thin shards | | | frost wisps, crystals, a hair-thin ring | |
+| Wisp | `hit.ice_wisp` *new*: a cyan four-point star, sparkle dust | a blue mote on a high arc | | a cyan glow, glints, a bright ring | |
+| Penguin | `hit.ice_penguin` *new*: an icy water splash, drops | | `burst.penguin_mend` *new*: a bubble disc, a star glow, flakes rise | a water splash, cyan mist, ripples | |
+| Golem | `hit.ice_golem` *new*: white shards blast, ice spikes | | | crystals thrown, ice shards, a web of ice cracks | |
+| Mammoth (Tuskcharge, mini-boss) | `hit.ice_mammoth` *new*: a tusk crescent gouge, a frost puff | | | flat snow clouds, ice shards, a round ring | **Tusk Charge**: wind-up `skill.frost_charge`; release `skill.ice_spear` from the mammoth to its target as it dashes; impact `skill` variant: glowing shards and flat speed streaks |
+| Yeti (Blizzard, boss) | `hit.ice_yeti` *new*: a pale impact splat, snow specks | | | rolling snow, ice shards, a rough ring | **Blizzard**: wind-up `skill.frost_howl` *new* (snow crystals and mist drawn in, a cold ring); release `skill.blizzard` *new* on its feet (snow clouds and flakes blow over the field, shards fly, a torn ring); impact `skill` variant: snowflakes and a soft gust |

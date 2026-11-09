@@ -1682,6 +1682,94 @@ return {
 		GateWatchSeconds = 1,
 	},
 
+	-- ===== Fight effects by monster (client/ZombieFight with src/shared/VfxLib; design: docs/DUNGEON_MAPS.md) =====
+	-- Each monster's own looks from the owner's VFX library, themed to its map (the owner, 2026-11-09): `blow` plays on
+	-- the one it hits (and, for a ranged one, `shot` flies there first: the same effect with its projectile), `fall` is
+	-- its burst when it falls (that effect's FallVariant), a healer's `heal` plays over the one it mends, and a mini-boss
+	-- or boss's `skill` has its wind-up on the caster when the skill is called, its release (`at`: on the caster's feet,
+	-- on the target with the caster as `from`, or rising straight up from the caster) when it comes down, and its blows
+	-- land as the blow's SkillVariant. A monster left out keeps the battle art of its kind (Ways). The slimes' own blows
+	-- and the village zombies never use these.
+	Fx = {
+		FallVariant = "death",
+		SkillVariant = "skill",
+		-- a blow, shot and fall are drawn this many times bigger per step of the monster's size, up to MaxScale
+		Scale = 1,
+		MaxScale = 2.2,
+		-- how long a shot flies before its blow lands (the library's projectiles fly about this long)
+		ShotSeconds = 0.3,
+		-- the height of the box the monsters' hit effects were made for (their refHeight): a fall stands it on the ground
+		FallBox = 4,
+		-- a wind-up fades out this softly when its skill goes off
+		WindupFade = 0.15,
+		Monsters = {
+			-- Meadow: leaves, wind, pollen, earth
+			green_sprout = { blow = "hit.green_sprout", fall = "hit.green_sprout" },
+			green_bee = { blow = "hit.green_bee", fall = "hit.green_bee" },
+			green_dandelion = { blow = "hit.green_dandelion", shot = true, fall = "hit.green_dandelion" },
+			green_moth = { blow = "hit.green_moth", heal = "burst.moth_mend", fall = "hit.green_moth" },
+			green_snail = { blow = "hit.green_snail", fall = "hit.green_snail" },
+			green_turtle = {
+				blow = "hit.green_turtle",
+				fall = "hit.green_turtle",
+				skill = { windup = "skill.renewal_charge", release = "skill.pollen_shockwave", at = "caster" },
+			},
+			green_boar = {
+				blow = "hit.green_boar",
+				fall = "hit.green_boar",
+				skill = { windup = "skill.bramble_rage", release = "burst.rock_smash", at = "target" },
+			},
+			-- Mushroom: spores, toxic, violet arcane
+			dark_hare = { blow = "hit.dark_hare", fall = "hit.dark_hare" },
+			dark_bat = { blow = "hit.dark_bat", fall = "hit.dark_bat" },
+			dark_fox = { blow = "hit.dark_fox", shot = true, fall = "hit.dark_fox" },
+			dark_deer = { blow = "hit.dark_deer", heal = "burst.deer_mend", fall = "hit.dark_deer" },
+			dark_totem = { blow = "hit.dark_totem", fall = "hit.dark_totem" },
+			dark_wyrm = {
+				blow = "hit.dark_wyrm",
+				fall = "hit.dark_wyrm",
+				skill = { windup = "skill.void_charge", release = "skill.spore_burst", at = "caster" },
+			},
+			dark_bear = {
+				blow = "hit.dark_bear",
+				fall = "hit.dark_bear",
+				skill = { windup = "skill.umbral_growl", release = "skill.leap_slam", variant = "lv2", at = "caster" },
+			},
+			-- Lava: fire, magma, explosions
+			lava_newt = { blow = "hit.lava_newt", fall = "hit.lava_newt" },
+			lava_wolf = { blow = "hit.lava_wolf", fall = "hit.lava_wolf" },
+			lava_phoenix = { blow = "hit.lava_phoenix", shot = true, fall = "hit.lava_phoenix" },
+			lava_drake = { blow = "hit.lava_drake", heal = "burst.drake_mend", fall = "hit.lava_drake" },
+			lava_tortoise = { blow = "hit.lava_tortoise", fall = "hit.lava_tortoise" },
+			lava_bull = {
+				blow = "hit.lava_bull",
+				fall = "hit.lava_bull",
+				skill = { windup = "skill.meteor_charge", release = "skill.meteor_crash", at = "caster" },
+			},
+			lava_golem = {
+				blow = "hit.lava_golem",
+				fall = "hit.lava_golem",
+				skill = { windup = "skill.phoenix_charge", release = "skill.flame_jet", at = "up" },
+			},
+			-- Ice: frost, snow, crystal shards
+			ice_fox = { blow = "hit.ice_fox", fall = "hit.ice_fox" },
+			ice_leopard = { blow = "hit.ice_leopard", fall = "hit.ice_leopard" },
+			ice_wisp = { blow = "hit.ice_wisp", shot = true, fall = "hit.ice_wisp" },
+			ice_penguin = { blow = "hit.ice_penguin", heal = "burst.penguin_mend", fall = "hit.ice_penguin" },
+			ice_golem = { blow = "hit.ice_golem", fall = "hit.ice_golem" },
+			ice_mammoth = {
+				blow = "hit.ice_mammoth",
+				fall = "hit.ice_mammoth",
+				skill = { windup = "skill.frost_charge", release = "skill.ice_spear", at = "target" },
+			},
+			ice_yeti = {
+				blow = "hit.ice_yeti",
+				fall = "hit.ice_yeti",
+				skill = { windup = "skill.frost_howl", release = "skill.blizzard", at = "caster" },
+			},
+		},
+	},
+
 	-- ===== The portal (server/DungeonPortal, Layout.marketPortal) =====
 	-- Egg Heist's portal (the owner, 2026-11-04: "use the portal we have"), rebuilt from its kit meshes, which the owner's
 	-- account published (InsertService ids). ONE portal for everyone in the Market (the owner, 2026-11-04: in the shopping

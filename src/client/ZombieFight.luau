@@ -18,6 +18,7 @@ local FightFx = require(script.Parent.FightFx)
 local SlimeActor = require(script.Parent.SlimeActor)
 local UiKit = require(script.Parent.UiKit)
 local UiTeams = require(script.Parent.UiTeams)
+local VfxLib = require(ReplicatedStorage.Shared.VfxLib)
 local ZombieLook = require(script.Parent.ZombieLook)
 local ZombieMarch = require(script.Parent.ZombieMarch)
 local ZombieTeams = require(script.Parent.ZombieTeams)
@@ -56,6 +57,8 @@ export type Extra = {
 	stand: Vector3,
 	foe: boolean,
 	way: string,
+	-- a Dungeon monster's own fight effects (Config.Dungeon.Fx.Monsters), drawn by VfxLib instead of its way's art
+	fx: any?,
 	size: number,
 	dead: boolean,
 	node: Instance,
@@ -368,6 +371,45 @@ end
 -- How a fighter's blows look.
 local function styleOf(id: string): FightFx.Style
 	return FightFx.style(wayOf(id))
+end
+
+-- A Dungeon monster's own fight effects (Config.Dungeon.Fx.Monsters), or nil: everyone else keeps its way's art.
+local DFx = Config.Dungeon.Fx
+local charges: { [string]: any } = {}
+
+local function fxOf(id: string?): any
+	local extra = if id then extras[id] else nil
+	return if extra then extra.fx else nil
+end
+
+local function fxScale(id: string?): number
+	local extra = if id then extras[id] else nil
+	return math.clamp((if extra then extra.size else 1) * DFx.Scale, 1, DFx.MaxScale)
+end
+
+-- Plays one library effect, never letting a broken one stop the fight.
+local function vfx(effect: string?, at: any, opts: { [string]: any }?): any
+	if not effect then
+		return nil
+	end
+	local ok, live = pcall(VfxLib.play, effect, at, opts)
+	if not ok then
+		if not warned[effect] then
+			warned[effect] = true
+			warn("[GooLineage] fight effect " .. effect .. ": " .. tostring(live))
+		end
+		return nil
+	end
+	return live
+end
+
+-- A skill's wind-up ends (it went off, or its caster fell).
+local function endCharge(id: string)
+	local live = charges[id]
+	charges[id] = nil
+	if live then
+		pcall(VfxLib.cancel, live, DFx.WindupFade)
+	end
 end
 
 local function flat(delta: Vector3): Vector3
@@ -769,6 +811,11 @@ local function onAim(event: { [string]: any })
 	end
 	local s = skillOf(event)
 	local deeper = if s then V.Skill.Windup else 1
+	local fx = fxOf(event.from)
+	if s and fx and fx.skill then
+		endCharge(event.from)
+		charges[event.from] = vfx(fx.skill.windup, attacker.model, { follow = true })
+	end
 	if s then
 		floatText(
 			from + Vector3.new(0, attacker.body.Size.Y + 1.5, 0),
@@ -813,7 +860,19 @@ local function impact(event: { [string]: any }, style: FightFx.Style)
 	local dir = along(to - (from or to - target.root.LookVector), -target.root.LookVector)
 	local height = target.body.Size.Y
 	local skin = to - dir * radius(target) * 0.8 + Vector3.new(0, height * 0.5, 0)
-	FightFx.mark(style, skin, skin - dir * 3, heavy)
+	local fx = fxOf(event.from)
+	if fx and fx.blow then
+		-- (a Dungeon monster's own blow; a ranged one's came with its shot, in strike)
+		if not (fx.shot and style.shot) then
+			vfx(fx.blow, skin, {
+				scale = fxScale(event.from),
+				variant = if s and fx.skill then DFx.SkillVariant else nil,
+				angle = math.random(-25, 25),
+			})
+		end
+	else
+		FightFx.mark(style, skin, skin - dir * 3, heavy)
+	end
 	FightFx.goo(target.body, skin, dir, if heavy then F.Goo.count * 2 else F.Goo.count)
 	play(target, to, dir * V.KnockStuds * (if heavy then V.CritKnock else 1), V.KnockSeconds, 0.2, V.HitStopSeconds)
 	local side = if math.random() < 0.5 then -1 else 1
@@ -848,7 +907,14 @@ local function strike(event: { [string]: any }, style: FightFx.Style, land: () -
 		SlimeActor.kick(attacker, "lean", 1.5)
 		local mouth = from + dir * radius(attacker) + Vector3.new(0, attacker.body.Size.Y * 0.6, 0)
 		local skin = to - dir * radius(target) + Vector3.new(0, target.body.Size.Y * 0.5, 0)
-		FightFx.shot(style.shot :: string, mouth, skin, land)
+		local fx = fxOf(event.from)
+		if fx and fx.shot and fx.blow then
+			-- (the flight and, as it lands, the blow: impact draws no second one)
+			vfx(fx.blow, skin, { from = mouth, scale = fxScale(event.from) })
+			task.delay(DFx.ShotSeconds, land)
+		else
+			FightFx.shot(style.shot :: string, mouth, skin, land)
+		end
 		return
 	end
 	local reach = math.max(0, line.Magnitude - (radius(attacker) + radius(target)) * 0.85)
@@ -863,6 +929,33 @@ end
 
 -- The one who strikes a skill moves once for all its blows: Goo Slam leaps onto its target, Belly Bounce leaps where it
 -- stands, the rest puff up; when it comes down the skill's art bursts and rings the ground (View.Skill.Looks).
+-- A Dungeon boss's skill goes off: its wind-up ends and its release plays (Config.Dungeon.Fx: on the caster's feet, on
+-- the target from the caster, or rising from the caster). True when it had one (the way's art is then left out).
+local function release(event: { [string]: any }, centre: Vector3?): boolean
+	local fx = fxOf(event.from)
+	local skill = if fx then fx.skill else nil
+	if not skill then
+		return false
+	end
+	endCharge(event.from)
+	local caster, from = find(event.from)
+	local _, to = find(event.to)
+	if not caster or not from then
+		return true
+	end
+	local opts: { [string]: any } = { scale = fxScale(event.from), variant = skill.variant }
+	if skill.at == "target" and to then
+		opts.from = from + Vector3.new(0, caster.body.Size.Y * 0.5, 0)
+		vfx(skill.release, to, opts)
+	elseif skill.at == "up" then
+		local base = from + Vector3.new(0, caster.body.Size.Y * 0.6, 0)
+		vfx(skill.release, CFrame.lookAt(base, base + Vector3.yAxis), opts)
+	else
+		vfx(skill.release, (centre or from) + Vector3.new(0, caster.body.Size.Y * 0.5, 0), opts)
+	end
+	return true
+end
+
 local function cast(event: { [string]: any }, looks: { [string]: any })
 	local caster, from = find(event.from)
 	local target, to = find(event.to)
@@ -898,6 +991,9 @@ local function cast(event: { [string]: any }, looks: { [string]: any })
 			if looks.leap then
 				SlimeActor.kick(caster, "squash", V.WindupSquash * K.Windup)
 			end
+			if release(event, centre) then
+				return
+			end
 			if looks.burst then
 				FightFx.burst(looks.burst, centre + Vector3.new(0, caster.body.Size.Y * 0.5, 0), K.Burst, looks.bits)
 			end
@@ -931,6 +1027,7 @@ local function deliver(event: { [string]: any }, style: FightFx.Style, first: bo
 				)
 			end
 			strike(event, style, function() end)
+			release(event, nil)
 		end
 		local n = if type(event.n) == "number" then event.n else 1
 		task.delay(contactSeconds(style) + (n - 1) * K.MultiGap, land)
@@ -940,7 +1037,8 @@ local function deliver(event: { [string]: any }, style: FightFx.Style, first: bo
 			cast(event, looks)
 		end
 		local target, to = find(event.to)
-		if looks.rain and target and to then
+		local own = fxOf(event.from)
+		if looks.rain and target and to and not (own and own.skill) then
 			local skin = to + Vector3.new(0, target.body.Size.Y * 0.5, 0)
 			FightFx.shot(looks.rain, skin + Vector3.new(0, K.RainHeight, 0), skin, function()
 				safe("rain", function()
@@ -1008,7 +1106,12 @@ local function onHeal(event: { [string]: any })
 	if target and to then
 		local amount = math.max(1, math.floor((event.amount or 0) + 0.5))
 		local P = Config.Dungeon.View
-		FightFx.burst("healCross", to + Vector3.new(0, target.body.Size.Y * 0.5, 0), P.HealBurst, nil)
+		local fx = fxOf(event.from)
+		if fx and fx.heal then
+			vfx(fx.heal, target.model, nil)
+		else
+			FightFx.burst("healCross", to + Vector3.new(0, target.body.Size.Y * 0.5, 0), P.HealBurst, nil)
+		end
 		floatText(to + Vector3.new(0, target.body.Size.Y, 0), "+" .. amount, UiKit.colour(P.HealColour), V.HitTextSize)
 	end
 end
@@ -1048,7 +1151,9 @@ local function fall(event: { [string]: any })
 		-- a Dungeon monster: it bursts in the way it fights; its drops are the Dungeon's to show (no coins fly from it)
 		monster.dead = true
 		dropBar(id)
+		endCharge(id)
 		local style = FightFx.style(monster.way)
+		local own = monster.fx
 		local bigness = math.clamp(monster.size, 1, Config.Dungeon.View.DeathBigness)
 		local body = monster.actor.body
 		local at = spot or monster.stand
@@ -1056,8 +1161,15 @@ local function fall(event: { [string]: any })
 		SlimeActor.kick(monster.actor, "squash", V.DeathSquash)
 		task.delay(V.DeathDelay, function()
 			safe("burst", function()
-				FightFx.burst(style.death or "burstShock", centre, F.DeathBurst * bigness, style.bits)
-				FightFx.ring(style.ring or "ringShock", at, F.DeathRing * bigness)
+				if own and own.fall then
+					-- (the effect's box stands on the ground where the monster fell)
+					local scale = bigness * DFx.Scale
+					local up = DFx.FallBox * scale * 0.5
+					vfx(own.fall, at + Vector3.new(0, up, 0), { scale = scale, variant = DFx.FallVariant })
+				else
+					FightFx.burst(style.death or "burstShock", centre, F.DeathBurst * bigness, style.bits)
+					FightFx.ring(style.ring or "ringShock", at, F.DeathRing * bigness)
+				end
 				FightFx.goo(body, centre, body.CFrame.LookVector, F.DeathGoo)
 			end)
 			local gone = monster.gone
@@ -1383,6 +1495,8 @@ function ZombieFight.endDungeon()
 end
 
 function ZombieFight.start()
+	-- (the game has no effects setting of its own: VfxLib follows the device's graphics quality)
+	VfxLib.setup({ log = "[GooLineage]" })
 	task.spawn(function()
 		local remotes = ReplicatedStorage:WaitForChild("Remotes")
 		local remote = remotes:WaitForChild("Fight")

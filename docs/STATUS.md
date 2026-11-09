@@ -1,5 +1,19 @@
 # Status
 
+## 2026-11-10 — Dungeon fight effects per monster, from the VFX library
+
+The owner paused the old effect work and asked for each map group's skills to be rebuilt from his VFX library
+(`C:\roblox-vfx-library`). Done: every one of the 28 dungeon monsters has its own blow and fall (`hit.<map>_<monster>`,
+`death`/`shot` variants), each healer its own mend (`burst.{moth,deer,drake,penguin}_mend`), and each boss two skills
+(wind-up, release): Meadow turtle `renewal_charge`/`pollen_shockwave`, boar `bramble_rage`/`burst.rock_smash`; Mushroom
+wyrm `void_charge`/`spore_burst`, bear `umbral_growl`/`leap_slam`; Lava bull `meteor_charge`/`meteor_crash`, golem
+`phoenix_charge`/`flame_jet`; Ice mammoth `frost_charge`/`ice_spear`, yeti `frost_howl`/`blizzard`. Wiring:
+`Config.Dungeon.Fx` by monster id, `client/ZombieFight` and `client/DungeonFight` play them through `src/shared/VfxLib`
+(imported copy; the village zombies and the slimes' own blows are unchanged). In-game shots of every moment:
+`docs/ui/dungeon/fx-<map>-<moment>.png`. `skill.earth_rupture`'s stone Beams draw as blank white quads in this place (fine in
+the Showroom): not used. Weak spots left: the Mushroom fox shot (not confirmed in game), the bear wind-up is faint on the
+dark map, the Lava bull wind-up is pink-white. Not seen: a real phone.
+
 ## 2026-11-09 — Frozen Ice, the fourth and last dungeon map (round 4 after ChatGPT's review)
 
 `MapOrder = {meadow, mushroom, lava, ice}`: all four maps of the original now turn per level. Props:

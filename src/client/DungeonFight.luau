@@ -217,6 +217,7 @@ local function addMonster(event: { [string]: any })
 		stand = at,
 		foe = true,
 		way = ways[event.foeKind] or "rotten",
+		fx = if type(event.defId) == "string" then (Config.Dungeon.Fx.Monsters :: any)[event.defId] else nil,
 		size = look.size,
 		dead = false,
 		node = node,
