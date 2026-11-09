@@ -1,7 +1,8 @@
 {
   "about": "Imported from the owner's VfxLib (C:\\roblox-vfx-library) by tools/import.luau: change the library, not these files.",
-  "commit": "14efd73",
+  "commit": "faf8d17",
   "effects": [
+    "aura.secret_signature",
     "burst.deer_mend",
     "burst.drake_mend",
     "burst.moth_mend",
@@ -55,6 +56,7 @@
     "Anchors.luau",
     "Budget.luau",
     "Builder.luau",
+    "Effects/aura/secret_signature.luau",
     "Effects/burst/deer_mend.luau",
     "Effects/burst/drake_mend.luau",
     "Effects/burst/moth_mend.luau",

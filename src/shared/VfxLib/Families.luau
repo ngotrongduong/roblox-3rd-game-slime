@@ -758,6 +758,7 @@ Families.List = {
 			"bubbles_flip",
 			"burstAcid",
 			"drop_glow",
+			"feathers_flip",
 			"gooBlob",
 			"honey_drop",
 			"rain_streak",
@@ -813,10 +814,9 @@ Families.List = {
 	},
 	{
 		name = "nature",
-		about = "feathers, petals, flowers, spores",
+		about = "feathers, leaves, petals, flowers, spores",
 		keys = {
 			"feather",
-			"feathers_flip",
 			"flower_bloom_flip",
 			"flower_burst_flip",
 			"flowers_flip",

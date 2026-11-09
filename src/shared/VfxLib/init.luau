@@ -41,8 +41,18 @@ local function warnOf(message)
 	warn(`{VfxLib.prefix} {message}`)
 end
 
--- Adds an effect (checked first: a broken one is refused with a warning, never half-built).
+-- Adds an effect (checked first: a broken one is refused with a warning, never half-built). A packaged effect
+-- (packages/, tools/package.luau) brings the pictures and models it wears in `assets`; they are taken in first.
 function VfxLib.register(effect)
+	local assets = type(effect) == "table" and effect.assets
+	if type(assets) == "table" then
+		for key, entry in assets.textures or {} do
+			Textures.add(key, entry)
+		end
+		for key, entry in assets.models or {} do
+			Models.add(key, entry)
+		end
+	end
 	local problem = Schema.problem(effect, Builder.variantOf)
 	if problem then
 		warnOf(`effect refused: {problem}`)

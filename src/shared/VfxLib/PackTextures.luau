@@ -163,6 +163,7 @@ return {
 	},
 	bats_flip = {
 		id = 12800352088,
+		look = "a white bat, 2 x 2 (not 4 x 4): wings open and folded, drawn head to the LEFT (turn ~90 to stand upright)",
 		from = "a free Creator Store pack in the owner's inventory, rebuilt without scripts (inv_sanz_auras/Aura_RedWings/HumanoidRootPart/Bat Bat)",
 	},
 	beam_blob = {
@@ -1058,7 +1059,7 @@ return {
 	},
 	feathers_flip = {
 		id = 16865899680,
-		look = "falling feathers and petals, 4 x 4",
+		look = "ink or goo splats breaking up, 4 x 4 (NOT feathers)",
 		from = "a free Creator Store pack in the owner's inventory, never baked yet (inv_sanz_auras/inv_sanz_auras/Aura_BlindObsession/LowerTorso/ParticleEmitter)",
 	},
 	feathers_streaks = {
@@ -1365,6 +1366,7 @@ return {
 	},
 	flowers_flip = {
 		id = 18671876469,
+		look = "2 x 2: a blossom, three petals, a lily and a HEART (not for flower-only designs)",
 		from = "a free Creator Store pack in the owner's inventory, rebuilt without scripts (inv_sanz_auras/Aura_RomanticBloom/UpperTorso/IceEmitter IceEmitter)",
 	},
 	frost_wisp_flip = {
@@ -1624,14 +1626,17 @@ return {
 	},
 	lightning_bolt_flip = {
 		id = 12800312727,
+		look = "thin lightning lines (they vanish at a slime's size)",
 		from = "a free Creator Store pack in the owner's inventory, rebuilt without scripts (inv_sanz_auras/Aura_Thund/HumanoidRootPart/petir/ParticleEmitter ParticleEmitter)",
 	},
 	lightning_crawl_flip = {
 		id = 14197083420,
+		look = "thin crawling lightning lines (they vanish at a slime's size)",
 		from = "a free Creator Store pack in the owner's inventory, rebuilt without scripts (inv_electric_aura/electric aura/Torso/LightningAura/lightning _3 lightning _3)",
 	},
 	lightning_fork_flip = {
 		id = 16504113471,
+		look = "thin forking lightning lines (they vanish at a slime's size)",
 		from = "a free Creator Store pack in the owner's inventory, rebuilt without scripts (inv_electric_aura/electric aura/Torso/LightningAura/lightning _5 lightning _5)",
 	},
 	mascot_maid = {
@@ -1762,6 +1767,7 @@ return {
 	},
 	petals_small_flip = {
 		id = 16879659749,
+		look = "one petal turning over, 4 x 4 (Loop at 8-12 fps: a fluttering petal)",
 		from = "a free Creator Store pack in the owner's inventory, rebuilt without scripts (inv_sanz_auras/Aura_RomanticBloom/UpperTorso/IceEmitter#2 IceEmitter)",
 	},
 	pixel_fire_flip = {
@@ -3219,7 +3225,7 @@ return {
 	},
 	zigzag_flip = {
 		id = 14354336687,
-		look = "zigzag lines, 4 x 4",
+		look = "thin zigzag lines, 4 x 4 (they vanish at a slime's size)",
 		from = "a free Creator Store pack in the owner's inventory, never baked yet (inv_angel_aura/inv_angel_aura/Angel Aura/Emit/E)",
 	},
 }

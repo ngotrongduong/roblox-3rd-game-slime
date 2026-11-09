@@ -82,6 +82,13 @@ Models.list = {
 	},
 }
 
+-- A model an effect brings with it (a packaged effect: `assets.models`): kept only when the key is new.
+function Models.add(key, entry)
+	if Models.list[key] == nil and type(entry) == "table" and entry.mesh ~= nil then
+		Models.list[key] = entry
+	end
+end
+
 function Models.boneName(index)
 	return string.format("S%02d", index)
 end
