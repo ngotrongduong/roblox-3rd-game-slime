@@ -29,6 +29,15 @@ foreach ($g in $groups) {
 		[void]$sb.AppendLine("{ `"$($g.Dest)`", `"$name`", `"$class`", [=====[$src]=====] },")
 	}
 }
+# The effects library (src/shared/VfxLib, every module under it by its path; init is VfxLib itself).
+$lib = Join-Path $root "src\shared\VfxLib"
+foreach ($f in Get-ChildItem $lib -Filter *.luau -Recurse) {
+	$rel = $f.FullName.Substring($lib.Length + 1).Replace("\", "/")
+	$rel = $rel.Substring(0, $rel.Length - 5)
+	$src = Get-Content $f.FullName -Raw -Encoding UTF8
+	if ($src.Length -ge 190000) { $src = [regex]::Replace($src, '(?m)^[ \t]*--[^\r\n]*', '') }
+	[void]$sb.AppendLine("{ `"VfxLib`", `"$rel`", `"ModuleScript`", [=====[$src]=====] },")
+}
 [void]$sb.AppendLine("}")
 [void]$sb.Append((Get-Content (Join-Path $PSScriptRoot "sync_all_body.luau") -Raw -Encoding UTF8))
 [System.IO.File]::WriteAllText($out, $sb.ToString(), (New-Object System.Text.UTF8Encoding $false))

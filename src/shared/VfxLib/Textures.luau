@@ -271,6 +271,13 @@ Textures.Images = {
 	arrow_steel = { id = 137131755131773, from = EC_ART }, -- an arrow: white vanes with a red band, wood, steel head
 	-- (the same way: a Beam from the vanes (top row) to the head; drawn 1 : 4, stored square)
 	bolt_steel = { id = 137919394637748, from = EC_ART }, -- a crossbow bolt: dark wood, iron vanes, brass bands, broad head
+	-- The Secret slimes' signatures (2026-11-10, Goo Lineage): keyed off magenta by unmixing it out of every pixel, so
+	-- soft and see-through edges keep their colour; one scale for a sheet's four frames. Solid, drawn normal: the glow
+	-- leaves (leaves_glow) vanish on a bright sky or floor.
+	leaves_solid = { id = 103435788705754, from = SKILL_ART }, -- four leaves, light grey: maple, oak, birch, holly (2 x 2)
+	butterfly_flip = { id = 91112461922690, from = SKILL_ART }, -- a light-grey butterfly from above flapping, 2 x 2 loop
+	-- (full colour, worn untinted)
+	bee_flip = { id = 97180849526015, from = SKILL_ART }, -- a chubby honeybee from the side, wings beating, 2 x 2 loop
 }
 
 -- The pictures of the packs that the baker met (tools/bake.luau writes them here: `lune run tools/bake.luau`). Each is

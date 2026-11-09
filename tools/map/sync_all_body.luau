@@ -19,8 +19,24 @@ local targets = {
 	Client = folder(StarterPlayerScripts, "Client"),
 }
 targets.Creatures = folder(targets.Shared, "Creatures")
-local counts = { Shared = 0, Server = 0, Client = 0, Creatures = 0 }
+local counts = { Shared = 0, Server = 0, Client = 0, Creatures = 0, VfxLib = 0 }
+local lib = Instance.new("ModuleScript")
+lib.Name = "VfxLib"
 for _, f in FILES do
+	if f[1] == "VfxLib" then
+		-- (the effects library, built fresh as Rojo lays it out: init is the module, each folder a Folder)
+		local path = string.split(f[2], "/")
+		local parent: Instance = lib
+		for i = 1, #path - 1 do
+			parent = folder(parent, path[i])
+		end
+		local m = if f[2] == "init" then lib else Instance.new("ModuleScript")
+		m.Name = if f[2] == "init" then "VfxLib" else path[#path]
+		m.Source = f[4]
+		m.Parent = if f[2] == "init" then nil else parent
+		counts.VfxLib += 1
+		continue
+	end
 	local parent = targets[f[1]]
 	-- The new copy is made before the old one goes, so a Source Studio refuses leaves the old script in place.
 	local s = Instance.new(f[3])
@@ -32,6 +48,13 @@ for _, f in FILES do
 	end
 	s.Parent = parent
 	counts[f[1]] += 1
+end
+if counts.VfxLib > 0 then
+	local old = targets.Shared:FindFirstChild("VfxLib")
+	if old then
+		old:Destroy()
+	end
+	lib.Parent = targets.Shared
 end
 
 -- The emotion stage (tools/slime/emotions.ps1) runs its own copies of SlimeFace and SlimeActor: keep them current.
@@ -112,4 +135,11 @@ for _, image in SkinIds.ById do
 end
 looks.Parent = kit
 
-return string.format("synced shared %d, server %d, client %d; ClientKit %s", counts.Shared, counts.Server, counts.Client, kitNote)
+return string.format(
+	"synced shared %d, vfxlib %d, server %d, client %d; ClientKit %s",
+	counts.Shared,
+	counts.VfxLib,
+	counts.Server,
+	counts.Client,
+	kitNote
+)

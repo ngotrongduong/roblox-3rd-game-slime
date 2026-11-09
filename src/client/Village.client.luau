@@ -7,8 +7,10 @@ local Config = require(ReplicatedStorage.Shared.Config)
 local Layout = require(ReplicatedStorage.Shared.Layout)
 local HatchReveal = require(script.Parent.HatchReveal)
 local ProgressClock = require(script.Parent.ProgressClock)
+local SecretFx = require(ReplicatedStorage.Shared.SecretFx)
 local SlimeActor = require(script.Parent.SlimeActor)
 local SlimeLook = require(script.Parent.SlimeLook)
+local VfxLib = require(ReplicatedStorage.Shared.VfxLib)
 local VillagePath = require(ReplicatedStorage.Shared.VillagePath)
 local WorkMoves = require(script.Parent.WorkMoves)
 
@@ -235,6 +237,12 @@ local function refreshLook(entry: Entry)
 	model.Parent = renderFolder
 	entry.model = model
 	entry.actor = SlimeActor.new(model, stringAttr(config, "Emotion", "normal"))
+	-- a Secret slime wears its own signature effect, welded to its body (SlimeActor moves the anchored body)
+	local variant = SecretFx.variant(stringAttr(config, "SecretId", ""))
+	local body = model:FindFirstChild("SlimeBody")
+	if variant and body and attrs.Ghost ~= true then
+		VfxLib.attach(body, SecretFx.Effect, { variant = variant, weld = true })
+	end
 	if entry.actor and entry.carry then
 		SlimeActor.attach(entry.actor, entry.carry, CFrame.new())
 	elseif not entry.actor then
