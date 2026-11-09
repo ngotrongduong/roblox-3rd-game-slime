@@ -57,15 +57,18 @@ if shared then
 	shared:Destroy()
 end
 code:GetService("ReplicatedStorage").Shared:Clone().Parent = place:GetService("ReplicatedStorage")
--- The Arena scene is built by tools/map/build_arena_stage.luau into assets/ArenaStage.rbxm (the Rojo build carries it), so
--- it comes from the code build like Shared, and a copy left in the work place never goes along.
-local oldStage = place:GetService("ReplicatedStorage"):FindFirstChild("ArenaStage")
-if oldStage then
-	oldStage:Destroy()
-end
-local newStage = code:GetService("ReplicatedStorage"):FindFirstChild("ArenaStage")
-if newStage then
-	newStage:Clone().Parent = place:GetService("ReplicatedStorage")
+-- The Arena scene (tools/map/build_arena_stage.luau, assets/ArenaStage.rbxm) and the Dungeon's monster models
+-- (tools/kit/export_monsters.luau, assets/MonsterKit.rbxm) are carried by the Rojo build, so they come from the code build
+-- like Shared, and an older copy left in the work place never goes along.
+for _, name in { "ArenaStage", "MonsterKit" } do
+	local old = place:GetService("ReplicatedStorage"):FindFirstChild(name)
+	if old then
+		old:Destroy()
+	end
+	local new = code:GetService("ReplicatedStorage"):FindFirstChild(name)
+	if new then
+		new:Clone().Parent = place:GetService("ReplicatedStorage")
+	end
 end
 
 -- The owner's debug menu is for Studio only: these two modules (and nothing else) never reach players. The game finds them
@@ -146,6 +149,9 @@ if not place:GetService("ReplicatedStorage"):FindFirstChild("ClientKit") then
 	problem("no ReplicatedStorage.ClientKit")
 end
 -- The Arena scene (client/ArenaStage): without it a fight is replayed in front of the player.
+if not place:GetService("ReplicatedStorage"):FindFirstChild("MonsterKit") then
+	problem("no ReplicatedStorage.MonsterKit (run lune run tools/kit/export_monsters.luau, then tools/check.ps1)")
+end
 if not place:GetService("ReplicatedStorage"):FindFirstChild("ArenaStage") then
 	problem("no ReplicatedStorage.ArenaStage (run lune run tools/map/build_arena_stage.luau, then tools/check.ps1)")
 end
