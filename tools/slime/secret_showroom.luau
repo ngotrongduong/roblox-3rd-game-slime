@@ -132,7 +132,8 @@ for r = 0, rows - 1 do
 		-- the face is on the model's look vector; turn it to the viewer (-Z)
 		local eye = model:FindFirstChild("EyeL", true)
 		local turn = if eye and eye.Position.Z > 0 then CFrame.Angles(0, math.pi, 0) else CFrame.identity
-		local x = BASE.X + (c - (PER_ROW + 1) / 2) * GAP_X
+		-- the viewer looks along +Z, so +X is on their left, where the sign's first column is
+		local x = BASE.X - (c - (PER_ROW + 1) / 2) * GAP_X
 		model:PivotTo(CFrame.new(x, top, z) * turn)
 		model.Parent = slimes
 	end
