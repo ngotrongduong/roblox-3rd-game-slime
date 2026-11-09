@@ -183,6 +183,11 @@ Config.Combat = {
 		-- erupt under every slime at once (a step heavier than the Grove's, as the map's monsters are).
 		lavastomp = { kind = "splash", name = "Magma Stomp", every = 4, factor = 2.6, splash = 0.75, spread = 3 },
 		eruption = { kind = "all", name = "Eruption", every = 5, factor = 0.6, stun = 0.6 },
+		-- The two of Frozen Ice, each a skill kind of its own: the Mammoth lowers its tusks and rams its target twice
+		-- (two blows that each weigh a step more than the Bull's share of a stomp), the Yeti howls a blizzard over every
+		-- slime at once, and the cold holds each one a moment longer than the eruption's heat.
+		tuskcharge = { kind = "multi", name = "Tusk Charge", every = 4, factor = 1.4, hits = 2 },
+		blizzard = { kind = "all", name = "Blizzard", every = 5, factor = 0.65, stun = 0.7 },
 	},
 }
 
@@ -579,6 +584,259 @@ Config.LibraryKit = {
 		},
 		Rock_5_Lava = {
 			{ mesh = 101777159754433, tex = "P", size = { 0.663, 0.653, 0.915 }, at = { 0, 0.327, 0 } },
+		},
+		-- Frozen Ice's (art/library/converted/IceProps.glb, re-imported 2026-11-09 with the round-4 meshes)
+		Bush_Snow_1_Ice = {
+			{ mesh = 109629374321597, tex = "P", size = { 1.384, 1.271, 1.776 }, at = { 0, 0.635, 0 } },
+		},
+		Bush_Snow_2_Ice = {
+			{ mesh = 86315062307433, tex = "P", size = { 1.362, 1.158, 1.359 }, at = { 0, 0.579, 0 } },
+		},
+		CommonTree_Dead_Snow_3_Ice = {
+			{ mesh = 82596345673035, tex = "P", size = { 0.638, 3.002, 0.813 }, at = { 0, 1.501, 0 } },
+		},
+		CommonTree_Dead_Snow_4_Ice = {
+			{ mesh = 84757499741988, tex = "P", size = { 0.819, 2.370, 1.082 }, at = { 0, 1.185, 0 } },
+		},
+		IceBank_1 = {
+			{ mesh = 126232137183409, tex = "P", size = { 7.808, 2.073, 3.836 }, at = { 0, 1.036, 0 } },
+		},
+		IceBank_2 = {
+			{ mesh = 117918765199226, tex = "P", size = { 6.870, 1.945, 3.918 }, at = { 0, 0.973, 0 } },
+		},
+		IceBank_3 = {
+			{ mesh = 76169625155685, tex = "P", size = { 8.528, 2.175, 3.460 }, at = { 0, 1.087, 0 } },
+		},
+		IceBank_4 = {
+			{ mesh = 90667313993296, tex = "P", size = { 5.530, 1.415, 5.321 }, at = { 0, 0.708, 0 } },
+		},
+		IceBoulder_1 = {
+			{ mesh = 88854164745033, tex = "P", size = { 1.966, 1.172, 1.901 }, at = { 0, 0.586, 0 } },
+		},
+		IceBoulder_2 = {
+			{ mesh = 74384128659852, tex = "P", size = { 1.969, 1.068, 2.438 }, at = { 0, 0.534, 0 } },
+		},
+		IceBoulder_3 = {
+			{ mesh = 88280603186113, tex = "P", size = { 2.013, 1.493, 1.967 }, at = { 0, 0.747, 0 } },
+		},
+		IceCliff_1 = {
+			{ mesh = 136765315852170, tex = "P", size = { 23.285, 14.000, 23.165 }, at = { 0, 7.000, 0 } },
+		},
+		IceCliff_2 = {
+			{ mesh = 86644216872883, tex = "P", size = { 20.214, 12.000, 18.188 }, at = { 0, 6.000, 0 } },
+		},
+		IceCliff_3 = {
+			{ mesh = 101552065135755, tex = "P", size = { 25.765, 15.000, 24.138 }, at = { 0, 7.500, 0 } },
+		},
+		IceCliff_4 = {
+			{ mesh = 121018561671771, tex = "P", size = { 18.702, 11.500, 17.510 }, at = { 0, 5.750, 0 } },
+		},
+		IceCrack_1 = {
+			{ mesh = 80188698455799, tex = "P", size = { 10.816, 0.080, 2.675 }, at = { 0, 0.040, 0 } },
+		},
+		IceCrack_2 = {
+			{ mesh = 125015794177127, tex = "P", size = { 10.300, 0.080, 10.097 }, at = { 0, 0.040, 0 } },
+		},
+		IceCrack_3 = {
+			{ mesh = 118693035256664, tex = "P", size = { 7.113, 0.080, 3.679 }, at = { 0, 0.040, 0 } },
+		},
+		IceCrack_4 = {
+			{ mesh = 75168936759383, tex = "P", size = { 8.833, 0.080, 5.498 }, at = { 0, 0.040, 0 } },
+		},
+		IceCrystalHero_1 = {
+			{ mesh = 125946448278090, tex = "P", size = { 8.410, 13.000, 7.882 }, at = { 0, 6.500, 0 } },
+		},
+		IceCrystalHero_2 = {
+			{ mesh = 116420020984836, tex = "P", size = { 10.542, 14.000, 9.284 }, at = { 0, 7.000, 0 } },
+		},
+		IceCrystalHero_3 = {
+			{ mesh = 126132487068728, tex = "P", size = { 7.520, 12.000, 7.977 }, at = { 0, 6.000, 0 } },
+		},
+		IceCrystalHero_4 = {
+			{ mesh = 83385289318042, tex = "P", size = { 9.172, 13.000, 9.254 }, at = { 0, 6.500, 0 } },
+		},
+		IceCrystalMid_1 = {
+			{ mesh = 124279069887716, tex = "P", size = { 3.495, 5.600, 3.897 }, at = { 0, 2.800, 0 } },
+		},
+		IceCrystalMid_2 = {
+			{ mesh = 71623198352085, tex = "P", size = { 4.290, 6.200, 4.206 }, at = { 0, 3.100, 0 } },
+		},
+		IceCrystalMid_3 = {
+			{ mesh = 82677496730144, tex = "P", size = { 3.779, 5.000, 3.841 }, at = { 0, 2.500, 0 } },
+		},
+		IceCrystalSmall_1 = {
+			{ mesh = 138906445335210, tex = "P", size = { 2.736, 2.600, 0.946 }, at = { 0, 1.300, 0 } },
+		},
+		IceCrystalSmall_2 = {
+			{ mesh = 73730997728307, tex = "P", size = { 1.715, 2.200, 2.374 }, at = { 0, 1.100, 0 } },
+		},
+		IceCrystalSmall_3 = {
+			{ mesh = 77409621367242, tex = "P", size = { 1.249, 2.800, 3.282 }, at = { 0, 1.400, 0 } },
+		},
+		IceCrystal_1 = {
+			{ mesh = 102454138987518, tex = "P", size = { 5.001, 7.000, 5.169 }, at = { 0, 3.500, 0 } },
+		},
+		IceCrystal_2 = {
+			{ mesh = 130730608318344, tex = "P", size = { 4.797, 8.500, 5.955 }, at = { 0, 4.250, 0 } },
+		},
+		IceCrystal_3 = {
+			{ mesh = 85632430791895, tex = "P", size = { 3.698, 6.000, 4.221 }, at = { 0, 3.000, 0 } },
+		},
+		IceCrystal_4 = {
+			{ mesh = 133922013551164, tex = "P", size = { 6.415, 9.000, 2.708 }, at = { 0, 4.500, 0 } },
+		},
+		IceFar_1 = {
+			{ mesh = 133913939139370, tex = "P", size = { 200.000, 40.000, 70.000 }, at = { 0, 20.000, 0 } },
+		},
+		IceFar_2 = {
+			{ mesh = 73970256829534, tex = "P", size = { 210.000, 38.000, 70.000 }, at = { 0, 19.000, 0 } },
+		},
+		IceFar_3 = {
+			{ mesh = 90655589383930, tex = "P", size = { 190.000, 42.000, 66.000 }, at = { 0, 21.000, 0 } },
+		},
+		IceFence_1 = {
+			{ mesh = 102744608904169, tex = "P", size = { 5.300, 1.888, 0.595 }, at = { 0, 0.944, 0 } },
+		},
+		IceFence_2 = {
+			{ mesh = 81600390306724, tex = "P", size = { 7.700, 1.865, 0.625 }, at = { 0, 0.932, 0 } },
+		},
+		IceFence_3 = {
+			{ mesh = 124359585247892, tex = "P", size = { 2.900, 1.639, 0.544 }, at = { 0, 0.820, 0 } },
+		},
+		IceFrostBush_1 = {
+			{ mesh = 125630450988296, tex = "P", size = { 4.151, 3.169, 4.480 }, at = { 0, 1.585, 0 } },
+		},
+		IceFrostBush_2 = {
+			{ mesh = 73281625371297, tex = "P", size = { 4.079, 3.231, 4.332 }, at = { 0, 1.615, 0 } },
+		},
+		IceFrostBush_3 = {
+			{ mesh = 91423953440207, tex = "P", size = { 4.838, 3.426, 4.356 }, at = { 0, 1.713, 0 } },
+		},
+		IceGrove_1 = {
+			{ mesh = 107641632480211, tex = "P", size = { 11.239, 13.680, 10.221 }, at = { 0, 6.840, 0 } },
+		},
+		IceGrove_2 = {
+			{ mesh = 123912489338479, tex = "P", size = { 11.276, 13.680, 10.314 }, at = { 0, 6.840, 0 } },
+		},
+		IceGrove_3 = {
+			{ mesh = 114047785465322, tex = "P", size = { 9.548, 13.680, 11.849 }, at = { 0, 6.840, 0 } },
+		},
+		IceGrove_4 = {
+			{ mesh = 88043783625549, tex = "P", size = { 11.079, 13.680, 11.093 }, at = { 0, 6.840, 0 } },
+		},
+		IceMound_1 = {
+			{ mesh = 105548164034361, tex = "P", size = { 12.448, 2.363, 10.555 }, at = { 0, 1.181, 0 } },
+		},
+		IceMound_2 = {
+			{ mesh = 134531357117045, tex = "P", size = { 15.390, 2.524, 13.671 }, at = { 0, 1.262, 0 } },
+		},
+		IceMound_3 = {
+			{ mesh = 115093632959818, tex = "P", size = { 10.837, 2.807, 10.751 }, at = { 0, 1.403, 0 } },
+		},
+		IceMound_4 = {
+			{ mesh = 71420473578672, tex = "P", size = { 13.411, 2.822, 12.015 }, at = { 0, 1.411, 0 } },
+		},
+		IcePatch_1 = {
+			{ mesh = 101416279151980, tex = "P", size = { 10.391, 0.070, 10.050 }, at = { 0, 0.035, 0 } },
+		},
+		IcePatch_2 = {
+			{ mesh = 114447597202875, tex = "P", size = { 12.363, 0.070, 11.291 }, at = { 0, 0.035, 0 } },
+		},
+		IcePatch_3 = {
+			{ mesh = 112796256787864, tex = "P", size = { 10.415, 0.070, 8.727 }, at = { 0, 0.035, 0 } },
+		},
+		IceRidge_1 = {
+			{ mesh = 98333394082224, tex = "P", size = { 34.000, 20.000, 22.000 }, at = { 0, 10.000, 0 } },
+		},
+		IceRidge_2 = {
+			{ mesh = 107335280544453, tex = "P", size = { 36.000, 22.000, 24.000 }, at = { 0, 11.000, 0 } },
+		},
+		IceRidge_3 = {
+			{ mesh = 138555956000103, tex = "P", size = { 32.000, 18.000, 20.000 }, at = { 0, 9.000, 0 } },
+		},
+		IceRidge_4 = {
+			{ mesh = 131746644540245, tex = "P", size = { 38.000, 21.000, 24.000 }, at = { 0, 10.500, 0 } },
+		},
+		IceRidge_5 = {
+			{ mesh = 113068332518628, tex = "P", size = { 30.000, 17.000, 20.000 }, at = { 0, 8.500, 0 } },
+		},
+		IceRock_1 = {
+			{ mesh = 79678896022977, tex = "P", size = { 17.430, 10.014, 17.806 }, at = { 0, 5.007, 0 } },
+		},
+		IceRock_2 = {
+			{ mesh = 93787167744071, tex = "P", size = { 20.489, 7.676, 19.506 }, at = { 0, 3.838, 0 } },
+		},
+		IceRock_3 = {
+			{ mesh = 86329577672340, tex = "P", size = { 19.554, 10.282, 21.045 }, at = { 0, 5.141, 0 } },
+		},
+		IceRock_4 = {
+			{ mesh = 87033316848003, tex = "P", size = { 15.966, 9.448, 18.858 }, at = { 0, 4.724, 0 } },
+		},
+		IceShard_1 = {
+			{ mesh = 118215808168269, tex = "P", size = { 5.380, 5.200, 4.631 }, at = { 0, 2.600, 0 } },
+		},
+		IceShard_2 = {
+			{ mesh = 124019687786895, tex = "P", size = { 5.393, 5.200, 5.072 }, at = { 0, 2.600, 0 } },
+		},
+		IceShard_3 = {
+			{ mesh = 107126844783500, tex = "P", size = { 4.208, 5.200, 5.031 }, at = { 0, 2.600, 0 } },
+		},
+		IceShrub_1 = {
+			{ mesh = 77679941456915, tex = "P", size = { 6.531, 3.946, 6.370 }, at = { 0, 1.973, 0 } },
+		},
+		IceShrub_2 = {
+			{ mesh = 115000926197297, tex = "P", size = { 6.417, 4.078, 6.204 }, at = { 0, 2.039, 0 } },
+		},
+		IceSprig_1 = {
+			{ mesh = 83224760780086, tex = "P", size = { 3.126, 4.022, 3.455 }, at = { 0, 2.011, 0 } },
+		},
+		IceSprig_2 = {
+			{ mesh = 94911508092213, tex = "P", size = { 3.696, 3.945, 3.495 }, at = { 0, 1.972, 0 } },
+		},
+		IceSprig_3 = {
+			{ mesh = 102700511981081, tex = "P", size = { 2.961, 3.572, 2.818 }, at = { 0, 1.786, 0 } },
+		},
+		PineTree_Snow_1_Ice = {
+			{ mesh = 125182804674344, tex = "P", size = { 1.951, 2.700, 1.802 }, at = { 0, 1.350, 0 } },
+		},
+		PineTree_Snow_2_Ice = {
+			{ mesh = 110668183415234, tex = "P", size = { 1.784, 3.568, 1.951 }, at = { 0, 1.784, 0 } },
+		},
+		PineTree_Snow_4_Ice = {
+			{ mesh = 82081149381174, tex = "P", size = { 1.242, 3.345, 1.379 }, at = { 0, 1.673, 0 } },
+		},
+		PineTree_Snow_5_Ice = {
+			{ mesh = 109342342407495, tex = "P", size = { 1.460, 2.695, 1.326 }, at = { 0, 1.347, 0 } },
+		},
+		Rock_Snow_1_Ice = {
+			{ mesh = 95597779943119, tex = "P", size = { 0.485, 0.984, 0.467 }, at = { 0, 0.492, 0 } },
+		},
+		Rock_Snow_3_Ice = {
+			{ mesh = 138690893762289, tex = "P", size = { 0.738, 0.579, 0.803 }, at = { 0, 0.289, 0 } },
+		},
+		Rock_Snow_4_Ice = {
+			{ mesh = 136361339169131, tex = "P", size = { 0.744, 0.798, 1.251 }, at = { 0, 0.399, 0 } },
+		},
+		Rock_Snow_5_Ice = {
+			{ mesh = 95003282720416, tex = "P", size = { 0.663, 0.606, 0.915 }, at = { 0, 0.303, 0 } },
+		},
+		Rock_Snow_6_Ice = {
+			{ mesh = 87595149976287, tex = "P", size = { 0.909, 0.737, 1.142 }, at = { 0, 0.368, 0 } },
+		},
+		TreeStump_Snow_Ice = {
+			{ mesh = 106845180938282, tex = "P", size = { 1.360, 0.622, 1.031 }, at = { 0, 0.311, 0 } },
+		},
+		Willow_Dead_Snow_1_Ice = {
+			{ mesh = 94801897905922, tex = "P", size = { 0.498, 2.692, 1.808 }, at = { 0, 1.346, 0 } },
+		},
+		Willow_Dead_Snow_3_Ice = {
+			{ mesh = 133980749855049, tex = "P", size = { 0.301, 1.906, 1.578 }, at = { 0, 0.953, 0 } },
+		},
+		Willow_Dead_Snow_4_Ice = {
+			{ mesh = 81598078693718, tex = "P", size = { 1.010, 2.719, 2.588 }, at = { 0, 1.359, 0 } },
+		},
+		WoodLog_Snow_Ice = {
+			{ mesh = 118142207603457, tex = "P", size = { 0.627, 0.586, 2.494 }, at = { 0, 0.293, 0 } },
 		},
 	},
 	-- how long a stage waits for the meshes before it leaves a library prop out (seconds)

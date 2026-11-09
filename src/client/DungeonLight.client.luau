@@ -28,11 +28,15 @@ type Baseline = {
 	sky: Sky?,
 	stars: number,
 	exposure: number,
+	cloudCover: number,
+	cloudDensity: number,
+	cloudColour: Color3,
 }
 
 local baseline: Baseline? = nil
 local atmosphere: Atmosphere? = nil
 local grade: ColorCorrectionEffect? = nil
+local clouds: Clouds? = nil
 local current = ""
 
 local function ensure()
@@ -41,7 +45,23 @@ local function ensure()
 	end
 	local own = Lighting:FindFirstChildOfClass("Atmosphere")
 	local sky = Lighting:FindFirstChildOfClass("Sky")
+	-- (the terrain's cloud layer: a map may draw an overcast one, Frozen Ice's pale winter sky; a place with none gets an empty one)
+	local ownClouds = workspace.Terrain:FindFirstChildOfClass("Clouds")
+	if ownClouds then
+		clouds = ownClouds
+	else
+		local madeClouds = Instance.new("Clouds")
+		madeClouds.Name = "DungeonClouds"
+		madeClouds.Cover = 0
+		madeClouds.Density = 0
+		madeClouds.Parent = workspace.Terrain
+		clouds = madeClouds
+	end
+	local layer = clouds :: Clouds
 	baseline = {
+		cloudCover = layer.Cover,
+		cloudDensity = layer.Density,
+		cloudColour = layer.Color,
 		sky = sky,
 		stars = if sky then sky.StarCount else 0,
 		exposure = Lighting.ExposureCompensation,
@@ -93,6 +113,7 @@ local function apply(mapId: string)
 	ensure()
 	local base = baseline :: Baseline
 	local atm, effect = atmosphere :: Atmosphere, grade :: ColorCorrectionEffect
+	local layer = clouds :: Clouds
 	if look then
 		local seconds = look.Seconds
 		-- (a map may switch the night's stars off: Ember Lava's sky is a dark charcoal, not a starry one)
@@ -121,6 +142,16 @@ local function apply(mapId: string)
 			Brightness = look.GradeBrightness,
 			Contrast = look.GradeContrast or 0,
 		})
+		local overcast = look.Clouds
+		if overcast then
+			ease(seconds, layer, {
+				Cover = overcast.Cover,
+				Density = overcast.Density,
+				Color = Color3.fromHex(overcast.Colour),
+			})
+		else
+			ease(seconds, layer, { Cover = base.cloudCover, Density = base.cloudDensity, Color = base.cloudColour })
+		end
 	else
 		local seconds = Config.Dungeon.LightBackSeconds
 		if base.sky then
@@ -140,6 +171,7 @@ local function apply(mapId: string)
 			Offset = base.atmOffset,
 			Haze = base.atmHaze,
 		})
+		ease(seconds, layer, { Cover = base.cloudCover, Density = base.cloudDensity, Color = base.cloudColour })
 		ease(seconds, effect, { TintColor = Color3.new(1, 1, 1), Saturation = 0, Brightness = 0, Contrast = 0 })
 	end
 end

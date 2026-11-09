@@ -214,6 +214,25 @@ return {
 					rain = "burstShock",
 					rainRing = "ringShock",
 				},
+				-- Frozen Ice's two bosses, each its own: the Mammoth's charge leaps onto its target with a holy-white burst and a
+				-- double ring (a ram, never a stomp's cracked ground); the Yeti's blizzard bursts over the whole field and lets
+				-- sparks fall on every slime, ringed by a cold arcane ring. (Stand-ins from the owner's battle art until ChatGPT
+				-- draws the frost set.)
+				tuskcharge = {
+					leap = true,
+					onTarget = true,
+					burst = "holyHit",
+					bits = "sparkStar",
+					ring = "ringShock",
+					ring2 = "ring",
+				},
+				blizzard = {
+					burst = "holyHit",
+					bits = "moteArcane",
+					ring = "ringArcane",
+					rain = "sparkStar",
+					rainRing = "ring",
+				},
 			},
 		},
 		-- A winning team cheers (Config.Zombies.CheerSeconds): this many hops each, CheerGap apart, the next slime a bit
@@ -257,6 +276,8 @@ return {
 				plague = 0.6,
 				lavastomp = 0.8,
 				eruption = 0.8,
+				tuskcharge = 0.7,
+				blizzard = 1,
 			},
 			Spread = {
 				attack = 35,
@@ -268,6 +289,8 @@ return {
 				plague = 30,
 				lavastomp = 30,
 				eruption = 30,
+				tuskcharge = 25,
+				blizzard = 35,
 			},
 		},
 		Fx = {
@@ -329,6 +352,21 @@ return {
 					size = 4.8,
 					death = "burstShock",
 					ring = "groundCrack",
+				},
+				-- Frozen Ice's: the Mammoth's gouging tusks and the Yeti's freezing, spinning blows
+				tuskcharge = {
+					mark = "biteMarks",
+					bits = "sparkStar",
+					size = 4.6,
+					death = "burstArcane",
+					ring = "ringShock",
+				},
+				blizzard = {
+					mark = "burstArcane",
+					bits = "moteArcane",
+					size = 4.8,
+					death = "burstAcid",
+					ring = "ringArcane",
 				},
 			},
 			MarkSeconds = 0.34,

@@ -6,6 +6,9 @@
 -- with ruins, roots, glowing clusters, flagstones (`stones`) and rune circles (`runes`) besides. Ember Lava (its painting,
 -- battle.map.lava.png) is the ring again with no path drawn (the lanes stay open), basalt for the trees, and lava: pools
 -- at the rim that carry the map's few lights, and flat veins that run to the corners, bigger and so thicker toward them.
+-- Frozen Ice (its painting, battle.map.ice.png) is the ring again with groves of frosted pines for the masses, slate rock,
+-- crystals (`glow`) and shards (`root`) in the corners, flat cracks on the floor (`pebble`) and a shore of snow mounds
+-- (`mound`) round the clearing.
 --
 -- The Meadow's painting: a round bright clearing; four dirt paths on the four axes that fade out before the middle; round trees in the
 -- four corners; pines beside the left and right paths; rocks (single and in pairs), flower clumps, bushes, a stump and a log
@@ -30,7 +33,7 @@ end
 export type Item = {
 	kind: string,
 	model: string,
-	zone: string, -- "rim" | "backdrop" | "tiny" | "mouth" | "floor" (flat lava veins: they claim no ground)
+	zone: string, -- "rim" | "backdrop" | "tiny" | "mouth" | "floor" (flat lava veins, snow mounds: they claim no ground)
 	x: number,
 	z: number,
 	yaw: number,
@@ -59,8 +62,20 @@ export type Segment = {
 
 -- One hill of the far horizon: a flattened ball of grass, its middle, its width and its height (a part of it sinks under the
 -- floor).
--- (`layer` 1 is the map's Hills ring, 2 its Hills.Far ring behind it; `colour` the ring's own hex.)
-export type Hill = { x: number, z: number, wide: number, tall: number, layer: number, colour: string }
+-- (`layer` 1 is the map's Hills ring, 2 its Hills.Far ring behind it; `colour` the ring's own hex; `sink` the share of its height
+-- under the floor line.) When the caller names library models for the rings (`names.ridge`, `names.far`) a hill is one of them
+-- instead of a ball: `model` is its name, `yaw` the turn that lays the mesh's X along the horizon (a tangent of the ring).
+export type Hill = {
+	x: number,
+	z: number,
+	wide: number,
+	tall: number,
+	layer: number,
+	colour: string,
+	sink: number,
+	model: string?,
+	yaw: number,
+}
 
 -- One flagstone of a stone path: its middle, size, yaw, a little pitch and roll in radians (for it to sit uneven), how far its
 -- colour fades toward the grass (0 = full stone), whether it is mossy, its grey (a share, -1 to 1, darker to lighter) and its
@@ -128,9 +143,11 @@ function ArenaPlan.paths(mapId: string?): { Segment }
 end
 
 -- The ring of hills behind the woods, round the whole circle (a path runs off into the woods and a hill, never into the sky).
-function ArenaPlan.hills(mapId: string?): { Hill }
+function ArenaPlan.hills(mapId: string?, names: { [string]: { string } }?): { Hill }
 	local A = arenaOf(mapId)
 	local rng = Rng.new(A.Seed + 7)
+	-- (the models and their turns are drawn apart, so naming models never moves a hill)
+	local pick = Rng.new(A.Seed + 17)
 	local out: { Hill } = {}
 	-- (Ember Lava has a second ring, Hills.Far, taller, further out and darker, so two layers of hills overlap on the horizon)
 	local rings: { any } = { A.Hills }
@@ -138,9 +155,17 @@ function ArenaPlan.hills(mapId: string?): { Hill }
 		table.insert(rings, A.Hills.Far)
 	end
 	for layer, H in rings do
+		local models = if names then names[if layer == 1 then "ridge" else "far"] else nil
 		for k = 1, H.Count do
 			local angle = (k - 0.5 + (rng:next() - 0.5) * 0.5) / H.Count * math.pi * 2
 			local r = H.Radius + (rng:next() - 0.5) * 2 * H.Jitter
+			local model: string? = nil
+			local yaw = 0
+			if models and #models > 0 then
+				model = pick:pick(models)
+				-- the mesh's +X along the ring's tangent (turning by `yaw` takes +X to (cos yaw, -sin yaw) on the floor)
+				yaw = math.atan2(-math.cos(angle), -math.sin(angle)) + (pick:next() - 0.5) * 0.5
+			end
 			table.insert(out, {
 				x = math.cos(angle) * r,
 				z = math.sin(angle) * r,
@@ -148,6 +173,9 @@ function ArenaPlan.hills(mapId: string?): { Hill }
 				tall = H.Tall[1] + rng:next() * (H.Tall[2] - H.Tall[1]),
 				layer = layer,
 				colour = H.Colour,
+				sink = H.Sink or A.Hills.Sink,
+				model = model,
+				yaw = yaw,
 			})
 		end
 	end
@@ -273,7 +301,8 @@ function ArenaPlan.build(names: { [string]: { string } }?, mapId: string?): { It
 			size: number,
 			wide: boolean,
 			light: boolean?,
-			turn: number?
+			turn: number?,
+			chosen: string?
 		)
 			if not has(kind) then
 				return
@@ -283,7 +312,7 @@ function ArenaPlan.build(names: { [string]: { string } }?, mapId: string?): { It
 			local tints = (if zone == "backdrop" and far and far[kind] then far else A.Tints :: any)[kind]
 			table.insert(items, {
 				kind = kind,
-				model = rng:pick(list[kind]),
+				model = chosen or rng:pick(list[kind]),
 				zone = zone,
 				x = at_x,
 				z = at_z,
@@ -315,7 +344,7 @@ function ArenaPlan.build(names: { [string]: { string } }?, mapId: string?): { It
 	end
 
 	local function tuftBeside(
-		add: (string, number, number, number, boolean, boolean?, number?) -> (),
+		add: (string, number, number, number, boolean, boolean?, number?, string?) -> (),
 		x: number,
 		z: number,
 		away: number
@@ -385,6 +414,93 @@ function ArenaPlan.build(names: { [string]: { string } }?, mapId: string?): { It
 			local x, z = spot(centre, spread, foot, A.RimInner, A.RimOuter)
 			if x and z then
 				poolIn(x, z, size)
+			end
+		end
+	end
+
+	-- 0c. Frozen Ice's hand-placed groups (a map without them draws nothing here): the heavy rock landmarks (Landmarks, fixed
+	-- spots that claim their ground first), the snowy groves behind each (backdrop), then the hero crystal clusters beside them
+	-- (Heroes: a spot that is taken moves to the nearest free one in the rim band, clear of the lanes).
+	local function nearestFree(x: number, z: number, foot: number): (number?, number?)
+		for ring = 0, 10 do
+			local steps = if ring == 0 then 1 else 6 + ring * 2
+			for s = 1, steps do
+				local a = (s - 1) / steps * math.pi * 2
+				local px, pz = x + math.cos(a) * ring * 2.5, z + math.sin(a) * ring * 2.5
+				local r = math.sqrt(px * px + pz * pz)
+				if
+					r - foot >= A.WallRadius
+					and r <= A.RimOuter
+					and ArenaPlan.lateral(px, pz) >= A.MouthHalf + foot
+					and free(px, pz, foot)
+				then
+					return px, pz
+				end
+			end
+		end
+		return nil, nil
+	end
+	local landmarks: { { x: number, z: number, foot: number } } = {}
+	local marks = (A :: any).Landmarks
+	if marks and has("cliff") then
+		local models = list.cliff
+		for _, mark in marks do
+			local foot = mark.size * 0.5
+			group("rim", mark.x, mark.z, foot)(
+				"cliff",
+				mark.x,
+				mark.z,
+				mark.size,
+				true,
+				nil,
+				nil,
+				models[(mark.model - 1) % #models + 1]
+			)
+			table.insert(landmarks, { x = mark.x, z = mark.z, foot = foot })
+		end
+		if has("pine") then
+			for index, mark in landmarks do
+				local r = math.sqrt(mark.x * mark.x + mark.z * mark.z)
+				local ox, oz = mark.x / r, mark.z / r
+				local pines: number = marks[index].pines or 0
+				for k = 1, pines do
+					local size = between((A :: any).PineBehind)
+					local foot = size * A.BackdropFoot
+					local along = (k - (pines + 1) / 2) * 10
+					for step = 0, 5 do
+						local back = mark.foot * 0.8 + 6 + step * 3
+						local x, z = mark.x + ox * back - oz * along, mark.z + oz * back + ox * along
+						if
+							math.abs(x) <= A.FloorHalf - 4
+							and math.abs(z) <= A.FloorHalf - 4
+							and ArenaPlan.lateral(x, z) >= A.MouthHalf + foot
+							and free(x, z, foot)
+						then
+							group("backdrop", x, z, foot)("pine", x, z, size, false)
+							break
+						end
+					end
+				end
+			end
+		end
+	end
+	local heroes = (A :: any).Heroes
+	if heroes and has("hero") then
+		local models = list.hero
+		for _, hero in heroes do
+			local foot = hero.size * 0.33 + 0.5
+			local x, z = nearestFree(hero.x, hero.z, foot)
+			if x and z then
+				group("rim", x, z, foot)(
+					"hero",
+					x,
+					z,
+					hero.size,
+					false,
+					true,
+					nil,
+					models[(hero.model - 1) % #models + 1]
+				)
 			end
 		end
 	end
@@ -516,6 +632,27 @@ function ArenaPlan.build(names: { [string]: { string } }?, mapId: string?): { It
 				group("rim", x, z, foot)("bush", x, z, size, true)
 			end
 		end
+		-- (Frozen Ice's frosted bushes stand in threes: a group of three or four, packed close)
+		local frost = (A :: any).Frost
+		for _ = 1, (if frost and has("frost") then each.Frosts or 0 else 0) do
+			local foot = frost.Spread * 0.5 + frost.Wide[2] / 2 + 0.5
+			local x, z = spot(centre, spread, foot, A.RimInner, A.RimOuter)
+			if x and z then
+				local add = group("rim", x, z, foot)
+				local count = rng:int(3, 4)
+				local turn = rng:next() * math.pi * 2
+				for k = 1, count do
+					local angle = turn + k / count * math.pi * 2
+					add(
+						"frost",
+						x + math.cos(angle) * frost.Spread * 0.5,
+						z + math.sin(angle) * frost.Spread * 0.5,
+						between(frost.Wide),
+						true
+					)
+				end
+			end
+		end
 		for _ = 1, each.Clumps do
 			-- two or three flower groups in a short row, with a tuft of grass beside them
 			local foot = 3.6
@@ -559,6 +696,8 @@ function ArenaPlan.build(names: { [string]: { string } }?, mapId: string?): { It
 	end
 	tiny("flower", A.TinyFlower, false, A.TinyFlowers)
 	tiny("tuft", A.TinyTuft, false, A.TinyTufts)
+	-- (Frozen Ice's faint frost patches, flat on the floor, come before its cracks)
+	tiny("patch", (A :: any).TinyPatch, true, (A :: any).TinyPatches or 0)
 	tiny("pebble", A.TinyPebble, true, A.TinyPebbles)
 
 	-- 4a. Past each path's outer end, a pair of trees closes the view, so a path runs off into the woods, never into the sky.
@@ -585,6 +724,12 @@ function ArenaPlan.build(names: { [string]: { string } }?, mapId: string?): { It
 	for _, row in A.BackdropRows do
 		for k = 1, row.count do
 			local angle = (k - 0.5 + (rng:next() - 0.5) * 0.6) / row.count * math.pi * 2
+			-- (Frozen Ice's woods stand in dense groups with short gaps between: the angles are pulled toward Groups nodes round the
+			-- circle, the same ones in both rows)
+			local clump = (A :: any).BackdropClump
+			if clump then
+				angle -= clump.Pull * math.sin(clump.Groups * angle) / clump.Groups
+			end
 			local pine = has("pine") and (not has("round") or rng:next() < A.BackdropPine)
 			local kind = if pine then "pine" else "round"
 			if has(kind) then
@@ -618,6 +763,47 @@ function ArenaPlan.build(names: { [string]: { string } }?, mapId: string?): { It
 		local x, z = math.cos(angle) * r, math.sin(angle) * r
 		if ArenaPlan.lateral(x, z) >= A.MouthHalf + foot and free(x, z, foot) then
 			group("backdrop", x, z, foot)("bush", x, z, size, true)
+		end
+	end
+
+	-- 5. Frozen Ice's snow shore (kind `mound`, by width): a ring of low drifts round the clearing's edge, Mounds.Count of them
+	-- from Mounds.From to Mounds.To out, broken only at the four lanes. Flat and low, they claim no ground and lie under
+	-- everything (as the lava does), so they come last: a map without `Mounds` draws nothing here and every other map's plan is
+	-- as it was.
+	local shore = (A :: any).Mounds
+	if shore and has("mound") then
+		for k = 1, shore.Count do
+			local angle = (k - 0.5 + (rng:next() - 0.5) * 0.6) / shore.Count * math.pi * 2
+			local size = between(shore.Wide)
+			local r = shore.From + rng:next() * (shore.To - shore.From)
+			local x, z = math.cos(angle) * r, math.sin(angle) * r
+			if ArenaPlan.lateral(x, z) >= A.MouthHalf + size / 2 then
+				group("floor", x, z, 0, false)("mound", x, z, size, true)
+			end
+		end
+	end
+
+	-- 5b. Frozen Ice's low snow banks join each rock landmark to its neighbours: Banks.PerLandmark of them round it (one along
+	-- each flank, one in front), long along the horizon, flat and low, claiming no ground and lying under everything.
+	local banks = (A :: any).Banks
+	if banks and has("bank") then
+		for _, mark in landmarks do
+			local r = math.sqrt(mark.x * mark.x + mark.z * mark.z)
+			-- (inward, to the middle, and along the horizon)
+			local ux, uz = -mark.x / r, -mark.z / r
+			local tx, tz = -uz, ux
+			for k = 1, banks.PerLandmark do
+				local length = between(banks.Long)
+				local side = if k == 1 then 1 elseif k == 2 then -1 else 0
+				local inward = mark.foot * (if side == 0 then 0.95 else 0.4)
+				local x = mark.x + tx * side * mark.foot * 0.8 + ux * inward
+				local z = mark.z + tz * side * mark.foot * 0.8 + uz * inward
+				-- (the mesh's +X, turned to lie along the tangent)
+				local turn = math.atan2(-tz, tx) + (rng:next() - 0.5) * 0.7
+				if ArenaPlan.lateral(x, z) >= A.MouthHalf + length / 2 then
+					group("floor", x, z, 0, false)("bank", x, z, length, true, nil, turn)
+				end
+			end
 		end
 	end
 

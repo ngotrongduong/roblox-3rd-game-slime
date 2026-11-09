@@ -1,5 +1,18 @@
 # Status
 
+## 2026-11-09 — Frozen Ice, the fourth and last dungeon map (round 4 after ChatGPT's review)
+
+`MapOrder = {meadow, mushroom, lava, ice}`: all four maps of the original now turn per level. Props:
+`tools/library/build_ice.ps1` + `make_ice.py` -> `IceProps.glb` (84 meshes: faceted snow ridges, a far land silhouette, snowy
+cliff landmarks in the left and right thirds, hero/mid/small crystal clusters, snowbanks, frost bushes, frost patches and
+cracks, Ultimate Nature snow pines and bare trees), imported by the owner, ids in `Config.LibraryKit.Props`. New plan kind
+`mound`, `NeonAlpha` for translucent crystals, a `Lighting.Clouds` key in `DungeonLight` (overcast winter sky). Monsters: Arctic
+Fox, Snow Leopard, Frost Wisp, Penguin (healer), Ice Golem, Mammoth (miniboss, `tuskcharge`), Yeti (`boss_Peaks`, `blizzard`,
+a dark ground shadow, drops 2 `frost_fang`, icon from ChatGPT). Seen in a play test: Lava -> Ice swap, every monster, both
+skills, the victory panel; shots `docs/ui/dungeon/ice-r1..r4-*.png`. Open: a thin teal strip of the place's far sea and a
+green hill can still show at the edge of some views; ice effect art for the two skills and the Wisp shot; no phone view.
+Lesson: a minimized Studio window renders the 3D view white (restore it before shooting).
+
 ## 2026-11-09 — Ember Lava, the third dungeon map (round 4 after ChatGPT's review)
 
 `MapOrder = {meadow, mushroom, lava}`. Props: `tools/library/build_lava.ps1` + `make_lava.py` -> `LavaProps.glb` (low

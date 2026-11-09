@@ -45,6 +45,29 @@ local function source(name: string): Model?
 	return nil
 end
 
+-- A big monster's flat dark contact shadow (the look's `contact`: its width in studs, its colour and transparency), parented
+-- in the creature's folder; SlimeActor keeps it under the monster's ground spot. Nil when the look has none.
+local function contactOf(spec: any, folder: Folder, scale: number): BasePart?
+	local contact = spec.contact
+	if not contact then
+		return nil
+	end
+	local disc = Instance.new("Part")
+	disc.Name = "ContactShadow"
+	disc.Shape = Enum.PartType.Cylinder
+	disc.Size = Vector3.new(0.12, contact.width * scale, contact.width * scale)
+	disc.Color = Color3.fromHex(contact.colour)
+	disc.Transparency = contact.alpha
+	disc.Material = Enum.Material.SmoothPlastic
+	disc.Anchored = true
+	disc.CanCollide = false
+	disc.CanQuery = false
+	disc.CanTouch = false
+	disc.CastShadow = false
+	disc.Parent = folder
+	return disc
+end
+
 -- The piece spec whose name the part's name is or ends with (an import may put the file's name in front).
 local function pieceOf(pieces: { [string]: any }, partName: string): (string?, any)
 	for name, piece in pieces do
@@ -94,10 +117,12 @@ local function creatureOf(spec: any, kitModel: Model, holder: Model, scale: numb
 		last = nil,
 		rig = nil,
 		air = 0,
+		contact = nil,
 	}
 	local folder = Instance.new("Folder")
 	folder.Name = "Creature"
 	folder.Parent = holder
+	creature.contact = contactOf(spec, folder, scale)
 	for _, part in list do
 		local _, piece = pieceOf(spec.pieces, part.Name)
 		local joint = if piece then CFrame.new(vec(piece.joint) * scale) else CFrame.new()
@@ -156,10 +181,12 @@ local function rigOf(spec: any, kitModel: Model, holder: Model, scale: number): 
 		last = nil,
 		rig = rig,
 		air = if (spec.hover or 0) > 0 then 1 else 0,
+		contact = nil,
 	}
 	local folder = Instance.new("Folder")
 	folder.Name = "Creature"
 	folder.Parent = holder
+	creature.contact = contactOf(spec, folder, scale)
 	part.CastShadow = spec.shadow == true
 	part.Parent = folder
 	copy:Destroy()

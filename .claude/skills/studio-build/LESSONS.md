@@ -682,3 +682,47 @@ was left there (this game has none); read it there if a cave is ever wanted.
   read ids and sizes from the new one, then destroy the old one (found by one of its old child names).
 - The Magma Bull and Golem stand out of dark basalt through their own cracks and horns; a pool beside them tints the floor red
   through its point light, so the lights sit 3 studs above the pool and the masses stay inside their 22-stud range.
+
+## Dungeon Frozen Ice, phase B (2026-11-09)
+
+- A pale winter sky is a `Clouds` layer, not an Atmosphere: `Density`, `Offset` (up to 0.9) and `Haze` (up to 10) did not change
+  the engine's blue day sky at all, while `workspace.Terrain` `Clouds` with `Cover 0.95`, `Density 0.55`, `Color #f4f8ff` turned
+  it into a flat grey-white overcast (`Cover 1, Density 0.9` was too dark and grey). It is in `Arenas.<map>.Lighting.Clouds`;
+  `client/DungeonLight` eases it and eases back to the place's own on any other map.
+- The place has its own `ColorCorrection` (saturation +0.18, warm tint) under the `DungeonGrade` one: a cool pale map needs
+  `Saturation` about -0.3 in its grade, not -0.04, to look desaturated at all.
+- Smooth white dome hills (Tall 18-30) read as igloos and hid the backdrop groves behind them: keep the near ring low (9-15) and
+  let only the far ring be tall. A far ring too low (24-38) shows the place's teal far sea at the horizon from low cameras.
+- Heavy dark slate masses (`ruin` 9-13 tall, three a corner) with cyan crystals between them are what read as the painting's
+  value contrast against the pale floor; crystal clusters stay few (two a corner, Neon with Transparency 0.25) and read well.
+- A test copy built before the 28-model kit lacks the new models: base64 `assets/MonsterKit.rbxm` into nine `StringValue`
+  chunks and decode (`SerializationService:DeserializeInstancesAsync`); `InsertService:LoadLocalAsset` is refused ("lacking
+  capability RobloxScript"). A python script that writes the chunk files and runs each with `studio_mcp.js run` does it in
+  one command.
+- The test fights are over in 10 to 30 seconds at `StatScale 0.08`; the Mammoth died before its Tusk Charge. A bound follow
+  camera stays bound across waves (`BindToRenderStep`), so for a boss shot: replay the level, a Server watcher returns when the
+  monster appears (+1.5 s), then one `shot` call. `StatScale 0.2` let the Mammoth ram twice and the Yeti blizzard the squad.
+- Events can be counted by a Client listener on `Remotes.Fight` (`aim/<skill>`, `hit/<skill>`), started BEFORE the Ice wave.
+
+## Dungeon Frozen Ice, round 4 (ChatGPT art-director review, 2026-11-09)
+
+- A MINIMIZED Studio window renders the 3D view pure white (only the CoreGui icons show), in Play and in Edit, whatever the
+  scene holds; a restart without saving fixed it. Restore the window before shooting: `scratchpad\studio_window.ps1 -Restore`.
+  First suspect it when every shot is flat white and the console is clean, before touching lighting or content.
+- A restart without saving also loses everything done in the test copy: the Config patch, the loaded `MonsterKit` (monsters
+  then show as the stand-in zombie slime) and the owner's import. Re-run `sync_all.ps1`, `patch_cfg.luau` (via `cycle.py`) and
+  `load_kit.py` with the NEW studio id (the id changes on every Studio start).
+- Two-stage work for new meshes: build and wire the plan, tests and Config with `Fallback` lists first (a kind with no models
+  found falls back to the old look, so the code ships and passes before the re-import), then fill MeshIds after the owner imports.
+  The `Hills` code takes a model list and stretches one prototype to a hill's size; with the list empty it still draws balls.
+- Faceted ridges beat domes. What worked in the Blender generator: a height field with a rock/snow split by face normal
+  (steep = slate, flat or high = snow), normalised so the tallest vertex is exactly the requested height; rock masses as
+  3-5 jittered, tapered towers with a small cap overhang (a big overhang reads as mushrooms).
+- A far silhouette must have its VALLEYS above the camera's eye, not just its peaks: at `Tall 34..50` and a 30 percent sink the
+  dips fell below eye level and the teal sea showed through; `Tall 54..70` with `Sink 0.12` closed it from the player's view.
+  The place's own green terrain is higher than any sensible far ring and still shows from corner cameras; judge the player's
+  view, not the corner's.
+- Landmarks that claim ground block the diagonal tree spots of the back corners: moving them from (+-60,-64) to (+-46,-72)
+  brought the round-tree and bare-tree counts back; check the per-kind counts after moving any big mass.
+- A flat dark contact disc (Cylinder, 0.12 thick, `CastShadow` false, `Transparency 0.45`) under a white monster gives the value
+  contrast the floor cannot; it is parented in the creature's folder and moved with the other parts in `SlimeActor`'s batch.

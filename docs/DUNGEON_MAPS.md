@@ -1,4 +1,4 @@
-# Slime Dungeon: the other three maps (Mushroom: built; Lava: phase A built; Ice: plan only)
+# Slime Dungeon: the other three maps (Mushroom: built; Lava: built; Ice: built)
 
 Written 2026-11-08. The Sunny Meadow (`battle.map.meadow.png`) is built: `shared/DungeonArenaPlan`, `server/DungeonArena`,
 `Config.Dungeon.Arenas.meadow`, props from `Config.LibraryKit`. This file plans Mushroom, Lava and Ice the same way, and the
@@ -41,6 +41,90 @@ rocks near-black), `lava-r2-*` (night light, bigger lava, smaller spires), `lava
   rocks read near-black and the play test emulated the colours on the client, see studio-build LESSONS.)
 - Still weak: a thin yellow-green terrain strip at the far-left horizon from the corner view, many spires on the rim, the floor
   shows the stud pattern (the owner's choice), no phone view seen.
+
+**Ice, phase A done (2026-11-09).** Code: `Config.Dungeon.Arenas.ice`, `Maps.ice` (seven monsters), `MapOrder = { meadow, mushroom,
+lava, ice }` (the four maps are all in), `Materials.frost_fang` (icon 116041071019115, in `DropOrder`), plan kind `mound` (zone
+`floor`, claims nothing, drawn last and only for a map with `Arenas.<map>.Mounds`, so no other map's plan changed; broken at the
+four lanes), `Arenas.ice.NeonAlpha` (a Transparency for the kinds in `Neon`; `server/DungeonArena.glowing`), folder `Snow`.
+Props: `art/library/converted/IceProps.glb` (52 props, one import; `tools/library/build_ice.ps1`, procedural ones in
+`make_ice.py`, the Ultimate Nature snow variants recoloured with `fbx_to_glb.py` `RAW=1 SUFFIX=_Ice` and the Ice palette; every prop at
+most 420 triangles, 166 models in 131 groups placed, about 38 thousand triangles). Models slots and their props (triangles in brackets):
+`mound` `IceMound_1..4` (160-240, snow drifts, 11-15 across); `pine` `IceGrove_1..4` (296-400, three frosted pines on a snow
+base, 13.7 tall) and `PineTree_Snow_2/5_Ice` (420); `round` `PineTree_Snow_1/2/4/5_Ice`, `CommonTree_Dead_Snow_3/4_Ice`,
+`Willow_Dead_Snow_1/3/4_Ice` (420, the bare twig look); `ruin` `IceRock_1..4` (220-348, slate masses with a snow cap, 16-20
+across); `rock` `IceBoulder_1..3` (80), `Rock_Snow_1/3/4/5/6_Ice` (96-160); `root` `IceShard_1..3` (54-90, crystal shards); `glow`
+`IceCrystal_1..4` (54-90, crystal clusters 6-9 tall); `bush` `Bush_Snow_1/2_Ice` (220), `IceShrub_1..2` (288-340); `stump`
+`TreeStump_Snow_Ice` (220); `log` `WoodLog_Snow_Ice` (220) and `IceFence_1..3` (40-50, short snow fences); `tuft` `IceSprig_1..3`
+(160, twig corals); `pebble` `IceCrack_1..4` (80-136, flat crack lines, 0.12 thick). Not used: `Rock_Snow_2` and
+`CommonTree_Dead_Snow_5` (their material names are numbers, so the palette cannot reach them). Monsters: Arctic Fox, Snow
+Leopard, Frost Wisp (floats), Penguin (the healer: the Aurora Owl already heals in the Meadow; the Penguin is a rigged Egg Heist
+pet and a walker, a new motion family for the healers), Ice Golem, Mammoth (mini-boss, skill `tuskcharge`, a `multi` skill of
+two rams), Yeti (boss `Guardians/Peaks`, skill `blizzard`, an `all` skill with a 0.7 s stun, drops 2 `frost_fang`). All seven
+models are in `assets/MonsterKit.rbxm` (28 models now) and their motion modules in `src/shared/Creatures`. The two skills each
+have a skill art entry, a blow style, steps (`Moves.Stand/Spread`) and a way; every one differs from every other skill's (a test
+checks it). The light is a cool low-sun day (`ClockTime 8.6`, bluish ambient, `Exposure -0.3` so the near-white floor does not
+burn out). Differences from the plan below: no `OwnIce*` models (the library props replace them), the crystals are the `glow`
+kind and the shards the `root` kind (both Neon, Transparency 0.25, four lights), the snow mounds are meshes and not Plastic balls,
+the floor cracks are flat meshes in the open band (`pebble`), the shore is one ring (`Mounds`). Missing pictures: a frost set
+for the skills and the Wisp's shard (the skills reuse the owner's battle art, `Config.Zombies.View.Skill.Looks.tuskcharge/blizzard`);
+the `frost_fang` icon exists. Phase B (after the owner imports `IceProps.glb`): copy the MeshIds and sizes into
+`Config.LibraryKit.Props` (names as above, tex "P", `at = {0, h/2, 0}`), then look from the player's camera: crystals and shards
+are already Neon and see-through by Config and four crystal clusters already carry the lights, so judge the floor colour
+`#dbe9f7` and the exposure (`Lighting`), the size of the mounds against the lanes, the grove scale and whether the crack lines
+read. Until the import the arena stands on `Fallback` (the valley's dead trees, pines and rocks and plain pebbles for the
+cracks) and one warning names the kinds that are missing.
+
+**Ice, phase B done (2026-11-09), three rounds in StudioTest.** The 52 props are in `Config.LibraryKit.Props` (tex "P", `at = {0,
+h/2, 0}`; ids and sizes read from the owner's import), so `Fallback` is no longer used for Ice and the console shows no
+missing-kinds warning. A run seen live: Lava (level 1) -> Ice (Next level) swap, all seven monsters fought (the Wisp hovers),
+the Mammoth's Tusk Charge (`aim/tuskcharge`, two `hit/tuskcharge`) and the Yeti's Blizzard (`aim/blizzard`, hits on the squad)
+fired, and the victory panel shows the `frost_fang` icon (`116041071019115`). The console stayed clean (only the village's two
+asset-still-generating notices and Studio's own camera note). Shots: `docs/ui/dungeon/ice-r1-{player,corner}.png` (first look),
+`ice-r2-{player,corner,victory}.png`, `ice-r3-{player,corner,live,boss}.png` (final; live = Mammoth, boss = Yeti, 34 studs away).
+- Round 1 (as built in phase A): the engine's blue day sky with white clouds read as summer, the near hills (Tall 18-30) were
+  smooth white domes that hid the rim's groves and masses, the slate rocks were few and small, the floor was fine (pale, not
+  blown out at `Exposure -0.3`).
+- Round 2: overcast sky. `Lighting.Clouds = { Cover, Density, Colour }` is new (`client/DungeonLight` eases the terrain's
+  `Clouds`, or makes an empty one, and eases back to the place's own on any other map): Atmosphere `Density`/`Offset`/`Haze`
+  barely change the engine sky, a full-cover pale `Clouds` layer does (`0.95`, `0.55`, `#f4f8ff`). The place's own
+  ColorCorrection adds `+0.18` saturation under ours, so the grade is `Saturation -0.3` (was `-0.04`), `Exposure -0.2`, Ambient
+  `#9fb1cc`. Near hills `Tall 9..15` (was 18..30), Far `Tall 24..38`; backdrop rows `11..16` and `15..22` tall; `Ruin 9..13`
+  (was 7..9), `Rocks` and `Ruins` 3 a corner (was 2), `TinyPebbles 18` (cracks read as pale blue lines on the floor).
+- Round 3: Far hills `Tall 40..56` again: at 24..38 the ridge no longer hid the teal band of the place's far sea at the horizon
+  (see below). Reads: a pale ice floor with the stud pattern, white snow shore drifts, dark slate masses with a snow cap, bright
+  cyan crystal clusters in the corners (four lit), frosted groves behind, a flat cool grey-white sky. The Mammoth reads brown
+  against the snow, the Yeti by its blue face and feet, horns and its blue shadow; the Penguin and Frost Wisp read small at the
+  player's distance (their health bars carry them).
+- Still weak: a teal band (the place's far water, outside the arena) shows in gaps between the far hills from low cameras; the
+  Yeti is white on white (value contrast comes from the rocks behind it, not from the floor); the overcast cloud layer shows a
+  faint wave pattern at some angles; the domes still read as smooth hills, not as the painting's rock ridges; no phone view seen.
+  The test copy keeps `Workspace.Scene` (the owner's import) and the new `MonsterKit` (28 models, loaded from
+  `assets/MonsterKit.rbxm` by `SerializationService`), and its Config patch (`MapOrder {lava, ice}`, `MapFirstRandom false`,
+  4 waves, `StatScale 0.2`) is not in the repo.
+
+**Ice, round 4 (2026-11-09), from a ChatGPT art-director review of the round-3 shots.** The verdict: smooth domes and a thin
+rim read as a field, not as a frozen arena enclosed by icy cliffs with two crystal-and-rock landmarks flanking an open fight
+space. Built in two stages: new meshes in `tools/library/make_ice.py` -> `IceProps.glb` (re-imported by the owner once), then
+the numbers by eye. The meshes are new names in `Config.LibraryKit.Props` (84 entries now; the whole Ice block was rewritten
+from the new import, every MeshId is new, the `IceCrack_*` sizes changed):
+- `IceRidge_1..5` (faceted snow ridges, 30-38 wide, 17-22 tall; slate-blue faces, snow shoulders) replace the dome balls: the near
+  ring is 40 ridges (`Hills`, `Wide 30..46`, `Tall 14..28`, `Sink 0.08`), stretched from the prototype's size by `DungeonArena`
+  and turned to face the arena; `IceFar_1..3` (190-210 wide, opaque pale `#b7c9d9`/`#d6e3ed` silhouettes, `Hills.Far`, 16 at
+  radius 206, `Tall 54..70`, `Sink 0.12`) close the horizon over the place's own far sea and terrain.
+- `IceCliff_1..4` (4-5 interlocking angular masses with snow caps, 17-26 wide, 11-15 tall) are the five `Landmarks` (two left and
+  two right of the player's view, one smaller far middle), each with two snowy pines behind it and three `IceBank_1..4` snowbanks
+  at its foot. `IceCrystalHero_1..4` (3-5 spires, 12-14 tall, cyan cores, light tips, not Neon) are the four `Heroes`, lit with
+  the point lights (`Glow.Lights`); `IceCrystalMid_1..3` and `IceCrystalSmall_1..3` are the glow and root kinds.
+- `IceFrostBush_1..3` trios in each corner (`Frosts`), `IcePatch_1..3` faint frost patches (8) and `IceCrack_1..4` thin cracks
+  (7) on the floor; the `Neon` kinds are off. The bare dark trees are down to 4; the backdrop pines clump in groups
+  (`BackdropClump`). The sky stays the cool grey-white cloud layer; floor `#ddebf5`.
+- Yeti: its own `contact` shadow (a flat dark-blue disc 6 studs across, `Looks.ice_yeti.contact`, made by `MonsterLook`, kept
+  under the monster's ground spot by `SlimeActor`); Penguin `height 3.5`, Frost Wisp `3`.
+- Result (shots `docs/ui/dungeon/ice-r4-{player,corner,live,boss}.png`): the player's view is enclosed by pale and slate
+  ridges, a rock landmark with a crystal hero in each third, open floor in the middle; the Mammoth and the Yeti stand out of
+  the rocks behind them, the Yeti on its dark contact disc. The console stayed clean. Still weak: from the corner camera
+  (outside the player's normal view) the place's green terrain still peeks over the far silhouette at one side, and a thin teal
+  sea line shows at the very edge of the player's view; no phone view seen.
 
 **Lava, round 4 (2026-11-09), from a ChatGPT art-director review of the round-3 shots.** The verdict: a purple crystal
 wasteland with lava puddles, where the painting is a volcanic crater (heavy low basalt, lava as connected cracks, a brighter
@@ -200,7 +284,7 @@ Monsters:
 | swarmer | Arctic Fox | `Pets/ArcticFox` | small and many |
 | raider / hunter | Snow Leopard | `Pets/SnowLeopard` | fast, hunts the weakest |
 | spitter / ranged | Frost Wisp | `Pets/FrostWisp` | floats, ice shard; `hover` in its Look |
-| shaman / healer | Aurora Owl | `AuroraOwl` (in the kit already) | a retint of its glow is not a new design: use its own motion, keep it; or Penguin `Pets/Penguin` |
+| shaman / healer | Penguin | `Pets/Penguin` | BUILT (phase A): the Aurora Owl already heals in the Meadow; the Penguin walks (a new motion for a healer) |
 | armoured | Ice Golem | `Pets/IceGolem` | slow, high defence |
 | miniboss | Mammoth | `Pets/Mammoth` | NEEDS WORK: size, `height = 9`, `shadow = true` |
 | boss | Yeti | `Guardians/Peaks` (`boss_Peaks`, 62 bones) | NEEDS WORK: boss size; alternative `Pets/FrostDragon` or Ultimate Monsters `Yeti` (not rigged) |

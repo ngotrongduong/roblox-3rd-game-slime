@@ -103,6 +103,8 @@ export type Creature = {
 	-- flies it aloft
 	rig: CreatureRig.Rig?,
 	air: number,
+	-- a big monster's flat dark contact shadow on the floor (MonsterLook, the look's `contact`): it follows the ground spot
+	contact: BasePart?,
 }
 
 local Actor = {}
@@ -381,6 +383,12 @@ local function tick(a: Slime, dt: number, write: boolean)
 		local hop = if rig then 0 else pose.lift * s
 		local rise = hop + MonsterMotion.lift(creature.hover, creature.bob, creature.bobHz, now)
 		local middle = (creature.top - creature.hover) / 2
+		local contact = creature.contact
+		if contact then
+			n += 1
+			parts[n] = contact
+			cfs[n] = CFrame.new(at.X, at.Y + 0.06, at.Z) * CFrame.Angles(0, 0, math.pi / 2)
+		end
 		local base = a.root
 			* CFrame.new(0, rise, 0)
 			* CFrame.Angles(0, pose.yaw, 0)

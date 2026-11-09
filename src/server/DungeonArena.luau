@@ -1,5 +1,5 @@
 --!strict
--- The Slime Dungeon's maps (the Sunny Meadow, the Mushroom Grove and Ember Lava), each built once from the owner's painting
+-- The Slime Dungeon's maps (the Sunny Meadow, the Mushroom Grove, Ember Lava and Frozen Ice), each built once from the owner's painting
 -- (reference/goo-lineage-web/assets/battle.map.<id>.png) and kept as a template that Dungeon clones for every run on that map.
 -- A Model whose pivot is the floor's top middle (Dungeon pivots a clone onto Layout.arenaFrame). Where things stand is
 -- shared/DungeonArenaPlan; every number is Config.Dungeon.Arenas.<map>.
@@ -10,6 +10,8 @@
 --   Runes     (the Grove) four flat stone rings with glowing marks in the quarters
 --   Lights    (the Grove) a few small point lights under the glowing mushroom clusters; (Ember Lava) the same under a few pools
 --   Lava      (Ember Lava) flat veins and pools: library meshes turned Neon (Arenas.lava.Neon), under everything else
+--             (Frozen Ice turns its crystals and shards Neon the same way, a little see-through: Neon, NeonAlpha)
+--   Snow      (Frozen Ice) the low drifts of its shore, under everything else
 --   Wall      an invisible ring of tall blocks at the edge of the fight: the only thing besides the floor that collides
 --   Trees / Rocks / Bushes / Flowers   kit models (ServerStorage.Kit.WildKit): anchored, nothing collides or can be queried, only
 --             the trees cast a shadow; the clones of one kit model share one mesh
@@ -54,6 +56,12 @@ local FOLDERS: { [string]: string } = {
 	glow = "Flowers",
 	vein = "Lava",
 	pool = "Lava",
+	mound = "Snow",
+	bank = "Snow",
+	patch = "Snow",
+	cliff = "Rocks",
+	hero = "Flowers",
+	frost = "Bushes",
 }
 
 local function prepare(source: Instance, tree: boolean): Proto?
@@ -106,12 +114,14 @@ end
 -- Lava is lit by itself: the model's parts turn Neon in the map's lava colour. The mesh carries its own palette in vertex
 -- colour (a hot core, an orange body, a dark burnt bank) and Roblox multiplies that by the part's colour, so with a white
 -- part colour the lava glows as painted and the bank stays dark.
-local function glowing(model: Model, hex: string)
+-- (Frozen Ice's crystals are the same, a little see-through: `clear` is the Transparency of the map's NeonAlpha, 0 when none.)
+local function glowing(model: Model, hex: string, clear: number)
 	local colour = Color3.fromHex(hex)
 	for _, d in model:GetDescendants() do
 		if d:IsA("BasePart") then
 			d.Material = Enum.Material.Neon
 			d.Color = colour
+			d.Transparency = clear
 			d.CastShadow = false
 		end
 	end
@@ -328,14 +338,39 @@ local function build(kit: Instance, mapId: string): Model?
 	local hills = Instance.new("Folder")
 	hills.Name = "Hills"
 	hills.Parent = arena
-	for index, hill in Plan.hills(mapId) do
+	for index, hill in Plan.hills(mapId, lists) do
+		local proto = if hill.model then protos[hill.model] else nil
+		local meshParts: { BasePart } = {}
+		local clone: Model? = nil
+		if proto then
+			-- a library hill (Frozen Ice's faceted ridges and far land): one mesh stretched to the plan's width and height, its
+			-- depth in proportion to its width, its foot sunk by hill.sink of its height, its X along the horizon
+			clone = proto.model:Clone()
+			for _, d in (clone :: Model):GetDescendants() do
+				if d:IsA("BasePart") then
+					table.insert(meshParts, d)
+				end
+			end
+		end
+		if clone and #meshParts == 1 then
+			local mesh = meshParts[1]
+			local depth = hill.wide * mesh.Size.Z / mesh.Size.X
+			mesh.Size = Vector3.new(hill.wide, hill.tall, depth)
+			mesh.CFrame = CFrame.new(0, hill.tall / 2, 0)
+			clone:PivotTo(CFrame.new(hill.x, -hill.sink * hill.tall, hill.z) * CFrame.Angles(0, hill.yaw, 0))
+			clone.Name = "Hill"
+			clone.Parent = hills
+			continue
+		elseif clone then
+			clone:Destroy()
+		end
 		-- (a map with a far ring of hills gives each ring its own colour)
 		local hillGreen = Color3.fromHex(hill.colour)
 		local part = Instance.new("Part")
 		part.Name = "Hill"
 		part.Shape = Enum.PartType.Ball
 		part.Size = Vector3.new(hill.wide, hill.tall, hill.wide)
-		part.Position = Vector3.new(hill.x, hill.tall * (0.5 - A.Hills.Sink), hill.z)
+		part.Position = Vector3.new(hill.x, hill.tall * (0.5 - hill.sink), hill.z)
 		part.Anchored = true
 		part.CanCollide = false
 		part.CanTouch = false
@@ -351,7 +386,7 @@ local function build(kit: Instance, mapId: string): Model?
 			local dome = part:Clone()
 			dome.Name = "HillGlow"
 			dome.Size = Vector3.new(hill.wide * cap.Wide, hill.tall * cap.Tall, hill.wide * cap.Wide)
-			dome.Position = Vector3.new(hill.x, hill.tall * (1 - A.Hills.Sink) - hill.tall * cap.Tall * 0.15, hill.z)
+			dome.Position = Vector3.new(hill.x, hill.tall * (1 - hill.sink) - hill.tall * cap.Tall * 0.15, hill.z)
 			dome.Material = Enum.Material.Neon
 			dome.Color = Color3.fromHex(cap.Colour)
 			dome.Parent = hills
@@ -372,7 +407,7 @@ local function build(kit: Instance, mapId: string): Model?
 		end
 		local lava = if A.Neon then A.Neon[item.kind] else nil
 		if lava then
-			glowing(clone, lava)
+			glowing(clone, lava, if A.NeonAlpha then A.NeonAlpha[item.kind] or 0 else 0)
 		end
 		local name = FOLDERS[item.kind]
 		local folder: Folder

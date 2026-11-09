@@ -255,7 +255,10 @@ local function suite(T: any, mapId: string)
 		for _, item in items do
 			if item.light then
 				lit += 1
-				T.ok(item.kind == "glow" or item.kind == "pool", "only a glowing mushroom or a lava pool is lit")
+				T.ok(
+					item.kind == "glow" or item.kind == "pool" or item.kind == "hero",
+					"only a glowing mushroom, a lava pool or a hero crystal cluster is lit"
+				)
 			end
 		end
 		if A.Glow then
@@ -263,6 +266,8 @@ local function suite(T: any, mapId: string)
 			for _, n in A.Glow.Lights do
 				most += n
 			end
+			-- (Frozen Ice's hero crystal clusters are each lit)
+			most += if A.Heroes then #A.Heroes else 0
 			T.ok(lit > 0 and lit <= most and most <= 6, "lights " .. lit)
 			for _, hex in A.Glow.Colours do
 				T.ok(string.match(hex, "^#%x%x%x%x%x%x$") ~= nil, "a colour " .. hex)
@@ -333,6 +338,96 @@ return function(T: any)
 			end
 		end
 	end)
+
+	T.test(
+		"Frozen Ice has a shore of snow mounds, crystals and shards in the corners and cracks on the floor",
+		function()
+			local A: any = Config.Dungeon.Arenas.ice
+			local items = Plan.build(nil, "ice")
+			local seen: { [string]: number } = {}
+			for _, item in items do
+				seen[item.kind] = (seen[item.kind] or 0) + 1
+				if item.kind == "mound" then
+					local r = flat(item.x, item.z)
+					T.ok(item.zone == "floor" and item.wide, "a mound is a flat, wide piece that claims no ground")
+					T.ok(r >= A.Mounds.From - 1e-6 and r <= A.Mounds.To + 1e-6, "a mound stands on the shore: " .. r)
+					T.ok(r - item.size / 2 >= A.FightClear, "a mound stays out of the fight's middle")
+					T.ok(Plan.lateral(item.x, item.z) >= A.MouthHalf, "a mound leaves the lanes free")
+					T.ok(item.size >= A.Mounds.Wide[1] - 1e-6 and item.size <= A.Mounds.Wide[2] + 1e-6, "its width")
+				elseif item.kind == "glow" or item.kind == "root" then
+					T.ok(flat(item.x, item.z) >= A.RimInner, "crystals and shards stand in the corners' rim band")
+					-- (round 4: the cyan cores and pale tips show as painted; none is turned Neon, so none blows out to white)
+					T.ok(A.Neon[item.kind] == nil, item.kind .. " is not Neon")
+				elseif item.kind == "pebble" or item.kind == "patch" then
+					T.ok(item.zone == "tiny" and item.wide, "a crack or a frost patch lies flat in the open band")
+					T.ok(
+						item.size >= (if item.kind == "patch" then A.TinyPatch else A.TinyPebble)[1] - 1e-6,
+						item.kind .. " size"
+					)
+				elseif item.kind == "cliff" then
+					T.ok(
+						item.size >= 16 and item.size <= 25 and item.wide,
+						"a landmark is 16 to 25 wide: " .. item.size
+					)
+				elseif item.kind == "hero" then
+					T.ok(item.light == true, "a hero cluster is lit")
+					T.ok(item.size >= 10 and item.size <= 16 and not item.wide, "a hero cluster is 10 to 16 tall")
+				elseif item.kind == "bank" then
+					T.ok(item.zone == "floor" and item.wide, "a bank is a flat, wide piece that claims no ground")
+					T.ok(item.size >= A.Banks.Long[1] - 1e-6 and item.size <= A.Banks.Long[2] + 1e-6, "its length")
+				end
+			end
+			T.ok((seen.mound or 0) >= A.Mounds.Count * 0.5, "most of the shore stands: " .. (seen.mound or 0))
+			T.ok(
+				(seen.glow or 0) >= 4 * A.PerCorner.Glows and (seen.root or 0) >= 3 * A.PerCorner.Roots,
+				"crystals, shards"
+			)
+			T.ok((seen.pebble or 0) >= A.TinyPebbles - 3, "cracks")
+			T.ok((seen.patch or 0) >= A.TinyPatches - 3, "frost patches: " .. (seen.patch or 0))
+			-- round 4: the landmarks, the crystal hierarchy, the banks, the frosted bushes in threes, a few bare trees
+			T.eq(seen.cliff, #A.Landmarks, "every landmark stands")
+			T.ok(
+				(seen.hero or 0) >= #A.Heroes - 1 and (seen.hero or 0) <= #A.Heroes,
+				"hero clusters: " .. (seen.hero or 0)
+			)
+			T.ok((seen.bank or 0) >= 10 and (seen.bank or 0) <= 4 * #A.Landmarks, "banks: " .. (seen.bank or 0))
+			T.ok((seen.frost or 0) >= 9 and (seen.frost or 0) <= 18, "frosted bushes: " .. (seen.frost or 0))
+			T.ok(
+				(seen.round or 0) >= 3 and (seen.round or 0) <= 5,
+				"bare trees are a few accents: " .. (seen.round or 0)
+			)
+			-- the hills' rings are library models, faceted ridges and the far land, laid along the horizon
+			local ridges = Plan.hills("ice", A.Models)
+			T.eq(#ridges, A.Hills.Count + A.Hills.Far.Count)
+			for _, hill in ridges do
+				T.ok(hill.model ~= nil, "every hill is a model")
+				local list: { string } = if hill.layer == 1 then A.Models.ridge else A.Models.far
+				T.ok(table.find(list, hill.model :: string) ~= nil, "a model of its ring: " .. tostring(hill.model))
+			end
+			for _, hill in Plan.hills("ice") do
+				T.ok(hill.model == nil, "without models the rings are balls")
+			end
+			T.ok((seen.pool or 0) == 0 and (seen.vein or 0) == 0, "no lava")
+			T.eq(A.PathStyle, "none")
+			T.eq(#Plan.stones("ice"), 0)
+			T.eq(#Plan.runes("ice"), 0)
+			-- the models come from the one IceProps.glb of tools/library/build_ice.ps1, none from another map
+			for kind, names in A.Models :: any do
+				for _, name in names do
+					T.ok(
+						string.find(name, "Ice", 1, true) ~= nil or string.find(name, "Snow", 1, true) ~= nil,
+						kind .. " " .. name .. " is an ice prop"
+					)
+				end
+			end
+			-- a map's other kinds are not touched: the other three have no snow shore
+			for _, id in { "meadow", "mushroom", "lava" } do
+				for _, item in Plan.build(nil, id) do
+					T.ok(item.kind ~= "mound", id .. " has no mounds")
+				end
+			end
+		end
+	)
 
 	T.test("the Grove has its own set of ruins, roots and glowing mushrooms", function()
 		local seen: { [string]: number } = {}

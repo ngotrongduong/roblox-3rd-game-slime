@@ -720,6 +720,125 @@ return function(T: any)
 		T.eq(D.View.Ways.eruption, "eruption")
 	end)
 
+	T.test(
+		"Frozen Ice: the Mammoth and the Yeti lead, the Yeti always pays 2 Frost Fangs, the skills strike",
+		function()
+			T.eq(Dungeon.plan("ice", 1, D.MiniBossWave, 99)[1].defId, "ice_mammoth")
+			local yeti = Dungeon.plan("ice", 1, D.BossWave, 99)[1]
+			T.eq(yeti.defId, "ice_yeti")
+			T.eq(yeti.kind, "blizzard")
+			for n = 1, 100 do
+				local fangs = 0
+				for _, drop in Dungeon.rollDrops(def("ice_yeti"), 1, "m10-" .. n, n) do
+					if drop.item == "frost_fang" then
+						fangs += drop.amount
+					end
+				end
+				T.eq(fangs, 2, "the boss always pays 2 Frost Fangs")
+			end
+			T.eq(D.Materials.frost_fang.name, "Frost Fang")
+			T.ok(
+				D.Materials.frost_fang.icon ~= nil and D.Materials.frost_fang.icon ~= 0,
+				"the Frost Fang has its picture"
+			)
+			T.ok(table.find(D.DropOrder, "frost_fang") ~= nil, "the Frost Fang is shown in the drop order")
+			-- the map is the fourth and last, and every monster has a model, a motion and a way of fighting
+			T.eq(D.MapOrder[#D.MapOrder], "ice")
+			T.eq(#D.MapOrder, 4)
+			for _, each in (D.Maps :: any).ice.monsters do
+				local look = D.Looks[each.id]
+				T.ok(look ~= nil and look.model ~= nil and look.motion ~= nil, each.id .. " has a model and a motion")
+				T.ok(D.View.Ways[each.kind] ~= nil or Config.Combat.Skills[each.kind] == nil, each.id .. " way")
+			end
+			-- every monster of the map is a step stronger than its role in Ember Lava
+			local function ofRole(map: string, role: string): any
+				for _, each in (D.Maps :: any)[map].monsters do
+					if each.role == role then
+						return each
+					end
+				end
+				error("no " .. role .. " in " .. map)
+			end
+			for _, role in { "swarmer", "raider", "spitter", "shaman", "armoured", "miniboss", "boss" } do
+				local lava, ice = ofRole("lava", role), ofRole("ice", role)
+				T.ok(ice.hp > lava.hp, role .. " has more health than Ember Lava's")
+				T.ok(ice.attack >= lava.attack, role .. " hits at least as hard")
+			end
+			-- the healer is not the Meadow's Aurora Owl
+			T.ok(D.Looks.ice_penguin.model ~= D.Looks.green_moth.model, "the healer is the Penguin, not the Owl")
+			-- the skills: a charge that rams its target twice, a blizzard that reaches all three
+			local function skillEvents(kind: string): { any }
+				local squad = {}
+				for _, id in { "a", "b", "c" } do
+					table.insert(squad, { id = id, attack = 0, defence = 0, speed = 0, hp = 1e6 })
+				end
+				local boss = { id = "boss", attack = 5, defence = 0, speed = 2, hp = 1e9, kind = kind }
+				local fight = Combat.new(squad, { boss }, Rng.new(6))
+				local out = {}
+				for _ = 1, 600 do
+					for _, event in Combat.step(fight, 0.1) do
+						if event.skill == kind then
+							table.insert(out, event)
+						end
+					end
+				end
+				return out
+			end
+			T.eq(Config.Combat.Skills.tuskcharge.name, "Tusk Charge")
+			T.eq(Config.Combat.Skills.blizzard.name, "Blizzard")
+			local rams, mostRams = 0, 0
+			for _, event in skillEvents("tuskcharge") do
+				if event.kind == "hit" then
+					T.ok(not event.splash, "the charge is no splash")
+					rams += 1
+					mostRams = math.max(mostRams, event.n or 0)
+				end
+			end
+			T.ok(rams >= 2 and mostRams == 2, "the charge rams twice: " .. mostRams)
+			local struck: { [string]: boolean } = {}
+			for _, event in skillEvents("blizzard") do
+				if event.kind == "hit" then
+					struck[event.to] = true
+				end
+			end
+			T.ok(struck.a and struck.b and struck.c, "the blizzard reaches all three")
+			-- each has an art of its own (Config.Zombies.View.Skill.Looks), apart from every other skill's
+			local looks: any = Config.Zombies.View.Skill.Looks
+			T.ok(looks.tuskcharge ~= nil and looks.blizzard ~= nil, "both have skill art")
+			local function signature(look: any): string
+				local parts = {}
+				for _, key in { "leap", "onTarget", "burst", "bits", "ring", "ring2", "rain", "rainRing" } do
+					table.insert(parts, tostring(look[key]))
+				end
+				return table.concat(parts, "/")
+			end
+			for _, mine in { "tuskcharge", "blizzard" } do
+				for name, look in looks do
+					if name ~= mine then
+						T.ok(signature(look) ~= signature(looks[mine]), mine .. "'s art is not " .. name .. "'s")
+					end
+				end
+			end
+			local styles: any = Config.Zombies.View.Fx.Styles
+			T.ok(styles.tuskcharge ~= nil and styles.blizzard ~= nil, "both have blow art")
+			for _, mine in { "tuskcharge", "blizzard" } do
+				for name, style in styles do
+					if name ~= mine then
+						T.ok(
+							style.mark ~= styles[mine].mark or style.bits ~= styles[mine].bits,
+							mine .. "'s blow is not " .. name .. "'s"
+						)
+					end
+				end
+				T.ok(
+					Config.Zombies.View.Moves.Stand[mine] ~= nil and Config.Zombies.View.Moves.Spread[mine] ~= nil,
+					"steps"
+				)
+				T.eq(D.View.Ways[mine], mine)
+			end
+		end
+	)
+
 	T.test("the best dungeon level is saved, repaired and migrated from schema 8", function()
 		local farm: any = FarmState.newFarm(NOW)
 		T.same(farm.dungeon, { best = 0 })
