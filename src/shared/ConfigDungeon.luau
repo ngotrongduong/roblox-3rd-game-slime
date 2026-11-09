@@ -3,7 +3,7 @@
 -- biggest blocks live apart. Config.luau requires this file; the game reads it as Config.Dungeon.
 
 return {
-	-- The maps (Sunny Meadow, Mushroom Grove; the order they turn in is MapOrder below). A monster: its budget `cost` (none for a mini-boss or boss,
+	-- The maps (Sunny Meadow, Mushroom Grove, Ember Lava; the order they turn in is MapOrder below). A monster: its budget `cost` (none for a mini-boss or boss,
 	-- which come alone), its level-1 stats (the same kind of numbers a slime has), its `role`, and `kind`: the way it
 	-- fights in Config.Combat (melee strikes anyone; ranged keeps its distance; hunter goes for the slime with the least
 	-- health and stings it slow; healer mends its wounded team-mates; bloomshell and bramblehorn are the two bosses with a
@@ -263,11 +263,141 @@ return {
 				},
 			} :: { any },
 		},
+		-- Ember Lava: the Grove's roles again, each a step stronger, with the owner's fire creatures from Egg Heist
+		-- (docs/DUNGEON_MAPS.md §3). The healer is the Inferno Dragon (a flier, small: the Meadow's Aurora Owl healer is the
+		-- same kind of motion; the Bestiary Imp is not rigged). The trophy is the Ember Core: the boss pays two, never
+		-- fewer; the mini-boss, the spitter and the healer sometimes one.
+		lava = {
+			name = "Ember Lava",
+			monsters = {
+				{
+					id = "lava_newt",
+					name = "Fire Newt",
+					role = "swarmer",
+					cost = 1,
+					attack = 2,
+					defence = 0,
+					speed = 3.2,
+					hp = 16,
+					kind = "melee",
+					drops = {
+						{ item = "coins", chance = 0.25, min = 2, max = 4 },
+						{ item = "food", chance = 0.15, min = 3, max = 5 },
+						{ item = "wood", chance = 0.35, min = 1, max = 1 },
+					},
+				},
+				{
+					id = "lava_wolf",
+					name = "Ember Wolf",
+					role = "raider",
+					cost = 2,
+					attack = 4,
+					defence = 0,
+					speed = 5,
+					hp = 19,
+					kind = "hunter",
+					drops = {
+						{ item = "coins", chance = 0.25, min = 2, max = 5 },
+						{ item = "food", chance = 0.10, min = 3, max = 5 },
+						{ item = "wood", chance = 0.15, min = 1, max = 1 },
+						{ item = "ore", chance = 0.10, min = 1, max = 1 },
+					},
+				},
+				{
+					id = "lava_phoenix",
+					name = "Phoenix",
+					role = "spitter",
+					cost = 2,
+					attack = 3,
+					defence = 0,
+					speed = 2.4,
+					hp = 18,
+					kind = "ranged",
+					drops = {
+						{ item = "coins", chance = 0.25, min = 2, max = 5 },
+						{ item = "food", chance = 0.15, min = 3, max = 5 },
+						{ item = "wood", chance = 0.30, min = 1, max = 1 },
+						{ item = "ember_core", chance = 0.10, min = 1, max = 1 },
+					},
+				},
+				{
+					id = "lava_drake",
+					name = "Inferno Dragon",
+					role = "shaman",
+					cost = 2,
+					attack = 1,
+					defence = 0,
+					speed = 2.5,
+					hp = 22,
+					kind = "healer",
+					drops = {
+						{ item = "coins", chance = 0.25, min = 2, max = 5 },
+						{ item = "food", chance = 0.10, min = 3, max = 5 },
+						{ item = "ore", chance = 0.15, min = 1, max = 1 },
+						{ item = "rare_part", chance = 0.05, min = 1, max = 1 },
+						{ item = "ember_core", chance = 0.12, min = 1, max = 1 },
+					},
+				},
+				{
+					id = "lava_tortoise",
+					name = "Rock Tortoise",
+					role = "armoured",
+					cost = 3,
+					attack = 3,
+					defence = 10,
+					speed = 0.8,
+					hp = 44,
+					kind = "melee",
+					drops = {
+						{ item = "coins", chance = 0.30, min = 3, max = 6 },
+						{ item = "food", chance = 0.10, min = 3, max = 5 },
+						{ item = "ore", chance = 0.45, min = 1, max = 2 },
+						{ item = "rare_part", chance = 0.12, min = 1, max = 1 },
+					},
+				},
+				{
+					id = "lava_bull",
+					name = "Magma Bull",
+					role = "miniboss",
+					attack = 7,
+					defence = 4,
+					speed = 3,
+					hp = 170,
+					kind = "lavastomp",
+					drops = {
+						{ item = "coins", chance = 1, min = 6, max = 11 },
+						{ item = "ore", chance = 1, min = 2, max = 3 },
+						{ item = "rare_part", chance = 0.60, min = 1, max = 2 },
+						{ item = "monster_core", chance = 0.30, min = 1, max = 1 },
+						{ item = "ember_core", chance = 0.35, min = 1, max = 2 },
+					},
+				},
+				{
+					id = "lava_golem",
+					name = "Magma Golem",
+					role = "boss",
+					attack = 8,
+					defence = 6,
+					speed = 1.5,
+					hp = 340,
+					kind = "eruption",
+					drops = {
+						{ item = "coins", chance = 1, min = 12, max = 20 },
+						{ item = "ore", chance = 1, min = 3, max = 5 },
+						{ item = "rare_part", chance = 1, min = 2, max = 3 },
+						{ item = "monster_core", chance = 0.50, min = 1, max = 1 },
+						{ item = "boss_essence", chance = 0.25, min = 1, max = 1 },
+						-- the map's trophy: two ember cores, never fewer
+						{ item = "ember_core", chance = 1, min = 2, max = 2 },
+					},
+				},
+			} :: { any },
+		},
 	},
 	-- The maps turn one step each dungeon level (shared/Dungeon.mapForLevel), from a first map each player's UserId picks
 	-- (MapFirstRandom, the original's seeded first map; off, everyone starts on the first of the list). MapSeedOffset is the
-	-- original's seed + 77. Lava and Ice join the list when they are built.
-	MapOrder = { "meadow", "mushroom" },
+	-- original's seed + 77. Ice joins the list when it is built.
+	MapOrder = { "meadow", "mushroom", "lava" },
 	MapFirstRandom = true,
 	MapSeedOffset = 77,
 	-- How long the lighting takes to come back to the place's own day when a run ends (client/DungeonLight).
@@ -338,6 +468,8 @@ return {
 		boar_tusk = { name = "Bramble Horn", short = "Horn", kind = "material", icon = 97935793546139 },
 		-- the Mushroom Grove's trophy (no picture yet: a plain tile with "Spore" until ChatGPT's icon is in)
 		glow_spore = { name = "Glow Spore", short = "Spore", kind = "material", icon = 138882147682185 },
+		-- Ember Lava's trophy (icon from ChatGPT, art/icons/dg_ember_core.png)
+		ember_core = { name = "Ember Core", short = "Ember", kind = "material", icon = 78182808861046 },
 	},
 	DropOrder = {
 		"coins",
@@ -349,6 +481,7 @@ return {
 		"boss_essence",
 		"boar_tusk",
 		"glow_spore",
+		"ember_core",
 	},
 
 	-- ===== The run (server/Dungeon) =====
@@ -763,6 +896,212 @@ return {
 				round = { "#8f9fb0", "#8494b0", "#7f9cae" },
 			},
 		},
+		-- Ember Lava (battle.map.lava.png), round 4 (the art director: a volcanic CRATER, not a crystal wasteland): the Meadow's
+		-- ring plan with its own keys. A neutral charcoal stud floor (#3F3A42) ringed by darker, hotter ground; no path is drawn
+		-- (PathStyle "none": the four lanes only stay free). The rock is heavy, LOW basalt: boulder masses on a first shelf
+		-- (kind `ruin`, by height; `pine` for the framing masses and the backdrop rows, lower straight behind: BackdropLow),
+		-- terraced ledges (`log`, by width), short thick column groups (`stump`), boulders (`rock`), and only four landmark
+		-- groups of sharp peaks (`round`). Flat fracture plates lie on the floor (`pebble`, by width). The lava is four connected
+		-- fissure systems, one a quarter (`vein`, claiming nothing, thin tip at VeinTip from the middle) each ending in a pool
+		-- (`pool`, claiming its ground; the first Glow.Lights of a quarter are lit), turned Neon in white by `Neon` (the mesh
+		-- carries its own colours). No plants, no glowing domes. The props are tools/library/build_lava.ps1's (LavaProps.glb,
+		-- all in Config.LibraryKit); Fallback (the owner's basalt and the valley's rocks) only guards a kind whose props are
+		-- missing, and the lava (no fallback) is then simply absent, with one warning naming which kinds. The light is LATE
+		-- DUSK (ClockTime 18.2, no stars: a dark sky with a thin warm band on the horizon; the glow carries the scene).
+		lava = {
+			Seed = 20261207,
+			FloorHalf = 175,
+			FloorColour = "#3f3a42",
+			WallRadius = 68,
+			WallHeight = 40,
+			WallThickness = 2,
+			WallSegments = 24,
+			FightClear = 35,
+			TinyFrom = 42,
+			TinyTo = 66,
+			TinyFlowers = 0,
+			TinyTufts = 0,
+			TinyPebbles = 10,
+			TinyApart = 14,
+			RimInner = 70,
+			RimOuter = 104,
+			BackdropInner = 108,
+			BackdropOuter = 138,
+			BackdropRows = {
+				{ from = 108, to = 118, count = 14, tall = { 6, 10 } },
+				{ from = 120, to = 138, count = 18, tall = { 9, 14 } },
+			},
+			BackdropFoot = 0.5,
+			BackdropPine = 1,
+			BackdropLow = { Lateral = 40, Factor = 0.55 },
+			BackdropBushes = 0,
+			BushRowDepth = 10,
+			-- Two overlapping layers of dark hills beyond the shelf: the near ring, and Far, taller and darker behind it.
+			Hills = {
+				Count = 24,
+				Radius = 160,
+				Jitter = 8,
+				Wide = { 70, 96 },
+				Tall = { 14, 24 },
+				Sink = 0.4,
+				Colour = "#2f2a37",
+				Far = {
+					Count = 18,
+					Radius = 196,
+					Jitter = 10,
+					Wide = { 140, 190 },
+					Tall = { 40, 60 },
+					Colour = "#221e2a",
+				},
+			},
+			-- No path is drawn; these only keep the four lanes along the axes free (the plan reads them for the tiny pieces).
+			PathStyle = "none",
+			PathColour = "#4d4360",
+			PathOuter = 124,
+			PathInner = 42,
+			PathSegments = 10,
+			PathWidthOuter = 12,
+			PathWidthInner = 6,
+			PathWobble = 0.6,
+			PathFade = 0.55,
+			PathLift = 0.05,
+			PathThick = 0.1,
+			PathStep = 0.01,
+			-- The lava, turned Neon in white: the mesh's own vertex colours (core #FFAD3D, body #F15A20, bank #211A1D) show as painted.
+			Neon = { vein = "#ffffff", pool = "#ffffff" },
+			-- A pool's light: the first Lights pools of each quarter (list: quarters 1 to 4, the two far ones the player's camera
+			-- looks into last) carry a point light, Lift above the floor, Range studs, never a particle. Six in all; the colour is
+			-- found by the model's name.
+			Glow = {
+				Lights = { 1, 1, 2, 2 },
+				Lift = 3,
+				Range = 22,
+				Brightness = 1.3,
+				Colours = { Lava = "#ff7132" },
+			},
+			-- The light inside this map (client/DungeonLight eases the game's lighting to it while a run is on this map): late dusk
+			-- (the place's own dusk sky is teal, wrong over lava; at 18.2 the sky is almost black with a faint warm band; later
+			-- it is plain navy, earlier olive), Stars 0, the rock lit by a bright neutral ambient and Exposure (the sun is under
+			-- the horizon) so the floor shows its stud colour and the black and dark slimes stay seen, the lava brighter.
+			Lighting = {
+				Seconds = 1.5,
+				ClockTime = 18.2,
+				Stars = 0,
+				Brightness = 3,
+				Exposure = 0.35,
+				Ambient = "#e0dade",
+				OutdoorAmbient = "#f0e8ec",
+				AtmosphereColour = "#5a3050",
+				AtmosphereDecay = "#8a3a30",
+				AtmosphereDensity = 0.7,
+				AtmosphereOffset = 0,
+				AtmosphereHaze = 3,
+				TintColour = "#ffe4d4",
+				Saturation = 0.05,
+				GradeBrightness = 0,
+				GradeContrast = 0.1,
+			},
+			MouthHalf = 11,
+			Gap = 1.5,
+			PerCorner = {
+				Trees = 1,
+				RockPairs = 1,
+				Rocks = 2,
+				Bushes = 0,
+				Clumps = 0,
+				Stumps = 3,
+				Logs = 2,
+				Ruins = 2,
+				Roots = 0,
+				Glows = 0,
+				-- (the lava: a list, one number for each quarter; each quarter has one fissure system)
+				Pools = { 1, 1, 2, 2 },
+				Veins = 1,
+			},
+			MouthBehind = 8,
+			MouthTreeApart = 7,
+			-- (the four path mouths are closed by low basalt masses, not by tall trees)
+			MouthKind = "pine",
+			Tries = 160,
+			-- the landmark peaks (kind `round`, by height): one group in each corner, 20 to 28 studs
+			Round = { 20, 28 },
+			-- the masses that frame the near-path sides (kind `pine`, by height) and the shelf's (`ruin`): 8 to 11 studs tall,
+			-- about twice that across, so their footprint is most of their height
+			Pine = { 8, 11 },
+			PineFoot = 0.7,
+			Ruin = { 8, 10.5 },
+			RuinFoot = 0.7,
+			RockPairFoot = 6.5,
+			StumpFoot = 0.4,
+			BackdropRound = { 8, 12 },
+			RockBig = { 7, 10 },
+			RockSmall = { 4.5, 6.5 },
+			RockSingle = { 6, 10 },
+			Bush = { 7, 10 },
+			BackdropBush = { 12, 17 },
+			Flower = { 5, 7 },
+			-- short thick column groups, 7 to 10 across; terraced ledges 12 to 18 across (2 to 5 high)
+			Stump = { 7, 10 },
+			Log = { 12, 18 },
+			Tuft = { 2.8, 4 },
+			TinyFlower = { 2, 2.8 },
+			TinyTuft = { 1.5, 2.1 },
+			-- the floor's broad low fracture plates, 6 to 12 across (R42 to 66)
+			TinyPebble = { 6, 12 },
+			Root = { 6, 9 },
+			GlowSize = { 3.2, 5.2 },
+			GlowCount = { 3, 5 },
+			GlowSpread = 2.6,
+			-- The lava: a pool is 8 to 14 studs long; a fissure system's main channel is 22 to 30 long with its thin tip 46 to 54
+			-- studs from the middle (nothing inside 35), so its thick end, 70 to 84 out, runs into a pool at the rim.
+			Pool = { 8, 14 },
+			Vein = { 22, 30 },
+			VeinTip = { 46, 54 },
+			Models = {
+				round = { "LavaPeak_1", "LavaPeak_2", "LavaPeak_3" },
+				pine = { "LavaMass_1", "LavaMass_2", "LavaMass_3", "LavaMass_4" },
+				rock = {
+					"LavaBoulder_1",
+					"LavaBoulder_2",
+					"LavaBoulder_3",
+					"Rock_1_Lava",
+					"Rock_2_Lava",
+					"Rock_3_Lava",
+					"Rock_4_Lava",
+					"Rock_5_Lava",
+				},
+				ruin = { "LavaMass_1", "LavaMass_2", "LavaMass_3", "LavaMass_4" },
+				root = {},
+				stump = { "LavaStump_1", "LavaStump_2", "LavaStump_3" },
+				log = { "LavaLedge_1", "LavaLedge_2", "LavaLedge_3" },
+				pebble = { "LavaPlate_1", "LavaPlate_2", "LavaPlate_3" },
+				vein = { "LavaFissure_1", "LavaFissure_2", "LavaFissure_3", "LavaFissure_4" },
+				pool = { "LavaPool_1", "LavaPool_2", "LavaPool_3", "LavaPool_4" },
+				glow = {},
+				bush = {},
+				flower = {},
+				tuft = {},
+			},
+			Fallback = {
+				round = { "QtDeadTree_1", "QtDeadTree_3", "QtDeadTree_5" },
+				pine = { "OwnStackedBasalt", "OwnMoltenPlateau" },
+				rock = { "QtRock_Medium_1", "QtRock_Medium_2", "QtRock_Medium_3" },
+				ruin = { "OwnStackedBasalt", "OwnMoltenPlateau" },
+				root = {},
+				stump = {},
+				log = {},
+				pebble = { "QtPebble_Round_1", "QtPebble_Square_2" },
+				vein = {},
+				pool = {},
+				glow = {},
+				bush = {},
+				flower = {},
+				tuft = {},
+			},
+			-- (the library props carry their own colours in vertex colour, so nothing is tinted)
+			Tints = {},
+			BackdropTints = {},
+		},
 	},
 	-- The stand-in for a monster until its model exists (the art step): a ball whose colour follows its kind, as big as its
 	-- role. Not a final look.
@@ -776,6 +1115,8 @@ return {
 			bramblehorn = "#8a5a3a",
 			sporeburst = "#9a6ae0",
 			bearslam = "#6a4a3a",
+			lavastomp = "#c8501e",
+			eruption = "#8a2a1a",
 		},
 		Sizes = { normal = 3, armoured = 4, miniboss = 7, boss = 10 },
 	},
@@ -801,6 +1142,21 @@ return {
 		dark_totem = { model = "TotemGolem", motion = "pet_TotemGolem", height = 5.5 },
 		dark_wyrm = { model = "JungleWyrm", motion = "pet_JungleWyrm", height = 7, shadow = true },
 		dark_bear = { model = "Woods", motion = "boss_Woods", height = 11, shadow = true },
+		-- Ember Lava's (heights are first guesses, set by eye at the fight camera). The Phoenix and the Inferno Dragon fly.
+		lava_newt = { model = "FireNewt", motion = "pet_FireNewt", height = 4 },
+		lava_wolf = { model = "EmberWolf", motion = "pet_EmberWolf", height = 4.6 },
+		lava_phoenix = { model = "Phoenix", motion = "pet_Phoenix", height = 3.6, hover = 3.5, bob = 0.2, bobHz = 1.4 },
+		lava_drake = {
+			model = "InfernoDragon",
+			motion = "pet_InfernoDragon",
+			height = 3.8,
+			hover = 3,
+			bob = 0.25,
+			bobHz = 1.1,
+		},
+		lava_tortoise = { model = "RockTortoise", motion = "pet_RockTortoise", height = 5 },
+		lava_bull = { model = "MagmaBull", motion = "pet_MagmaBull", height = 8, shadow = true },
+		lava_golem = { model = "Volcano", motion = "boss_Volcano", height = 11, shadow = true },
 	},
 
 	-- ===== The client (client/UiDungeon, DungeonFight, MonsterLook): pixels, studs and seconds =====
@@ -868,6 +1224,9 @@ return {
 			bramblehorn = "rotten",
 			sporeburst = "plague",
 			bearslam = "hp",
+			-- Ember Lava's two bosses have a way of their own (their blows, steps and skill art in Config.Zombies.View)
+			lavastomp = "lavastomp",
+			eruption = "eruption",
 		},
 		-- A monster's burst when it falls grows with its size, up to this many times a plain one's.
 		DeathBigness = 2,

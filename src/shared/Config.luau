@@ -179,6 +179,10 @@ Config.Combat = {
 		-- under her target and the slimes beside it.
 		sporeburst = { kind = "all", name = "Spore Burst", every = 4, factor = 0.5, stun = 0.5 },
 		bearslam = { kind = "splash", name = "Den Slam", every = 4, factor = 2.4, splash = 0.7, spread = 3 },
+		-- The two of Ember Lava: the Magma Bull stamps its target and the slimes beside it, the Magma Golem makes the ground
+		-- erupt under every slime at once (a step heavier than the Grove's, as the map's monsters are).
+		lavastomp = { kind = "splash", name = "Magma Stomp", every = 4, factor = 2.6, splash = 0.75, spread = 3 },
+		eruption = { kind = "all", name = "Eruption", every = 5, factor = 0.6, stun = 0.6 },
 	},
 }
 
@@ -478,6 +482,103 @@ Config.LibraryKit = {
 		},
 		Willow_Dead_3_Grove = {
 			{ mesh = 117932356743380, tex = "P", size = { 0.311, 1.906, 1.578 }, at = { 0, 0.953, 0 } },
+		},
+		-- Ember Lava's (art/library/converted/LavaProps.glb, re-imported 2026-11-09 for round 4)
+		LavaBoulder_1 = {
+			{ mesh = 136262590650396, tex = "P", size = { 1.692, 1.175, 2.104 }, at = { 0, 0.588, 0 } },
+		},
+		LavaBoulder_2 = {
+			{ mesh = 133160707813778, tex = "P", size = { 1.797, 1.150, 2.711 }, at = { 0, 0.575, 0 } },
+		},
+		LavaBoulder_3 = {
+			{ mesh = 110064537160234, tex = "P", size = { 2.168, 1.515, 2.170 }, at = { 0, 0.757, 0 } },
+		},
+		LavaFissure_1 = {
+			{ mesh = 105394039797071, tex = "P", size = { 24.179, 0.300, 16.161 }, at = { 0, 0.150, 0 } },
+		},
+		LavaFissure_2 = {
+			{ mesh = 125002752972030, tex = "P", size = { 26.336, 0.300, 13.860 }, at = { 0, 0.150, 0 } },
+		},
+		LavaFissure_3 = {
+			{ mesh = 76556525121560, tex = "P", size = { 21.973, 0.300, 9.718 }, at = { 0, 0.150, 0 } },
+		},
+		LavaFissure_4 = {
+			{ mesh = 134812736660128, tex = "P", size = { 28.332, 0.300, 20.371 }, at = { 0, 0.150, 0 } },
+		},
+		LavaLedge_1 = {
+			{ mesh = 96780386446623, tex = "P", size = { 12.838, 4.062, 10.340 }, at = { 0, 2.031, 0 } },
+		},
+		LavaLedge_2 = {
+			{ mesh = 86199735009200, tex = "P", size = { 11.596, 2.992, 10.281 }, at = { 0, 1.496, 0 } },
+		},
+		LavaLedge_3 = {
+			{ mesh = 88768925313860, tex = "P", size = { 12.890, 4.062, 11.813 }, at = { 0, 2.031, 0 } },
+		},
+		LavaMass_1 = {
+			{ mesh = 126158809574000, tex = "P", size = { 18.216, 8.556, 17.550 }, at = { 0, 4.278, 0 } },
+		},
+		LavaMass_2 = {
+			{ mesh = 130222315037742, tex = "P", size = { 23.436, 8.320, 23.218 }, at = { 0, 4.160, 0 } },
+		},
+		LavaMass_3 = {
+			{ mesh = 103337344761113, tex = "P", size = { 20.244, 9.055, 20.720 }, at = { 0, 4.527, 0 } },
+		},
+		LavaMass_4 = {
+			{ mesh = 106613319552706, tex = "P", size = { 25.374, 7.604, 23.051 }, at = { 0, 3.802, 0 } },
+		},
+		LavaPeak_1 = {
+			{ mesh = 74436766905220, tex = "P", size = { 10.152, 10.000, 8.059 }, at = { 0, 5.000, 0 } },
+		},
+		LavaPeak_2 = {
+			{ mesh = 122599360401308, tex = "P", size = { 8.824, 10.000, 7.597 }, at = { 0, 5.000, 0 } },
+		},
+		LavaPeak_3 = {
+			{ mesh = 133363040217282, tex = "P", size = { 10.911, 10.000, 7.136 }, at = { 0, 5.000, 0 } },
+		},
+		LavaPlate_1 = {
+			{ mesh = 96189998264266, tex = "P", size = { 11.186, 0.255, 7.283 }, at = { 0, 0.128, 0 } },
+		},
+		LavaPlate_2 = {
+			{ mesh = 122436832985513, tex = "P", size = { 11.081, 0.255, 7.896 }, at = { 0, 0.128, 0 } },
+		},
+		LavaPlate_3 = {
+			{ mesh = 78772015733558, tex = "P", size = { 11.934, 0.255, 8.526 }, at = { 0, 0.128, 0 } },
+		},
+		LavaPool_1 = {
+			{ mesh = 140207913557398, tex = "P", size = { 12.228, 0.550, 7.915 }, at = { 0, 0.275, 0 } },
+		},
+		LavaPool_2 = {
+			{ mesh = 116477501453488, tex = "P", size = { 9.730, 0.550, 8.216 }, at = { 0, 0.275, 0 } },
+		},
+		LavaPool_3 = {
+			{ mesh = 131177167201142, tex = "P", size = { 10.849, 0.550, 10.614 }, at = { 0, 0.275, 0 } },
+		},
+		LavaPool_4 = {
+			{ mesh = 104916821881907, tex = "P", size = { 9.630, 0.550, 6.481 }, at = { 0, 0.275, 0 } },
+		},
+		LavaStump_1 = {
+			{ mesh = 115679444372201, tex = "P", size = { 7.241, 7.591, 8.145 }, at = { 0, 3.796, 0 } },
+		},
+		LavaStump_2 = {
+			{ mesh = 79703866409281, tex = "P", size = { 8.047, 7.169, 7.848 }, at = { 0, 3.584, 0 } },
+		},
+		LavaStump_3 = {
+			{ mesh = 72455173056730, tex = "P", size = { 8.179, 7.469, 5.544 }, at = { 0, 3.735, 0 } },
+		},
+		Rock_1_Lava = {
+			{ mesh = 98962634157089, tex = "P", size = { 0.485, 0.878, 0.467 }, at = { 0, 0.439, 0 } },
+		},
+		Rock_2_Lava = {
+			{ mesh = 134260206375231, tex = "P", size = { 0.561, 0.646, 0.565 }, at = { 0, 0.323, 0 } },
+		},
+		Rock_3_Lava = {
+			{ mesh = 84716651710154, tex = "P", size = { 0.738, 0.676, 0.803 }, at = { 0, 0.338, 0 } },
+		},
+		Rock_4_Lava = {
+			{ mesh = 93042374472366, tex = "P", size = { 0.744, 0.784, 1.251 }, at = { 0, 0.392, 0 } },
+		},
+		Rock_5_Lava = {
+			{ mesh = 101777159754433, tex = "P", size = { 0.663, 0.653, 0.915 }, at = { 0, 0.327, 0 } },
 		},
 	},
 	-- how long a stage waits for the meshes before it leaves a library prop out (seconds)

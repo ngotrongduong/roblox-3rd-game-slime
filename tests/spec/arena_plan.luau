@@ -17,10 +17,11 @@ local function suite(T: any, mapId: string)
 	end
 
 	-- one entry a group, with its footprint
+	-- (flat lava veins claim no ground and lie under everything: they are checked on their own, below)
 	local seen: { [number]: any } = {}
 	local order: { any } = {}
 	for _, item in items do
-		if not seen[item.group] then
+		if not seen[item.group] and item.zone ~= "floor" then
 			seen[item.group] = item
 			table.insert(order, item)
 		end
@@ -72,11 +73,14 @@ local function suite(T: any, mapId: string)
 
 	test("a ring of hills round the whole circle, far behind the woods", function()
 		local hills = Plan.hills(mapId)
-		T.eq(#hills, A.Hills.Count)
+		-- (a map may have a second ring, Hills.Far, behind the first)
+		local far = A.Hills.Far
+		T.eq(#hills, A.Hills.Count + (if far then far.Count else 0))
 		local quarters: { [number]: number } = {}
 		for _, hill in hills do
 			T.ok(flat(hill.x, hill.z) >= A.BackdropOuter, "behind the woods")
-			T.ok(hill.tall >= A.Hills.Tall[1] and hill.wide >= A.Hills.Wide[1], "its size")
+			local ring: any = if hill.layer == 2 then far else A.Hills
+			T.ok(hill.tall >= ring.Tall[1] and hill.wide >= ring.Wide[1], "its size")
 			local q = math.floor((math.atan2(hill.z, hill.x) % (2 * math.pi)) / (math.pi / 2))
 			quarters[q] = (quarters[q] or 0) + 1
 		end
@@ -251,7 +255,7 @@ local function suite(T: any, mapId: string)
 		for _, item in items do
 			if item.light then
 				lit += 1
-				T.ok(item.kind == "glow", "only a glowing mushroom is lit")
+				T.ok(item.kind == "glow" or item.kind == "pool", "only a glowing mushroom or a lava pool is lit")
 			end
 		end
 		if A.Glow then
@@ -282,6 +286,52 @@ return function(T: any)
 		T.eq(#Plan.stones("meadow"), 0)
 		T.eq(#Plan.runes("meadow"), 0)
 		T.eq(#Plan.build(), #meadow, "no map named is the Meadow")
+	end)
+
+	T.test("Ember Lava has pools at the rim and one fissure system a quarter, no path and no runes", function()
+		local A: any = Config.Dungeon.Arenas.lava
+		local items = Plan.build(nil, "lava")
+		local pools, veins, lit = 0, 0, 0
+		local wanted = 0
+		for q = 1, 4 do
+			wanted += if type(A.PerCorner.Pools) == "table" then A.PerCorner.Pools[q] else A.PerCorner.Pools
+		end
+		for _, item in items do
+			if item.kind == "pool" then
+				pools += 1
+				T.ok(item.zone == "rim", "a pool stands in the rim band")
+				T.ok(flat(item.x, item.z) - item.size / 2 >= A.RimInner, "a pool is never in the fight zone")
+				T.ok(item.light ~= nil, "a pool says whether it is lit")
+				if item.light then
+					lit += 1
+				end
+			elseif item.kind == "vein" then
+				veins += 1
+				local r = flat(item.x, item.z)
+				T.ok(item.zone == "floor" and item.wide, "a vein is a flat, wide piece")
+				T.ok(r - item.size / 2 >= A.FightClear, "a vein stops short of the fight's centre")
+				T.ok(Plan.lateral(item.x, item.z) >= A.MouthHalf, "a vein leaves the lanes free")
+				T.ok(item.size >= A.Vein[1] * 0.9 - 1e-6 and item.size <= A.Vein[2] * 1.1 + 1e-6, "its length")
+				-- the thin tip (the mesh's +X) points at the middle, kept out of it; the thick end is at the corner
+				T.ok(r - item.size / 2 >= A.VeinTip[1] - 2, "a vein's tip stays out of the middle: " .. r)
+				local toMiddle = math.atan2(-item.z, -item.x)
+				local along = math.atan2(-math.sin(item.yaw), math.cos(item.yaw))
+				local off = math.abs((along - toMiddle + math.pi) % (2 * math.pi) - math.pi)
+				T.ok(off <= 0.5, "a vein runs to its corner, off by " .. off)
+			end
+		end
+		T.ok(pools >= wanted - 1, "pools: " .. pools .. " of " .. wanted)
+		T.ok(lit >= 1 and lit <= 6, "a few pools carry the lights: " .. lit)
+		T.eq(veins, 4 * A.PerCorner.Veins)
+		T.eq(A.PathStyle, "none")
+		T.eq(#Plan.stones("lava"), 0)
+		T.eq(#Plan.runes("lava"), 0)
+		-- a map's other kinds are not touched: the Meadow and the Grove have no lava
+		for _, id in { "meadow", "mushroom" } do
+			for _, item in Plan.build(nil, id) do
+				T.ok(item.kind ~= "pool" and item.kind ~= "vein" and item.zone ~= "floor", id .. " " .. item.kind)
+			end
+		end
 	end)
 
 	T.test("the Grove has its own set of ruins, roots and glowing mushrooms", function()

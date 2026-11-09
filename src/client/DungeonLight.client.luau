@@ -25,6 +25,9 @@ type Baseline = {
 	atmDensity: number,
 	atmOffset: number,
 	atmHaze: number,
+	sky: Sky?,
+	stars: number,
+	exposure: number,
 }
 
 local baseline: Baseline? = nil
@@ -37,7 +40,11 @@ local function ensure()
 		return
 	end
 	local own = Lighting:FindFirstChildOfClass("Atmosphere")
+	local sky = Lighting:FindFirstChildOfClass("Sky")
 	baseline = {
+		sky = sky,
+		stars = if sky then sky.StarCount else 0,
+		exposure = Lighting.ExposureCompensation,
 		brightness = Lighting.Brightness,
 		clock = Lighting.ClockTime,
 		ambient = Lighting.Ambient,
@@ -88,8 +95,15 @@ local function apply(mapId: string)
 	local atm, effect = atmosphere :: Atmosphere, grade :: ColorCorrectionEffect
 	if look then
 		local seconds = look.Seconds
+		-- (a map may switch the night's stars off: Ember Lava's sky is a dark charcoal, not a starry one)
+		-- (a place with no Sky of its own shows the engine's own sky, whose few stars at this hour cannot be switched off;
+		-- a Sky made here turned the whole sky navy, so none is made)
+		if base.sky and look.Stars ~= nil then
+			base.sky.StarCount = look.Stars
+		end
 		ease(seconds, Lighting, {
 			Brightness = look.Brightness,
+			ExposureCompensation = look.Exposure or base.exposure,
 			ClockTime = look.ClockTime,
 			Ambient = Color3.fromHex(look.Ambient),
 			OutdoorAmbient = Color3.fromHex(look.OutdoorAmbient),
@@ -109,8 +123,12 @@ local function apply(mapId: string)
 		})
 	else
 		local seconds = Config.Dungeon.LightBackSeconds
+		if base.sky then
+			base.sky.StarCount = base.stars
+		end
 		ease(seconds, Lighting, {
 			Brightness = base.brightness,
+			ExposureCompensation = base.exposure,
 			ClockTime = base.clock,
 			Ambient = base.ambient,
 			OutdoorAmbient = base.outdoor,

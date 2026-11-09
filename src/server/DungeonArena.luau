@@ -1,5 +1,5 @@
 --!strict
--- The Slime Dungeon's maps (the Sunny Meadow and the Mushroom Grove), each built once from the owner's painting
+-- The Slime Dungeon's maps (the Sunny Meadow, the Mushroom Grove and Ember Lava), each built once from the owner's painting
 -- (reference/goo-lineage-web/assets/battle.map.<id>.png) and kept as a template that Dungeon clones for every run on that map.
 -- A Model whose pivot is the floor's top middle (Dungeon pivots a clone onto Layout.arenaFrame). Where things stand is
 -- shared/DungeonArenaPlan; every number is Config.Dungeon.Arenas.<map>.
@@ -8,7 +8,8 @@
 --   Paths     the four paths: flat stud-look blocks (dirt) or loose flagstones just over the grass, fading toward the grass at
 --             their inner ends
 --   Runes     (the Grove) four flat stone rings with glowing marks in the quarters
---   Lights    (the Grove) a few small point lights under the glowing mushroom clusters
+--   Lights    (the Grove) a few small point lights under the glowing mushroom clusters; (Ember Lava) the same under a few pools
+--   Lava      (Ember Lava) flat veins and pools: library meshes turned Neon (Arenas.lava.Neon), under everything else
 --   Wall      an invisible ring of tall blocks at the edge of the fight: the only thing besides the floor that collides
 --   Trees / Rocks / Bushes / Flowers   kit models (ServerStorage.Kit.WildKit): anchored, nothing collides or can be queried, only
 --             the trees cast a shadow; the clones of one kit model share one mesh
@@ -51,6 +52,8 @@ local FOLDERS: { [string]: string } = {
 	ruin = "Rocks",
 	root = "Rocks",
 	glow = "Flowers",
+	vein = "Lava",
+	pool = "Lava",
 }
 
 local function prepare(source: Instance, tree: boolean): Proto?
@@ -96,6 +99,20 @@ local function tint(model: Model, hex: string)
 				-- (a library prop's colour is white under its vertex colours, so this is the tint itself)
 				d.Color = Color3.new(d.Color.R * colour.R, d.Color.G * colour.G, d.Color.B * colour.B)
 			end
+		end
+	end
+end
+
+-- Lava is lit by itself: the model's parts turn Neon in the map's lava colour. The mesh carries its own palette in vertex
+-- colour (a hot core, an orange body, a dark burnt bank) and Roblox multiplies that by the part's colour, so with a white
+-- part colour the lava glows as painted and the bank stays dark.
+local function glowing(model: Model, hex: string)
+	local colour = Color3.fromHex(hex)
+	for _, d in model:GetDescendants() do
+		if d:IsA("BasePart") then
+			d.Material = Enum.Material.Neon
+			d.Color = colour
+			d.CastShadow = false
 		end
 	end
 end
@@ -204,7 +221,8 @@ local function build(kit: Instance, mapId: string): Model?
 			part.CanCollide = false
 			part.CanQuery = false
 		end
-	else
+	elseif A.PathStyle ~= "none" then
+		-- (PathStyle "none", Ember Lava: no path is drawn, the lanes along the four axes only stay free of scenery)
 		local dirt = Color3.fromHex(A.PathColour)
 		for _, seg in Plan.paths(mapId) do
 			local y = A.PathLift + A.PathThick / 2 + (seg.index - 1) * A.PathStep
@@ -310,8 +328,9 @@ local function build(kit: Instance, mapId: string): Model?
 	local hills = Instance.new("Folder")
 	hills.Name = "Hills"
 	hills.Parent = arena
-	local hillGreen = Color3.fromHex(A.Hills.Colour)
 	for index, hill in Plan.hills(mapId) do
+		-- (a map with a far ring of hills gives each ring its own colour)
+		local hillGreen = Color3.fromHex(hill.colour)
 		local part = Instance.new("Part")
 		part.Name = "Hill"
 		part.Shape = Enum.PartType.Ball
@@ -326,6 +345,17 @@ local function build(kit: Instance, mapId: string): Model?
 		part.Material = Enum.Material.Plastic
 		part.Color = hillGreen:Lerp(Color3.new(0, 0, 0), if index % 2 == 0 then 0.1 else 0)
 		part.Parent = hills
+		-- (Ember Lava: every Every-th hill is a volcano, a glowing dome on its top)
+		local cap = A.Hills.Glow
+		if cap and index % cap.Every == 0 then
+			local dome = part:Clone()
+			dome.Name = "HillGlow"
+			dome.Size = Vector3.new(hill.wide * cap.Wide, hill.tall * cap.Tall, hill.wide * cap.Wide)
+			dome.Position = Vector3.new(hill.x, hill.tall * (1 - A.Hills.Sink) - hill.tall * cap.Tall * 0.15, hill.z)
+			dome.Material = Enum.Material.Neon
+			dome.Color = Color3.fromHex(cap.Colour)
+			dome.Parent = hills
+		end
 	end
 
 	-- the scenery: kit models scaled to the plan's size (by height, or by width), feet on the floor
@@ -339,6 +369,10 @@ local function build(kit: Instance, mapId: string): Model?
 		clone:PivotTo(CFrame.new(item.x, 0, item.z) * CFrame.Angles(0, item.yaw, 0))
 		if item.tint then
 			tint(clone, item.tint)
+		end
+		local lava = if A.Neon then A.Neon[item.kind] else nil
+		if lava then
+			glowing(clone, lava)
 		end
 		local name = FOLDERS[item.kind]
 		local folder: Folder

@@ -1,5 +1,16 @@
 # Status
 
+## 2026-11-09 — Ember Lava, the third dungeon map (round 4 after ChatGPT's review)
+
+`MapOrder = {meadow, mushroom, lava}`. Props: `tools/library/build_lava.ps1` + `make_lava.py` -> `LavaProps.glb` (low
+basalt masses, ledges, plates, peaks, four connected lava fissures ending in six lit pools with burnt banks), imported by the
+owner, ids in `Config.LibraryKit.Props`. Charcoal stud floor `#3F3A42`, starless night with `ExposureCompensation` per map in
+`DungeonLight`. Monsters: Fire Newt, Ember Wolf, Phoenix, Inferno Dragon (healer), Rock Tortoise, Magma Bull (miniboss,
+`lavastomp`), Magma Golem (`boss_Volcano`, `eruption`, drops 2 `ember_core`, icon from ChatGPT). Seen in a play test: Grove ->
+Lava swap, every monster fighting, both skills, the victory panel; shots `docs/ui/dungeon/lava-r1..r4-*.png`. Open: fire
+effect art for the two skills and the Phoenix shot (they reuse the battle art), the fissures read small from the player camera,
+the far hills are round domes, faint clouds in the sky, no phone view; monsters still read small (all maps).
+
 ## 2026-11-09 — Mushroom Grove, round 3 (ChatGPT's review: the glow and runes carry the magic)
 
 Floor `#6c7a40` (darker, less yellow, studs kept); six lit glow clusters (`Glow.Lights = {2,2,1,1}` per quarter, front quarters

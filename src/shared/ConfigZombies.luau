@@ -197,6 +197,23 @@ return {
 				defence = { burst = "holyHit", bits = "sparkStar", ring = "ring" },
 				toxic = { burst = "burstAcid", bits = "acidDrop", rain = "acidDrop", rainRing = "ringAcid" },
 				plague = { burst = "burstArcane", bits = "spore", ring = "ringArcane" },
+				-- Ember Lava's two bosses, each its own (Config.Combat.Skills): the Bull's stomp lands on the Bull's own feet with a
+				-- shock and a cracked ground; the Golem's eruption throws bursts down on every slime and rings each one. (The owner's
+				-- battle art has no fire in it: these stand in until ChatGPT draws the fire set.)
+				lavastomp = {
+					leap = true,
+					burst = "shockwave",
+					bits = "sparkStar",
+					ring = "groundCrack",
+					ring2 = "ring",
+				},
+				eruption = {
+					burst = "shockwave",
+					bits = "moteShock",
+					ring = "groundCrack",
+					rain = "burstShock",
+					rainRing = "ringShock",
+				},
 			},
 		},
 		-- A winning team cheers (Config.Zombies.CheerSeconds): this many hops each, CheerGap apart, the next slime a bit
@@ -230,8 +247,28 @@ return {
 			RegroupSeconds = 0.45,
 			-- rounds of stepping off other fighters when a place is chosen
 			Passes = 4,
-			Stand = { attack = 0.6, defence = 0.5, speed = 1.6, hp = 0.8, rotten = 0.7, toxic = 2.6, plague = 0.6 },
-			Spread = { attack = 35, defence = 20, speed = 85, hp = 30, rotten = 55, toxic = 40, plague = 30 },
+			Stand = {
+				attack = 0.6,
+				defence = 0.5,
+				speed = 1.6,
+				hp = 0.8,
+				rotten = 0.7,
+				toxic = 2.6,
+				plague = 0.6,
+				lavastomp = 0.8,
+				eruption = 0.8,
+			},
+			Spread = {
+				attack = 35,
+				defence = 20,
+				speed = 85,
+				hp = 30,
+				rotten = 55,
+				toxic = 40,
+				plague = 30,
+				lavastomp = 30,
+				eruption = 30,
+			},
 		},
 		Fx = {
 			-- The owner's own battle art from the original game (reference/goo-lineage-web/assets/battlefx-*.png), uploaded
@@ -278,6 +315,21 @@ return {
 					ring = "ringAcid",
 				},
 				plague = { mark = "clawMarks", bits = "spore", size = 3.8, death = "burstArcane", ring = "ringArcane" },
+				-- the plain blows of Ember Lava's mini-boss and boss: a cracking stamp and a heaving shock
+				lavastomp = {
+					mark = "groundCrack",
+					bits = "sparkStar",
+					size = 4.4,
+					death = "burstShock",
+					ring = "ringShock",
+				},
+				eruption = {
+					mark = "shockwave",
+					bits = "moteShock",
+					size = 4.8,
+					death = "burstShock",
+					ring = "groundCrack",
+				},
 			},
 			MarkSeconds = 0.34,
 			MarkSwell = 1.35,

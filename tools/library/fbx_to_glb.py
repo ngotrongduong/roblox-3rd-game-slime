@@ -37,6 +37,7 @@ PALETTE = {
 # a colour variant of the same props (the flower clumps): OVERRIDE='{"Cyan":"#ee7fb0"}' SUFFIX=_Pink
 PALETTE.update(json.loads(os.environ.get("OVERRIDE", "{}")))
 SUFFIX = os.environ.get("SUFFIX", "")
+RAW = os.environ.get("RAW") == "1"
 # a prop heavier than this many triangles is collapsed down to it (tools/library/fbx_to_glb.py: trees)
 MAX_TRIS = int(os.environ.get("MAX_TRIS", "600"))
 
@@ -74,7 +75,8 @@ for name in sorted(os.listdir(in_dir)):
 						break
 			if m.name.split(".")[0] in PALETTE:
 				h = PALETTE[m.name.split(".")[0]]
-				c = tuple(srgb_to_linear(int(h[i : i + 2], 16) / 255) for i in (1, 3, 5)) + (1.0,)
+				# RAW=1: the hex is stored as it is (a dark palette, Ember Lava: the linear value read black in Roblox)
+				c = tuple((v if RAW else srgb_to_linear(v)) for v in (int(h[i : i + 2], 16) / 255 for i in (1, 3, 5))) + (1.0,)
 		cols.append(c)
 	for poly in me.polygons:
 		c = cols[poly.material_index] if poly.material_index < len(cols) else (0.8, 0.8, 0.8, 1)

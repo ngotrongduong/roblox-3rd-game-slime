@@ -633,6 +633,93 @@ return function(T: any)
 		T.ok(heavy and splash, "a heavy blow and a splash beside it")
 	end)
 
+	T.test("Ember Lava: the Bull and the Golem lead, the Golem always pays 2 Ember Cores, the skills strike", function()
+		T.eq(Dungeon.plan("lava", 1, D.MiniBossWave, 99)[1].defId, "lava_bull")
+		local golem = Dungeon.plan("lava", 1, D.BossWave, 99)[1]
+		T.eq(golem.defId, "lava_golem")
+		T.eq(golem.kind, "eruption")
+		for n = 1, 100 do
+			local cores = 0
+			for _, drop in Dungeon.rollDrops(def("lava_golem"), 1, "m10-" .. n, n) do
+				if drop.item == "ember_core" then
+					cores += drop.amount
+				end
+			end
+			T.eq(cores, 2, "the boss always pays 2 Ember Cores")
+		end
+		T.eq(D.Materials.ember_core.name, "Ember Core")
+		-- every monster of the map is a step stronger than its role in the Grove
+		local function ofRole(map: string, role: string): any
+			for _, each in (D.Maps :: any)[map].monsters do
+				if each.role == role then
+					return each
+				end
+			end
+			error("no " .. role .. " in " .. map)
+		end
+		for _, role in { "swarmer", "raider", "spitter", "shaman", "armoured", "miniboss", "boss" } do
+			local grove, lava = ofRole("mushroom", role), ofRole("lava", role)
+			T.ok(lava.hp > grove.hp, role .. " has more health than the Grove's")
+			T.ok(lava.attack >= grove.attack, role .. " hits at least as hard")
+		end
+		-- the skills: a stomp that throws a heavy blow and a splash, an eruption that reaches all three
+		local function skillEvents(kind: string): { any }
+			local squad = {}
+			for _, id in { "a", "b", "c" } do
+				table.insert(squad, { id = id, attack = 0, defence = 0, speed = 0, hp = 1e6 })
+			end
+			local boss = { id = "boss", attack = 5, defence = 0, speed = 2, hp = 1e9, kind = kind }
+			local fight = Combat.new(squad, { boss }, Rng.new(6))
+			local out = {}
+			for _ = 1, 600 do
+				for _, event in Combat.step(fight, 0.1) do
+					if event.skill == kind then
+						table.insert(out, event)
+					end
+				end
+			end
+			return out
+		end
+		T.eq(Config.Combat.Skills.lavastomp.name, "Magma Stomp")
+		T.eq(Config.Combat.Skills.eruption.name, "Eruption")
+		local heavy, splash = false, false
+		for _, event in skillEvents("lavastomp") do
+			if event.kind == "hit" and event.splash then
+				splash = true
+			elseif event.kind == "hit" then
+				heavy = true
+			end
+		end
+		T.ok(heavy and splash, "a heavy blow and a splash beside it")
+		local struck: { [string]: boolean } = {}
+		for _, event in skillEvents("eruption") do
+			if event.kind == "hit" then
+				struck[event.to] = true
+			end
+		end
+		T.ok(struck.a and struck.b and struck.c, "the eruption reaches all three")
+		-- each has an art of its own (Config.Zombies.View.Skill.Looks), apart from every other skill's
+		local looks: any = Config.Zombies.View.Skill.Looks
+		T.ok(looks.lavastomp ~= nil and looks.eruption ~= nil, "both have skill art")
+		local function signature(look: any): string
+			local parts = {}
+			for _, key in { "leap", "onTarget", "burst", "bits", "ring", "ring2", "rain", "rainRing" } do
+				table.insert(parts, tostring(look[key]))
+			end
+			return table.concat(parts, "/")
+		end
+		for name, look in looks do
+			if name ~= "lavastomp" then
+				T.ok(signature(look) ~= signature(looks.lavastomp), "the stomp's art is not " .. name .. "'s")
+			end
+			if name ~= "eruption" then
+				T.ok(signature(look) ~= signature(looks.eruption), "the eruption's art is not " .. name .. "'s")
+			end
+		end
+		T.eq(D.View.Ways.lavastomp, "lavastomp")
+		T.eq(D.View.Ways.eruption, "eruption")
+	end)
+
 	T.test("the best dungeon level is saved, repaired and migrated from schema 8", function()
 		local farm: any = FarmState.newFarm(NOW)
 		T.same(farm.dungeon, { best = 0 })

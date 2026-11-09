@@ -592,6 +592,22 @@ was left there (this game has none); read it there if a cave is ever wanted.
 - Mood belongs to the map's config and a client script (`DungeonLight`): tween Lighting, an Atmosphere and a colour grade
   while the player attribute `DungeonMap` is set, and tween back to the place's own values when it clears.
 
+## Dungeon Ember Lava, phase A (2026-11-09)
+
+- Flat glowing things (lava veins, pools) are meshes in the GLB, not script parts: a ribbon or blob with a little
+  thickness (0.3; `prepare` refuses a model under 0.01 high), painted WHITE in the middle and dark at the edge. Roblox
+  multiplies vertex colour by the part colour, so Config turns the model Neon `#ff6a1a` and the middle glows hot while the
+  rim stays a dark crust. The mesh's long axis is +X with the thick end at -X, which the plan turns at the corner.
+- A piece that lies under everything (a vein) is its own zone (`floor`) and a group that claims nothing (`group(..., false)`);
+  the generic plan tests skip that zone and a test of its own checks the fight's centre, the lanes and the thickening.
+- A prop with no plan kind of its own can borrow a free slot of the map: the black dead snags went in `root`, the rubble in
+  `log`, and no new plan kind was needed. A prop sized by width must be checked against the mesh: a Quaternius dead tree is
+  3 high and 0.8 wide, so the slot's width range was cut to 6-9 to give 8 to 20 studs of height.
+- Place the lit pieces first in a corner (the pools), then the rest: the lights land where the painting wants them.
+- A map with no path draws none (`PathStyle = "none"`) but keeps the path keys: the plan reads them for the lanes.
+- A skill's art is keyed by the skill's id (`Skill.Looks`), a blow's by the monster's way (`Ways` -> `Fx.Styles`, `Moves`): give
+  a new boss both, and a test that no other skill has the same art (the owner: never one effect recoloured).
+
 ## Dungeon Mushroom Grove, phase B (2026-11-09)
 
 - The default sky is bright blue at ClockTime 17.2 and pitch black from about 18.3; the dusk is a narrow window (17.6 still
@@ -622,3 +638,47 @@ was left there (this game has none); read it there if a cave is ever wanted.
 - Cooler ambient (#6f8a96) made the black backdrop pure black: halfway (#758f9c) kept the woods readable. Tinting only the far
   woods (`BackdropTints`, by plan zone) separates near willows from the wall at no triangle cost.
 - A fight shot with no camera override (`shot` without coordinates) shows the game's own close camera: good for a live wave.
+
+## Dungeon Ember Lava, phase B (2026-11-09)
+
+- **Vertex colours are shown exactly as stored.** `fbx_to_glb.py` used to store PALETTE colours as linear values (the Grove palette
+  was pre-brightened to hide it), so a dark palette (`#3a3446`) rendered near black in Studio. Dark props: build with `RAW=1`
+  (raw sRGB stored) and choose hexes you want to SEE; judge a prop in Studio before trusting its palette.
+- Emulate a rebuilt mesh before the owner re-imports it: on the client, read the old MeshId into an EditableMesh
+  (`AssetService:CreateEditableMeshAsync(Content.fromUri(id))`), `GetColors` / `SetColor` the new values, make a donor with
+  `CreateMeshPartAsync(Content.fromObject(em))`, then `part:ApplyMesh(donor)` and restore `Size` (it resets). Works in the
+  Client context of a play test. `InsertService:LoadLocalAsset` and `Lighting.Technology` are capability-blocked there.
+- A night map: `ClockTime 19.5` plus a bright `Ambient` gives a black starry sky while the ground stays readable; `Atmosphere`
+  never recolours the Sky texture, so a dusk sky stays teal whatever its colours say. The glow (Neon, point lights, glow domes)
+  then carries the scene, and it can be judged only through the real `DungeonLight` (toggle the player's `DungeonMap` attribute
+  to "" then "lava" to re-ease after a Config change).
+- The arena is built at world x about 2400 (z centre 6.6) for plot 1: a test camera at x=5000 shows sky and water. The squad
+  stands at (2400, 3.6, 22), the monsters spawn on the far side (z -63 to 56).
+- All arenas of all maps are built once at server start (3 now) and Replay reuses them: a Config change needs a play restart.
+- `_G` persists between Client runs of `studio_mcp.js run` (a test camera flag survives); the first Client run right after a play
+  start fails "Target is not reachable": wait about 12 s and retry.
+- A watcher that waits for VICTORY must start after the level's transition: the previous level's VICTORY is still the state,
+  so it returns at once ("0s end VICTORY"). Check the state first.
+- Monster nodes in the arena are not Models: follow them with `PVInstance:GetPivot()`.
+
+## Dungeon Ember Lava, round 4 (ChatGPT art-director review, 2026-11-09)
+
+- Judge a map against the PAINTING's silhouette, not the prop list: round 3 had every number right and still read as a crystal
+  wasteland because the rim was thin pale spires. Heavy LOW basalt masses (18-25 wide, 8-9 high) plus a few tall peaks in
+  landmark groups, and lava as connected fissure systems (one a quarter, ending in a pool), are what make a crater.
+- Place the thing that must stay connected (the fissure and the pool at its thick end) BEFORE anything that claims ground;
+  placed after the 20-28 stud peaks, the pools never found room. In `DungeonArenaPlan` the lava block now runs first.
+- Tune footprints, not counts, when the per-kind tests starve: masses `PineFoot`/`RuinFoot` 0.9 -> 0.7, `RockPairFoot` 9 -> 6.5,
+  `StumpFoot` 0.5 -> 0.4 and a rim 4 studs wider brought ruins 3 -> 8, rocks 3 -> 12, stumps 5 -> 12 at the same Config counts.
+  A lune script that prints the kind counts and where pools, fissures, peaks and ruins land beats guessing (delete it after).
+- The place has no `Sky` instance. `Instance.new("Sky")` in code turned the whole sky navy and killed the horizon glow; the
+  engine's own sky has a few faint stars that cannot be switched off. Sky colour then depends on `ClockTime` alone:
+  at 18.2 it is almost black with a thin warm horizon band, 18.7 and later plain navy, 18.1 and earlier olive with clouds.
+  `Atmosphere` colours barely change it. A floor shown at its stud colour needs `Ambient` near white and
+  `ExposureCompensation` about 0.35 once the sun is under the horizon (Ambient 0.6 left `#3F3A42` at about 10 percent).
+- Try lighting live before editing Config: a client run that sets `Lighting`, the `Atmosphere` and `DungeonGrade` values
+  (about 20 lines) plus a `shot` is a 20-second loop; then put the winner into Config and resync.
+- The owner's re-import can land as a SECOND `Scene` model next to the old one: list `workspace:GetChildren()` and read both;
+  read ids and sizes from the new one, then destroy the old one (found by one of its old child names).
+- The Magma Bull and Golem stand out of dark basalt through their own cracks and horns; a pool beside them tints the floor red
+  through its point light, so the lights sit 3 studs above the pool and the masses stay inside their 22-stud range.

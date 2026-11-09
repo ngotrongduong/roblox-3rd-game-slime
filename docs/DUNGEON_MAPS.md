@@ -1,8 +1,72 @@
-# Slime Dungeon: the other three maps (Mushroom: phase A built; Lava and Ice: plan only)
+# Slime Dungeon: the other three maps (Mushroom: built; Lava: phase A built; Ice: plan only)
 
 Written 2026-11-08. The Sunny Meadow (`battle.map.meadow.png`) is built: `shared/DungeonArenaPlan`, `server/DungeonArena`,
 `Config.Dungeon.Arenas.meadow`, props from `Config.LibraryKit`. This file plans Mushroom, Lava and Ice the same way, and the
 code that rotates the maps each level.
+
+**Lava, phase A done (2026-11-09).** Code: `Config.Dungeon.Arenas.lava`, `Maps.lava` (seven monsters), `MapOrder = { meadow, mushroom,
+lava }`, plan kinds `pool` (claims ground, rim only, the map's six lights on the first pools of each quarter) and `vein`
+(zone `floor`, claims nothing, longer and so thicker toward the rim, its thick end turned at the corner; the plan test checks
+all of it), `PathStyle = "none"`, `Arenas.lava.Neon` (the kinds turned Neon `#ff6a1a` by `server/DungeonArena`) and
+`Hills.Glow` (every fourth hill wears a Neon dome). Props: `art/library/converted/LavaProps.glb` (31 props, one import;
+`tools/library/build_lava.ps1`, procedural ones in `make_lava.py`; 139 models placed, about 15 thousand triangles, none over
+400). Slots: `round` spires `LavaSpire_1..3`; `pine` and `ruin` column clusters `LavaColumns_1..3`; `rock` `LavaBoulder_1..3`
+and `Rock_1..5_Lava`; `stump` `LavaStump_1..3`; `log` rubble heaps `LavaRubble_1..2`; `pebble` `LavaPebble_1..2`; `root` black
+dead snags `CommonTree_Dead_3/4_Lava`, `Willow_Dead_3_Lava`; `vein` `LavaVein_1..4` and `pool` `LavaPool_1..3` (both flat,
+painted white in the middle and dark at the edge, so Neon `#ff6a1a` reads hot in the middle and cools to a crust; the vein's
+long axis is +X with the thick end at -X). Monsters: Fire Newt, Ember Wolf, Phoenix (flies), Inferno Dragon (the healer: the
+Bestiary Imp is not rigged, the Dragon is a flier of the Aurora Owl's motion family), Rock Tortoise, Magma Bull (mini-boss,
+skill `lavastomp`), Magma Golem (boss `Guardians/Volcano`, skill `eruption`, drops 2 `ember_core`). Differences from the plan
+below: the snags use the `root` slot (sized by width) instead of a new kind, rubble heaps use `log`, and the volcano hills
+are a glowing dome on the existing ring of hills (no separate volcano meshes). Missing pictures: the `ember_core` icon
+(`Materials.ember_core.icon = 0`, a plain tile until ChatGPT draws it) and a fire set for the skills and the Phoenix's shot
+(the skills reuse the owner's battle art, `Config.Zombies.View.Skill.Looks.lavastomp/eruption`). Phase B (after the owner
+imports `LavaProps.glb`): copy MeshIds and sizes into `Config.LibraryKit.Props` (names as above), then look from the player's
+camera: veins and pools are already Neon by Config and the pools already carry the lights, so only judge the floor colour
+`#4d4360`, the light (`Lighting`, same dusk window as the Grove) and the spire/column scale.
+
+**Lava, phase B done (2026-11-09), three rounds in StudioTest.** The 31 props are in `Config.LibraryKit.Props` (tex "P", `at = {0,
+h/2, 0}`). The Grove -> Lava swap at Next level, all seven monsters fighting, the Magma Bull's Stomp, the Golem's Eruption and
+the victory panel (`ember_core` icon) were all seen; the console stayed clean. Shots: `docs/ui/dungeon/lava-r1-*` (first look,
+rocks near-black), `lava-r2-*` (night light, bigger lava, smaller spires), `lava-r3-{player,corner,live}.png` (final).
+- Round 1: floor `#4d4360` read black under the dusk light, the sky was teal, the lava pools too small. The rocks were pitch black:
+  Roblox shows a mesh's vertex colours as stored, and `fbx_to_glb.py` had stored them as linear values (the Grove palette was
+  pre-brightened to hide this). Fix: `RAW=1` stores raw sRGB (`make_lava.py raw()`, new `$lava` palette in `build_lava.ps1`),
+  `LavaProps.glb` rebuilt (313520 bytes).
+- Round 2: lighting is NIGHT (`ClockTime 19.5`, bright Ambient: a black starry sky, the lava and the glow domes carry the scene),
+  floor `#554e66`, hills `#4a4058`, lava `Pool 11..16` (13..20 crowded the rocks below the plan test's count), `Vein 18..36`, `Tries` 80 -> 160, spires `Round 17..23` and column clusters `Pine 14..19` (fewer, so the rim stops reading as a wall).
+- Round 3: hills 22 -> 26 (the green terrain gap at the horizon is nearly closed), `Veins` 5 -> 7 per corner. Reads: violet
+  rock clusters in the corners, glowing veins and rim pools, a calm dark centre, the bull and golem lit by their own lava.
+- (Done in round 4: the owner re-imported the rebuilt `LavaProps.glb`; its ids are in `Config.LibraryKit.Props`. Until then the
+  rocks read near-black and the play test emulated the colours on the client, see studio-build LESSONS.)
+- Still weak: a thin yellow-green terrain strip at the far-left horizon from the corner view, many spires on the rim, the floor
+  shows the stud pattern (the owner's choice), no phone view seen.
+
+**Lava, round 4 (2026-11-09), from a ChatGPT art-director review of the round-3 shots.** The verdict: a purple crystal
+wasteland with lava puddles, where the painting is a volcanic crater (heavy low basalt, lava as connected cracks, a brighter
+neutral fight floor ringed by a darker, hotter perimeter). Rebuilt, re-imported by the owner (`LavaProps.glb`, 381464 bytes,
+32 props, ids in `Config.LibraryKit.Props`, the old import and the dead-snag props gone). Shots:
+`docs/ui/dungeon/lava-r4-{player,corner,live,boss}.png` (live = Magma Bull, boss = Magma Golem, 26 studs away, both read
+through their own glow against the dark basalt).
+- Props (`tools/library/make_lava.py`, procedural, all `inward 0`): `LavaMass_1..4` chunky basalt clusters (350-400 triangles,
+  18-25 wide, 8-9 high) for the `pine` and `ruin` slots; `LavaPeak_1..3` thin 10-high peaks (`round`, scaled to 20-28, one group
+  a corner); `LavaStump_1..3` short thick hex columns (`stump`); `LavaLedge_1..3` terraced ledges (`log`); `LavaPlate_1..3`
+  flat fracture plates (`pebble`, 6-12 across); `LavaBoulder_1..3` and `Rock_1..5_Lava` (`rock`); `LavaFissure_1..4` (`vein`:
+  a 22-28 long main channel with branches and a Y fork, thick end at -X) and `LavaPool_1..4` (`pool`: 3-5 irregular pieces,
+  dark burnt bank `#211A1D`, orange `#F15A20` body, `#FFAD3D` core).
+- Plan (`DungeonArenaPlan`): the lava is placed FIRST (`step 0b`): one fissure system a corner, its tip `VeinTip` 46-54 from
+  the middle (nothing inside 35), the pool at its thick end, then the other pools (`Pools = { 1, 1, 2, 2 }`, six lights);
+  only then the peaks, masses, rocks and ledges. Hills have two layers (`Hills` and `Hills.Far`, taller and darker behind).
+  The shelf is `RimInner 70` .. `RimOuter 104`, the woods start at 108. New numbers: `PineFoot`, `RuinFoot` 0.7 (masses are
+  wide), `RockPairFoot`, `StumpFoot`. Result: 4 fissures, 6 pools, 4 peaks, 8 masses, 12 rocks, 12 stumps, 7 ledges, 42 hills,
+  636 parts and 274 meshes in the arena.
+- Light (`Arenas.lava.Lighting`, `client/DungeonLight`): LATE DUSK `ClockTime 18.2` with a bright neutral `Ambient #e0dade`,
+  `Exposure 0.35` (new, `ExposureCompensation`), no sun, so the studs show the floor colour. 18.2 gives a dark sky with a thin
+  warm band at the horizon; later it is plain navy, earlier olive. A `Sky` instance made in code turned the whole sky navy
+  (the place has no Sky of its own and its engine sky keeps a few faint stars), so none is made. `Stars = 0` only works in a
+  place that has a `Sky`.
+- Still weak: a few stars remain (no Sky in the place), the fissures read small from the player's camera because the near
+  corners are behind it, the white glow behind the left peak is the sun just under the horizon, no phone view seen.
 
 **Mushroom, phase B done (2026-11-09).** Real props in `Config.LibraryKit.Props`, dusk light tuned (ClockTime 17.82, see
 `Lighting` in the Config), olive floor `#7d8742`, a live Meadow -> Grove run and all six monsters seen; shots in

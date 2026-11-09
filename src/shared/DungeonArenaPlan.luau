@@ -3,7 +3,9 @@
 -- numbers in Config.Dungeon.Arenas.<map>, the Meadow's when no map is named). Pure: the same plan every time, flat studs from
 -- the arena's middle (x, z; yaw turns about Y), so a test can prove the fight's centre is clear, the four path mouths are open
 -- and nothing overlaps. server/DungeonArena turns the plan into parts and models. The Mushroom Grove is the same ring plan
--- with ruins, roots, glowing clusters, flagstones (`stones`) and rune circles (`runes`) besides.
+-- with ruins, roots, glowing clusters, flagstones (`stones`) and rune circles (`runes`) besides. Ember Lava (its painting,
+-- battle.map.lava.png) is the ring again with no path drawn (the lanes stay open), basalt for the trees, and lava: pools
+-- at the rim that carry the map's few lights, and flat veins that run to the corners, bigger and so thicker toward them.
 --
 -- The Meadow's painting: a round bright clearing; four dirt paths on the four axes that fade out before the middle; round trees in the
 -- four corners; pines beside the left and right paths; rocks (single and in pairs), flower clumps, bushes, a stump and a log
@@ -28,7 +30,7 @@ end
 export type Item = {
 	kind: string,
 	model: string,
-	zone: string, -- "rim" | "backdrop" | "tiny" | "mouth"
+	zone: string, -- "rim" | "backdrop" | "tiny" | "mouth" | "floor" (flat lava veins: they claim no ground)
 	x: number,
 	z: number,
 	yaw: number,
@@ -57,7 +59,8 @@ export type Segment = {
 
 -- One hill of the far horizon: a flattened ball of grass, its middle, its width and its height (a part of it sinks under the
 -- floor).
-export type Hill = { x: number, z: number, wide: number, tall: number }
+-- (`layer` 1 is the map's Hills ring, 2 its Hills.Far ring behind it; `colour` the ring's own hex.)
+export type Hill = { x: number, z: number, wide: number, tall: number, layer: number, colour: string }
 
 -- One flagstone of a stone path: its middle, size, yaw, a little pitch and roll in radians (for it to sit uneven), how far its
 -- colour fades toward the grass (0 = full stone), whether it is mossy, its grey (a share, -1 to 1, darker to lighter) and its
@@ -127,18 +130,26 @@ end
 -- The ring of hills behind the woods, round the whole circle (a path runs off into the woods and a hill, never into the sky).
 function ArenaPlan.hills(mapId: string?): { Hill }
 	local A = arenaOf(mapId)
-	local H = A.Hills
 	local rng = Rng.new(A.Seed + 7)
 	local out: { Hill } = {}
-	for k = 1, H.Count do
-		local angle = (k - 0.5 + (rng:next() - 0.5) * 0.5) / H.Count * math.pi * 2
-		local r = H.Radius + (rng:next() - 0.5) * 2 * H.Jitter
-		table.insert(out, {
-			x = math.cos(angle) * r,
-			z = math.sin(angle) * r,
-			wide = H.Wide[1] + rng:next() * (H.Wide[2] - H.Wide[1]),
-			tall = H.Tall[1] + rng:next() * (H.Tall[2] - H.Tall[1]),
-		})
+	-- (Ember Lava has a second ring, Hills.Far, taller, further out and darker, so two layers of hills overlap on the horizon)
+	local rings: { any } = { A.Hills }
+	if A.Hills.Far then
+		table.insert(rings, A.Hills.Far)
+	end
+	for layer, H in rings do
+		for k = 1, H.Count do
+			local angle = (k - 0.5 + (rng:next() - 0.5) * 0.5) / H.Count * math.pi * 2
+			local r = H.Radius + (rng:next() - 0.5) * 2 * H.Jitter
+			table.insert(out, {
+				x = math.cos(angle) * r,
+				z = math.sin(angle) * r,
+				wide = H.Wide[1] + rng:next() * (H.Wide[2] - H.Wide[1]),
+				tall = H.Tall[1] + rng:next() * (H.Tall[2] - H.Tall[1]),
+				layer = layer,
+				colour = H.Colour,
+			})
+		end
 	end
 	return out
 end
@@ -247,12 +258,23 @@ function ArenaPlan.build(names: { [string]: { string } }?, mapId: string?): { It
 		return true
 	end
 
-	-- A group: its footprint is claimed, and its models are added to it.
-	local function group(zone: string, x: number, z: number, foot: number)
+	-- A group: its footprint is claimed (unless `claims` is false: flat lava lies under everything), and its models are
+	-- added to it. A model may be turned to a `turn` (radians) instead of a drawn yaw.
+	local function group(zone: string, x: number, z: number, foot: number, claims: boolean?)
 		groups += 1
-		table.insert(placed, { x = x, z = z, foot = foot })
+		if claims ~= false then
+			table.insert(placed, { x = x, z = z, foot = foot })
+		end
 		local id = groups
-		return function(kind: string, at_x: number, at_z: number, size: number, wide: boolean, light: boolean?)
+		return function(
+			kind: string,
+			at_x: number,
+			at_z: number,
+			size: number,
+			wide: boolean,
+			light: boolean?,
+			turn: number?
+		)
 			if not has(kind) then
 				return
 			end
@@ -265,7 +287,7 @@ function ArenaPlan.build(names: { [string]: { string } }?, mapId: string?): { It
 				zone = zone,
 				x = at_x,
 				z = at_z,
-				yaw = rng:next() * math.pi * 2,
+				yaw = if turn then turn else rng:next() * math.pi * 2,
 				size = size,
 				wide = wide,
 				tint = if tints then rng:pick(tints) else nil,
@@ -293,7 +315,7 @@ function ArenaPlan.build(names: { [string]: { string } }?, mapId: string?): { It
 	end
 
 	local function tuftBeside(
-		add: (string, number, number, number, boolean, boolean?) -> (),
+		add: (string, number, number, number, boolean, boolean?, number?) -> (),
 		x: number,
 		z: number,
 		away: number
@@ -307,13 +329,73 @@ function ArenaPlan.build(names: { [string]: { string } }?, mapId: string?): { It
 		group("rune", circle.x, circle.z, circle.radius + 1)
 	end
 
+	-- 0b. Ember Lava's lava comes before everything else, so nothing stands where a fissure leads: one fissure system in each
+	-- quarter, flat and claiming nothing, its thin tip at VeinTip from the middle and its thick end (the mesh's -X) toward the
+	-- corner; a pool at that thick end, so the lava is connected; then the quarter's other pools, claiming their ground. The
+	-- first few pools of each quarter carry one of the map's point lights, Glow.Lights. `Pools` is a number for every quarter
+	-- or a list, one for each.
+	local each = A.PerCorner
+	local spread = 42 * DEG
+	for q = 0, 3 do
+		local centre = (q + 0.5) * HALF_PI
+		local litPools = 0
+		local poolLights = if A.Glow then A.Glow.Lights[q + 1] or 0 else 0
+		local poolsHere: number = if type(each.Pools) == "table" then each.Pools[q + 1] or 0 else each.Pools or 0
+		local function poolIn(x: number, z: number, size: number, turn: number?)
+			local foot = size / 2 + 1
+			local light = litPools < poolLights
+			group("rim", x, z, foot)("pool", x, z, size, true, light, turn)
+			if light then
+				litPools += 1
+			end
+			poolsHere -= 1
+		end
+		for _ = 1, each.Veins or 0 do
+			for _ = 1, A.Tries do
+				local angle = centre + (rng:next() - rng:next()) * spread
+				local size = between(A.Vein)
+				local r = between(A.VeinTip) + size / 2
+				local x, z = math.cos(angle) * r, math.sin(angle) * r
+				if ArenaPlan.lateral(x, z) >= A.MouthHalf + 4 then
+					local turn = math.atan2(z, -x) + (rng:next() - 0.5) * 0.25
+					group("floor", x, z, 0, false)("vein", x, z, size, true, nil, turn)
+					if poolsHere > 0 then
+						local psize = between(A.Pool)
+						-- (the mesh's +X, toward the middle, is (cos turn, -sin turn) on the floor)
+						local back = size / 2 - psize * 0.05
+						local px, pz = x - math.cos(turn) * back, z + math.sin(turn) * back
+						local foot = psize / 2 + 1
+						local pr = math.sqrt(px * px + pz * pz)
+						if
+							pr - foot >= A.WallRadius
+							and pr <= A.RimOuter
+							and ArenaPlan.lateral(px, pz) >= A.MouthHalf + foot
+							and free(px, pz, foot)
+						then
+							poolIn(px, pz, psize, turn)
+						end
+					end
+					break
+				end
+			end
+		end
+		for _ = 1, poolsHere do
+			local size = between(A.Pool)
+			local foot = size / 2 + 1
+			local x, z = spot(centre, spread, foot, A.RimInner, A.RimOuter)
+			if x and z then
+				poolIn(x, z, size)
+			end
+		end
+	end
+
 	-- 1. The two pines beside the left and right paths (first: their spots are narrow), then the first round tree in each
 	-- corner; the corners' other trees (the painting packs two or three together) come after the rocks and flowers.
 	if has("pine") then
 		for _, axis in { 0, 180 } do
 			for _, side in { -1, 1 } do
 				local size = between(A.Pine)
-				local foot = size * 0.33
+				local foot = size * (A.PineFoot or 0.33)
 				local x, z = spot((axis + side * 23) * DEG, 5 * DEG, foot, A.RimInner + 3, A.RimOuter + 2)
 				if x and z then
 					group("rim", x, z, foot)("pine", x, z, size, false)
@@ -321,7 +403,7 @@ function ArenaPlan.build(names: { [string]: { string } }?, mapId: string?): { It
 			end
 		end
 	end
-	local function cornerTrees(zone: string, count: number, spread: number, rIn: number, rOut: number)
+	local function cornerTrees(zone: string, count: number, aside: number, rIn: number, rOut: number)
 		if not has("round") then
 			return
 		end
@@ -329,7 +411,7 @@ function ArenaPlan.build(names: { [string]: { string } }?, mapId: string?): { It
 			for _ = 1, count do
 				local size = between(A.Round)
 				local foot = size * 0.3
-				local x, z = spot((q + 0.5) * HALF_PI, spread, foot, rIn, rOut)
+				local x, z = spot((q + 0.5) * HALF_PI, aside, foot, rIn, rOut)
 				if x and z then
 					group(zone, x, z, foot)("round", x, z, size, false)
 				end
@@ -339,14 +421,12 @@ function ArenaPlan.build(names: { [string]: { string } }?, mapId: string?): { It
 	cornerTrees("rim", 1, 5 * DEG, A.RimInner + 3, A.RimOuter + 2)
 
 	-- 2. Per corner: rock pairs, single rocks (each in a tuft of grass), bushes, flower clumps, a stump and a log.
-	local each = A.PerCorner
-	local spread = 42 * DEG
 	for q = 0, 3 do
 		local centre = (q + 0.5) * HALF_PI
 		-- (the Grove's: the ruins first, the corner's great pieces, each with a root lying across its foot half the time)
 		for _ = 1, each.Ruins or 0 do
 			local size = between(A.Ruin)
-			local foot = size * 0.3 + 1.5
+			local foot = size * (A.RuinFoot or 0.3) + 1.5
 			local x, z = spot(centre, spread, foot, A.RimInner, A.RimOuter)
 			if x and z then
 				local add = group("rim", x, z, foot)
@@ -366,7 +446,7 @@ function ArenaPlan.build(names: { [string]: { string } }?, mapId: string?): { It
 			end
 		end
 		for _ = 1, each.RockPairs do
-			local foot = 9
+			local foot = A.RockPairFoot or 9
 			local x, z = spot(centre, spread, foot, A.RimInner, A.RimOuter)
 			if x and z then
 				local add = group("rim", x, z, foot)
@@ -387,7 +467,7 @@ function ArenaPlan.build(names: { [string]: { string } }?, mapId: string?): { It
 		end
 		for _ = 1, each.Stumps do
 			local size = between(A.Stump)
-			local foot = size / 2 + 0.6
+			local foot = size * (A.StumpFoot or 0.5) + 0.6
 			local x, z = spot(centre, spread, foot, A.RimInner, A.RimOuter)
 			if x and z then
 				local add = group("rim", x, z, foot)
@@ -482,17 +562,19 @@ function ArenaPlan.build(names: { [string]: { string } }?, mapId: string?): { It
 	tiny("pebble", A.TinyPebble, true, A.TinyPebbles)
 
 	-- 4a. Past each path's outer end, a pair of trees closes the view, so a path runs off into the woods, never into the sky.
-	if has("round") then
+	-- (Ember Lava closes them with low basalt masses, MouthKind, not with tall peaks)
+	local mouthKind = A.MouthKind or "round"
+	if has(mouthKind) then
 		for q = 0, 3 do
 			local axis = q * HALF_PI
 			local ax, az = math.cos(axis), math.sin(axis)
 			for _, side in { -1, 1 } do
 				local size = between(A.BackdropRound)
-				local foot = size * 0.2
+				local foot = size * (if A.MouthKind then 0.6 else 0.2)
 				local r = A.PathOuter + foot + A.MouthBehind
 				local x, z = ax * r - az * side * A.MouthTreeApart, az * r + ax * side * A.MouthTreeApart
 				if free(x, z, foot) then
-					group("mouth", x, z, foot)("round", x, z, size, false)
+					group("mouth", x, z, foot)(mouthKind, x, z, size, false)
 				end
 			end
 		end
@@ -507,6 +589,13 @@ function ArenaPlan.build(names: { [string]: { string } }?, mapId: string?): { It
 			local kind = if pine then "pine" else "round"
 			if has(kind) then
 				local size = between(row.tall)
+				-- (Ember Lava: the masses straight behind the monsters, along the four axes, stand lower so a boss reads against
+				-- the sky; the ones in the corners, framing the view, keep their height)
+				local low = (A :: any).BackdropLow
+				if low then
+					local lateral = ArenaPlan.lateral(math.cos(angle), math.sin(angle)) * (row.from + row.to) / 2
+					size *= low.Factor + (1 - low.Factor) * math.clamp(lateral / low.Lateral, 0, 1)
+				end
 				local foot = size * A.BackdropFoot
 				for _ = 1, 8 do
 					local r = row.from + rng:next() * (row.to - row.from)
