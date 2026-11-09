@@ -784,12 +784,13 @@ local function buildHud()
 		Size = UDim2.fromOffset(P.PlateLeft, height),
 	})
 
-	-- the run's drops under the plate
+	-- the run's drops along the bottom edge (on a phone the band under the plate is where the monsters stand); a second
+	-- row grows upward
 	local strip = UiKit.make("Frame", {
 		Name = "Drops",
 		BackgroundTransparency = 1,
-		AnchorPoint = Vector2.new(0.5, 0),
-		Position = UDim2.new(0.5, 0, 0, U.Edge + P.PlateHeight + U.Gap),
+		AnchorPoint = Vector2.new(0.5, 1),
+		Position = UDim2.new(0.5, 0, 1, -U.Edge),
 		Size = UDim2.fromOffset(P.DropsWidth, 0),
 		AutomaticSize = Enum.AutomaticSize.Y,
 	}, host)

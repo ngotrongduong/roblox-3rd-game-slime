@@ -726,3 +726,12 @@ was left there (this game has none); read it there if a cave is ever wanted.
   brought the round-tree and bare-tree counts back; check the per-kind counts after moving any big mass.
 - A flat dark contact disc (Cylinder, 0.12 thick, `CastShadow` false, `Transparency 0.45`) under a white monster gives the value
   contrast the floor cannot; it is parented in the creature's folder and moved with the other parts in `SlimeActor`'s batch.
+- A far ring inherits the arena's `Hills.Sink` unless it names its own: Lava's `Far` ring sank 40 percent and its valleys fell to
+  the floor line, so the farm's yellow-green terrain (about 3 degrees above the horizon) showed between the domes. Give every ring
+  its own `Sink`, and check by a 15-degree sweep of the camera at the squad spot (script `look.luau`: Scriptable camera, HUD off).
+- Phone-frame shots: resize the Studio window to about 1397 x 558 outer for an 860 x 390 viewport (the side panels take the rest;
+  the ratio is not 1:1 and changes after every play start, so shoot a test image and read its size first). A minimised Studio
+  renders the 3D view pure white; restore it before every shot. Monsters of a wave are random: wait for "any monster" or a time,
+  not for one id.
+- On a phone-sized screen the wave plate and a centred drops row cover the band where monsters and their name bars stand; the
+  drops belong on the bottom edge.

@@ -1081,11 +1081,14 @@ return {
 				Sink = 0.4,
 				Colour = "#2f2a37",
 				Far = {
-					Count = 18,
+					Count = 30,
 					Radius = 196,
 					Jitter = 10,
 					Wide = { 140, 190 },
-					Tall = { 40, 60 },
+					Tall = { 50, 70 },
+					-- (the foot barely sunk: with the ring's 0.4 the valleys between the hills fell to the floor line and the farm
+					-- hill's grass showed through them)
+					Sink = 0.12,
 					Colour = "#221e2a",
 				},
 			},
@@ -1297,11 +1300,11 @@ return {
 				Sink = 0.08,
 				Colour = "#cfe0f2",
 				Far = {
-					Count = 16,
+					Count = 40,
 					Radius = 206,
 					Jitter = 6,
 					Wide = { 170, 230 },
-					Tall = { 54, 70 },
+					Tall = { 60, 76 },
 					Sink = 0.12,
 					Colour = "#b7c9d9",
 				},
@@ -1538,6 +1541,10 @@ return {
 	-- `height` the model's height in studs, `hover` how high a flyer flies (it then flies, wings beating) with a `bob`
 	-- at `bobHz`. (A look may instead name `pieces`: a model of rigid pieces turned about their joints, shared/MonsterMotion;
 	-- the Blender builds of the owner's paintings in art/models/monsters/ are kept that way.)
+	-- Every look's `height` (and its hover) is drawn this many times bigger: the monsters read small beside the 3-stud
+	-- slimes in a fight at the player's camera (2026-11-09). `Big` is for the looks with `shadow` (minibosses and
+	-- bosses), which are already tall.
+	LookScale = { Normal = 1.35, Big = 1.15 },
 	Looks = {
 		green_sprout = { model = "Twigling", motion = "pet_Twigling", height = 4.4 },
 		green_bee = { model = "Parrot", motion = "pet_Parrot", height = 3.6, hover = 3.5, bob = 0.15, bobHz = 1.5 },
@@ -1607,14 +1614,14 @@ return {
 		StepperButton = 48,
 		StepperLabel = 70,
 		EnterWidth = 110,
-		-- The arena HUD: the plate at the top (wave, level, monsters left), the drops column at the left edge, the Leave button
-		-- at the right edge.
+		-- The arena HUD: the plate at the top (wave, level, monsters left), the drops row along the bottom edge, the Leave
+		-- button at the right edge.
 		PlateWidth = 236,
 		PlateHeight = 40,
 		PlateWave = 88,
 		PlateLevel = 48,
 		PlateLeft = 34,
-		DropsWidth = 300,
+		DropsWidth = 360,
 		DropChip = 34,
 		LeaveWidth = 104,
 		-- The end card at the top: Victory or Defeat, the drops of the run and the buttons.

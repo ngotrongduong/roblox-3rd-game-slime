@@ -212,7 +212,8 @@ function MonsterLook.build(monster: Monster): Look
 	local creature = nil
 	if spec and kitModel then
 		model:PivotTo(CFrame.new())
-		creature = if spec.motion then rigOf(spec, kitModel, model, 1) else creatureOf(spec, kitModel, model, 1)
+		local scale = if spec.shadow then D.LookScale.Big else D.LookScale.Normal
+		creature = if spec.motion then rigOf(spec, kitModel, model, scale) else creatureOf(spec, kitModel, model, scale)
 	end
 	return { model = model, face = ZombieLook.look("rotten").face, size = size, creature = creature }
 end

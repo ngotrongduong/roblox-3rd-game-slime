@@ -340,3 +340,18 @@ next map in the cycle.
   owner's models), then Mushroom (the rune circles and the ruins need the most new work).
 - Each map is built as the Meadow was: reference list, greybox, props, light, three rounds of shots against the painting
   (`docs/ui/dungeon/<map>-r<n>-*.png`), lessons into `studio-build/LESSONS.md`.
+
+## 8. Polish pass (2026-11-09)
+
+- `LookScale` (`Normal 1.35`, `Big 1.15`) kept: checked on all four maps with the phone-size view (`docs/ui/dungeon/phone-*.png`,
+  `boss-*.png`, `scale-meadow-*.png`). Monsters read against slimes, Bramblehorn (12.65 studs), the Magma Golem and the Yeti do not
+  clip the arena or the camera and keep their spacing from the squad (`Move.MinApart 3.5` unchanged).
+- Phone HUD (844 x 390 landscape): the run's drops chips sat under the wave plate, over the band where monsters and their name bars
+  stand. They are now one row along the bottom edge (`UiDungeon.buildHud`, `View.DropsWidth 360`; a second row grows upward).
+- Edges of Lava and Ice: the farm's grass hill (about 3 degrees above the horizon, 1500 studs out) showed in the valleys between the
+  far hills from the squad spot and, on Ice, from the corner side. Lava `Hills.Far`: `Count 30`, `Tall 50..70`, `Sink 0.12`
+  (it inherited the near ring's 0.4, which dropped the valleys to the floor line). Ice `Hills.Far`: `Count 40`, `Tall 60..76`.
+  Judged by a 15-degree sweep from the squad spot and from 60 studs toward the monsters; no green or sea left.
+- Skill and shot effects (lavastomp, eruption, tuskcharge, blizzard, Phoenix and Frost Wisp shots, sporeburst, bearslam): not touched.
+  The owner stopped that work to rebuild them from the VFX library, one set per monster group.
+- Not fixed: the village HUD's right pill ("Village 16") is clipped at the right edge of an 844 px screen (not a dungeon screen).
