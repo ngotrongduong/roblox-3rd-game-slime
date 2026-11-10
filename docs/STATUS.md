@@ -80,6 +80,10 @@ in `wear_kit.py`, which keeps a plaque's relief outside the skin), and the crest
 Left out: the foot's crest (it would meet the ground as the jelly squashes) and the snowflake (it would sit on the
 face). Model 106684279429446; all fifteen dressed Secrets n/n in Play, the older kits rebuilt unchanged, the swan seen
 front, level, back, side and three-quarter. Not seen: a phone.
+Hand-over: 15 of the 56 Secrets wear their pieces. The next one starts when the owner sends its file: skill
+`slime-wear` from step 1. Everything learnt today, right and wrong, is in the skill (the owner's rules in SKILL.md, a
+"What worked" list and every mistake with its fix in LESSONS.md); the close shots in Play are one command now,
+`.claude/skills/slime-wear/shoot_close.ps1 <studio> <secret> <out>`.
 
 ## 2026-11-10 — Dungeon fight effects per monster, from the VFX library
 

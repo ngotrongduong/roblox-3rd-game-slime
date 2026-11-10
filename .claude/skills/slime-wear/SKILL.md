@@ -94,12 +94,14 @@ orchestrator's (CLAUDE.md).
 9. **Check:** `& "C:\Roblox 3rd game\tools\check.ps1"` ends `CHECK OK` (`tests/spec/wear.luau` holds every piece on
    the skin and every pair mirrored).
 10. **See it in Play:** stop Play (MCP `start_stop_play`),
-    `& "C:\Roblox 3rd game\tools\map\sync_all.ps1" -StudioId <id>`, start Play, then
-    `node tools/studio_mcp.js run .claude/skills/slime-wear/play_check.luau <id> Client` (move the character to an
-    open lawn first, away from the well and the village slimes): every Secret that wears
-    pieces stands in a row in front of the player, alive; each must say `n/n pieces`. Shoot each changed one close from
-    the front and the back with the camera lines it prints (`node tools/studio_mcp.js shot <id> <out.png> ...`) and
-    look: pieces on the skin, no gap, the detail at their foot showing, moving with the jelly.
+    `& "C:\Roblox 3rd game\tools\map\sync_all.ps1" -StudioId <id>`, start Play, then one command:
+    `& "C:\Roblox 3rd game\.claude\skills\slime-wear\shoot_close.ps1" <id> secret-<a>-<b> <scratchpad>\close`.
+    It puts the character on the open lawn (`play_stage.luau`), lines every Secret that wears pieces up in front of it,
+    alive (`play_check.luau`; each must say `n/n pieces`), brings the one named out onto open ground
+    (`play_close.luau`) and shoots it from the front, back, side and three-quarter as the game sees it, and level as the
+    painting does. Look at all five next to the painting: pieces on the skin, no gap, the detail at their foot showing,
+    the place and size the painting gives. A piece that only moves keeps its mesh ids; change `at` and `anchor` alone.
+    End by running `play_stage.luau` again so the owner's character stands in front of it, then send him the shots.
 11. **Finish:** a paragraph in `docs/STATUS.md` under today's section at the top (a new `## <date> — ...` section if
     there is none); commit only your own files: the kit folder's `.glb`, `.fbx`, `.png` and `wear.json`, `wear_kit.py`,
     `Config.luau`, `docs/STATUS.md`, this skill if it changed (`git add` new ones first, then `commit --only`); tell the

@@ -3,6 +3,27 @@
 What went wrong while dressing Secret slimes, and the fix now in the tools. Newest last; add to it after every kit that
 taught something.
 
+## What worked (keep doing it)
+
+Fifteen Secrets dressed on 2026-11-10; these got a piece right in one or two rounds:
+
+- **Read the painting in body units.** The painting's body and the game's share their shape: 1 tall, 0.527 wide each
+  side at its widest. Measure a piece's middle, height and reach on the painting in pixels, divide by the body's height
+  in pixels, and `at` and `scale` come out nearly right at the first build (Frost Swan's frills).
+- **Ask what a winged part is before placing it:** a real wing (spread from the back: the bird's standard, a bat's
+  `wing`) or an ornament the painting draws on the body (`front`). The renders cannot tell; the painting can.
+- **One kit, many rounds of renders, one upload.** Build, look at `front`, `head`, `game`, `side`, `backq` next to the
+  painting, change the table, build again; upload only when the renders match. A Play look then usually needs one
+  more step of scale (the jelly sits wider than the render's body).
+- **A piece that only moves keeps its mesh ids** (Roblox centres an uploaded mesh): change `at` and `anchor` in Config
+  and skip the upload. A change of scale or of its foot's draw-down is new geometry: upload again.
+- **Rebuild the other kits in the background** while uploading (step 6), then restore the FBX files that differ only in
+  their timestamp; a `wear.json` that did not move proves the kit did not.
+- **Close shots on open ground, five sides** (`shoot_close.ps1`): above as the game sees it, and level as the painting
+  does. Judge horns beside wings and plaques the colour of the skin from the level shot too.
+- **When the owner corrects, his words go into "The owner's rules" the same hour**, with the date, and the fix into
+  the tool, so the next Secret starts right.
+
 ## 2026-11-10 (Tempest Dragon, Steam Dragon, Fire-Ice Chimera, Shadow Wolf)
 
 | What went wrong | The fix |
