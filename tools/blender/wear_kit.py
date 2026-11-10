@@ -32,6 +32,16 @@ FANTASY_WINGS = nearest(Moth=(-0.336, 0.598), Butterfly=(-0.21, 0.216), Phoenix=
 	Griffin=(0.207, 0.174), Fairy=(0.337, 0.575))
 FANTASY_BUDGET = dict(Moth=344, Butterfly=656, Phoenix=546, Griffin=688, Fairy=506)
 
+# the owner's "stylized fox tail 3d model.glb" (2026-11-10): four rows of two ears and a tail, top to bottom the Arctic
+# Wolf's (navy and white), the Ember Tiger's (striped), the Witch Cat's (purple) and the Creamsicle Fox's. In each row the
+# ear at x -0.02 opens toward +X: the slime's left ear
+FOX_TAIL = nearest(WolfEarR=(-0.284, 0.855), WolfEarL=(-0.019, 0.853), WolfTail=(0.224, 0.856),
+	TigerEarR=(-0.282, 0.615), TigerEarL=(-0.021, 0.62), TigerTail=(0.239, 0.617),
+	CatEarR=(-0.28, 0.388), CatEarL=(-0.017, 0.386), CatTail=(0.24, 0.383),
+	FoxEarR=(-0.282, 0.13), FoxEarL=(-0.021, 0.128), FoxTail=(0.231, 0.119))
+FOX_BUDGET = dict(WolfEarR=462, WolfEarL=390, WolfTail=682, TigerEarR=424, TigerEarL=336, TigerTail=538, CatEarR=368,
+	CatEarL=366, CatTail=701, FoxEarR=380, FoxEarL=320, FoxTail=812)
+
 # `sort` says which part of the file a loose bit belongs to, by its middle; `budget` the triangles a part keeps;
 # `pieces` what is made of each part, in the order they are exported: kind (horn: horns and ears, wing, tail), where it
 # sits on the body (Blender axes, body height 1; +X is the slime's own left), size factor, turns in degrees, and `twin`,
@@ -582,6 +592,72 @@ KITS = {
 				face=(0, 1, 0.2), twin="WingL"),
 		),
 		body=(1, 0.8, 0.2, 1),
+	),
+	# Four Secrets' ears and tails from FOX_TAIL, 2026-11-10: the ears upright at the top corners as the paintings have
+	# them, leaning out a little, open to the front; the tail low on the back, as Shadow Wolf's
+	"ArcticWolf": dict(
+		folder="arctic_wolf",
+		glb="fox_tail.glb",
+		out="ArcticWolfWear",
+		texture="arctic_wolf_wear.png",
+		sort=FOX_TAIL,
+		budget=FOX_BUDGET,
+		pieces=dict(
+			EarL=dict(part="WolfEarL", kind="horn", at=(0.34, 0.0, 0.68), scale=1.6, tilt_out=15, tilt_back=0,
+				level=False, foot="low"),
+			EarR=dict(part="WolfEarR", kind="horn", at=(-0.34, 0.0, 0.68), scale=1.6, tilt_out=15, tilt_back=0,
+				level=False, foot="low"),
+			Tail=dict(part="WolfTail", kind="tail", base="-x", at=(0.0, 0.45, 0.2), scale=2.6, lift=0, sink=True),
+		),
+		body=(0.75, 0.82, 0.97, 1),
+	),
+	"EmberTiger": dict(
+		folder="ember_tiger",
+		glb="fox_tail.glb",
+		out="EmberTigerWear",
+		texture="ember_tiger_wear.png",
+		sort=FOX_TAIL,
+		budget=FOX_BUDGET,
+		pieces=dict(
+			EarL=dict(part="TigerEarL", kind="horn", at=(0.36, 0.0, 0.66), scale=1.6, tilt_out=25, tilt_back=0,
+				level=False, foot="low"),
+			EarR=dict(part="TigerEarR", kind="horn", at=(-0.36, 0.0, 0.66), scale=1.6, tilt_out=25, tilt_back=0,
+				level=False, foot="low"),
+			Tail=dict(part="TigerTail", kind="tail", base="-x", at=(0.0, 0.45, 0.2), scale=2.6, lift=0, sink=True),
+		),
+		body=(1, 0.55, 0.15, 1),
+	),
+	"WitchCat": dict(
+		folder="witch_cat",
+		glb="fox_tail.glb",
+		out="WitchCatWear",
+		texture="witch_cat_wear.png",
+		sort=FOX_TAIL,
+		budget=FOX_BUDGET,
+		pieces=dict(
+			EarL=dict(part="CatEarL", kind="horn", at=(0.34, 0.0, 0.68), scale=1.6, tilt_out=15, tilt_back=0,
+				level=False, foot="low"),
+			EarR=dict(part="CatEarR", kind="horn", at=(-0.34, 0.0, 0.68), scale=1.6, tilt_out=15, tilt_back=0,
+				level=False, foot="low"),
+			Tail=dict(part="CatTail", kind="tail", base="-x", at=(0.0, 0.45, 0.2), scale=2.6, lift=0, sink=True),
+		),
+		body=(0.6, 0.35, 0.8, 1),
+	),
+	"CreamsicleFox": dict(
+		folder="creamsicle_fox",
+		glb="fox_tail.glb",
+		out="CreamsicleFoxWear",
+		texture="creamsicle_fox_wear.png",
+		sort=FOX_TAIL,
+		budget=FOX_BUDGET,
+		pieces=dict(
+			EarL=dict(part="FoxEarL", kind="horn", at=(0.34, 0.0, 0.7), scale=1.6, tilt_out=25, tilt_back=0,
+				level=False, foot="low"),
+			EarR=dict(part="FoxEarR", kind="horn", at=(-0.34, 0.0, 0.7), scale=1.6, tilt_out=25, tilt_back=0,
+				level=False, foot="low"),
+			Tail=dict(part="FoxTail", kind="tail", base="-x", at=(0.0, 0.45, 0.2), scale=2.6, lift=0, sink=True),
+		),
+		body=(1, 0.75, 0.4, 1),
 	),
 }
 TEXTURE = 1024

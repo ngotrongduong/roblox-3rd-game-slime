@@ -122,6 +122,14 @@ turning on that edge back toward each other and open again (fairy quick, butterf
 and beat, tips at about +-1.0. All twenty-five dressed Secrets n/n in Play, the five seen from five sides. Not seen: a
 phone.
 
+Four more wear ears and a tail from the owner's `stylized fox tail 3d model.glb` (four rows of two ears and a tail):
+`secret-navy-white` Arctic Wolf, `secret-orange-orange` Ember Tiger, `secret-orange-purple` Witch Cat and
+`secret-orange-white` Creamsicle Fox. The ears stand at the top corners as the paintings have them, leaning out a
+little, and flick now and then; the bushy tails sit low on the back, wagging and trailing the hop (wolf brisk, tiger slow,
+cat lazy, fox bushy). The reference painting `slime.secret.orange-white.png` is the Yellow+White daisy slime (the
+owner, 2026-11-10); the game's own Creamsicle Fox skin is right. All twenty-nine dressed Secrets n/n in Play. Not seen: a
+phone.
+
 ## 2026-11-10 — Dungeon fight effects per monster, from the VFX library
 
 The owner paused the old effect work and asked for each map group's skills to be rebuilt from his VFX library
