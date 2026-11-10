@@ -67,6 +67,12 @@ membrane mended (`mend` in `wear_kit.py`: each hole found from the wing's outlin
 each patch face wearing its own tile of the membrane's texture; model 113673886578474). All thirteen dressed Secrets
 n/n in Play, the older ten rebuilt unchanged; the three new ones seen front and back, the mended wing close. Not
 seen: a phone.
+Then `secret-gray-purple` Moonstone Gargoyle from the owner's `gray_purple.glb` (stone bat wings, two horns, an
+arrow-tipped tail): the wings spread up and out from the back of the shoulders (spread wing motion, 12 degrees at
+0.8 Hz), the horns on the front of the head's top corners as the painting has them (set further back they merged with
+the wing roots from the game's camera), the tail hanging from the back with a slow heavy wag (the painting shows no
+tail; the file has one, so it is worn). Model 128659610713284; all fourteen dressed Secrets n/n in Play, the gargoyle
+seen front, back, side and three-quarter. Not seen: a phone.
 
 ## 2026-11-10 — Dungeon fight effects per monster, from the VFX library
 

@@ -2299,6 +2299,7 @@ Config.Wear = {
 		["secret-blue-blue"] = "CloudPegasus",
 		["secret-black-yellow"] = "HoneybeeSlime",
 		["secret-black-red"] = "BloodMoonBat",
+		["secret-gray-purple"] = "MoonstoneGargoyle",
 	},
 	Kits = {
 		-- the owner's Meshy model art/models/accessories/tempest_dragon/neon_dragon_relics.glb, uploaded as model
@@ -2807,6 +2808,54 @@ Config.Wear = {
 					at = { 0.4365, 0.7854, 0.2705 },
 					anchor = { 0.28, 0.66, 0.25 },
 					flap = { axis = { -0.2756, 0, 0.9613 }, degrees = 12, hz = 0.8 },
+				},
+			},
+		},
+		-- the owner's model art/models/accessories/moonstone_gargoyle/gray_purple.glb (stone bat wings out behind the
+		-- shoulders, two small horns on the front of the head's top corners, a scaly arrow-tipped tail), uploaded as model
+		-- 128659610713284
+		MoonstoneGargoyle = {
+			texture = "rbxassetid://84499624132900",
+			pieces = {
+				{
+					name = "HornL",
+					mesh = 133666424166771,
+					size = { 0.171, 0.2183, 0.1067 },
+					at = { -0.2748, 0.8717, -0.0862 },
+					anchor = { -0.2331, 0.7792, -0.1 },
+				},
+				{
+					name = "HornR",
+					mesh = 81409518149910,
+					size = { 0.1678, 0.2227, 0.1064 },
+					at = { 0.2832, 0.8667, -0.1022 },
+					anchor = { 0.2331, 0.7792, -0.1 },
+				},
+				{
+					name = "WingL",
+					mesh = 82014703898286,
+					size = { 0.65, 0.4992, 0.3888 },
+					at = { -0.5931, 0.7108, 0.4556 },
+					anchor = { -0.29, 0.67, 0.28 },
+					flap = { axis = { -0.5, 0, -0.866 }, degrees = 12, hz = 0.8 },
+				},
+				{
+					name = "WingR",
+					mesh = 119158942649300,
+					size = { 0.6594, 0.4984, 0.3867 },
+					at = { 0.5982, 0.7152, 0.4537 },
+					anchor = { 0.29, 0.67, 0.28 },
+					flap = { axis = { -0.5, 0, 0.866 }, degrees = 12, hz = 0.8 },
+				},
+				{
+					name = "Tail",
+					mesh = 72949607917756,
+					size = { 0.1329, 0.2124, 0.6239 },
+					at = { -0.0066, 0.1987, 0.7766 },
+					anchor = { 0, 0.2, 0.485 },
+					-- (a stone creature's tail: a slow, heavy wag)
+					flap = { axis = { 0, 1, 0 }, degrees = 8, hz = 0.5 },
+					lag = { axis = { 1, 0, 0 }, degrees = 10 },
 				},
 			},
 		},

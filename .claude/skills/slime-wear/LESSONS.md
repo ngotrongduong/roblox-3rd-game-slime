@@ -62,3 +62,11 @@ taught something.
 | The patch's UVs taken from the membrane round the hole showed pale; one flat colour showed as a sticker; repainting the texture under the patch smeared 770 000 pixels, because the file's atlas cuts the membrane into many islands | each patch face gets a tile of its own in the texture (`TILE`, where the bat shows nothing; this kit's PNG serves the bat only): the membrane round the hole sampled through its faces, the hole blended in smoothly |
 | Patches set 20 % of the thickness inside left a dark seam round each hole | 5 % (`inset=0.05`); the tile carries the membrane's own texture where patch and membrane overlap, so nothing fights |
 | Bee wings came out solid cream in Roblox (the texture has no alpha) | a piece's `clear` (0.35) lets light through, on top of a ghost's fade (`client/SlimeWear`) |
+
+## 2026-11-10 (Moonstone Gargoyle)
+
+| What went wrong | The fix |
+|---|---|
+| Spread bat wings matching the painting best had their root at r 0.424 at height 0.72, off the skin (0.359): the skin test failed | slide the root down and in along the shoulder (0.67, r 0.403) and check the render again; a piece that only moves keeps its mesh ids (Roblox centres an uploaded mesh), only `at` and `anchor` change |
+| Horns at the head's top corners, level with the wing roots (`at` y 0.02), looked right in the level front render but merged with the wing roots from the game's camera above: same colour, one behind the other | horns on the FRONT of the top corners (y -0.1), so the body is behind them; judge horns beside wings in Play from the front |
+| The line-up row ran into a fence for the last Secrets (x 217): the close shots showed planks | move the one Secret onto open ground in front of the row: set its actor's `root` (the actor puts the model back on it) as well as `PivotTo` |

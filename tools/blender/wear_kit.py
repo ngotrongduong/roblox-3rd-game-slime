@@ -302,6 +302,27 @@ KITS = {
 		),
 		body=(0.6, 0.05, 0.08, 1),
 	),
+	# Moonstone Gargoyle (secret-gray-purple), 2026-11-10: stone bat wings standing up and out behind the shoulders, two
+	# small horns on the FRONT of the head's top corners (the file has them upright, tips curling out; further back they
+	# merge with the wing roots seen from the game's camera), a scaly tail with an arrow tip (the painting shows none:
+	# worn as the other tails are)
+	"MoonstoneGargoyle": dict(
+		folder="moonstone_gargoyle",
+		glb="gray_purple.glb",
+		out="MoonstoneGargoyleWear",
+		texture="moonstone_gargoyle_wear.png",
+		sort=lambda c: "Tail" if c.z < 0.2 else ((("HornR" if c.x < 0 else "HornL") if abs(c.x) < 0.2 else
+			("WingL" if c.x < 0 else "WingR"))),
+		budget=dict(HornL=400, HornR=400, WingL=600, WingR=600, Tail=700),
+		pieces=dict(
+			HornL=dict(part="HornL", kind="horn", at=(0.23, -0.1, 0.75), scale=1.0, tilt_out=6, tilt_back=0, level=False),
+			HornR=dict(part="HornR", kind="horn", at=(-0.23, -0.1, 0.75), scale=1.0, tilt_out=6, tilt_back=0, level=False),
+			WingL=dict(part="WingL", kind="wing", at=(0.29, 0.28, 0.67), scale=1.65, raise_=-5, sweep=30),
+			WingR=dict(part="WingR", kind="wing", root="-x", at=(-0.29, 0.28, 0.67), scale=1.65, raise_=-5, sweep=30),
+			Tail=dict(part="Tail", kind="tail", base="-x", at=(0.0, 0.485, 0.2), scale=0.85, lift=5),
+		),
+		body=(0.45, 0.42, 0.5, 1),
+	),
 }
 TEXTURE = 1024
 
