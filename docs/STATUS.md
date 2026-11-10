@@ -139,6 +139,12 @@ to lay its whole foot rim on the skin, and the close shots add two from low at t
 The owner: each round made them worse; copy Sunshower Fox, whose ears he likes. The four now wear their ears at
 Sunshower's exact place and angles (`at` +-0.34, 0, 0.7, lean out 32, no lean back, the default seat), scaled to its
 height; the per-ear fit is gone from the tool, and the skill says every pair of ears copies Sunshower Fox.
+He still saw them differ and placed the eight ears himself in the new ear editor (skill slime-wear: `ear_editor.luau`
+puts the slimes on a stage over the map for Studio's Move and Rotate tools, `ear_read.luau` and `ear_write.py` bring
+his places back). A piece now keeps an optional `turn` (degrees, about its own middle) in Config.Wear, drawn by
+`SlimeWear` at rest and in motion; a hand-set pair is not held to the mirror test. Rebuilt from Config, the stage
+reads back unchanged, and the Play shots show his angles. His rule from now on: Claude places ears roughly, he
+fine-tunes them in the editor.
 
 ## 2026-11-10 — Dungeon fight effects per monster, from the VFX library
 

@@ -112,7 +112,8 @@ return function(T)
 			for name, piece in byName do
 				local twin = string.match(name, "^(.+)L$")
 				local other = twin and byName[twin .. "R"]
-				if other then
+				-- (a pair the owner set by hand in the ear editor keeps his places)
+				if other and not (piece.turn or other.turn) then
 					T.near(piece.anchor[1], -other.anchor[1], 0.005, `{kitName}.{name}`)
 					T.near(piece.anchor[3], other.anchor[3], 0.005, `{kitName}.{name}`)
 					T.near(piece.at[1], -other.at[1], 0.07, `{kitName}.{name}`)

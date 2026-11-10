@@ -28,16 +28,19 @@ type PieceSpec = {
 	bones: { { number } }?,
 	wriggle: WriggleSpec?,
 	clear: number?,
+	turn: { number }?,
 }
 type KitSpec = { texture: string, pieces: { PieceSpec } }
 
 -- `anchor` and `offset` (from the anchor to the piece's middle) are in mesh units, times the slime's scale in studs.
 -- `bend`/`bendSpeed`: the lag spring's angle (radians) and its speed. `bones`: a tentacle's, root to tip, built on its
 -- part; `boneAxes` the wriggle's axis in each bone's own frame; `wave`/`curl` radians, their speeds radians a second.
+-- `turn`: the piece turned about its own middle (the owner's hand in the ear editor).
 type Piece = {
 	part: BasePart,
 	anchor: Vector3,
 	offset: Vector3,
+	turn: CFrame,
 	axis: Vector3?,
 	swing: number,
 	swingMid: number,
@@ -126,7 +129,11 @@ local function dress(model: Model, name: string)
 	for i, spec in KITS[name].pieces do
 		local part = templates[name][i]:Clone()
 		part.Size = v3(spec.size) * s
-		part.CFrame = feet * CFrame.new(v3(spec.at) * s)
+		local t = spec.turn
+		local turn = if t
+			then CFrame.fromEulerAnglesXYZ(math.rad(t[1]), math.rad(t[2]), math.rad(t[3]))
+			else CFrame.identity
+		part.CFrame = feet * CFrame.new(v3(spec.at) * s) * turn
 		-- (a ghost's pieces fade as its body does; a `clear` piece, an insect's wing, lets that share of the light through)
 		part.Transparency = 1 - (1 - body.Transparency) * (1 - (spec.clear or 0))
 		local flap = spec.flap
@@ -161,6 +168,7 @@ local function dress(model: Model, name: string)
 			part = part,
 			anchor = v3(spec.anchor),
 			offset = v3(spec.at) - v3(spec.anchor),
+			turn = turn,
 			axis = if flap then v3(flap.axis).Unit else nil,
 			swing = if flap then math.rad(flap.degrees) else 0,
 			swingMid = if flap then math.rad(flap.bias or 0) else 0,
@@ -315,7 +323,7 @@ function SlimeWear.pose(
 		end
 		n += 1
 		parts[n] = p.part
-		cfs[n] = cf * CFrame.new(p.offset * s)
+		cfs[n] = cf * CFrame.new(p.offset * s) * p.turn
 	end
 	return n
 end

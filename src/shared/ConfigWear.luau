@@ -15,6 +15,9 @@
 -- `degrees` running out to the tip `hz` times a second, each bone `lag` radians behind the one before, and a slow curl
 -- of `curl` degrees and back `curlHz` times a second; both grow toward the tip. (the owner, 2026-11-10: "co duỗi, ngọ
 -- nguậy như tay bạch tuộc")
+-- A `turn` (degrees about X, Y, Z, CFrame.fromEulerAnglesXYZ) turns the piece about its middle: the owner set it by hand
+-- in the ear editor (skill slime-wear, `ear_editor.luau`), and `at` and `anchor` came with it. (the owner, 2026-11-10:
+-- "để tôi tự thao tác rồi bạn lưu lại thông số")
 type WearMotion = { axis: { number }, degrees: number, hz: number?, every: number?, bias: number? }
 type WearWriggle = { axis: { number }, degrees: number, hz: number, lag: number, curl: number, curlHz: number }
 type WearPiece = {
@@ -28,6 +31,7 @@ type WearPiece = {
 	lag: WearMotion?,
 	bones: { { number } }?,
 	wriggle: WearWriggle?,
+	turn: { number }?,
 }
 type WearKit = { texture: string, pieces: { WearPiece } }
 local Wear = {
@@ -1215,8 +1219,9 @@ local Wear = {
 					name = "EarL",
 					mesh = 135207235802339,
 					size = { 0.3066, 0.2875, 0.163 },
-					at = { -0.3623, 0.8128, 0.0102 },
-					anchor = { -0.3469, 0.711, 0 },
+					at = { -0.3182, 0.7974, 0.0102 },
+					anchor = { -0.3854, 0.6962, 0 },
+					turn = { 0, 0, -19.241 },
 					-- (a wolf's ear: a quick swivel now and then, each ear on its own)
 					twitch = { axis = { 0, 1, 0 }, degrees = 18, every = 3.5 },
 					lag = { axis = { 1, 0, 0 }, degrees = 5 },
@@ -1225,8 +1230,9 @@ local Wear = {
 					name = "EarR",
 					mesh = 77879909334130,
 					size = { 0.3072, 0.2873, 0.1606 },
-					at = { 0.3548, 0.8213, 0.01 },
-					anchor = { 0.3473, 0.7117, 0 },
+					at = { 0.3123, 0.8061, 0.01 },
+					anchor = { 0.3818, 0.7004, 0 },
+					turn = { 0, 0, 19.6352 },
 					twitch = { axis = { 0, 1, 0 }, degrees = 18, every = 3.5 },
 					lag = { axis = { 1, 0, 0 }, degrees = 5 },
 				},
@@ -1251,8 +1257,9 @@ local Wear = {
 					name = "EarL",
 					mesh = 73941534531922,
 					size = { 0.2926, 0.2662, 0.1609 },
-					at = { -0.3653, 0.829, 0.0071 },
-					anchor = { -0.3476, 0.7121, 0 },
+					at = { -0.339, 0.816, 0.0071 },
+					anchor = { -0.3784, 0.7034, 0 },
+					turn = { 0, 0, -26.3884 },
 					-- (a big cat's ear: a slower, rarer flick)
 					twitch = { axis = { 0, 1, 0 }, degrees = 14, every = 4.5 },
 					lag = { axis = { 1, 0, 0 }, degrees = 5 },
@@ -1261,8 +1268,9 @@ local Wear = {
 					name = "EarR",
 					mesh = 136421325789516,
 					size = { 0.2905, 0.2702, 0.1585 },
-					at = { 0.3668, 0.8306, 0.016 },
-					anchor = { 0.3474, 0.7119, 0 },
+					at = { 0.3502, 0.8223, 0.016 },
+					anchor = { 0.3738, 0.7074, 0 },
+					turn = { 0, 0, 26.5056 },
 					twitch = { axis = { 0, 1, 0 }, degrees = 14, every = 4.5 },
 					lag = { axis = { 1, 0, 0 }, degrees = 5 },
 				},
@@ -1287,8 +1295,9 @@ local Wear = {
 					name = "EarL",
 					mesh = 125582493660919,
 					size = { 0.3035, 0.2696, 0.1613 },
-					at = { -0.3732, 0.8249, 0.002 },
-					anchor = { -0.3476, 0.7121, 0 },
+					at = { -0.3503, 0.8125, 0.002 },
+					anchor = { -0.3809, 0.7011, 0 },
+					turn = { 0, 0, -28.5113 },
 					-- (a cat's ear flicks often)
 					twitch = { axis = { 0, 1, 0 }, degrees = 20, every = 3 },
 					lag = { axis = { 1, 0, 0 }, degrees = 5 },
@@ -1297,8 +1306,9 @@ local Wear = {
 					name = "EarR",
 					mesh = 111901571764146,
 					size = { 0.3067, 0.2741, 0.1599 },
-					at = { 0.3725, 0.8229, 0.0068 },
-					anchor = { 0.3475, 0.712, 0 },
+					at = { 0.3641, 0.8187, 0.0068 },
+					anchor = { 0.3727, 0.7084, 0 },
+					turn = { 0, 0, 26.6927 },
 					twitch = { axis = { 0, 1, 0 }, degrees = 20, every = 3 },
 					lag = { axis = { 1, 0, 0 }, degrees = 5 },
 				},
@@ -1323,8 +1333,9 @@ local Wear = {
 					name = "EarL",
 					mesh = 128017434678007,
 					size = { 0.2898, 0.2846, 0.1636 },
-					at = { -0.3802, 0.8296, 0.006 },
-					anchor = { -0.3472, 0.7116, 0 },
+					at = { -0.3727, 0.8255, 0.006 },
+					anchor = { -0.3752, 0.7062, 0 },
+					turn = { 0, 0, -28.8076 },
 					-- (a fox's ear: a quick swivel now and then)
 					twitch = { axis = { 0, 1, 0 }, degrees = 18, every = 3.5 },
 					lag = { axis = { 1, 0, 0 }, degrees = 5 },
@@ -1333,8 +1344,9 @@ local Wear = {
 					name = "EarR",
 					mesh = 104537285412488,
 					size = { 0.2931, 0.2895, 0.1624 },
-					at = { 0.3796, 0.8218, 0.0093 },
-					anchor = { 0.3472, 0.7115, 0 },
+					at = { 0.364, 0.8151, 0.0093 },
+					anchor = { 0.3811, 0.701, 0 },
+					turn = { 0, 0, 23.3513 },
 					twitch = { axis = { 0, 1, 0 }, degrees = 18, every = 3.5 },
 					lag = { axis = { 1, 0, 0 }, degrees = 5 },
 				},

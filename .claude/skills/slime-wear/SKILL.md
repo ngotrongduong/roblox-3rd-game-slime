@@ -32,6 +32,17 @@ orchestrator's (CLAUDE.md).
   each its own angle to hide a gap: those were tried and he rejected them. An ear twitches by a swivel about the
   upright (it never tips its foot off the skin). Judge ears from 3x close-ups of every root in Play, including the two
   shots from low at the front (`-lowright`, `-lowleft`), and next to Sunshower Fox.
+- **Claude places ears roughly, the owner fine-tunes them by hand** (2026-11-10, after placing four pairs himself: "lần
+  sau cũng làm như vậy, bạn sắp xếp chung chung như vậy rồi để tôi tinh chỉnh lại là được"): put the ears on in one
+  plain round (the Sunshower Fox standard above), check them in Play, then open the ear editor for him instead of more
+  rounds of your own. Stop Play, sync, run `ear_editor.luau` (Edit; set its EDIT and REFERENCE lists), tell him in
+  Vietnamese: click an ear, Move (Ctrl+2), Rotate (Ctrl+3), and turn Studio's snapping down first (Model tab, Rotate
+  45 -> off or 1, Move -> off or 0.05; he met the 45-degree steps). Wait for his word, then `ear_read.luau` (Edit) to
+  a JSON file, `python ear_write.py <json> src/shared/ConfigWear.luau`, check, sync, run `ear_editor.luau` and
+  `ear_read.luau` again (it must return `[]`: the game draws exactly what he set), remove the stage
+  (`workspace.EarEditor`), see it in Play. His `turn`, `at`, `size` and `anchor` are kept as they are: no rebuild, no
+  mirroring, no "fixing" them afterwards. The editor takes any piece whose name holds "Ear"; widen `isEar` for other
+  pieces he wants to place.
 - **Vines grow out, not stuck on** (2026-11-10: "dây leo mọc vươn ra cả bên ngoài của slime"): what the painting draws
   round the outline stands out past the body (`frame`), only what lies on the back is laid on the skin (`wrap`).
 - **A bird's wings spread from the back** (2026-11-10: "tư thế tự nhiên của cánh chim thay vì chổng lên trên cao", then
