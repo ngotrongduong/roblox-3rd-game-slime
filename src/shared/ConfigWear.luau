@@ -59,6 +59,11 @@ local Wear = {
 		["secret-pink-yellow"] = "PeachBlossom",
 		["secret-purple-purple"] = "AmethystUnicorn",
 		["secret-gray-orange"] = "CopperBeetle",
+		["secret-pink-pink"] = "RoseFairy",
+		["secret-pink-purple"] = "DreamButterfly",
+		["secret-navy-pink"] = "TwilightMoth",
+		["secret-orange-yellow"] = "SunPhoenix",
+		["secret-purple-yellow"] = "RoyalGriffin",
 	},
 	Kits = {
 		-- the owner's Meshy model art/models/accessories/tempest_dragon/neon_dragon_relics.glb, uploaded as model
@@ -1072,6 +1077,125 @@ local Wear = {
 					size = { 0.1007, 0.1621, 0.1271 },
 					at = { 0.4593, 0.0914, -0.1787 },
 					anchor = { 0.4266, 0.1394, -0.174 },
+				},
+			},
+		},
+		-- the owner's model art/models/accessories/rose_fairy/fantasy_wings.glb (its fairy wing, mirrored into a pair, in
+		-- the bee's pose on the upper back), uploaded as model 89183950647204
+		RoseFairy = {
+			texture = "rbxassetid://132123962648519",
+			pieces = {
+				{
+					name = "WingL",
+					mesh = 129410502697214,
+					size = { 0.5052, 0.6393, 0.2537 },
+					at = { -0.4726, 0.916, 0.3724 },
+					anchor = { -0.24, 0.7, 0.27 },
+					-- (a fairy's wings flutter, quicker than a butterfly's)
+					flap = { axis = { -0.2567, 0.1694, -0.9515 }, degrees = 14, hz = 1.2 },
+				},
+				{
+					name = "WingR",
+					mesh = 131760084285353,
+					size = { 0.5052, 0.6393, 0.2537 },
+					at = { 0.4726, 0.916, 0.3724 },
+					anchor = { 0.24, 0.7, 0.27 },
+					flap = { axis = { -0.2567, -0.1694, 0.9515 }, degrees = 14, hz = 1.2 },
+				},
+			},
+		},
+		-- the owner's model art/models/accessories/dream_butterfly/fantasy_wings.glb (its butterfly wing, mirrored into a
+		-- pair, in the bee's pose on the upper back), uploaded as model 75756341136828
+		DreamButterfly = {
+			texture = "rbxassetid://105140380877532",
+			pieces = {
+				{
+					name = "WingL",
+					mesh = 133581142305174,
+					size = { 0.5153, 0.6624, 0.2548 },
+					at = { -0.4816, 0.9241, 0.3806 },
+					anchor = { -0.24, 0.7, 0.27 },
+					-- (a butterfly's slow, wide beat)
+					flap = { axis = { -0.2567, 0.1694, -0.9515 }, degrees = 18, hz = 0.8 },
+				},
+				{
+					name = "WingR",
+					mesh = 121779404514416,
+					size = { 0.5153, 0.6624, 0.2548 },
+					at = { 0.4816, 0.9241, 0.3806 },
+					anchor = { 0.24, 0.7, 0.27 },
+					flap = { axis = { -0.2567, -0.1694, 0.9515 }, degrees = 18, hz = 0.8 },
+				},
+			},
+		},
+		-- the owner's model art/models/accessories/twilight_moth/fantasy_wings.glb (its moth wing, mirrored into a pair, in
+		-- the bee's pose on the upper back), uploaded as model 85481550171965
+		TwilightMoth = {
+			texture = "rbxassetid://136009891707826",
+			pieces = {
+				{
+					name = "WingL",
+					mesh = 126656958178577,
+					size = { 0.5342, 0.672, 0.284 },
+					at = { -0.4889, 0.9198, 0.3848 },
+					anchor = { -0.24, 0.7, 0.27 },
+					-- (a moth's soft, sleepy beat)
+					flap = { axis = { -0.2567, 0.1694, -0.9515 }, degrees = 12, hz = 0.7 },
+				},
+				{
+					name = "WingR",
+					mesh = 91650038352566,
+					size = { 0.5342, 0.672, 0.284 },
+					at = { 0.4889, 0.9198, 0.3848 },
+					anchor = { 0.24, 0.7, 0.27 },
+					flap = { axis = { -0.2567, -0.1694, 0.9515 }, degrees = 12, hz = 0.7 },
+				},
+			},
+		},
+		-- the owner's model art/models/accessories/sun_phoenix/fantasy_wings.glb (its flame-orange feathered wing, mirrored
+		-- into a pair; the Raven's pose and beat, the owner's standard for every bird wing pair), uploaded as model
+		-- 115786779767394
+		SunPhoenix = {
+			texture = "rbxassetid://72055305970075",
+			pieces = {
+				{
+					name = "WingL",
+					mesh = 90632312139034,
+					size = { 0.8827, 0.4424, 0.2285 },
+					at = { -0.5444, 0.5922, 0.5375 },
+					anchor = { -0.17, 0.53, 0.45 },
+					flap = { axis = { -0.2437, -0.1181, -0.9626 }, degrees = 10, hz = 0.6 },
+				},
+				{
+					name = "WingR",
+					mesh = 140444306653341,
+					size = { 0.8827, 0.4424, 0.2285 },
+					at = { 0.5444, 0.5922, 0.5375 },
+					anchor = { 0.17, 0.53, 0.45 },
+					flap = { axis = { -0.2437, 0.1181, 0.9626 }, degrees = 10, hz = 0.6 },
+				},
+			},
+		},
+		-- the owner's model art/models/accessories/royal_griffin/fantasy_wings.glb (its purple and gold feathered wing,
+		-- mirrored into a pair; the Raven's pose and beat), uploaded as model 131481220667166
+		RoyalGriffin = {
+			texture = "rbxassetid://104673014318939",
+			pieces = {
+				{
+					name = "WingL",
+					mesh = 73512483710055,
+					size = { 0.8372, 0.5287, 0.2452 },
+					at = { -0.5626, 0.5782, 0.5256 },
+					anchor = { -0.17, 0.53, 0.45 },
+					flap = { axis = { -0.2437, -0.1181, -0.9626 }, degrees = 10, hz = 0.6 },
+				},
+				{
+					name = "WingR",
+					mesh = 114237378969296,
+					size = { 0.8372, 0.5287, 0.2452 },
+					at = { 0.5626, 0.5782, 0.5256 },
+					anchor = { 0.17, 0.53, 0.45 },
+					flap = { axis = { -0.2437, 0.1181, 0.9626 }, degrees = 10, hz = 0.6 },
 				},
 			},
 		},

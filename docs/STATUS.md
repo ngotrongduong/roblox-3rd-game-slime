@@ -112,6 +112,14 @@ and a part may be worn twice; Forest Dryad and Peach Blossom rebuilt to the same
 `src/shared/ConfigWear.luau` (Config.luau neared Studio's script limit). All twenty dressed Secrets n/n in Play, the two
 seen from five sides. Not seen: a phone.
 
+Five more Secrets wear wings from the owner's `fantasy wings 3d model.glb` (five single wings, each mirrored into a
+pair): `secret-pink-pink` Rose Fairy (fairy wings), `secret-pink-purple` Dream Butterfly, `secret-navy-pink` Twilight
+Moth, all three in the bee's pose on the upper back (the owner: they need not match their paintings, "cứ đặt ở vị trí
+sau lưng như những cánh bướm khác") with their own beat (fairy quick, butterfly slow and wide, moth soft);
+`secret-orange-yellow` Sun Phoenix and `secret-purple-yellow` Royal Griffin, feathered wings in Midnight Raven's pose
+and beat, tips at about +-1.0. All twenty-five dressed Secrets n/n in Play, the five seen from five sides. Not seen: a
+phone.
+
 ## 2026-11-10 — Dungeon fight effects per monster, from the VFX library
 
 The owner paused the old effect work and asked for each map group's skills to be rebuilt from his VFX library

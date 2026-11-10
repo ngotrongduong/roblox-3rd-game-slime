@@ -26,6 +26,12 @@ def nearest(**marks):
 # the owner's "feathered wing 3d model.glb" (2026-11-10): one torn bat wing, one big white feathered wing, one bee wing
 WING_TRIO = nearest(Bat=(-0.295, 0.615), Feather=(-0.073, 0.212), Bee=(0.253, 0.577))
 
+# the owner's "fantasy wings 3d model.glb" (2026-11-10): five single wings, one for each of five Secrets, every one with
+# its root at its -X end (the narrow end where it meets the body), its tip up and toward +X: the file's right wing
+FANTASY_WINGS = nearest(Moth=(-0.336, 0.598), Butterfly=(-0.21, 0.216), Phoenix=(-0.026, 0.568),
+	Griffin=(0.207, 0.174), Fairy=(0.337, 0.575))
+FANTASY_BUDGET = dict(Moth=344, Butterfly=656, Phoenix=546, Griffin=688, Fairy=506)
+
 # `sort` says which part of the file a loose bit belongs to, by its middle; `budget` the triangles a part keeps;
 # `pieces` what is made of each part, in the order they are exported: kind (horn: horns and ears, wing, tail), where it
 # sits on the body (Blender axes, body height 1; +X is the slime's own left), size factor, turns in degrees, and `twin`,
@@ -506,6 +512,75 @@ KITS = {
 			ClawR1=dict(part="ClawR1", kind="rigid", at=(-70, 0.11), scale=1.1, tilt=-20),
 		),
 		body=(0.5, 0.5, 0.52, 1),
+	),
+	# Five Secrets' wings from FANTASY_WINGS, 2026-11-10, each the file's right wing mirrored into a pair. The feathered
+	# ones (Sun Phoenix, Royal Griffin) take Midnight Raven's pose, the owner's standard for a bird's wings; the fairy,
+	# butterfly and moth wings take the bee's pose on the back, not their paintings' (the owner, 2026-11-10: "không cần
+	# khớp với tranh, cứ đặt ở vị trí sau lưng như những cánh bướm khác")
+	"RoseFairy": dict(
+		folder="rose_fairy",
+		glb="fantasy_wings.glb",
+		out="RoseFairyWear",
+		texture="rose_fairy_wear.png",
+		sort=FANTASY_WINGS,
+		budget=FANTASY_BUDGET,
+		pieces=dict(
+			WingR=dict(part="Fairy", kind="aim", root="-x", at=(-0.24, 0.27, 0.7), scale=1.8, point=(0.65, 0.3, 0.7),
+				face=(0, 1, 0.1), twin="WingL"),
+		),
+		body=(0.95, 0.5, 0.7, 1),
+	),
+	"DreamButterfly": dict(
+		folder="dream_butterfly",
+		glb="fantasy_wings.glb",
+		out="DreamButterflyWear",
+		texture="dream_butterfly_wear.png",
+		sort=FANTASY_WINGS,
+		budget=FANTASY_BUDGET,
+		pieces=dict(
+			WingR=dict(part="Butterfly", kind="aim", root="-x", at=(-0.24, 0.27, 0.7), scale=1.65, point=(0.65, 0.3, 0.7),
+				face=(0, 1, 0.1), twin="WingL"),
+		),
+		body=(0.8, 0.45, 0.95, 1),
+	),
+	"TwilightMoth": dict(
+		folder="twilight_moth",
+		glb="fantasy_wings.glb",
+		out="TwilightMothWear",
+		texture="twilight_moth_wear.png",
+		sort=FANTASY_WINGS,
+		budget=FANTASY_BUDGET,
+		pieces=dict(
+			WingR=dict(part="Moth", kind="aim", root="-x", at=(-0.24, 0.27, 0.7), scale=2.0, point=(0.65, 0.3, 0.7),
+				face=(0, 1, 0.1), twin="WingL"),
+		),
+		body=(0.3, 0.2, 0.6, 1),
+	),
+	"SunPhoenix": dict(
+		folder="sun_phoenix",
+		glb="fantasy_wings.glb",
+		out="SunPhoenixWear",
+		texture="sun_phoenix_wear.png",
+		sort=FANTASY_WINGS,
+		budget=FANTASY_BUDGET,
+		pieces=dict(
+			WingR=dict(part="Phoenix", kind="aim", root="-x", at=(-0.17, 0.45, 0.53), scale=2.05, point=(0.95, 0.2, 0.33),
+				face=(0, 1, 0.2), twin="WingL"),
+		),
+		body=(1, 0.75, 0.15, 1),
+	),
+	"RoyalGriffin": dict(
+		folder="royal_griffin",
+		glb="fantasy_wings.glb",
+		out="RoyalGriffinWear",
+		texture="royal_griffin_wear.png",
+		sort=FANTASY_WINGS,
+		budget=FANTASY_BUDGET,
+		pieces=dict(
+			WingR=dict(part="Griffin", kind="aim", root="-x", at=(-0.17, 0.45, 0.53), scale=1.78, point=(0.95, 0.2, 0.33),
+				face=(0, 1, 0.2), twin="WingL"),
+		),
+		body=(1, 0.8, 0.2, 1),
 	),
 }
 TEXTURE = 1024

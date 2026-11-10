@@ -50,6 +50,10 @@ orchestrator's (CLAUDE.md).
 - **Not every wing shape is a bird's wing** (2026-11-10, Frost Swan: "trông giống như cánh nhưng không phải cánh chim,
   hãy gắn nó vào vị trí giống như trong hình ảnh tham chiếu"): a wing-shaped ornament the painting draws on the body's
   sides (crystal frills) goes where the painting draws it (`front`); the bird's wing standard is for real wings only.
+- **Insect wings sit on the back like the bee's** (2026-11-10, fairy, butterfly and moth wings: "không cần khớp với
+  tranh, cứ đặt ở vị trí sau lưng như những cánh bướm khác"): copy Honeybee Slime's `aim` numbers (`at=(-0.24, 0.27,
+  0.7)`, `point=(0.65, 0.3, 0.7)`, `face=(0, 1, 0.1)`), `scale` bringing the tips to about x +-0.73, height 1.23; each
+  kind keeps its own beat. Paintings with huge wings do not override this.
 - **Flowers and leaves keep their 3D shape** (2026-11-10, Forest Dryad and Peach Blossom: "các lưới của hoa và lá ...
   biến dạng ... hãy cố gắng giữ nguyên mesh để khối hình hoa lá đúng với nguyên dạng 3d nhất có thể, không cần phải
   kéo để nó ôm sát thân con slime"): a crown, a wreath of hair, a cluster, a festoon is worn `rigid` (turned, moved,

@@ -123,3 +123,10 @@ Fifteen Secrets dressed on 2026-11-10; these got a piece right in one or two rou
 | `tests/spec/wear.luau` allowed no side of 1 or more; a mane to the feet is 1.12 long | the limit is 1.25 |
 | Config.luau neared Studio's 200000-character script limit with every kit | `Config.Wear` lives in `src/shared/ConfigWear.luau` |
 | The unicorn's horn stood straight up on the top of the head as the painting has it. The owner: lower, on the forehead, the tip leaning out forward, and a little deeper in the body | `horn` at (0, -0.3, 0.76), `tilt_back` -40; then 0.04 further in along the horn in Config (`at` and `anchor` moved together) |
+
+## 2026-11-10 (Rose Fairy, Dream Butterfly, Twilight Moth, Sun Phoenix, Royal Griffin: one file, five Secrets)
+
+| What went wrong | The fix |
+|---|---|
+| The fairy, butterfly and moth wings were scaled up to their paintings' huge wings (root at mid back, tips past the top of the head); in Play they stood at the sides of the body. The owner: "không cần khớp với tranh, cứ đặt ở vị trí sau lưng như những cánh bướm khác" | the bee's `aim` numbers, scale to tips at about x +-0.73 (fairy 1.8, butterfly 1.65, moth 2.0); now an owner's rule in `SKILL.md` |
+| The two feathered wings at the first scale reached x +-0.9 | scale up (phoenix 2.05, griffin 1.78) to Raven's +-1.0 |
