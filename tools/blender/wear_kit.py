@@ -99,9 +99,10 @@ KITS = {
 		body=(0.1, 0.1, 0.12, 1),
 	),
 	# Void Kraken (secret-black-purple), 2026-11-10: eight cosmic tentacles with glowing suckers. The owner: they grow
-	# from under the body and curl and wriggle like an octopus's arms. Around the foot, none straight in front: the two
-	# at the front low and short, the sides rising, the two at the back tall so their curls show over the shoulders from
-	# the front as the painting's do
+	# from under the body and curl and wriggle like an octopus's arms. Around the foot, none straight in front. Raised
+	# up the sides and back (the first try), several sank into the body and showed as stubs at its side, and some turned
+	# their suckers up: every arm now joins under the body and goes out low, its suckers down or out (searched by the
+	# tool)
 	"VoidKraken": dict(
 		folder="void_kraken",
 		glb="black_purple.glb",
@@ -112,14 +113,14 @@ KITS = {
 		budget=dict(Arm1=450, Arm2=450, Arm3=450, Arm4=450, Arm5=450, Arm6=450, Arm7=450, Arm8=450),
 		pieces=dict(
 			# (the front pair at 40 degrees, not 22.5: straight at the camera they read as stubs)
-			Arm4=dict(part="Arm4", kind="tentacle", at=(40, 0.24, 0.04), scale=1.45, rise=8),
-			Arm5=dict(part="Arm5", kind="tentacle", at=(80, 0.24, 0.04), scale=1.6, rise=20),
-			Arm1=dict(part="Arm1", kind="tentacle", at=(120, 0.24, 0.04), scale=1.7, rise=35),
-			Arm2=dict(part="Arm2", kind="tentacle", at=(160, 0.24, 0.04), scale=1.9, rise=55),
-			Arm3=dict(part="Arm3", kind="tentacle", at=(-160, 0.24, 0.04), scale=1.9, rise=55),
-			Arm6=dict(part="Arm6", kind="tentacle", at=(-120, 0.24, 0.04), scale=1.7, rise=35),
-			Arm8=dict(part="Arm8", kind="tentacle", at=(-80, 0.24, 0.04), scale=1.6, rise=20),
-			Arm7=dict(part="Arm7", kind="tentacle", at=(-40, 0.24, 0.04), scale=1.45, rise=4),
+			Arm4=dict(part="Arm4", kind="tentacle", at=(40, 0.24, 0.04), scale=1.4),
+			Arm5=dict(part="Arm5", kind="tentacle", at=(80, 0.24, 0.04), scale=1.5),
+			Arm1=dict(part="Arm1", kind="tentacle", at=(120, 0.24, 0.04), scale=1.5),
+			Arm2=dict(part="Arm2", kind="tentacle", at=(160, 0.24, 0.04), scale=1.6),
+			Arm3=dict(part="Arm3", kind="tentacle", at=(-160, 0.24, 0.04), scale=1.6),
+			Arm6=dict(part="Arm6", kind="tentacle", at=(-120, 0.24, 0.04), scale=1.5),
+			Arm8=dict(part="Arm8", kind="tentacle", at=(-80, 0.24, 0.04), scale=1.5),
+			Arm7=dict(part="Arm7", kind="tentacle", at=(-40, 0.24, 0.04), scale=1.4),
 		),
 		body=(0.12, 0.05, 0.3, 1),
 	),
@@ -210,9 +211,10 @@ KITS = {
 		),
 		body=(0.8, 0.3, 0.05, 1),
 	),
-	# Cotton Candy Sheep (secret-blue-pink), 2026-11-10: two spiral ram horns on the shoulders, two sheep ears out at
-	# the sides under them, a garland of cotton-candy puffs across the top, puff clouds at the sides low down and a
-	# swirly cloud along the foot in front
+	# Cotton Candy Sheep (secret-blue-pink), 2026-11-10: two spiral ram horns on the shoulders and a tuft of
+	# cotton-candy puffs across the top. The file also holds two sheep ears, puff clouds for the sides and a cloud for
+	# the foot: the owner kept only the horns and the tuft ("chỉ cần để lại cặp sừng và chỏm lông trên đầu"), so the
+	# rest are parts no piece uses
 	"CottonCandySheep": dict(
 		folder="cotton_candy_sheep",
 		glb="blue_pink.glb",
@@ -225,15 +227,8 @@ KITS = {
 		pieces=dict(
 			HornL=dict(part="HornL", kind="horn", at=(0.27, 0.0, 0.72), scale=0.55, tilt_out=10, tilt_back=0, level=False),
 			HornR=dict(part="HornR", kind="horn", at=(-0.27, 0.0, 0.72), scale=0.55, tilt_out=10, tilt_back=0, level=False),
-			EarL=dict(part="EarL", kind="horn", at=(0.36, 0.0, 0.6), scale=0.8, tilt_out=120, tilt_back=0, level=False,
-				foot="low"),
-			EarR=dict(part="EarR", kind="horn", at=(-0.36, 0.0, 0.6), scale=0.8, tilt_out=120, tilt_back=0, level=False,
-				foot="low"),
 			Garland=dict(part="Garland", kind="aim", root="+x", at=(-0.23, -0.05, 0.8), scale=1.1, point=(-1, 0, 0),
 				face=(0, -1, 0.3)),
-			CloudL=dict(part="CloudL", kind="frame", at=(90, 0.3, 0.56), scale=1.3, hug=1, yaw=30),
-			CloudR=dict(part="CloudR", kind="frame", at=(-90, 0.3, 0.56), scale=1.3, hug=1, yaw=30),
-			CloudFront=dict(part="CloudFront", kind="wrap", at=(0, 0.17), scale=1.4),
 		),
 		body=(0.45, 0.6, 0.95, 1),
 	),
@@ -642,12 +637,50 @@ def place_aim(ob, spec, name):
 	return normal if normal.cross(along).z > 0 else -normal
 
 
+SUCKER_PIXELS = []
+
+
+def suckers_of(ob):
+	# the vertices painted as suckers (light pink-purple; the arm itself is dark blue with blue-violet streaks), by the
+	# texture under them
+	import numpy as np
+	img = [i for i in bpy.data.images if i.size[0] > 0][0]
+	w, h = img.size
+	if not SUCKER_PIXELS:
+		px = np.empty(w * h * 4, np.float32)
+		img.pixels.foreach_get(px)
+		SUCKER_PIXELS.append(px.reshape(h, w, 4))
+	px = SUCKER_PIXELS[0]
+	uv = ob.data.uv_layers.active.data
+	sums = [[0.0, 0.0, 0] for _ in ob.data.vertices]
+	for loop in ob.data.loops:
+		u, v = uv[loop.index].uv
+		c = px[min(int(v % 1 * h), h - 1), min(int(u % 1 * w), w - 1)]
+		s = sums[loop.vertex_index]
+		s[0] += c[0]
+		s[1] += c[1]
+		s[2] += 1
+	return [i for i, s in enumerate(sums) if s[2] and s[0] / s[2] > SUCKER_RED and (s[0] - s[1]) / s[2] > SUCKER_PINK]
+
+
+# a sucker's red, and how far its red stands above its green (the arm's streaks are blue-violet: low red)
+SUCKER_RED = 0.5
+SUCKER_PINK = 0.15
+# how much of an arm's length (from its root) is its root, under the body
+ROOT_PART = 0.2
+# above this height a part of an arm inside the body pierces its side (below, the jelly's low bulge hides it)
+PIERCE = 0.12
+
+
 def place_tentacle(ob, spec, name):
 	# an octopus arm growing from under the body (the owner, 2026-11-10: "gắn ở dưới thân của slime", "co duỗi, ngọ nguậy
-	# như tay bạch tuộc"). The file draws it in its XZ plane, its thick root the lowest end. The root goes under the body
-	# at `at` = (degrees around from the front, + toward the slime's left; how far out from the middle line; height), its
-	# long line (root to farthest point) out over the ground, rising `rise` degrees, its plane upright through the body's
-	# middle, the curl turned up (`flip`: down); lifted if it dips under the ground. Then rigged: a chain of `bones` bones
+	# như tay bạch tuộc"; then: every arm joins the body underneath, none sunk into it to show only a stub at its side,
+	# and the purple suckers face down or out, never up: "phần màu tím phải quay xuống bên dưới hoặc ra ngoài"). The file
+	# draws it in its XZ plane, its thick root the lowest end. The root goes under the body at `at` = (degrees around from
+	# the front, + toward the slime's left; how far out from the middle line; height), its long line (root to farthest
+	# point) out over the ground. How steeply it climbs and how its plane rolls about that line are searched: the turn
+	# whose suckers look most down and out, with nothing past its root inside the body, nothing over the face, the root
+	# not lifted off the ground's level and the arm reaching well out of the body. Then rigged: a chain of `bones` bones
 	# root to tip (named <name>_0, _1, ...), each vertex weighted by how far along the arm it lies, measured over its
 	# surface. Returns the curl axis (its plane's normal; a positive turn lifts the tip) and the joints
 	vs = ob.data.vertices
@@ -656,27 +689,6 @@ def place_tentacle(ob, spec, name):
 	root = [v.index for v in vs if v.co.z <= cut]
 	rebase(ob, sum((vs[i].co for i in root), Vector()) / len(root))
 	ob.data.transform(Matrix.Scale(spec["scale"], 4))
-
-	def frame(along, look):
-		along = along.normalized()
-		look = (look - along * look.dot(along)).normalized()
-		return Matrix((along, look, along.cross(look))).transposed()
-
-	deg, reach, height = spec["at"]
-	out = Vector((math.sin(rad(deg)), -math.cos(rad(deg)), 0))
-	side = Vector((0, 0, 1)).cross(out)
-	point = out * math.cos(rad(spec["rise"])) + Vector((0, 0, math.sin(rad(spec["rise"]))))
-	far = max(vs, key=lambda v: v.co.length).co.copy()
-	mid = sum((v.co for v in vs), Vector()) / len(vs)
-	# (the two ways its plane can face; the one that lifts its middle higher curls it up)
-	turns = [frame(point, side * s) @ frame(far, Vector((0, 1, 0))).transposed() for s in (1, -1)]
-	turns.sort(key=lambda m: (m @ mid).z, reverse=not spec.get("flip"))
-	turn = turns[0]
-	ob.data.transform(turn.to_4x4())
-	ob.location = Vector((out.x * reach, out.y * reach, height))
-	low = min((ob.location + v.co).z for v in vs)
-	if low < 0:
-		ob.location.z -= low
 	# how far along the arm each vertex lies: the shortest way over its edges from the root (Dijkstra)
 	links = [[] for _ in vs]
 	for e in ob.data.edges:
@@ -700,6 +712,44 @@ def place_tentacle(ob, spec, name):
 				heapq.heappush(heap, (d + w, j))
 	top = max(x for x in dist if x < math.inf)
 	t = [min(x, top) / top for x in dist]
+
+	def frame(along, look):
+		along = along.normalized()
+		look = (look - along * look.dot(along)).normalized()
+		return Matrix((along, look, along.cross(look))).transposed()
+
+	deg, reach, height = spec["at"]
+	out = Vector((math.sin(rad(deg)), -math.cos(rad(deg)), 0))
+	side = Vector((0, 0, 1)).cross(out)
+	far = max(vs, key=lambda v: v.co.length).co.copy()
+	sucker = suckers_of(ob)
+	cos = [v.co.copy() for v in vs]
+	nos = [v.normal.copy() for v in vs]
+	flat = frame(far, Vector((0, 1, 0))).transposed()
+	best = None
+	for rise in range(-10, 35, 5):
+		point = out * math.cos(rad(rise)) + Vector((0, 0, math.sin(rad(rise))))
+		for roll in range(0, 360, 15):
+			turn = frame(point, Matrix.Rotation(rad(roll), 3, point) @ side) @ flat
+			ps = [turn @ c for c in cos]
+			# (the root may go under the ground, hidden by the body; the arm past it lies on the ground at most)
+			lift = max(-(height + min(p.z for p, f in zip(ps, t) if f > ROOT_PART)), 0.0)
+			origin = Vector((out.x * reach, out.y * reach, height + lift))
+			ws = [origin + p for p in ps]
+			# past its root inside the body: hidden under the jelly's low bulge, or (above PIERCE) out through its side
+			inside = sum(1 for w, f in zip(ws, t) if f > ROOT_PART and outside(w) < 0) / len(ws)
+			pierce = sum(1 for w in ws if w.z > PIERCE and outside(w) < 0) / len(ws)
+			face = sum(1 for w in ws if 0.3 < w.z < 0.7 and w.y < 0 and abs(math.atan2(w.x, -w.y)) < rad(35)) / len(ws)
+			looks = [turn @ nos[i] for i in sucker]
+			look = sum(looks, Vector()).normalized()
+			up = sum(1 for d in looks if d.z > 0.3) / max(len(looks), 1)
+			score = (-look.z + 0.6 * look.dot(out) - 2 * up - 10 * pierce - 2 * inside - 4 * face - 10 * lift
+				+ 1.5 * max(outside(w) for w in ws))
+			if best is None or score > best[0]:
+				best = (score, rise, roll, point, turn, lift, inside, pierce, up, look)
+	_, rise, roll, point, turn, lift, inside, pierce, up, look = best
+	ob.data.transform(turn.to_4x4())
+	ob.location = Vector((out.x * reach, out.y * reach, height + lift))
 	n = spec.get("bones", 5)
 	joints = []
 	for k in range(n + 1):
@@ -740,8 +790,9 @@ def place_tentacle(ob, spec, name):
 	along = point.normalized()
 	axis = normal if normal.cross(along).z > 0 else -normal
 	tip = max((ob.location + v.co).length for v in vs)
-	print(f"TENTACLE {name} at {deg} degrees, root {tuple(round(x, 3) for x in ob.location)}, reaches {tip:.3f} from "
-		f"the feet, lifted {max(-low, 0):.3f}, {n} bones")
+	print(f"TENTACLE {name} at {deg} degrees, rise {rise}, roll {roll}, root {tuple(round(x, 3) for x in ob.location)}, "
+		f"reaches {tip:.3f} from the feet, lifted {lift:.3f}, {inside:.0%} under the body, {pierce:.0%} through its side, "
+		f"suckers {len(sucker)} of {len(vs)} looking {tuple(round(x, 2) for x in look)}, {up:.0%} of them up, {n} bones")
 	# each bone's rest frame (its point and its X and Y axes, Y along the bone), as Roblox's import puts it: the game
 	# builds the bones from these, by name, and the skin bends with them
 	frames = [rig.matrix_world @ b.matrix_local for b in arm.bones]
@@ -784,6 +835,12 @@ for name, spec in KIT["pieces"].items():
 	wear.append(ob)
 	if spec.get("twin"):
 		wear.append(mirrored(ob, spec["twin"]))
+
+# a part no piece uses (a bit the owner did not want) leaves the pictures too
+used = {spec["part"] for spec in KIT["pieces"].values()}
+for key, ob in parts.items():
+	if key not in used:
+		bpy.data.objects.remove(ob)
 
 # texture at 1024
 img = [i for i in bpy.data.images if i.size[0] > 0][0]
@@ -855,6 +912,8 @@ views = {
 	"top": Vector((0, 0.001, 1)),
 	"game": Vector((0.6, -1, 0.75)),
 	"backq": Vector((-0.8, 1, 0.5)),
+	# (low at the front quarter: what grows from under the body)
+	"low": Vector((0.7, -1, 0.12)),
 }
 for name, d in views.items():
 	cam.location = centre + d.normalized() * 6

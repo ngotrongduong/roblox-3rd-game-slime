@@ -54,6 +54,10 @@ show over the shoulders; model 100288988956406, seen bending in Play. `secret-bl
 a bushy tail; model 111111432845594). `secret-blue-pink` Cotton Candy Sheep (pink ram horns, sheep ears out to the
 sides that flick up, a cotton-candy garland worn as a crown, puffs at the sides and in front; model 109726191050235).
 All ten dressed Secrets n/n in Play; the older seven rebuilt unchanged after the tool change. Not seen: a phone.
+The owner's look the same day: the sheep keeps only its horns and the tuft on its head; some tentacles sank into the
+body and showed as stubs at its side, some turned their purple suckers up. `wear_kit` now finds each arm's suckers by
+the texture's colour and searches its climb and roll: every arm joins under the body and goes out low, suckers down or
+out, nothing through the side; model 91899436585494, seen in Play from the front, the back, low and above.
 
 ## 2026-11-10 — Dungeon fight effects per monster, from the VFX library
 

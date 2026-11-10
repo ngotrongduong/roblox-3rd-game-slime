@@ -40,7 +40,9 @@ orchestrator's (CLAUDE.md).
 - **Tentacles grow from under the body and wriggle** (2026-11-10, Void Kraken: "gắn ở dưới thân của slime, nó sẽ có
   chuyển động co duỗi, ngọ nguậy như tay bạch tuộc"): rooted under the rim, out over the ground, rigged with bones so
   each arm bends along its length, curling and uncurling slowly while a wave runs to its tip, every arm on its own
-  beat (`tentacle`, `kit-reference.md`, "Tentacles").
+  beat (`tentacle`, `kit-reference.md`, "Tentacles"). Then: "tất cả đều phải kết nối ở phần dưới của con slime", none
+  sunk into the body to show only a stub at its side, and "phần màu tím phải quay xuống bên dưới hoặc ra ngoài chứ
+  không lật mặt lên trên": all low, the suckers down or out.
 - Each Secret has its own design; one piece recoloured for another Secret is not a new design.
 - Low poly for cheap phones: each part keeps the triangles in its kit's `budget` (about 500 to 900).
 

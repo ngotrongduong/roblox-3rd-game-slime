@@ -23,8 +23,9 @@ opening toward -Y; a tail's base at one end along X.
 | `body` | the body colour in the review renders (RGBA, near the Secret's colours) |
 
 Every name `sort` returns must be a part in `budget` (else a KeyError), and every part in `budget` must get at least
-one bit (else an IndexError). A stray bit the kit does not want gets a part of its own that no piece uses: it is left
-out of the FBX but still shows in the renders where the file has it.
+one bit (else an IndexError). A stray bit the kit does not want (or a piece the owner dropped) gets a part of its own
+that no piece uses: it is left out of the FBX and the renders. A dropped piece also leaves `Config.Wear`; the meshes
+that stay keep their ids, so nothing is uploaded again.
 
 A piece, by `kind`:
 
@@ -36,7 +37,7 @@ A piece, by `kind`:
 | `tail` | `part`, `base` `"+x"` or `"-x"` (its base end in the file), `at`, `scale`, `lift` degrees tip up (negative: down), `sink` true pushes its base end 0.03 into the body (not when its base has detail to show, a rose, a tuft) |
 | `wrap` (lying ON the skin: a vine on the back, a leaf) | `part`, `at` = (degrees around the body from the front, + toward the slime's left; height of its middle), `scale`, `turn` degrees in its own plane, `flip` |
 | `frame` (growing OUT past the body, as a painting draws vines round its outline) | `part`, `at` = (degrees around from the front; height of its middle; how far its middle stands from the middle line, about the skin radius there), `scale`, `yaw` degrees its plane turns to the back so it also shows from the side (30), `hug` 0-1 bends its inner edge along the outline (1 for a vine down the side, 0 for one rising off a shoulder), `turn`, `flip`; what falls inside the body is laid on the skin |
-| `tentacle` (an octopus arm growing from under the body, rigged so it bends) | `part` (drawn in the file's XZ plane, its thick root the lowest end), `at` = (degrees around from the front, + toward the slime's left; how far out from the middle line, 0.24 is under the rim; height, 0.04), `scale`, `rise` degrees its long line climbs (8 at the front, 55 at the back), `flip` curls it down instead of up, `bones` (default 5) |
+| `tentacle` (an octopus arm growing from under the body, rigged so it bends) | `part` (drawn in the file's XZ plane, its thick root the lowest end, its suckers along one edge), `at` = (degrees around from the front, + toward the slime's left; how far out from the middle line, 0.24 is under the rim; height, 0.04), `scale` (1.4 at the front to 1.6 at the back), `bones` (default 5). How steeply it climbs and how its plane rolls are searched by the tool (below) |
 
 At +-90 degrees a `frame` is seen from the front exactly as the file is (the painting's view): a piece from the file's
 left half goes on the slime's right (`at` negative). Keep the face's zone clear (front, 35 degrees each way, heights
@@ -61,11 +62,15 @@ Config: `flap = { axis = <wear.json axis>, degrees = 10, hz = 0.6 }` on both.
 
 ### Tentacles (Void Kraken, 2026-11-10)
 
-The owner: an octopus slime's arms grow from under the body and curl, uncurl and wriggle like an octopus's. Eight arms
-round the foot, none straight in front of the face: the front pair at +-40 degrees, low and short (straight at the
-camera they read as stubs), the sides rising, the back pair tall (`rise` 55, `scale` 1.9) so their curls show over the
-shoulders from the front. `wear_kit` rigs each arm (a chain of bones root to tip, each vertex weighted by its distance
-along the arm over the surface) and exports the bones in the FBX; `wear.json` gives each bone's rest frame.
+The owner: an octopus slime's arms grow from under the body and curl, uncurl and wriggle like an octopus's; every arm
+joins the body underneath, none sunk into it to show only a stub at its side, and the purple suckers face down or out,
+never up. Eight arms round the foot at +-40, 80, 120, 160 degrees (none straight in front of the face), all low.
+`wear_kit` finds each arm's suckers by the texture under its vertices (light pink-purple: red above `SUCKER_RED` and
+above green by `SUCKER_PINK`), then tries every climb (-10 to 30 degrees) and roll of its plane (every 15 degrees) and
+keeps the one whose suckers look most down and out, with few of them up, nothing inside the body above `PIERCE`, nothing
+over the face, the arm past its root (`ROOT_PART`) not under the ground and reaching well out. It rigs each arm (a chain
+of bones root to tip, each vertex weighted by its distance along the arm over the surface) and exports the bones in the
+FBX; `wear.json` gives each bone's rest frame. Look at `review/low.png` (low at the front quarter) and the top.
 
 A pair of horns or ears the file holds both of (two ears, a red horn and a blue one) is two pieces with mirrored `at`,
 no `twin`; so is a pair of wings (`root` per wing). Another kind of piece needs the tool changed first (SKILL.md,
@@ -85,10 +90,10 @@ step 4).
 | `AIM <name> tip at (...), n of m vertices inside the body, upright u` | where the tip went (x out to the side, y back, z height); a few vertices inside is the root on the skin; more than about a sixth inside: move `at` out; `u` how far the file's up stays up: below 0 the piece is upside down (a turn cannot mirror: wear the file's piece of the other side) |
 | `WRAP <name> at d degrees, height h, anchor (...)` | where it lies on the skin |
 | `FRAME <name> at d degrees, height h, reach r, n of m vertices laid on the skin` | about half laid on the skin is a vine growing out of it; nearly none: it floats, lower `reach` |
-| `TENTACLE <name> at d degrees, root (...), reaches r from the feet, lifted l, n bones` | `lifted` above 0: it dipped under the ground and was raised, lower its `rise` or `flip` it; `r` how far out it reaches |
+| `TENTACLE <name> at d degrees, rise r, roll q, root (...), reaches x from the feet, lifted l, a under the body, b through its side, suckers n of m looking (...), u of them up, k bones` | `suckers` 0: the texture test missed them (look at the colours); `looking` should point down (its last number negative) or out; `through its side` above about 15 % or `u` above 20 %: move `at` round or change `scale`; `lifted` above 0.05 lifts the root off the ground |
 | `WEAR {...}` | what `wear.json` holds (a tentacle also its `bones`: per bone its point, X and Y axes, 9 numbers in Roblox space) |
 
-Renders in `<folder>/review/` (not committed): `front back side top game backq` whole, `head headback` close.
+Renders in `<folder>/review/` (not committed): `front back side top game backq low` whole, `head headback` close.
 
 ## Upload
 
