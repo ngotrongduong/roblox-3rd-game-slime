@@ -130,6 +130,10 @@ cat lazy, fox bushy). The reference painting `slime.secret.orange-white.png` is 
 owner, 2026-11-10); the game's own Creamsicle Fox skin is right. All twenty-nine dressed Secrets n/n in Play. Not seen: a
 phone.
 
+The owner still saw light under those ears after the first fix. They now lean with the shoulder, set 0.08 into the
+jelly with their foot drawn on over most of their height, and swivel about the upright instead of flicking back (a
+flick tipped the foot's rim off the skin); every root checked in 3x close-ups of the Play shots from four sides.
+
 ## 2026-11-10 — Dungeon fight effects per monster, from the VFX library
 
 The owner paused the old effect work and asked for each map group's skills to be rebuilt from his VFX library
