@@ -264,6 +264,23 @@ Textures.Images = {
 	butterfly_flip = { id = 91112461922690, from = SKILL_ART }, -- a light-grey butterfly from above flapping, 2 x 2 loop
 	-- (full colour, worn untinted)
 	bee_flip = { id = 97180849526015, from = SKILL_ART }, -- a chubby honeybee from the side, wings beating, 2 x 2 loop
+	-- The signatures' second round (2026-11-10, the owner: "small, not loud, but truly fitting and beautiful"): one
+	-- picture each, 512, keyed the same way. White and light grey, tinted:
+	heart_puffy = { id = 86067573132905, from = SKILL_ART }, -- a chubby glossy heart
+	blossom_five = { id = 127785005425047, from = SKILL_ART }, -- a five-petal cherry blossom from above, notched petals
+	rose_top = { id = 121999667549833, from = SKILL_ART }, -- a rose bloom from above, a spiral of petals
+	koi_top = { id = 138089618563309, from = SKILL_ART }, -- a koi from above, head UP (VelocityParallel: it swims head first)
+	bubble_gloss = { id = 138130484403547, from = SKILL_ART }, -- a see-through glass bubble, a bright shine
+	droplet_gloss = { id = 107460170148223, from = SKILL_ART }, -- a glossy water drop, point up
+	down_feather = { id = 114074618716227, from = SKILL_ART }, -- a fluffy little down feather
+	gem_round = { id = 84274586076811, from = SKILL_ART }, -- a faceted round gem from above
+	gust_curl = { id = 107418049747886, from = SKILL_ART }, -- a gust of wind: three soft curling strokes
+	moth_flip = { id = 137535747251006, from = SKILL_ART }, -- a fuzzy moth from above flapping (open, half, shut, half), 2 x 2
+	-- (full colour, worn untinted)
+	daisy_colour = { id = 80302072044730, from = SKILL_ART }, -- a white daisy, a yellow middle
+	lemon_slice = { id = 103054104053485, from = SKILL_ART }, -- a lemon slice
+	peach_blossom = { id = 110052652170210, from = SKILL_ART }, -- a pink peach blossom, yellow stamens
+	peppermint_candy = { id = 114832500049402, from = SKILL_ART }, -- a red-and-white peppermint swirl candy
 
 	-- Rendered by EffectCraft from a recipe (2026-11-09, tools/effectcraft/recipes/<key>.json, flipbook.ps1 -Black):
 	-- white on black, tinted, 4 x 4
