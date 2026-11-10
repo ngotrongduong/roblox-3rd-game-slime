@@ -917,8 +917,10 @@ local Wear = {
 					name = "Horn",
 					mesh = 107578772271505,
 					size = { 0.1291, 0.3673, 0.1278 },
-					at = { -0.008, 1.0407, -0.1252 },
-					anchor = { 0, 0.8919, -0.0871 },
+					-- (the owner: "dịch xuống dưới một chút và có thể cắm vào trong thân sâu hơn": 0.07 lower than the
+					-- build seated it, its foot in the jelly)
+					at = { -0.008, 0.9707, -0.1252 },
+					anchor = { 0, 0.8219, -0.0871 },
 				},
 				{
 					name = "Mane",
