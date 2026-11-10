@@ -2253,14 +2253,38 @@ Config.Slime = {
 -- which writes these numbers to art/models/accessories/<kit>/wear.json), in mesh units: feet at y 0, front -Z, the slime's
 -- own left -X. `at` is the piece's middle where it rests, `size` its box; it rides the skin at `anchor` as the jelly
 -- squashes, hops and leans. A `flap` swings it about its anchor along `axis` (a positive turn lifts it), `degrees` each
--- way, `hz` times a second. A kit whose meshes are not uploaded yet (mesh 0) is left off.
+-- way, `hz` times a second (a tail wags with one about the up axis). A `twitch` flicks it now and then (Twitch), a `lag`
+-- makes it trail the hop (Lag). A kit whose meshes are not uploaded yet (mesh 0) is left off.
+-- (the owner, 2026-11-10: "gắn thêm chuyển động cho phần đuôi và tai")
+type WearMotion = { axis: { number }, degrees: number, hz: number?, every: number? }
+type WearPiece = {
+	name: string,
+	mesh: number,
+	size: { number },
+	at: { number },
+	anchor: { number },
+	flap: WearMotion?,
+	twitch: WearMotion?,
+	lag: WearMotion?,
+}
+type WearKit = { texture: string, pieces: { WearPiece } }
 Config.Wear = {
+	-- An ear's `twitch`: once in each `every` seconds, at a moment of its own, it flicks `degrees` about `axis` ({1, 0, 0}
+	-- tips it back) and comes home: Out the flick's seconds, Length the whole move's.
+	Twitch = { Out = 0.07, Length = 0.4 },
+	-- A `lag` bends a piece about `axis` ({1, 0, 0}: ears tip back, a tail drops) as the slime climbs, the other way as it
+	-- falls: `degrees` at a climb of Rise bodies a second, eased by a spring that goes half way in HalfLife seconds; a
+	-- pause longer than Gap (a far slime) starts it over.
+	Lag = { Rise = 4, HalfLife = 0.07, Gap = 0.5 },
 	-- Secret id -> its kit
 	Secrets = {
 		["secret-black-blue"] = "TempestDragon",
 		["secret-blue-red"] = "SteamDragon",
 		["secret-navy-red"] = "FireIceChimera",
 		["secret-black-gray"] = "ShadowWolf",
+		["secret-black-navy"] = "MidnightRaven",
+		["secret-black-orange"] = "JackOSlime",
+		["secret-black-pink"] = "GothicBat",
 	},
 	Kits = {
 		-- the owner's Meshy model art/models/accessories/tempest_dragon/neon_dragon_relics.glb, uploaded as model
@@ -2305,6 +2329,9 @@ Config.Wear = {
 					size = { 0.1352, 0.2177, 0.3827 },
 					at = { 0.0017, 0.1752, 0.6211 },
 					anchor = { 0, 0.16, 0.44 },
+					-- (a slow lazy wag)
+					flap = { axis = { 0, 1, 0 }, degrees = 8, hz = 0.5 },
+					lag = { axis = { 1, 0, 0 }, degrees = 10 },
 				},
 			},
 		},
@@ -2349,6 +2376,8 @@ Config.Wear = {
 					size = { 0.1093, 0.2103, 0.365 },
 					at = { 0.0024, 0.1512, 0.6229 },
 					anchor = { 0, 0.21, 0.45 },
+					flap = { axis = { 0, 1, 0 }, degrees = 8, hz = 0.5 },
+					lag = { axis = { 1, 0, 0 }, degrees = 10 },
 				},
 			},
 		},
@@ -2377,6 +2406,8 @@ Config.Wear = {
 					size = { 0.1082, 0.2751, 0.4989 },
 					at = { 0.0073, 0.2827, 0.6657 },
 					anchor = { 0, 0.1965, 0.4303 },
+					flap = { axis = { 0, 1, 0 }, degrees = 10, hz = 0.6 },
+					lag = { axis = { 1, 0, 0 }, degrees = 10 },
 				},
 			},
 		},
@@ -2391,6 +2422,9 @@ Config.Wear = {
 					size = { 0.3834, 0.4831, 0.1856 },
 					at = { -0.2704, 0.9018, 0.0312 },
 					anchor = { -0.356, 0.7026, 0 },
+					-- (a dog's ear: a quick flick back now and then, each ear on its own)
+					twitch = { axis = { 1, 0, 0 }, degrees = 18, every = 3.5 },
+					lag = { axis = { 1, 0, 0 }, degrees = 12 },
 				},
 				{
 					name = "EarR",
@@ -2398,6 +2432,8 @@ Config.Wear = {
 					size = { 0.3808, 0.4934, 0.185 },
 					at = { 0.2738, 0.901, 0.0358 },
 					anchor = { 0.3559, 0.7021, 0 },
+					twitch = { axis = { 1, 0, 0 }, degrees = 18, every = 3.5 },
+					lag = { axis = { 1, 0, 0 }, degrees = 12 },
 				},
 				{
 					name = "Tail",
@@ -2405,10 +2441,172 @@ Config.Wear = {
 					size = { 0.1708, 0.2537, 0.459 },
 					at = { 0.0119, 0.1979, 0.6566 },
 					anchor = { 0, 0.1983, 0.4402 },
+					-- (a wolf's brisk wag)
+					flap = { axis = { 0, 1, 0 }, degrees = 14, hz = 0.9 },
+					lag = { axis = { 1, 0, 0 }, degrees = 12 },
 				},
 			},
 		},
-	},
+		-- the owner's model art/models/accessories/midnight_raven/black_navy.glb (a pair of feathered wings; the owner: the
+		-- painting's wings are wrong, and raised they stood too high, so they rest folded along the sides as a bird's
+		-- do), uploaded as model 86457925782781
+		MidnightRaven = {
+			texture = "rbxassetid://95556414402224",
+			pieces = {
+				{
+					name = "WingL",
+					mesh = 96870618615778,
+					size = { 0.2326, 0.4025, 0.6331 },
+					at = { -0.5815, 0.3546, 0.2869 },
+					anchor = { -0.47, 0.55, 0 },
+					-- (a folded wing only ruffles a little, its tip easing out and back)
+					flap = { axis = { 0, 1, 0 }, degrees = 5, hz = 0.5 },
+				},
+				{
+					name = "WingR",
+					mesh = 134379464013345,
+					size = { 0.2338, 0.4035, 0.6294 },
+					at = { 0.5817, 0.3548, 0.2861 },
+					anchor = { 0.47, 0.55, 0 },
+					flap = { axis = { 0, 1, 0 }, degrees = 5, hz = 0.5 },
+				},
+			},
+		},
+		-- the owner's model art/models/accessories/jack_o_slime/black_orange.glb (pumpkin vines and leaves; the owner: as
+		-- his painting has them, growing out past the body round its outline), uploaded as model 104420315090131
+		JackOSlime = {
+			texture = "rbxassetid://112513356176270",
+			pieces = {
+				{
+					name = "VineTopL",
+					mesh = 137899791141278,
+					size = { 0.44, 0.382, 0.3043 },
+					at = { -0.4402, 0.8, -0.0151 },
+					anchor = { -0.2417, 0.8, 0 },
+				},
+				{
+					name = "VineTopR",
+					mesh = 101060743461314,
+					size = { 0.4299, 0.466, 0.2477 },
+					at = { 0.4386, 0.8, 0 },
+					anchor = { 0.2417, 0.8, 0 },
+				},
+				{
+					name = "VineSideL",
+					mesh = 102760336778778,
+					size = { 0.4963, 0.6921, 0.3002 },
+					at = { -0.3924, 0.351, -0.0964 },
+					anchor = { -0.5267, 0.34, 0 },
+				},
+				{
+					name = "VineSideR",
+					mesh = 109032431194606,
+					size = { 0.4333, 0.6883, 0.2666 },
+					at = { 0.402, 0.3491, -0.0955 },
+					anchor = { 0.5267, 0.34, 0 },
+				},
+				{
+					name = "VineFootL",
+					mesh = 135231371777731,
+					size = { 0.4182, 0.1209, 0.3688 },
+					at = { -0.2769, 0.1288, -0.3114 },
+					anchor = { -0.2966, 0.12, -0.3294 },
+				},
+				{
+					name = "VineFootR",
+					mesh = 131548259721098,
+					size = { 0.5516, 0.1558, 0.439 },
+					at = { 0.228, 0.1332, -0.2479 },
+					anchor = { 0.2966, 0.12, -0.3294 },
+				},
+				{
+					name = "VineBack",
+					mesh = 95837274024134,
+					size = { 0.6241, 0.6992, 0.3456 },
+					at = { -0.0032, 0.4133, 0.3959 },
+					anchor = { 0, 0.42, 0.5185 },
+				},
+				{
+					name = "LeafTop",
+					mesh = 78142670396585,
+					size = { 0.2187, 0.1368, 0.1232 },
+					at = { -0.2072, 0.6746, 0.3623 },
+					anchor = { -0.1996, 0.68, 0.3458 },
+				},
+				{
+					name = "LeafA",
+					mesh = 139024666239614,
+					size = { 0.128, 0.1487, 0.1502 },
+					at = { 0.4166, 0.2055, 0.2926 },
+					anchor = { 0.4092, 0.2, 0.2865 },
+				},
+				{
+					name = "LeafB",
+					mesh = 87898225951103,
+					size = { 0.1076, 0.1549, 0.1119 },
+					at = { -0.4234, 0.2239, 0.292 },
+					anchor = { -0.4149, 0.22, 0.2905 },
+				},
+				{
+					name = "LeafC",
+					mesh = 83191436666121,
+					size = { 0.1932, 0.1667, 0.1266 },
+					at = { 0.1878, 0.6525, 0.3711 },
+					anchor = { 0.2081, 0.66, 0.3605 },
+				},
+			},
+		},
+		-- the owner's model art/models/accessories/gothic_bat/black_pink.glb (bat ears and wings, a tail from a rose to a
+		-- pink tip), uploaded as model 96930448698996
+		GothicBat = {
+			texture = "rbxassetid://111197209449835",
+			pieces = {
+				{
+					name = "EarL",
+					mesh = 111731956855345,
+					size = { 0.3638, 0.3755, 0.1382 },
+					at = { -0.3519, 0.8528, -0.0011 },
+					anchor = { -0.3343, 0.7204, 0 },
+					twitch = { axis = { 1, 0, 0 }, degrees = 16, every = 3 },
+					lag = { axis = { 1, 0, 0 }, degrees = 10 },
+				},
+				{
+					name = "EarR",
+					mesh = 88489406212673,
+					size = { 0.3664, 0.3795, 0.14 },
+					at = { 0.3517, 0.8513, -0.002 },
+					anchor = { 0.3344, 0.7208, 0 },
+					twitch = { axis = { 1, 0, 0 }, degrees = 16, every = 3 },
+					lag = { axis = { 1, 0, 0 }, degrees = 10 },
+				},
+				{
+					name = "WingL",
+					mesh = 137310084417243,
+					size = { 0.7067, 0.4821, 0.2204 },
+					at = { -0.6589, 0.6412, 0.3938 },
+					anchor = { -0.32, 0.5, 0.3 },
+					flap = { axis = { -0.2756, 0, -0.9613 }, degrees = 12, hz = 0.8 },
+				},
+				{
+					name = "WingR",
+					mesh = 88069061520671,
+					size = { 0.7083, 0.4746, 0.2227 },
+					at = { 0.6615, 0.6546, 0.3946 },
+					anchor = { 0.32, 0.5, 0.3 },
+					flap = { axis = { -0.2756, 0, 0.9613 }, degrees = 12, hz = 0.8 },
+				},
+				{
+					name = "Tail",
+					mesh = 84110834357638,
+					size = { 0.1221, 0.2419, 0.5623 },
+					at = { 0.0143, 0.2155, 0.7477 },
+					anchor = { 0, 0.2, 0.485 },
+					flap = { axis = { 0, 1, 0 }, degrees = 10, hz = 0.6 },
+					lag = { axis = { 1, 0, 0 }, degrees = 10 },
+				},
+			},
+		},
+	} :: { [string]: WearKit },
 }
 
 -- ===== Gaits: how a slime moves along a leg =====

@@ -19,3 +19,17 @@ taught something.
 | `upload_image` failed without its `imagePaths` | pass picture-server URLs |
 | The owner's character stood in the shots | `play_check.luau` steps it aside |
 | New files could not go into `git commit --only` | `git add` them first |
+
+## 2026-11-10 (Midnight Raven, Jack-o'-Slime, Gothic Bat)
+
+| What went wrong | The fix |
+|---|---|
+| A file holding both wings of a pair: the tool knew only one wing mirrored by `twin` | `root="-x"` for the file's right wing |
+| Raven's feathered wings, raised and swept like a dragon's, stood up like an angel's. The owner: "giống với tư thế tự nhiên của cánh chim thay vì chổng lên trên cao" | kind `fold`: along the sides, tips back and a little down; `splay` 16 so they show from the front |
+| Vines from a sticker sheet bent flat onto the skin looked like stickers (and at scale 0.8 like scattered bits). The owner: "dây leo mọc vươn ra cả bên ngoài của slime, hãy xem bản thiết kế gốc" | kind `frame` for what the painting draws round the outline (shoulders, sides): upright, out past the body, `hug` along the outline, `yaw` 30 so it shows from the side; `wrap` only for what lies on the back |
+| A vine stood exactly in the front plane was a straight stick from the side | `yaw` |
+| Vines judged in the renders looked small in Play, where the jelly is wider | scale them up a step after the first Play look |
+| Gothic Bat's tail with `sink` buried the rose at its base | no `sink` on a tail whose base has detail; set `at` on the skin instead |
+| Two different vines of one sheet at mirrored spots failed the pair test's `at` check | the test allows 0.07 for a pair's middles (anchors stay at 0.005) |
+| Pieces with different motion fields broke the type check of `Config.Wear.Kits` | the table is cast to `{ [string]: WearKit }` |
+| The stage for `play_check` stood by the well among village slimes | move the character to an open lawn first (a free 46-stud box) |

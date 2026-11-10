@@ -31,6 +31,18 @@ The whole job is now the project skill `slime-wear` (the owner asked for a stand
 field, upload and Config, lessons, `tools/blender/wear_inspect.ps1` (a file's loose bits and six renders before its kit
 is written) and `play_check.luau` (every dressed Secret alive in a row in Play, with close-shot cameras). A dry run by
 a fresh agent found its gaps (colour ids, kinds the tool lacks, sort and budget errors), now written in.
+Three more kits, the same day: `secret-black-navy` Midnight Raven (two starry feathered wings; the owner: the painting's
+wings are wrong, and raised they stood too high, so they rest folded along the sides, tips back, as a bird's do: kind
+`fold`; model 86457925782781), `secret-black-orange` Jack-o'-Slime (a sheet of pumpkin vines and leaves; the owner: the
+vines grow out past the body as his painting draws them, so a leafy vine rises off each shoulder and a curling vine runs
+down each side, upright and out past the outline, kind `frame`; vines at the foot in front and a big curly vine with
+leaves on the back lie on the skin, kind `wrap`; the face stays clear; model 104420315090131) and `secret-black-pink`
+Gothic Bat (bat ears, bat wings, a thorny tail growing from a rose to a pink tip; model 96930448698996). Tails and ears
+now move (the owner: "gắn thêm chuyển động cho phần đuôi và tai"): every tail wags (`flap` about the up axis) and
+trails the hop (`lag`: a spring on the slime's climb), every ear flicks back now and then on its own clock (`twitch`)
+and trails the hop; `Config.Wear.Twitch` and `Config.Wear.Lag` hold the shared numbers, `tests/spec/wear.luau` fails a
+tail or an ear that does not move. All seven dressed Secrets seen alive in Play (n/n pieces), the three new ones close
+from the front, three-quarter and back; tails measured turning 10-20 degrees and ears 16-22 in Play. Not seen: a phone.
 
 ## 2026-11-10 — Dungeon fight effects per monster, from the VFX library
 

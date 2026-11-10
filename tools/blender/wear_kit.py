@@ -17,6 +17,12 @@ from mathutils import Matrix, Vector
 
 ART = r"C:\Roblox 3rd game\art\models\accessories"
 
+def nearest(**marks):
+	# a `sort` for a file of many loose bits: each goes to the part whose mark (x, z of its middle in the file, from
+	# wear_inspect.ps1) is nearest
+	return lambda c: min(marks, key=lambda k: (marks[k][0] - c.x) ** 2 + (marks[k][1] - c.z) ** 2)
+
+
 # `sort` says which part of the file a loose bit belongs to, by its middle; `budget` the triangles a part keeps;
 # `pieces` what is made of each part, in the order they are exported: kind (horn: horns and ears, wing, tail), where it
 # sits on the body (Blender axes, body height 1; +X is the slime's own left), size factor, turns in degrees, and `twin`,
@@ -91,6 +97,89 @@ KITS = {
 			Tail=dict(part="Tail", kind="tail", base="+x", at=(0.0, 0.45, 0.2), scale=0.55, lift=10, sink=True),
 		),
 		body=(0.1, 0.1, 0.12, 1),
+	),
+	# Midnight Raven (secret-black-navy), 2026-11-10: a pair of starry feathered wings, both in the file. The owner: the
+	# painting's wings are not right, set them where they sit well on its back; then, raised they stood up too high: fold
+	# them as a resting bird does, along the sides, the tips back
+	"MidnightRaven": dict(
+		folder="midnight_raven",
+		glb="black_navy.glb",
+		out="MidnightRavenWear",
+		texture="midnight_raven_wear.png",
+		sort=lambda c: "WingL" if c.x > 0 else "WingR",
+		budget=dict(WingL=900, WingR=900),
+		pieces=dict(
+			WingL=dict(part="WingL", kind="fold", root="-x", at=(0.47, 0.0, 0.55), scale=1.25, droop=65, splay=16,
+				roll=10),
+			WingR=dict(part="WingR", kind="fold", root="+x", at=(-0.47, 0.0, 0.55), scale=1.25, droop=65, splay=16,
+				roll=10),
+		),
+		body=(0.05, 0.06, 0.2, 1),
+	),
+	# Gothic Bat (secret-black-pink), 2026-11-10: bat ears, bat wings with rose vines, a thorny tail with a rose at its
+	# base and a pink tip
+	"GothicBat": dict(
+		folder="gothic_bat",
+		glb="black_pink.glb",
+		out="GothicBatWear",
+		texture="gothic_bat_wear.png",
+		sort=lambda c: "Tail" if c.z < 0.27 else (("EarL" if c.x > 0 else "EarR") if c.z > 0.59 else ("WingR" if c.x > 0 else "WingL")),
+		budget=dict(EarL=500, EarR=500, WingL=700, WingR=700, Tail=900),
+		pieces=dict(
+			# (the owner's painting: big ears upright at the shoulders, leaning out, open to the front; the wings spread
+			# out to the sides behind the shoulders)
+			EarL=dict(part="EarL", kind="horn", at=(0.33, 0.0, 0.7), scale=1.5, tilt_out=12, tilt_back=0, level=False,
+				foot="low"),
+			EarR=dict(part="EarR", kind="horn", at=(-0.33, 0.0, 0.7), scale=1.5, tilt_out=12, tilt_back=0, level=False,
+				foot="low"),
+			WingL=dict(part="WingL", kind="wing", at=(0.32, 0.3, 0.5), scale=1.6, raise_=12, sweep=16),
+			WingR=dict(part="WingR", kind="wing", root="-x", at=(-0.32, 0.3, 0.5), scale=1.6, raise_=12, sweep=16),
+			# (the owner: the rose end grows from the body and shows, the pink tip is the end)
+			Tail=dict(part="Tail", kind="tail", base="-x", at=(0.0, 0.485, 0.2), scale=0.85, lift=5),
+		),
+		body=(0.6, 0.1, 0.3, 1),
+	),
+	# Jack-o'-Slime (secret-black-orange), 2026-11-10: a sheet of curling vines and leaves, laid around the pumpkin body
+	# as the owner's painting has them: a leafy vine on each shoulder, a vine down each side, vines along the foot in
+	# front; the big curly vine on the back (the face takes the front)
+	"JackOSlime": dict(
+		folder="jack_o_slime",
+		glb="black_orange.glb",
+		out="JackOSlimeWear",
+		texture="jack_o_slime_wear.png",
+		sort=nearest(
+			VineTopR=(-0.336, 0.845),
+			VineFootR=(-0.265, 0.082),
+			VineBack=(-0.234, 0.478),
+			LeafA=(-0.126, 0.246),
+			LeafB=(-0.015, 0.481),
+			LeafTop=(0.001, 0.917),
+			LeafC=(0.019, 0.289),
+			VineSideR=(0.187, 0.451),
+			VineFootL=(0.282, 0.068),
+			VineTopL=(0.304, 0.874),
+			VineSideL=(0.373, 0.441),
+		),
+		budget=dict(VineTopR=260, VineFootR=260, VineBack=500, LeafA=60, LeafB=40, LeafTop=60, LeafC=40, VineSideR=280,
+			VineFootL=300, VineTopL=280, VineSideL=280),
+		pieces=dict(
+			# (the owner: the vines grow out past the body, as his painting draws them round its outline) a leafy vine
+			# rising off each shoulder, a curling vine down each side; `at` for a frame: (degrees around the body from the
+			# front, + toward the slime's left; height; distance out from the middle line)
+			VineTopL=dict(part="VineTopL", kind="frame", at=(90, 0.8, 0.44), scale=1.45, yaw=30),
+			VineTopR=dict(part="VineTopR", kind="frame", at=(-90, 0.8, 0.44), scale=1.45, yaw=30),
+			VineSideL=dict(part="VineSideL", kind="frame", at=(90, 0.34, 0.56), scale=1.3, hug=1, yaw=30),
+			VineSideR=dict(part="VineSideR", kind="frame", at=(-90, 0.34, 0.56), scale=1.3, hug=1, yaw=30),
+			# `at` for a wrap: (degrees around the body from the front, + toward the slime's left; height)
+			VineFootL=dict(part="VineFootL", kind="wrap", at=(42, 0.12), scale=1.3),
+			VineFootR=dict(part="VineFootR", kind="wrap", at=(-42, 0.12), scale=1.3),
+			VineBack=dict(part="VineBack", kind="wrap", at=(180, 0.42), scale=1.3),
+			LeafTop=dict(part="LeafTop", kind="wrap", at=(150, 0.68), scale=1.5),
+			LeafA=dict(part="LeafA", kind="wrap", at=(-125, 0.2), scale=1.5),
+			LeafB=dict(part="LeafB", kind="wrap", at=(125, 0.22), scale=1.5),
+			LeafC=dict(part="LeafC", kind="wrap", at=(-150, 0.66), scale=1.5),
+		),
+		body=(0.8, 0.3, 0.05, 1),
 	),
 }
 TEXTURE = 1024
@@ -309,17 +398,20 @@ def place_horn(ob, spec, name):
 
 
 def place_wing(ob, spec):
-	# root = the end at +X in the file, spreading toward -X: turn it to spread toward the slime's left (+X) with its
-	# painted side to the back, raise the tip, sweep it back; returns the flap axis
-	rebase(ob, anchor_of(ob, "x", True))
+	# root = the end at +X in the file, spreading toward -X (the file's left wing, as the file is seen from its front):
+	# turn it to spread toward the slime's left (+X) with its painted side to the back. With `root="-x"` (the file's
+	# right wing of a pair) it spreads to the slime's right the same way. Then raise the tip, sweep it back; returns the
+	# flap axis
+	side = -1 if spec.get("root") == "-x" else 1
+	rebase(ob, anchor_of(ob, "x", side > 0))
 	ob.data.transform(Matrix.Scale(spec["scale"], 4))
 	ob.data.transform(Matrix.Rotation(rad(180), 4, "Z"))
-	ob.data.transform(Matrix.Rotation(rad(-spec["raise_"]), 4, "Y"))
-	ob.data.transform(Matrix.Rotation(rad(spec["sweep"]), 4, "Z"))
+	ob.data.transform(Matrix.Rotation(rad(-side * spec["raise_"]), 4, "Y"))
+	ob.data.transform(Matrix.Rotation(rad(side * spec["sweep"]), 4, "Z"))
 	ob.location = spec["at"]
 	sw = rad(spec["sweep"])
 	# the hinge runs along the root, front to back after the sweep; a positive turn about it lifts the tip
-	axis = Vector((math.sin(sw), -math.cos(sw), 0))
+	axis = Vector((math.sin(sw), -side * math.cos(sw), 0))
 	# a check that the flap axis lifts the tip: turn the farthest point by +10 degrees about it
 	far = max(ob.data.vertices, key=lambda v: v.co.length).co
 	print("FLAP CHECK tip z", round(far.z, 3), "->", round((Matrix.Rotation(rad(10), 3, axis) @ far).z, 3))
@@ -340,6 +432,124 @@ def place_tail(ob, spec, name):
 	ob.location = spec["at"]
 	if spec.get("sink"):
 		sink(ob, end, Matrix.Rotation(rad(spec["lift"]), 3, "X") @ Vector((0, 1, 0)), name)
+
+
+def meridian():
+	# the body's outline from its feet to its top: (height, radius, length along the skin from the feet) every 0.005
+	rows, run = [], 0.0
+	for k in range(201):
+		z = k * 0.005
+		r = skin_radius(z)
+		if rows:
+			run += math.hypot(z - rows[-1][0], r - rows[-1][1])
+		rows.append((z, r, run))
+	return rows
+
+
+MERIDIAN = meridian()
+
+
+def along(run):
+	# the height and radius that lie `run` along the skin from the feet
+	run = min(max(run, 0.0), MERIDIAN[-1][2])
+	for a, b in zip(MERIDIAN, MERIDIAN[1:]):
+		if b[2] >= run:
+			f = (run - a[2]) / max(b[2] - a[2], 1e-9)
+			return a[0] + (b[0] - a[0]) * f, a[1] + (b[1] - a[1]) * f
+	return MERIDIAN[-1][0], MERIDIAN[-1][1]
+
+
+def place_wrap(ob, spec, name):
+	# a flat piece the file lays in its XZ plane with its face to -Y (a vine, a leaf), bent around the body onto its
+	# skin: its height runs up the skin, its width around the body, its back face on the skin. `at` = (degrees around
+	# the body from the front, positive toward the slime's left; the height of its middle); `turn` degrees in its own
+	# plane, positive counter-clockwise as seen from outside; `flip` mirrors it left to right
+	vs = ob.data.vertices
+	lo = Vector((min(v.co.x for v in vs), min(v.co.y for v in vs), min(v.co.z for v in vs)))
+	hi = Vector((max(v.co.x for v in vs), max(v.co.y for v in vs), max(v.co.z for v in vs)))
+	rebase(ob, (lo + hi) / 2)
+	ob.data.transform(Matrix.Scale(spec["scale"], 4) @ Matrix.Rotation(rad(-spec.get("turn", 0)), 4, "Y"))
+	if spec.get("flip"):
+		ob.data.transform(Matrix.Scale(-1, 4, (1, 0, 0)))
+		ob.data.flip_normals()
+	back = max(v.co.y for v in vs)
+	phi, height = rad(spec["at"][0]), spec["at"][1]
+	start = next(row[2] for row in MERIDIAN if row[0] >= height)
+	r0 = skin_radius(height)
+	anchor = Vector((r0 * math.sin(phi), -r0 * math.cos(phi), height))
+	for v in vs:
+		z, r = along(start + v.co.z)
+		a = phi + v.co.x / max(r, 0.08)
+		# (its back face a hair under the skin, so no gap shows)
+		out = r + (back - v.co.y) - 0.005
+		v.co = Vector((out * math.sin(a), -out * math.cos(a), z)) - anchor
+	ob.location = anchor
+	print(f"WRAP {name} at {spec['at'][0]} degrees, height {height}, anchor {tuple(round(x, 3) for x in anchor)}")
+
+
+def onto_skin(p):
+	# a point inside the body (or under the ground) moved straight out onto the skin
+	p.z = max(p.z, 0.005)
+	r, least = math.hypot(p.x, p.y), skin_radius(p.z) + 0.004
+	if r < least:
+		k = least / max(r, 1e-6)
+		p.x, p.y = p.x * k, p.y * k
+	return p
+
+
+def place_frame(ob, spec, name):
+	# a flat piece the file lays in its XZ plane with its face to -Y (a vine, a leaf) that grows OUT of the body, as the
+	# owner's painting draws vines curling round the outline: stood upright in the plane through the body's middle line
+	# at `at` = (degrees around from the front, positive toward the slime's left; the height of its middle; how far its
+	# middle stands from the middle line), seen from there as the file is seen from its front (at +-90 degrees, the
+	# painting's own view). `yaw` turns its plane about the upright line, its outer end toward the back (degrees), so it
+	# also shows from the side. `hug` (0 to 1) bends it so its inner edge follows the body's outline up and down;
+	# whatever then lies inside the body is laid on the skin. `turn` and `flip` as for a wrap
+	vs = ob.data.vertices
+	lo = Vector((min(v.co.x for v in vs), min(v.co.y for v in vs), min(v.co.z for v in vs)))
+	hi = Vector((max(v.co.x for v in vs), max(v.co.y for v in vs), max(v.co.z for v in vs)))
+	rebase(ob, (lo + hi) / 2)
+	ob.data.transform(Matrix.Scale(spec["scale"], 4) @ Matrix.Rotation(rad(-spec.get("turn", 0)), 4, "Y"))
+	if spec.get("flip"):
+		ob.data.transform(Matrix.Scale(-1, 4, (1, 0, 0)))
+		ob.data.flip_normals()
+	deg, height, reach = spec["at"]
+	phi, s, hug = rad(deg), (1 if deg >= 0 else -1), spec.get("hug", 0)
+	plane = phi + s * rad(spec.get("yaw", 0))
+	out = Vector((math.sin(plane), -math.cos(plane), 0))
+	depth = Vector((math.cos(plane), math.sin(plane), 0)) * s
+	centre = Vector((reach * math.sin(phi), -reach * math.cos(phi), height))
+	r0 = skin_radius(height)
+	anchor = Vector((r0 * math.sin(phi), -r0 * math.cos(phi), height))
+	laid = 0
+	for v in vs:
+		p = centre + out * (v.co.x * s) + depth * v.co.y + Vector((0, 0, v.co.z))
+		p += out * (hug * (skin_radius(p.z) - r0))
+		q = onto_skin(p.copy())
+		laid += (q - p).length > 1e-6
+		v.co = q - anchor
+	ob.location = anchor
+	print(f"FRAME {name} at {deg} degrees, height {height}, reach {reach}, {laid} of {len(vs)} vertices laid on the skin")
+
+
+def place_fold(ob, spec, name):
+	# a bird's wing folded at the body's side (the owner, 2026-11-10: "tư thế tự nhiên của cánh chim"). Its root is the
+	# end along X that `root` names ("-x": the file's right wing of a pair, worn on the slime's left; "+x" on its right);
+	# set at `at`, the feathers stretch back along the side with the painted face out. `droop` lowers the tips (degrees),
+	# `splay` turns them out from the body, `roll` tips the wing's top edge in toward it. Returns the flutter axis, up
+	# through the root
+	side = 1 if spec["root"] == "-x" else -1
+	rebase(ob, anchor_of(ob, "x", side < 0))
+	ob.data.transform(Matrix.Scale(spec["scale"], 4))
+	ob.data.transform(Matrix.Rotation(rad(side * 90), 4, "Z"))
+	ob.data.transform(Matrix.Rotation(rad(-spec["droop"]), 4, "X"))
+	ob.data.transform(Matrix.Rotation(rad(-side * spec.get("splay", 0)), 4, "Z"))
+	ob.data.transform(Matrix.Rotation(rad(-side * spec.get("roll", 0)), 4, "Y"))
+	ob.location = spec["at"]
+	tip = max(ob.data.vertices, key=lambda v: v.co.length).co + ob.location
+	inside = sum(outside(ob.location + v.co) < 0 for v in ob.data.vertices)
+	print(f"FOLD {name} tip at {tuple(round(x, 3) for x in tip)}, {inside} of {len(ob.data.vertices)} vertices inside the body")
+	return Vector((0, 0, 1))
 
 
 def mirrored(ob, name):
@@ -363,6 +573,12 @@ for name, spec in KIT["pieces"].items():
 		axes[name] = axis
 		if spec.get("twin"):
 			axes[spec["twin"]] = Vector((axis.x, -axis.y, axis.z))
+	elif spec["kind"] == "wrap":
+		place_wrap(ob, spec, name)
+	elif spec["kind"] == "frame":
+		place_frame(ob, spec, name)
+	elif spec["kind"] == "fold":
+		axes[name] = place_fold(ob, spec, name)
 	else:
 		place_tail(ob, spec, name)
 	ob.name = name

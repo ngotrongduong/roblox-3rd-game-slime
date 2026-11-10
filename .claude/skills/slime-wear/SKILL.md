@@ -24,6 +24,12 @@ orchestrator's (CLAUDE.md).
   rim of its foot goes under the skin, and where the shoulder slopes away the lowest part is drawn down onto it
   (`seat`). The detail at its foot (fur, a spiked collar, a band) must show.
 - **No base showing** (2026-11-10): no rim, hollow or gap under a piece from any side.
+- **Vines grow out, not stuck on** (2026-11-10: "dây leo mọc vươn ra cả bên ngoài của slime"): what the painting draws
+  round the outline stands out past the body (`frame`), only what lies on the back is laid on the skin (`wrap`).
+- **A bird's wings rest as a bird's do** (2026-11-10: "tư thế tự nhiên của cánh chim thay vì chổng lên trên cao"):
+  folded along the sides, tips back (`fold`); raised spread wings are for dragons and bats.
+- **Tails and ears move** (2026-11-10: "gắn thêm chuyển động cho phần đuôi và tai"): a tail wags and trails the hop,
+  an ear twitches now and then and trails the hop (`kit-reference.md`, "Config").
 - Each Secret has its own design; one piece recoloured for another Secret is not a new design.
 - Low poly for cheap phones: each part keeps the triangles in its kit's `budget` (about 500 to 900).
 
@@ -46,10 +52,10 @@ orchestrator's (CLAUDE.md).
    bit is what, where each one's base is, which way a horn curls, which way an ear opens.
 4. **Write the kit** in `KITS` of `tools/blender/wear_kit.py` (fields in `kit-reference.md`): `sort` by the middles
    from step 3, `budget`, and a piece for each part with its place from step 1. Start from the nearest existing kit.
-   The tool knows three kinds: `horn` (horns and ears), `wing` (one wing, mirrored by `twin`) and `tail`. A piece of
-   another kind (a crown, a halo, a wreath, a file holding both wings or four of them) first gets its kind in
-   `wear_kit.py`, its row in `kit-reference.md` and, if its anchor cannot sit on the skin, a change to
-   `tests/spec/wear.luau`; then step 6 is due.
+   The tool knows `horn` (horns and ears), `wing` (spread), `fold` (a bird's wing at rest), `tail`, `wrap` (a flat
+   piece lying on the skin) and `frame` (a flat piece growing out past the outline). A piece of another kind (a crown,
+   a halo, four wings) first gets its kind in `wear_kit.py`, its row in `kit-reference.md` and, if its anchor cannot
+   sit on the skin, a change to `tests/spec/wear.luau`; then step 6 is due.
 5. **Build:** `& "C:\Roblox 3rd game\tools\blender\wear_kit.ps1" <Kit>`. Read the lines (`kit-reference.md`), then
    look at `review/head.png`, `headback.png`, `front.png`, `side.png`, `game.png` and `backq.png` next to the painting.
    List what differs (place, lean, size, foot showing, detail lost, a gap), change the table, build again. Several
@@ -61,12 +67,13 @@ orchestrator's (CLAUDE.md).
 7. **Upload** the FBX (and the texture, for a new kit): `kit-reference.md`, "Upload". Unchanged meshes keep their ids.
    The Studio id comes from the MCP's `list_roblox_studios`.
 8. **Config.Wear:** the Secret in `Secrets`, the kit in `Kits` with the model id in its comment, each piece's numbers
-   from `wear.json` (`kit-reference.md`, "Config").
+   from `wear.json` and its motion (`kit-reference.md`, "Config").
 9. **Check:** `& "C:\Roblox 3rd game\tools\check.ps1"` ends `CHECK OK` (`tests/spec/wear.luau` holds every piece on
    the skin and every pair mirrored).
 10. **See it in Play:** stop Play (MCP `start_stop_play`),
     `& "C:\Roblox 3rd game\tools\map\sync_all.ps1" -StudioId <id>`, start Play, then
-    `node tools/studio_mcp.js run .claude/skills/slime-wear/play_check.luau <id> Client`: every Secret that wears
+    `node tools/studio_mcp.js run .claude/skills/slime-wear/play_check.luau <id> Client` (move the character to an
+    open lawn first, away from the well and the village slimes): every Secret that wears
     pieces stands in a row in front of the player, alive; each must say `n/n pieces`. Shoot each changed one close from
     the front and the back with the camera lines it prints (`node tools/studio_mcp.js shot <id> <out.png> ...`) and
     look: pieces on the skin, no gap, the detail at their foot showing, moving with the jelly.
