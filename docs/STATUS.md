@@ -154,7 +154,9 @@ sides). `fantasy_icons.glb`: Autumn Fox (`secret-green-orange`, leaf fox ears, S
 `bunny_ears.glb`: Snow Rabbit (`secret-white-white`) and Sakura Bunny (`secret-pink-white`, no painting: placed like
 Snow Rabbit), ears and a cotton tail each. Models 136774730886462, 95357458515961, 134708971114673, 127539713384618,
 81131164014814, 109887950093986, 111477370477627. The wings and fins were moved forward after the first Play shots hid
-them behind the body from the front. Seen in Play; waiting for the owner's approval (ears: his editor if he wants).
+them behind the body from the front. Then the owner placed every piece of the seven himself in the editor (he added a
+second pair of gills to Coral Axolotl) and asked for both sides alike: `ear_mirror.luau` evens each pair, and his
+places are in Config.Wear, seen in Play.
 
 ## 2026-11-10 — Dungeon fight effects per monster, from the VFX library
 

@@ -1,14 +1,24 @@
 -- Edit datamodel (skill slime-wear): the ear editor. Puts the Secrets named in EDIT, dressed and still, twice the
--- game's size, on a stage high over the map, with the Studio camera on them, so the owner can drag and turn each ear with
--- Studio's Move (Ctrl+2) and Rotate (Ctrl+3) tools; then `ear_read.luau` reads what he did back into numbers for
--- Config.Wear. Each slime's parts sit in a Folder (not a Model) so a click picks one ear; everything but the ears is
--- locked. REFERENCE slimes stand at the end, locked whole, to compare with. Run again to start over from Config.
+-- game's size, on a stage high over the map, with the Studio camera on them, so the owner can drag and turn each worn
+-- piece (those PIECES names) with Studio's Move (Ctrl+2) and Rotate (Ctrl+3) tools; then `ear_read.luau` reads what he
+-- did back into numbers for Config.Wear. Each slime's parts sit in a Folder (not a Model) so a click picks one piece;
+-- everything else is locked. REFERENCE slimes stand at the end, locked whole, to compare with. Run again to start over from Config.
 --   node tools/studio_mcp.js run .claude/skills/slime-wear/ear_editor.luau <studio_id> Edit
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local StarterPlayer = game:GetService("StarterPlayer")
 
-local EDIT = { "secret-navy-white", "secret-orange-orange", "secret-orange-purple", "secret-orange-white" }
-local REFERENCE = { "secret-blue-orange" }
+local EDIT = {
+	"secret-orange-pink",
+	"secret-orange-red",
+	"secret-green-orange",
+	"secret-green-red",
+	"secret-navy-navy",
+	"secret-white-white",
+	"secret-pink-white",
+}
+local REFERENCE = {}
+-- the worn pieces he may move: names matching this pattern ("Ear" for ears only; "" for every piece)
+local PIECES = ""
 -- each slime's body this many studs tall (the game's is about 4)
 local HEIGHT = 8
 local STAGE = Vector3.new(0, 600, 0)
@@ -38,8 +48,13 @@ floor.CFrame = CFrame.new(STAGE - Vector3.new(0, 0.5, 0))
 floor.Color = Color3.fromRGB(120, 170, 90)
 floor.Parent = stage
 
-local function isEar(name: string): boolean
-	return string.match(name, "Ear") ~= nil
+local function editable(kit, name: string): boolean
+	for _, spec in kit.pieces do
+		if spec.name == name then
+			return string.find(name, PIECES, 1, true) ~= nil
+		end
+	end
+	return false
 end
 
 local out = {}
@@ -76,7 +91,7 @@ for k, id in all do
 	for _, d in folder:GetDescendants() do
 		if d:IsA("BasePart") then
 			d.Anchored = true
-			d.Locked = reference or not isEar(d.Name)
+			d.Locked = reference or not editable(kit, d.Name)
 		end
 	end
 	local body = folder:FindFirstChild("SlimeBody") :: BasePart

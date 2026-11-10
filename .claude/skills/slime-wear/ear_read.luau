@@ -1,7 +1,9 @@
 -- Edit datamodel (skill slime-wear): reads the owner's hand in the ear editor (`ear_editor.luau`) back into Config.Wear
 -- numbers. For every ear he moved, turned or sized: `at` (its middle), `turn` (degrees about X, Y, Z,
 -- CFrame.fromEulerAnglesXYZ) and `size` relative to the slime's feet in mesh units, and `anchor`, the point it rides
--- the skin by, carried with the ear and set back on the skin. Returns JSON {kit: {piece: {size, at, anchor, turn}}};
+-- the skin by, carried with the ear and set back on the skin. A piece he copied (its name not in Config: rename the
+-- copies first, `Gill2L` for a copy of `GillL`, so pairs still end in L and R) is matched to its mesh and returned with
+-- `copy`, the piece it came from. Returns JSON {kit: {piece: {size, at, anchor, turn, copy?}}};
 -- `ear_write.py` writes it into ConfigWear.luau.
 --   node tools/studio_mcp.js run .claude/skills/slime-wear/ear_read.luau <studio_id> Edit
 local HttpService = game:GetService("HttpService")
@@ -36,9 +38,26 @@ for _, folder in stage:GetChildren() do
 	end
 	local s = body.Size.Y / S.MeshHeight
 	local feet = body.CFrame * CFrame.new(0, -S.MeshCentre * s, 0)
+	-- a piece he copied (Ctrl+D) is worn as one more piece of the same mesh, named `copy` after the one it came from
+	local specs = {}
 	for _, spec in Config.Wear.Kits[kitName].pieces do
-		local part = folder:FindFirstChild(spec.name)
-		if not (part and part:IsA("BasePart")) or part.Locked then
+		specs[spec.name] = spec
+	end
+	for _, part in folder:GetChildren() do
+		if not part:IsA("BasePart") or part.Locked then
+			continue
+		end
+		local spec = specs[part.Name]
+		local copy = nil
+		if not spec then
+			for _, s2 in Config.Wear.Kits[kitName].pieces do
+				if part:IsA("MeshPart") and string.match(part.MeshId, "%d+$") == tostring(s2.mesh) then
+					spec, copy = s2, s2.name
+					break
+				end
+			end
+		end
+		if not spec then
 			continue
 		end
 		local was = feet * CFrame.new(v3(spec.at) * s) * turnOf(spec.turn)
@@ -47,7 +66,7 @@ for _, folder in stage:GetChildren() do
 		local moved = (rel.Position / s - v3(spec.at)).Magnitude > 0.0005
 			or rel.Rotation:FuzzyEq(turnOf(spec.turn), 0.0005) == false
 			or (size - v3(spec.size)).Magnitude > 0.0005
-		if not moved then
+		if not moved and not copy then
 			continue
 		end
 		-- the anchor rides along with the ear, then back onto the skin at its height
@@ -59,11 +78,12 @@ for _, folder in stage:GetChildren() do
 		local anchor = if flat.Magnitude > 0.001 then Vector3.new(0, y, 0) + flat.Unit * r else Vector3.new(0, y, 0)
 		local rx, ry, rz = rel:ToEulerAnglesXYZ()
 		result[kitName] = result[kitName] or {}
-		result[kitName][spec.name] = {
+		result[kitName][part.Name] = {
 			size = list(size),
 			at = list(rel.Position / s),
 			anchor = list(anchor),
 			turn = { round(math.deg(rx)), round(math.deg(ry)), round(math.deg(rz)) },
+			copy = copy,
 		}
 	end
 end

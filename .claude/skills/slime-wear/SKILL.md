@@ -41,8 +41,11 @@ orchestrator's (CLAUDE.md).
   a JSON file, `python ear_write.py <json> src/shared/ConfigWear.luau`, check, sync, run `ear_editor.luau` and
   `ear_read.luau` again (it must return `[]`: the game draws exactly what he set), remove the stage
   (`workspace.EarEditor`), see it in Play. His `turn`, `at`, `size` and `anchor` are kept as they are: no rebuild, no
-  mirroring, no "fixing" them afterwards. The editor takes any piece whose name holds "Ear"; widen `isEar` for other
-  pieces he wants to place.
+  mirroring, no "fixing" them afterwards. The editor's PIECES picks what he may move ("" every worn piece, "Ear" ears
+  only). When he asks for both sides alike (2026-11-11: "căn chỉnh cho chúng đối xứng 2 bên"), run `ear_mirror.luau`
+  first: each L/R pair takes the halfway of the two, a tail near the middle is set on it. A piece he copies (Ctrl+D,
+  2026-11-11: a second pair of axolotl gills) is renamed `Gill2L` / `Gill2R` before the mirror, and `ear_read.luau` /
+  `ear_write.py` add it to the kit with the mesh and motion of the one it came from.
 - **Vines grow out, not stuck on** (2026-11-10: "dây leo mọc vươn ra cả bên ngoài của slime"): what the painting draws
   round the outline stands out past the body (`frame`), only what lies on the back is laid on the skin (`wrap`).
 - **A bird's wings spread from the back** (2026-11-10: "tư thế tự nhiên của cánh chim thay vì chổng lên trên cao", then
