@@ -2248,6 +2248,65 @@ Config.Slime = {
 	FarHz = 10,
 }
 
+-- ===== Worn pieces of a Secret slime (the owner, 2026-11-10: "phụ kiện cho từng con slime") =====
+-- Drawn by the client (client/SlimeWear): each piece is a mesh made for a body one unit tall (tools/blender/wear_*.py,
+-- which writes these numbers to art/models/accessories/<kit>/wear.json), in mesh units: feet at y 0, front -Z, the slime's
+-- own left -X. `at` is the piece's middle where it rests, `size` its box; it rides the skin at `anchor` as the jelly
+-- squashes, hops and leans. A `flap` swings it about its anchor along `axis` (a positive turn lifts it), `degrees` each
+-- way, `hz` times a second. A kit whose meshes are not uploaded yet (mesh 0) is left off.
+Config.Wear = {
+	-- Secret id -> its kit
+	Secrets = {
+		["secret-black-blue"] = "TempestDragon",
+	},
+	Kits = {
+		-- the owner's Meshy model art/models/accessories/tempest_dragon/neon_dragon_relics.glb (tools/blender/wear_tempest_dragon.py)
+		TempestDragon = {
+			texture = "rbxassetid://83202714233801",
+			pieces = {
+				{
+					name = "HornL",
+					mesh = 0,
+					size = { 0.1537, 0.2482, 0.17 },
+					at = { -0.2262, 0.8605, 0.0134 },
+					anchor = { -0.22, 0.75, 0.06 },
+				},
+				{
+					name = "HornR",
+					mesh = 0,
+					size = { 0.1537, 0.2482, 0.17 },
+					at = { 0.2262, 0.8605, 0.0134 },
+					anchor = { 0.22, 0.75, 0.06 },
+				},
+				{
+					name = "WingL",
+					mesh = 0,
+					size = { 0.4211, 0.4311, 0.3377 },
+					at = { -0.4875, 0.6246, 0.484 },
+					anchor = { -0.3, 0.47, 0.34 },
+					-- (the owner: "đôi cánh hơi vỗ nhẹ", a soft slow beat)
+					flap = { axis = { -0.6157, 0, -0.788 }, degrees = 12, hz = 0.8 },
+				},
+				{
+					name = "WingR",
+					mesh = 0,
+					size = { 0.4211, 0.4311, 0.3377 },
+					at = { 0.4875, 0.6246, 0.484 },
+					anchor = { 0.3, 0.47, 0.34 },
+					flap = { axis = { -0.6157, 0, 0.788 }, degrees = 12, hz = 0.8 },
+				},
+				{
+					name = "Tail",
+					mesh = 0,
+					size = { 0.1352, 0.2177, 0.3827 },
+					at = { 0.0017, 0.1752, 0.6211 },
+					anchor = { 0, 0.16, 0.44 },
+				},
+			},
+		},
+	},
+}
+
 -- ===== Gaits: how a slime moves along a leg =====
 -- (the owner chose them in the movement lab, 2026-10-29: tools/slime/hop_lab_lanes.luau; docs/GAMEPLAY.md 10.1;
 -- chosen by shared Gaits.choose, timed by VillagePath, played by SlimeActor / SlimeMotion).

@@ -7,6 +7,7 @@ local Config = require(ReplicatedStorage.Shared.Config)
 local DualDesigns = require(ReplicatedStorage.Shared.DualDesigns)
 local Materials = require(ReplicatedStorage.Shared.Materials)
 local SkinIds = require(ReplicatedStorage.Shared.SkinIds)
+local SlimeWear = require(script.Parent.SlimeWear)
 
 local C = Config.VillageClient
 local SlimeLook = {}
@@ -200,6 +201,8 @@ function SlimeLook.build(attrs: { [string]: any }): Model
 		hull.Parent = model
 	end
 	model.WorldPivot = CFrame.new()
+	-- a Secret slime's own pieces (horns, wings...), scaled with the body below
+	SlimeWear.put(model, secret)
 	local scale = attrs.Scale
 	model:ScaleTo(C.BodyHeight * (if type(scale) == "number" then math.clamp(scale, C.MinimumBodyScale, 1) else 1))
 	if attrs.Ghost == true then
