@@ -443,7 +443,8 @@ KITS = {
 			("GemR" if c.x < -0.32 else ("Big" if c.x < -0.2 else ("GemL" if c.x < -0.08 else "TipL")))))),
 		budget=dict(Horn=484, Mane=2600, TipR=26, GemR=64, Big=172, GemL=96, TipL=30),
 		pieces=dict(
-			Horn=dict(part="Horn", kind="horn", at=(0, -0.1, 0.94), scale=0.9, tilt_out=0, tilt_back=-15),
+			# (the owner: on the forehead, under the top of the head, the tip leaning out forward, not straight up)
+			Horn=dict(part="Horn", kind="horn", at=(0, -0.3, 0.76), scale=0.9, tilt_out=0, tilt_back=-40),
 			# (laid along the spine seen from the side: the file's hair arcs from its top front over and down, as a mane
 			# runs over a horse's neck; pitched steeper to fall down the back)
 			Mane=dict(part="Mane", kind="rigid", lay="side", at=(180, 0.7), scale=1.55, squash=(1, 0.55, 1), turn=-10,

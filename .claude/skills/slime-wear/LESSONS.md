@@ -122,3 +122,4 @@ Fifteen Secrets dressed on 2026-11-10; these got a piece right in one or two rou
 | The owner: "nhớ ghép cả giáp ở phần trước thân nữa" | the shoulder and side plates worn twice (front and back); at 50 degrees round the front shoulders touched the eyes, 68 clears them; the shield stays on the back |
 | `tests/spec/wear.luau` allowed no side of 1 or more; a mane to the feet is 1.12 long | the limit is 1.25 |
 | Config.luau neared Studio's 200000-character script limit with every kit | `Config.Wear` lives in `src/shared/ConfigWear.luau` |
+| The unicorn's horn stood straight up on the top of the head as the painting has it. The owner: lower, on the forehead, the tip leaning out forward, and a little deeper in the body | `horn` at (0, -0.3, 0.76), `tilt_back` -40; then 0.04 further in along the horn in Config (`at` and `anchor` moved together) |

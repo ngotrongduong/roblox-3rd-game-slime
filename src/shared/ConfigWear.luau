@@ -906,21 +906,21 @@ local Wear = {
 				},
 			},
 		},
-		-- the owner's model art/models/accessories/amethyst_unicorn/purple_purple.glb (the crystal horn at the top front,
+		-- the owner's model art/models/accessories/amethyst_unicorn/purple_purple.glb (the crystal horn on the forehead,
 		-- the mane from behind it over the head and down the back to the feet as a horse's runs, pressed onto the body
 		-- with some of it in the jelly as the owner drew it, the file's row of crystals across the lower front),
-		-- uploaded as model 130026127101028
+		-- uploaded as model 122773918711003
 		AmethystUnicorn = {
 			texture = "rbxassetid://139531407970587",
 			pieces = {
 				{
 					name = "Horn",
-					mesh = 107578772271505,
-					size = { 0.1291, 0.3673, 0.1278 },
-					-- (the owner: "dịch xuống dưới một chút và có thể cắm vào trong thân sâu hơn": 0.07 lower than the
-					-- build seated it, its foot in the jelly)
-					at = { -0.008, 0.9707, -0.1252 },
-					anchor = { 0, 0.8219, -0.0871 },
+					mesh = 77613199042991,
+					size = { 0.1291, 0.2906, 0.2241 },
+					-- (the owner: on the forehead under the top of the head, the tip leaning out forward; and a little
+					-- deeper in the body: 0.04 further in along the horn than the build seated it)
+					at = { -0.008, 0.8331, -0.3548 },
+					anchor = { 0, 0.723, -0.2689 },
 				},
 				{
 					name = "Mane",
