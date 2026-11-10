@@ -1,7 +1,7 @@
 -- Play client (skill slime-wear), after play_check.luau: bring one Secret of the row 7 studs out in front of it onto
 -- open ground (the row's ends can run into a fence: the close shots then showed planks), keep it alive there, and print
--- five camera lines: front, back, side, three-quarter (all from above, as the game sees it) and level (the painting's
--- view). The actor puts its model back on its own `root` every frame, so the root moves too.
+-- seven camera lines: front, back, side, three-quarter (all from above, as the game sees it), level (the painting's
+-- view), and close and low at the front from its right and its left. The actor puts its model back on its own `root` every frame, so the root moves too.
 --   node tools/studio_mcp.js run .claude/skills/slime-wear/play_close.luau <studio_id> Client SECRET=<file with the id>
 -- (shoot_close.ps1 runs the whole stage, line-up and shots)
 local id = string.gsub(SECRET, "%s", "")
@@ -46,4 +46,8 @@ return table.concat({
 	cam(head + right * h * 1.7 + Vector3.new(0, h * 0.3, 0), head),
 	cam(head + (front + right).Unit * h * 1.7 + Vector3.new(0, h * 0.6, 0), head),
 	cam(head + front * h * 1.9 - Vector3.new(0, h * 0.15, 0), head - Vector3.new(0, h * 0.2, 0)),
+		-- close and low at the front, each side: a player next to the slime looks up under its ears (the owner saw an
+		-- ear's foot hang over the shoulder from there, 2026-11-10)
+		cam(head + (front + right * 0.6).Unit * h * 1.3 - Vector3.new(0, h * 0.35, 0), head + Vector3.new(0, h * 0.15, 0)),
+		cam(head + (front - right * 0.6).Unit * h * 1.3 - Vector3.new(0, h * 0.35, 0), head + Vector3.new(0, h * 0.15, 0)),
 }, "\n")

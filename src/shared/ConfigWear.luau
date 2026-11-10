@@ -1207,26 +1207,26 @@ local Wear = {
 			},
 		},
 		-- the owner's model art/models/accessories/arctic_wolf/fox_tail.glb (its navy and white wolf ears and tail; the
-		-- file holds four Secrets' sets), uploaded as model 124346398544213
+		-- file holds four Secrets' sets), uploaded as model 140673944704729
 		ArcticWolf = {
 			texture = "rbxassetid://128430066123954",
 			pieces = {
 				{
 					name = "EarL",
-					mesh = 116044959073312,
-					size = { 0.3494, 0.3457, 0.2043 },
-					at = { -0.3194, 0.7548, -0.0015 },
-					anchor = { -0.3154, 0.6338, 0.0055 },
+					mesh = 124995750087936,
+					size = { 0.3619, 0.3166, 0.2046 },
+					at = { -0.3544, 0.7484, -0.0015 },
+					anchor = { -0.3057, 0.6391, 0.0056 },
 					-- (a wolf's ear: a quick swivel now and then, each ear on its own)
 					twitch = { axis = { 0, 1, 0 }, degrees = 18, every = 3.5 },
 					lag = { axis = { 1, 0, 0 }, degrees = 5 },
 				},
 				{
 					name = "EarR",
-					mesh = 134103014322464,
-					size = { 0.3496, 0.3455, 0.2033 },
-					at = { 0.3106, 0.7653, -0.0038 },
-					anchor = { 0.3159, 0.6347, 0.0054 },
+					mesh = 84486713206174,
+					size = { 0.3592, 0.3299, 0.1931 },
+					at = { 0.327, 0.7602, 0.0046 },
+					anchor = { 0.3107, 0.6365, 0.0027 },
 					twitch = { axis = { 0, 1, 0 }, degrees = 18, every = 3.5 },
 					lag = { axis = { 1, 0, 0 }, degrees = 5 },
 				},
@@ -1243,26 +1243,26 @@ local Wear = {
 			},
 		},
 		-- the owner's model art/models/accessories/ember_tiger/fox_tail.glb (its striped ears and tail), uploaded as model
-		-- 124767812581159
+		-- 118142838672417
 		EmberTiger = {
 			texture = "rbxassetid://99281636509995",
 			pieces = {
 				{
 					name = "EarL",
-					mesh = 119860827402069,
-					size = { 0.338, 0.3116, 0.201 },
-					at = { -0.3719, 0.7534, -0.0072 },
-					anchor = { -0.3278, 0.6188, 0.0055 },
+					mesh = 85581621403224,
+					size = { 0.3437, 0.314, 0.1877 },
+					at = { -0.3355, 0.7612, 0.0083 },
+					anchor = { -0.3244, 0.6256, 0 },
 					-- (a big cat's ear: a slower, rarer flick)
 					twitch = { axis = { 0, 1, 0 }, degrees = 14, every = 4.5 },
 					lag = { axis = { 1, 0, 0 }, degrees = 5 },
 				},
 				{
 					name = "EarR",
-					mesh = 74826190520449,
-					size = { 0.3367, 0.3155, 0.2013 },
-					at = { 0.3745, 0.755, 0.0027 },
-					anchor = { 0.3275, 0.6184, 0.0055 },
+					mesh = 123292086546515,
+					size = { 0.3356, 0.3176, 0.2011 },
+					at = { 0.3377, 0.763, 0.0025 },
+					anchor = { 0.3246, 0.626, 0.0053 },
 					twitch = { axis = { 0, 1, 0 }, degrees = 14, every = 4.5 },
 					lag = { axis = { 1, 0, 0 }, degrees = 5 },
 				},
@@ -1279,26 +1279,26 @@ local Wear = {
 			},
 		},
 		-- the owner's model art/models/accessories/witch_cat/fox_tail.glb (its purple starry cat ears and tail), uploaded
-		-- as model 119022117082273
+		-- as model 77250680145306
 		WitchCat = {
 			texture = "rbxassetid://128548880469265",
 			pieces = {
 				{
 					name = "EarL",
-					mesh = 104722705141815,
-					size = { 0.3484, 0.3197, 0.2071 },
-					at = { -0.3323, 0.7696, -0.0129 },
-					anchor = { -0.3164, 0.6355, 0.0053 },
+					mesh = 83021565351571,
+					size = { 0.3568, 0.3075, 0.1844 },
+					at = { -0.358, 0.768, 0.0067 },
+					anchor = { -0.309, 0.6388, -0.0027 },
 					-- (a cat's ear flicks often)
 					twitch = { axis = { 0, 1, 0 }, degrees = 20, every = 3 },
 					lag = { axis = { 1, 0, 0 }, degrees = 5 },
 				},
 				{
 					name = "EarR",
-					mesh = 91109768290138,
-					size = { 0.3518, 0.3262, 0.2045 },
-					at = { 0.3315, 0.7674, -0.0099 },
-					anchor = { 0.3162, 0.6353, 0.0053 },
+					mesh = 93917057701335,
+					size = { 0.3537, 0.3189, 0.2043 },
+					at = { 0.3491, 0.7664, -0.0096 },
+					anchor = { 0.3112, 0.6374, 0.0054 },
 					twitch = { axis = { 0, 1, 0 }, degrees = 20, every = 3 },
 					lag = { axis = { 1, 0, 0 }, degrees = 5 },
 				},
@@ -1315,26 +1315,26 @@ local Wear = {
 			},
 		},
 		-- the owner's model art/models/accessories/creamsicle_fox/fox_tail.glb (its orange fox ears and white-tipped tail),
-		-- uploaded as model 104523000314723
+		-- uploaded as model 85254800783974
 		CreamsicleFox = {
 			texture = "rbxassetid://103683143568775",
 			pieces = {
 				{
 					name = "EarL",
-					mesh = 92609137479697,
-					size = { 0.3357, 0.3225, 0.2039 },
-					at = { -0.3475, 0.7787, -0.0061 },
-					anchor = { -0.3029, 0.645, 0.007 },
+					mesh = 140434098177917,
+					size = { 0.3414, 0.3285, 0.1909 },
+					at = { -0.3443, 0.781, 0.007 },
+					anchor = { -0.3037, 0.6442, 0 },
 					-- (a fox's ear: a quick swivel now and then)
 					twitch = { axis = { 0, 1, 0 }, degrees = 18, every = 3.5 },
 					lag = { axis = { 1, 0, 0 }, degrees = 5 },
 				},
 				{
 					name = "EarR",
-					mesh = 116051324381824,
-					size = { 0.3414, 0.3291, 0.2035 },
-					at = { 0.3453, 0.7685, -0.0032 },
-					anchor = { 0.3027, 0.6447, 0.007 },
+					mesh = 83714049541814,
+					size = { 0.3434, 0.3242, 0.2036 },
+					at = { 0.3594, 0.7689, -0.0031 },
+					anchor = { 0.2979, 0.648, 0.007 },
 					twitch = { axis = { 0, 1, 0 }, degrees = 18, every = 3.5 },
 					lag = { axis = { 1, 0, 0 }, degrees = 5 },
 				},

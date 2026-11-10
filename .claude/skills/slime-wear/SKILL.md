@@ -30,7 +30,10 @@ orchestrator's (CLAUDE.md).
   (`deep` 0.08); the run's `HORN` line must show 0 of its lowest fifth outside the skin. Then (his second note: "vẫn
   còn khoảng hở từ gốc ... vậy mà bạn cũng đồng ý được?") it twitches by a swivel about the upright, never a flick that
   tips its foot off the skin, and is judged from close-ups of every root in Play (`crop.py`-style, 3x), front, back,
-  side and quarter, never from the whole-body shot alone.
+  side and quarter, never from the whole-body shot alone. Then (his third note, of Ember Tiger and Creamsicle Fox:
+  "chỉnh lại góc xoay của tai để cả phần đáy của tai chạm vào thân", and "tách rời tai trái và tai phải ... chỉnh từng
+  góc độ từng tai"): each ear gets its own angle (`fit`), never one angle mirrored for the pair, and the close shots
+  include the two from low at the front (`-lowright`, `-lowleft`), where a player beside the slime looks up under them.
 - **Vines grow out, not stuck on** (2026-11-10: "dây leo mọc vươn ra cả bên ngoài của slime"): what the painting draws
   round the outline stands out past the body (`frame`), only what lies on the back is laid on the skin (`wrap`).
 - **A bird's wings spread from the back** (2026-11-10: "tư thế tự nhiên của cánh chim thay vì chổng lên trên cao", then

@@ -133,6 +133,9 @@ phone.
 The owner still saw light under those ears after the first fix. They now lean with the shoulder, set 0.08 into the
 jelly with their foot drawn on over most of their height, and swivel about the upright instead of flicking back (a
 flick tipped the foot's rim off the skin); every root checked in 3x close-ups of the Play shots from four sides.
+Then the owner shot Ember Tiger and Creamsicle Fox close and low and still saw an ear's foot off the body: each pair
+had one mirrored angle, though the file's two ears differ. Now every ear is turned on its own (`fit` in `wear_kit.py`)
+to lay its whole foot rim on the skin, and the close shots add two from low at the front (`-lowright`, `-lowleft`).
 
 ## 2026-11-10 — Dungeon fight effects per monster, from the VFX library
 
