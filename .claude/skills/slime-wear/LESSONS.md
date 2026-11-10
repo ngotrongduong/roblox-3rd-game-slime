@@ -100,3 +100,12 @@ Fifteen Secrets dressed on 2026-11-10; these got a piece right in one or two rou
 | A `frame` lays each point inside the body onto the skin one by one: a flat plaque's front and back faces land on the same skin, its relief flattened, the "sunk" look the owner forbids | `front` lays the plaque's back face on the skin and keeps its thickness outside |
 | The frills matched the painting in the renders but looked small in Play, where the jelly sits wider | measure the painting's middle and height in body units and add a step of scale after the first Play look (1.18 -> 1.25, `at` out 0.36 -> 0.39) |
 | A plaque the same colours as the painted skin is hard to see where it lies flat on the front | judge it from a level camera too (the crystal reads at the outline and in its relief) |
+
+## 2026-11-10 (Forest Dryad, Iron Boar, Peach Blossom)
+
+| What went wrong | The fix |
+|---|---|
+| Iron Boar's tusks, worn as horns with the file's turn (`level=False`), were lifted 0.34 up to the shoulders as horns, their foot stretched 0.2: their cuff opens sideways, which `base_plane` (40 degrees from down) cannot find. The owner: "là 2 cái nanh, không phải sừng" | `spread=90` finds the sideways sole; levelled and `tilt_out` 80 the tusk lies out flat from the lower side, its tip curling up |
+| Curved armour plates (shoulder guards) as `front` or `wrap` stood off the body like fins from the game's camera: their own curve is kept as relief | left out (the skin already paints the armour); a strongly curved piece is not a plaque |
+| A leafy arch of hair or a flower crown drawn round the head in the painting: `front` at the painting's place matched it at the first build | `front`, `at` (0, 0.72-0.74), scale to the painting's width in body units |
+| Antlers behind the `front` hair hid in Play from the front | a step of scale (1.1 -> 1.4) so they rise above it |

@@ -351,6 +351,78 @@ KITS = {
 		),
 		body=(0.55, 0.8, 1, 1),
 	),
+	# Forest Dryad (secret-green-green), 2026-11-10: the painting's leafy hair round the top with flowers, and small
+	# antlers at the top corners. The file: two antlers with leaves and blossoms, the leafy arch of hair, a cluster of
+	# blossoms, a big leaf, a small vine and a yellow pollen speck (no piece). The owner: "không cần phải chính xác như
+	# trong hình, chỉ cần gắn lên cho đẹp": the hair worn where the painting has it, the blossoms, leaf and vine dress the
+	# back
+	"ForestDryad": dict(
+		folder="forest_dryad",
+		glb="green_green.glb",
+		out="ForestDryadWear",
+		texture="forest_dryad_wear.png",
+		sort=lambda c: (("AntlerR" if c.x < -0.1 else ("AntlerL" if c.x < 0.2 else "Blossoms")) if c.z > 0.4 else
+			("Hair" if c.x < 0 else ("Pollen" if c.z < 0.1 else ("Leaf" if c.x < 0.32 else "Vine")))),
+		budget=dict(AntlerL=450, AntlerR=450, Blossoms=400, Hair=900, Leaf=160, Vine=180, Pollen=6),
+		pieces=dict(
+			# (1.1 hid behind the hair seen from the front in Play)
+			AntlerL=dict(part="AntlerL", kind="horn", at=(0.25, 0.02, 0.76), scale=1.4, tilt_out=12, tilt_back=0),
+			AntlerR=dict(part="AntlerR", kind="horn", at=(-0.25, 0.02, 0.76), scale=1.4, tilt_out=12, tilt_back=0),
+			Hair=dict(part="Hair", kind="front", at=(0, 0.74), scale=1.65, bend=25),
+			Blossoms=dict(part="Blossoms", kind="wrap", at=(170, 0.66), scale=1.2),
+			Leaf=dict(part="Leaf", kind="wrap", at=(-145, 0.34), scale=1.2, turn=-20),
+			Vine=dict(part="Vine", kind="wrap", at=(140, 0.32), scale=1.3, turn=15),
+		),
+		body=(0.25, 0.6, 0.15, 1),
+	),
+	# Iron Boar (secret-gray-red), 2026-11-10: the painting's metal tusks out of red armour cuffs at the lower sides,
+	# red armour plates on the sides. The file: two tusks in red cuffs (the owner: "là 2 cái nanh, không phải sừng"),
+	# two armour plates, an armoured tail with an arrow tip, a spiked circlet, a chained collar and a loose red gem. No
+	# piece for the plates (curved shoulder guards: laid on the front or wrapped round the sides, their outer half stood
+	# off the body like fins; the skin already paints the red armour), the collar (no neck) or the gem (it would float)
+	"IronBoar": dict(
+		folder="iron_boar",
+		glb="gray_red.glb",
+		out="IronBoarWear",
+		texture="iron_boar_wear.png",
+		sort=lambda c: ("Tail" if c.z < 0.24 else
+			(("TuskR" if c.x < -0.27 else ("TuskL" if c.x < 0 else "Circlet")) if c.z > 0.45 else
+			("PlateR" if c.x < -0.3 else ("PlateL" if c.x < -0.05 else ("Collar" if c.x < 0.3 else "Gem"))))),
+		budget=dict(TuskL=345, TuskR=345, PlateL=400, PlateR=400, Tail=900, Circlet=700, Collar=600, Gem=26),
+		pieces=dict(
+			# (worn as horns are: the cuff's open end faces the middle in the file, `spread` 90 finds it as the sole;
+			# levelled, the tusk stands up out of it, then leans out flat to its side at the foot, its tip curling up)
+			# (1.2 looked small in Play, the cuffs half hidden by the wider jelly)
+			TuskL=dict(part="TuskL", kind="horn", at=(0.5, -0.12, 0.22), scale=1.5, tilt_out=80, tilt_back=0, spread=90),
+			TuskR=dict(part="TuskR", kind="horn", at=(-0.5, -0.12, 0.22), scale=1.5, tilt_out=80, tilt_back=0, spread=90),
+			# (round the front of the head, the spikes up: a rigid piece set by where it runs, as the sheep's garland)
+			Circlet=dict(part="Circlet", kind="aim", root="+x", at=(0.32, -0.2, 0.7), scale=1.2, point=(-1, 0, 0),
+				face=(0, -1, 0.1)),
+			Tail=dict(part="Tail", kind="tail", base="-x", at=(0.0, 0.485, 0.2), scale=0.7, lift=5),
+		),
+		body=(0.55, 0.12, 0.1, 1),
+	),
+	# Peach Blossom (secret-pink-yellow), 2026-11-10: the painting's crown of peach blossoms across the top. The file:
+	# the crown, two small blossom clusters, a blossom with a bead, a blossom branch with beads, a festoon with ribbons
+	# and three loose petals. The crown where the painting has it, the clusters behind it on the head, the festoon across
+	# the back; the bead blossom would sit on the face and the branch and petals add nothing (no piece)
+	"PeachBlossom": dict(
+		folder="peach_blossom",
+		glb="pink_yellow.glb",
+		out="PeachBlossomWear",
+		texture="peach_blossom_wear.png",
+		sort=lambda c: ("Crown" if c.z > 0.38 else
+			(("ClusterR" if c.x < -0.15 else ("Bloom" if c.x < 0.15 else "ClusterL")) if c.z > 0.2 else
+			("Branch" if c.x < -0.25 else ("Festoon" if c.x < 0.25 else "Petals")))),
+		budget=dict(Crown=900, ClusterL=420, ClusterR=390, Bloom=480, Branch=460, Festoon=600, Petals=32),
+		pieces=dict(
+			Crown=dict(part="Crown", kind="front", at=(0, 0.72), scale=1.35, bend=25),
+			ClusterL=dict(part="ClusterL", kind="wrap", at=(125, 0.64), scale=1.2),
+			ClusterR=dict(part="ClusterR", kind="wrap", at=(-125, 0.64), scale=1.2),
+			Festoon=dict(part="Festoon", kind="wrap", at=(180, 0.42), scale=1.3),
+		),
+		body=(0.95, 0.5, 0.65, 1),
+	),
 }
 TEXTURE = 1024
 
@@ -739,7 +811,7 @@ def place_horn(ob, spec, name):
 	side = 1 if spec["at"][0] >= 0 else -1
 	vs = ob.data.vertices
 	if spec.get("foot", "plane") == "plane":
-		down, foot = base_plane(ob.data)
+		down, foot = base_plane(ob.data, spec.get("spread", 40))
 	else:
 		zs = sorted(v.co.z for v in vs)
 		down, foot = Vector((0, 0, -1)), [v.index for v in vs if v.co.z <= zs[0] + (zs[-1] - zs[0]) * 0.1]

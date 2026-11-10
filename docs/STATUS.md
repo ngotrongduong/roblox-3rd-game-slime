@@ -84,6 +84,16 @@ Hand-over: 15 of the 56 Secrets wear their pieces. The next one starts when the 
 `slime-wear` from step 1. Everything learnt today, right and wrong, is in the skill (the owner's rules in SKILL.md, a
 "What worked" list and every mistake with its fix in LESSONS.md); the close shots in Play are one command now,
 `.claude/skills/slime-wear/shoot_close.ps1 <studio> <secret> <out>`.
+Then three at once, the owner: "không cần phải chính xác như trong hình, chỉ cần gắn lên cho đẹp".
+`secret-green-green` Forest Dryad: antlers at the top corners, the leafy hair round the top as the painting has it
+(`front`), blossoms, a leaf and a vine on the back (model 117231029918059). `secret-gray-red` Iron Boar: two metal
+tusks in red cuffs out of the lower sides, tips curling up (the owner: "là 2 cái nanh, không phải sừng"; worn as horns
+with the new `spread` 90, which finds a sole facing sideways), a spiked circlet round the head (`aim`) and an armoured
+tail (model 89853209729270); left out: two curved armour plates (they stood off the body like fins), the collar and a
+gem. `secret-pink-yellow` Peach Blossom: the blossom crown across the top as painted (`front`), two clusters behind it
+and a festoon across the back (model 136245608358614); left out: a bead blossom (on the face), a branch and petals.
+All eighteen dressed Secrets n/n in Play, the three seen front, level, back, side and three-quarter; the other kits
+were not rebuilt (`spread` defaults to the old 40). Not seen: a phone.
 
 ## 2026-11-10 — Dungeon fight effects per monster, from the VFX library
 

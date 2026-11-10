@@ -2301,6 +2301,9 @@ Config.Wear = {
 		["secret-black-red"] = "BloodMoonBat",
 		["secret-gray-purple"] = "MoonstoneGargoyle",
 		["secret-blue-white"] = "FrostSwan",
+		["secret-green-green"] = "ForestDryad",
+		["secret-gray-red"] = "IronBoar",
+		["secret-pink-yellow"] = "PeachBlossom",
 	},
 	Kits = {
 		-- the owner's Meshy model art/models/accessories/tempest_dragon/neon_dragon_relics.glb, uploaded as model
@@ -3020,6 +3023,128 @@ Config.Wear = {
 					size = { 0.348, 0.2149, 0.2976 },
 					at = { -0.0015, 0.7416, -0.3234 },
 					anchor = { 0, 0.76, -0.3086 },
+				},
+			},
+		},
+		-- the owner's model art/models/accessories/forest_dryad/green_green.glb (antlers at the top corners, the leafy
+		-- hair round the top as the painting has it, blossoms, a leaf and a vine on the back), uploaded as model
+		-- 117231029918059
+		ForestDryad = {
+			texture = "rbxassetid://110529232415796",
+			pieces = {
+				{
+					name = "AntlerL",
+					mesh = 106261752757295,
+					size = { 0.4071, 0.4061, 0.0898 },
+					at = { -0.4316, 0.9682, 0.0195 },
+					anchor = { -0.254, 0.779, 0.02 },
+				},
+				{
+					name = "AntlerR",
+					mesh = 91618738893358,
+					size = { 0.4341, 0.3802, 0.0955 },
+					at = { 0.4478, 0.9524, 0.0328 },
+					anchor = { 0.254, 0.7788, 0.02 },
+				},
+				{
+					name = "Hair",
+					mesh = 121784009978487,
+					size = { 0.9518, 0.6178, 0.6859 },
+					at = { 0, 0.74, -0.1964 },
+					anchor = { 0, 0.74, -0.3367 },
+				},
+				{
+					name = "Blossoms",
+					mesh = 99253566930392,
+					size = { 0.3153, 0.212, 0.1842 },
+					at = { -0.0817, 0.6482, 0.4341 },
+					anchor = { -0.0723, 0.66, 0.41 },
+				},
+				{
+					name = "Leaf",
+					mesh = 115952386903171,
+					size = { 0.2147, 0.2697, 0.1719 },
+					at = { 0.319, 0.3274, 0.4289 },
+					anchor = { 0.3021, 0.34, 0.4314 },
+				},
+				{
+					name = "Vine",
+					mesh = 85520136775689,
+					size = { 0.1966, 0.3375, 0.1618 },
+					at = { -0.337, 0.3343, 0.4084 },
+					anchor = { -0.3383, 0.32, 0.4031 },
+				},
+			},
+		},
+		-- the owner's model art/models/accessories/iron_boar/gray_red.glb (two metal tusks in red cuffs out of the lower
+		-- sides, tips curling up, a spiked circlet round the head, an armoured tail), uploaded as model 89853209729270
+		IronBoar = {
+			texture = "rbxassetid://139006485220604",
+			pieces = {
+				{
+					name = "TuskL",
+					mesh = 109358523321339,
+					size = { 0.3572, 0.3061, 0.1805 },
+					at = { -0.5877, 0.2846, -0.1365 },
+					anchor = { -0.4633, 0.2135, -0.12 },
+				},
+				{
+					name = "TuskR",
+					mesh = 112862473070780,
+					size = { 0.3489, 0.3, 0.1706 },
+					at = { 0.594, 0.2904, -0.1283 },
+					anchor = { 0.4619, 0.2133, -0.12 },
+				},
+				{
+					name = "Circlet",
+					mesh = 121095280713482,
+					size = { 0.6416, 0.3253, 0.1363 },
+					at = { -0.0151, 0.8103, -0.2528 },
+					anchor = { -0.32, 0.7, -0.2 },
+				},
+				{
+					name = "Tail",
+					mesh = 129865375558409,
+					size = { 0.1364, 0.1932, 0.5988 },
+					at = { 0.0241, 0.2325, 0.7606 },
+					anchor = { 0, 0.2, 0.485 },
+					flap = { axis = { 0, 1, 0 }, degrees = 10, hz = 0.7 },
+					lag = { axis = { 1, 0, 0 }, degrees = 10 },
+				},
+			},
+		},
+		-- the owner's model art/models/accessories/peach_blossom/pink_yellow.glb (the crown of blossoms across the top as
+		-- the painting has it, two clusters behind it, a festoon across the back), uploaded as model 136245608358614
+		PeachBlossom = {
+			texture = "rbxassetid://78105804155910",
+			pieces = {
+				{
+					name = "Crown",
+					mesh = 88000674074782,
+					size = { 0.9282, 0.4361, 0.6233 },
+					at = { 0, 0.72, -0.2298 },
+					anchor = { 0, 0.72, -0.3594 },
+				},
+				{
+					name = "ClusterL",
+					mesh = 110267713399251,
+					size = { 0.1982, 0.1865, 0.1967 },
+					at = { -0.3588, 0.6317, 0.2639 },
+					anchor = { -0.3532, 0.64, 0.2473 },
+				},
+				{
+					name = "ClusterR",
+					mesh = 95706882197672,
+					size = { 0.1973, 0.1854, 0.194 },
+					at = { 0.3599, 0.6318, 0.2618 },
+					anchor = { 0.3532, 0.64, 0.2473 },
+				},
+				{
+					name = "Festoon",
+					mesh = 77997498713747,
+					size = { 0.5779, 0.243, 0.1608 },
+					at = { 0, 0.4179, 0.4873 },
+					anchor = { 0, 0.42, 0.5185 },
 				},
 			},
 		},
