@@ -146,6 +146,16 @@ his places back). A piece now keeps an optional `turn` (degrees, about its own m
 reads back unchanged, and the Play shots show his angles. His rule from now on: Claude places ears roughly, he
 fine-tunes them in the editor.
 
+2026-11-11: seven more Secrets wear pieces from three owner files. `demon_wings.glb`: Coral Axolotl (`secret-orange-pink`,
+gills that sway and small leaves) and Fire Dragon (`secret-orange-red`, big and small horns, bat wings that beat; the
+file's wing was torn, `mend`'s new `scallop` fills the bitten edge to a smooth arc and the whole wing is worn on both
+sides). `fantasy_icons.glb`: Autumn Fox (`secret-green-orange`, leaf fox ears, Sunshower's standard), Holly Deer
+(`secret-green-red`, antlers with holly), Deep-Sea Leviathan (`secret-navy-navy`, paddling fins and a lure that bobs).
+`bunny_ears.glb`: Snow Rabbit (`secret-white-white`) and Sakura Bunny (`secret-pink-white`, no painting: placed like
+Snow Rabbit), ears and a cotton tail each. Models 136774730886462, 95357458515961, 134708971114673, 127539713384618,
+81131164014814, 109887950093986, 111477370477627. The wings and fins were moved forward after the first Play shots hid
+them behind the body from the front. Seen in Play; waiting for the owner's approval (ears: his editor if he wants).
+
 ## 2026-11-10 — Dungeon fight effects per monster, from the VFX library
 
 The owner paused the old effect work and asked for each map group's skills to be rebuilt from his VFX library

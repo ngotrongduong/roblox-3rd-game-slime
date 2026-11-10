@@ -73,6 +73,13 @@ local Wear = {
 		["secret-orange-orange"] = "EmberTiger",
 		["secret-orange-purple"] = "WitchCat",
 		["secret-orange-white"] = "CreamsicleFox",
+		["secret-orange-pink"] = "CoralAxolotl",
+		["secret-orange-red"] = "FireDragon",
+		["secret-green-orange"] = "AutumnFox",
+		["secret-green-red"] = "HollyDeer",
+		["secret-navy-navy"] = "DeepSeaLeviathan",
+		["secret-white-white"] = "SnowRabbit",
+		["secret-pink-white"] = "SakuraBunny",
 	},
 	Kits = {
 		-- the owner's Meshy model art/models/accessories/tempest_dragon/neon_dragon_relics.glb, uploaded as model
@@ -1359,6 +1366,248 @@ local Wear = {
 					-- (a fox's bushy wag)
 					flap = { axis = { 0, 1, 0 }, degrees = 14, hz = 0.8 },
 					lag = { axis = { 1, 0, 0 }, degrees = 12 },
+				},
+			},
+		},
+		-- the owner's model art/models/accessories/coral_axolotl/demon_wings.glb (its pink gills and gold leaves), uploaded as model
+		-- 136774730886462
+		CoralAxolotl = {
+			texture = "rbxassetid://116191391533242",
+			pieces = {
+				{
+					name = "GillL",
+					mesh = 128664448759195,
+					size = { 0.4867, 0.5103, 0.1883 },
+					at = { -0.5992, 0.8559, 0.1334 },
+					anchor = { -0.37, 0.68, 0.08 },
+					-- (the gills sway slowly, as in water)
+					flap = { axis = { -0.2873, 0, -0.9578 }, degrees = 7, hz = 0.5 },
+				},
+				{
+					name = "GillR",
+					mesh = 117802565745021,
+					size = { 0.5011, 0.5168, 0.1855 },
+					at = { 0.6059, 0.8316, 0.1349 },
+					anchor = { 0.37, 0.68, 0.08 },
+					flap = { axis = { -0.2873, -0, 0.9578 }, degrees = 7, hz = 0.5 },
+				},
+				{
+					name = "LeafL",
+					mesh = 72821026334181,
+					size = { 0.2557, 0.161, 0.0772 },
+					at = { -0.5417, 0.5509, 0.0312 },
+					anchor = { -0.42, 0.6, 0.04 },
+				},
+				{
+					name = "LeafR",
+					mesh = 115199734185380,
+					size = { 0.2598, 0.1599, 0.0769 },
+					at = { 0.5434, 0.5561, 0.0251 },
+					anchor = { 0.42, 0.6, 0.04 },
+				},
+			},
+		},
+		-- the owner's model art/models/accessories/fire_dragon/demon_wings.glb (its horns and bat wings; the wing mended where the file had it torn), uploaded as model
+		-- 95357458515961
+		FireDragon = {
+			texture = "rbxassetid://97926775327660",
+			pieces = {
+				{
+					name = "HornL",
+					mesh = 71663261394209,
+					size = { 0.2014, 0.3408, 0.1734 },
+					at = { -0.3355, 0.9161, 0.0696 },
+					anchor = { -0.27, 0.7676, 0.04 },
+				},
+				{
+					name = "HornR",
+					mesh = 138736547112810,
+					size = { 0.2012, 0.3379, 0.1733 },
+					at = { 0.3354, 0.9153, 0.0701 },
+					anchor = { 0.27, 0.7677, 0.04 },
+				},
+				{
+					name = "SpikeL",
+					mesh = 122399464490828,
+					size = { 0.1211, 0.1173, 0.0651 },
+					at = { -0.4248, 0.6971, -0.0834 },
+					anchor = { -0.3834, 0.6634, -0.08 },
+				},
+				{
+					name = "SpikeR",
+					mesh = 117191022609605,
+					size = { 0.1207, 0.1161, 0.0678 },
+					at = { 0.4227, 0.6998, -0.0821 },
+					anchor = { 0.3836, 0.6637, -0.08 },
+				},
+				{
+					name = "WingL",
+					mesh = 125843860539411,
+					size = { 0.3165, 0.3038, 0.0942 },
+					at = { -0.5776, 0.6773, 0.08 },
+					anchor = { -0.4295, 0.58, 0.055 },
+					-- (a dragon's small wings beat softly, as Tempest Dragon's)
+					flap = { axis = { -0.2588, 0, -0.9659 }, degrees = 12, hz = 0.8 },
+				},
+				{
+					name = "WingR",
+					mesh = 131082052186622,
+					size = { 0.3165, 0.3038, 0.0942 },
+					at = { 0.5776, 0.6773, 0.08 },
+					anchor = { 0.4295, 0.58, 0.055 },
+					flap = { axis = { -0.2588, 0, 0.9659 }, degrees = 12, hz = 0.8 },
+				},
+			},
+		},
+		-- the owner's model art/models/accessories/autumn_fox/fantasy_icons.glb (its leaf fox ears), uploaded as model
+		-- 134708971114673
+		AutumnFox = {
+			texture = "rbxassetid://74964702579728",
+			pieces = {
+				{
+					name = "EarL",
+					mesh = 84022118881390,
+					size = { 0.235, 0.287, 0.1661 },
+					at = { -0.3676, 0.8039, 0.0097 },
+					anchor = { -0.3459, 0.7095, -0 },
+					-- (a fox's ear: a quick swivel now and then, each ear on its own)
+					twitch = { axis = { 0, 1, 0 }, degrees = 18, every = 3.5 },
+					lag = { axis = { 1, 0, 0 }, degrees = 5 },
+				},
+				{
+					name = "EarR",
+					mesh = 80210080080308,
+					size = { 0.2352, 0.2841, 0.1666 },
+					at = { 0.3673, 0.807, 0.0051 },
+					anchor = { 0.346, 0.7096, -0 },
+					twitch = { axis = { 0, 1, 0 }, degrees = 18, every = 3.5 },
+					lag = { axis = { 1, 0, 0 }, degrees = 5 },
+				},
+			},
+		},
+		-- the owner's model art/models/accessories/holly_deer/fantasy_icons.glb (its antlers with holly and berries), uploaded as model
+		-- 127539713384618
+		HollyDeer = {
+			texture = "rbxassetid://102588308789596",
+			pieces = {
+				{
+					name = "AntlerL",
+					mesh = 85448627855479,
+					size = { 0.3175, 0.4286, 0.1118 },
+					at = { -0.3024, 0.9083, 0.016 },
+					anchor = { -0.2625, 0.7719, 0.02 },
+				},
+				{
+					name = "AntlerR",
+					mesh = 89746149520057,
+					size = { 0.3255, 0.4407, 0.1124 },
+					at = { 0.3269, 0.8922, 0.013 },
+					anchor = { 0.2623, 0.771, 0.02 },
+				},
+			},
+		},
+		-- the owner's model art/models/accessories/deep_sea_leviathan/fantasy_icons.glb (its fins and glowing lure), uploaded as model
+		-- 81131164014814
+		DeepSeaLeviathan = {
+			texture = "rbxassetid://71997858678842",
+			pieces = {
+				{
+					name = "FinL",
+					mesh = 78556856246562,
+					size = { 0.2153, 0.2998, 0.2056 },
+					at = { -0.59, 0.3409, 0.06 },
+					anchor = { -0.4956, 0.33, -0.03 },
+					-- (a fish's fins paddle)
+					flap = { axis = { -0.7071, 0, -0.7071 }, degrees = 14, hz = 1.1 },
+				},
+				{
+					name = "FinR",
+					mesh = 103814594064594,
+					size = { 0.2182, 0.3002, 0.2027 },
+					at = { 0.5903, 0.3427, 0.0588 },
+					anchor = { 0.4956, 0.33, -0.03 },
+					flap = { axis = { -0.7071, -0, 0.7071 }, degrees = 14, hz = 1.1 },
+				},
+				{
+					name = "Lure",
+					mesh = 74881771902573,
+					size = { 0.3114, 0.3695, 0.2889 },
+					at = { -0.1738, 0.9507, -0.2929 },
+					anchor = { -0.08, 0.7911, -0.22 },
+					-- (the lure bobs as the slime hops)
+					lag = { axis = { 1, 0, 0 }, degrees = 14 },
+				},
+			},
+		},
+		-- the owner's model art/models/accessories/snow_rabbit/bunny_ears.glb (its white bunny ears and cotton tail), uploaded as model
+		-- 109887950093986
+		SnowRabbit = {
+			texture = "rbxassetid://126064439790587",
+			pieces = {
+				{
+					name = "EarL",
+					mesh = 124275681048331,
+					size = { 0.2866, 0.4809, 0.1617 },
+					at = { -0.4277, 0.8857, 0.003 },
+					anchor = { -0.3439, 0.7108, 0 },
+					-- (a rabbit's ear: a quick swivel now and then, each ear on its own)
+					twitch = { axis = { 0, 1, 0 }, degrees = 18, every = 3.5 },
+					lag = { axis = { 1, 0, 0 }, degrees = 5 },
+				},
+				{
+					name = "EarR",
+					mesh = 129067788654882,
+					size = { 0.2832, 0.4958, 0.1618 },
+					at = { 0.4299, 0.884, -0.0003 },
+					anchor = { 0.3438, 0.7106, 0 },
+					twitch = { axis = { 0, 1, 0 }, degrees = 18, every = 3.5 },
+					lag = { axis = { 1, 0, 0 }, degrees = 5 },
+				},
+				{
+					name = "Tail",
+					mesh = 71326020587900,
+					size = { 0.2112, 0.1557, 0.1986 },
+					at = { 0, 0.22, 0.586 },
+					anchor = { 0.0107, 0.2364, 0.5122 },
+					-- (a cotton tail's small wag)
+					flap = { axis = { 0, 1, 0 }, degrees = 10, hz = 0.9 },
+					lag = { axis = { 1, 0, 0 }, degrees = 10 },
+				},
+			},
+		},
+		-- the owner's model art/models/accessories/sakura_bunny/bunny_ears.glb (its pink drooping bunny ears and cotton tail), uploaded as model
+		-- 111477370477627
+		SakuraBunny = {
+			texture = "rbxassetid://110056530031892",
+			pieces = {
+				{
+					name = "EarL",
+					mesh = 130510895837082,
+					size = { 0.4072, 0.3399, 0.342 },
+					at = { -0.4534, 0.8451, 0.0434 },
+					anchor = { -0.3426, 0.7148, -0 },
+					-- (a rabbit's ear: a quick swivel now and then, each ear on its own)
+					twitch = { axis = { 0, 1, 0 }, degrees = 18, every = 3.5 },
+					lag = { axis = { 1, 0, 0 }, degrees = 5 },
+				},
+				{
+					name = "EarR",
+					mesh = 114317605367900,
+					size = { 0.4086, 0.343, 0.3408 },
+					at = { 0.4547, 0.8472, 0.0443 },
+					anchor = { 0.3425, 0.7141, 0 },
+					twitch = { axis = { 0, 1, 0 }, degrees = 18, every = 3.5 },
+					lag = { axis = { 1, 0, 0 }, degrees = 5 },
+				},
+				{
+					name = "Tail",
+					mesh = 136907406087401,
+					size = { 0.2148, 0.1646, 0.196 },
+					at = { -0, 0.22, 0.5878 },
+					anchor = { 0.0047, 0.2497, 0.517 },
+					-- (a cotton tail's small wag)
+					flap = { axis = { 0, 1, 0 }, degrees = 10, hz = 0.9 },
+					lag = { axis = { 1, 0, 0 }, degrees = 10 },
 				},
 			},
 		},

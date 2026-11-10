@@ -20,6 +20,7 @@ opening toward -Y; a tail's base at one end along X.
 | `sort` | `lambda c:` the part a loose bit belongs to, by its middle `c` (the BIT middles from `wear_inspect.ps1`); for a sheet of many loose bits (vines, leaves) `nearest(Part=(x, z), ...)` sends each bit to the part whose mark (its middle in the file) is nearest |
 | `budget` | triangles each part keeps |
 | `mend` | parts torn through (a bat wing's membrane with holes): each hole is patched (below) |
+| `scallop` | part -> `dict(tips=[(x, z), ...], sag=[...])`: a membrane bitten out of its EDGE, filled out to smooth scallops between finger tips (below) |
 | `pieces` | name -> one piece, exported in this order |
 | `body` | the body colour in the review renders (RGBA, near the Secret's colours) |
 
@@ -32,7 +33,7 @@ A piece, by `kind`:
 
 | kind | Fields |
 |---|---|
-| `horn` (horns and ears) | `part`; `at` where its foot's middle starts (then it is seated along its own axis); `scale`; `tilt_out` degrees leaning out to its side; `tilt_back` degrees, positive leans back; `curl` `"back"`, `"out"`, `"in"` or none (turns a tip that curls toward -X in the file); `level` (default true: turn its flat sole level; false: keep the file's turn, for a horn the file already has upright); `foot` (`"plane"` default: the flat sole or a hollow cup's lip; `"low"`: the lowest tenth, for soft fur); `band` (default 0.3: how far up its length the draw-down onto the skin fades); `deep` (default 0: pushed this far further in along its axis after seating; not for ears: every pair of ears copies Sunshower Fox, `SKILL.md`); `spread` (default 40: degrees from straight down the sole is looked for; 90 finds a sole facing sideways, a tusk's cuff open to the middle); `spin` degrees about its own axis before it leans (overrides `curl`); a tusk out of the face (Iron Boar): `at` (+-0.22, -0.44, 0.26), `spread` 90, `spin` -90 / 90, `tilt_back` -70, `tilt_out` 15; `twin` the mirrored copy's name |
+| `horn` (horns and ears) | `part`; `at` where its foot's middle starts (then it is seated along its own axis); `scale`; `tilt_out` degrees leaning out to its side; `tilt_back` degrees, positive leans back; `curl` `"back"`, `"out"`, `"in"` or none (turns a tip that curls toward -X in the file); `level` (default true: turn its flat sole level; false: keep the file's turn, for a horn the file already has upright); `foot` (`"plane"` default: the flat sole or a hollow cup's lip; `"low"`: the lowest tenth, for soft fur); `band` (default 0.3: how far up its length the draw-down onto the skin fades); `deep` (default 0: pushed this far further in along its axis after seating; not for ears: every pair of ears copies Sunshower Fox, `SKILL.md`); `spread` (default 40: degrees from straight down the sole is looked for; 90 finds a sole facing sideways, a tusk's cuff open to the middle); `spin` degrees about its own axis before it leans (overrides `curl`); `pre` = ((axis, degrees), ...) turns applied to the file's piece before anything else, for a file that lays an ear down or tilts it (the bunny file's white ears: `(("X", 64), ("Y", -32))`; the fantasy-icons fox ears, tilted toward each other: `(("Y", 32),)` on the left one); a tusk out of the face (Iron Boar): `at` (+-0.22, -0.44, 0.26), `spread` 90, `spin` -90 / 90, `tilt_back` -70, `tilt_out` 15; `twin` the mirrored copy's name |
 | `wing` (spread, a dragon's or a bat's) | `part`, `at` (the root), `scale`, `raise_` degrees tip up, `sweep` degrees back, `root` (`"+x"` default; `"-x"` for the file's right wing of a pair, spread to the slime's right), `twin` |
 | `aim` (set by where it points: a bird's open wing) | `part`, `root` (which end along X is its root: `"+x"` for the file's left wing, whose root is its inner end), `at` the root just inside the skin, `scale`, `point` the direction from the root to its farthest point (the long feather's tip), `face` the way its painted side (-Y in the file) looks; both for the piece on the slime's left, mirrored for the right. With `face` to the back, each side wears the file's piece of the same side (seen from the file's front), or it comes out upside down. Its flap axis (in `wear.json`) beats the wing in its own plane, tip up for a positive turn. `twin` mirrors it to the other side (its flap axis mirrored too). A bird's wing pair: the standard below |
 | `tail` | `part`, `base` `"+x"` or `"-x"` (its base end in the file), `at`, `scale`, `lift` degrees tip up (negative: down), `sink` true pushes its base end 0.03 into the body (not when its base has detail to show, a rose, a tuft) |
@@ -98,6 +99,17 @@ hull of the hole widened by `margin`, 3.5 % of the part's size) lies `inset` (5 
 its front and back. Each patch face wears a tile of its own in the texture (`TILE` pixels, put where the part shows
 nothing): the membrane round the hole as the file paints it, the hole blended in smoothly. The run prints `MEND`; look
 close at the wing in Play from behind (a seam or a pale fleck shows there first).
+
+A bite out of the membrane's EDGE (Fire Dragon, 2026-11-11: "demon wings" file, bitten between two fingers) is open
+ground the outline does not close round, so `mend` alone sees nothing. `scallop` names the finger tips along the trailing
+edge in the file's front view (leading tip, each finger's tip, the inner corner, the wrist; each snapped to the nearest
+corner of the outline's hull) and, per scallop between two tips, `sag` (the arc's depth over its chord, 0.15 matches a
+whole neighbour) or None (whole: left as the file draws it). Open ground inside the hull whose mouth meets that scallop's
+chord is filled out to its arc with a patch in the bite's own shape (not its hull), its depth off the membrane following
+the plane of the membrane's faces round it, textured as `mend`'s tiles. It prints `SCALLOP <part> bite of n cells between
+tips a and b, d of the chord deep, filled m cells` per bite. Look at it flat: the scratch `mendview` render (both faces)
+before the whole-body renders. When one wing of a pair mends clean and the other does not (a bite where the wing meets the
+body left a straight wall and a loose strip), wear the clean one on both sides with `twin`.
 
 ### Tentacles (Void Kraken, 2026-11-10)
 

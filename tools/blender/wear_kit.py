@@ -42,6 +42,31 @@ FOX_TAIL = nearest(WolfEarR=(-0.284, 0.855), WolfEarL=(-0.019, 0.853), WolfTail=
 FOX_BUDGET = dict(WolfEarR=462, WolfEarL=390, WolfTail=682, TigerEarR=424, TigerEarL=336, TigerTail=538, CatEarR=368,
 	CatEarL=366, CatTail=701, FoxEarR=380, FoxEarL=320, FoxTail=812)
 
+# the owner's "demon wings 3d model.glb" (2026-11-11): five pairs, top to bottom axolotl gills (two feathery fronds from
+# one root, the root at the inner end), small leaves, big ribbed horns (a hollow cup at the foot, curling out and up),
+# small horns, bat wings (the wrist knob and the root at the inner end, three fingers; the membrane bitten through
+# between two fingers on each). The file's left one of each pair (x < 0) is the slime's right, except the wings: the
+# file's left wing has its root at +X, so it spreads to the slime's left once turned (`wing`)
+DEMON_WINGS = lambda c: (("GillL" if c.x > 0 else "GillR") if c.z > 0.7 else
+	(("LeafL" if c.x > 0 else "LeafR") if c.z > 0.55 else
+	((("HornL" if c.x > 0 else "HornR") if abs(c.x) > 0.18 else ("SpikeL" if c.x > 0 else "SpikeR")) if c.z > 0.3 else
+	("BatR" if c.x > 0 else "BatL"))))
+DEMON_BUDGET = dict(GillL=860, GillR=860, LeafL=134, LeafR=134, HornL=640, HornR=640, SpikeL=150, SpikeR=150, BatL=700,
+	BatR=700)
+
+# the owner's "fantasy icons 3d model.glb" (2026-11-11): two fox ears of autumn leaves (tilted toward each other, open
+# toward each other), two reindeer antlers with holly and berries at their foot, two fish fins (the round root at the
+# inner end, the fan out) and an angler fish's lure (the knob at its foot, arching over to the bulb)
+FANTASY_ICONS = nearest(FoxEarA=(-0.412, 0.504), FoxEarB=(-0.17, 0.504), AntlerR=(0.198, 0.501),
+	AntlerL=(0.401, 0.496), FinR=(-0.4, 0.111), FinL=(-0.161, 0.106), Lure=(0.267, 0.115))
+FANTASY_ICONS_BUDGET = dict(FoxEarA=700, FoxEarB=700, AntlerR=510, AntlerL=600, FinR=700, FinL=700, Lure=442)
+
+# the owner's "fluffy bunny ears 3d model.glb" (2026-11-11): white ears lying on their backs, tips back and out; pink
+# ears that rise from a cup and flop over, hanging out to their side; a white and a pink round cotton tail (x > 0)
+BUNNY_EARS = lambda c: (("TailW" if c.y > 0 else "TailP") if c.x > 0.15 else
+	(("WEarR" if c.x < -0.18 else "WEarL") if c.y > 0 else ("PEarR" if c.x < -0.18 else "PEarL")))
+BUNNY_BUDGET = dict(WEarR=284, WEarL=234, PEarR=258, PEarL=278, TailW=404, TailP=472)
+
 # `sort` says which part of the file a loose bit belongs to, by its middle; `budget` the triangles a part keeps;
 # `pieces` what is made of each part, in the order they are exported: kind (horn: horns and ears, wing, tail), where it
 # sits on the body (Blender axes, body height 1; +X is the slime's own left), size factor, turns in degrees, and `twin`,
@@ -659,6 +684,157 @@ KITS = {
 		),
 		body=(1, 0.75, 0.4, 1),
 	),
+	# Coral Axolotl (secret-orange-pink), 2026-11-11: the painting's feathery gill fronds fanning out from the upper
+	# sides past the outline, small leaves low at their foot. From DEMON_WINGS: each gill pair kept as the file shapes it
+	# (seen from the front as the painting draws them), the file's piece of the same side
+	"CoralAxolotl": dict(
+		folder="coral_axolotl",
+		glb="demon_wings.glb",
+		out="CoralAxolotlWear",
+		texture="coral_axolotl_wear.png",
+		sort=DEMON_WINGS,
+		budget=DEMON_BUDGET,
+		pieces=dict(
+			# (the root just inside the skin at the upper side, the lower frond reaching out and a little up, the upper
+			# one rising out of it; turned a little back so they show from the side too)
+			GillL=dict(part="GillL", kind="aim", root="-x", at=(0.37, 0.08, 0.68), scale=1.4, point=(1, 0.3, 0.3),
+				face=(0.3, -1, 0)),
+			GillR=dict(part="GillR", kind="aim", root="+x", at=(-0.37, 0.08, 0.68), scale=1.4, point=(1, 0.3, 0.3),
+				face=(0.3, -1, 0)),
+			# (a leaf tucked under each gill's root, reaching out and down)
+			LeafL=dict(part="LeafL", kind="aim", root="-x", at=(0.42, 0.04, 0.6), scale=1.4, point=(0.9, 0.0, -0.45),
+				face=(0.2, -1, 0.2)),
+			LeafR=dict(part="LeafR", kind="aim", root="+x", at=(-0.42, 0.04, 0.6), scale=1.4, point=(0.9, 0.0, -0.45),
+				face=(0.2, -1, 0.2)),
+		),
+		body=(1, 0.5, 0.4, 1),
+	),
+	# Fire Dragon (secret-orange-red), 2026-11-11: the painting's big ribbed horns on the top corners curving out and up,
+	# small horns on the shoulders below and outside them, small bat wings spread level at the sides. From DEMON_WINGS;
+	# the bat wings came bitten through between two fingers: mended to a whole scalloped membrane (`scallop`)
+	"FireDragon": dict(
+		folder="fire_dragon",
+		glb="demon_wings.glb",
+		out="FireDragonWear",
+		texture="fire_dragon_wear.png",
+		sort=DEMON_WINGS,
+		budget=DEMON_BUDGET,
+		# (the wing's finger tips along its trailing edge in the file's front view: the leading edge's tip, the second and
+		# third fingers' tips, the inner corner by the body, the wrist. The file's WingR is bitten between the second and
+		# third fingers: filled out to an arc as deep as its whole neighbours'. The file's WingL is bitten twice, once
+		# under the wrist where it meets the body; mended it kept a straight wall there and a loose strip of its inner
+		# edge, so WingR is worn on both sides)
+		scallop=dict(
+			BatR=dict(tips=[(0.45, 0.229), (0.385, 0.085), (0.268, 0.027), (0.132, 0.004), (0.178, 0.226)],
+				sag=[None, 0.15, None, None]),
+		),
+		pieces=dict(
+			# (the file has them upright, bulging out with the tip up: they keep its turn)
+			HornL=dict(part="HornL", kind="horn", at=(0.27, 0.04, 0.74), scale=1.05, tilt_out=0, tilt_back=0, level=False,
+				spread=60),
+			HornR=dict(part="HornR", kind="horn", at=(-0.27, 0.04, 0.74), scale=1.05, tilt_out=0, tilt_back=0, level=False,
+				spread=60),
+			# (the painting's small horns on the shoulders, in front of the wing roots, pointing up and out)
+			SpikeL=dict(part="SpikeL", kind="horn", at=(0.36, -0.08, 0.63), scale=0.95, tilt_out=35, tilt_back=0, spin=180),
+			SpikeR=dict(part="SpikeR", kind="horn", at=(-0.36, -0.08, 0.63), scale=0.95, tilt_out=35, tilt_back=0,
+				spin=180),
+			WingR=dict(part="BatR", kind="wing", root="-x", at=(-0.41, 0.14, 0.58), scale=1.05, raise_=5, sweep=15,
+				twin="WingL"),
+		),
+		body=(0.9, 0.25, 0.08, 1),
+	),
+	# Autumn Fox (secret-green-orange), 2026-11-11: fox ears of autumn leaves at the top corners (FANTASY_ICONS). The
+	# file tilts them toward each other, open toward each other: stood up (`pre`) and turned open to the front (`spin`),
+	# then worn as Sunshower Fox wears its ears (the owner's standard); he fine-tunes them by hand
+	"AutumnFox": dict(
+		folder="autumn_fox",
+		glb="fantasy_icons.glb",
+		out="AutumnFoxWear",
+		texture="autumn_fox_wear.png",
+		sort=FANTASY_ICONS,
+		budget=FANTASY_ICONS_BUDGET,
+		pieces=dict(
+			EarL=dict(part="FoxEarB", kind="horn", at=(0.34, 0.0, 0.7), scale=1.45, tilt_out=32, tilt_back=0, level=False,
+				foot="low", pre=(("Y", 32),)),
+			EarR=dict(part="FoxEarA", kind="horn", at=(-0.34, 0.0, 0.7), scale=1.45, tilt_out=32, tilt_back=0, level=False,
+				foot="low", pre=(("Y", -32),)),
+		),
+		body=(0.55, 0.6, 0.15, 1),
+	),
+	# Holly Deer (secret-green-red), 2026-11-11: the painting's antlers standing up from the top corners, holly leaves and
+	# red berries at their foot (FANTASY_ICONS; the antler whose big holly leaf reaches +X on the slime's left)
+	"HollyDeer": dict(
+		folder="holly_deer",
+		glb="fantasy_icons.glb",
+		out="HollyDeerWear",
+		texture="holly_deer_wear.png",
+		sort=FANTASY_ICONS,
+		budget=FANTASY_ICONS_BUDGET,
+		pieces=dict(
+			AntlerL=dict(part="AntlerL", kind="horn", at=(0.26, 0.02, 0.76), scale=1.8, tilt_out=12, tilt_back=0,
+				level=False, foot="low"),
+			AntlerR=dict(part="AntlerR", kind="horn", at=(-0.26, 0.02, 0.76), scale=1.8, tilt_out=12, tilt_back=0,
+				level=False, foot="low"),
+		),
+		body=(0.35, 0.6, 0.12, 1),
+	),
+	# Deep-Sea Leviathan (secret-navy-navy), 2026-11-11: the painting's fins on both sides standing out past the outline,
+	# and an angler fish's lure rising from the top of the head on the slime's left, arching out with its glowing bulb
+	# hanging (FANTASY_ICONS; the file's fins and lure seen from the front as the painting draws them)
+	"DeepSeaLeviathan": dict(
+		folder="deep_sea_leviathan",
+		glb="fantasy_icons.glb",
+		out="DeepSeaLeviathanWear",
+		texture="deep_sea_leviathan_wear.png",
+		sort=FANTASY_ICONS,
+		budget=FANTASY_ICONS_BUDGET,
+		pieces=dict(
+			FinL=dict(part="FinL", kind="aim", root="-x", at=(0.49, 0.08, 0.33), scale=1.4, point=(0.6, 0.6, 0.53),
+				face=(0.71, -0.71, 0)),
+			FinR=dict(part="FinR", kind="aim", root="+x", at=(-0.49, 0.08, 0.33), scale=1.4, point=(0.6, 0.6, 0.53),
+				face=(0.71, -0.71, 0)),
+			Lure=dict(part="Lure", kind="horn", at=(0.08, -0.22, 0.8), scale=1.3, tilt_out=0, tilt_back=0, level=False,
+				foot="low", spin=-20),
+		),
+		body=(0.05, 0.1, 0.35, 1),
+	),
+	# Snow Rabbit (secret-white-white), 2026-11-11: the painting's tall white ears at the top corners leaning out a
+	# little, and a white cotton tail low on the back (BUNNY_EARS; the file lays the ears on their backs: stood up by
+	# `pre`)
+	"SnowRabbit": dict(
+		folder="snow_rabbit",
+		glb="bunny_ears.glb",
+		out="SnowRabbitWear",
+		texture="snow_rabbit_wear.png",
+		sort=BUNNY_EARS,
+		budget=BUNNY_BUDGET,
+		pieces=dict(
+			EarL=dict(part="WEarL", kind="horn", at=(0.34, 0.0, 0.7), scale=1.3, tilt_out=20, tilt_back=0, level=False,
+				foot="low", pre=(("X", 64), ("Y", -32))),
+			EarR=dict(part="WEarR", kind="horn", at=(-0.34, 0.0, 0.7), scale=1.3, tilt_out=20, tilt_back=0, level=False,
+				foot="low", pre=(("X", 64), ("Y", 33))),
+			Tail=dict(part="TailW", kind="rigid", at=(180, 0.22), scale=0.7),
+		),
+		body=(0.88, 0.9, 1, 1),
+	),
+	# Sakura Bunny (secret-pink-white), 2026-11-11: no painting; worn as Snow Rabbit: the pink ears rise from the top
+	# corners and flop over to hang at the sides, a pink cotton tail low on the back (BUNNY_EARS)
+	"SakuraBunny": dict(
+		folder="sakura_bunny",
+		glb="bunny_ears.glb",
+		out="SakuraBunnyWear",
+		texture="sakura_bunny_wear.png",
+		sort=BUNNY_EARS,
+		budget=BUNNY_BUDGET,
+		pieces=dict(
+			EarL=dict(part="PEarL", kind="horn", at=(0.34, 0.0, 0.7), scale=1.35, tilt_out=10, tilt_back=0, level=False,
+				foot="low"),
+			EarR=dict(part="PEarR", kind="horn", at=(-0.34, 0.0, 0.7), scale=1.35, tilt_out=10, tilt_back=0, level=False,
+				foot="low"),
+			Tail=dict(part="TailP", kind="rigid", at=(180, 0.22), scale=0.7),
+		),
+		body=(1, 0.8, 0.88, 1),
+	),
 }
 TEXTURE = 1024
 
@@ -744,13 +920,61 @@ def rebase(ob, anchor):
 TILE = 96
 
 
-def mend(ob, name, margin=0.035, inset=0.05):
+def hull2(pts):
+	# the convex hull of (x, z) points, counter-clockwise seen from the front
+	pts = sorted(set(pts))
+
+	def half(seq):
+		out = []
+		for p in seq:
+			while len(out) >= 2 and ((out[-1][0] - out[-2][0]) * (p[1] - out[-2][1]) - (out[-1][1] - out[-2][1]) * (p[0] - out[-2][0])) <= 0:
+				out.pop()
+			out.append(p)
+		return out[:-1]
+
+	return half(pts) + half(reversed(pts))
+
+
+def simplify(loop, eps):
+	# a closed outline with the points that stray less than `eps` from the line through their neighbours left out
+	# (Douglas-Peucker on each half, split at the point farthest from the first)
+	import numpy as np
+	p = np.array(loop)
+
+	def rdp(a):
+		if len(a) < 3:
+			return list(range(len(a)))
+		d = a[-1] - a[0]
+		n = np.hypot(*d)
+		dist = np.abs(d[0] * (a[:, 1] - a[0, 1]) - d[1] * (a[:, 0] - a[0, 0])) / n if n > 1e-12 else np.hypot(*(a - a[0]).T)
+		k = int(np.argmax(dist))
+		if dist[k] <= eps:
+			return [0, len(a) - 1]
+		left, right = rdp(a[:k + 1]), rdp(a[k:])
+		return left[:-1] + [k + i for i in right]
+
+	far = int(np.argmax(np.hypot(*(p - p[0]).T)))
+	first = rdp(p[:far + 1])
+	second = rdp(np.concatenate([p[far:], p[:1]]))
+	keep = first[:-1] + [far + i for i in second[:-1]]
+	return [tuple(p[i]) for i in keep]
+
+
+def mend(ob, name, margin=0.035, inset=0.05, used=None, scallop=None):
 	# fill the holes torn through a thin piece the file lays flat in its XZ plane (a bat wing's membrane): where its
 	# outline seen from the front closes round empty ground, a thin patch is laid over the hole, wider than it by
 	# `margin` of the piece's size, its two faces `inset` of the membrane's thickness under the membrane's front and
 	# back, so its edge hides inside the membrane. Each face of the patch wears a tile of its own in the texture: the
 	# membrane round the hole as the file paints it, the hole blended smoothly in from it (one flat colour showed as a
-	# sticker; the file's own texture over a hole is pale)
+	# sticker; the file's own texture over a hole is pale). The tiles go where none of the kit's `used` parts shows the
+	# texture.
+	# `scallop` = dict(tips=[(x, z), ...], sag=[...]): a membrane bitten out of its EDGE (Fire Dragon's bat wings: the
+	# owner wants a whole membrane, each scallop between two finger tips a smooth inward curve). `tips` are the finger
+	# tips (and the wrist) along the trailing edge in the file's front view, each snapped to the nearest corner of the
+	# outline's hull; between tips k and k+1 the edge is a circular arc bowed in by `sag[k]` of the chord (None: that
+	# scallop is whole, left as the file draws it). Empty ground inside the hull that a bitten scallop's chord opens onto
+	# is filled out to its arc, and every hole as above; the patch keeps the shape of what it fills (not its hull), and
+	# off the membrane its depth follows the plane of the membrane round it
 	import numpy as np
 	from collections import deque
 	from mathutils.geometry import barycentric_transform
@@ -794,6 +1018,103 @@ def mend(ob, name, margin=0.035, inset=0.05):
 	flood((0, 0), lambda q: not cover[q])
 	holes = [flood((j, i), lambda q: not cover[q]) for j in range(h) for i in range(w) if not cover[j, i] and not seen[j, i]]
 	holes = [r for r in holes if len(r) >= 20]
+	outside_ground = seen.copy()
+
+	def near_(m):
+		# (the cells next to a mask, without wrapping round the grid's edges)
+		p = np.pad(m, 1)
+		return p[:-2, 1:-1] | p[2:, 1:-1] | p[1:-1, :-2] | p[1:-1, 2:]
+
+	if scallop:
+		# the hull of the membrane seen from the front, and the bites that a bitten scallop's chord opens onto
+		hull = hull2([(float(x), float(z)) for x, z in zip(gx[cover], gz[cover])])
+		hx = np.array([p[0] for p in hull])
+		hz = np.array([p[1] for p in hull])
+		inhull = np.ones((h, w), bool)
+		for k in range(len(hull)):
+			a, b = hull[k], hull[(k + 1) % len(hull)]
+			inhull &= (b[0] - a[0]) * (gz - a[1]) - (b[1] - a[1]) * (gx - a[0]) >= -1e-9
+		tips = []
+		for x, z in scallop["tips"]:
+			k = int(np.argmin(np.hypot(hx - x, hz - z)))
+			tips.append(Vector((hx[k], 0, hz[k])))
+		mid = Vector((float(gx[cover].mean()), 0, float(gz[cover].mean())))
+		slabs, cuts = [], np.zeros((h, w), bool)
+		for k, r in enumerate(scallop["sag"]):
+			a, b = tips[k], tips[k + 1]
+			chord = (b - a).length
+			u = (b - a) / chord
+			n = Vector((-u.z, 0, u.x))
+			if n.dot(mid - a) < 0:
+				n = -n
+			t = (gx - a.x) * u.x + (gz - a.z) * u.z
+			s = (gx - a.x) * n.x + (gz - a.z) * n.z
+			slab = (t >= 0) & (t <= chord) & (s >= -2 * cell)
+			slabs.append((slab, s, chord))
+			if r:
+				sag = r * chord
+				big = (chord * chord / 4 + sag * sag) / (2 * sag)
+				c = a + u * (chord / 2) + n * (sag - big)
+				cuts |= slab & (np.hypot(gx - c.x, gz - c.z) < big)
+		# the bites: open ground inside the hull, reached from outside, each bit apart (the hull's own rim left out, so
+		# two scallops either side of a finger tip stay apart)
+		ground = inhull & ~near_(~inhull) & ~cover & outside_ground
+		rim = near_(near_(near_(near_(~inhull))))
+		labelled = np.zeros((h, w), bool)
+		bites = []
+		for j, i in zip(*np.nonzero(ground)):
+			if labelled[j, i]:
+				continue
+			region, todo = [], deque([(j, i)])
+			labelled[j, i] = True
+			while todo:
+				q = todo.popleft()
+				region.append(q)
+				for dj, di in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+					p = (q[0] + dj, q[1] + di)
+					if 0 <= p[0] < h and 0 <= p[1] < w and ground[p] and not labelled[p]:
+						labelled[p] = True
+						todo.append(p)
+			if len(region) < 20:
+				continue
+			rj, ri = np.array(region).T
+			# (which scallop it opens onto: where its mouth meets the hull's rim; deep inside, the slabs overlap)
+			mouth = rim[rj, ri]
+			mj, mi = (rj[mouth], ri[mouth]) if mouth.any() else (rj, ri)
+			hits = [int(slab[mj, mi].sum()) for slab, _, _ in slabs]
+			k = int(np.argmax(hits))
+			if not hits[k]:
+				continue
+			deep = float(slabs[k][1][rj, ri].max()) / slabs[k][2]
+			mask = np.zeros((h, w), bool)
+			mask[rj, ri] = True
+			if scallop["sag"][k]:
+				mask &= ~cuts
+			# (a sliver a cell or two wide along an arc is left out)
+			core = mask & ~near_(~mask)
+			core = core & ~near_(~core)
+			mask &= near_(near_(core)) | core
+			print(f"SCALLOP {name} bite of {len(region)} cells between tips {k} and {k + 1}, {deep:.2f} of the chord deep, "
+				f"{'filled ' + str(int(mask.sum())) + ' cells' if scallop['sag'][k] else 'whole, kept'}")
+			if scallop["sag"][k]:
+				# (each piece of it apart: the arc may cut it in two)
+				left = mask.copy()
+				for j0, i0 in zip(*np.nonzero(mask)):
+					if not left[j0, i0]:
+						continue
+					piece, todo = [], deque([(j0, i0)])
+					left[j0, i0] = False
+					while todo:
+						q = todo.popleft()
+						piece.append(q)
+						for dj, di in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+							p = (q[0] + dj, q[1] + di)
+							if 0 <= p[0] < h and 0 <= p[1] < w and left[p]:
+								left[p] = False
+								todo.append(p)
+					if len(piece) >= 20:
+						bites.append([(int(a), int(b)) for a, b in piece])
+		print(f"SCALLOP {name} tips {[tuple(round(c, 3) for c in (p.x, p.z)) for p in tips]}")
 
 	def under(x, z, facing):
 		# the membrane's front (facing -1) or back (+1) at a point: its depth
@@ -831,12 +1152,15 @@ def mend(ob, name, margin=0.035, inset=0.05):
 	def near(m):
 		return np.roll(m, 1, 0) | np.roll(m, -1, 0) | np.roll(m, 1, 1) | np.roll(m, -1, 1)
 
-	# the pixels the piece's own faces show: a patch's tile goes where it shows nothing (the file's atlas cuts the
-	# membrane into many islands, so the hole has no place of its own in the texture; this kit's texture serves this
-	# piece only, so the other parts' pixels are free)
+	# the pixels the kit's pieces show: a patch's tile goes where none of them shows anything (the file's atlas cuts the
+	# membrane into many islands, so the hole has no place of its own in the texture; this kit's texture serves its own
+	# pieces only, so the other parts' pixels are free)
 	shown = np.zeros((ih, iw), bool)
-	for t in me.loop_triangles:
-		raster(shown, [uv[i].uv for i in t.loops])
+	for part in used or [ob]:
+		part.data.calc_loop_triangles()
+		puv = part.data.uv_layers.active.data
+		for t in part.data.loop_triangles:
+			raster(shown, [puv[i].uv for i in t.loops])
 
 	def tile(hull, facing):
 		# a TILE-pixel square of the texture painted as the membrane round the hole (sampled through the faces on that
@@ -921,6 +1245,106 @@ def mend(ob, name, margin=0.035, inset=0.05):
 				face.normal_flip()
 			added += len(corners) - 2
 		filled += len(region)
+
+	def outline(mask):
+		# the outer edge of a mask of cells, as a loop of cell corners (j, i) with the mask on its left: counter-clockwise
+		# seen from the front (x along i, z along j)
+		m = np.pad(mask, 1)
+		nxt = {}
+		for j, i in zip(*np.nonzero(mask)):
+			if not m[j, i + 1]:
+				nxt.setdefault((j, i), []).append((j, i + 1))
+			if not m[j + 1, i + 2]:
+				nxt.setdefault((j, i + 1), []).append((j + 1, i + 1))
+			if not m[j + 2, i + 1]:
+				nxt.setdefault((j + 1, i + 1), []).append((j + 1, i))
+			if not m[j + 1, i]:
+				nxt.setdefault((j + 1, i), []).append((j, i))
+		loops = []
+		while nxt:
+			start = min(nxt)
+			loop, p = [start], start
+			while True:
+				q = nxt[p].pop()
+				if not nxt[p]:
+					del nxt[p]
+				if q == start:
+					break
+				loop.append(q)
+				p = q
+			loops.append(loop)
+		return max(loops, key=len)
+
+	for region in bites if scallop else []:
+		cells = set(region)
+		grow = int(round(margin * size / cell))
+		# the bite widened by the margin into the membrane round it, its own shape kept (an arc's bow is not convex)
+		ring = set(cells)
+		for _ in range(grow):
+			ring |= {(j + dj, i + di) for j, i in ring for dj, di in ((1, 0), (-1, 0), (0, 1), (0, -1))
+				if 0 <= j + dj < h and 0 <= i + di < w and (cover[j + dj, i + di] or (j + dj, i + di) in cells)}
+		mask = np.zeros((h, w), bool)
+		mask[tuple(np.array(sorted(ring)).T)] = True
+		# (closed by a cell, and any island of membrane inside it taken in, so its edge is one loop)
+		mask = mask | near_(mask)
+		mask = mask & ~near_(~mask)
+		out = np.zeros((h, w), bool)
+		todo = deque([(0, 0)])
+		out[0, 0] = True
+		while todo:
+			j, i = todo.popleft()
+			for dj, di in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+				q = (j + dj, i + di)
+				if 0 <= q[0] < h and 0 <= q[1] < w and not mask[q] and not out[q]:
+					out[q] = True
+					todo.append(q)
+		mask = ~out
+		poly = simplify([(x0 + i * cell, z0 + j * cell) for j, i in outline(mask)], 1.5 * cell)
+
+		def on_membrane(x, z):
+			# how many of the four cells round a corner the membrane covers
+			i, j = int(round((x - x0) / cell)), int(round((z - z0) / cell))
+			return sum(bool(cover[jj, ii]) for jj in (j - 1, j) for ii in (i - 1, i) if 0 <= jj < h and 0 <= ii < w)
+
+		# off the membrane, the depth of its two faces follows the plane of the membrane's front and back round the bite
+		# (the middles of the faces looking that way within a fifth of the piece's size of the bite's middle; a fit to the
+		# outline's own points caught the finger bones and tilted the patch out of the membrane)
+		cx = sum(p[0] for p in poly) / len(poly)
+		cz = sum(p[1] for p in poly) / len(poly)
+		plane = []
+		for facing in (-1, 1):
+			rows = []
+			for t, (a, b, c) in tris:
+				m = (a + b + c) / 3
+				if t.normal.y * facing > 0.5 and math.hypot(m.x - cx, m.z - cz) < 0.2 * size:
+					rows.append((m.x, m.z, 1.0, m.y))
+			if len(rows) < 3:
+				plane = None
+				break
+			rows = np.array(rows)
+			plane.append(np.linalg.lstsq(rows[:, :3], rows[:, 3], rcond=None)[0])
+		for facing in (-1, 1):
+			at = tile(poly, facing)
+			corners = []
+			for x, z in poly:
+				if on_membrane(x, z) or plane is None:
+					yf, yb = under(x, z, -1), under(x, z, 1)
+				else:
+					yf, yb = [float(c[0] * x + c[1] * z + c[2]) for c in plane]
+				y = yf + inset * (yb - yf) if facing < 0 else yb - inset * (yb - yf)
+				corners.append((bm.verts.new((x, y, z)), at(x, z)))
+			if facing > 0:
+				corners.reverse()
+			face = bm.faces.new([v for v, _ in corners])
+			for loop, (_, u) in zip(face.loops, corners):
+				loop[layer].uv = u
+			painted += 1
+			face.normal_update()
+			if face.normal.y * facing < 0:
+				face.normal_flip()
+			added += len(corners) - 2
+		filled += len(region)
+		holes.append(region)
 	bmesh.ops.triangulate(bm, faces=[f for f in bm.faces if len(f.verts) > 3])
 	bm.to_mesh(me)
 	bm.free()
@@ -931,8 +1355,12 @@ def mend(ob, name, margin=0.035, inset=0.05):
 		f"{painted} tiles of {TILE} pixels painted")
 
 
+# (the parts the kit's pieces wear: a mended patch's texture tile goes where none of them shows the texture)
+worn = [parts[p] for p in dict.fromkeys(spec["part"] for spec in KIT["pieces"].values())]
 for key in KIT.get("mend", ()):
-	mend(parts[key], key)
+	mend(parts[key], key, used=worn)
+for key, spec in KIT.get("scallop", {}).items():
+	mend(parts[key], key, used=worn, scallop=spec)
 for key, ob in parts.items():
 	print(f"KEPT {key} tris={decimate(ob, KIT['budget'][key])}")
 
@@ -1046,6 +1474,10 @@ def place_horn(ob, spec, name):
 	# to curl back (+Y), out or in (`curl`); then lean it out to its side and back, and seat it on the body
 	side = 1 if spec["at"][0] >= 0 else -1
 	vs = ob.data.vertices
+	# `pre` = ((axis, degrees), ...): turns applied to the file's piece first, for a piece the file lays down or tilts
+	# (the bunny file's ears lie on their backs): stood up, its foot is found as usual
+	for ax, deg in spec.get("pre", ()):
+		ob.data.transform(Matrix.Rotation(rad(deg), 4, ax))
 	if spec.get("foot", "plane") == "plane":
 		down, foot = base_plane(ob.data, spec.get("spread", 40))
 	else:
