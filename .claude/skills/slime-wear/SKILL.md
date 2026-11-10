@@ -50,10 +50,13 @@ orchestrator's (CLAUDE.md).
 - **Not every wing shape is a bird's wing** (2026-11-10, Frost Swan: "trông giống như cánh nhưng không phải cánh chim,
   hãy gắn nó vào vị trí giống như trong hình ảnh tham chiếu"): a wing-shaped ornament the painting draws on the body's
   sides (crystal frills) goes where the painting draws it (`front`); the bird's wing standard is for real wings only.
-- **Insect wings sit on the back like the bee's** (2026-11-10, fairy, butterfly and moth wings: "không cần khớp với
-  tranh, cứ đặt ở vị trí sau lưng như những cánh bướm khác"): copy Honeybee Slime's `aim` numbers (`at=(-0.24, 0.27,
-  0.7)`, `point=(0.65, 0.3, 0.7)`, `face=(0, 1, 0.1)`), `scale` bringing the tips to about x +-0.73, height 1.23; each
-  kind keeps its own beat. Paintings with huge wings do not override this.
+- **Butterfly wings are worn on their straight edge, low on the back, and beat back** (2026-11-10, fairy, butterfly
+  and moth wings: "không cần khớp với tranh, cứ đặt ở vị trí sau lưng", then "quá cao, cho xuống thấp tầm ngang thân
+  dưới một chút, tăng kích thước cánh lên lớn hơn và đặt chuyển động kiểu cánh bướm vỗ từ trước ra sau chứ không phải
+  từ trên xuống dưới", then "phần tiếp xúc với thân thể không phải là phần nhỏ nhọn ... mà là phần thẳng của cạnh cánh
+  bướm"): `aim` with `edge=True`, the straight inner edge laid down the back either side of the spine from about
+  0.35 up, the wing out to the side, about 0.93 tall; the beat turns it on that edge back toward its twin and open
+  again (`flap` with `bias`, `kit-reference.md`). Paintings with huge wings do not override this.
 - **Flowers and leaves keep their 3D shape** (2026-11-10, Forest Dryad and Peach Blossom: "các lưới của hoa và lá ...
   biến dạng ... hãy cố gắng giữ nguyên mesh để khối hình hoa lá đúng với nguyên dạng 3d nhất có thể, không cần phải
   kéo để nó ôm sát thân con slime"): a crown, a wreath of hair, a cluster, a festoon is worn `rigid` (turned, moved,

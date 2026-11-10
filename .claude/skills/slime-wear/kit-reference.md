@@ -75,6 +75,20 @@ WingR=dict(part="Feather", kind="aim", root="-x", at=(-0.17, 0.45, 0.53), scale=
 way with their own `point`: Honeybee Slime's bee wings rise up and out from the upper back,
 `at=(-0.24, 0.27, 0.7), scale=1.3, point=(0.65, 0.3, 0.7), face=(0, 1, 0.1)`.
 
+A butterfly's wing (fairy, butterfly, moth; Dream Butterfly, 2026-11-10) meets the body along its straight inner edge,
+not at its narrow point: `edge=True` lays the line from the root to the highest vertex of the wing's inner 35 % along
+`point` instead of the farthest vertex, and the run's axis becomes that edge, signed so a positive turn sweeps the
+wing back:
+
+```python
+WingR=dict(part="Butterfly", kind="aim", edge=True, root="-x", at=(-0.12, 0.52, 0.35), scale=2.25,
+	point=(0.3, -0.25, 1), face=(0, 1, 0.1), twin="WingL"),
+```
+
+(`point` leans the edge out a little and forward with the back's curve; scale to about 0.93 tall.) Config: `flap = {
+axis = <wear.json axis>, degrees = 30, hz = 0.7-1.2, bias = 30 }`: the beat swings 0 to 60 degrees back about the edge,
+the wings closing toward each other behind the back and opening again.
+
 ### A torn piece (`mend`, Blood Moon Bat, 2026-11-10)
 
 The owner's bat wing came with two holes torn through its membrane ("cánh dơi thì bị rách, nếu bạn sửa được thì dùng
@@ -169,6 +183,7 @@ Motion (the owner, 2026-11-10: tails and ears move; `tests/spec/wear.luau` fails
 | spread wing | `flap = { axis = <wear.json axis>, degrees = 12, hz = 0.8 }` (the owner's word on the dragons' wings: "đôi cánh hơi vỗ nhẹ") |
 | bird's open wing (`aim`) | `flap = { axis = <wear.json axis>, degrees = 10, hz = 0.6 }`, a slow beat, the tip rising and falling |
 | insect's wing (`aim`) | `flap = { axis = <wear.json axis>, degrees = 14, hz = 3 }`, a quick buzz, and `clear = 0.35` (lets light through: the texture has no alpha) |
+| butterfly's wing (`aim`, `edge`) | `flap = { axis = <wear.json axis>, degrees = 30, hz = 0.7-1.2, bias = 30 }`: `bias` moves the beat's middle, so it swings from open to 60 degrees back and open again (fairy 1.2 Hz, butterfly 0.8, moth 0.7 with 25/25) |
 | tail | a wag `flap = { axis = { 0, 1, 0 }, degrees = 8-14, hz = 0.5-0.9 }` (lazy dragon 8/0.5, brisk wolf 14/0.9) and `lag = { axis = { 1, 0, 0 }, degrees = 10-12 }` (drops as the slime climbs, lifts as it falls) |
 | ear | `twitch = { axis = { 1, 0, 0 }, degrees = 16-18, every = 3-3.5 }` (a flick back now and then, each ear on its own clock) and `lag = { axis = { 1, 0, 0 }, degrees = 10-12 }` |
 | ear out to the side (a sheep's) | EarL `twitch = { axis = { 0, 0, -1 }, degrees = 14, every = 3.5 }`, `lag = { axis = { 0, 0, 1 }, degrees = 12 }`; EarR the axes negated (a flick lifts it, a hop leaves it hanging) |

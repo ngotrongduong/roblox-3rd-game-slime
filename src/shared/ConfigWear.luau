@@ -6,7 +6,8 @@
 -- which writes these numbers to art/models/accessories/<kit>/wear.json), in mesh units: feet at y 0, front -Z, the slime's
 -- own left -X. `at` is the piece's middle where it rests, `size` its box; it rides the skin at `anchor` as the jelly
 -- squashes, hops and leans. A `flap` swings it about its anchor along `axis` (a positive turn lifts it), `degrees` each
--- way, `hz` times a second (a tail wags with one about the up axis). A `twitch` flicks it now and then (Twitch), a `lag`
+-- way, `hz` times a second (a tail wags with one about the up axis), about a middle `bias` degrees from rest (a
+-- butterfly's wings beat back from open toward each other behind the back and open again). A `twitch` flicks it now and then (Twitch), a `lag`
 -- makes it trail the hop (Lag). A kit whose meshes are not uploaded yet (mesh 0) is left off.
 -- (the owner, 2026-11-10: "gắn thêm chuyển động cho phần đuôi và tai")
 -- A tentacle bends: its `bones` (root to tip, each its rest point and X and Y axes in mesh units) are built on it by name
@@ -14,7 +15,7 @@
 -- `degrees` running out to the tip `hz` times a second, each bone `lag` radians behind the one before, and a slow curl
 -- of `curl` degrees and back `curlHz` times a second; both grow toward the tip. (the owner, 2026-11-10: "co duỗi, ngọ
 -- nguậy như tay bạch tuộc")
-type WearMotion = { axis: { number }, degrees: number, hz: number?, every: number? }
+type WearMotion = { axis: { number }, degrees: number, hz: number?, every: number?, bias: number? }
 type WearWriggle = { axis: { number }, degrees: number, hz: number, lag: number, curl: number, curlHz: number }
 type WearPiece = {
 	name: string,
@@ -1080,75 +1081,77 @@ local Wear = {
 				},
 			},
 		},
-		-- the owner's model art/models/accessories/rose_fairy/fantasy_wings.glb (its fairy wing, mirrored into a pair, in
-		-- the bee's pose on the upper back), uploaded as model 89183950647204
+		-- the owner's model art/models/accessories/rose_fairy/fantasy_wings.glb (its fairy wing, mirrored into a pair, worn
+		-- on its straight inner edge down the back either side of the spine, level with the body), uploaded as model
+		-- 108083969083397
 		RoseFairy = {
 			texture = "rbxassetid://132123962648519",
 			pieces = {
 				{
 					name = "WingL",
-					mesh = 129410502697214,
-					size = { 0.5052, 0.6393, 0.2537 },
-					at = { -0.4726, 0.916, 0.3724 },
-					anchor = { -0.24, 0.7, 0.27 },
-					-- (a fairy's wings flutter, quicker than a butterfly's)
-					flap = { axis = { -0.2567, 0.1694, -0.9515 }, degrees = 14, hz = 1.2 },
+					mesh = 125453199792398,
+					size = { 0.6331, 0.9312, 0.2378 },
+					at = { -0.42, 0.6978, 0.4391 },
+					anchor = { -0.12, 0.35, 0.52 },
+					-- (a butterfly's beat: each wing turns on its edge back toward the other and opens again; a fairy's
+					-- quicker)
+					flap = { axis = { -0.2794, 0.9315, -0.2329 }, degrees = 30, hz = 1.2, bias = 30 },
 				},
 				{
 					name = "WingR",
-					mesh = 131760084285353,
-					size = { 0.5052, 0.6393, 0.2537 },
-					at = { 0.4726, 0.916, 0.3724 },
-					anchor = { 0.24, 0.7, 0.27 },
-					flap = { axis = { -0.2567, -0.1694, 0.9515 }, degrees = 14, hz = 1.2 },
+					mesh = 87256932928516,
+					size = { 0.6331, 0.9312, 0.2378 },
+					at = { 0.42, 0.6978, 0.4391 },
+					anchor = { 0.12, 0.35, 0.52 },
+					flap = { axis = { -0.2794, -0.9315, 0.2329 }, degrees = 30, hz = 1.2, bias = 30 },
 				},
 			},
 		},
 		-- the owner's model art/models/accessories/dream_butterfly/fantasy_wings.glb (its butterfly wing, mirrored into a
-		-- pair, in the bee's pose on the upper back), uploaded as model 75756341136828
+		-- pair, worn on its straight inner edge down the back), uploaded as model 85339505056556
 		DreamButterfly = {
 			texture = "rbxassetid://105140380877532",
 			pieces = {
 				{
 					name = "WingL",
-					mesh = 133581142305174,
-					size = { 0.5153, 0.6624, 0.2548 },
-					at = { -0.4816, 0.9241, 0.3806 },
-					anchor = { -0.24, 0.7, 0.27 },
+					mesh = 137320455283590,
+					size = { 0.6613, 0.9444, 0.2663 },
+					at = { -0.4304, 0.701, 0.4251 },
+					anchor = { -0.12, 0.35, 0.52 },
 					-- (a butterfly's slow, wide beat)
-					flap = { axis = { -0.2567, 0.1694, -0.9515 }, degrees = 18, hz = 0.8 },
+					flap = { axis = { -0.2794, 0.9315, -0.2329 }, degrees = 30, hz = 0.8, bias = 30 },
 				},
 				{
 					name = "WingR",
-					mesh = 121779404514416,
-					size = { 0.5153, 0.6624, 0.2548 },
-					at = { 0.4816, 0.9241, 0.3806 },
-					anchor = { 0.24, 0.7, 0.27 },
-					flap = { axis = { -0.2567, -0.1694, 0.9515 }, degrees = 18, hz = 0.8 },
+					mesh = 125511363255335,
+					size = { 0.6613, 0.9444, 0.2663 },
+					at = { 0.4304, 0.701, 0.4251 },
+					anchor = { 0.12, 0.35, 0.52 },
+					flap = { axis = { -0.2794, -0.9315, 0.2329 }, degrees = 30, hz = 0.8, bias = 30 },
 				},
 			},
 		},
-		-- the owner's model art/models/accessories/twilight_moth/fantasy_wings.glb (its moth wing, mirrored into a pair, in
-		-- the bee's pose on the upper back), uploaded as model 85481550171965
+		-- the owner's model art/models/accessories/twilight_moth/fantasy_wings.glb (its moth wing, mirrored into a pair,
+		-- worn on its straight inner edge down the back), uploaded as model 79629704166256
 		TwilightMoth = {
 			texture = "rbxassetid://136009891707826",
 			pieces = {
 				{
 					name = "WingL",
-					mesh = 126656958178577,
-					size = { 0.5342, 0.672, 0.284 },
-					at = { -0.4889, 0.9198, 0.3848 },
-					anchor = { -0.24, 0.7, 0.27 },
-					-- (a moth's soft, sleepy beat)
-					flap = { axis = { -0.2567, 0.1694, -0.9515 }, degrees = 12, hz = 0.7 },
+					mesh = 125840989954803,
+					size = { 0.7241, 0.929, 0.2716 },
+					at = { -0.4563, 0.6848, 0.4242 },
+					anchor = { -0.12, 0.35, 0.52 },
+					-- (a moth's softer, sleepier beat)
+					flap = { axis = { -0.2794, 0.9315, -0.2329 }, degrees = 25, hz = 0.7, bias = 25 },
 				},
 				{
 					name = "WingR",
-					mesh = 91650038352566,
-					size = { 0.5342, 0.672, 0.284 },
-					at = { 0.4889, 0.9198, 0.3848 },
-					anchor = { 0.24, 0.7, 0.27 },
-					flap = { axis = { -0.2567, -0.1694, 0.9515 }, degrees = 12, hz = 0.7 },
+					mesh = 118737329562859,
+					size = { 0.7241, 0.929, 0.2716 },
+					at = { 0.4563, 0.6848, 0.4242 },
+					anchor = { 0.12, 0.35, 0.52 },
+					flap = { axis = { -0.2794, -0.9315, 0.2329 }, degrees = 25, hz = 0.7, bias = 25 },
 				},
 			},
 		},

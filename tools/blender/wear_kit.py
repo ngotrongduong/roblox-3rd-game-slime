@@ -515,8 +515,9 @@ KITS = {
 	),
 	# Five Secrets' wings from FANTASY_WINGS, 2026-11-10, each the file's right wing mirrored into a pair. The feathered
 	# ones (Sun Phoenix, Royal Griffin) take Midnight Raven's pose, the owner's standard for a bird's wings; the fairy,
-	# butterfly and moth wings take the bee's pose on the back, not their paintings' (the owner, 2026-11-10: "không cần
-	# khớp với tranh, cứ đặt ở vị trí sau lưng như những cánh bướm khác")
+	# butterfly and moth wings sit on the back, not as their paintings have them (the owner, 2026-11-10: "không cần khớp
+	# với tranh, cứ đặt ở vị trí sau lưng"), then lower, level with the body, and bigger ("quá cao, cho xuống thấp tầm
+	# ngang thân dưới một chút, tăng kích thước cánh lên lớn hơn")
 	"RoseFairy": dict(
 		folder="rose_fairy",
 		glb="fantasy_wings.glb",
@@ -525,8 +526,8 @@ KITS = {
 		sort=FANTASY_WINGS,
 		budget=FANTASY_BUDGET,
 		pieces=dict(
-			WingR=dict(part="Fairy", kind="aim", root="-x", at=(-0.24, 0.27, 0.7), scale=1.8, point=(0.65, 0.3, 0.7),
-				face=(0, 1, 0.1), twin="WingL"),
+			WingR=dict(part="Fairy", kind="aim", edge=True, root="-x", at=(-0.12, 0.52, 0.35), scale=2.45,
+				point=(0.3, -0.25, 1), face=(0, 1, 0.1), twin="WingL"),
 		),
 		body=(0.95, 0.5, 0.7, 1),
 	),
@@ -538,8 +539,8 @@ KITS = {
 		sort=FANTASY_WINGS,
 		budget=FANTASY_BUDGET,
 		pieces=dict(
-			WingR=dict(part="Butterfly", kind="aim", root="-x", at=(-0.24, 0.27, 0.7), scale=1.65, point=(0.65, 0.3, 0.7),
-				face=(0, 1, 0.1), twin="WingL"),
+			WingR=dict(part="Butterfly", kind="aim", edge=True, root="-x", at=(-0.12, 0.52, 0.35), scale=2.25,
+				point=(0.3, -0.25, 1), face=(0, 1, 0.1), twin="WingL"),
 		),
 		body=(0.8, 0.45, 0.95, 1),
 	),
@@ -551,8 +552,8 @@ KITS = {
 		sort=FANTASY_WINGS,
 		budget=FANTASY_BUDGET,
 		pieces=dict(
-			WingR=dict(part="Moth", kind="aim", root="-x", at=(-0.24, 0.27, 0.7), scale=2.0, point=(0.65, 0.3, 0.7),
-				face=(0, 1, 0.1), twin="WingL"),
+			WingR=dict(part="Moth", kind="aim", edge=True, root="-x", at=(-0.12, 0.52, 0.35), scale=2.7,
+				point=(0.3, -0.25, 1), face=(0, 1, 0.1), twin="WingL"),
 		),
 		body=(0.3, 0.2, 0.6, 1),
 	),
@@ -1295,6 +1296,15 @@ def place_aim(ob, spec, name):
 	point.x *= m
 	face.x *= m
 	far = max(vs, key=lambda v: v.co.length).co.copy()
+	if spec.get("edge"):
+		# a butterfly's wing meets the body along its straight inner edge, not at its narrow point (the owner,
+		# 2026-11-10: "phần tiếp xúc với thân thể ... là phần thẳng của cạnh cánh bướm"): the edge runs from the root to
+		# the highest vertex of the inner 35 % of the wing (the file draws the wing upright), and that edge, not the
+		# farthest point, is what runs along `point`
+		out = 1 if spec["root"] == "-x" else -1
+		width = max(v.co.x * out for v in vs)
+		far = max((v for v in vs if v.co.x * out < width * 0.35), key=lambda v: v.co.z).co.copy()
+		print(f"EDGE {name} {far.length:.3f} long")
 	turn = frame(point, face) @ frame(far, Vector((0, -1, 0))).transposed()
 	ob.data.transform(turn.to_4x4())
 	ob.location = spec["at"]
@@ -1304,6 +1314,9 @@ def place_aim(ob, spec, name):
 	print(f"AIM {name} tip at {tuple(round(x, 3) for x in tip)}, {inside} of {len(vs)} vertices inside the body, "
 		f"upright {upright:+.2f}")
 	along = point.normalized()
+	if spec.get("edge"):
+		# (a butterfly's beat: the wing turns on its edge as on a hinge, signed so a positive turn sweeps it back)
+		return along * m
 	normal = (face - along * face.dot(along)).normalized()
 	return normal if normal.cross(along).z > 0 else -normal
 

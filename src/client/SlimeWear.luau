@@ -12,7 +12,7 @@ local SlimeShape = require(ReplicatedStorage.Shared.SlimeShape)
 local W = Config.Wear
 local S = Config.Slime
 
-type FlapSpec = { axis: { number }, degrees: number, hz: number }
+type FlapSpec = { axis: { number }, degrees: number, hz: number, bias: number? }
 type TwitchSpec = { axis: { number }, degrees: number, every: number }
 type LagSpec = { axis: { number }, degrees: number }
 type WriggleSpec = { axis: { number }, degrees: number, hz: number, lag: number, curl: number, curlHz: number }
@@ -40,6 +40,7 @@ type Piece = {
 	offset: Vector3,
 	axis: Vector3?,
 	swing: number,
+	swingMid: number,
 	speed: number,
 	twitchAxis: Vector3?,
 	twitchAngle: number,
@@ -162,6 +163,7 @@ local function dress(model: Model, name: string)
 			offset = v3(spec.at) - v3(spec.anchor),
 			axis = if flap then v3(flap.axis).Unit else nil,
 			swing = if flap then math.rad(flap.degrees) else 0,
+			swingMid = if flap then math.rad(flap.bias or 0) else 0,
 			speed = if flap then flap.hz * 2 * math.pi else 0,
 			twitchAxis = if twitch then v3(twitch.axis).Unit else nil,
 			twitchAngle = if twitch then math.rad(twitch.degrees) else 0,
@@ -289,7 +291,7 @@ function SlimeWear.pose(
 		local cf = feet * CFrame.new(x * s, y * s, z * s) * tilt
 		local axis = p.axis
 		if axis then
-			cf *= CFrame.fromAxisAngle(axis, p.swing * math.sin((now + w.phase) * p.speed))
+			cf *= CFrame.fromAxisAngle(axis, p.swingMid + p.swing * math.sin((now + w.phase) * p.speed))
 		end
 		local twitchAxis = p.twitchAxis
 		if twitchAxis then

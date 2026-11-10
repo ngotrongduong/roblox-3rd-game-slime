@@ -114,8 +114,10 @@ seen from five sides. Not seen: a phone.
 
 Five more Secrets wear wings from the owner's `fantasy wings 3d model.glb` (five single wings, each mirrored into a
 pair): `secret-pink-pink` Rose Fairy (fairy wings), `secret-pink-purple` Dream Butterfly, `secret-navy-pink` Twilight
-Moth, all three in the bee's pose on the upper back (the owner: they need not match their paintings, "cứ đặt ở vị trí
-sau lưng như những cánh bướm khác") with their own beat (fairy quick, butterfly slow and wide, moth soft);
+Moth, all three worn on their straight inner edge down the back either side of the spine, level with the body (the
+owner: not as their paintings, lower, bigger, joined at the straight edge, not the point), beating as a butterfly's do:
+turning on that edge back toward each other and open again (fairy quick, butterfly slow, moth soft; `flap` gained
+`bias`, `aim` gained `edge`);
 `secret-orange-yellow` Sun Phoenix and `secret-purple-yellow` Royal Griffin, feathered wings in Midnight Raven's pose
 and beat, tips at about +-1.0. All twenty-five dressed Secrets n/n in Play, the five seen from five sides. Not seen: a
 phone.
