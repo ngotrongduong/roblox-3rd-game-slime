@@ -67,6 +67,23 @@ BUNNY_EARS = lambda c: (("TailW" if c.y > 0 else "TailP") if c.x > 0.15 else
 	(("WEarR" if c.x < -0.18 else "WEarL") if c.y > 0 else ("PEarR" if c.x < -0.18 else "PEarL")))
 BUNNY_BUDGET = dict(WEarR=284, WEarL=234, PEarR=258, PEarL=278, TailW=404, TailP=472)
 
+# the owner's "fantasy wings 3d model (1).glb" (2026-11-11), not the 2026-11-10 file of that name: two ribbed ram horns
+# (their spirals opening outward), a golden swirl of cloud, two starry navy feathered wings (each root at its inner
+# end), two red dragon horns with a spiked gold collar at the foot, two whole red bat wings (the wrist knob at the inner
+# end). Facing the file's front, the left one of each pair is the slime's right, except the wings (`aim`, `wing`)
+FANTASY_WINGS_B = nearest(RedHornR=(-0.436, 0.156), RamHornR=(-0.312, 0.716), RedHornL=(-0.246, 0.155),
+	StarWingL=(-0.175, 0.437), RamHornL=(-0.039, 0.712), BatL=(0.042, 0.188), StarWingR=(0.166, 0.439),
+	Cloud=(0.245, 0.699), BatR=(0.344, 0.185))
+FANTASY_WINGS_B_BUDGET = dict(RedHornR=434, RamHornR=460, RedHornL=348, StarWingL=528, RamHornL=502, BatL=598,
+	StarWingR=700, Cloud=500, BatR=594)
+
+# the owner's "golden wing 3d model.glb" (2026-11-11): two golden feathered wings with blue inner feathers (each root at
+# its inner end), two striped green watermelon frog feet with pink toes, two green poison frog feet with purple spots;
+# the feet lie flat, toes to the front (-Y)
+GOLDEN_WING = nearest(FootWR=(-0.389, 0.071), GoldWingL=(-0.186, 0.448), FootWL=(-0.16, 0.077),
+	FootPR=(0.155, 0.078), GoldWingR=(0.198, 0.456), FootPL=(0.392, 0.082))
+GOLDEN_WING_BUDGET = dict(FootWR=164, GoldWingL=700, FootWL=124, FootPR=278, GoldWingR=499, FootPL=166)
+
 # `sort` says which part of the file a loose bit belongs to, by its middle; `budget` the triangles a part keeps;
 # `pieces` what is made of each part, in the order they are exported: kind (horn: horns and ears, wing, tail), where it
 # sits on the body (Blender axes, body height 1; +X is the slime's own left), size factor, turns in degrees, and `twin`,
@@ -834,6 +851,103 @@ KITS = {
 			Tail=dict(part="TailP", kind="rigid", at=(180, 0.22), scale=0.7),
 		),
 		body=(1, 0.8, 0.88, 1),
+	),
+	# Rose Dragon (secret-red-red), 2026-11-11: the painting's red horns on the top corners curling up, roses at their
+	# foot, red bat wings spread from the upper sides behind them (FANTASY_WINGS_B). Placed roughly: the owner fine-tunes
+	"RoseDragon": dict(
+		folder="rose_dragon",
+		glb="fantasy_wings_b.glb",
+		out="RoseDragonWear",
+		texture="rose_dragon_wear.png",
+		sort=FANTASY_WINGS_B,
+		budget=FANTASY_WINGS_B_BUDGET,
+		pieces=dict(
+			HornL=dict(part="RedHornL", kind="horn", at=(0.26, 0.04, 0.74), scale=1.4, tilt_out=8, tilt_back=0, level=False),
+			HornR=dict(part="RedHornR", kind="horn", at=(-0.26, 0.04, 0.74), scale=1.4, tilt_out=8, tilt_back=0, level=False),
+			WingL=dict(part="BatL", kind="wing", at=(0.33, 0.28, 0.58), scale=1.75, raise_=20, sweep=20),
+			WingR=dict(part="BatR", kind="wing", root="-x", at=(-0.33, 0.28, 0.58), scale=1.75, raise_=20, sweep=20),
+		),
+		body=(0.75, 0.05, 0.1, 1),
+	),
+	# Star Owl (secret-navy-yellow), 2026-11-11: starry navy feathered wings, worn as every bird's wing pair (Midnight
+	# Raven's pose). The painting's crest on the top is not in the file
+	"StarOwl": dict(
+		folder="star_owl",
+		glb="fantasy_wings_b.glb",
+		out="StarOwlWear",
+		texture="star_owl_wear.png",
+		sort=FANTASY_WINGS_B,
+		budget=FANTASY_WINGS_B_BUDGET,
+		pieces=dict(
+			WingL=dict(part="StarWingL", kind="aim", root="+x", at=(0.17, 0.45, 0.53), scale=2.6, point=(0.95, 0.2, 0.33),
+				face=(0, 1, 0.2)),
+			WingR=dict(part="StarWingR", kind="aim", root="-x", at=(-0.17, 0.45, 0.53), scale=2.6, point=(0.95, 0.2, 0.33),
+				face=(0, 1, 0.2)),
+		),
+		body=(0.08, 0.12, 0.4, 1),
+	),
+	# Thunder Ram (secret-gray-yellow), 2026-11-11: the painting's big ribbed ram horns on the top corners, curling out
+	# and down; the file's golden swirl of cloud (the painting's cloud markings) worn as a fluffy tail low on the back
+	"ThunderRam": dict(
+		folder="thunder_ram",
+		glb="fantasy_wings_b.glb",
+		out="ThunderRamWear",
+		texture="thunder_ram_wear.png",
+		sort=FANTASY_WINGS_B,
+		budget=FANTASY_WINGS_B_BUDGET,
+		pieces=dict(
+			# (the file's two horns differ, the right one curled tighter and set further out: the left worn on both sides)
+			HornL=dict(part="RamHornL", kind="horn", at=(0.31, 0.02, 0.7), scale=1.85, tilt_out=10, tilt_back=0, level=False,
+				twin="HornR"),
+			Tail=dict(part="Cloud", kind="rigid", at=(180, 0.26), scale=1.0),
+		),
+		body=(1, 0.8, 0.1, 1),
+	),
+	# Thunderbird (secret-blue-yellow), 2026-11-11: golden feathered wings with blue inner feathers, worn as every bird's
+	# wing pair (Midnight Raven's pose). The painting's crest on the top is not in the file
+	"Thunderbird": dict(
+		folder="thunderbird",
+		glb="golden_wing.glb",
+		out="ThunderbirdWear",
+		texture="thunderbird_wear.png",
+		sort=GOLDEN_WING,
+		budget=GOLDEN_WING_BUDGET,
+		pieces=dict(
+			WingL=dict(part="GoldWingL", kind="aim", root="+x", at=(0.17, 0.45, 0.53), scale=1.85, point=(0.95, 0.2, 0.33),
+				face=(0, 1, 0.2)),
+			WingR=dict(part="GoldWingR", kind="aim", root="-x", at=(-0.17, 0.45, 0.53), scale=1.85, point=(0.95, 0.2, 0.33),
+				face=(0, 1, 0.2)),
+		),
+		body=(0.2, 0.55, 1, 1),
+	),
+	# Watermelon Frog (secret-green-pink), 2026-11-11: the painting's frog feet at the foot on both sides, toes out
+	"WatermelonFrog": dict(
+		folder="watermelon_frog",
+		glb="golden_wing.glb",
+		out="WatermelonFrogWear",
+		texture="watermelon_frog_wear.png",
+		sort=GOLDEN_WING,
+		budget=GOLDEN_WING_BUDGET,
+		pieces=dict(
+			FootL=dict(part="FootWL", kind="rigid", at=(60, 0.08), scale=1.0),
+			FootR=dict(part="FootWR", kind="rigid", at=(-60, 0.08), scale=1.0),
+		),
+		body=(0.35, 0.65, 0.2, 1),
+	),
+	# Poison Frog (secret-green-purple), 2026-11-11: the painting's frog feet at the foot on both sides, toes out. Its eyes
+	# on the top are not in the file
+	"PoisonFrog": dict(
+		folder="poison_frog",
+		glb="golden_wing.glb",
+		out="PoisonFrogWear",
+		texture="poison_frog_wear.png",
+		sort=GOLDEN_WING,
+		budget=GOLDEN_WING_BUDGET,
+		pieces=dict(
+			FootL=dict(part="FootPL", kind="rigid", at=(60, 0.08), scale=1.0),
+			FootR=dict(part="FootPR", kind="rigid", at=(-60, 0.08), scale=1.0),
+		),
+		body=(0.5, 0.75, 0.1, 1),
 	),
 }
 TEXTURE = 1024

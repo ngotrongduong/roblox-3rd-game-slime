@@ -158,6 +158,16 @@ them behind the body from the front. Then the owner placed every piece of the se
 second pair of gills to Coral Axolotl) and asked for both sides alike: `ear_mirror.luau` evens each pair, and his
 places are in Config.Wear, seen in Play.
 
+2026-11-11, six more from two owner files, placed roughly for the owner to fine-tune in the editor (his rule).
+`fantasy_wings_b.glb` (his second "fantasy wings" file): Rose Dragon (`secret-red-red`, red horns with a spiked collar,
+whole bat wings that beat), Star Owl (`secret-navy-yellow`, starry feathered wings, Raven's pose), Thunder Ram
+(`secret-gray-yellow`, ram horns, the file's left one on both sides; the golden cloud swirl worn as a wagging tail, the
+painting shows none). `golden_wing.glb`: Thunderbird (`secret-blue-yellow`, golden wings, Raven's pose), Watermelon
+Frog (`secret-green-pink`) and Poison Frog (`secret-green-purple`), frog feet flat on the ground at the front sides.
+Not in the files: the Star Owl's and Thunderbird's crests, the Poison Frog's eyes. Models 112581261439114,
+127121329117477, 138808936970841, 136944893323987, 100454179348381, 94042749760826. Seen in Play; the editor is open on
+them in Studio.
+
 ## 2026-11-10 — Dungeon fight effects per monster, from the VFX library
 
 The owner paused the old effect work and asked for each map group's skills to be rebuilt from his VFX library

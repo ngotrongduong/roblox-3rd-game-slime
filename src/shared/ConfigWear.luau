@@ -80,6 +80,12 @@ local Wear = {
 		["secret-navy-navy"] = "DeepSeaLeviathan",
 		["secret-white-white"] = "SnowRabbit",
 		["secret-pink-white"] = "SakuraBunny",
+		["secret-red-red"] = "RoseDragon",
+		["secret-navy-yellow"] = "StarOwl",
+		["secret-gray-yellow"] = "ThunderRam",
+		["secret-blue-yellow"] = "Thunderbird",
+		["secret-green-pink"] = "WatermelonFrog",
+		["secret-green-purple"] = "PoisonFrog",
 	},
 	Kits = {
 		-- the owner's Meshy model art/models/accessories/tempest_dragon/neon_dragon_relics.glb, uploaded as model
@@ -1647,6 +1653,165 @@ local Wear = {
 					-- (a cotton tail's small wag)
 					flap = { axis = { 0, 1, 0 }, degrees = 10, hz = 0.9 },
 					lag = { axis = { 1, 0, 0 }, degrees = 10 },
+				},
+			},
+		},
+		-- the owner's model art/models/accessories/rose_dragon/fantasy_wings_b.glb (its red horns and bat wings), uploaded as model
+		-- 112581261439114
+		RoseDragon = {
+			texture = "rbxassetid://134482154121467",
+			pieces = {
+				{
+					name = "HornL",
+					mesh = 73077824367649,
+					size = { 0.1946, 0.3778, 0.1401 },
+					at = { -0.2932, 0.9353, 0.0427 },
+					anchor = { -0.2641, 0.7695, 0.04 },
+				},
+				{
+					name = "HornR",
+					mesh = 102413170479807,
+					size = { 0.1987, 0.3768, 0.14 },
+					at = { 0.2919, 0.9346, 0.0428 },
+					anchor = { 0.2641, 0.7695, 0.04 },
+				},
+				{
+					name = "WingL",
+					mesh = 131465137936327,
+					size = { 0.4506, 0.4483, 0.1977 },
+					at = { -0.5327, 0.7041, 0.3356 },
+					anchor = { -0.33, 0.58, 0.28 },
+					-- (a dragon's wings beat softly, as Fire Dragon's)
+					flap = { axis = { -0.342, 0, -0.9397 }, degrees = 12, hz = 0.8 },
+				},
+				{
+					name = "WingR",
+					mesh = 108862035832098,
+					size = { 0.445, 0.4467, 0.1969 },
+					at = { 0.5222, 0.7114, 0.3374 },
+					anchor = { 0.33, 0.58, 0.28 },
+					flap = { axis = { -0.342, 0, 0.9397 }, degrees = 12, hz = 0.8 },
+				},
+			},
+		},
+		-- the owner's model art/models/accessories/star_owl/fantasy_wings_b.glb (its starry feathered wings), uploaded as model
+		-- 127121329117477
+		StarOwl = {
+			texture = "rbxassetid://127214800694330",
+			pieces = {
+				{
+					name = "WingL",
+					mesh = 122824646089567,
+					size = { 0.8743, 0.5402, 0.2275 },
+					at = { -0.5599, 0.5472, 0.5314 },
+					anchor = { -0.17, 0.53, 0.45 },
+					-- (every bird's wing pair beats as Midnight Raven's)
+					flap = { axis = { -0.2437, -0.1181, -0.9626 }, degrees = 10, hz = 0.6 },
+				},
+				{
+					name = "WingR",
+					mesh = 78374975851194,
+					size = { 0.8727, 0.5379, 0.217 },
+					at = { 0.5512, 0.5425, 0.5316 },
+					anchor = { 0.17, 0.53, 0.45 },
+					flap = { axis = { -0.2437, 0.1181, 0.9626 }, degrees = 10, hz = 0.6 },
+				},
+			},
+		},
+		-- the owner's model art/models/accessories/thunder_ram/fantasy_wings_b.glb (its ram horns and a cloud tail), uploaded as model
+		-- 138808936970841 (the file's left horn worn on both sides)
+		ThunderRam = {
+			texture = "rbxassetid://78965008496351",
+			pieces = {
+				{
+					name = "HornL",
+					mesh = 123461222056881,
+					size = { 0.4014, 0.3911, 0.2781 },
+					at = { -0.3387, 0.851, -0.0052 },
+					anchor = { -0.3153, 0.73, 0.02 },
+				},
+				{
+					name = "HornR",
+					mesh = 136889814258620,
+					size = { 0.4014, 0.3911, 0.2781 },
+					at = { 0.3387, 0.851, -0.0052 },
+					anchor = { 0.3153, 0.73, 0.02 },
+				},
+				{
+					name = "Tail",
+					mesh = 118120776949133,
+					size = { 0.2324, 0.2169, 0.12 },
+					at = { -0, 0.26, 0.5524 },
+					anchor = { 0.0271, 0.2547, 0.5172 },
+					-- (a fluffy tail's small wag)
+					flap = { axis = { 0, 1, 0 }, degrees = 10, hz = 0.9 },
+					lag = { axis = { 1, 0, 0 }, degrees = 10 },
+				},
+			},
+		},
+		-- the owner's model art/models/accessories/thunderbird/golden_wing.glb (its golden feathered wings), uploaded as model
+		-- 136944893323987
+		Thunderbird = {
+			texture = "rbxassetid://97567031672898",
+			pieces = {
+				{
+					name = "WingL",
+					mesh = 118329524305012,
+					size = { 0.8519, 0.5016, 0.2372 },
+					at = { -0.5739, 0.566, 0.5294 },
+					anchor = { -0.17, 0.53, 0.45 },
+					-- (every bird's wing pair beats as Midnight Raven's)
+					flap = { axis = { -0.2437, -0.1181, -0.9626 }, degrees = 10, hz = 0.6 },
+				},
+				{
+					name = "WingR",
+					mesh = 123372025328561,
+					size = { 0.8448, 0.5057, 0.246 },
+					at = { 0.572, 0.5644, 0.542 },
+					anchor = { 0.17, 0.53, 0.45 },
+					flap = { axis = { -0.2437, 0.1181, 0.9626 }, degrees = 10, hz = 0.6 },
+				},
+			},
+		},
+		-- the owner's model art/models/accessories/watermelon_frog/golden_wing.glb (its frog feet), uploaded as model
+		-- 100454179348381
+		WatermelonFrog = {
+			texture = "rbxassetid://73828585430204",
+			pieces = {
+				{
+					name = "FootL",
+					mesh = 92145553248792,
+					size = { 0.1848, 0.1688, 0.2105 },
+					at = { -0.453, 0.08, -0.266 },
+					anchor = { -0.4002, 0.1505, -0.2465 },
+				},
+				{
+					name = "FootR",
+					mesh = 89930876406596,
+					size = { 0.1801, 0.1624, 0.2042 },
+					at = { 0.4553, 0.08, -0.2725 },
+					anchor = { 0.4002, 0.1505, -0.2465 },
+				},
+			},
+		},
+		-- the owner's model art/models/accessories/poison_frog/golden_wing.glb (its frog feet), uploaded as model
+		-- 94042749760826
+		PoisonFrog = {
+			texture = "rbxassetid://89502532648819",
+			pieces = {
+				{
+					name = "FootL",
+					mesh = 136387322962561,
+					size = { 0.1888, 0.1646, 0.205 },
+					at = { -0.4529, 0.08, -0.2691 },
+					anchor = { -0.3943, 0.1373, -0.2348 },
+				},
+				{
+					name = "FootR",
+					mesh = 72756343488803,
+					size = { 0.1885, 0.1692, 0.2089 },
+					at = { 0.4569, 0.08, -0.2705 },
+					anchor = { 0.3943, 0.1373, -0.2348 },
 				},
 			},
 		},
