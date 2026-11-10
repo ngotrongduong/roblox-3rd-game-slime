@@ -2262,23 +2262,23 @@ Config.Wear = {
 	},
 	Kits = {
 		-- the owner's Meshy model art/models/accessories/tempest_dragon/neon_dragon_relics.glb, uploaded as model
-		-- 91743466444489 (its five MeshParts give the mesh ids)
+		-- 107139793078199 (its five MeshParts give the mesh ids)
 		TempestDragon = {
 			texture = "rbxassetid://83202714233801",
 			pieces = {
 				{
 					name = "HornL",
-					mesh = 95639447713232,
+					mesh = 77415302490678,
 					size = { 0.1537, 0.2482, 0.17 },
-					at = { -0.2262, 0.8605, 0.0134 },
-					anchor = { -0.22, 0.75, 0.06 },
+					at = { -0.2221, 0.8465, 0.0092 },
+					anchor = { -0.2191, 0.7503, -0.0026 },
 				},
 				{
 					name = "HornR",
-					mesh = 78282821888249,
+					mesh = 96443110294501,
 					size = { 0.1537, 0.2482, 0.17 },
-					at = { 0.2262, 0.8605, 0.0134 },
-					anchor = { 0.22, 0.75, 0.06 },
+					at = { 0.2221, 0.8465, 0.0092 },
+					anchor = { 0.2191, 0.7503, -0.0026 },
 				},
 				{
 					name = "WingL",
@@ -2307,23 +2307,23 @@ Config.Wear = {
 			},
 		},
 		-- the owner's Meshy model art/models/accessories/steam_dragon/patriotic_dragon_cost.glb, uploaded as model
-		-- 105747110048467
+		-- 78918189995011
 		SteamDragon = {
 			texture = "rbxassetid://79626976517509",
 			pieces = {
 				{
 					name = "HornL",
-					mesh = 86840792177617,
-					size = { 0.1621, 0.285, 0.1771 },
-					at = { -0.2321, 0.8808, 0.0756 },
-					anchor = { -0.22, 0.75, 0.06 },
+					mesh = 111705787378387,
+					size = { 0.2939, 0.2643, 0.203 },
+					at = { -0.3182, 0.8172, 0.0507 },
+					anchor = { -0.2615, 0.706, 0.04 },
 				},
 				{
 					name = "HornR",
-					mesh = 128252202269088,
-					size = { 0.1621, 0.285, 0.1771 },
-					at = { 0.2321, 0.8808, 0.0756 },
-					anchor = { 0.22, 0.75, 0.06 },
+					mesh = 132327167005131,
+					size = { 0.2939, 0.2643, 0.203 },
+					at = { 0.3182, 0.8172, 0.0507 },
+					anchor = { 0.2615, 0.706, 0.04 },
 				},
 				{
 					name = "WingL",

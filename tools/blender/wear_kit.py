@@ -24,7 +24,7 @@ KITS = {
 		out="TempestDragonWear",
 		texture="tempest_dragon_wear.png",
 		sort=lambda c: "Tail" if c.x < -0.185 else ("Horn" if c.x > 0.25 else "Wing"),
-		horn=dict(at=(0.22, 0.06, 0.75), scale=0.92, tilt_out=16, tilt_back=8),
+		horn=dict(at=(0.223, 0.002, 0.764), scale=0.92, tilt_out=16, tilt_back=18, curl="back"),
 		wing=dict(at=(0.3, 0.34, 0.47), scale=1.5, raise_=24, sweep=38),
 		tail=dict(at=(0.0, 0.44, 0.16), scale=1.25, lift=12),
 		budget=dict(Horn=520, Wing=760, Tail=640),
@@ -37,7 +37,8 @@ KITS = {
 		out="SteamDragonWear",
 		texture="steam_dragon_wear.png",
 		sort=lambda c: "Tail" if c.z < -0.02 else ("Horn" if c.x > 0.2 else "Wing"),
-		horn=dict(at=(0.22, 0.06, 0.75), scale=0.66, tilt_out=16, tilt_back=8),
+		# (the owner's painting: the horns stand at the shoulders, their tips curling out to the sides)
+		horn=dict(at=(0.27, 0.04, 0.74), scale=0.8, tilt_out=14, tilt_back=0, curl="out"),
 		wing=dict(at=(0.3, 0.34, 0.47), scale=1.1, raise_=24, sweep=38),
 		tail=dict(at=(0.0, 0.45, 0.21), scale=0.62, lift=14),
 		budget=dict(Horn=900, Wing=900, Tail=900),
@@ -128,14 +129,75 @@ def rebase(ob, anchor):
 for key, ob in pieces.items():
 	print(f"KEPT {key} tris={decimate(ob, BUDGET[key])}")
 
-# horn: base = lowest end; its tip curls toward -X in the file: turn it to curl back (+Y), lean out (+X) and back
+def skin_radius(z):
+	# the body's radius at a height (0 above its tip)
+	if z <= 0:
+		return PROFILE[0]
+	if z >= 1:
+		return 0.0
+	f = z / 0.05
+	i = min(int(f), len(PROFILE) - 2)
+	return PROFILE[i] + (PROFILE[i + 1] - PROFILE[i]) * (f - i)
+
+
+def outside(p):
+	# how far a point stands out of the body, across (negative: inside)
+	return math.sqrt(p.x * p.x + p.y * p.y) - skin_radius(p.z)
+
+
+# the owner, 2026-11-10: "vị trí gốc của 2 cặp sừng còn bị lộ" (the horns' bases showed): a horn is pushed down its own
+# axis until all of it below its collar (the lowest height where it is nearly as wide as its base gets) lies this far
+# inside the body, so no rim and no overhang shows above the skin
+BURY = 0.03
+
+
+def base_plane(me, spread=40, step=2, tol=0.02):
+	# the plane a piece's flat bottom (a sole, or the lip of a hollow cup) rests on: of the directions within `spread`
+	# degrees of straight down, the one whose lowest plane touches the most vertices (within `tol` of the piece's
+	# height); returns that direction and those vertices
+	vs = [v.co for v in me.vertices]
+	tol *= max(v.z for v in vs) - min(v.z for v in vs)
+	best = None
+	for a in range(0, spread + 1, step):
+		for b in range(0, 360, step * 4 if a else 360):
+			n = Vector((math.sin(rad(a)) * math.cos(rad(b)), math.sin(rad(a)) * math.sin(rad(b)), -math.cos(rad(a))))
+			d = [v.dot(n) for v in vs]
+			low = max(d)
+			near = [i for i, x in enumerate(d) if x > low - tol]
+			if not best or len(near) > len(best[1]):
+				best = (n, near)
+	return best
+
+
+# horn: its base is flat but cut at a slant in the file: turn the base level so the horn grows straight out of it; its
+# tip then curls toward -X: turn it to curl back (+Y) or out (+X), lean it out (+X) and back
 horn = pieces["Horn"]
-rebase(horn, anchor_of(horn, "z", False))
+down, ring = base_plane(horn.data)
+rebase(horn, sum((horn.data.vertices[i].co for i in ring), Vector()) / len(ring))
+horn.data.transform(down.rotation_difference(Vector((0, 0, -1))).to_matrix().to_4x4())
+print(f"HORN base vertices={len(ring)} of {len(horn.data.vertices)}, levelled by {math.degrees(down.angle(Vector((0, 0, -1)))):.1f} degrees")
 horn.data.transform(Matrix.Scale(HORN["scale"], 4))
-horn.data.transform(Matrix.Rotation(rad(-90), 4, "Z"))
-horn.data.transform(Matrix.Rotation(rad(HORN["tilt_back"]), 4, "X"))
-horn.data.transform(Matrix.Rotation(rad(HORN["tilt_out"]), 4, "Y"))
+vs = horn.data.vertices
+tall = max(v.co.z for v in vs)
+widths = [0.0] * 18
+for v in vs:
+	k = max(0, int(v.co.z / tall / 0.02))
+	if k < len(widths):
+		widths[k] = max(widths[k], v.co.xy.length)
+collar = (next(k for k, w in enumerate(widths) if w >= max(widths) * 0.92) + 1) * 0.02
+base = [v.index for v in vs if v.co.z <= collar * tall]
+print(f"HORN collar at {collar:.0%} of its height, {len(base)} vertices below it")
+horn.data.transform(Matrix.Rotation(rad(-90 if HORN["curl"] == "back" else 180), 4, "Z"))
+turn = Matrix.Rotation(rad(HORN["tilt_out"]), 3, "Y") @ Matrix.Rotation(rad(-HORN["tilt_back"]), 3, "X")
+horn.data.transform(turn.to_4x4())
 horn.location = HORN["at"]
+up = turn @ Vector((0, 0, 1))
+sunk = 0.0
+while max(outside(horn.location + vs[i].co) for i in base) > -BURY and sunk < 0.2:
+	horn.location -= up * 0.005
+	sunk += 0.005
+top = max((horn.location + v.co).z for v in horn.data.vertices)
+print(f"HORN sunk {sunk:.3f}, base at {tuple(round(c, 3) for c in horn.location)}, tip at height {top:.3f}")
 
 # wing: root = the end at +X in the file, spreading toward -X: turn it to spread toward the slime's left (+X) with its
 # painted side to the back, raise the tip, sweep it back

@@ -6,11 +6,15 @@ The owner sends a Meshy model per Secret slime (so far each one tail, one bat wi
 Tempest Dragon, `secret-blue-red` Steam Dragon. `tools/blender/wear_kit.ps1 <Kit>` (a table per kit in `wear_kit.py`)
 splits them, mirrors the wing and horn into pairs, sets them on a body one unit tall, renders `review/` and writes
 `wear.json`; the FBX goes up through `open_cloud_invoke` (the owner approved `art/models` in Studio's MCP Permissions;
-models 91743466444489 and 105747110048467), `InsertService:LoadAsset` gives the five mesh ids. `Config.Wear` maps a
+models 107139793078199 and 78918189995011), `InsertService:LoadAsset` gives the five mesh ids. `Config.Wear` maps a
 Secret to its kit; `client/SlimeWear` builds the pieces from their mesh ids, `SlimeLook` puts them on, `SlimeActor` makes
 them ride the skin (anchor + the jelly's lean) and flap (wings 12 degrees, 0.8 Hz). Next kit: a new table entry, run,
 upload, a new `Config.Wear` entry. The owner saved the test place to Roblox as "Slime" (place 118370379105805). Not
 seen: a phone.
+Owner's note on the horns ("góc sừng của con steam dragon chưa đúng ... gốc của 2 cặp sừng còn bị lộ"): a horn's flat
+base (found as the plane its bottom rests on; Steam's is the lip of a hollow cup) is now turned level, and the horn is
+sunk along its axis until everything below its collar is 0.03 inside the body; Steam's tips curl out to the sides
+(`curl = "out"`), Tempest keeps its old look. Seen close up in Play.
 
 ## 2026-11-10 — Dungeon fight effects per monster, from the VFX library
 
