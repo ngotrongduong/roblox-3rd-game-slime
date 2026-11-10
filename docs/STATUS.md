@@ -45,6 +45,15 @@ trails the hop (`lag`: a spring on the slime's climb), every ear flicks back now
 and trails the hop; `Config.Wear.Twitch` and `Config.Wear.Lag` hold the shared numbers, `tests/spec/wear.luau` fails a
 tail or an ear that does not move. All seven dressed Secrets seen alive in Play (n/n pieces), the three new ones close
 from the front, three-quarter and back; tails measured turning 10-20 degrees and ears 16-22 in Play. Not seen: a phone.
+Three more, the same day: `secret-black-purple` Void Kraken (eight cosmic tentacles; the owner: they grow from under
+the body and curl, uncurl and wriggle like an octopus's arms): new kind `tentacle` in `wear_kit.py` rigs each arm
+with five bones (weights by distance along the arm over its surface) and exports them in the FBX; `client/SlimeWear`
+makes the Bones by name under each skinned MeshPart and turns them each frame, a wave running to the tip while the arm
+slowly curls and uncurls, every arm on its own beat; the front pair at +-40 degrees, the back pair tall so their curls
+show over the shoulders; model 100288988956406, seen bending in Play. `secret-blue-orange` Sunshower Fox (fox ears and
+a bushy tail; model 111111432845594). `secret-blue-pink` Cotton Candy Sheep (pink ram horns, sheep ears out to the
+sides that flick up, a cotton-candy garland worn as a crown, puffs at the sides and in front; model 109726191050235).
+All ten dressed Secrets n/n in Play; the older seven rebuilt unchanged after the tool change. Not seen: a phone.
 
 ## 2026-11-10 — Dungeon fight effects per monster, from the VFX library
 

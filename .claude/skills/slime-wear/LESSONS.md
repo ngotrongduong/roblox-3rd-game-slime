@@ -37,3 +37,15 @@ taught something.
 | Two different vines of one sheet at mirrored spots failed the pair test's `at` check | the test allows 0.07 for a pair's middles (anchors stay at 0.005) |
 | Pieces with different motion fields broke the type check of `Config.Wear.Kits` | the table is cast to `{ [string]: WearKit }` |
 | The stage for `play_check` stood by the well among village slimes | move the character to an open lawn first (a free 46-stud box) |
+
+## 2026-11-10 (Void Kraken, Sunshower Fox, Cotton Candy Sheep)
+
+| What went wrong | The fix |
+|---|---|
+| Tentacles that must bend along their length cannot be rigid pieces turned about one point | kind `tentacle`: an armature in the FBX, the mesh `HasSkinnedMesh`; the game makes `Bone`s by name under the MeshPart from `CreateMeshPartAsync` at the rest frames in `wear.json`, and the skin binds to them (checked in Studio: it bends) |
+| The bones' frames from Blender came out mirrored in Roblox | the FBX turns a bone half round its Y: Roblox's bone X is minus Blender's; `wear_kit` writes `-X` |
+| Weights by straight distance from the root bled across a curled arm's coils | distance measured over the surface (Dijkstra on the edges), weights blended between bone middles |
+| The front pair straight at the camera (22.5 degrees) read as stubs | +-40 degrees, low (`rise` 4-8) and short |
+| The skin test failed tentacles: their anchors are under the body, not on its skin | `tests/spec/wear.luau`: a piece with `bones` must sit under the rim (height 0-0.25) and carry a `wriggle` |
+| The sheep's garland, seated as a horn, stood as an arch | `aim` with its file's top down: a crown round the head's top; its `upright` reads negative on purpose |
+| Sheep ears stick out sideways: a twitch about X only spun them | twitch and lag about Z, the axes negated on the right |

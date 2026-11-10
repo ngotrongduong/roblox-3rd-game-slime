@@ -12,7 +12,7 @@
 # end along X (`base`).
 # Run: tools/blender/wear_kit.ps1 <kit>. The whole job, the kit fields and the lessons: skill slime-wear
 # (.claude/skills/slime-wear), kept current with this file.
-import bpy, bmesh, json, math, os, sys
+import bpy, bmesh, heapq, json, math, os, sys
 from mathutils import Matrix, Vector
 
 ART = r"C:\Roblox 3rd game\art\models\accessories"
@@ -97,6 +97,31 @@ KITS = {
 			Tail=dict(part="Tail", kind="tail", base="+x", at=(0.0, 0.45, 0.2), scale=0.55, lift=10, sink=True),
 		),
 		body=(0.1, 0.1, 0.12, 1),
+	),
+	# Void Kraken (secret-black-purple), 2026-11-10: eight cosmic tentacles with glowing suckers. The owner: they grow
+	# from under the body and curl and wriggle like an octopus's arms. Around the foot, none straight in front: the two
+	# at the front low and short, the sides rising, the two at the back tall so their curls show over the shoulders from
+	# the front as the painting's do
+	"VoidKraken": dict(
+		folder="void_kraken",
+		glb="black_purple.glb",
+		out="VoidKrakenWear",
+		texture="void_kraken_wear.png",
+		sort=nearest(Arm1=(-0.374, 0.677), Arm2=(-0.124, 0.651), Arm3=(0.15, 0.67), Arm4=(0.379, 0.604),
+			Arm5=(-0.357, 0.2), Arm6=(-0.129, 0.218), Arm7=(0.121, 0.12), Arm8=(0.378, 0.216)),
+		budget=dict(Arm1=450, Arm2=450, Arm3=450, Arm4=450, Arm5=450, Arm6=450, Arm7=450, Arm8=450),
+		pieces=dict(
+			# (the front pair at 40 degrees, not 22.5: straight at the camera they read as stubs)
+			Arm4=dict(part="Arm4", kind="tentacle", at=(40, 0.24, 0.04), scale=1.45, rise=8),
+			Arm5=dict(part="Arm5", kind="tentacle", at=(80, 0.24, 0.04), scale=1.6, rise=20),
+			Arm1=dict(part="Arm1", kind="tentacle", at=(120, 0.24, 0.04), scale=1.7, rise=35),
+			Arm2=dict(part="Arm2", kind="tentacle", at=(160, 0.24, 0.04), scale=1.9, rise=55),
+			Arm3=dict(part="Arm3", kind="tentacle", at=(-160, 0.24, 0.04), scale=1.9, rise=55),
+			Arm6=dict(part="Arm6", kind="tentacle", at=(-120, 0.24, 0.04), scale=1.7, rise=35),
+			Arm8=dict(part="Arm8", kind="tentacle", at=(-80, 0.24, 0.04), scale=1.6, rise=20),
+			Arm7=dict(part="Arm7", kind="tentacle", at=(-40, 0.24, 0.04), scale=1.45, rise=4),
+		),
+		body=(0.12, 0.05, 0.3, 1),
 	),
 	# Midnight Raven (secret-black-navy), 2026-11-10: a pair of starry feathered wings, both in the file. The owner: the
 	# painting's wings are not right, set them where they sit well on its back; raised, they stood up too high; folded,
@@ -184,6 +209,51 @@ KITS = {
 			LeafC=dict(part="LeafC", kind="wrap", at=(-150, 0.66), scale=1.5),
 		),
 		body=(0.8, 0.3, 0.05, 1),
+	),
+	# Cotton Candy Sheep (secret-blue-pink), 2026-11-10: two spiral ram horns on the shoulders, two sheep ears out at
+	# the sides under them, a garland of cotton-candy puffs across the top, puff clouds at the sides low down and a
+	# swirly cloud along the foot in front
+	"CottonCandySheep": dict(
+		folder="cotton_candy_sheep",
+		glb="blue_pink.glb",
+		out="CottonCandySheepWear",
+		texture="cotton_candy_sheep_wear.png",
+		sort=lambda c: (("HornL" if c.x > 0 else "HornR") if c.z > 0.5 else
+			(("EarL" if c.x > 0 else "EarR") if abs(c.x) > 0.25 else "Garland") if c.z > 0.2 else
+			("CloudFront" if abs(c.x) < 0.2 else ("CloudL" if c.x > 0 else "CloudR"))),
+		budget=dict(HornL=500, HornR=500, EarL=400, EarR=400, Garland=400, CloudL=220, CloudR=220, CloudFront=380),
+		pieces=dict(
+			HornL=dict(part="HornL", kind="horn", at=(0.27, 0.0, 0.72), scale=0.55, tilt_out=10, tilt_back=0, level=False),
+			HornR=dict(part="HornR", kind="horn", at=(-0.27, 0.0, 0.72), scale=0.55, tilt_out=10, tilt_back=0, level=False),
+			EarL=dict(part="EarL", kind="horn", at=(0.36, 0.0, 0.6), scale=0.8, tilt_out=120, tilt_back=0, level=False,
+				foot="low"),
+			EarR=dict(part="EarR", kind="horn", at=(-0.36, 0.0, 0.6), scale=0.8, tilt_out=120, tilt_back=0, level=False,
+				foot="low"),
+			Garland=dict(part="Garland", kind="aim", root="+x", at=(-0.23, -0.05, 0.8), scale=1.1, point=(-1, 0, 0),
+				face=(0, -1, 0.3)),
+			CloudL=dict(part="CloudL", kind="frame", at=(90, 0.3, 0.56), scale=1.3, hug=1, yaw=30),
+			CloudR=dict(part="CloudR", kind="frame", at=(-90, 0.3, 0.56), scale=1.3, hug=1, yaw=30),
+			CloudFront=dict(part="CloudFront", kind="wrap", at=(0, 0.17), scale=1.4),
+		),
+		body=(0.45, 0.6, 0.95, 1),
+	),
+	# Sunshower Fox (secret-blue-orange), 2026-11-10: two small pointed fox ears at the top corners, leaning out, and a
+	# bushy tail (blue-white at the base, an orange curling tip)
+	"SunshowerFox": dict(
+		folder="sunshower_fox",
+		glb="blue_orange.glb",
+		out="SunshowerFoxWear",
+		texture="sunshower_fox_wear.png",
+		sort=lambda c: "Tail" if c.z < 0.45 else ("EarL" if c.x > 0 else "EarR"),
+		budget=dict(EarL=620, EarR=620, Tail=900),
+		pieces=dict(
+			EarL=dict(part="EarL", kind="horn", at=(0.34, 0.0, 0.7), scale=0.75, tilt_out=32, tilt_back=0, level=False,
+				foot="low"),
+			EarR=dict(part="EarR", kind="horn", at=(-0.34, 0.0, 0.7), scale=0.75, tilt_out=32, tilt_back=0, level=False,
+				foot="low"),
+			Tail=dict(part="Tail", kind="tail", base="-x", at=(0.0, 0.45, 0.2), scale=0.95, lift=0, sink=True),
+		),
+		body=(0.3, 0.55, 0.9, 1),
 	),
 }
 TEXTURE = 1024
@@ -572,6 +642,112 @@ def place_aim(ob, spec, name):
 	return normal if normal.cross(along).z > 0 else -normal
 
 
+def place_tentacle(ob, spec, name):
+	# an octopus arm growing from under the body (the owner, 2026-11-10: "gắn ở dưới thân của slime", "co duỗi, ngọ nguậy
+	# như tay bạch tuộc"). The file draws it in its XZ plane, its thick root the lowest end. The root goes under the body
+	# at `at` = (degrees around from the front, + toward the slime's left; how far out from the middle line; height), its
+	# long line (root to farthest point) out over the ground, rising `rise` degrees, its plane upright through the body's
+	# middle, the curl turned up (`flip`: down); lifted if it dips under the ground. Then rigged: a chain of `bones` bones
+	# root to tip (named <name>_0, _1, ...), each vertex weighted by how far along the arm it lies, measured over its
+	# surface. Returns the curl axis (its plane's normal; a positive turn lifts the tip) and the joints
+	vs = ob.data.vertices
+	zs = sorted(v.co.z for v in vs)
+	cut = zs[0] + (zs[-1] - zs[0]) * 0.06
+	root = [v.index for v in vs if v.co.z <= cut]
+	rebase(ob, sum((vs[i].co for i in root), Vector()) / len(root))
+	ob.data.transform(Matrix.Scale(spec["scale"], 4))
+
+	def frame(along, look):
+		along = along.normalized()
+		look = (look - along * look.dot(along)).normalized()
+		return Matrix((along, look, along.cross(look))).transposed()
+
+	deg, reach, height = spec["at"]
+	out = Vector((math.sin(rad(deg)), -math.cos(rad(deg)), 0))
+	side = Vector((0, 0, 1)).cross(out)
+	point = out * math.cos(rad(spec["rise"])) + Vector((0, 0, math.sin(rad(spec["rise"]))))
+	far = max(vs, key=lambda v: v.co.length).co.copy()
+	mid = sum((v.co for v in vs), Vector()) / len(vs)
+	# (the two ways its plane can face; the one that lifts its middle higher curls it up)
+	turns = [frame(point, side * s) @ frame(far, Vector((0, 1, 0))).transposed() for s in (1, -1)]
+	turns.sort(key=lambda m: (m @ mid).z, reverse=not spec.get("flip"))
+	turn = turns[0]
+	ob.data.transform(turn.to_4x4())
+	ob.location = Vector((out.x * reach, out.y * reach, height))
+	low = min((ob.location + v.co).z for v in vs)
+	if low < 0:
+		ob.location.z -= low
+	# how far along the arm each vertex lies: the shortest way over its edges from the root (Dijkstra)
+	links = [[] for _ in vs]
+	for e in ob.data.edges:
+		a, b = e.vertices
+		d = (vs[a].co - vs[b].co).length
+		links[a].append((b, d))
+		links[b].append((a, d))
+	dist = [math.inf] * len(vs)
+	heap = []
+	for i in root:
+		dist[i] = 0.0
+		heap.append((0.0, i))
+	heapq.heapify(heap)
+	while heap:
+		d, i = heapq.heappop(heap)
+		if d > dist[i]:
+			continue
+		for j, w in links[i]:
+			if d + w < dist[j]:
+				dist[j] = d + w
+				heapq.heappush(heap, (d + w, j))
+	top = max(x for x in dist if x < math.inf)
+	t = [min(x, top) / top for x in dist]
+	n = spec.get("bones", 5)
+	joints = []
+	for k in range(n + 1):
+		band = [vs[i].co for i in range(len(vs)) if (k - 0.5) / n <= t[i] < (k + 0.5) / n]
+		if not band:
+			band = [vs[min(range(len(vs)), key=lambda i: abs(t[i] - k / n))].co]
+		joints.append(sum(band, Vector()) / len(band))
+	arm = bpy.data.armatures.new(name + "Rig")
+	rig = bpy.data.objects.new(name + "Rig", arm)
+	bpy.context.scene.collection.objects.link(rig)
+	rig.location = ob.location
+	bpy.ops.object.select_all(action="DESELECT")
+	rig.select_set(True)
+	bpy.context.view_layer.objects.active = rig
+	bpy.ops.object.mode_set(mode="EDIT")
+	prev = None
+	for k in range(n):
+		b = arm.edit_bones.new(f"{name}_{k}")
+		b.head, b.tail = joints[k], joints[k + 1]
+		if prev:
+			b.parent = prev
+			b.use_connect = True
+		prev = b
+	bpy.ops.object.mode_set(mode="OBJECT")
+	groups = [ob.vertex_groups.new(name=f"{name}_{k}") for k in range(n)]
+	for i in range(len(vs)):
+		# (between the middles of the two nearest bones)
+		f = min(max(t[i] * n - 0.5, 0.0), n - 1.0)
+		k = min(int(f), n - 2)
+		w = f - k
+		groups[k].add([i], 1.0 - w, "REPLACE")
+		groups[k + 1].add([i], w, "REPLACE")
+	ob.parent = rig
+	ob.matrix_parent_inverse = rig.matrix_world.inverted()
+	mod = ob.modifiers.new("Rig", "ARMATURE")
+	mod.object = rig
+	normal = turn @ Vector((0, 1, 0))
+	along = point.normalized()
+	axis = normal if normal.cross(along).z > 0 else -normal
+	tip = max((ob.location + v.co).length for v in vs)
+	print(f"TENTACLE {name} at {deg} degrees, root {tuple(round(x, 3) for x in ob.location)}, reaches {tip:.3f} from "
+		f"the feet, lifted {max(-low, 0):.3f}, {n} bones")
+	# each bone's rest frame (its point and its X and Y axes, Y along the bone), as Roblox's import puts it: the game
+	# builds the bones from these, by name, and the skin bends with them
+	frames = [rig.matrix_world @ b.matrix_local for b in arm.bones]
+	return axis, frames, rig
+
+
 def mirrored(ob, name):
 	twin = ob.copy()
 	twin.data = ob.data.copy()
@@ -583,7 +759,7 @@ def mirrored(ob, name):
 	return twin
 
 
-wear, axes = [], {}
+wear, axes, joints, rigs = [], {}, {}, []
 for name, spec in KIT["pieces"].items():
 	ob = parts[spec["part"]]
 	if spec["kind"] == "horn":
@@ -599,6 +775,9 @@ for name, spec in KIT["pieces"].items():
 		place_frame(ob, spec, name)
 	elif spec["kind"] == "aim":
 		axes[name] = place_aim(ob, spec, name)
+	elif spec["kind"] == "tentacle":
+		axes[name], joints[name], rig = place_tentacle(ob, spec, name)
+		rigs.append(rig)
 	else:
 		place_tail(ob, spec, name)
 	ob.name = name
@@ -711,6 +890,10 @@ for ob in wear:
 		tris=len(ob.data.loop_triangles))
 	if ob.name in axes:
 		entry["axis"] = rb(axes[ob.name])
+	if ob.name in joints:
+		# (a rigged piece: its bones root to tip, each its point, X axis and Y axis as Roblox's import makes them: the
+		# FBX turns a bone half round its own Y, so its X is Blender's turned backwards; checked in Studio, 2026-11-10)
+		entry["bones"] = [rb(m.translation) + rb(-m.col[0].xyz) + rb(m.col[1].xyz) for m in joints[ob.name]]
 	out[ob.name] = entry
 out["triangles"] = total
 with open(os.path.join(ROOT, "wear.json"), "w") as f:
@@ -719,11 +902,13 @@ print("WEAR", json.dumps(out))
 
 # export the pieces like the body
 bpy.ops.object.select_all(action="DESELECT")
-for ob in wear:
+for ob in wear + rigs:
 	ob.select_set(True)
 bpy.context.view_layer.objects.active = wear[0]
+# (a rigged kit carries its bones; the modifier stays live so the skin goes out unposed)
 bpy.ops.export_scene.fbx(filepath=os.path.join(ROOT, KIT["out"] + ".fbx"), use_selection=True,
-	object_types={"MESH"}, axis_forward="-Z", axis_up="Y", apply_scale_options="FBX_SCALE_ALL", apply_unit_scale=True,
-	use_space_transform=True, bake_space_transform=False, mesh_smooth_type="FACE", use_mesh_modifiers=True,
-	use_tspace=False, path_mode="AUTO", embed_textures=False)
+	object_types={"MESH", "ARMATURE"} if rigs else {"MESH"}, axis_forward="-Z", axis_up="Y",
+	apply_scale_options="FBX_SCALE_ALL", apply_unit_scale=True, use_space_transform=True, bake_space_transform=False,
+	mesh_smooth_type="FACE", use_mesh_modifiers=not rigs, use_tspace=False, path_mode="AUTO", embed_textures=False,
+	add_leaf_bones=False, use_armature_deform_only=True, bake_anim=False)
 print("DONE")

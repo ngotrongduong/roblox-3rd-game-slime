@@ -15,6 +15,7 @@ local S = Config.Slime
 type FlapSpec = { axis: { number }, degrees: number, hz: number }
 type TwitchSpec = { axis: { number }, degrees: number, every: number }
 type LagSpec = { axis: { number }, degrees: number }
+type WriggleSpec = { axis: { number }, degrees: number, hz: number, lag: number, curl: number, curlHz: number }
 type PieceSpec = {
 	name: string,
 	mesh: number,
@@ -24,11 +25,14 @@ type PieceSpec = {
 	flap: FlapSpec?,
 	twitch: TwitchSpec?,
 	lag: LagSpec?,
+	bones: { { number } }?,
+	wriggle: WriggleSpec?,
 }
 type KitSpec = { texture: string, pieces: { PieceSpec } }
 
 -- `anchor` and `offset` (from the anchor to the piece's middle) are in mesh units, times the slime's scale in studs.
--- `bend`/`bendSpeed`: the lag spring's angle (radians) and its speed.
+-- `bend`/`bendSpeed`: the lag spring's angle (radians) and its speed. `bones`: a tentacle's, root to tip, built on its
+-- part; `boneAxes` the wriggle's axis in each bone's own frame; `wave`/`curl` radians, their speeds radians a second.
 type Piece = {
 	part: BasePart,
 	anchor: Vector3,
@@ -44,6 +48,13 @@ type Piece = {
 	phase: number,
 	bend: number,
 	bendSpeed: number,
+	bones: { Bone },
+	boneAxes: { Vector3 },
+	wave: number,
+	waveSpeed: number,
+	waveLag: number,
+	curl: number,
+	curlSpeed: number,
 }
 -- `lastY`/`lastAt`: the feet's height (in bodies) and the clock at the last pose
 type Worn = { pieces: { Piece }, phase: number, lastY: number?, lastAt: number }
@@ -119,6 +130,31 @@ local function dress(model: Model, name: string)
 		local flap = spec.flap
 		local twitch = spec.twitch
 		local lag = spec.lag
+		local wriggle = spec.wriggle
+		-- a tentacle's bones, by the names its skin was made with, at their rest frames (the part's own frame is its
+		-- middle, unturned), scaled with it
+		local bones: { Bone } = {}
+		local boneAxes: { Vector3 } = {}
+		if spec.bones then
+			local axis = if wriggle then v3(wriggle.axis).Unit else Vector3.xAxis
+			local parent: Instance = part
+			local rest = CFrame.new(v3(spec.at))
+			for k, b in spec.bones do
+				local frame = CFrame.fromMatrix(
+					Vector3.new(b[1], b[2], b[3]),
+					Vector3.new(b[4], b[5], b[6]),
+					Vector3.new(b[7], b[8], b[9])
+				)
+				local rel = rest:Inverse() * frame
+				local bone = Instance.new("Bone")
+				bone.Name = spec.name .. "_" .. (k - 1)
+				bone.CFrame = rel.Rotation + rel.Position * s
+				bone.Parent = parent
+				table.insert(bones, bone)
+				table.insert(boneAxes, frame:VectorToObjectSpace(axis))
+				parent, rest = bone, frame
+			end
+		end
 		table.insert(pieces, {
 			part = part,
 			anchor = v3(spec.anchor),
@@ -135,6 +171,13 @@ local function dress(model: Model, name: string)
 			phase = random:NextNumber(0, 100),
 			bend = 0,
 			bendSpeed = 0,
+			bones = bones,
+			boneAxes = boneAxes,
+			wave = if wriggle then math.rad(wriggle.degrees) else 0,
+			waveSpeed = if wriggle then wriggle.hz * 2 * math.pi else 0,
+			waveLag = if wriggle then wriggle.lag else 0,
+			curl = if wriggle then math.rad(wriggle.curl) else 0,
+			curlSpeed = if wriggle then wriggle.curlHz * 2 * math.pi else 0,
 		})
 		-- (a model taken away while the meshes loaded cannot be dressed)
 		if not pcall(function()
@@ -255,6 +298,17 @@ function SlimeWear.pose(
 		if lagAxis then
 			settle(p, climb * p.lagAngle, dt)
 			cf *= CFrame.fromAxisAngle(lagAxis, p.bend)
+		end
+		-- a tentacle wriggles: a wave runs out to its tip while it slowly curls and uncurls, more toward the tip
+		local bones = p.bones
+		local count = #bones
+		if count > 0 then
+			local clock = now + p.phase
+			local curl = p.curl * (0.5 - 0.5 * math.cos(clock * p.curlSpeed))
+			for k, bone in bones do
+				local wave = p.wave * math.sin(clock * p.waveSpeed - (k - 1) * p.waveLag)
+				bone.Transform = CFrame.fromAxisAngle(p.boneAxes[k], k / count * (wave + curl))
+			end
 		end
 		n += 1
 		parts[n] = p.part

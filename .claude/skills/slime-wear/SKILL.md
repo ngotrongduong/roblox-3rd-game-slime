@@ -37,6 +37,10 @@ orchestrator's (CLAUDE.md).
   about the `wear.json` axis); only `scale` changes, to bring the span to Raven's (tips at about +-1.0).
 - **Tails and ears move** (2026-11-10: "gắn thêm chuyển động cho phần đuôi và tai"): a tail wags and trails the hop,
   an ear twitches now and then and trails the hop (`kit-reference.md`, "Config").
+- **Tentacles grow from under the body and wriggle** (2026-11-10, Void Kraken: "gắn ở dưới thân của slime, nó sẽ có
+  chuyển động co duỗi, ngọ nguậy như tay bạch tuộc"): rooted under the rim, out over the ground, rigged with bones so
+  each arm bends along its length, curling and uncurling slowly while a wave runs to its tip, every arm on its own
+  beat (`tentacle`, `kit-reference.md`, "Tentacles").
 - Each Secret has its own design; one piece recoloured for another Secret is not a new design.
 - Low poly for cheap phones: each part keeps the triangles in its kit's `budget` (about 500 to 900).
 
@@ -60,8 +64,8 @@ orchestrator's (CLAUDE.md).
 4. **Write the kit** in `KITS` of `tools/blender/wear_kit.py` (fields in `kit-reference.md`): `sort` by the middles
    from step 3, `budget`, and a piece for each part with its place from step 1. Start from the nearest existing kit.
    The tool knows `horn` (horns and ears), `wing` (spread), `aim` (a piece set by where it points: a bird's open
-   wing), `tail`, `wrap` (a flat
-   piece lying on the skin) and `frame` (a flat piece growing out past the outline). A piece of another kind (a crown,
+   wing), `tail`, `wrap` (a flat piece lying on the skin), `frame` (a flat piece growing out past the outline) and
+   `tentacle` (an arm under the body, rigged with bones). A piece of another kind (a crown,
    a halo, four wings) first gets its kind in `wear_kit.py`, its row in `kit-reference.md` and, if its anchor cannot
    sit on the skin, a change to `tests/spec/wear.luau`; then step 6 is due.
 5. **Build:** `& "C:\Roblox 3rd game\tools\blender\wear_kit.ps1" <Kit>`. Read the lines (`kit-reference.md`), then

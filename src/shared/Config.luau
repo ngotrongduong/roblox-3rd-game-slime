@@ -2256,7 +2256,13 @@ Config.Slime = {
 -- way, `hz` times a second (a tail wags with one about the up axis). A `twitch` flicks it now and then (Twitch), a `lag`
 -- makes it trail the hop (Lag). A kit whose meshes are not uploaded yet (mesh 0) is left off.
 -- (the owner, 2026-11-10: "gắn thêm chuyển động cho phần đuôi và tai")
+-- A tentacle bends: its `bones` (root to tip, each its rest point and X and Y axes in mesh units) are built on it by name
+-- so its skin follows them, and its `wriggle` turns each about `axis` (a positive turn lifts the tip): a wave of
+-- `degrees` running out to the tip `hz` times a second, each bone `lag` radians behind the one before, and a slow curl
+-- of `curl` degrees and back `curlHz` times a second; both grow toward the tip. (the owner, 2026-11-10: "co duỗi, ngọ
+-- nguậy như tay bạch tuộc")
 type WearMotion = { axis: { number }, degrees: number, hz: number?, every: number? }
+type WearWriggle = { axis: { number }, degrees: number, hz: number, lag: number, curl: number, curlHz: number }
 type WearPiece = {
 	name: string,
 	mesh: number,
@@ -2266,6 +2272,8 @@ type WearPiece = {
 	flap: WearMotion?,
 	twitch: WearMotion?,
 	lag: WearMotion?,
+	bones: { { number } }?,
+	wriggle: WearWriggle?,
 }
 type WearKit = { texture: string, pieces: { WearPiece } }
 Config.Wear = {
@@ -2285,6 +2293,9 @@ Config.Wear = {
 		["secret-black-navy"] = "MidnightRaven",
 		["secret-black-orange"] = "JackOSlime",
 		["secret-black-pink"] = "GothicBat",
+		["secret-blue-pink"] = "CottonCandySheep",
+		["secret-blue-orange"] = "SunshowerFox",
+		["secret-black-purple"] = "VoidKraken",
 	},
 	Kits = {
 		-- the owner's Meshy model art/models/accessories/tempest_dragon/neon_dragon_relics.glb, uploaded as model
@@ -2444,6 +2455,295 @@ Config.Wear = {
 					-- (a wolf's brisk wag)
 					flap = { axis = { 0, 1, 0 }, degrees = 14, hz = 0.9 },
 					lag = { axis = { 1, 0, 0 }, degrees = 12 },
+				},
+			},
+		},
+		-- the owner's model art/models/accessories/cotton_candy_sheep/blue_pink.glb (pink ram horns, sheep ears, a
+		-- cotton-candy garland worn as a crown, puffs on the sides and in front), uploaded as model 109726191050235
+		CottonCandySheep = {
+			texture = "rbxassetid://132670767775971",
+			pieces = {
+				{
+					name = "HornL",
+					mesh = 90284009845471,
+					size = { 0.2499, 0.2246, 0.0884 },
+					at = { -0.3141, 0.8037, 0.0113 },
+					anchor = { -0.2774, 0.7619, 0 },
+				},
+				{
+					name = "HornR",
+					mesh = 73095859444618,
+					size = { 0.2531, 0.2205, 0.0887 },
+					at = { 0.3053, 0.8096, 0.0184 },
+					anchor = { 0.2774, 0.7618, 0 },
+				},
+				{
+					name = "EarL",
+					mesh = 107370154304133,
+					size = { 0.3053, 0.1992, 0.1301 },
+					at = { -0.5769, 0.519, 0.048 },
+					anchor = { -0.4616, 0.5413, 0 },
+					-- (floppy ears out to the sides: a flick lifts them, a hop leaves them hanging a moment)
+					twitch = { axis = { 0, 0, -1 }, degrees = 14, every = 3.5 },
+					lag = { axis = { 0, 0, 1 }, degrees = 12 },
+				},
+				{
+					name = "EarR",
+					mesh = 80250439964879,
+					size = { 0.2908, 0.2002, 0.129 },
+					at = { 0.5856, 0.5018, 0.0489 },
+					anchor = { 0.4624, 0.5409, 0 },
+					twitch = { axis = { 0, 0, 1 }, degrees = 14, every = 3.5 },
+					lag = { axis = { 0, 0, -1 }, degrees = 12 },
+				},
+				{
+					name = "Garland",
+					mesh = 74304308066268,
+					size = { 0.438, 0.2276, 0.2008 },
+					at = { 0.0243, 0.8499, -0.1075 },
+					anchor = { 0.23, 0.8, -0.05 },
+				},
+				{
+					name = "CloudL",
+					mesh = 79358774633303,
+					size = { 0.1555, 0.2026, 0.2274 },
+					at = { -0.5864, 0.3, 0.0173 },
+					anchor = { -0.5258, 0.3, 0 },
+				},
+				{
+					name = "CloudR",
+					mesh = 78720106392411,
+					size = { 0.2278, 0.205, 0.2466 },
+					at = { 0.6088, 0.3, -0.0091 },
+					anchor = { 0.5258, 0.3, 0 },
+				},
+				{
+					name = "CloudFront",
+					mesh = 120925165946697,
+					size = { 0.6576, 0.231, 0.298 },
+					at = { -0.024, 0.1879, -0.5555 },
+					anchor = { 0, 0.17, -0.482 },
+				},
+			},
+		},
+		-- the owner's model art/models/accessories/sunshower_fox/blue_orange.glb (fox ears, blue fur, orange rim, white fluff
+		-- inside; a bushy tail from a blue base to an orange curl), uploaded as model 111111432845594
+		SunshowerFox = {
+			texture = "rbxassetid://91317140780540",
+			pieces = {
+				{
+					name = "EarL",
+					mesh = 133352440958331,
+					size = { 0.2333, 0.2844, 0.0912 },
+					at = { -0.3269, 0.8388, 0.0151 },
+					anchor = { -0.3479, 0.7127, 0 },
+					-- (small perky ears flick often)
+					twitch = { axis = { 1, 0, 0 }, degrees = 18, every = 3 },
+					lag = { axis = { 1, 0, 0 }, degrees = 12 },
+				},
+				{
+					name = "EarR",
+					mesh = 81193564832508,
+					size = { 0.2341, 0.2801, 0.0898 },
+					at = { 0.3415, 0.8285, 0.0162 },
+					anchor = { 0.3475, 0.712, 0 },
+					twitch = { axis = { 1, 0, 0 }, degrees = 18, every = 3 },
+					lag = { axis = { 1, 0, 0 }, degrees = 12 },
+				},
+				{
+					name = "Tail",
+					mesh = 70476181876410,
+					size = { 0.23, 0.3657, 0.6189 },
+					at = { 0.0154, 0.1952, 0.6984 },
+					anchor = { 0, 0.2, 0.41 },
+					-- (a brisk bushy wag, between the wolf's and the dragon's)
+					flap = { axis = { 0, 1, 0 }, degrees = 12, hz = 0.8 },
+					lag = { axis = { 1, 0, 0 }, degrees = 12 },
+				},
+			},
+		},
+		-- the owner's model art/models/accessories/void_kraken/black_purple.glb (eight cosmic tentacles with glowing
+		-- suckers; the owner: they grow from under the body and curl and wriggle like an octopus's arms), rigged by
+		-- tools/blender/wear_kit.py (kind `tentacle`), uploaded as model 100288988956406
+		VoidKraken = {
+			texture = "rbxassetid://113029184257138",
+			pieces = {
+				{
+					name = "Arm4",
+					mesh = 134531529318180,
+					size = { 0.3129, 0.3167, 0.3535 },
+					at = { -0.2624, 0.1584, -0.319 },
+					anchor = { -0.1543, 0.0997, -0.1839 },
+					bones = {
+						{ -0.1694, 0.0796, -0.1865, 0.0904, 0.8505, 0.5181, -0.5181, 0.4845, -0.7049 },
+						{ -0.2079, 0.1156, -0.2389, 0.4589, 0.7564, 0.4662, -0.4662, 0.6516, -0.5984 },
+						{ -0.2608, 0.1896, -0.3068, -0.7536, 0.0344, 0.6564, -0.6564, 0.0129, -0.7543 },
+						{ -0.3239, 0.1908, -0.3793, 0.8961, -0.376, 0.2358, -0.2358, -0.8535, -0.4646 },
+						{ -0.3435, 0.1199, -0.4179, 0.8834, 0.1768, -0.4339, 0.4339, -0.6582, 0.6153 },
+					},
+					-- (each arm on its own beat)
+					wriggle = {
+						axis = { 0.7725, -0.0014, -0.6351 },
+						degrees = 8,
+						hz = 0.45,
+						lag = 0.9,
+						curl = 10,
+						curlHz = 0.15,
+					},
+				},
+				{
+					name = "Arm5",
+					mesh = 135305598073734,
+					size = { 0.5632, 0.447, 0.2588 },
+					at = { -0.4869, 0.2235, -0.0629 },
+					anchor = { -0.2364, 0.0804, -0.0417 },
+					bones = {
+						{ -0.25, 0.0818, -0.0775, 0.2018, 0.386, 0.9001, -0.9001, 0.4353, 0.0151 },
+						{ -0.3415, 0.1261, -0.076, 0.5861, 0.4919, 0.6438, -0.6438, 0.7652, 0.0014 },
+						{ -0.4308, 0.2321, -0.0758, 0.2736, 0.5201, 0.8091, -0.8091, 0.5793, -0.0988 },
+						{ -0.5406, 0.3108, -0.0892, -0.1556, -0.1602, 0.9747, -0.9747, -0.1352, -0.1778 },
+						{ -0.669, 0.293, -0.1126, 0.8969, -0.3081, 0.3171, -0.3171, -0.9481, -0.0242 },
+					},
+					wriggle = {
+						axis = { 0.1734, 0.0001, -0.9849 },
+						degrees = 8,
+						hz = 0.48,
+						lag = 0.9,
+						curl = 10,
+						curlHz = 0.15,
+					},
+				},
+				{
+					name = "Arm1",
+					mesh = 80785018209581,
+					size = { 0.6444, 0.5749, 0.4444 },
+					at = { -0.4347, 0.2875, 0.228 },
+					anchor = { -0.2078, 0.0562, 0.12 },
+					bones = {
+						{ -0.2204, 0.0782, 0.1301, 0.4859, 0.0939, 0.869, -0.869, 0.1587, 0.4687 },
+						{ -0.3544, 0.1026, 0.2023, 0.7424, 0.3099, 0.594, -0.594, 0.7145, 0.3697 },
+						{ -0.4577, 0.227, 0.2667, 0.9185, 0.2515, 0.3052, -0.3052, 0.9415, 0.1426 },
+						{ -0.5168, 0.4092, 0.2943, 0.5209, 0.1763, 0.8352, -0.8352, 0.3073, 0.4561 },
+						{ -0.6559, 0.4604, 0.3702, 0.9894, -0.098, 0.1076, -0.1076, -0.9904, 0.0867 },
+					},
+					wriggle = {
+						axis = { -0.5009, 0.0008, -0.8655 },
+						degrees = 8,
+						hz = 0.51,
+						lag = 0.9,
+						curl = 10,
+						curlHz = 0.15,
+					},
+				},
+				{
+					name = "Arm2",
+					mesh = 73311344136687,
+					size = { 0.3199, 0.7604, 0.556 },
+					at = { -0.1256, 0.3802, 0.4276 },
+					anchor = { -0.0821, 0.075, 0.2255 },
+					bones = {
+						{ -0.0814, 0.0978, 0.2445, 0.968, 0.1338, 0.2122, -0.2122, 0.8879, 0.4082 },
+						{ -0.1106, 0.2202, 0.3007, 0.9964, 0.0574, 0.063, -0.063, 0.9939, 0.0908 },
+						{ -0.1227, 0.4096, 0.318, 0.9357, 0.0734, 0.3449, -0.3449, 0.3942, 0.8518 },
+						{ -0.1895, 0.486, 0.4831, 0.9648, 0.0634, 0.2554, -0.2554, 0.4597, 0.8506 },
+						{ -0.2387, 0.5746, 0.647, 0.9915, -0.0971, -0.087, 0.087, 0.9897, -0.1135 },
+					},
+					wriggle = {
+						axis = { -0.9415, 0.0079, -0.3368 },
+						degrees = 8,
+						hz = 0.54,
+						lag = 0.9,
+						curl = 10,
+						curlHz = 0.15,
+					},
+				},
+				{
+					name = "Arm3",
+					mesh = 86975317316820,
+					size = { 0.3331, 0.6756, 0.5999 },
+					at = { 0.1336, 0.3427, 0.4259 },
+					anchor = { 0.0821, 0.04, 0.2255 },
+					bones = {
+						{ 0.0768, 0.0539, 0.2368, 0.938, -0.1119, -0.3281, 0.3281, 0.5921, 0.736 },
+						{ 0.1306, 0.151, 0.3574, 0.995, -0.0657, -0.0746, 0.0746, 0.9897, 0.1224 },
+						{ 0.1428, 0.314, 0.3776, 0.9944, -0.0623, -0.0854, 0.0854, 0.9497, 0.3013 },
+						{ 0.1587, 0.4906, 0.4336, 0.954, -0.0601, -0.2936, 0.2936, 0.3838, 0.8755 },
+						{ 0.2107, 0.5585, 0.5884, 0.9801, 0.0961, -0.1735, 0.1735, -0.8391, 0.5155 },
+					},
+					wriggle = {
+						axis = { -0.9424, -0.0118, 0.3342 },
+						degrees = 8,
+						hz = 0.57,
+						lag = 0.9,
+						curl = 10,
+						curlHz = 0.15,
+					},
+				},
+				{
+					name = "Arm6",
+					mesh = 96975033612405,
+					size = { 0.5946, 0.5221, 0.3968 },
+					at = { 0.4511, 0.2611, 0.2297 },
+					anchor = { 0.2078, 0.0576, 0.12 },
+					bones = {
+						{ 0.2279, 0.0791, 0.1123, 0.5927, -0.1915, -0.7823, 0.7823, 0.3679, 0.5026 },
+						{ 0.3399, 0.1317, 0.1842, 0.8091, -0.3052, -0.5022, 0.5022, 0.8029, 0.3212 },
+						{ 0.4176, 0.2559, 0.2339, 0.6139, -0.2716, -0.7412, 0.7412, 0.5214, 0.4228 },
+						{ 0.5317, 0.3362, 0.299, 0.5094, -0.1565, -0.8462, 0.8462, 0.2699, 0.4595 },
+						{ 0.6805, 0.3836, 0.3798, 0.7925, 0.4618, 0.3984, -0.3984, 0.8866, -0.2351 },
+					},
+					wriggle = {
+						axis = { -0.4936, 0.0051, 0.8697 },
+						degrees = 8,
+						hz = 0.6,
+						lag = 0.9,
+						curl = 10,
+						curlHz = 0.15,
+					},
+				},
+				{
+					name = "Arm8",
+					mesh = 90156370663951,
+					size = { 0.6652, 0.4265, 0.2571 },
+					at = { 0.5288, 0.2132, -0.0521 },
+					anchor = { 0.2364, 0.0779, -0.0417 },
+					bones = {
+						{ 0.2586, 0.0873, -0.0414, -0.1807, 0.0132, -0.9834, 0.9834, -0.011, -0.1809 },
+						{ 0.39, 0.0859, -0.0656, 0.16, -0.4588, -0.874, 0.874, 0.4773, -0.0906 },
+						{ 0.5283, 0.1614, -0.08, 0.689, -0.5022, -0.5225, 0.5225, 0.8439, -0.1221 },
+						{ 0.6237, 0.3155, -0.1023, -0.1848, -0.1939, -0.9635, 0.9635, 0.1577, -0.2165 },
+						{ 0.7738, 0.34, -0.136, 0.9651, 0.1869, -0.1834, 0.1834, -0.9824, -0.0359 },
+					},
+					wriggle = {
+						axis = { 0.1894, 0.0058, 0.9819 },
+						degrees = 8,
+						hz = 0.63,
+						lag = 0.9,
+						curl = 10,
+						curlHz = 0.15,
+					},
+				},
+				{
+					name = "Arm7",
+					mesh = 112396719007024,
+					size = { 0.409, 0.3534, 0.4662 },
+					at = { 0.2793, 0.1767, -0.3427 },
+					anchor = { 0.1543, 0.1744, -0.1839 },
+					bones = {
+						{ 0.1749, 0.158, -0.1971, -0.6022, 0.5217, -0.6043, 0.6043, -0.1968, -0.7721 },
+						{ 0.2253, 0.1416, -0.2614, -0.1865, -0.8154, -0.548, 0.548, 0.3766, -0.7469 },
+						{ 0.286, 0.1833, -0.3441, 0.3638, -0.776, -0.5152, 0.5152, 0.6285, -0.5827 },
+						{ 0.373, 0.2894, -0.4425, -0.1598, 0.7957, -0.5843, 0.5843, -0.4009, -0.7056 },
+						{ 0.4444, 0.2404, -0.5288, 0.9564, -0.1751, 0.2336, -0.2336, -0.939, 0.2526 },
+					},
+					wriggle = {
+						axis = { 0.764, -0.0002, 0.6452 },
+						degrees = 8,
+						hz = 0.66,
+						lag = 0.9,
+						curl = 10,
+						curlHz = 0.15,
+					},
 				},
 			},
 		},

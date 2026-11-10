@@ -36,6 +36,7 @@ A piece, by `kind`:
 | `tail` | `part`, `base` `"+x"` or `"-x"` (its base end in the file), `at`, `scale`, `lift` degrees tip up (negative: down), `sink` true pushes its base end 0.03 into the body (not when its base has detail to show, a rose, a tuft) |
 | `wrap` (lying ON the skin: a vine on the back, a leaf) | `part`, `at` = (degrees around the body from the front, + toward the slime's left; height of its middle), `scale`, `turn` degrees in its own plane, `flip` |
 | `frame` (growing OUT past the body, as a painting draws vines round its outline) | `part`, `at` = (degrees around from the front; height of its middle; how far its middle stands from the middle line, about the skin radius there), `scale`, `yaw` degrees its plane turns to the back so it also shows from the side (30), `hug` 0-1 bends its inner edge along the outline (1 for a vine down the side, 0 for one rising off a shoulder), `turn`, `flip`; what falls inside the body is laid on the skin |
+| `tentacle` (an octopus arm growing from under the body, rigged so it bends) | `part` (drawn in the file's XZ plane, its thick root the lowest end), `at` = (degrees around from the front, + toward the slime's left; how far out from the middle line, 0.24 is under the rim; height, 0.04), `scale`, `rise` degrees its long line climbs (8 at the front, 55 at the back), `flip` curls it down instead of up, `bones` (default 5) |
 
 At +-90 degrees a `frame` is seen from the front exactly as the file is (the painting's view): a piece from the file's
 left half goes on the slime's right (`at` negative). Keep the face's zone clear (front, 35 degrees each way, heights
@@ -58,6 +59,14 @@ This assumes the file's wings stand as a pair seen from the front, roots at the 
 image-to-3D files do). Both `AIM` lines must say `upright` above +0.5; a negative one is upside down: swap the sort.
 Config: `flap = { axis = <wear.json axis>, degrees = 10, hz = 0.6 }` on both.
 
+### Tentacles (Void Kraken, 2026-11-10)
+
+The owner: an octopus slime's arms grow from under the body and curl, uncurl and wriggle like an octopus's. Eight arms
+round the foot, none straight in front of the face: the front pair at +-40 degrees, low and short (straight at the
+camera they read as stubs), the sides rising, the back pair tall (`rise` 55, `scale` 1.9) so their curls show over the
+shoulders from the front. `wear_kit` rigs each arm (a chain of bones root to tip, each vertex weighted by its distance
+along the arm over the surface) and exports the bones in the FBX; `wear.json` gives each bone's rest frame.
+
 A pair of horns or ears the file holds both of (two ears, a red horn and a blue one) is two pieces with mirrored `at`,
 no `twin`; so is a pair of wings (`root` per wing). Another kind of piece needs the tool changed first (SKILL.md,
 step 4).
@@ -76,7 +85,8 @@ step 4).
 | `AIM <name> tip at (...), n of m vertices inside the body, upright u` | where the tip went (x out to the side, y back, z height); a few vertices inside is the root on the skin; more than about a sixth inside: move `at` out; `u` how far the file's up stays up: below 0 the piece is upside down (a turn cannot mirror: wear the file's piece of the other side) |
 | `WRAP <name> at d degrees, height h, anchor (...)` | where it lies on the skin |
 | `FRAME <name> at d degrees, height h, reach r, n of m vertices laid on the skin` | about half laid on the skin is a vine growing out of it; nearly none: it floats, lower `reach` |
-| `WEAR {...}` | what `wear.json` holds |
+| `TENTACLE <name> at d degrees, root (...), reaches r from the feet, lifted l, n bones` | `lifted` above 0: it dipped under the ground and was raised, lower its `rise` or `flip` it; `r` how far out it reaches |
+| `WEAR {...}` | what `wear.json` holds (a tentacle also its `bones`: per bone its point, X and Y axes, 9 numbers in Roblox space) |
 
 Renders in `<folder>/review/` (not committed): `front back side top game backq` whole, `head headback` close.
 
@@ -128,9 +138,13 @@ Motion (the owner, 2026-11-10: tails and ears move; `tests/spec/wear.luau` fails
 | bird's open wing (`aim`) | `flap = { axis = <wear.json axis>, degrees = 10, hz = 0.6 }`, a slow beat, the tip rising and falling |
 | tail | a wag `flap = { axis = { 0, 1, 0 }, degrees = 8-14, hz = 0.5-0.9 }` (lazy dragon 8/0.5, brisk wolf 14/0.9) and `lag = { axis = { 1, 0, 0 }, degrees = 10-12 }` (drops as the slime climbs, lifts as it falls) |
 | ear | `twitch = { axis = { 1, 0, 0 }, degrees = 16-18, every = 3-3.5 }` (a flick back now and then, each ear on its own clock) and `lag = { axis = { 1, 0, 0 }, degrees = 10-12 }` |
-| horn, vine, leaf | none |
+| ear out to the side (a sheep's) | EarL `twitch = { axis = { 0, 0, -1 }, degrees = 14, every = 3.5 }`, `lag = { axis = { 0, 0, 1 }, degrees = 12 }`; EarR the axes negated (a flick lifts it, a hop leaves it hanging) |
+| tentacle | `bones = <wear.json bones>` and `wriggle = { axis = <wear.json axis>, degrees = 8, hz = 0.45-0.66, lag = 0.9, curl = 10, curlHz = 0.15 }`: a wave runs out to the tip (`lag` radians between bones) while it slowly curls and uncurls, more toward the tip; each arm a different `hz` so they never move as one |
+| horn, vine, leaf, garland, cloud | none |
 
 `Config.Wear.Twitch` (the flick's timing) and `Config.Wear.Lag` (the climb that gives a full bend, the spring's
 half-life) hold the shared numbers. `client/SlimeWear` loads a kit's meshes once (`CreateMeshPartAsync`), sizes them by
 the slime's scale, and each frame moves every piece with the skin at its `anchor` (`SlimeShape.deform`) and the
-jelly's lean, then turns it by its flap, twitch and lag about the anchor.
+jelly's lean, then turns it by its flap, twitch and lag about the anchor. A piece with `bones` gets Roblox `Bone`s made
+by the client under its MeshPart, named as in the FBX (`<piece>_0`, ...), at their rest frames (positions scaled with
+the part): the skinned mesh binds to them by name, and `pose` turns each `Bone.Transform` for the wriggle.

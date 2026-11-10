@@ -1,5 +1,5 @@
 -- Secret slimes' worn pieces (Config.Wear, drawn by client/SlimeWear): every entry names a real Secret and a kit, every
--- piece is whole, sits on the skin, and a flap swings softly.
+-- piece is whole, sits on the skin (a tentacle under the body), and a flap swings softly.
 local Config = require("../../src/shared/Config")
 local SecretRecipes = require("../../src/shared/SecretRecipes")
 local SlimeShape = require("../../src/shared/SlimeShape")
@@ -39,10 +39,29 @@ return function(T)
 				for _, side in piece.size do
 					T.ok(side > 0 and side < 1, `{label} size`)
 				end
-				-- the anchor is on the body's skin or just under it
 				local x, y, z = piece.anchor[1], piece.anchor[2], piece.anchor[3]
 				local r, skin = math.sqrt(x * x + z * z), SlimeShape.radius(y)
-				T.ok(y >= 0 and y <= 1 and r <= skin + 0.02 and r >= skin - 0.15, `{label} anchor off the skin`)
+				local bones = piece.bones
+				if bones then
+					-- a tentacle grows from under the body, inside its rim, and wriggles
+					T.ok(y >= 0 and y <= 0.25 and r <= skin + 0.02, `{label} not under the body`)
+					T.ok(#bones >= 2, `{label} bones`)
+					for _, bone in bones do
+						T.ok(#bone == 9, `{label} bone frame`)
+					end
+					local wriggle = piece.wriggle
+					T.ok(wriggle ~= nil and three(wriggle.axis), `{label} does not wriggle`)
+					if wriggle then
+						T.ok(
+							wriggle.degrees > 0 and wriggle.degrees <= 30 and wriggle.curl >= 0 and wriggle.curl <= 45,
+							label
+						)
+						T.ok(wriggle.hz > 0 and wriggle.hz <= 3 and wriggle.curlHz > 0 and wriggle.curlHz <= 1, label)
+					end
+				else
+					-- the anchor is on the body's skin or just under it
+					T.ok(y >= 0 and y <= 1 and r <= skin + 0.02 and r >= skin - 0.15, `{label} anchor off the skin`)
+				end
 				local flap = piece.flap
 				if flap then
 					T.ok(three(flap.axis), label)
