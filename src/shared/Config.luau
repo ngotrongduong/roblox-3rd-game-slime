@@ -2260,27 +2260,28 @@ Config.Wear = {
 		["secret-black-blue"] = "TempestDragon",
 	},
 	Kits = {
-		-- the owner's Meshy model art/models/accessories/tempest_dragon/neon_dragon_relics.glb (tools/blender/wear_tempest_dragon.py)
+		-- the owner's Meshy model art/models/accessories/tempest_dragon/neon_dragon_relics.glb (tools/blender/wear_tempest_dragon.py),
+		-- uploaded as model 91743466444489 (its five MeshParts give the mesh ids)
 		TempestDragon = {
 			texture = "rbxassetid://83202714233801",
 			pieces = {
 				{
 					name = "HornL",
-					mesh = 0,
+					mesh = 95639447713232,
 					size = { 0.1537, 0.2482, 0.17 },
 					at = { -0.2262, 0.8605, 0.0134 },
 					anchor = { -0.22, 0.75, 0.06 },
 				},
 				{
 					name = "HornR",
-					mesh = 0,
+					mesh = 78282821888249,
 					size = { 0.1537, 0.2482, 0.17 },
 					at = { 0.2262, 0.8605, 0.0134 },
 					anchor = { 0.22, 0.75, 0.06 },
 				},
 				{
 					name = "WingL",
-					mesh = 0,
+					mesh = 114769919864432,
 					size = { 0.4211, 0.4311, 0.3377 },
 					at = { -0.4875, 0.6246, 0.484 },
 					anchor = { -0.3, 0.47, 0.34 },
@@ -2289,7 +2290,7 @@ Config.Wear = {
 				},
 				{
 					name = "WingR",
-					mesh = 0,
+					mesh = 78544047008425,
 					size = { 0.4211, 0.4311, 0.3377 },
 					at = { 0.4875, 0.6246, 0.484 },
 					anchor = { 0.3, 0.47, 0.34 },
@@ -2297,7 +2298,7 @@ Config.Wear = {
 				},
 				{
 					name = "Tail",
-					mesh = 0,
+					mesh = 137066152781922,
 					size = { 0.1352, 0.2177, 0.3827 },
 					at = { 0.0017, 0.1752, 0.6211 },
 					anchor = { 0, 0.16, 0.44 },
