@@ -112,7 +112,8 @@ local oldLooks = kit:FindFirstChild("Looks")
 if oldLooks then
 	oldLooks:Destroy()
 end
-local C = require(targets.Shared:FindFirstChild("Config")).VillageClient
+local Config = require(targets.Shared:FindFirstChild("Config"))
+local C = Config.VillageClient
 local SkinIds = require(targets.Shared:FindFirstChild("SkinIds"))
 local looks = Instance.new("Folder")
 looks.Name = "Looks"
@@ -132,6 +133,15 @@ look("PlainFine", C.WhiteMap, C.RoughMetalMap, false)
 look("Mirror", C.MirrorMap, C.RoughMetalMap, true)
 for _, image in SkinIds.ById do
 	look("Skin_" .. tostring(image), "rbxassetid://" .. tostring(image), C.RoughMap, false)
+end
+-- a Secret's own body (Config.Wear.Bodies): its own maps, else the slime's normal and roughness
+for secret, spec in Config.Wear.Bodies do
+	local sa = Instance.new("SurfaceAppearance")
+	sa.Name = "Body_" .. secret
+	sa.ColorMap = "rbxassetid://" .. tostring(spec.color)
+	sa.NormalMap = if spec.normal then "rbxassetid://" .. tostring(spec.normal) else C.NormalMap
+	sa.RoughnessMap = if spec.rough then "rbxassetid://" .. tostring(spec.rough) else C.RoughMap
+	sa.Parent = looks
 end
 looks.Parent = kit
 

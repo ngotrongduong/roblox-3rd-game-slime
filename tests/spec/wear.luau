@@ -26,6 +26,17 @@ return function(T)
 		end
 	end)
 
+	T.test("every own body is a Secret slime's, with its mesh and colour map", function()
+		local ids = {}
+		for _, recipe in SecretRecipes.List do
+			ids[recipe.id] = true
+		end
+		for id, body in W.Bodies do
+			T.ok(ids[id] == true, `{id} is not a Secret`)
+			T.ok(body.mesh > 0 and body.color > 0, `{id} has no mesh or colour map`)
+		end
+	end)
+
 	T.test("every piece is whole and rests on the skin", function()
 		for kitName, kit in W.Kits do
 			T.ok(type(kit.texture) == "string" and string.match(kit.texture, "^rbxassetid://%d+$") ~= nil, kitName)

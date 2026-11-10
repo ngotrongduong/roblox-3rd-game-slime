@@ -130,3 +130,9 @@ purple-yellow (Royal Griffin), red-red (Rose Dragon).
 ## Done by the owner
 
 gray-green (Moss Golem): made and uploaded by the owner; its views here only proved the tools.
+
+2026-11-11: the owner's own 3D models replace the skin-on-body look of Moss Golem (gray-green), Stone Tortoise
+(gray-gray) and Dragonfruit Slime (purple-red). `tools/blender/secret_body.ps1 <folder>` sets each in the shared body's
+box on the same bones (`art/models/secret_bodies/<folder>/`), `Config.Wear.Bodies` names the mesh and maps,
+`client/SlimeLook` gives the shared body that mesh (`MeshPart:ApplyMesh`) so it squashes, hops and wears the face as
+every slime; the maps are ClientKit.Looks `Body_<secret>` (`tools/kit/add_body_looks.luau`).

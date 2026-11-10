@@ -34,7 +34,30 @@ type WearPiece = {
 	turn: { number }?,
 }
 type WearKit = { texture: string, pieces: { WearPiece } }
+type WearBody = { mesh: number, color: number, normal: number?, rough: number? }
 local Wear = {
+	-- A Secret whose whole body is the owner's own 3D model (2026-11-11: "dùng nó để thay thế những con chúng ta đã
+	-- tạo"): tools/blender/secret_body.py sets it in the shared body's box on the same bones, client/SlimeLook gives the
+	-- shared body this mesh, so it squashes, hops and wears its face as every slime does. `mesh` is the MeshId, the maps are
+	-- image ids (ClientKit.Looks "Body_<secret>"; no `normal` or `rough`: the slime's own glossy ones)
+	Bodies = {
+		-- art/models/secret_bodies/moss_golem (the owner's Meshy model), uploaded as model 113714112407896
+		["secret-gray-green"] = { mesh = 107314041686690, color = 90353775797081 },
+		-- art/models/secret_bodies/stone_tortoise ("rocky mossy dome"), model 83371849239636
+		["secret-gray-gray"] = {
+			mesh = 70838901900987,
+			color = 72630902371011,
+			normal = 90556411412623,
+			rough = 108882901551957,
+		},
+		-- art/models/secret_bodies/dragonfruit ("purple red"), model 99837639422512
+		["secret-purple-red"] = {
+			mesh = 125941701860519,
+			color = 129055924521815,
+			normal = 131590558702635,
+			rough = 130178370897115,
+		},
+	} :: { [string]: WearBody },
 	-- An ear's `twitch`: once in each `every` seconds, at a moment of its own, it flicks `degrees` about `axis` ({1, 0, 0}
 	-- tips it back) and comes home: Out the flick's seconds, Length the whole move's.
 	Twitch = { Out = 0.07, Length = 0.4 },

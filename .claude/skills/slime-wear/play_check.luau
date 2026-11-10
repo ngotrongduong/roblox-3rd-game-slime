@@ -28,6 +28,12 @@ local ids = {}
 for id in Config.Wear.Secrets do
 	table.insert(ids, id)
 end
+-- (and every Secret with its own body, Config.Wear.Bodies)
+for id in Config.Wear.Bodies do
+	if not Config.Wear.Secrets[id] then
+		table.insert(ids, id)
+	end
+end
 table.sort(ids)
 
 local ahead = (hrp.CFrame.LookVector * Vector3.new(1, 0, 1)).Unit
@@ -47,7 +53,8 @@ for k, id in ids do
 end
 
 local function worn(k: number): (number, number)
-	local pieces = Config.Wear.Kits[Config.Wear.Secrets[ids[k]]].pieces
+	local kit = Config.Wear.Kits[Config.Wear.Secrets[ids[k]] or ""]
+	local pieces = if kit then kit.pieces else {}
 	local n = 0
 	for _, spec in pieces do
 		if models[k]:FindFirstChild(spec.name) then
@@ -79,7 +86,7 @@ for k, model in models do
 	local h = body.Size.Y
 	local head = body.Position + Vector3.new(0, h * 0.3, 0)
 	local front = face.LookVector
-	table.insert(out, string.format("%s %s %d/%d pieces", ids[k], Config.Wear.Secrets[ids[k]], n, of))
+	table.insert(out, string.format("%s %s %d/%d pieces", ids[k], Config.Wear.Secrets[ids[k]] or "own body", n, of))
 	table.insert(out, "  front " .. cam(head + front * h * 1.6 + Vector3.new(0, h * 0.5, 0), head))
 	table.insert(out, "  back  " .. cam(head - front * h * 1.6 + Vector3.new(0, h * 0.7, 0), head))
 end

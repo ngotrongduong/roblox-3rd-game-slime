@@ -117,7 +117,18 @@ for _, image in SkinIds.ById do
 	look("Skin_" .. tostring(image), "rbxassetid://" .. tostring(image), C.RoughMap, false)
 	skins += 1
 end
-table.insert(lines, "  Looks: Plain, PlainFine, Mirror, " .. skins .. " skins")
+-- a Secret's own body (Config.Wear.Bodies): its own maps, else the slime's normal and roughness
+local bodies = 0
+for secret, spec in Config.Wear.Bodies do
+	local sa = Instance.new("SurfaceAppearance")
+	sa.Name = "Body_" .. secret
+	sa.ColorMap = "rbxassetid://" .. tostring(spec.color)
+	sa.NormalMap = if spec.normal then "rbxassetid://" .. tostring(spec.normal) else C.NormalMap
+	sa.RoughnessMap = if spec.rough then "rbxassetid://" .. tostring(spec.rough) else C.RoughMap
+	sa.Parent = looks
+	bodies += 1
+end
+table.insert(lines, "  Looks: Plain, PlainFine, Mirror, " .. skins .. " skins, " .. bodies .. " own bodies")
 
 local data = roblox.serializeModel({ kit })
 fs.writeFile(OUT, data)

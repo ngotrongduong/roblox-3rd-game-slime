@@ -168,6 +168,12 @@ Not in the files: the Star Owl's and Thunderbird's crests, the Poison Frog's eye
 127121329117477, 138808936970841, 136944893323987, 100454179348381, 94042749760826. Seen in Play; the editor is open on
 them in Studio.
 
+2026-11-11, own bodies: Moss Golem (`secret-gray-green`), Stone Tortoise (`secret-gray-gray`) and Dragonfruit Slime
+(`secret-purple-red`) now wear the owner's own 3D models as their whole body instead of a skin on the shared body
+(`docs/turnaround.md`, last section: `tools/blender/secret_body.ps1`, `Config.Wear.Bodies`, `SlimeLook` applies the mesh
+to the shared rigged body, no outline). Models 113714112407896, 83371849239636, 99837639422512. Seen in Play with
+their faces and jelly motion.
+
 ## 2026-11-10 — Dungeon fight effects per monster, from the VFX library
 
 The owner paused the old effect work and asked for each map group's skills to be rebuilt from his VFX library

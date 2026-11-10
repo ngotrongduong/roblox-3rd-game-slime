@@ -1,5 +1,6 @@
 --!strict
 -- Draws a replicated appearance on the owner's shared rig; no genetics are decided here.
+local AssetService = game:GetService("AssetService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Colours = require(ReplicatedStorage.Shared.Colours)
@@ -33,9 +34,10 @@ end
 -- A game script may not set a SurfaceAppearance's maps (Plugin capability), so the maps come ready made in
 -- ClientKit.Looks (tools/kit/export_client_kit.luau): Plain, PlainFine, Mirror and Skin_<image id>. Only the
 -- tint is set here; a look is cloned for each body (one SurfaceAppearance belongs to one MeshPart).
-local function template(map: string, colour: Color3, mirror: boolean, fine: boolean): SurfaceAppearance?
-	local name = if mirror
-		then "Mirror"
+local function template(map: string, colour: Color3, mirror: boolean, fine: boolean, named: string?): SurfaceAppearance?
+	local name = if named
+		then named
+		elseif mirror then "Mirror"
 		elseif map == C.WhiteMap then (if fine then "PlainFine" else "Plain")
 		else "Skin_" .. (string.match(map, "%d+") or "")
 	local key = name .. ":" .. colour:ToHex()
@@ -66,6 +68,52 @@ local function partFromKit(name: string): MeshPart?
 	end
 	missing("missing ClientKit/" .. name)
 	return nil
+end
+
+-- A Secret with its own body (Config.Wear.Bodies): the shared body, bones and all, takes the owner's mesh, loaded from
+-- Roblox once (AssetService:CreateMeshPartAsync, as SlimeWear's pieces); a body built before it arrives takes it when
+-- it does. Its box is the shared body's, so the size it has (scaled or not) stays.
+local bodyMeshes: { [string]: MeshPart | false } = {}
+local waiting: { [string]: { MeshPart } } = {}
+
+local function applyMesh(body: MeshPart, mesh: MeshPart)
+	local size = body.Size
+	body:ApplyMesh(mesh)
+	body.Size = size
+end
+
+local function ownBody(body: MeshPart, secret: string, meshId: number)
+	local mesh = bodyMeshes[secret]
+	if mesh == false then
+		return
+	elseif mesh then
+		applyMesh(body, mesh :: MeshPart)
+		return
+	end
+	local list = waiting[secret]
+	if list then
+		table.insert(list, body)
+		return
+	end
+	waiting[secret] = { body }
+	task.spawn(function()
+		local ok, result = pcall(function()
+			return AssetService:CreateMeshPartAsync(Content.fromAssetId(meshId))
+		end)
+		local bodies = waiting[secret]
+		waiting[secret] = nil
+		if not ok then
+			bodyMeshes[secret] = false
+			missing("missing Secret body " .. secret .. ": " .. tostring(result))
+			return
+		end
+		bodyMeshes[secret] = result
+		for _, b in bodies do
+			if b.Parent then
+				applyMesh(b, result)
+			end
+		end
+	end)
 end
 
 local function standIn(): Model
@@ -111,8 +159,15 @@ function SlimeLook.build(attrs: { [string]: any }): Model
 	local fine, mirror, alpha = false, false, 0
 	local robloxMaterial = Enum.Material.SmoothPlastic
 	local hullOn = true
+	local ownSpec = if secret then Config.Wear.Bodies[secret] else nil
+	local named: string? = nil
 
-	if type(attrs.SkinImage) == "number" then
+	if ownSpec and secret then
+		-- its own body wears its own maps, and no outline (the hull is the shared body's shape)
+		named = "Body_" .. secret
+		surfaceColour = Color3.new(1, 1, 1)
+		hullOn = false
+	elseif type(attrs.SkinImage) == "number" then
 		-- a skin named directly: the zombie kinds
 		map = "rbxassetid://" .. tostring(attrs.SkinImage)
 		surfaceColour = Color3.new(1, 1, 1)
@@ -178,9 +233,12 @@ function SlimeLook.build(attrs: { [string]: any }): Model
 			old:Destroy()
 		end
 	end
-	local sa = if surface then template(map, surfaceColour, mirror, fine) else nil
+	local sa = if surface then template(map, surfaceColour, mirror, fine, named) else nil
 	if sa then
 		sa:Clone().Parent = body
+	end
+	if ownSpec and secret then
+		ownBody(body, secret, ownSpec.mesh)
 	end
 
 	local model = Instance.new("Model")
