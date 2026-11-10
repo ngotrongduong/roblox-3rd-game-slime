@@ -10,7 +10,8 @@
 # How the files lay their parts out so far: a wing's root at its +X end, spreading toward -X with its painted side to
 # -Y; a horn's or an ear's base at the bottom (a horn's tip curling toward -X, an ear facing -Y); a tail's base at one
 # end along X (`base`).
-# Run: tools/blender/wear_kit.ps1 <kit>
+# Run: tools/blender/wear_kit.ps1 <kit>. The whole job, the kit fields and the lessons: skill slime-wear
+# (.claude/skills/slime-wear), kept current with this file.
 import bpy, bmesh, json, math, os, sys
 from mathutils import Matrix, Vector
 

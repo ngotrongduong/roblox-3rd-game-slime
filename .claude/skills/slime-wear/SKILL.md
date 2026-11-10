@@ -1,0 +1,83 @@
+---
+name: slime-wear
+description: Use when the owner sends a 3D file (GLB or FBX, from Meshy, Tripo or his image-to-3D) of horns, ears, wings, a tail, a crown or any other piece for a Secret slime of Goo Lineage V2 to wear; when he says a worn piece sits wrong (sunk into the body, floating, its base showing, the wrong angle, side, size or place); or before changing Config.Wear, client/SlimeWear or tools/blender/wear_kit.py.
+---
+
+# Slime wear: a Secret slime's own pieces
+
+Each Secret slime may wear its own pieces, made from the owner's 3D file and set on the slime's jelly body so they ride
+it as it squashes, hops and leans. One kit per Secret: `tools/blender/wear_kit.py` (a table in `KITS`) turns the file
+into placed, low-poly pieces; `Config.Wear` names them; `client/SlimeWear` draws them. Replies to the owner are in
+Vietnamese; everything in the game is English.
+
+Read with: `kit-reference.md` (every kit field, the run's output, the Config mapping), `LESSONS.md` (what went wrong
+and the fix; read it before the first run), the owner's painting of the Secret (the reference for every piece).
+
+Who does what: an agent may do steps 1-6, 8 and 9 and report; Studio (steps 7 and 10) and the commit are the
+orchestrator's (CLAUDE.md).
+
+## The owner's rules for worn pieces
+
+- **His painting decides.** Where a piece stands, its angle, its size and which side it is on come from
+  `reference/goo-lineage-web/assets/slime.secret.<colours>.png`. His art is never recoloured or redrawn.
+- **Sat on the skin, never sunk in** (2026-11-10): a horn or an ear stands as far out of the body as it can; only the
+  rim of its foot goes under the skin, and where the shoulder slopes away the lowest part is drawn down onto it
+  (`seat`). The detail at its foot (fur, a spiked collar, a band) must show.
+- **No base showing** (2026-11-10): no rim, hollow or gap under a piece from any side.
+- Each Secret has its own design; one piece recoloured for another Secret is not a new design.
+- Low poly for cheap phones: each part keeps the triangles in its kit's `budget` (about 500 to 900).
+
+## The steps
+
+1. **Know the Secret.** The owner names it by its two colours ("Navy+red"). The id is `secret-<a>-<b>` with the two
+   colour names in alphabetical order (`Colours.pairKey`): `secret-navy-red`. His word may not be a palette name
+   ("gold"): match it to the names in `src/shared/Colours.luau` and to a Secret in `src/shared/SecretRecipes.luau` (its
+   name and painting); if two Secrets could fit, pick the one whose painting shows the pieces and say so in the report.
+   Look at the painting whole (`reference/goo-lineage-web/assets/slime.secret.<a>-<b>.png`) and its top enlarged:
+   `python "C:\Roblox 3rd game\.claude\skills\slime-wear\paint_top.py" navy-red <scratchpad>\paint_top.png`.
+   Note each piece's place (shoulder edge, top, back), lean, how it turns, how big against the body. A piece the
+   painting does not show is still worn (the file is what the owner wants): place it as the nearest existing kit does
+   and name it in the report.
+2. **Take the file in.** A scratch `.ps1` copies it from Downloads to `art/models/accessories/<folder>/<file>`: the
+   folder is the Secret's name in snake case (`fire_ice_chimera`), the file name without spaces (`navy_red.glb`).
+   `art/models` is the folder the owner approved for uploads: never copy a file elsewhere to get round an approval.
+3. **Look into it:** `& "C:\Roblox 3rd game\tools\blender\wear_inspect.ps1" "<file>"` prints the loose bits with
+   their middles (what `sort` reads) and renders six sides into `<folder>\review\inspect\`. Look at the renders: which
+   bit is what, where each one's base is, which way a horn curls, which way an ear opens.
+4. **Write the kit** in `KITS` of `tools/blender/wear_kit.py` (fields in `kit-reference.md`): `sort` by the middles
+   from step 3, `budget`, and a piece for each part with its place from step 1. Start from the nearest existing kit.
+   The tool knows three kinds: `horn` (horns and ears), `wing` (one wing, mirrored by `twin`) and `tail`. A piece of
+   another kind (a crown, a halo, a wreath, a file holding both wings or four of them) first gets its kind in
+   `wear_kit.py`, its row in `kit-reference.md` and, if its anchor cannot sit on the skin, a change to
+   `tests/spec/wear.luau`; then step 6 is due.
+5. **Build:** `& "C:\Roblox 3rd game\tools\blender\wear_kit.ps1" <Kit>`. Read the lines (`kit-reference.md`), then
+   look at `review/head.png`, `headback.png`, `front.png`, `side.png`, `game.png` and `backq.png` next to the painting.
+   List what differs (place, lean, size, foot showing, detail lost, a gap), change the table, build again. Several
+   rounds are normal.
+6. **If `wear_kit.py` itself changed:** rebuild every other kit, then `git -C "C:/Roblox 3rd game" status --short --
+   art/models/accessories`. A kit whose `wear.json` is not listed did not move: its FBX differs only in its timestamp,
+   restore it with `git checkout -- <fbx>`. A kit whose numbers moved without a reason is a regression: fix the tool.
+   A kit that moved on purpose goes through steps 7 and 8 too.
+7. **Upload** the FBX (and the texture, for a new kit): `kit-reference.md`, "Upload". Unchanged meshes keep their ids.
+   The Studio id comes from the MCP's `list_roblox_studios`.
+8. **Config.Wear:** the Secret in `Secrets`, the kit in `Kits` with the model id in its comment, each piece's numbers
+   from `wear.json` (`kit-reference.md`, "Config").
+9. **Check:** `& "C:\Roblox 3rd game\tools\check.ps1"` ends `CHECK OK` (`tests/spec/wear.luau` holds every piece on
+   the skin and every pair mirrored).
+10. **See it in Play:** stop Play (MCP `start_stop_play`),
+    `& "C:\Roblox 3rd game\tools\map\sync_all.ps1" -StudioId <id>`, start Play, then
+    `node tools/studio_mcp.js run .claude/skills/slime-wear/play_check.luau <id> Client`: every Secret that wears
+    pieces stands in a row in front of the player, alive; each must say `n/n pieces`. Shoot each changed one close from
+    the front and the back with the camera lines it prints (`node tools/studio_mcp.js shot <id> <out.png> ...`) and
+    look: pieces on the skin, no gap, the detail at their foot showing, moving with the jelly.
+11. **Finish:** a paragraph in `docs/STATUS.md` under today's section at the top (a new `## <date> — ...` section if
+    there is none); commit only your own files: the kit folder's `.glb`, `.fbx`, `.png` and `wear.json`, `wear_kit.py`,
+    `Config.luau`, `docs/STATUS.md`, this skill if it changed (`git add` new ones first, then `commit --only`); tell the
+    owner in Vietnamese what he will see and what was not seen (a phone).
+
+## Keeping this skill current
+
+This skill is the standard way to dress a Secret slime. When a run finds a better method, a new kind of piece, a tool
+or a new rule from the owner, change this skill in the same commit as the work: the steps or `kit-reference.md` for
+the method, `LESSONS.md` for what went wrong and its fix, "The owner's rules" for his words (with the date). Never leave
+a method only in a scratch file or a chat.

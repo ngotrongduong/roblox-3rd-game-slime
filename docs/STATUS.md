@@ -27,6 +27,10 @@ foot's rim 0.02 under it, and where the shoulder falls away under the foot the l
 (`seat` in `wear_kit.py`). All four kits rebuilt: the wolf's ears stand at the shoulder edges with their fur hanging
 down, the Chimera's spiked collars and the dragons' horn bands show. Models now 137031942711781, 88958587355820,
 119200639103906, 117979860637781 (wings and tails kept their meshes).
+The whole job is now the project skill `slime-wear` (the owner asked for a standard way, kept current): steps, every kit
+field, upload and Config, lessons, `tools/blender/wear_inspect.ps1` (a file's loose bits and six renders before its kit
+is written) and `play_check.luau` (every dressed Secret alive in a row in Play, with close-shot cameras). A dry run by
+a fresh agent found its gaps (colour ids, kinds the tool lacks, sort and budget errors), now written in.
 
 ## 2026-11-10 — Dungeon fight effects per monster, from the VFX library
 
