@@ -24,6 +24,10 @@ orchestrator's (CLAUDE.md).
   rim of its foot goes under the skin, and where the shoulder slopes away the lowest part is drawn down onto it
   (`seat`). The detail at its foot (fur, a spiked collar, a band) must show.
 - **No base showing** (2026-11-10): no rim, hollow or gap under a piece from any side.
+- **A whole-slime model with hair keeps the shared body's shape** (2026-11-11, Sun Lion and Rose Hedgehog: "chỉnh sửa
+  lại cho đúng với dáng của con slime gốc (chỉ phần thân thôi nhé phần tóc giữ nguyên)"): `tools/blender/
+  secret_mane.ps1 <folder>` bakes the model's colours onto the shared body (a skin in `SkinIds`) and cuts its hair off
+  as one worn `Mane` with its own `texture`; a whole model without hair goes through `secret_body.ps1` instead.
 - **Every pair of ears is worn as Sunshower Fox wears its own** (2026-11-10, after four rounds on the fox-file ears
   that each made them worse: "càng sửa càng hỏng, hãy nghiên cứu con này ... copy chính xác như vậy. cả về góc độ và vị
   trí đặt tai"): `horn` at (+-0.34, 0, 0.7), `tilt_out` 32, `tilt_back` 0, `level=False`, `foot="low"`, the default

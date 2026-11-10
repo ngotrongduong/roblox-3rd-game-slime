@@ -107,7 +107,8 @@ SkinIds.Secrets = {
 	["secret-gray-gray"] = 79438925598393,
 	["secret-gray-navy"] = 129937385407954,
 	["secret-gray-orange"] = 114197395821720,
-	["secret-gray-pink"] = 82356097312530,
+	-- (Rose Hedgehog's and Sun Lion's: the owner's own models' colours baked onto the shared body, tools/blender/secret_mane.py)
+	["secret-gray-pink"] = 135866855135593,
 	["secret-gray-purple"] = 87610306895982,
 	["secret-gray-red"] = 121852914845200,
 	["secret-gray-white"] = 108472135284309,
@@ -147,7 +148,7 @@ SkinIds.Secrets = {
 	["secret-red-yellow"] = 107912341409908,
 	["secret-white-white"] = 112685052448784,
 	["secret-white-yellow"] = 99024964036568,
-	["secret-yellow-yellow"] = 120337424212608,
+	["secret-yellow-yellow"] = 71734327776774,
 } :: { [string]: number }
 for id, image in SkinIds.Secrets do
 	SkinIds.ById[id] = image

@@ -18,6 +18,7 @@
 -- A `turn` (degrees about X, Y, Z, CFrame.fromEulerAnglesXYZ) turns the piece about its middle: the owner set it by hand
 -- in the ear editor (skill slime-wear, `ear_editor.luau`), and `at` and `anchor` came with it. (the owner, 2026-11-10:
 -- "để tôi tự thao tác rồi bạn lưu lại thông số")
+-- A piece's own `texture` wins over its kit's (a mane cut from the Secret's own model keeps that model's map).
 type WearMotion = { axis: { number }, degrees: number, hz: number?, every: number?, bias: number? }
 type WearWriggle = { axis: { number }, degrees: number, hz: number, lag: number, curl: number, curlHz: number }
 type WearPiece = {
@@ -32,6 +33,7 @@ type WearPiece = {
 	bones: { { number } }?,
 	wriggle: WearWriggle?,
 	turn: { number }?,
+	texture: string?,
 }
 type WearKit = { texture: string, pieces: { WearPiece } }
 type WearBody = { mesh: number, color: number, normal: number?, rough: number? }
@@ -109,6 +111,9 @@ local Wear = {
 		["secret-blue-yellow"] = "Thunderbird",
 		["secret-green-pink"] = "WatermelonFrog",
 		["secret-green-purple"] = "PoisonFrog",
+		["secret-yellow-yellow"] = "SunLion",
+		["secret-gray-pink"] = "RoseHedgehog",
+		["secret-red-yellow"] = "FireSalamander",
 	},
 	Kits = {
 		-- the owner's Meshy model art/models/accessories/tempest_dragon/neon_dragon_relics.glb, uploaded as model
@@ -332,6 +337,79 @@ local Wear = {
 					-- (a brisk bushy wag, between the wolf's and the dragon's)
 					flap = { axis = { 0, 1, 0 }, degrees = 12, hz = 0.8 },
 					lag = { axis = { 1, 0, 0 }, degrees = 12 },
+				},
+			},
+		},
+		-- Sun Lion (2026-11-11): its mane cut from the owner's own model (art/models/secret_bodies/sun_lion, tools/blender/
+		-- secret_mane.py, whose body became the shared one in its colours, SkinIds), uploaded as model 108739731666477; the
+		-- golden lion's tail of art/models/accessories/sun_lion/phoenix_tail.glb, model 109881506240835
+		SunLion = {
+			texture = "rbxassetid://125497969667230",
+			pieces = {
+				{
+					name = "Mane",
+					mesh = 135932589447444,
+					texture = "rbxassetid://73471272419109",
+					size = { 1.3646, 1.1532, 0.9102 },
+					at = { 0, 0.6378, 0.2045 },
+					anchor = { -0.0866, 0.7324, 0.3347 },
+				},
+				{
+					name = "Tail",
+					mesh = 124664691398711,
+					size = { 0.2372, 0.6983, 0.6048 },
+					at = { -0.0143, 0.4142, 0.6917 },
+					anchor = { 0, 0.2, 0.41 },
+					flap = { axis = { 0, 1, 0 }, degrees = 10, hz = 0.9 },
+					lag = { axis = { 1, 0, 0 }, degrees = 10 },
+				},
+			},
+		},
+		-- Rose Hedgehog (2026-11-11): its spines and roses cut from the owner's own model (art/models/secret_bodies/
+		-- rose_hedgehog, as Sun Lion's mane), uploaded as model 133933723128891
+		RoseHedgehog = {
+			texture = "rbxassetid://132383635474241",
+			pieces = {
+				{
+					name = "Mane",
+					mesh = 103626998565297,
+					size = { 1.2668, 1.2088, 0.9687 },
+					at = { 0, 0.6277, 0.3007 },
+					anchor = { 0.0709, 0.7879, 0.2542 },
+				},
+			},
+		},
+		-- Fire Salamander (2026-11-11): the red flame ears and flame tail of art/models/accessories/fire_salamander/
+		-- phoenix_tail.glb, uploaded as model 99746958007317
+		FireSalamander = {
+			texture = "rbxassetid://117704570297184",
+			pieces = {
+				{
+					name = "EarL",
+					mesh = 99204141749117,
+					size = { 0.3052, 0.2824, 0.0995 },
+					at = { -0.3875, 0.8323, -0.0042 },
+					anchor = { -0.3479, 0.7126, 0 },
+					twitch = { axis = { 0, 1, 0 }, degrees = 18, every = 3.5 },
+					lag = { axis = { 1, 0, 0 }, degrees = 5 },
+				},
+				{
+					name = "EarR",
+					mesh = 88734944128419,
+					size = { 0.307, 0.2809, 0.0984 },
+					at = { 0.3854, 0.8367, -0.0113 },
+					anchor = { 0.3477, 0.7124, 0 },
+					twitch = { axis = { 0, 1, 0 }, degrees = 18, every = 3.5 },
+					lag = { axis = { 1, 0, 0 }, degrees = 5 },
+				},
+				{
+					name = "Tail",
+					mesh = 102467500627601,
+					size = { 0.2159, 0.7284, 0.6023 },
+					at = { 0.0451, 0.4337, 0.6787 },
+					anchor = { 0, 0.2, 0.4 },
+					flap = { axis = { 0, 1, 0 }, degrees = 10, hz = 0.9 },
+					lag = { axis = { 1, 0, 0 }, degrees = 10 },
 				},
 			},
 		},

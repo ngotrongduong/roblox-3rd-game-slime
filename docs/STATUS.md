@@ -174,6 +174,15 @@ them in Studio.
 to the shared rigged body, no outline). Models 113714112407896, 83371849239636, 99837639422512. Seen in Play with
 their faces and jelly motion.
 
+2026-11-11, Sun Lion (`secret-yellow-yellow`) and Rose Hedgehog (`secret-gray-pink`): the owner's own models had a lumpy
+front, so their body is now the shared body itself ("đúng với dáng của con slime gốc ... phần tóc giữ nguyên"):
+`tools/blender/secret_mane.ps1 <folder>` fits the model onto the shared body, bakes its colours onto the shared UV (a new
+skin in `SkinIds`; under the mane the sides grow over the back) and cuts the mane / spines with roses off as one worn
+piece (`Config.Wear` kits SunLion and RoseHedgehog; a piece may carry its own `texture`). From the owner's phoenix file
+(`PHOENIX_TAIL` in `wear_kit.py`): Sun Lion wears the golden lion's tail, Fire Salamander (`secret-red-yellow`) the red
+flame ears and flame tail, placed roughly like the foxes'. Models 108739731666477, 133933723128891, 109881506240835,
+99746958007317. Seen in Play.
+
 ## 2026-11-10 — Dungeon fight effects per monster, from the VFX library
 
 The owner paused the old effect work and asked for each map group's skills to be rebuilt from his VFX library

@@ -29,6 +29,7 @@ type PieceSpec = {
 	wriggle: WriggleSpec?,
 	clear: number?,
 	turn: { number }?,
+	texture: string?,
 }
 type KitSpec = { texture: string, pieces: { PieceSpec } }
 
@@ -95,7 +96,7 @@ local function load(name: string): { BasePart }?
 			if loaded then
 				part.Name = spec.name
 				part.Size = v3(spec.size)
-				part.TextureID = kit.texture
+				part.TextureID = spec.texture or kit.texture
 				part.Color = Color3.new(1, 1, 1)
 				part.Material = Enum.Material.SmoothPlastic
 				part.Anchored = true

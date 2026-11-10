@@ -47,10 +47,15 @@ return function(T)
 				names[piece.name] = true
 				T.ok(type(piece.mesh) == "number", label)
 				T.ok(three(piece.size) and three(piece.at) and three(piece.anchor), label)
-				-- (a mane runs from the top of the head to the feet, a little longer than the body is tall)
+				-- (a mane runs from the top of the head to the feet, a little longer than the body is tall; Sun Lion's
+				-- spreads round its head like the sun's rays, a third wider than the body)
 				for _, side in piece.size do
-					T.ok(side > 0 and side < 1.25, `{label} size`)
+					T.ok(side > 0 and side < 1.4, `{label} size`)
 				end
+				T.ok(
+					piece.texture == nil or string.match(piece.texture, "^rbxassetid://%d+$") ~= nil,
+					`{label} texture`
+				)
 				local x, y, z = piece.anchor[1], piece.anchor[2], piece.anchor[3]
 				local r, skin = math.sqrt(x * x + z * z), SlimeShape.radius(y)
 				local bones = piece.bones

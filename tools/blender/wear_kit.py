@@ -84,6 +84,12 @@ GOLDEN_WING = nearest(FootWR=(-0.389, 0.071), GoldWingL=(-0.186, 0.448), FootWL=
 	FootPR=(0.155, 0.078), GoldWingR=(0.198, 0.456), FootPL=(0.392, 0.082))
 GOLDEN_WING_BUDGET = dict(FootWR=164, GoldWingL=700, FootWL=124, FootPR=278, GoldWingR=499, FootPL=166)
 
+# the owner's "fiery phoenix tail 3d model.glb" (2026-11-11): two red flame ears (fur inside) at the top, a golden lion's
+# tail (a tuft at its tip) at bottom left, a red flame tail at bottom right; each tail's root is its thin curled end at -X
+PHOENIX_TAIL = nearest(FlameEarR=(-0.257, 0.688), FlameEarL=(0.158, 0.698), LionTail=(-0.224, 0.326),
+	FlameTail=(0.262, 0.315))
+PHOENIX_TAIL_BUDGET = dict(FlameEarR=348, FlameEarL=422, LionTail=706, FlameTail=500)
+
 # `sort` says which part of the file a loose bit belongs to, by its middle; `budget` the triangles a part keeps;
 # `pieces` what is made of each part, in the order they are exported: kind (horn: horns and ears, wing, tail), where it
 # sits on the body (Blender axes, body height 1; +X is the slime's own left), size factor, turns in degrees, and `twin`,
@@ -652,6 +658,38 @@ KITS = {
 			Tail=dict(part="WolfTail", kind="tail", base="-x", at=(0.0, 0.45, 0.2), scale=2.6, lift=0, sink=True),
 		),
 		body=(0.75, 0.82, 0.97, 1),
+	),
+	# Sun Lion (secret-yellow-yellow), 2026-11-11: the golden lion's tail of PHOENIX_TAIL (its mane is its own model's,
+	# tools/blender/secret_mane.py)
+	"SunLion": dict(
+		folder="sun_lion",
+		glb="phoenix_tail.glb",
+		out="SunLionWear",
+		texture="sun_lion_wear.png",
+		sort=PHOENIX_TAIL,
+		budget=PHOENIX_TAIL_BUDGET,
+		pieces=dict(
+			Tail=dict(part="LionTail", kind="tail", base="-x", at=(0.0, 0.45, 0.2), scale=1.2, lift=0, sink=True),
+		),
+		body=(1, 0.8, 0.2, 1),
+	),
+	# Fire Salamander (secret-red-yellow), 2026-11-11: the red flame ears and flame tail of PHOENIX_TAIL ("bộ tai đỏ và
+	# đuôi đỏ là cho con Yellow+red"), worn as every fox's
+	"FireSalamander": dict(
+		folder="fire_salamander",
+		glb="phoenix_tail.glb",
+		out="FireSalamanderWear",
+		texture="fire_salamander_wear.png",
+		sort=PHOENIX_TAIL,
+		budget=PHOENIX_TAIL_BUDGET,
+		pieces=dict(
+			EarL=dict(part="FlameEarL", kind="horn", at=(0.34, 0.0, 0.7), scale=0.9, tilt_out=32, tilt_back=0,
+				level=False, foot="low"),
+			EarR=dict(part="FlameEarR", kind="horn", at=(-0.34, 0.0, 0.7), scale=0.9, tilt_out=32, tilt_back=0,
+				level=False, foot="low"),
+			Tail=dict(part="FlameTail", kind="tail", base="-x", at=(0.0, 0.45, 0.2), scale=1.2, lift=0, sink=True),
+		),
+		body=(0.9, 0.2, 0.1, 1),
 	),
 	"EmberTiger": dict(
 		folder="ember_tiger",
