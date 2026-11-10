@@ -70,3 +70,12 @@ taught something.
 | Spread bat wings matching the painting best had their root at r 0.424 at height 0.72, off the skin (0.359): the skin test failed | slide the root down and in along the shoulder (0.67, r 0.403) and check the render again; a piece that only moves keeps its mesh ids (Roblox centres an uploaded mesh), only `at` and `anchor` change |
 | Horns at the head's top corners, level with the wing roots (`at` y 0.02), looked right in the level front render but merged with the wing roots from the game's camera above: same colour, one behind the other | horns on the FRONT of the top corners (y -0.1), so the body is behind them; judge horns beside wings in Play from the front |
 | The line-up row ran into a fence for the last Secrets (x 217): the close shots showed planks | move the one Secret onto open ground in front of the row: set its actor's `root` (the actor puts the model back on it) as well as `PivotTo` |
+
+## 2026-11-10 (Frost Swan)
+
+| What went wrong | The fix |
+|---|---|
+| Crystal frills shaped like wings were worn in the bird's wing pose; the owner: "trông giống như cánh nhưng không phải cánh chim, hãy gắn nó vào vị trí giống như trong hình ảnh tham chiếu" | a wing-shaped ornament the painting draws on the body is not a wing: kind `front`, where the painting draws it. Ask of each winged part: does the painting show it spread off the back (a wing) or lying on the body (an ornament)? |
+| A `frame` lays each point inside the body onto the skin one by one: a flat plaque's front and back faces land on the same skin, its relief flattened, the "sunk" look the owner forbids | `front` lays the plaque's back face on the skin and keeps its thickness outside |
+| The frills matched the painting in the renders but looked small in Play, where the jelly sits wider | measure the painting's middle and height in body units and add a step of scale after the first Play look (1.18 -> 1.25, `at` out 0.36 -> 0.39) |
+| A plaque the same colours as the painted skin is hard to see where it lies flat on the front | judge it from a level camera too (the crystal reads at the outline and in its relief) |

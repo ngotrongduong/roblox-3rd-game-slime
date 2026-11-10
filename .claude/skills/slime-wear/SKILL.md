@@ -43,6 +43,13 @@ orchestrator's (CLAUDE.md).
   beat (`tentacle`, `kit-reference.md`, "Tentacles"). Then: "tất cả đều phải kết nối ở phần dưới của con slime", none
   sunk into the body to show only a stub at its side, and "phần màu tím phải quay xuống bên dưới hoặc ra ngoài chứ
   không lật mặt lên trên": all low, the suckers down or out.
+- **Worn proud, never sunk** (2026-11-10, Frost Swan: "chúng là phụ kiện gắn nổi trên thân slime, không phải chìm vào
+  trong thân"): a flat piece laid on the body keeps its whole relief outside the skin, only its back face touching it.
+  A file may hold more than fits ("không cần dùng hết, chỉ dùng những cái phù hợp"): leave out a piece that would sit on
+  the face or meet the ground, and say which in the report.
+- **Not every wing shape is a bird's wing** (2026-11-10, Frost Swan: "trông giống như cánh nhưng không phải cánh chim,
+  hãy gắn nó vào vị trí giống như trong hình ảnh tham chiếu"): a wing-shaped ornament the painting draws on the body's
+  sides (crystal frills) goes where the painting draws it (`front`); the bird's wing standard is for real wings only.
 - Each Secret has its own design; one piece recoloured for another Secret is not a new design.
 - Low poly for cheap phones: each part keeps the triangles in its kit's `budget` (about 500 to 900).
 
@@ -66,7 +73,8 @@ orchestrator's (CLAUDE.md).
 4. **Write the kit** in `KITS` of `tools/blender/wear_kit.py` (fields in `kit-reference.md`): `sort` by the middles
    from step 3, `budget`, and a piece for each part with its place from step 1. Start from the nearest existing kit.
    The tool knows `horn` (horns and ears), `wing` (spread), `aim` (a piece set by where it points: a bird's open
-   wing), `tail`, `wrap` (a flat piece lying on the skin), `frame` (a flat piece growing out past the outline) and
+   wing), `tail`, `wrap` (a flat piece lying on the skin), `frame` (a flat piece growing out past the outline),
+   `front` (a flat piece worn exactly where the painting draws it seen from the front, its relief standing proud) and
    `tentacle` (an arm under the body, rigged with bones); `twin` mirrors one piece into a pair, and a part torn through
    (a bat wing with holes) is mended by the kit's `mend`. A piece of another kind (a crown,
    a halo, four wings) first gets its kind in `wear_kit.py`, its row in `kit-reference.md` and, if its anchor cannot

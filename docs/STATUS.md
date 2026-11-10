@@ -73,6 +73,13 @@ arrow-tipped tail): the wings spread up and out from the back of the shoulders (
 the wing roots from the game's camera), the tail hanging from the back with a slow heavy wag (the painting shows no
 tail; the file has one, so it is worn). Model 128659610713284; all fourteen dressed Secrets n/n in Play, the gargoyle
 seen front, back, side and three-quarter. Not seen: a phone.
+Then `secret-blue-white` Frost Swan from the owner's `ice crystal wings 3d model.glb` (the painting's ice pieces as
+raised plaques), worn proud of the body as he asked: the two crystal frills up the lower front sides, their feathers
+out past the outline to eye height, as the painting draws them (he said they are not a bird's wings: new kind `front`
+in `wear_kit.py`, which keeps a plaque's relief outside the skin), and the crest on the front under the top (`wrap`).
+Left out: the foot's crest (it would meet the ground as the jelly squashes) and the snowflake (it would sit on the
+face). Model 106684279429446; all fifteen dressed Secrets n/n in Play, the older kits rebuilt unchanged, the swan seen
+front, level, back, side and three-quarter. Not seen: a phone.
 
 ## 2026-11-10 — Dungeon fight effects per monster, from the VFX library
 

@@ -2300,6 +2300,7 @@ Config.Wear = {
 		["secret-black-yellow"] = "HoneybeeSlime",
 		["secret-black-red"] = "BloodMoonBat",
 		["secret-gray-purple"] = "MoonstoneGargoyle",
+		["secret-blue-white"] = "FrostSwan",
 	},
 	Kits = {
 		-- the owner's Meshy model art/models/accessories/tempest_dragon/neon_dragon_relics.glb, uploaded as model
@@ -2990,6 +2991,35 @@ Config.Wear = {
 					anchor = { 0, 0.2, 0.485 },
 					flap = { axis = { 0, 1, 0 }, degrees = 10, hz = 0.6 },
 					lag = { axis = { 1, 0, 0 }, degrees = 10 },
+				},
+			},
+		},
+		-- the owner's model art/models/accessories/frost_swan/blue_white.glb (two crystal frills up the lower front sides,
+		-- their feathers out past the outline, as the painting has them; the crest on the front under the top), uploaded
+		-- as model 106684279429446
+		FrostSwan = {
+			texture = "rbxassetid://88808323037751",
+			pieces = {
+				{
+					name = "FrillL",
+					mesh = 85681272384829,
+					size = { 0.4884, 0.6275, 0.529 },
+					at = { -0.39, 0.41, -0.2457 },
+					anchor = { -0.39, 0.41, -0.3444 },
+				},
+				{
+					name = "FrillR",
+					mesh = 133525621422716,
+					size = { 0.4674, 0.6264, 0.5276 },
+					at = { 0.39, 0.41, -0.2422 },
+					anchor = { 0.39, 0.41, -0.3444 },
+				},
+				{
+					name = "Crest",
+					mesh = 74536228408578,
+					size = { 0.348, 0.2149, 0.2976 },
+					at = { -0.0015, 0.7416, -0.3234 },
+					anchor = { 0, 0.76, -0.3086 },
 				},
 			},
 		},

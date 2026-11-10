@@ -323,6 +323,34 @@ KITS = {
 		),
 		body=(0.45, 0.42, 0.5, 1),
 	),
+	# Frost Swan (secret-blue-white), 2026-11-10: the owner's file holds the painting's ice pieces as raised plaques: two
+	# crystal frills shaped like wings, the crest under the top, a crest for the foot and a snowflake. The owner: use only
+	# what fits, worn standing proud of the body, never sunk in ("gắn nổi trên thân slime, không phải chìm vào trong
+	# thân"); the frills are not a bird's wings, they go where the painting has them ("không phải cánh chim, hãy gắn nó
+	# vào vị trí giống như trong hình ảnh tham chiếu"): up the lower front sides, the feathers past the outline. The crest
+	# lies on the front under the top. The foot's crest would meet the ground as the jelly squashes and the snowflake would
+	# sit on the face: parts no piece uses
+	"FrostSwan": dict(
+		folder="frost_swan",
+		glb="blue_white.glb",
+		out="FrostSwanWear",
+		texture="frost_swan_wear.png",
+		sort=nearest(
+			FrillR=(-0.335, 0.407),
+			Foot=(-0.005, 0.122),
+			Crest=(-0.009, 0.625),
+			Flake=(-0.004, 0.399),
+			FrillL=(0.307, 0.4),
+		),
+		budget=dict(FrillL=700, FrillR=700, Crest=300, Foot=320, Flake=180),
+		pieces=dict(
+			# `at` for a front piece: (across, + toward the slime's left; up) of its middle as the painting draws it
+			FrillL=dict(part="FrillL", kind="front", at=(0.39, 0.41), scale=1.25, bend=15),
+			FrillR=dict(part="FrillR", kind="front", at=(-0.39, 0.41), scale=1.25, bend=15),
+			Crest=dict(part="Crest", kind="wrap", at=(0, 0.76), scale=1.25),
+		),
+		body=(0.55, 0.8, 1, 1),
+	),
 }
 TEXTURE = 1024
 
@@ -867,6 +895,43 @@ def place_frame(ob, spec, name):
 	print(f"FRAME {name} at {deg} degrees, height {height}, reach {reach}, {laid} of {len(vs)} vertices laid on the skin")
 
 
+def place_front(ob, spec, name):
+	# a flat piece worn where the owner's painting draws it, as the painting is seen: from the front (the Frost Swan's
+	# crystal frills, the owner 2026-11-10: "gắn nó vào vị trí giống như trong hình ảnh tham chiếu", worn standing proud,
+	# "không phải chìm vào trong thân"). The file's front view is the painting's: every point keeps its place across and
+	# up; what lies over the body is laid on its front with the back face on the skin and the whole relief outside (a
+	# frame lays such points one by one and flattens the relief); what reaches past the outline stands out in the body's
+	# middle plane, turned back by `bend` degrees. `at` = (across, + toward the slime's left; up) of its middle in the
+	# front view, `scale`; `turn` and `flip` as for a wrap
+	vs = ob.data.vertices
+	lo = Vector((min(v.co.x for v in vs), min(v.co.y for v in vs), min(v.co.z for v in vs)))
+	hi = Vector((max(v.co.x for v in vs), max(v.co.y for v in vs), max(v.co.z for v in vs)))
+	rebase(ob, (lo + hi) / 2)
+	ob.data.transform(Matrix.Scale(spec["scale"], 4) @ Matrix.Rotation(rad(-spec.get("turn", 0)), 4, "Y"))
+	if spec.get("flip"):
+		ob.data.transform(Matrix.Scale(-1, 4, (1, 0, 0)))
+		ob.data.flip_normals()
+	back = max(v.co.y for v in vs)
+	ax, az = spec["at"]
+	bend = math.tan(rad(spec.get("bend", 0)))
+	laid = 0
+	for v in vs:
+		x, z = ax + v.co.x, max(az + v.co.z, 0.005)
+		r = skin_radius(z)
+		if abs(x) < r:
+			y = -math.sqrt(r * r - x * x)
+			laid += 1
+		else:
+			y = (abs(x) - r) * bend
+		# (its back face a hair under the skin, so no gap shows)
+		v.co = Vector((x, y + 0.005 - (back - v.co.y), z))
+	r = skin_radius(az)
+	anchor = Vector((ax, -math.sqrt(max(r * r - ax * ax, 0.0)), az))
+	ob.data.transform(Matrix.Translation(-anchor))
+	ob.location = anchor
+	print(f"FRONT {name} at {spec['at']}, {laid} of {len(vs)} vertices laid on the body's front, anchor {tuple(round(x, 3) for x in anchor)}")
+
+
 def place_aim(ob, spec, name):
 	# a piece set by where it points (a bird's wing at rest on the back: the owner, 2026-11-10, "tư thế tự nhiên của cánh
 	# chim", "phải ở đằng sau lưng của slime", "xoay ngang như đang xòe cánh"): its root (the end along X that `root`
@@ -1090,6 +1155,8 @@ for name, spec in KIT["pieces"].items():
 		place_wrap(ob, spec, name)
 	elif spec["kind"] == "frame":
 		place_frame(ob, spec, name)
+	elif spec["kind"] == "front":
+		place_front(ob, spec, name)
 	elif spec["kind"] == "aim":
 		axes[name] = place_aim(ob, spec, name)
 		if spec.get("twin"):
