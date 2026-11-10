@@ -271,7 +271,8 @@ Textures.Images = {
 	rose_top = { id = 121999667549833, from = SKILL_ART }, -- a rose bloom from above, a spiral of petals
 	koi_top = { id = 138089618563309, from = SKILL_ART }, -- a koi from above, head UP (VelocityParallel: it swims head first)
 	bubble_gloss = { id = 138130484403547, from = SKILL_ART }, -- a see-through glass bubble, a bright shine
-	droplet_gloss = { id = 107460170148223, from = SKILL_ART }, -- a glossy water drop, point up
+	droplet_gloss = { id = 107460170148223, from = SKILL_ART }, -- a glossy water drop, point UP (falling: rotation 0;
+	-- a VelocityParallel spray: rotation 180, so the point trails)
 	down_feather = { id = 114074618716227, from = SKILL_ART }, -- a fluffy little down feather
 	gem_round = { id = 84274586076811, from = SKILL_ART }, -- a faceted round gem from above
 	gust_curl = { id = 107418049747886, from = SKILL_ART }, -- a gust of wind: three soft curling strokes
