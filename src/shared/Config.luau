@@ -2296,6 +2296,9 @@ Config.Wear = {
 		["secret-blue-pink"] = "CottonCandySheep",
 		["secret-blue-orange"] = "SunshowerFox",
 		["secret-black-purple"] = "VoidKraken",
+		["secret-blue-blue"] = "CloudPegasus",
+		["secret-black-yellow"] = "HoneybeeSlime",
+		["secret-black-red"] = "BloodMoonBat",
 	},
 	Kits = {
 		-- the owner's Meshy model art/models/accessories/tempest_dragon/neon_dragon_relics.glb, uploaded as model
@@ -2731,6 +2734,79 @@ Config.Wear = {
 					at = { 0.5819, 0.5534, 0.558 },
 					anchor = { 0.17, 0.53, 0.45 },
 					flap = { axis = { -0.2437, 0.1181, 0.9626 }, degrees = 10, hz = 0.6 },
+				},
+			},
+		},
+		-- the owner's model art/models/accessories/cloud_pegasus/wing_trio.glb (one white feathered wing, mirrored into a
+		-- pair; the Raven's pose and beat, the owner's standard for every bird wing pair, only smaller), uploaded as model
+		-- 87390925158467
+		CloudPegasus = {
+			texture = "rbxassetid://89482836839649",
+			pieces = {
+				{
+					name = "WingL",
+					mesh = 106819395859519,
+					size = { 0.7862, 0.3704, 0.1954 },
+					at = { -0.5389, 0.6181, 0.5257 },
+					anchor = { -0.17, 0.53, 0.45 },
+					flap = { axis = { -0.2437, -0.1181, -0.9626 }, degrees = 10, hz = 0.6 },
+				},
+				{
+					name = "WingR",
+					mesh = 127232322331656,
+					size = { 0.7862, 0.3704, 0.1954 },
+					at = { 0.5389, 0.6181, 0.5257 },
+					anchor = { 0.17, 0.53, 0.45 },
+					flap = { axis = { -0.2437, 0.1181, 0.9626 }, degrees = 10, hz = 0.6 },
+				},
+			},
+		},
+		-- the owner's model art/models/accessories/honeybee_slime/wing_trio.glb (one bee wing, mirrored into a pair, rising
+		-- up and out from the upper back), uploaded as model 71604348945099
+		HoneybeeSlime = {
+			texture = "rbxassetid://85451487466506",
+			pieces = {
+				{
+					name = "WingL",
+					mesh = 89838154835644,
+					size = { 0.3991, 0.4405, 0.1866 },
+					at = { -0.4292, 0.8807, 0.351 },
+					anchor = { -0.24, 0.7, 0.27 },
+					-- (a bee's wings buzz: small and quick; clear, as the painting's)
+					flap = { axis = { -0.2567, 0.1694, -0.9515 }, degrees = 14, hz = 3 },
+					clear = 0.35,
+				},
+				{
+					name = "WingR",
+					mesh = 86802540053816,
+					size = { 0.3991, 0.4405, 0.1866 },
+					at = { 0.4292, 0.8807, 0.351 },
+					anchor = { 0.24, 0.7, 0.27 },
+					flap = { axis = { -0.2567, -0.1694, 0.9515 }, degrees = 14, hz = 3 },
+					clear = 0.35,
+				},
+			},
+		},
+		-- the owner's model art/models/accessories/blood_moon_bat/wing_trio.glb (one bat wing, its two torn holes mended,
+		-- mirrored into a pair, up and out from the upper shoulders), uploaded as model 113673886578474
+		BloodMoonBat = {
+			texture = "rbxassetid://121139310661251",
+			pieces = {
+				{
+					name = "WingL",
+					mesh = 105030148439945,
+					size = { 0.5243, 0.5736, 0.1981 },
+					at = { -0.4365, 0.7854, 0.2705 },
+					anchor = { -0.28, 0.66, 0.25 },
+					flap = { axis = { -0.2756, 0, -0.9613 }, degrees = 12, hz = 0.8 },
+				},
+				{
+					name = "WingR",
+					mesh = 101786129418069,
+					size = { 0.5243, 0.5736, 0.1981 },
+					at = { 0.4365, 0.7854, 0.2705 },
+					anchor = { 0.28, 0.66, 0.25 },
+					flap = { axis = { -0.2756, 0, 0.9613 }, degrees = 12, hz = 0.8 },
 				},
 			},
 		},

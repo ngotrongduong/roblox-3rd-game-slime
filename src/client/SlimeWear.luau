@@ -27,6 +27,7 @@ type PieceSpec = {
 	lag: LagSpec?,
 	bones: { { number } }?,
 	wriggle: WriggleSpec?,
+	clear: number?,
 }
 type KitSpec = { texture: string, pieces: { PieceSpec } }
 
@@ -125,8 +126,8 @@ local function dress(model: Model, name: string)
 		local part = templates[name][i]:Clone()
 		part.Size = v3(spec.size) * s
 		part.CFrame = feet * CFrame.new(v3(spec.at) * s)
-		-- (a ghost's pieces fade as its body does)
-		part.Transparency = body.Transparency
+		-- (a ghost's pieces fade as its body does; a `clear` piece, an insect's wing, lets that share of the light through)
+		part.Transparency = 1 - (1 - body.Transparency) * (1 - (spec.clear or 0))
 		local flap = spec.flap
 		local twitch = spec.twitch
 		local lag = spec.lag

@@ -23,6 +23,9 @@ def nearest(**marks):
 	return lambda c: min(marks, key=lambda k: (marks[k][0] - c.x) ** 2 + (marks[k][1] - c.z) ** 2)
 
 
+# the owner's "feathered wing 3d model.glb" (2026-11-10): one torn bat wing, one big white feathered wing, one bee wing
+WING_TRIO = nearest(Bat=(-0.295, 0.615), Feather=(-0.073, 0.212), Bee=(0.253, 0.577))
+
 # `sort` says which part of the file a loose bit belongs to, by its middle; `budget` the triangles a part keeps;
 # `pieces` what is made of each part, in the order they are exported: kind (horn: horns and ears, wing, tail), where it
 # sits on the body (Blender axes, body height 1; +X is the slime's own left), size factor, turns in degrees, and `twin`,
@@ -250,6 +253,55 @@ KITS = {
 		),
 		body=(0.3, 0.55, 0.9, 1),
 	),
+	# Cloud Pegasus (secret-blue-blue), 2026-11-10: a pair of small white feathered wings. The owner's file holds ONE
+	# white feathered wing, one bee wing and one bat wing (WING_TRIO); each Secret takes its own and mirrors it into a
+	# pair. Its root is at -X, spreading toward +X: the file's right wing, so it goes on the slime's right and its twin on
+	# the left. A bird's wings take the Raven's pose, the owner's standard for every bird wing pair, only smaller
+	"CloudPegasus": dict(
+		folder="cloud_pegasus",
+		glb="wing_trio.glb",
+		out="CloudPegasusWear",
+		texture="cloud_pegasus_wear.png",
+		sort=WING_TRIO,
+		budget=dict(Bat=300, Feather=900, Bee=300),
+		pieces=dict(
+			WingR=dict(part="Feather", kind="aim", root="-x", at=(-0.17, 0.45, 0.53), scale=0.8, point=(0.95, 0.2, 0.33),
+				face=(0, 1, 0.2), twin="WingL"),
+		),
+		body=(0.3, 0.6, 1, 1),
+	),
+	# Honeybee Slime (secret-black-yellow), 2026-11-10: a bee's two clear wings from the upper back, rising up and out
+	# behind the shoulders as the painting has them (WING_TRIO's bee wing, root at -X: the file's right wing)
+	"HoneybeeSlime": dict(
+		folder="honeybee_slime",
+		glb="wing_trio.glb",
+		out="HoneybeeSlimeWear",
+		texture="honeybee_slime_wear.png",
+		sort=WING_TRIO,
+		budget=dict(Bat=300, Feather=900, Bee=300),
+		pieces=dict(
+			WingR=dict(part="Bee", kind="aim", root="-x", at=(-0.24, 0.27, 0.7), scale=1.3, point=(0.65, 0.3, 0.7),
+				face=(0, 1, 0.1), twin="WingL"),
+		),
+		body=(0.95, 0.8, 0.1, 1),
+	),
+	# Blood Moon Bat (secret-black-red), 2026-11-10: bat wings from the upper shoulders, up and out, the tips above the
+	# top. WING_TRIO's bat wing came torn, two holes through its membrane: mended (`mend`). Root at -X: the file's right
+	# wing
+	"BloodMoonBat": dict(
+		folder="blood_moon_bat",
+		glb="wing_trio.glb",
+		out="BloodMoonBatWear",
+		texture="blood_moon_bat_wear.png",
+		sort=WING_TRIO,
+		budget=dict(Bat=600, Feather=900, Bee=300),
+		mend=["Bat"],
+		pieces=dict(
+			WingR=dict(part="Bat", kind="wing", root="-x", at=(-0.28, 0.25, 0.66), scale=1.5, raise_=50, sweep=16,
+				twin="WingL"),
+		),
+		body=(0.6, 0.05, 0.08, 1),
+	),
 }
 TEXTURE = 1024
 
@@ -331,6 +383,199 @@ def rebase(ob, anchor):
 	ob.location = (0, 0, 0)
 
 
+# the side of a mended hole's tile in the texture, in pixels at the file's size
+TILE = 96
+
+
+def mend(ob, name, margin=0.035, inset=0.05):
+	# fill the holes torn through a thin piece the file lays flat in its XZ plane (a bat wing's membrane): where its
+	# outline seen from the front closes round empty ground, a thin patch is laid over the hole, wider than it by
+	# `margin` of the piece's size, its two faces `inset` of the membrane's thickness under the membrane's front and
+	# back, so its edge hides inside the membrane. Each face of the patch wears a tile of its own in the texture: the
+	# membrane round the hole as the file paints it, the hole blended smoothly in from it (one flat colour showed as a
+	# sticker; the file's own texture over a hole is pale)
+	import numpy as np
+	from collections import deque
+	from mathutils.geometry import barycentric_transform
+
+	me = ob.data
+	me.calc_loop_triangles()
+	uv = me.uv_layers.active.data
+	tris = [(t, [me.vertices[i].co.copy() for i in t.vertices]) for t in me.loop_triangles]
+	xs = [v.co.x for v in me.vertices]
+	zs = [v.co.z for v in me.vertices]
+	size = max(max(xs) - min(xs), max(zs) - min(zs))
+	cell = size / 240
+	x0, z0 = min(xs) - 3 * cell, min(zs) - 3 * cell
+	w, h = int((max(xs) - x0) / cell) + 4, int((max(zs) - z0) / cell) + 4
+	gx, gz = np.meshgrid(x0 + (np.arange(w) + 0.5) * cell, z0 + (np.arange(h) + 0.5) * cell)
+	cover = np.zeros((h, w), bool)
+	for _, (a, b, c) in tris:
+		# (the cells whose middles lie in the triangle, seen from the front)
+		d = (b.z - c.z) * (a.x - c.x) + (c.x - b.x) * (a.z - c.z)
+		if abs(d) < 1e-12:
+			continue
+		l1 = ((b.z - c.z) * (gx - c.x) + (c.x - b.x) * (gz - c.z)) / d
+		l2 = ((c.z - a.z) * (gx - c.x) + (a.x - c.x) * (gz - c.z)) / d
+		cover |= (l1 >= -0.01) & (l2 >= -0.01) & (1 - l1 - l2 >= -0.01)
+	# the open ground reached from the edge of the grid is outside; open ground left over is a hole
+	seen = np.zeros((h, w), bool)
+
+	def flood(start, keep):
+		region, todo = [], deque([start])
+		seen[start] = True
+		while todo:
+			j, i = todo.popleft()
+			region.append((j, i))
+			for dj, di in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+				q = (j + dj, i + di)
+				if 0 <= q[0] < h and 0 <= q[1] < w and not seen[q] and keep(q):
+					seen[q] = True
+					todo.append(q)
+		return region
+
+	flood((0, 0), lambda q: not cover[q])
+	holes = [flood((j, i), lambda q: not cover[q]) for j in range(h) for i in range(w) if not cover[j, i] and not seen[j, i]]
+	holes = [r for r in holes if len(r) >= 20]
+
+	def under(x, z, facing):
+		# the membrane's front (facing -1) or back (+1) at a point: its depth
+		best = None
+		for t, (a, b, c) in tris:
+			if t.normal.y * facing <= 0.2:
+				continue
+			p = barycentric_transform(Vector((x, 0, z)), Vector((a.x, 0, a.z)), Vector((b.x, 0, b.z)), Vector((c.x, 0, c.z)),
+				Vector((1, 0, 0)), Vector((0, 1, 0)), Vector((0, 0, 1)))
+			miss = max(-p.x, -p.y, -p.z, 0.0)
+			if best is None or miss < best[0]:
+				best = (miss, p, t)
+		_, p, t = best
+		return p.x * me.vertices[t.vertices[0]].co.y + p.y * me.vertices[t.vertices[1]].co.y + p.z * me.vertices[t.vertices[2]].co.y
+
+	img = [i for i in bpy.data.images if i.size[0] > 0][0]
+	iw, ih = img.size
+	px = np.empty(iw * ih * 4, np.float32)
+	img.pixels.foreach_get(px)
+	px = px.reshape(ih, iw, 4)
+
+	def raster(mask, uvs):
+		# mark the texture's pixels whose middles lie in a triangle of UVs
+		(ax, ay), (bx, by), (cx, cy) = [(u.x * iw - 0.5, u.y * ih - 0.5) for u in uvs]
+		d = (by - cy) * (ax - cx) + (cx - bx) * (ay - cy)
+		i0, i1 = max(int(min(ax, bx, cx)), 0), min(int(max(ax, bx, cx)) + 2, iw)
+		j0, j1 = max(int(min(ay, by, cy)), 0), min(int(max(ay, by, cy)) + 2, ih)
+		if abs(d) < 1e-9 or i0 >= i1 or j0 >= j1:
+			return
+		gi, gj = np.meshgrid(np.arange(i0, i1), np.arange(j0, j1))
+		l1 = ((by - cy) * (gi - cx) + (cx - bx) * (gj - cy)) / d
+		l2 = ((cy - ay) * (gi - cx) + (ax - cx) * (gj - cy)) / d
+		mask[j0:j1, i0:i1] |= (l1 >= 0) & (l2 >= 0) & (1 - l1 - l2 >= 0)
+
+	def near(m):
+		return np.roll(m, 1, 0) | np.roll(m, -1, 0) | np.roll(m, 1, 1) | np.roll(m, -1, 1)
+
+	# the pixels the piece's own faces show: a patch's tile goes where it shows nothing (the file's atlas cuts the
+	# membrane into many islands, so the hole has no place of its own in the texture; this kit's texture serves this
+	# piece only, so the other parts' pixels are free)
+	shown = np.zeros((ih, iw), bool)
+	for t in me.loop_triangles:
+		raster(shown, [uv[i].uv for i in t.loops])
+
+	def tile(hull, facing):
+		# a TILE-pixel square of the texture painted as the membrane round the hole (sampled through the faces on that
+		# side) with the hole blended smoothly in from it; returns the UV of a point (x, z) in it
+		for j0 in range(4, ih - TILE - 4, 16):
+			free = [i0 for i0 in range(4, iw - TILE - 4, 16) if not shown[j0 - 4:j0 + TILE + 4, i0 - 4:i0 + TILE + 4].any()]
+			if free:
+				break
+		i0 = free[0]
+		shown[j0 - 4:j0 + TILE + 4, i0 - 4:i0 + TILE + 4] = True
+		lo_x, lo_z = min(p[0] for p in hull), min(p[1] for p in hull)
+		k = (TILE - 8) / max(max(p[0] for p in hull) - lo_x, max(p[1] for p in hull) - lo_z)
+		ii, jj = np.meshgrid(np.arange(TILE), np.arange(TILE))
+		gx_, gz_ = lo_x + (ii + 0.5 - 4) / k, lo_z + (jj + 0.5 - 4) / k
+		col = np.zeros((TILE, TILE, 3), np.float32)
+		known = np.zeros((TILE, TILE), bool)
+		for t, (a, b, c) in tris:
+			d = (b.z - c.z) * (a.x - c.x) + (c.x - b.x) * (a.z - c.z)
+			if t.normal.y * facing <= 0.2 or abs(d) < 1e-12:
+				continue
+			l1 = ((b.z - c.z) * (gx_ - c.x) + (c.x - b.x) * (gz_ - c.z)) / d
+			l2 = ((c.z - a.z) * (gx_ - c.x) + (a.x - c.x) * (gz_ - c.z)) / d
+			l3 = 1 - l1 - l2
+			inside = (l1 >= 0) & (l2 >= 0) & (l3 >= 0) & ~known
+			if inside.any():
+				ua, ub, uc = [uv[i].uv for i in t.loops]
+				pu = np.clip(((l1 * ua.x + l2 * ub.x + l3 * uc.x)[inside] * iw).astype(int), 0, iw - 1)
+				pv = np.clip(((l1 * ua.y + l2 * ub.y + l3 * uc.y)[inside] * ih).astype(int), 0, ih - 1)
+				col[inside] = px[pv, pu, :3]
+				known |= inside
+		# (the membrane's last pixels at the hole's edge are pale: left out)
+		for _ in range(3):
+			known &= ~near(~known)
+		gap = ~known
+		col[gap] = col[known].mean(axis=0)
+		for _ in range(1500):
+			col[gap] = ((np.roll(col, 1, 0) + np.roll(col, -1, 0) + np.roll(col, 1, 1) + np.roll(col, -1, 1)) / 4)[gap]
+		px[j0:j0 + TILE, i0:i0 + TILE, :3] = col
+		return lambda x, z: Vector(((i0 + 4 + (x - lo_x) * k) / iw, (j0 + 4 + (z - lo_z) * k) / ih))
+
+	bm = bmesh.new()
+	bm.from_mesh(me)
+	layer = bm.loops.layers.uv.active
+	added, filled, painted = 0, 0, 0
+	for region in holes:
+		cells = set(region)
+		grow = int(round(margin * size / cell))
+		# the hole widened by the margin, as far as the membrane reaches (never out past its outline)
+		ring = set(cells)
+		for _ in range(grow):
+			ring |= {(j + dj, i + di) for j, i in ring for dj, di in ((1, 0), (-1, 0), (0, 1), (0, -1))
+				if 0 <= j + dj < h and 0 <= i + di < w and (cover[j + dj, i + di] or (j + dj, i + di) in cells)}
+		pts = sorted({(float(gx[j, i]), float(gz[j, i])) for j, i in ring})
+
+		def half(seq):
+			out = []
+			for p in seq:
+				while len(out) >= 2 and ((out[-1][0] - out[-2][0]) * (p[1] - out[-2][1]) - (out[-1][1] - out[-2][1]) * (p[0] - out[-2][0])) <= 0:
+					out.pop()
+				out.append(p)
+			return out[:-1]
+
+		# its outline: the hull of the widened hole (counter-clockwise seen from the front), points closer than a few
+		# cells merged
+		hull = half(pts) + half(reversed(pts))
+		hull = [p for k, p in enumerate(hull) if k == 0 or math.dist(p, hull[k - 1]) > 4 * cell]
+		for facing in (-1, 1):
+			at = tile(hull, facing)
+			corners = []
+			for x, z in hull:
+				yf, yb = under(x, z, -1), under(x, z, 1)
+				y = yf + inset * (yb - yf) if facing < 0 else yb - inset * (yb - yf)
+				corners.append((bm.verts.new((x, y, z)), at(x, z)))
+			if facing > 0:
+				corners.reverse()
+			face = bm.faces.new([v for v, _ in corners])
+			for loop, (_, u) in zip(face.loops, corners):
+				loop[layer].uv = u
+			painted += 1
+			face.normal_update()
+			if face.normal.y * facing < 0:
+				face.normal_flip()
+			added += len(corners) - 2
+		filled += len(region)
+	bmesh.ops.triangulate(bm, faces=[f for f in bm.faces if len(f.verts) > 3])
+	bm.to_mesh(me)
+	bm.free()
+	me.update()
+	img.pixels.foreach_set(px.ravel())
+	img.update()
+	print(f"MEND {name} {len(holes)} holes, {filled * cell * cell:.4f} square units, +{added} triangles, "
+		f"{painted} tiles of {TILE} pixels painted")
+
+
+for key in KIT.get("mend", ()):
+	mend(parts[key], key)
 for key, ob in parts.items():
 	print(f"KEPT {key} tris={decimate(ob, KIT['budget'][key])}")
 
@@ -826,6 +1071,9 @@ for name, spec in KIT["pieces"].items():
 		place_frame(ob, spec, name)
 	elif spec["kind"] == "aim":
 		axes[name] = place_aim(ob, spec, name)
+		if spec.get("twin"):
+			# (the mirror of a turn's axis keeps its x and turns its y and z: the twin's tip lifts too)
+			axes[spec["twin"]] = Vector((axes[name].x, -axes[name].y, -axes[name].z))
 	elif spec["kind"] == "tentacle":
 		axes[name], joints[name], rig = place_tentacle(ob, spec, name)
 		rigs.append(rig)

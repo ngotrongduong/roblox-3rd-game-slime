@@ -67,7 +67,8 @@ orchestrator's (CLAUDE.md).
    from step 3, `budget`, and a piece for each part with its place from step 1. Start from the nearest existing kit.
    The tool knows `horn` (horns and ears), `wing` (spread), `aim` (a piece set by where it points: a bird's open
    wing), `tail`, `wrap` (a flat piece lying on the skin), `frame` (a flat piece growing out past the outline) and
-   `tentacle` (an arm under the body, rigged with bones). A piece of another kind (a crown,
+   `tentacle` (an arm under the body, rigged with bones); `twin` mirrors one piece into a pair, and a part torn through
+   (a bat wing with holes) is mended by the kit's `mend`. A piece of another kind (a crown,
    a halo, four wings) first gets its kind in `wear_kit.py`, its row in `kit-reference.md` and, if its anchor cannot
    sit on the skin, a change to `tests/spec/wear.luau`; then step 6 is due.
 5. **Build:** `& "C:\Roblox 3rd game\tools\blender\wear_kit.ps1" <Kit>`. Read the lines (`kit-reference.md`), then

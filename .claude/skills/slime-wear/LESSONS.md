@@ -51,3 +51,14 @@ taught something.
 | Sheep ears stick out sideways: a twitch about X only spun them | twitch and lag about Z, the axes negated on the right |
 | The owner kept only the sheep's horns and tuft ("chỉ cần để lại cặp sừng và chỏm lông trên đầu, còn lại có thể bỏ đi hết"): a file is what he offers, not all of it must be worn | the dropped parts stay in `sort` and `budget` with no piece (out of the FBX and the renders) and leave `Config.Wear`; the kept meshes keep their ids |
 | Tentacles raised up the sides and back (`rise` up to 55) sank into the body's bulge and showed as stubs at its side; some turned their suckers up. The renders from the front looked fine, the owner's close look in Play did not | the tool now finds the suckers by colour and searches each arm's climb and roll (suckers down or out, nothing through the side above `PIERCE`, root on the ground); judge from `review/low.png`, the top, and close in Play from every side |
+
+## 2026-11-10 (Cloud Pegasus, Honeybee Slime, Blood Moon Bat: one file, three Secrets)
+
+| What went wrong | The fix |
+|---|---|
+| The owner's file held ONE white wing, ONE bee wing and ONE bat wing for three Secrets | three kits read the same file (`WING_TRIO` sort), each keeps its own wing (the others are parts no piece uses) and mirrors it with `twin` |
+| A single wing aimed as the slime's left wing came out upside down (its root is at -X: the file's right wing) | it goes on the slime's RIGHT (`WingR`, `root="-x"`, `at` x < 0) with `twin="WingL"`; `upright` +0.99. The `aim` twin's flap axis is the mirror of a turn axis, (x, -y, -z): the same numbers as the Raven's own pair |
+| The torn bat wing had no open edges: each tear is a tunnel through a closed, thin shell (Euler number -2), so "fill holes" tools see nothing | `mend`: the wing's outline seen from the front, rastered; empty ground it closes round is a hole; a thin patch a little wider than the hole lies just under the membrane's two faces |
+| The patch's UVs taken from the membrane round the hole showed pale; one flat colour showed as a sticker; repainting the texture under the patch smeared 770 000 pixels, because the file's atlas cuts the membrane into many islands | each patch face gets a tile of its own in the texture (`TILE`, where the bat shows nothing; this kit's PNG serves the bat only): the membrane round the hole sampled through its faces, the hole blended in smoothly |
+| Patches set 20 % of the thickness inside left a dark seam round each hole | 5 % (`inset=0.05`); the tile carries the membrane's own texture where patch and membrane overlap, so nothing fights |
+| Bee wings came out solid cream in Roblox (the texture has no alpha) | a piece's `clear` (0.35) lets light through, on top of a ghost's fade (`client/SlimeWear`) |

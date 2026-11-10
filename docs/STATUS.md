@@ -58,6 +58,15 @@ The owner's look the same day: the sheep keeps only its horns and the tuft on it
 body and showed as stubs at its side, some turned their purple suckers up. `wear_kit` now finds each arm's suckers by
 the texture's colour and searches its climb and roll: every arm joins under the body and goes out low, suckers down or
 out, nothing through the side; model 91899436585494, seen in Play from the front, the back, low and above.
+Three more from one file of the owner's (one white feathered wing, one bee wing, one torn bat wing), the same day:
+`secret-blue-blue` Cloud Pegasus wears the white wing mirrored into a pair in the Raven's pose, smaller (model
+87390925158467); `secret-black-yellow` Honeybee Slime the bee wings rising up and out from the upper back, buzzing
+(14 degrees, 3 Hz) and see-through (new piece field `clear`, 0.35; model 71604348945099); `secret-black-red` Blood
+Moon Bat the bat wings up and out from the upper shoulders as its painting has them, the two holes torn through the
+membrane mended (`mend` in `wear_kit.py`: each hole found from the wing's outline, patched just under both faces,
+each patch face wearing its own tile of the membrane's texture; model 113673886578474). All thirteen dressed Secrets
+n/n in Play, the older ten rebuilt unchanged; the three new ones seen front and back, the mended wing close. Not
+seen: a phone.
 
 ## 2026-11-10 — Dungeon fight effects per monster, from the VFX library
 

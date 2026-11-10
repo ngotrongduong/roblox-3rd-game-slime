@@ -77,6 +77,8 @@ return function(T)
 				if lag then
 					T.ok(three(lag.axis) and lag.degrees > 0 and lag.degrees <= 30, `{label} lag`)
 				end
+				-- (a clear piece still shows)
+				T.ok(piece.clear == nil or (piece.clear > 0 and piece.clear <= 0.6), `{label} clear`)
 			end
 		end
 	end)
