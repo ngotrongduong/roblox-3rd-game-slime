@@ -1,14 +1,16 @@
 # Status
 
-## 2026-11-10 — Secret slimes wear their own pieces (first: Tempest Dragon)
+## 2026-11-10 — Secret slimes wear their own pieces (Tempest Dragon, Steam Dragon)
 
-The owner starts accessories "for every slime" with a Meshy model for `secret-black-blue` (Tempest Dragon): one tail,
-one bat wing, one horn. `tools/blender/wear_tempest_dragon.py` splits them, mirrors the wing and horn into pairs (3,200
-triangles), sets them on a body one unit tall and writes `wear.json`; the FBX is uploaded as model 91743466444489 through
-`open_cloud_invoke` (the owner approved `art/models` in Studio's MCP Permissions). `Config.Wear` maps a Secret to its kit;
-`client/SlimeWear` builds the pieces from their mesh ids, `SlimeLook` puts them on, `SlimeActor` makes them ride the skin
-(anchor + the jelly's lean) and flap (wings 12 degrees, 0.8 Hz). Next kit: same script with new numbers, a new
-`Config.Wear` entry. The owner saved the test place to Roblox as "Slime" (place 118370379105805). Not seen: a phone.
+The owner sends a Meshy model per Secret slime (so far each one tail, one bat wing, one horn): `secret-black-blue`
+Tempest Dragon, `secret-blue-red` Steam Dragon. `tools/blender/wear_kit.ps1 <Kit>` (a table per kit in `wear_kit.py`)
+splits them, mirrors the wing and horn into pairs, sets them on a body one unit tall, renders `review/` and writes
+`wear.json`; the FBX goes up through `open_cloud_invoke` (the owner approved `art/models` in Studio's MCP Permissions;
+models 91743466444489 and 105747110048467), `InsertService:LoadAsset` gives the five mesh ids. `Config.Wear` maps a
+Secret to its kit; `client/SlimeWear` builds the pieces from their mesh ids, `SlimeLook` puts them on, `SlimeActor` makes
+them ride the skin (anchor + the jelly's lean) and flap (wings 12 degrees, 0.8 Hz). Next kit: a new table entry, run,
+upload, a new `Config.Wear` entry. The owner saved the test place to Roblox as "Slime" (place 118370379105805). Not
+seen: a phone.
 
 ## 2026-11-10 — Dungeon fight effects per monster, from the VFX library
 

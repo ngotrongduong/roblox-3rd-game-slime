@@ -2249,7 +2249,7 @@ Config.Slime = {
 }
 
 -- ===== Worn pieces of a Secret slime (the owner, 2026-11-10: "phụ kiện cho từng con slime") =====
--- Drawn by the client (client/SlimeWear): each piece is a mesh made for a body one unit tall (tools/blender/wear_*.py,
+-- Drawn by the client (client/SlimeWear): each piece is a mesh made for a body one unit tall (tools/blender/wear_kit.py,
 -- which writes these numbers to art/models/accessories/<kit>/wear.json), in mesh units: feet at y 0, front -Z, the slime's
 -- own left -X. `at` is the piece's middle where it rests, `size` its box; it rides the skin at `anchor` as the jelly
 -- squashes, hops and leans. A `flap` swings it about its anchor along `axis` (a positive turn lifts it), `degrees` each
@@ -2258,10 +2258,11 @@ Config.Wear = {
 	-- Secret id -> its kit
 	Secrets = {
 		["secret-black-blue"] = "TempestDragon",
+		["secret-blue-red"] = "SteamDragon",
 	},
 	Kits = {
-		-- the owner's Meshy model art/models/accessories/tempest_dragon/neon_dragon_relics.glb (tools/blender/wear_tempest_dragon.py),
-		-- uploaded as model 91743466444489 (its five MeshParts give the mesh ids)
+		-- the owner's Meshy model art/models/accessories/tempest_dragon/neon_dragon_relics.glb, uploaded as model
+		-- 91743466444489 (its five MeshParts give the mesh ids)
 		TempestDragon = {
 			texture = "rbxassetid://83202714233801",
 			pieces = {
@@ -2302,6 +2303,50 @@ Config.Wear = {
 					size = { 0.1352, 0.2177, 0.3827 },
 					at = { 0.0017, 0.1752, 0.6211 },
 					anchor = { 0, 0.16, 0.44 },
+				},
+			},
+		},
+		-- the owner's Meshy model art/models/accessories/steam_dragon/patriotic_dragon_cost.glb, uploaded as model
+		-- 105747110048467
+		SteamDragon = {
+			texture = "rbxassetid://79626976517509",
+			pieces = {
+				{
+					name = "HornL",
+					mesh = 86840792177617,
+					size = { 0.1621, 0.285, 0.1771 },
+					at = { -0.2321, 0.8808, 0.0756 },
+					anchor = { -0.22, 0.75, 0.06 },
+				},
+				{
+					name = "HornR",
+					mesh = 128252202269088,
+					size = { 0.1621, 0.285, 0.1771 },
+					at = { 0.2321, 0.8808, 0.0756 },
+					anchor = { 0.22, 0.75, 0.06 },
+				},
+				{
+					name = "WingL",
+					mesh = 102255726396265,
+					size = { 0.5098, 0.4678, 0.4121 },
+					at = { -0.5241, 0.6013, 0.5068 },
+					anchor = { -0.3, 0.47, 0.34 },
+					flap = { axis = { -0.6157, 0, -0.788 }, degrees = 12, hz = 0.8 },
+				},
+				{
+					name = "WingR",
+					mesh = 98472723970976,
+					size = { 0.5098, 0.4678, 0.4121 },
+					at = { 0.5241, 0.6013, 0.5068 },
+					anchor = { 0.3, 0.47, 0.34 },
+					flap = { axis = { -0.6157, 0, 0.788 }, degrees = 12, hz = 0.8 },
+				},
+				{
+					name = "Tail",
+					mesh = 106763278921249,
+					size = { 0.1093, 0.2103, 0.365 },
+					at = { 0.0024, 0.1512, 0.6229 },
+					anchor = { 0, 0.21, 0.45 },
 				},
 			},
 		},

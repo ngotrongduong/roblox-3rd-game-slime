@@ -1,32 +1,60 @@
-# Tempest Dragon's worn pieces (Secret slime secret-black-blue), from the owner's Meshy model
-# art/models/accessories/tempest_dragon/neon_dragon_relics.glb (one tail, one bat wing, one horn).
+# A Secret slime's worn pieces (Config.Wear) from the owner's Meshy model of one wing, one horn and one tail.
 # Splits the three, mirrors the wing and the horn into pairs, lowers the triangles for phones, sets each piece on a
-# slime body one unit tall (the game's mesh units), renders it from five sides, and exports:
-#   TempestDragonWear.fbx   HornL HornR WingL WingR Tail, placed around the body (feet at the origin)
-#   tempest_dragon_wear.png the texture at 1024
-#   wear.json               each piece's centre, size and anchor (and a wing's flap axis) in Roblox mesh space
+# slime body one unit tall (the game's mesh units), renders it from six sides into <folder>/review/, and exports:
+#   <out>.fbx       HornL HornR WingL WingR Tail, placed around the body (feet at the origin)
+#   <texture>.png   the texture at 1024
+#   wear.json       each piece's centre, size and anchor (and a wing's flap axis) in Roblox mesh space: Config.Wear
 # Blender axes are the slime body's own (tools/blender/slime_body.py): Z up, the slime faces -Y, its own left is +X.
 # Exported like the body (FBX, forward -Z, up Y), so Roblox reads (X, Y, Z) = (-x, z, y).
-# Run: tools/blender/wear_tempest_dragon.ps1
-import bpy, bmesh, json, math, os
+# Every Meshy model so far lays the pieces out alike: the wing's root at its +X end, spreading toward -X with its
+# painted side to -Y; the horn's base at the bottom, its tip curling toward -X; the tail's base at its +X end.
+# Run: tools/blender/wear_kit.ps1 <kit>
+import bpy, bmesh, json, math, os, sys
 from mathutils import Matrix, Vector
 
-ROOT = r"C:\Roblox 3rd game\art\models\accessories\tempest_dragon"
-GLB = os.path.join(ROOT, "neon_dragon_relics.glb")
-REVIEW = os.path.join(ROOT, "review")
-os.makedirs(REVIEW, exist_ok=True)
+ART = r"C:\Roblox 3rd game\art\models\accessories"
 
-# where each piece sits on the body (Blender axes, body height 1): anchor point, size factor, turns (degrees)
-HORN = dict(at=(0.22, 0.06, 0.75), scale=0.92, tilt_out=16, tilt_back=8)
-WING = dict(at=(0.3, 0.34, 0.47), scale=1.5, raise_=24, sweep=38)
-TAIL = dict(at=(0.0, 0.44, 0.16), scale=1.25, lift=12)
-# triangles a piece may keep (one of each pair)
-BUDGET = dict(Horn=520, Wing=760, Tail=640)
+# where each piece sits on the body (Blender axes, body height 1): anchor point, size factor, turns (degrees);
+# `sort` says which piece a loose part of the file belongs to, by its middle; `budget` the triangles a piece keeps
+KITS = {
+	# Tempest Dragon (secret-black-blue), 2026-11-10
+	"TempestDragon": dict(
+		folder="tempest_dragon",
+		glb="neon_dragon_relics.glb",
+		out="TempestDragonWear",
+		texture="tempest_dragon_wear.png",
+		sort=lambda c: "Tail" if c.x < -0.185 else ("Horn" if c.x > 0.25 else "Wing"),
+		horn=dict(at=(0.22, 0.06, 0.75), scale=0.92, tilt_out=16, tilt_back=8),
+		wing=dict(at=(0.3, 0.34, 0.47), scale=1.5, raise_=24, sweep=38),
+		tail=dict(at=(0.0, 0.44, 0.16), scale=1.25, lift=12),
+		budget=dict(Horn=520, Wing=760, Tail=640),
+		body=(0.05, 0.12, 0.45, 1),
+	),
+	# Steam Dragon (secret-blue-red), 2026-11-10
+	"SteamDragon": dict(
+		folder="steam_dragon",
+		glb="patriotic_dragon_cost.glb",
+		out="SteamDragonWear",
+		texture="steam_dragon_wear.png",
+		sort=lambda c: "Tail" if c.z < -0.02 else ("Horn" if c.x > 0.2 else "Wing"),
+		horn=dict(at=(0.22, 0.06, 0.75), scale=0.66, tilt_out=16, tilt_back=8),
+		wing=dict(at=(0.3, 0.34, 0.47), scale=1.1, raise_=24, sweep=38),
+		tail=dict(at=(0.0, 0.45, 0.21), scale=0.62, lift=14),
+		budget=dict(Horn=900, Wing=900, Tail=900),
+		body=(0.55, 0.12, 0.1, 1),
+	),
+}
 TEXTURE = 1024
 
 # the body's radius every 0.05 of its height (Shared/SlimeShape PROFILE)
 PROFILE = [0.1164, 0.3466, 0.4251, 0.4704, 0.4995, 0.5171, 0.5258, 0.5269, 0.5221, 0.5131, 0.4997, 0.4811, 0.4568,
 	0.4248, 0.3822, 0.3253, 0.2417, 0.1508, 0.0997, 0.0671, 0.0]
+
+KIT = KITS[sys.argv[sys.argv.index("--") + 1]]
+ROOT = os.path.join(ART, KIT["folder"])
+REVIEW = os.path.join(ROOT, "review")
+os.makedirs(REVIEW, exist_ok=True)
+HORN, WING, TAIL, BUDGET = KIT["horn"], KIT["wing"], KIT["tail"], KIT["budget"]
 
 
 def rad(d):
@@ -34,7 +62,7 @@ def rad(d):
 
 
 bpy.ops.wm.read_factory_settings(use_empty=True)
-bpy.ops.import_scene.gltf(filepath=GLB)
+bpy.ops.import_scene.gltf(filepath=os.path.join(ROOT, KIT["glb"]))
 src = [o for o in bpy.data.objects if o.type == "MESH"][0]
 for o in bpy.data.objects:
 	if o is not src and o.type != "MESH":
@@ -42,11 +70,8 @@ for o in bpy.data.objects:
 bpy.context.view_layer.objects.active = src
 src.select_set(True)
 bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
-mat = src.data.materials[0]
-for node in mat.node_tree.nodes:
-	print("NODE", node.type, node.name, getattr(getattr(node, "image", None), "name", ""))
 
-# weld the seams, split into loose parts, and sort them by where they stand (tail left, wing middle, horn right)
+# weld the seams, split into loose parts, and sort them into the three pieces
 bpy.ops.object.mode_set(mode="EDIT")
 bpy.ops.mesh.select_all(action="SELECT")
 bpy.ops.mesh.remove_doubles(threshold=0.0001)
@@ -55,8 +80,7 @@ bpy.ops.object.mode_set(mode="OBJECT")
 groups = {"Tail": [], "Wing": [], "Horn": []}
 for o in [o for o in bpy.data.objects if o.type == "MESH"]:
 	c = sum((o.matrix_world @ v.co for v in o.data.vertices), Vector()) / len(o.data.vertices)
-	key = "Tail" if c.x < -0.185 else ("Horn" if c.x > 0.25 else "Wing")
-	groups[key].append(o)
+	groups[KIT["sort"](c)].append(o)
 pieces = {}
 for key, objs in groups.items():
 	bpy.ops.object.select_all(action="DESELECT")
@@ -126,7 +150,7 @@ sw = rad(WING["sweep"])
 # the hinge runs along the root, front to back after the sweep; a positive turn about it lifts the tip
 wing_axis = Vector((math.sin(sw), -math.cos(sw), 0))
 
-# tail: base = the thick end at +X in the file, the spade tip up toward -X: turn it to stretch back (+Y), tip up
+# tail: base = the thick end at +X in the file, the tip toward -X: turn it to stretch back (+Y), tip up
 tail = pieces["Tail"]
 rebase(tail, anchor_of(tail, "x", True))
 tail.data.transform(Matrix.Scale(TAIL["scale"], 4))
@@ -159,7 +183,7 @@ print("FLAP CHECK tip z", round(far.z, 3), "->", round(lifted.z, 3))
 # texture at 1024
 img = bpy.data.images["Image_0"]
 img.scale(TEXTURE, TEXTURE)
-img.filepath_raw = os.path.join(ROOT, "tempest_dragon_wear.png")
+img.filepath_raw = os.path.join(ROOT, KIT["texture"])
 img.file_format = "PNG"
 img.save()
 
@@ -184,9 +208,8 @@ def lathe():
 	for p in me.polygons:
 		p.use_smooth = True
 	m = bpy.data.materials.new("BodyMat")
-	m.diffuse_color = (0.05, 0.12, 0.45, 1)
 	m.use_nodes = True
-	m.node_tree.nodes["Principled BSDF"].inputs["Base Color"].default_value = (0.05, 0.12, 0.45, 1)
+	m.node_tree.nodes["Principled BSDF"].inputs["Base Color"].default_value = KIT["body"]
 	me.materials.append(m)
 	for sx in (-0.16, 0.16):
 		bpy.ops.mesh.primitive_uv_sphere_add(radius=0.06, location=(sx, -0.47, 0.55))
@@ -267,7 +290,7 @@ bpy.ops.object.select_all(action="DESELECT")
 for ob in wear:
 	ob.select_set(True)
 bpy.context.view_layer.objects.active = wear[0]
-bpy.ops.export_scene.fbx(filepath=os.path.join(ROOT, "TempestDragonWear.fbx"), use_selection=True,
+bpy.ops.export_scene.fbx(filepath=os.path.join(ROOT, KIT["out"] + ".fbx"), use_selection=True,
 	object_types={"MESH"}, axis_forward="-Z", axis_up="Y", apply_scale_options="FBX_SCALE_ALL", apply_unit_scale=True,
 	use_space_transform=True, bake_space_transform=False, mesh_smooth_type="FACE", use_mesh_modifiers=True,
 	use_tspace=False, path_mode="AUTO", embed_textures=False)
