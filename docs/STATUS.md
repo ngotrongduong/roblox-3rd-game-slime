@@ -136,6 +136,9 @@ flick tipped the foot's rim off the skin); every root checked in 3x close-ups of
 Then the owner shot Ember Tiger and Creamsicle Fox close and low and still saw an ear's foot off the body: each pair
 had one mirrored angle, though the file's two ears differ. Now every ear is turned on its own (`fit` in `wear_kit.py`)
 to lay its whole foot rim on the skin, and the close shots add two from low at the front (`-lowright`, `-lowleft`).
+The owner: each round made them worse; copy Sunshower Fox, whose ears he likes. The four now wear their ears at
+Sunshower's exact place and angles (`at` +-0.34, 0, 0.7, lean out 32, no lean back, the default seat), scaled to its
+height; the per-ear fit is gone from the tool, and the skill says every pair of ears copies Sunshower Fox.
 
 ## 2026-11-10 — Dungeon fight effects per monster, from the VFX library
 

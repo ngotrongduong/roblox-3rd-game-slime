@@ -24,16 +24,14 @@ orchestrator's (CLAUDE.md).
   rim of its foot goes under the skin, and where the shoulder slopes away the lowest part is drawn down onto it
   (`seat`). The detail at its foot (fur, a spiked collar, a band) must show.
 - **No base showing** (2026-11-10): no rim, hollow or gap under a piece from any side.
-- **Ears lean with the shoulder, joined tight** (2026-11-10, the fox-file ears: "chưa được dính sát vào thân slime. vẫn
-  còn khoảng hở nhỏ, đồng thời điều chỉnh lại góc độ"): an ear at a top corner leans out about 28-38 degrees with the
-  slope there, not upright, its foot drawn onto the skin over most of its height (`band` 0.6) and set well in
-  (`deep` 0.08); the run's `HORN` line must show 0 of its lowest fifth outside the skin. Then (his second note: "vẫn
-  còn khoảng hở từ gốc ... vậy mà bạn cũng đồng ý được?") it twitches by a swivel about the upright, never a flick that
-  tips its foot off the skin, and is judged from close-ups of every root in Play (`crop.py`-style, 3x), front, back,
-  side and quarter, never from the whole-body shot alone. Then (his third note, of Ember Tiger and Creamsicle Fox:
-  "chỉnh lại góc xoay của tai để cả phần đáy của tai chạm vào thân", and "tách rời tai trái và tai phải ... chỉnh từng
-  góc độ từng tai"): each ear gets its own angle (`fit`), never one angle mirrored for the pair, and the close shots
-  include the two from low at the front (`-lowright`, `-lowleft`), where a player beside the slime looks up under them.
+- **Every pair of ears is worn as Sunshower Fox wears its own** (2026-11-10, after four rounds on the fox-file ears
+  that each made them worse: "càng sửa càng hỏng, hãy nghiên cứu con này ... copy chính xác như vậy. cả về góc độ và vị
+  trí đặt tai"): `horn` at (+-0.34, 0, 0.7), `tilt_out` 32, `tilt_back` 0, `level=False`, `foot="low"`, the default
+  `band` and no `deep`; `scale` only brings the ear to Sunshower's height (about 0.28 in `WEAR`). Its foot then sits
+  at height 0.71 on the top corner. Never sink ears deeper, lean them out further, drag their lower half down or give
+  each its own angle to hide a gap: those were tried and he rejected them. An ear twitches by a swivel about the
+  upright (it never tips its foot off the skin). Judge ears from 3x close-ups of every root in Play, including the two
+  shots from low at the front (`-lowright`, `-lowleft`), and next to Sunshower Fox.
 - **Vines grow out, not stuck on** (2026-11-10: "dây leo mọc vươn ra cả bên ngoài của slime"): what the painting draws
   round the outline stands out past the body (`frame`), only what lies on the back is laid on the skin (`wrap`).
 - **A bird's wings spread from the back** (2026-11-10: "tư thế tự nhiên của cánh chim thay vì chổng lên trên cao", then

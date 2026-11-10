@@ -603,12 +603,10 @@ KITS = {
 		sort=FOX_TAIL,
 		budget=FOX_BUDGET,
 		pieces=dict(
-			EarL=dict(part="WolfEarL", kind="horn", at=(0.34, 0.0, 0.68), scale=1.75, tilt_out=28, tilt_back=-6,
-				level=False, foot="low", band=0.6, deep=0.08,
-				fit=((-15, 15, 3), (-12, 12, 3), (-20, 20, 5))),
-			EarR=dict(part="WolfEarR", kind="horn", at=(-0.34, 0.0, 0.68), scale=1.75, tilt_out=28, tilt_back=-6,
-				level=False, foot="low", band=0.6, deep=0.08,
-				fit=((-15, 15, 3), (-12, 12, 3), (-20, 20, 5))),
+			EarL=dict(part="WolfEarL", kind="horn", at=(0.34, 0.0, 0.7), scale=1.5, tilt_out=32, tilt_back=0,
+				level=False, foot="low"),
+			EarR=dict(part="WolfEarR", kind="horn", at=(-0.34, 0.0, 0.7), scale=1.5, tilt_out=32, tilt_back=0,
+				level=False, foot="low"),
 			Tail=dict(part="WolfTail", kind="tail", base="-x", at=(0.0, 0.45, 0.2), scale=2.6, lift=0, sink=True),
 		),
 		body=(0.75, 0.82, 0.97, 1),
@@ -621,12 +619,10 @@ KITS = {
 		sort=FOX_TAIL,
 		budget=FOX_BUDGET,
 		pieces=dict(
-			EarL=dict(part="TigerEarL", kind="horn", at=(0.35, 0.0, 0.67), scale=1.75, tilt_out=30, tilt_back=-6,
-				level=False, foot="low", band=0.6, deep=0.08,
-				fit=((-15, 15, 3), (-12, 12, 3), (-20, 20, 5))),
-			EarR=dict(part="TigerEarR", kind="horn", at=(-0.35, 0.0, 0.67), scale=1.75, tilt_out=30, tilt_back=-6,
-				level=False, foot="low", band=0.6, deep=0.08,
-				fit=((-15, 15, 3), (-12, 12, 3), (-20, 20, 5))),
+			EarL=dict(part="TigerEarL", kind="horn", at=(0.34, 0.0, 0.7), scale=1.5, tilt_out=32, tilt_back=0,
+				level=False, foot="low"),
+			EarR=dict(part="TigerEarR", kind="horn", at=(-0.34, 0.0, 0.7), scale=1.5, tilt_out=32, tilt_back=0,
+				level=False, foot="low"),
 			Tail=dict(part="TigerTail", kind="tail", base="-x", at=(0.0, 0.45, 0.2), scale=2.6, lift=0, sink=True),
 		),
 		body=(1, 0.55, 0.15, 1),
@@ -639,12 +635,10 @@ KITS = {
 		sort=FOX_TAIL,
 		budget=FOX_BUDGET,
 		pieces=dict(
-			EarL=dict(part="CatEarL", kind="horn", at=(0.34, 0.0, 0.68), scale=1.75, tilt_out=28, tilt_back=-6,
-				level=False, foot="low", band=0.6, deep=0.08,
-				fit=((-15, 15, 3), (-12, 12, 3), (-20, 20, 5))),
-			EarR=dict(part="CatEarR", kind="horn", at=(-0.34, 0.0, 0.68), scale=1.75, tilt_out=28, tilt_back=-6,
-				level=False, foot="low", band=0.6, deep=0.08,
-				fit=((-15, 15, 3), (-12, 12, 3), (-20, 20, 5))),
+			EarL=dict(part="CatEarL", kind="horn", at=(0.34, 0.0, 0.7), scale=1.5, tilt_out=32, tilt_back=0,
+				level=False, foot="low"),
+			EarR=dict(part="CatEarR", kind="horn", at=(-0.34, 0.0, 0.7), scale=1.5, tilt_out=32, tilt_back=0,
+				level=False, foot="low"),
 			Tail=dict(part="CatTail", kind="tail", base="-x", at=(0.0, 0.45, 0.2), scale=2.6, lift=0, sink=True),
 		),
 		body=(0.6, 0.35, 0.8, 1),
@@ -657,12 +651,10 @@ KITS = {
 		sort=FOX_TAIL,
 		budget=FOX_BUDGET,
 		pieces=dict(
-			EarL=dict(part="FoxEarL", kind="horn", at=(0.34, 0.0, 0.7), scale=1.75, tilt_out=30, tilt_back=-6,
-				level=False, foot="low", band=0.6, deep=0.08,
-				fit=((-15, 15, 3), (-12, 12, 3), (-20, 20, 5))),
-			EarR=dict(part="FoxEarR", kind="horn", at=(-0.34, 0.0, 0.7), scale=1.75, tilt_out=30, tilt_back=-6,
-				level=False, foot="low", band=0.6, deep=0.08,
-				fit=((-15, 15, 3), (-12, 12, 3), (-20, 20, 5))),
+			EarL=dict(part="FoxEarL", kind="horn", at=(0.34, 0.0, 0.7), scale=1.5, tilt_out=32, tilt_back=0,
+				level=False, foot="low"),
+			EarR=dict(part="FoxEarR", kind="horn", at=(-0.34, 0.0, 0.7), scale=1.5, tilt_out=32, tilt_back=0,
+				level=False, foot="low"),
 			Tail=dict(part="FoxTail", kind="tail", base="-x", at=(0.0, 0.45, 0.2), scale=2.6, lift=0, sink=True),
 		),
 		body=(1, 0.75, 0.4, 1),
@@ -1047,33 +1039,6 @@ def base_plane(me, spread=40, step=2, tol=0.02):
 	return best
 
 
-def fit_horn(ob, foot, spec, side, spin, name):
-	# `fit`: each ear of a pair turned on its own until the whole rim of its foot lies on the skin (the owner,
-	# 2026-11-10: "tách rời tai trái và tai phải ... chỉnh từng góc độ từng tai để chúng khớp với thân"): the two ears of a
-	# file are not mirror images, so one mirrored angle leaves one of them, or part of each, off the shoulder. Of the
-	# turns within `fit` = ((lean out from, to, step), (lean back ...), (spin ...)) degrees, offsets to the kit's own
-	# numbers, it keeps the one whose seated foot is most even on the skin, nudged toward the kit's numbers
-	rims = [ob.data.vertices[i].co.copy() for i in foot]
-	at = Vector(spec["at"])
-	(o0, o1, os_), (b0, b1, bs), (s0, s1, ss) = spec["fit"]
-	best = None
-	for do in range(o0, o1 + 1, os_):
-		for db in range(b0, b1 + 1, bs):
-			for ds in range(s0, s1 + 1, ss):
-				turn = Matrix.Rotation(rad(side * (spec["tilt_out"] + do)), 3, "Y") @ Matrix.Rotation(rad(-(spec["tilt_back"] + db)), 3, "X")
-				r = turn @ Matrix.Rotation(rad(spin + ds), 3, "Z")
-				axis = turn @ Vector((0, 0, 1))
-				gaps = [to_skin(at + r @ c, axis) for c in rims]
-				if None in gaps:
-					continue
-				cost = max(gaps) - min(gaps) + 0.0004 * (abs(do) + abs(db) + abs(ds))
-				if best is None or cost < best[0]:
-					best = (cost, max(gaps) - min(gaps), do, db, ds)
-	_, uneven, do, db, ds = best
-	print(f"FIT {name} lean out {spec['tilt_out'] + do}, back {spec['tilt_back'] + db}, spin {spin + ds}: foot uneven by {uneven:.3f}")
-	return spin + ds, spec["tilt_out"] + do, spec["tilt_back"] + db
-
-
 def place_horn(ob, spec, name):
 	# a horn or an ear. Its foot: the flat sole (or a hollow cup's lip) of a horn, the lowest tenth of an ear's soft fur
 	# (`foot="low"`). A horn's sole is cut at a slant in the file: turn it level (`level`) so the horn grows straight out
@@ -1094,11 +1059,8 @@ def place_horn(ob, spec, name):
 	ob.data.transform(Matrix.Scale(spec["scale"], 4))
 	curl = spec.get("curl")
 	spin = spec.get("spin", {"back": -90, "out": 180 if side > 0 else 0, "in": 0 if side > 0 else 180}.get(curl, 0))
-	tilt_out, tilt_back = spec["tilt_out"], spec["tilt_back"]
-	if spec.get("fit"):
-		spin, tilt_out, tilt_back = fit_horn(ob, foot, spec, side, spin, name)
 	ob.data.transform(Matrix.Rotation(rad(spin), 4, "Z"))
-	turn = Matrix.Rotation(rad(side * tilt_out), 3, "Y") @ Matrix.Rotation(rad(-tilt_back), 3, "X")
+	turn = Matrix.Rotation(rad(side * spec["tilt_out"]), 3, "Y") @ Matrix.Rotation(rad(-spec["tilt_back"]), 3, "X")
 	ob.data.transform(turn.to_4x4())
 	ob.location = spec["at"]
 	axis = turn @ Vector((0, 0, 1))

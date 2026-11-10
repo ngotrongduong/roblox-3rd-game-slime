@@ -102,8 +102,7 @@ return function(T)
 
 	-- (a mirrored twin matches exactly; a pair the file holds both of, such as two ears, is two meshes that differ a
 	-- little, each seated on the skin by its own foot; two vines of one file wrapped at mirrored spots are two
-	-- different vines, so their middles differ more; each ear of a pair turned to its own fit (`fit`, the owner,
-	-- 2026-11-10) moves its seated foot by up to a hundredth)
+	-- different vines, so their middles differ more)
 	T.test("a pair is mirrored across the body", function()
 		for kitName, kit in W.Kits do
 			local byName = {}
@@ -114,8 +113,8 @@ return function(T)
 				local twin = string.match(name, "^(.+)L$")
 				local other = twin and byName[twin .. "R"]
 				if other then
-					T.near(piece.anchor[1], -other.anchor[1], 0.01, `{kitName}.{name}`)
-					T.near(piece.anchor[3], other.anchor[3], 0.01, `{kitName}.{name}`)
+					T.near(piece.anchor[1], -other.anchor[1], 0.005, `{kitName}.{name}`)
+					T.near(piece.anchor[3], other.anchor[3], 0.005, `{kitName}.{name}`)
 					T.near(piece.at[1], -other.at[1], 0.07, `{kitName}.{name}`)
 					T.near(piece.at[3], other.at[3], 0.07, `{kitName}.{name}`)
 				end
