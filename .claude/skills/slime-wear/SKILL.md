@@ -50,6 +50,13 @@ orchestrator's (CLAUDE.md).
 - **Not every wing shape is a bird's wing** (2026-11-10, Frost Swan: "trông giống như cánh nhưng không phải cánh chim,
   hãy gắn nó vào vị trí giống như trong hình ảnh tham chiếu"): a wing-shaped ornament the painting draws on the body's
   sides (crystal frills) goes where the painting draws it (`front`); the bird's wing standard is for real wings only.
+- **Flowers and leaves keep their 3D shape** (2026-11-10, Forest Dryad and Peach Blossom: "các lưới của hoa và lá ...
+  biến dạng ... hãy cố gắng giữ nguyên mesh để khối hình hoa lá đúng với nguyên dạng 3d nhất có thể, không cần phải
+  kéo để nó ôm sát thân con slime"): a crown, a wreath of hair, a cluster, a festoon is worn `rigid` (turned, moved,
+  scaled, never bent), touching the body and standing off its curve; `wrap`, `frame` and `front` bend the mesh and are
+  only for flat plaques and vines that may bend. Keep nearly all their triangles: decimated hard, leaves break up.
+- **Tusks stand out of the face** (2026-11-10, Iron Boar: "nanh răng của con lợn rừng nằm ở phía trước mặt, không phải
+  ở 2 bên"): low on the front either side of the mouth, pointing forward, tips curling up.
 - Each Secret has its own design; one piece recoloured for another Secret is not a new design.
 - Low poly for cheap phones: each part keeps the triangles in its kit's `budget` (about 500 to 900).
 
@@ -74,7 +81,8 @@ orchestrator's (CLAUDE.md).
    from step 3, `budget`, and a piece for each part with its place from step 1. Start from the nearest existing kit.
    The tool knows `horn` (horns and ears), `wing` (spread), `aim` (a piece set by where it points: a bird's open
    wing), `tail`, `wrap` (a flat piece lying on the skin), `frame` (a flat piece growing out past the outline),
-   `front` (a flat piece worn exactly where the painting draws it seen from the front, its relief standing proud) and
+   `front` (a flat piece worn exactly where the painting draws it seen from the front, its relief standing proud),
+   `rigid` (a flower crown, leafy hair, a cluster: kept exactly as the file shapes it, never bent) and
    `tentacle` (an arm under the body, rigged with bones); `twin` mirrors one piece into a pair, and a part torn through
    (a bat wing with holes) is mended by the kit's `mend`. A piece of another kind (a crown,
    a halo, four wings) first gets its kind in `wear_kit.py`, its row in `kit-reference.md` and, if its anchor cannot

@@ -105,7 +105,9 @@ Fifteen Secrets dressed on 2026-11-10; these got a piece right in one or two rou
 
 | What went wrong | The fix |
 |---|---|
-| Iron Boar's tusks, worn as horns with the file's turn (`level=False`), were lifted 0.34 up to the shoulders as horns, their foot stretched 0.2: their cuff opens sideways, which `base_plane` (40 degrees from down) cannot find. The owner: "là 2 cái nanh, không phải sừng" | `spread=90` finds the sideways sole; levelled and `tilt_out` 80 the tusk lies out flat from the lower side, its tip curling up |
+| Iron Boar's tusks, worn as horns with the file's turn (`level=False`), were lifted 0.34 up to the shoulders as horns, their foot stretched 0.2: their cuff opens sideways, which `base_plane` (40 degrees from down) cannot find. The owner: "là 2 cái nanh, không phải sừng" | `spread=90` finds the sideways sole |
+| Then laid out flat from the lower sides, as the painting's side view seemed to show. The owner: "nằm ở phía trước mặt, không phải ở 2 bên" | low on the front either side of the mouth, leaning forward (`tilt_back` -70, `spin` turns the curl so the tips rise); a boar's tusks come out of its face |
+| Flowers, leaves and a wreath of leafy hair worn `front` and `wrap` were bent onto the skin, their petals and leaves stretched; cut to 900 triangles the leaves broke into shards. The owner: "lưới của hoa và lá ... biến dạng ... giữ nguyên mesh" | kind `rigid`: only turned, moved and scaled, touching the body at its deepest point; keep nearly all the triangles (Hair 2200, Crown 1800) |
 | Curved armour plates (shoulder guards) as `front` or `wrap` stood off the body like fins from the game's camera: their own curve is kept as relief | left out (the skin already paints the armour); a strongly curved piece is not a plaque |
 | A leafy arch of hair or a flower crown drawn round the head in the painting: `front` at the painting's place matched it at the first build | `front`, `at` (0, 0.72-0.74), scale to the painting's width in body units |
 | Antlers behind the `front` hair hid in Play from the front | a step of scale (1.1 -> 1.4) so they rise above it |

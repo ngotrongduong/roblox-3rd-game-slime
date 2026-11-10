@@ -3027,14 +3027,14 @@ Config.Wear = {
 			},
 		},
 		-- the owner's model art/models/accessories/forest_dryad/green_green.glb (antlers at the top corners, the leafy
-		-- hair round the top as the painting has it, blossoms, a leaf and a vine on the back), uploaded as model
-		-- 117231029918059
+		-- hair over the top of the head, blossoms, a leaf and a vine on the back, all worn as the file shapes them),
+		-- uploaded as model 73928175279860
 		ForestDryad = {
 			texture = "rbxassetid://110529232415796",
 			pieces = {
 				{
 					name = "AntlerL",
-					mesh = 106261752757295,
+					mesh = 96504268539154,
 					size = { 0.4071, 0.4061, 0.0898 },
 					at = { -0.4316, 0.9682, 0.0195 },
 					anchor = { -0.254, 0.779, 0.02 },
@@ -3048,52 +3048,53 @@ Config.Wear = {
 				},
 				{
 					name = "Hair",
-					mesh = 121784009978487,
-					size = { 0.9518, 0.6178, 0.6859 },
-					at = { 0, 0.74, -0.1964 },
-					anchor = { 0, 0.74, -0.3367 },
+					mesh = 112673097426010,
+					size = { 0.8501, 0.3885, 0.4201 },
+					at = { 0, 0.7723, -0.2176 },
+					anchor = { -0.0292, 0.9171, -0.0836 },
 				},
 				{
 					name = "Blossoms",
-					mesh = 99253566930392,
-					size = { 0.3153, 0.212, 0.1842 },
-					at = { -0.0817, 0.6482, 0.4341 },
-					anchor = { -0.0723, 0.66, 0.41 },
+					mesh = 125452105300017,
+					size = { 0.3027, 0.2258, 0.1813 },
+					at = { -0.0881, 0.6202, 0.4507 },
+					anchor = { -0.1432, 0.5293, 0.4674 },
 				},
 				{
 					name = "Leaf",
-					mesh = 115952386903171,
-					size = { 0.2147, 0.2697, 0.1719 },
-					at = { 0.319, 0.3274, 0.4289 },
-					anchor = { 0.3021, 0.34, 0.4314 },
+					mesh = 80237581752590,
+					size = { 0.1996, 0.2761, 0.1407 },
+					at = { 0.3112, 0.3257, 0.4209 },
+					anchor = { 0.2686, 0.2537, 0.4426 },
 				},
 				{
 					name = "Vine",
-					mesh = 85520136775689,
-					size = { 0.1966, 0.3375, 0.1618 },
-					at = { -0.337, 0.3343, 0.4084 },
-					anchor = { -0.3383, 0.32, 0.4031 },
+					mesh = 92960301550157,
+					size = { 0.1666, 0.3496, 0.1471 },
+					at = { -0.347, 0.3312, 0.4042 },
+					anchor = { -0.3321, 0.286, 0.4045 },
 				},
 			},
 		},
 		-- the owner's model art/models/accessories/iron_boar/gray_red.glb (two metal tusks in red cuffs out of the lower
-		-- sides, tips curling up, a spiked circlet round the head, an armoured tail), uploaded as model 89853209729270
+		-- front either side of the mouth, tips curling up, a spiked circlet round the head, an armoured tail), uploaded as
+		-- model 122177229873839
 		IronBoar = {
 			texture = "rbxassetid://139006485220604",
 			pieces = {
 				{
 					name = "TuskL",
-					mesh = 109358523321339,
-					size = { 0.3572, 0.3061, 0.1805 },
-					at = { -0.5877, 0.2846, -0.1365 },
-					anchor = { -0.4633, 0.2135, -0.12 },
+					mesh = 96127316600360,
+					size = { 0.2383, 0.3365, 0.3492 },
+					at = { -0.2328, 0.3497, -0.5876 },
+					anchor = { -0.2201, 0.2603, -0.4408 },
 				},
 				{
 					name = "TuskR",
-					mesh = 112862473070780,
-					size = { 0.3489, 0.3, 0.1706 },
-					at = { 0.594, 0.2904, -0.1283 },
-					anchor = { 0.4619, 0.2133, -0.12 },
+					mesh = 74982988821151,
+					size = { 0.2172, 0.3419, 0.3622 },
+					at = { 0.2375, 0.3522, -0.5811 },
+					anchor = { 0.2199, 0.2596, -0.439 },
 				},
 				{
 					name = "Circlet",
@@ -3113,38 +3114,40 @@ Config.Wear = {
 				},
 			},
 		},
-		-- the owner's model art/models/accessories/peach_blossom/pink_yellow.glb (the crown of blossoms across the top as
-		-- the painting has it, two clusters behind it, a festoon across the back), uploaded as model 136245608358614
+		-- the owner's model art/models/accessories/peach_blossom/pink_yellow.glb (the crown of blossoms over the top as
+		-- the painting has it, two clusters behind it, a festoon across the back, all worn as the file shapes them),
+		-- uploaded as model 136863691703075
 		PeachBlossom = {
 			texture = "rbxassetid://78105804155910",
 			pieces = {
 				{
 					name = "Crown",
-					mesh = 88000674074782,
-					size = { 0.9282, 0.4361, 0.6233 },
-					at = { 0, 0.72, -0.2298 },
-					anchor = { 0, 0.72, -0.3594 },
+					mesh = 102806357229282,
+					size = { 0.8964, 0.3678, 0.2748 },
+					at = { 0, 0.7521, -0.3215 },
+					anchor = { 0.0478, 0.7526, -0.3174 },
 				},
 				{
 					name = "ClusterL",
-					mesh = 110267713399251,
-					size = { 0.1982, 0.1865, 0.1967 },
-					at = { -0.3588, 0.6317, 0.2639 },
-					anchor = { -0.3532, 0.64, 0.2473 },
+					mesh = 96683455502940,
+					size = { 0.1727, 0.2075, 0.1872 },
+					at = { -0.3572, 0.6189, 0.2629 },
+					-- (the pair's two meshes touch the skin 0.006 apart: both ride the mirrored middle of their touch points)
+					anchor = { -0.31, 0.649, 0.291 },
 				},
 				{
 					name = "ClusterR",
-					mesh = 95706882197672,
-					size = { 0.1973, 0.1854, 0.194 },
-					at = { 0.3599, 0.6318, 0.2618 },
-					anchor = { 0.3532, 0.64, 0.2473 },
+					mesh = 79653697859969,
+					size = { 0.171, 0.206, 0.1841 },
+					at = { 0.3595, 0.6209, 0.2627 },
+					anchor = { 0.31, 0.649, 0.291 },
 				},
 				{
 					name = "Festoon",
-					mesh = 77997498713747,
-					size = { 0.5779, 0.243, 0.1608 },
-					at = { 0, 0.4179, 0.4873 },
-					anchor = { 0, 0.42, 0.5185 },
+					mesh = 92357861924788,
+					size = { 0.4922, 0.2031, 0.0518 },
+					at = { 0, 0.3994, 0.5207 },
+					anchor = { 0.0034, 0.4084, 0.5206 },
 				},
 			},
 		},

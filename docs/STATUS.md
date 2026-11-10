@@ -94,6 +94,13 @@ gem. `secret-pink-yellow` Peach Blossom: the blossom crown across the top as pai
 and a festoon across the back (model 136245608358614); left out: a bead blossom (on the face), a branch and petals.
 All eighteen dressed Secrets n/n in Play, the three seen front, level, back, side and three-quarter; the other kits
 were not rebuilt (`spread` defaults to the old 40). Not seen: a phone.
+The owner's notes on them: the flower and leaf meshes were deformed ("giữ nguyên mesh ... không cần phải kéo để nó ôm
+sát thân"), and the boar's tusks belong on the front of the face, not the sides. New kind `rigid` in `wear_kit.py`
+(turned, moved and scaled only, touching the body at its deepest point): the Dryad's hair, blossoms, leaf and vine and
+all of Peach Blossom's pieces now keep the file's 3D shape, with nearly all their triangles. The tusks stand low on the
+front either side of the mouth, pointing forward, tips curling up (`spin`, a new horn field). Models: Forest Dryad
+73928175279860, Iron Boar 122177229873839, Peach Blossom 136863691703075. Seen in Play from five sides; no other kit
+uses the new fields. Not seen: a phone.
 
 ## 2026-11-10 — Dungeon fight effects per monster, from the VFX library
 

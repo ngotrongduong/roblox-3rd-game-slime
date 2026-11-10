@@ -363,15 +363,18 @@ KITS = {
 		texture="forest_dryad_wear.png",
 		sort=lambda c: (("AntlerR" if c.x < -0.1 else ("AntlerL" if c.x < 0.2 else "Blossoms")) if c.z > 0.4 else
 			("Hair" if c.x < 0 else ("Pollen" if c.z < 0.1 else ("Leaf" if c.x < 0.32 else "Vine")))),
-		budget=dict(AntlerL=450, AntlerR=450, Blossoms=400, Hair=900, Leaf=160, Vine=180, Pollen=6),
+		# (the leaves and blossoms keep nearly all their triangles: cut to 900, the hair's leaves broke into shards)
+		budget=dict(AntlerL=470, AntlerR=390, Blossoms=420, Hair=2200, Leaf=160, Vine=180, Pollen=6),
 		pieces=dict(
 			# (1.1 hid behind the hair seen from the front in Play)
 			AntlerL=dict(part="AntlerL", kind="horn", at=(0.25, 0.02, 0.76), scale=1.4, tilt_out=12, tilt_back=0),
 			AntlerR=dict(part="AntlerR", kind="horn", at=(-0.25, 0.02, 0.76), scale=1.4, tilt_out=12, tilt_back=0),
-			Hair=dict(part="Hair", kind="front", at=(0, 0.74), scale=1.65, bend=25),
-			Blossoms=dict(part="Blossoms", kind="wrap", at=(170, 0.66), scale=1.2),
-			Leaf=dict(part="Leaf", kind="wrap", at=(-145, 0.34), scale=1.2, turn=-20),
-			Vine=dict(part="Vine", kind="wrap", at=(140, 0.32), scale=1.3, turn=15),
+			# (the owner: bent onto the skin by `front` and `wrap`, the leaves and blossoms came out deformed; worn rigid,
+			# as the file shapes them, touching the body and standing off its curve)
+			Hair=dict(part="Hair", kind="rigid", at=(0, 0.8), scale=1.4, tilt=55),
+			Blossoms=dict(part="Blossoms", kind="rigid", at=(170, 0.62), scale=1.2, tilt=35),
+			Leaf=dict(part="Leaf", kind="rigid", at=(-145, 0.34), scale=1.2, turn=-20),
+			Vine=dict(part="Vine", kind="rigid", at=(140, 0.32), scale=1.3, turn=15),
 		),
 		body=(0.25, 0.6, 0.15, 1),
 	),
@@ -391,10 +394,13 @@ KITS = {
 		budget=dict(TuskL=345, TuskR=345, PlateL=400, PlateR=400, Tail=900, Circlet=700, Collar=600, Gem=26),
 		pieces=dict(
 			# (worn as horns are: the cuff's open end faces the middle in the file, `spread` 90 finds it as the sole;
-			# levelled, the tusk stands up out of it, then leans out flat to its side at the foot, its tip curling up)
-			# (1.2 looked small in Play, the cuffs half hidden by the wider jelly)
-			TuskL=dict(part="TuskL", kind="horn", at=(0.5, -0.12, 0.22), scale=1.5, tilt_out=80, tilt_back=0, spread=90),
-			TuskR=dict(part="TuskR", kind="horn", at=(-0.5, -0.12, 0.22), scale=1.5, tilt_out=80, tilt_back=0, spread=90),
+			# levelled, the tusk stands up out of it; `spin` turns its curl to the back, then it leans forward out of the
+			# lower front either side of the mouth, its tip curling up. The owner: "nằm ở phía trước mặt, không phải ở 2
+			# bên")
+			TuskL=dict(part="TuskL", kind="horn", at=(0.22, -0.44, 0.26), scale=1.6, tilt_out=15, tilt_back=-70, spread=90,
+				spin=-90),
+			TuskR=dict(part="TuskR", kind="horn", at=(-0.22, -0.44, 0.26), scale=1.6, tilt_out=15, tilt_back=-70, spread=90,
+				spin=90),
 			# (round the front of the head, the spikes up: a rigid piece set by where it runs, as the sheep's garland)
 			Circlet=dict(part="Circlet", kind="aim", root="+x", at=(0.32, -0.2, 0.7), scale=1.2, point=(-1, 0, 0),
 				face=(0, -1, 0.1)),
@@ -414,12 +420,13 @@ KITS = {
 		sort=lambda c: ("Crown" if c.z > 0.38 else
 			(("ClusterR" if c.x < -0.15 else ("Bloom" if c.x < 0.15 else "ClusterL")) if c.z > 0.2 else
 			("Branch" if c.x < -0.25 else ("Festoon" if c.x < 0.25 else "Petals")))),
-		budget=dict(Crown=900, ClusterL=420, ClusterR=390, Bloom=480, Branch=460, Festoon=600, Petals=32),
+		budget=dict(Crown=1800, ClusterL=420, ClusterR=390, Bloom=480, Branch=460, Festoon=800, Petals=32),
 		pieces=dict(
-			Crown=dict(part="Crown", kind="front", at=(0, 0.72), scale=1.35, bend=25),
-			ClusterL=dict(part="ClusterL", kind="wrap", at=(125, 0.64), scale=1.2),
-			ClusterR=dict(part="ClusterR", kind="wrap", at=(-125, 0.64), scale=1.2),
-			Festoon=dict(part="Festoon", kind="wrap", at=(180, 0.42), scale=1.3),
+			# (worn rigid, as the file shapes them: bent onto the skin the blossoms came out deformed)
+			Crown=dict(part="Crown", kind="rigid", at=(0, 0.74), scale=1.3, tilt=40),
+			ClusterL=dict(part="ClusterL", kind="rigid", at=(125, 0.62), scale=1.2, tilt=25),
+			ClusterR=dict(part="ClusterR", kind="rigid", at=(-125, 0.62), scale=1.2, tilt=25),
+			Festoon=dict(part="Festoon", kind="rigid", at=(180, 0.4), scale=1.05, tilt=5),
 		),
 		body=(0.95, 0.5, 0.65, 1),
 	),
@@ -822,7 +829,7 @@ def place_horn(ob, spec, name):
 	print(f"HORN {name} foot vertices={len(foot)} of {len(vs)}, levelled by {math.degrees(down.angle(Vector((0, 0, -1)))):.1f} degrees")
 	ob.data.transform(Matrix.Scale(spec["scale"], 4))
 	curl = spec.get("curl")
-	spin = {"back": -90, "out": 180 if side > 0 else 0, "in": 0 if side > 0 else 180}.get(curl, 0)
+	spin = spec.get("spin", {"back": -90, "out": 180 if side > 0 else 0, "in": 0 if side > 0 else 180}.get(curl, 0))
 	ob.data.transform(Matrix.Rotation(rad(spin), 4, "Z"))
 	turn = Matrix.Rotation(rad(side * spec["tilt_out"]), 3, "Y") @ Matrix.Rotation(rad(-spec["tilt_back"]), 3, "X")
 	ob.data.transform(turn.to_4x4())
@@ -892,6 +899,52 @@ def along(run):
 			f = (run - a[2]) / max(b[2] - a[2], 1e-9)
 			return a[0] + (b[0] - a[0]) * f, a[1] + (b[1] - a[1]) * f
 	return MERIDIAN[-1][0], MERIDIAN[-1][1]
+
+
+def place_rigid(ob, spec, name):
+	# a piece worn exactly as the file shapes it (the owner, 2026-11-10, of flowers and leaves bent onto the skin by
+	# `wrap` and `front`: "lưới của hoa và lá ... biến dạng", "hãy cố gắng giữ nguyên mesh ... không cần phải kéo để nó ôm
+	# sát thân"): only scaled, turned and moved, never bent. Its front (-Y in the file) looks out from the body at `at` =
+	# (degrees around from the front, + toward the slime's left; height), leaned back by `tilt` degrees (its front
+	# looking up, its top lying back over the head); `turn` degrees in its own plane, `flip` mirrors it. Then it moves in
+	# or out along that look until its deepest point lies SEAT under the skin: it touches the body there and keeps its
+	# shape, standing off the curve elsewhere
+	vs = ob.data.vertices
+	lo = Vector((min(v.co.x for v in vs), min(v.co.y for v in vs), min(v.co.z for v in vs)))
+	hi = Vector((max(v.co.x for v in vs), max(v.co.y for v in vs), max(v.co.z for v in vs)))
+	rebase(ob, (lo + hi) / 2)
+	ob.data.transform(Matrix.Scale(spec["scale"], 4) @ Matrix.Rotation(rad(-spec.get("turn", 0)), 4, "Y"))
+	if spec.get("flip"):
+		ob.data.transform(Matrix.Scale(-1, 4, (1, 0, 0)))
+		ob.data.flip_normals()
+	phi, height, t = rad(spec["at"][0]), spec["at"][1], rad(spec.get("tilt", 0))
+	out = Vector((math.sin(phi), -math.cos(phi), 0))
+	look = out * math.cos(t) + Vector((0, 0, 1)) * math.sin(t)
+	up = -out * math.sin(t) + Vector((0, 0, 1)) * math.cos(t)
+	ob.data.transform(Matrix(((-look).cross(up), -look, up)).transposed().to_4x4())
+	r0 = skin_radius(height)
+	base = Vector((r0 * math.sin(phi), -r0 * math.cos(phi), height))
+
+	def depth(d):
+		return max(-outside(base + look * d + v.co) for v in vs)
+
+	near, far = -0.6, 1.0
+	for _ in range(40):
+		mid = (near + far) / 2
+		if depth(mid) > SEAT:
+			near = mid
+		else:
+			far = mid
+	at = base + look * far
+	deep = max(vs, key=lambda v: -outside(at + v.co)).co + at
+	across = math.hypot(deep.x, deep.y)
+	r = skin_radius(deep.z)
+	anchor = Vector((deep.x * r / across, deep.y * r / across, deep.z)) if across > 1e-6 else Vector((0, 0, deep.z))
+	ob.data.transform(Matrix.Translation(at - anchor))
+	ob.location = anchor
+	touch = sum(outside(anchor + v.co) < 0.03 for v in vs)
+	print(f"RIGID {name} at {spec['at']}, moved {far:+.3f} along its look, {touch} of {len(vs)} vertices within 0.03 of "
+		f"the skin, anchor {tuple(round(x, 3) for x in anchor)}")
 
 
 def place_wrap(ob, spec, name):
@@ -1229,6 +1282,8 @@ for name, spec in KIT["pieces"].items():
 		place_frame(ob, spec, name)
 	elif spec["kind"] == "front":
 		place_front(ob, spec, name)
+	elif spec["kind"] == "rigid":
+		place_rigid(ob, spec, name)
 	elif spec["kind"] == "aim":
 		axes[name] = place_aim(ob, spec, name)
 		if spec.get("twin"):
