@@ -99,8 +99,9 @@ KITS = {
 		body=(0.1, 0.1, 0.12, 1),
 	),
 	# Midnight Raven (secret-black-navy), 2026-11-10: a pair of starry feathered wings, both in the file. The owner: the
-	# painting's wings are not right, set them where they sit well on its back; then, raised they stood up too high: fold
-	# them as a resting bird does, along the sides, the tips back
+	# painting's wings are not right, set them where they sit well on its back; raised, they stood up too high; folded,
+	# at the sides or on the back, they were not what he wants: so they grow from the upper back and spread out
+	# sideways, level, as a bird's open wings ("xoay ngang như đang xòe cánh")
 	"MidnightRaven": dict(
 		folder="midnight_raven",
 		glb="black_navy.glb",
@@ -109,10 +110,12 @@ KITS = {
 		sort=lambda c: "WingL" if c.x > 0 else "WingR",
 		budget=dict(WingL=900, WingR=900),
 		pieces=dict(
-			WingL=dict(part="WingL", kind="fold", root="-x", at=(0.47, 0.0, 0.55), scale=1.25, droop=65, splay=16,
-				roll=10),
-			WingR=dict(part="WingR", kind="fold", root="+x", at=(-0.47, 0.0, 0.55), scale=1.25, droop=65, splay=16,
-				roll=10),
+			# (his sketch over the back view: the roots near the spine at mid-back, the wings wide, past the body by most
+			# of their length, their tips drooping)
+			WingL=dict(part="WingL", kind="aim", root="-x", at=(0.17, 0.45, 0.53), scale=1.7, point=(0.95, 0.2, -0.3),
+				face=(0, 1, 0.2)),
+			WingR=dict(part="WingR", kind="aim", root="+x", at=(-0.17, 0.45, 0.53), scale=1.7, point=(0.95, 0.2, -0.3),
+				face=(0, 1, 0.2)),
 		),
 		body=(0.05, 0.06, 0.2, 1),
 	),
@@ -532,24 +535,35 @@ def place_frame(ob, spec, name):
 	print(f"FRAME {name} at {deg} degrees, height {height}, reach {reach}, {laid} of {len(vs)} vertices laid on the skin")
 
 
-def place_fold(ob, spec, name):
-	# a bird's wing folded at the body's side (the owner, 2026-11-10: "tư thế tự nhiên của cánh chim"). Its root is the
-	# end along X that `root` names ("-x": the file's right wing of a pair, worn on the slime's left; "+x" on its right);
-	# set at `at`, the feathers stretch back along the side with the painted face out. `droop` lowers the tips (degrees),
-	# `splay` turns them out from the body, `roll` tips the wing's top edge in toward it. Returns the flutter axis, up
-	# through the root
-	side = 1 if spec["root"] == "-x" else -1
-	rebase(ob, anchor_of(ob, "x", side < 0))
+def place_aim(ob, spec, name):
+	# a piece set by where it points (a bird's wing at rest on the back: the owner, 2026-11-10, "tư thế tự nhiên của cánh
+	# chim", "phải ở đằng sau lưng của slime", "xoay ngang như đang xòe cánh"): its root (the end along X that `root`
+	# names) at `at`, turned so its long line (from the root to its farthest point) runs along `point` and its painted
+	# side (-Y in the file) looks along `face` (made square to `point`). The directions are for a piece on the slime's
+	# left (+X); one on its right (`at` x < 0) takes them mirrored. Returns the beat axis: the painted side's normal,
+	# signed so a positive turn lifts the tip, the wing beating in its own plane
+	vs = ob.data.vertices
+	rebase(ob, anchor_of(ob, "x", spec["root"] == "+x"))
 	ob.data.transform(Matrix.Scale(spec["scale"], 4))
-	ob.data.transform(Matrix.Rotation(rad(side * 90), 4, "Z"))
-	ob.data.transform(Matrix.Rotation(rad(-spec["droop"]), 4, "X"))
-	ob.data.transform(Matrix.Rotation(rad(-side * spec.get("splay", 0)), 4, "Z"))
-	ob.data.transform(Matrix.Rotation(rad(-side * spec.get("roll", 0)), 4, "Y"))
+
+	def frame(along, look):
+		along = along.normalized()
+		look = (look - along * look.dot(along)).normalized()
+		return Matrix((along, look, along.cross(look))).transposed()
+
+	m = 1 if spec["at"][0] >= 0 else -1
+	point, face = Vector(spec["point"]), Vector(spec["face"])
+	point.x *= m
+	face.x *= m
+	far = max(vs, key=lambda v: v.co.length).co.copy()
+	ob.data.transform((frame(point, face) @ frame(far, Vector((0, -1, 0))).transposed()).to_4x4())
 	ob.location = spec["at"]
-	tip = max(ob.data.vertices, key=lambda v: v.co.length).co + ob.location
-	inside = sum(outside(ob.location + v.co) < 0 for v in ob.data.vertices)
-	print(f"FOLD {name} tip at {tuple(round(x, 3) for x in tip)}, {inside} of {len(ob.data.vertices)} vertices inside the body")
-	return Vector((0, 0, 1))
+	tip = max(vs, key=lambda v: v.co.length).co + ob.location
+	inside = sum(outside(ob.location + v.co) < 0 for v in vs)
+	print(f"AIM {name} tip at {tuple(round(x, 3) for x in tip)}, {inside} of {len(vs)} vertices inside the body")
+	along = point.normalized()
+	normal = (face - along * face.dot(along)).normalized()
+	return normal if normal.cross(along).z > 0 else -normal
 
 
 def mirrored(ob, name):
@@ -577,8 +591,8 @@ for name, spec in KIT["pieces"].items():
 		place_wrap(ob, spec, name)
 	elif spec["kind"] == "frame":
 		place_frame(ob, spec, name)
-	elif spec["kind"] == "fold":
-		axes[name] = place_fold(ob, spec, name)
+	elif spec["kind"] == "aim":
+		axes[name] = place_aim(ob, spec, name)
 	else:
 		place_tail(ob, spec, name)
 	ob.name = name

@@ -32,8 +32,9 @@ field, upload and Config, lessons, `tools/blender/wear_inspect.ps1` (a file's lo
 is written) and `play_check.luau` (every dressed Secret alive in a row in Play, with close-shot cameras). A dry run by
 a fresh agent found its gaps (colour ids, kinds the tool lacks, sort and budget errors), now written in.
 Three more kits, the same day: `secret-black-navy` Midnight Raven (two starry feathered wings; the owner: the painting's
-wings are wrong, and raised they stood too high, so they rest folded along the sides, tips back, as a bird's do: kind
-`fold`; model 86457925782781), `secret-black-orange` Jack-o'-Slime (a sheet of pumpkin vines and leaves; the owner: the
+wings are wrong, raised they stood too high, folded at the sides or on the back they were not what he wants: so, as
+his sketch over the back view draws them, they grow from mid-back near the spine and spread wide and level out to the
+sides, tips drooping, beating slowly: kind `aim`; model 98666146416809), `secret-black-orange` Jack-o'-Slime (a sheet of pumpkin vines and leaves; the owner: the
 vines grow out past the body as his painting draws them, so a leafy vine rises off each shoulder and a curling vine runs
 down each side, upright and out past the outline, kind `frame`; vines at the foot in front and a big curly vine with
 leaves on the back lie on the skin, kind `wrap`; the face stays clear; model 104420315090131) and `secret-black-pink`

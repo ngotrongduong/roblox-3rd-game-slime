@@ -26,8 +26,11 @@ orchestrator's (CLAUDE.md).
 - **No base showing** (2026-11-10): no rim, hollow or gap under a piece from any side.
 - **Vines grow out, not stuck on** (2026-11-10: "dây leo mọc vươn ra cả bên ngoài của slime"): what the painting draws
   round the outline stands out past the body (`frame`), only what lies on the back is laid on the skin (`wrap`).
-- **A bird's wings rest as a bird's do** (2026-11-10: "tư thế tự nhiên của cánh chim thay vì chổng lên trên cao"):
-  folded along the sides, tips back (`fold`); raised spread wings are for dragons and bats.
+- **A bird's wings spread from the back** (2026-11-10: "tư thế tự nhiên của cánh chim thay vì chổng lên trên cao", then
+  "phải ở đằng sau lưng của slime, không phải ở bên cạnh", then "xoay ngang như đang xòe cánh chứ không phải tư thế
+  cánh cụp lại", with his sketch): the roots near the spine at mid-back, the wings wide and level out to the sides,
+  past the body by most of their length, the tips drooping (`aim`). Never folded, never at the sides, never raised
+  high.
 - **Tails and ears move** (2026-11-10: "gắn thêm chuyển động cho phần đuôi và tai"): a tail wags and trails the hop,
   an ear twitches now and then and trails the hop (`kit-reference.md`, "Config").
 - Each Secret has its own design; one piece recoloured for another Secret is not a new design.
@@ -52,7 +55,8 @@ orchestrator's (CLAUDE.md).
    bit is what, where each one's base is, which way a horn curls, which way an ear opens.
 4. **Write the kit** in `KITS` of `tools/blender/wear_kit.py` (fields in `kit-reference.md`): `sort` by the middles
    from step 3, `budget`, and a piece for each part with its place from step 1. Start from the nearest existing kit.
-   The tool knows `horn` (horns and ears), `wing` (spread), `fold` (a bird's wing at rest), `tail`, `wrap` (a flat
+   The tool knows `horn` (horns and ears), `wing` (spread), `aim` (a piece set by where it points: a bird's open
+   wing), `tail`, `wrap` (a flat
    piece lying on the skin) and `frame` (a flat piece growing out past the outline). A piece of another kind (a crown,
    a halo, four wings) first gets its kind in `wear_kit.py`, its row in `kit-reference.md` and, if its anchor cannot
    sit on the skin, a change to `tests/spec/wear.luau`; then step 6 is due.

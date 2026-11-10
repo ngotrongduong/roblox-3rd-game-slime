@@ -25,7 +25,9 @@ taught something.
 | What went wrong | The fix |
 |---|---|
 | A file holding both wings of a pair: the tool knew only one wing mirrored by `twin` | `root="-x"` for the file's right wing |
-| Raven's feathered wings, raised and swept like a dragon's, stood up like an angel's. The owner: "giống với tư thế tự nhiên của cánh chim thay vì chổng lên trên cao" | kind `fold`: along the sides, tips back and a little down; `splay` 16 so they show from the front |
+| Raven's feathered wings, raised and swept like a dragon's, stood up like an angel's. The owner: "giống với tư thế tự nhiên của cánh chim thay vì chổng lên trên cao" | (a fold along the sides, below, was wrong too) |
+| Folded along the sides: "cặp cánh phải ở đằng sau lưng của slime, không phải ở bên cạnh"; folded on the back, tips down: "xoay ngang như đang xòe cánh chứ không phải tư thế cánh cụp lại", and he drew it over the back render | kind `aim` (replaces `fold`): roots at mid-back near the spine, the wings spread level and wide, tips drooping; his sketch is the check. A short Vietnamese word for a pose can mean several: when the owner sends a sketch, match it |
+| The fold's angles (`droop`, `splay`, `roll`) took rounds of guessing | `aim` names where the long feather points and where the painted side looks; one round got close |
 | Vines from a sticker sheet bent flat onto the skin looked like stickers (and at scale 0.8 like scattered bits). The owner: "dây leo mọc vươn ra cả bên ngoài của slime, hãy xem bản thiết kế gốc" | kind `frame` for what the painting draws round the outline (shoulders, sides): upright, out past the body, `hug` along the outline, `yaw` 30 so it shows from the side; `wrap` only for what lies on the back |
 | A vine stood exactly in the front plane was a straight stick from the side | `yaw` |
 | Vines judged in the renders looked small in Play, where the jelly is wider | scale them up a step after the first Play look |

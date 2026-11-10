@@ -32,7 +32,7 @@ A piece, by `kind`:
 |---|---|
 | `horn` (horns and ears) | `part`; `at` where its foot's middle starts (then it is seated along its own axis); `scale`; `tilt_out` degrees leaning out to its side; `tilt_back` degrees, positive leans back; `curl` `"back"`, `"out"`, `"in"` or none (turns a tip that curls toward -X in the file); `level` (default true: turn its flat sole level; false: keep the file's turn, for a horn the file already has upright); `foot` (`"plane"` default: the flat sole or a hollow cup's lip; `"low"`: the lowest tenth, for soft fur); `band` (default 0.3: how far up its length the draw-down onto the skin fades); `twin` the mirrored copy's name |
 | `wing` (spread, a dragon's or a bat's) | `part`, `at` (the root), `scale`, `raise_` degrees tip up, `sweep` degrees back, `root` (`"+x"` default; `"-x"` for the file's right wing of a pair, spread to the slime's right), `twin` |
-| `fold` (a bird's wing at rest) | `part`, `root` (`"-x"`: the file's right wing, worn on the slime's LEFT; `"+x"` on its right), `at` the root on the skin at the side (about (+-0.47, 0.0, 0.55)), `scale`, `droop` degrees the tips go down (65: level-to-low, resting), `splay` degrees the tips stand out from the body (16 shows them from the front), `roll` degrees the top edge leans in |
+| `aim` (set by where it points: a bird's open wing) | `part`, `root` (`"-x"`: the file's right wing, worn on the slime's LEFT; `"+x"` on its right), `at` the root just inside the skin (Midnight Raven: (+-0.17, 0.45, 0.53), mid-back near the spine), `scale`, `point` the direction from the root to its farthest point (the long feather's tip), `face` the way its painted side (-Y in the file) looks; both for the piece on the slime's left, mirrored for the right. Raven: `point` (0.95, 0.2, -0.3) spreads it level, a little back, tips drooping; `face` (0, 1, 0.2) shows it from behind. Its flap axis (in `wear.json`) beats the wing in its own plane, tip up for a positive turn |
 | `tail` | `part`, `base` `"+x"` or `"-x"` (its base end in the file), `at`, `scale`, `lift` degrees tip up (negative: down), `sink` true pushes its base end 0.03 into the body (not when its base has detail to show, a rose, a tuft) |
 | `wrap` (lying ON the skin: a vine on the back, a leaf) | `part`, `at` = (degrees around the body from the front, + toward the slime's left; height of its middle), `scale`, `turn` degrees in its own plane, `flip` |
 | `frame` (growing OUT past the body, as a painting draws vines round its outline) | `part`, `at` = (degrees around from the front; height of its middle; how far its middle stands from the middle line, about the skin radius there), `scale`, `yaw` degrees its plane turns to the back so it also shows from the side (30), `hug` 0-1 bends its inner edge along the outline (1 for a vine down the side, 0 for one rising off a shoulder), `turn`, `flip`; what falls inside the body is laid on the skin |
@@ -56,7 +56,7 @@ step 4).
 | `HORN <name> tip at height h` | the body's top is 1.0 |
 | `SINK Tail x, base at (...)` | how far a tail with `sink` was pushed in |
 | `FLAP CHECK tip z a -> b` | b above a, or the wing flaps down |
-| `FOLD <name> tip at (...), n of m vertices inside the body` | the tip's height against the root's: lower or level reads as resting; more than about a sixth inside: move `at` out |
+| `AIM <name> tip at (...), n of m vertices inside the body` | where the tip went (x out to the side, y back, z height); a few vertices inside is the root on the skin; more than about a sixth inside: move `at` out |
 | `WRAP <name> at d degrees, height h, anchor (...)` | where it lies on the skin |
 | `FRAME <name> at d degrees, height h, reach r, n of m vertices laid on the skin` | about half laid on the skin is a vine growing out of it; nearly none: it floats, lower `reach` |
 | `WEAR {...}` | what `wear.json` holds |
@@ -108,7 +108,7 @@ Motion (the owner, 2026-11-10: tails and ears move; `tests/spec/wear.luau` fails
 | Piece | Fields |
 |---|---|
 | spread wing | `flap = { axis = <wear.json axis>, degrees = 12, hz = 0.8 }` (the owner's word on the dragons' wings: "đôi cánh hơi vỗ nhẹ") |
-| folded wing | `flap = { axis = { 0, 1, 0 }, degrees = 5, hz = 0.5 }`, a slow ruffle |
+| bird's open wing (`aim`) | `flap = { axis = <wear.json axis>, degrees = 10, hz = 0.6 }`, a slow beat, the tip rising and falling |
 | tail | a wag `flap = { axis = { 0, 1, 0 }, degrees = 8-14, hz = 0.5-0.9 }` (lazy dragon 8/0.5, brisk wolf 14/0.9) and `lag = { axis = { 1, 0, 0 }, degrees = 10-12 }` (drops as the slime climbs, lifts as it falls) |
 | ear | `twitch = { axis = { 1, 0, 0 }, degrees = 16-18, every = 3-3.5 }` (a flick back now and then, each ear on its own clock) and `lag = { axis = { 1, 0, 0 }, degrees = 10-12 }` |
 | horn, vine, leaf | none |

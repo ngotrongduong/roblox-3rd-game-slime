@@ -2448,27 +2448,27 @@ Config.Wear = {
 			},
 		},
 		-- the owner's model art/models/accessories/midnight_raven/black_navy.glb (a pair of feathered wings; the owner: the
-		-- painting's wings are wrong, and raised they stood too high, so they rest folded along the sides as a bird's
-		-- do), uploaded as model 86457925782781
+		-- painting's wings are wrong; raised they stood too high, folded they were not what he wants: so they grow from the
+		-- middle of the back and spread wide, level, as a bird's open wings: his sketch), uploaded as model 98666146416809
 		MidnightRaven = {
 			texture = "rbxassetid://95556414402224",
 			pieces = {
 				{
 					name = "WingL",
-					mesh = 96870618615778,
-					size = { 0.2326, 0.4025, 0.6331 },
-					at = { -0.5815, 0.3546, 0.2869 },
-					anchor = { -0.47, 0.55, 0 },
-					-- (a folded wing only ruffles a little, its tip easing out and back)
-					flap = { axis = { 0, 1, 0 }, degrees = 5, hz = 0.5 },
+					mesh = 92071299178976,
+					size = { 0.8801, 0.5937, 0.2327 },
+					at = { -0.5886, 0.5197, 0.5313 },
+					anchor = { -0.17, 0.53, 0.45 },
+					-- (the open wing beats slowly in its own plane, the tip rising and falling)
+					flap = { axis = { -0.1275, -0.2382, -0.9628 }, degrees = 10, hz = 0.6 },
 				},
 				{
 					name = "WingR",
-					mesh = 134379464013345,
-					size = { 0.2338, 0.4035, 0.6294 },
-					at = { 0.5817, 0.3548, 0.2861 },
-					anchor = { 0.47, 0.55, 0 },
-					flap = { axis = { 0, 1, 0 }, degrees = 5, hz = 0.5 },
+					mesh = 85422082867669,
+					size = { 0.8842, 0.5842, 0.2242 },
+					at = { 0.5889, 0.542, 0.5253 },
+					anchor = { 0.17, 0.53, 0.45 },
+					flap = { axis = { -0.1275, 0.2382, 0.9628 }, degrees = 10, hz = 0.6 },
 				},
 			},
 		},
