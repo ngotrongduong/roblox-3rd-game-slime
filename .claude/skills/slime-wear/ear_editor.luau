@@ -8,12 +8,8 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local StarterPlayer = game:GetService("StarterPlayer")
 
 local EDIT = {
-	"secret-red-red",
-	"secret-navy-yellow",
-	"secret-gray-yellow",
-	"secret-blue-yellow",
-	"secret-green-pink",
-	"secret-green-purple",
+	"secret-red-yellow",
+	"secret-yellow-yellow",
 }
 local REFERENCE = {}
 -- the worn pieces he may move: names matching this pattern ("Ear" for ears only; "" for every piece)
