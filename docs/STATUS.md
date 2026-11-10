@@ -13,13 +13,20 @@ upload, a new `Config.Wear` entry. The owner saved the test place to Roblox as "
 seen: a phone.
 Owner's note on the horns ("góc sừng của con steam dragon chưa đúng ... gốc của 2 cặp sừng còn bị lộ"): a horn's flat
 base (found as the plane its bottom rests on; Steam's is the lip of a hollow cup) is now turned level, and the horn is
-sunk along its axis until everything below its collar is 0.03 inside the body; Steam's tips curl out to the sides
+seated on the body so that base never shows (see the rule below); Steam's tips curl out to the sides
 (`curl = "out"`), Tempest keeps its old look. Seen close up in Play.
 Two more kits, the same day: `secret-navy-red` Fire-Ice Chimera (a red horn on its red side, a blue one on its blue
 side, a red-to-blue arrow tail; model 109191823877589) and `secret-black-gray` Shadow Wolf (two wolf ears at the
 shoulders, open to the front, and a bushy smoky tail; Tripo, model 89148182836943). `wear_kit.py` now takes any pieces
 per kit (`pieces`: horn for horns and ears, wing, tail; `twin` mirrors one into a pair; `level = false` keeps a part as
 the file stands it; a tail's `base` end and `sink`). Seen in Play from the front and the back.
+Owner's rule for every horn and ear, the same day ("nằm sát phần ngoài của slime nhiều nhất có thể để giữ được các chi
+tiết gần gốc"; the wolf's ears sank and lost their lower fur): a piece is no longer sunk to its collar. It is moved
+along its axis until its foot (a horn's sole, the lowest tenth of an ear, `foot = "low"`) touches the skin, only the
+foot's rim 0.02 under it, and where the shoulder falls away under the foot the lowest part is drawn down onto the skin
+(`seat` in `wear_kit.py`). All four kits rebuilt: the wolf's ears stand at the shoulder edges with their fur hanging
+down, the Chimera's spiked collars and the dragons' horn bands show. Models now 137031942711781, 88958587355820,
+119200639103906, 117979860637781 (wings and tails kept their meshes).
 
 ## 2026-11-10 — Dungeon fight effects per monster, from the VFX library
 

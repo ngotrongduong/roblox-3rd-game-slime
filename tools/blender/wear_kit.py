@@ -81,11 +81,12 @@ KITS = {
 		sort=lambda c: "Tail" if c.z < 0.5 else ("EarL" if c.x > 0 else "EarR"),
 		budget=dict(EarL=700, EarR=700, Tail=900),
 		pieces=dict(
-			# (the owner's painting: upright at the shoulders, leaning out a little, open to the front)
-			EarL=dict(part="EarL", kind="horn", at=(0.3, 0.0, 0.69), scale=0.85, tilt_out=0, tilt_back=0, level=False,
-				sink=0.12),
-			EarR=dict(part="EarR", kind="horn", at=(-0.3, 0.0, 0.69), scale=0.85, tilt_out=0, tilt_back=0, level=False,
-				sink=0.12),
+			# (the owner's painting: upright at the shoulders, leaning out a little, open to the front, the fur at their
+			# foot hanging down the shoulder)
+			EarL=dict(part="EarL", kind="horn", at=(0.35, 0.0, 0.66), scale=0.85, tilt_out=8, tilt_back=0, level=False,
+				foot="low"),
+			EarR=dict(part="EarR", kind="horn", at=(-0.35, 0.0, 0.66), scale=0.85, tilt_out=8, tilt_back=0, level=False,
+				foot="low"),
 			Tail=dict(part="Tail", kind="tail", base="+x", at=(0.0, 0.45, 0.2), scale=0.55, lift=10, sink=True),
 		),
 		body=(0.1, 0.1, 0.12, 1),
@@ -191,9 +192,13 @@ def outside(p):
 	return math.sqrt(p.x * p.x + p.y * p.y) - skin_radius(p.z)
 
 
-# the owner, 2026-11-10: "vị trí gốc của 2 cặp sừng còn bị lộ" (the horns' bases showed): a horn is pushed down its own
-# axis until all of it below its collar (the lowest height where it is nearly as wide as its base gets; an ear: a set
-# share of its height) lies this far inside the body, so no rim and no overhang shows above the skin
+# the owner, 2026-11-10, twice: a horn's or an ear's foot must not show ("vị trí gốc của 2 cặp sừng còn bị lộ"), yet it
+# stands as far out of the body as it can, keeping the detail near its foot ("nằm sát phần ngoài của slime nhiều nhất có
+# thể để giữ được các chi tiết gần gốc"): only its foot's rim goes SEAT under the skin, and where the skin falls away
+# under the foot (a shoulder's slope) the lowest part of the piece is drawn down onto the skin, never the whole piece
+# pushed in
+SEAT = 0.02
+# a tail's base end is pushed this far under the skin
 BURY = 0.03
 
 
@@ -204,6 +209,55 @@ def sink(ob, base, axis, name):
 		ob.location -= axis * 0.005
 		sunk += 0.005
 	print(f"SINK {name} {sunk:.3f}, base at {tuple(round(c, 3) for c in ob.location)}")
+
+
+def to_skin(p, axis):
+	# how far a point must move down `axis` to lie SEAT under the skin (negative: up); None where no skin lies below
+	t = -0.6
+	while outside(p - axis * t) > -SEAT:
+		t += 0.01
+		if t > 0.6:
+			return None
+	while outside(p - axis * (t - 0.001)) <= -SEAT:
+		t -= 0.001
+	return t
+
+
+def seat(ob, foot, axis, band, name):
+	# set a placed horn or ear on the skin: move it along `axis` until the vertex of its foot nearest the skin lies SEAT
+	# under it, then draw the rest of the foot down onto the skin, and with it what stands above the foot, less the
+	# higher it stands, to nothing at `band` (a share of the piece's length)
+	vs = ob.data.vertices
+	gap = {i: to_skin(ob.location + vs[i].co, axis) for i in foot}
+	foot = [i for i in foot if gap[i] is not None]
+	lift = min(gap[i] for i in foot)
+	ob.location -= axis * lift
+	for i in foot:
+		gap[i] -= lift
+	high = max(v.co.dot(axis) for v in vs) - min(v.co.dot(axis) for v in vs)
+	band *= high
+	flat = {i: vs[i].co - axis * vs[i].co.dot(axis) for i in foot}
+	moved = []
+	for v in vs:
+		t = to_skin(ob.location + v.co, axis)
+		if t is None:
+			continue
+		# the foot's gap under this point: its nearest foot vertices across the axis, weighted by nearness
+		p = v.co - axis * v.co.dot(axis)
+		w = {i: math.exp(-((p - flat[i]).length / 0.012) ** 2) for i in foot}
+		if sum(w.values()) < 1e-9:
+			w = {min(foot, key=lambda i: (p - flat[i]).length): 1.0}
+		g = sum(w[i] * gap[i] for i in w) / sum(w.values())
+		over = max(0.0, t - g)
+		if over < band and g > 0:
+			moved.append((v, axis * g * (1 - over / band)))
+	for v, d in moved:
+		v.co -= d
+	# the piece rides the skin from the middle of its foot
+	c = sum((vs[i].co for i in foot), Vector()) / len(foot)
+	ob.data.transform(Matrix.Translation(-c))
+	ob.location += c
+	print(f"SEAT {name} lifted {-lift:.3f}, foot gap up to {max(gap[i] for i in foot):.3f}, {len(moved)} vertices drawn down, anchor {tuple(round(x, 3) for x in ob.location)}")
 
 
 def base_plane(me, spread=40, step=2, tol=0.02):
@@ -225,40 +279,30 @@ def base_plane(me, spread=40, step=2, tol=0.02):
 
 
 def place_horn(ob, spec, name):
-	# a horn or an ear. A horn's base is flat but cut at a slant in the file: turn it level (`level`) so the horn grows
-	# straight out of it. A horn's tip curls toward -X in the file: turn it to curl back (+Y), out or in (`curl`); then
-	# lean it out to its side and back, set it on the body and sink it
+	# a horn or an ear. Its foot: the flat sole (or a hollow cup's lip) of a horn, the lowest tenth of an ear's soft fur
+	# (`foot="low"`). A horn's sole is cut at a slant in the file: turn it level (`level`) so the horn grows straight out
+	# of it, or keep the horn as the file stands it (upright already). A horn's tip curls toward -X in the file: turn it
+	# to curl back (+Y), out or in (`curl`); then lean it out to its side and back, and seat it on the body
 	side = 1 if spec["at"][0] >= 0 else -1
-	if spec.get("level", True):
-		down, ring = base_plane(ob.data)
-	else:
-		# kept as the file stands it (upright already, or an ear's soft fur): its base is the middle of its lowest tenth
-		zs = sorted(v.co.z for v in ob.data.vertices)
-		down = Vector((0, 0, -1))
-		ring = [v.index for v in ob.data.vertices if v.co.z <= zs[0] + (zs[-1] - zs[0]) * 0.1]
-	rebase(ob, sum((ob.data.vertices[i].co for i in ring), Vector()) / len(ring))
-	ob.data.transform(down.rotation_difference(Vector((0, 0, -1))).to_matrix().to_4x4())
-	print(f"HORN {name} base vertices={len(ring)} of {len(ob.data.vertices)}, levelled by {math.degrees(down.angle(Vector((0, 0, -1)))):.1f} degrees")
-	ob.data.transform(Matrix.Scale(spec["scale"], 4))
 	vs = ob.data.vertices
-	tall = max(v.co.z for v in vs)
-	share = spec.get("sink", "collar")
-	if share == "collar":
-		widths = [0.0] * 18
-		for v in vs:
-			k = max(0, int(v.co.z / tall / 0.02))
-			if k < len(widths):
-				widths[k] = max(widths[k], v.co.xy.length)
-		share = (next(k for k, w in enumerate(widths) if w >= max(widths) * 0.92) + 1) * 0.02
-	base = [v.index for v in vs if v.co.z <= share * tall]
-	print(f"HORN {name} buried up to {share:.0%} of its height, {len(base)} vertices")
+	if spec.get("foot", "plane") == "plane":
+		down, foot = base_plane(ob.data)
+	else:
+		zs = sorted(v.co.z for v in vs)
+		down, foot = Vector((0, 0, -1)), [v.index for v in vs if v.co.z <= zs[0] + (zs[-1] - zs[0]) * 0.1]
+	if not spec.get("level", True):
+		down = Vector((0, 0, -1))
+	rebase(ob, sum((vs[i].co for i in foot), Vector()) / len(foot))
+	ob.data.transform(down.rotation_difference(Vector((0, 0, -1))).to_matrix().to_4x4())
+	print(f"HORN {name} foot vertices={len(foot)} of {len(vs)}, levelled by {math.degrees(down.angle(Vector((0, 0, -1)))):.1f} degrees")
+	ob.data.transform(Matrix.Scale(spec["scale"], 4))
 	curl = spec.get("curl")
 	spin = {"back": -90, "out": 180 if side > 0 else 0, "in": 0 if side > 0 else 180}.get(curl, 0)
 	ob.data.transform(Matrix.Rotation(rad(spin), 4, "Z"))
 	turn = Matrix.Rotation(rad(side * spec["tilt_out"]), 3, "Y") @ Matrix.Rotation(rad(-spec["tilt_back"]), 3, "X")
 	ob.data.transform(turn.to_4x4())
 	ob.location = spec["at"]
-	sink(ob, base, turn @ Vector((0, 0, 1)), name)
+	seat(ob, foot, turn @ Vector((0, 0, 1)), spec.get("band", 0.3), name)
 	top = max((ob.location + v.co).z for v in vs)
 	print(f"HORN {name} tip at height {top:.3f}")
 

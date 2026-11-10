@@ -2264,23 +2264,23 @@ Config.Wear = {
 	},
 	Kits = {
 		-- the owner's Meshy model art/models/accessories/tempest_dragon/neon_dragon_relics.glb, uploaded as model
-		-- 107139793078199 (its five MeshParts give the mesh ids)
+		-- 137031942711781 (its five MeshParts give the mesh ids)
 		TempestDragon = {
 			texture = "rbxassetid://83202714233801",
 			pieces = {
 				{
 					name = "HornL",
-					mesh = 77415302490678,
-					size = { 0.1537, 0.2482, 0.17 },
-					at = { -0.2221, 0.8465, 0.0092 },
-					anchor = { -0.2191, 0.7503, -0.0026 },
+					mesh = 96314571205165,
+					size = { 0.1553, 0.2796, 0.182 },
+					at = { -0.239, 0.8957, 0.0251 },
+					anchor = { -0.2306, 0.7906, 0.011 },
 				},
 				{
 					name = "HornR",
-					mesh = 96443110294501,
-					size = { 0.1537, 0.2482, 0.17 },
-					at = { 0.2221, 0.8465, 0.0092 },
-					anchor = { 0.2191, 0.7503, -0.0026 },
+					mesh = 127323584430638,
+					size = { 0.1553, 0.2796, 0.182 },
+					at = { 0.239, 0.8957, 0.0251 },
+					anchor = { 0.2306, 0.7906, 0.011 },
 				},
 				{
 					name = "WingL",
@@ -2309,23 +2309,23 @@ Config.Wear = {
 			},
 		},
 		-- the owner's Meshy model art/models/accessories/steam_dragon/patriotic_dragon_cost.glb, uploaded as model
-		-- 78918189995011
+		-- 88958587355820
 		SteamDragon = {
 			texture = "rbxassetid://79626976517509",
 			pieces = {
 				{
 					name = "HornL",
-					mesh = 111705787378387,
-					size = { 0.2939, 0.2643, 0.203 },
-					at = { -0.3182, 0.8172, 0.0507 },
-					anchor = { -0.2615, 0.706, 0.04 },
+					mesh = 72943524244004,
+					size = { 0.2944, 0.3225, 0.203 },
+					at = { -0.3388, 0.8715, 0.0507 },
+					anchor = { -0.2746, 0.7584, 0.04 },
 				},
 				{
 					name = "HornR",
-					mesh = 132327167005131,
-					size = { 0.2939, 0.2643, 0.203 },
-					at = { 0.3182, 0.8172, 0.0507 },
-					anchor = { 0.2615, 0.706, 0.04 },
+					mesh = 105459137410678,
+					size = { 0.2944, 0.3225, 0.203 },
+					at = { 0.3388, 0.8715, 0.0507 },
+					anchor = { 0.2746, 0.7584, 0.04 },
 				},
 				{
 					name = "WingL",
@@ -2353,23 +2353,23 @@ Config.Wear = {
 			},
 		},
 		-- the owner's model art/models/accessories/fire_ice_chimera/navy_red.glb (a red horn on the red side, a blue one
-		-- on the blue side, a red-to-blue tail), uploaded as model 109191823877589
+		-- on the blue side, a red-to-blue tail), uploaded as model 119200639103906
 		FireIceChimera = {
 			texture = "rbxassetid://131498492296218",
 			pieces = {
 				{
 					name = "HornL",
-					mesh = 108463648991823,
-					size = { 0.1776, 0.3333, 0.1652 },
-					at = { -0.2482, 0.8224, 0.0765 },
-					anchor = { -0.251, 0.6756, 0.04 },
+					mesh = 108500283271458,
+					size = { 0.1807, 0.3802, 0.1652 },
+					at = { -0.29, 0.9051, 0.035 },
+					anchor = { -0.264, 0.7683, 0.04 },
 				},
 				{
 					name = "HornR",
-					mesh = 105287032978403,
-					size = { 0.1807, 0.3337, 0.1652 },
-					at = { 0.2517, 0.8234, 0.0784 },
-					anchor = { 0.251, 0.6756, 0.04 },
+					mesh = 101066443649361,
+					size = { 0.1838, 0.3785, 0.1652 },
+					at = { 0.2869, 0.9094, 0.0324 },
+					anchor = { 0.264, 0.7682, 0.04 },
 				},
 				{
 					name = "Tail",
@@ -2381,23 +2381,23 @@ Config.Wear = {
 			},
 		},
 		-- the owner's model art/models/accessories/shadow_wolf/black_gray.glb (two wolf ears, a bushy smoky tail), uploaded
-		-- as model 89148182836943
+		-- as model 117979860637781
 		ShadowWolf = {
 			texture = "rbxassetid://120486318461151",
 			pieces = {
 				{
 					name = "EarL",
-					mesh = 95494869010632,
-					size = { 0.3822, 0.4398, 0.1856 },
-					at = { -0.1881, 0.8427, 0.0312 },
-					anchor = { -0.3, 0.65, 0 },
+					mesh = 70636085288680,
+					size = { 0.3834, 0.4831, 0.1856 },
+					at = { -0.2704, 0.9018, 0.0312 },
+					anchor = { -0.356, 0.7026, 0 },
 				},
 				{
 					name = "EarR",
-					mesh = 80610797975881,
-					size = { 0.3802, 0.4393, 0.185 },
-					at = { 0.1924, 0.8358, 0.0358 },
-					anchor = { 0.3, 0.64, 0 },
+					mesh = 96839745024511,
+					size = { 0.3808, 0.4934, 0.185 },
+					at = { 0.2738, 0.901, 0.0358 },
+					anchor = { 0.3559, 0.7021, 0 },
 				},
 				{
 					name = "Tail",
