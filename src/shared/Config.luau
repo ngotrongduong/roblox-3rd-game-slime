@@ -2259,6 +2259,8 @@ Config.Wear = {
 	Secrets = {
 		["secret-black-blue"] = "TempestDragon",
 		["secret-blue-red"] = "SteamDragon",
+		["secret-navy-red"] = "FireIceChimera",
+		["secret-black-gray"] = "ShadowWolf",
 	},
 	Kits = {
 		-- the owner's Meshy model art/models/accessories/tempest_dragon/neon_dragon_relics.glb, uploaded as model
@@ -2347,6 +2349,62 @@ Config.Wear = {
 					size = { 0.1093, 0.2103, 0.365 },
 					at = { 0.0024, 0.1512, 0.6229 },
 					anchor = { 0, 0.21, 0.45 },
+				},
+			},
+		},
+		-- the owner's model art/models/accessories/fire_ice_chimera/navy_red.glb (a red horn on the red side, a blue one
+		-- on the blue side, a red-to-blue tail), uploaded as model 109191823877589
+		FireIceChimera = {
+			texture = "rbxassetid://131498492296218",
+			pieces = {
+				{
+					name = "HornL",
+					mesh = 108463648991823,
+					size = { 0.1776, 0.3333, 0.1652 },
+					at = { -0.2482, 0.8224, 0.0765 },
+					anchor = { -0.251, 0.6756, 0.04 },
+				},
+				{
+					name = "HornR",
+					mesh = 105287032978403,
+					size = { 0.1807, 0.3337, 0.1652 },
+					at = { 0.2517, 0.8234, 0.0784 },
+					anchor = { 0.251, 0.6756, 0.04 },
+				},
+				{
+					name = "Tail",
+					mesh = 138892483345830,
+					size = { 0.1082, 0.2751, 0.4989 },
+					at = { 0.0073, 0.2827, 0.6657 },
+					anchor = { 0, 0.1965, 0.4303 },
+				},
+			},
+		},
+		-- the owner's model art/models/accessories/shadow_wolf/black_gray.glb (two wolf ears, a bushy smoky tail), uploaded
+		-- as model 89148182836943
+		ShadowWolf = {
+			texture = "rbxassetid://120486318461151",
+			pieces = {
+				{
+					name = "EarL",
+					mesh = 95494869010632,
+					size = { 0.3822, 0.4398, 0.1856 },
+					at = { -0.1881, 0.8427, 0.0312 },
+					anchor = { -0.3, 0.65, 0 },
+				},
+				{
+					name = "EarR",
+					mesh = 80610797975881,
+					size = { 0.3802, 0.4393, 0.185 },
+					at = { 0.1924, 0.8358, 0.0358 },
+					anchor = { 0.3, 0.64, 0 },
+				},
+				{
+					name = "Tail",
+					mesh = 87072655348517,
+					size = { 0.1708, 0.2537, 0.459 },
+					at = { 0.0119, 0.1979, 0.6566 },
+					anchor = { 0, 0.1983, 0.4402 },
 				},
 			},
 		},

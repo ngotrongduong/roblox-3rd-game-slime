@@ -1,21 +1,25 @@
-# A Secret slime's worn pieces (Config.Wear) from the owner's Meshy model of one wing, one horn and one tail.
-# Splits the three, mirrors the wing and the horn into pairs, lowers the triangles for phones, sets each piece on a
-# slime body one unit tall (the game's mesh units), renders it from six sides into <folder>/review/, and exports:
-#   <out>.fbx       HornL HornR WingL WingR Tail, placed around the body (feet at the origin)
+# A Secret slime's worn pieces (Config.Wear) from the owner's model (Meshy, Tripo) of its horns, ears, wings and tail.
+# Splits the file into its parts, lowers the triangles for phones, sets each piece on a slime body one unit tall (the
+# game's mesh units), mirrors a piece into its twin where the file holds one of a pair, renders it from six sides into
+# <folder>/review/, and exports:
+#   <out>.fbx       the pieces (HornL HornR WingL WingR Tail, EarL EarR ...), placed around the body (feet at the origin)
 #   <texture>.png   the texture at 1024
 #   wear.json       each piece's centre, size and anchor (and a wing's flap axis) in Roblox mesh space: Config.Wear
 # Blender axes are the slime body's own (tools/blender/slime_body.py): Z up, the slime faces -Y, its own left is +X.
 # Exported like the body (FBX, forward -Z, up Y), so Roblox reads (X, Y, Z) = (-x, z, y).
-# Every Meshy model so far lays the pieces out alike: the wing's root at its +X end, spreading toward -X with its
-# painted side to -Y; the horn's base at the bottom, its tip curling toward -X; the tail's base at its +X end.
+# How the files lay their parts out so far: a wing's root at its +X end, spreading toward -X with its painted side to
+# -Y; a horn's or an ear's base at the bottom (a horn's tip curling toward -X, an ear facing -Y); a tail's base at one
+# end along X (`base`).
 # Run: tools/blender/wear_kit.ps1 <kit>
 import bpy, bmesh, json, math, os, sys
 from mathutils import Matrix, Vector
 
 ART = r"C:\Roblox 3rd game\art\models\accessories"
 
-# where each piece sits on the body (Blender axes, body height 1): anchor point, size factor, turns (degrees);
-# `sort` says which piece a loose part of the file belongs to, by its middle; `budget` the triangles a piece keeps
+# `sort` says which part of the file a loose bit belongs to, by its middle; `budget` the triangles a part keeps;
+# `pieces` what is made of each part, in the order they are exported: kind (horn: horns and ears, wing, tail), where it
+# sits on the body (Blender axes, body height 1; +X is the slime's own left), size factor, turns in degrees, and `twin`,
+# the mirrored piece on the other side
 KITS = {
 	# Tempest Dragon (secret-black-blue), 2026-11-10
 	"TempestDragon": dict(
@@ -24,10 +28,13 @@ KITS = {
 		out="TempestDragonWear",
 		texture="tempest_dragon_wear.png",
 		sort=lambda c: "Tail" if c.x < -0.185 else ("Horn" if c.x > 0.25 else "Wing"),
-		horn=dict(at=(0.223, 0.002, 0.764), scale=0.92, tilt_out=16, tilt_back=18, curl="back"),
-		wing=dict(at=(0.3, 0.34, 0.47), scale=1.5, raise_=24, sweep=38),
-		tail=dict(at=(0.0, 0.44, 0.16), scale=1.25, lift=12),
 		budget=dict(Horn=520, Wing=760, Tail=640),
+		pieces=dict(
+			HornL=dict(part="Horn", kind="horn", at=(0.223, 0.002, 0.764), scale=0.92, tilt_out=16, tilt_back=18,
+				curl="back", twin="HornR"),
+			WingL=dict(part="Wing", kind="wing", at=(0.3, 0.34, 0.47), scale=1.5, raise_=24, sweep=38, twin="WingR"),
+			Tail=dict(part="Tail", kind="tail", base="+x", at=(0.0, 0.44, 0.16), scale=1.25, lift=-12),
+		),
 		body=(0.05, 0.12, 0.45, 1),
 	),
 	# Steam Dragon (secret-blue-red), 2026-11-10
@@ -37,12 +44,51 @@ KITS = {
 		out="SteamDragonWear",
 		texture="steam_dragon_wear.png",
 		sort=lambda c: "Tail" if c.z < -0.02 else ("Horn" if c.x > 0.2 else "Wing"),
-		# (the owner's painting: the horns stand at the shoulders, their tips curling out to the sides)
-		horn=dict(at=(0.27, 0.04, 0.74), scale=0.8, tilt_out=14, tilt_back=0, curl="out"),
-		wing=dict(at=(0.3, 0.34, 0.47), scale=1.1, raise_=24, sweep=38),
-		tail=dict(at=(0.0, 0.45, 0.21), scale=0.62, lift=14),
 		budget=dict(Horn=900, Wing=900, Tail=900),
+		pieces=dict(
+			# (the owner's painting: the horns stand at the shoulders, their tips curling out to the sides)
+			HornL=dict(part="Horn", kind="horn", at=(0.27, 0.04, 0.74), scale=0.8, tilt_out=14, tilt_back=0, curl="out",
+				twin="HornR"),
+			WingL=dict(part="Wing", kind="wing", at=(0.3, 0.34, 0.47), scale=1.1, raise_=24, sweep=38, twin="WingR"),
+			Tail=dict(part="Tail", kind="tail", base="+x", at=(0.0, 0.45, 0.21), scale=0.62, lift=-14),
+		),
 		body=(0.55, 0.12, 0.1, 1),
+	),
+	# Fire-Ice Chimera (secret-navy-red), 2026-11-10: a red horn on the red side (its right), a blue one on the left, a
+	# tail red at the base and blue at the arrow tip
+	"FireIceChimera": dict(
+		folder="fire_ice_chimera",
+		glb="navy_red.glb",
+		out="FireIceChimeraWear",
+		texture="fire_ice_chimera_wear.png",
+		sort=lambda c: "Tail" if c.z < 0 else ("HornR" if c.x < 0 else "HornL"),
+		budget=dict(HornL=600, HornR=600, Tail=800),
+		pieces=dict(
+			# (the owner's painting: both stand at the shoulders, bulging out, their tips turning in; the file has them so
+			# already, upright, so they keep its turn)
+			HornL=dict(part="HornL", kind="horn", at=(0.26, 0.04, 0.74), scale=0.8, tilt_out=8, tilt_back=0, level=False),
+			HornR=dict(part="HornR", kind="horn", at=(-0.26, 0.04, 0.74), scale=0.8, tilt_out=8, tilt_back=0, level=False),
+			Tail=dict(part="Tail", kind="tail", base="-x", at=(0.0, 0.45, 0.2), scale=0.55, lift=10, sink=True),
+		),
+		body=(0.45, 0.1, 0.25, 1),
+	),
+	# Shadow Wolf (secret-black-gray), 2026-11-10: two wolf ears and a bushy tail (Tripo, already a pair of ears)
+	"ShadowWolf": dict(
+		folder="shadow_wolf",
+		glb="black_gray.glb",
+		out="ShadowWolfWear",
+		texture="shadow_wolf_wear.png",
+		sort=lambda c: "Tail" if c.z < 0.5 else ("EarL" if c.x > 0 else "EarR"),
+		budget=dict(EarL=700, EarR=700, Tail=900),
+		pieces=dict(
+			# (the owner's painting: upright at the shoulders, leaning out a little, open to the front)
+			EarL=dict(part="EarL", kind="horn", at=(0.3, 0.0, 0.69), scale=0.85, tilt_out=0, tilt_back=0, level=False,
+				sink=0.12),
+			EarR=dict(part="EarR", kind="horn", at=(-0.3, 0.0, 0.69), scale=0.85, tilt_out=0, tilt_back=0, level=False,
+				sink=0.12),
+			Tail=dict(part="Tail", kind="tail", base="+x", at=(0.0, 0.45, 0.2), scale=0.55, lift=10, sink=True),
+		),
+		body=(0.1, 0.1, 0.12, 1),
 	),
 }
 TEXTURE = 1024
@@ -55,7 +101,6 @@ KIT = KITS[sys.argv[sys.argv.index("--") + 1]]
 ROOT = os.path.join(ART, KIT["folder"])
 REVIEW = os.path.join(ROOT, "review")
 os.makedirs(REVIEW, exist_ok=True)
-HORN, WING, TAIL, BUDGET = KIT["horn"], KIT["wing"], KIT["tail"], KIT["budget"]
 
 
 def rad(d):
@@ -72,17 +117,17 @@ bpy.context.view_layer.objects.active = src
 src.select_set(True)
 bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
 
-# weld the seams, split into loose parts, and sort them into the three pieces
+# weld the seams, split into loose bits, and sort them into the file's parts
 bpy.ops.object.mode_set(mode="EDIT")
 bpy.ops.mesh.select_all(action="SELECT")
 bpy.ops.mesh.remove_doubles(threshold=0.0001)
 bpy.ops.mesh.separate(type="LOOSE")
 bpy.ops.object.mode_set(mode="OBJECT")
-groups = {"Tail": [], "Wing": [], "Horn": []}
+groups = {key: [] for key in KIT["budget"]}
 for o in [o for o in bpy.data.objects if o.type == "MESH"]:
 	c = sum((o.matrix_world @ v.co for v in o.data.vertices), Vector()) / len(o.data.vertices)
 	groups[KIT["sort"](c)].append(o)
-pieces = {}
+parts = {}
 for key, objs in groups.items():
 	bpy.ops.object.select_all(action="DESELECT")
 	for o in objs:
@@ -94,7 +139,7 @@ for key, objs in groups.items():
 	ob.name = key
 	ob.data.calc_loop_triangles()
 	print(f"PIECE {key} parts={len(objs)} tris={len(ob.data.loop_triangles)}")
-	pieces[key] = ob
+	parts[key] = ob
 
 
 def anchor_of(ob, axis, high):
@@ -126,8 +171,9 @@ def rebase(ob, anchor):
 	ob.location = (0, 0, 0)
 
 
-for key, ob in pieces.items():
-	print(f"KEPT {key} tris={decimate(ob, BUDGET[key])}")
+for key, ob in parts.items():
+	print(f"KEPT {key} tris={decimate(ob, KIT['budget'][key])}")
+
 
 def skin_radius(z):
 	# the body's radius at a height (0 above its tip)
@@ -146,9 +192,18 @@ def outside(p):
 
 
 # the owner, 2026-11-10: "vị trí gốc của 2 cặp sừng còn bị lộ" (the horns' bases showed): a horn is pushed down its own
-# axis until all of it below its collar (the lowest height where it is nearly as wide as its base gets) lies this far
-# inside the body, so no rim and no overhang shows above the skin
+# axis until all of it below its collar (the lowest height where it is nearly as wide as its base gets; an ear: a set
+# share of its height) lies this far inside the body, so no rim and no overhang shows above the skin
 BURY = 0.03
+
+
+def sink(ob, base, axis, name):
+	# push a placed piece along -axis until every vertex in `base` lies BURY inside the body
+	sunk = 0.0
+	while max(outside(ob.location + ob.data.vertices[i].co) for i in base) > -BURY and sunk < 0.2:
+		ob.location -= axis * 0.005
+		sunk += 0.005
+	print(f"SINK {name} {sunk:.3f}, base at {tuple(round(c, 3) for c in ob.location)}")
 
 
 def base_plane(me, spread=40, step=2, tol=0.02):
@@ -169,56 +224,77 @@ def base_plane(me, spread=40, step=2, tol=0.02):
 	return best
 
 
-# horn: its base is flat but cut at a slant in the file: turn the base level so the horn grows straight out of it; its
-# tip then curls toward -X: turn it to curl back (+Y) or out (+X), lean it out (+X) and back
-horn = pieces["Horn"]
-down, ring = base_plane(horn.data)
-rebase(horn, sum((horn.data.vertices[i].co for i in ring), Vector()) / len(ring))
-horn.data.transform(down.rotation_difference(Vector((0, 0, -1))).to_matrix().to_4x4())
-print(f"HORN base vertices={len(ring)} of {len(horn.data.vertices)}, levelled by {math.degrees(down.angle(Vector((0, 0, -1)))):.1f} degrees")
-horn.data.transform(Matrix.Scale(HORN["scale"], 4))
-vs = horn.data.vertices
-tall = max(v.co.z for v in vs)
-widths = [0.0] * 18
-for v in vs:
-	k = max(0, int(v.co.z / tall / 0.02))
-	if k < len(widths):
-		widths[k] = max(widths[k], v.co.xy.length)
-collar = (next(k for k, w in enumerate(widths) if w >= max(widths) * 0.92) + 1) * 0.02
-base = [v.index for v in vs if v.co.z <= collar * tall]
-print(f"HORN collar at {collar:.0%} of its height, {len(base)} vertices below it")
-horn.data.transform(Matrix.Rotation(rad(-90 if HORN["curl"] == "back" else 180), 4, "Z"))
-turn = Matrix.Rotation(rad(HORN["tilt_out"]), 3, "Y") @ Matrix.Rotation(rad(-HORN["tilt_back"]), 3, "X")
-horn.data.transform(turn.to_4x4())
-horn.location = HORN["at"]
-up = turn @ Vector((0, 0, 1))
-sunk = 0.0
-while max(outside(horn.location + vs[i].co) for i in base) > -BURY and sunk < 0.2:
-	horn.location -= up * 0.005
-	sunk += 0.005
-top = max((horn.location + v.co).z for v in horn.data.vertices)
-print(f"HORN sunk {sunk:.3f}, base at {tuple(round(c, 3) for c in horn.location)}, tip at height {top:.3f}")
+def place_horn(ob, spec, name):
+	# a horn or an ear. A horn's base is flat but cut at a slant in the file: turn it level (`level`) so the horn grows
+	# straight out of it. A horn's tip curls toward -X in the file: turn it to curl back (+Y), out or in (`curl`); then
+	# lean it out to its side and back, set it on the body and sink it
+	side = 1 if spec["at"][0] >= 0 else -1
+	if spec.get("level", True):
+		down, ring = base_plane(ob.data)
+	else:
+		# kept as the file stands it (upright already, or an ear's soft fur): its base is the middle of its lowest tenth
+		zs = sorted(v.co.z for v in ob.data.vertices)
+		down = Vector((0, 0, -1))
+		ring = [v.index for v in ob.data.vertices if v.co.z <= zs[0] + (zs[-1] - zs[0]) * 0.1]
+	rebase(ob, sum((ob.data.vertices[i].co for i in ring), Vector()) / len(ring))
+	ob.data.transform(down.rotation_difference(Vector((0, 0, -1))).to_matrix().to_4x4())
+	print(f"HORN {name} base vertices={len(ring)} of {len(ob.data.vertices)}, levelled by {math.degrees(down.angle(Vector((0, 0, -1)))):.1f} degrees")
+	ob.data.transform(Matrix.Scale(spec["scale"], 4))
+	vs = ob.data.vertices
+	tall = max(v.co.z for v in vs)
+	share = spec.get("sink", "collar")
+	if share == "collar":
+		widths = [0.0] * 18
+		for v in vs:
+			k = max(0, int(v.co.z / tall / 0.02))
+			if k < len(widths):
+				widths[k] = max(widths[k], v.co.xy.length)
+		share = (next(k for k, w in enumerate(widths) if w >= max(widths) * 0.92) + 1) * 0.02
+	base = [v.index for v in vs if v.co.z <= share * tall]
+	print(f"HORN {name} buried up to {share:.0%} of its height, {len(base)} vertices")
+	curl = spec.get("curl")
+	spin = {"back": -90, "out": 180 if side > 0 else 0, "in": 0 if side > 0 else 180}.get(curl, 0)
+	ob.data.transform(Matrix.Rotation(rad(spin), 4, "Z"))
+	turn = Matrix.Rotation(rad(side * spec["tilt_out"]), 3, "Y") @ Matrix.Rotation(rad(-spec["tilt_back"]), 3, "X")
+	ob.data.transform(turn.to_4x4())
+	ob.location = spec["at"]
+	sink(ob, base, turn @ Vector((0, 0, 1)), name)
+	top = max((ob.location + v.co).z for v in vs)
+	print(f"HORN {name} tip at height {top:.3f}")
 
-# wing: root = the end at +X in the file, spreading toward -X: turn it to spread toward the slime's left (+X) with its
-# painted side to the back, raise the tip, sweep it back
-wing = pieces["Wing"]
-rebase(wing, anchor_of(wing, "x", True))
-wing.data.transform(Matrix.Scale(WING["scale"], 4))
-wing.data.transform(Matrix.Rotation(rad(180), 4, "Z"))
-wing.data.transform(Matrix.Rotation(rad(-WING["raise_"]), 4, "Y"))
-wing.data.transform(Matrix.Rotation(rad(WING["sweep"]), 4, "Z"))
-wing.location = WING["at"]
-sw = rad(WING["sweep"])
-# the hinge runs along the root, front to back after the sweep; a positive turn about it lifts the tip
-wing_axis = Vector((math.sin(sw), -math.cos(sw), 0))
 
-# tail: base = the thick end at +X in the file, the tip toward -X: turn it to stretch back (+Y), tip up
-tail = pieces["Tail"]
-rebase(tail, anchor_of(tail, "x", True))
-tail.data.transform(Matrix.Scale(TAIL["scale"], 4))
-tail.data.transform(Matrix.Rotation(rad(-90), 4, "Z"))
-tail.data.transform(Matrix.Rotation(rad(-TAIL["lift"]), 4, "X"))
-tail.location = TAIL["at"]
+def place_wing(ob, spec):
+	# root = the end at +X in the file, spreading toward -X: turn it to spread toward the slime's left (+X) with its
+	# painted side to the back, raise the tip, sweep it back; returns the flap axis
+	rebase(ob, anchor_of(ob, "x", True))
+	ob.data.transform(Matrix.Scale(spec["scale"], 4))
+	ob.data.transform(Matrix.Rotation(rad(180), 4, "Z"))
+	ob.data.transform(Matrix.Rotation(rad(-spec["raise_"]), 4, "Y"))
+	ob.data.transform(Matrix.Rotation(rad(spec["sweep"]), 4, "Z"))
+	ob.location = spec["at"]
+	sw = rad(spec["sweep"])
+	# the hinge runs along the root, front to back after the sweep; a positive turn about it lifts the tip
+	axis = Vector((math.sin(sw), -math.cos(sw), 0))
+	# a check that the flap axis lifts the tip: turn the farthest point by +10 degrees about it
+	far = max(ob.data.vertices, key=lambda v: v.co.length).co
+	print("FLAP CHECK tip z", round(far.z, 3), "->", round((Matrix.Rotation(rad(10), 3, axis) @ far).z, 3))
+	return axis
+
+
+def place_tail(ob, spec, name):
+	# base = the end along X that `base` names, the tip toward the other: turn it to stretch back (+Y), lift the tip
+	# (`lift`, degrees up), set it on the body; with `sink`, push it into the body until its base end lies inside
+	high = spec["base"] == "+x"
+	xs = sorted(v.co.x for v in ob.data.vertices)
+	cut = xs[-1] - (xs[-1] - xs[0]) * 0.06 if high else xs[0] + (xs[-1] - xs[0]) * 0.06
+	end = [v.index for v in ob.data.vertices if (v.co.x >= cut if high else v.co.x <= cut)]
+	rebase(ob, anchor_of(ob, "x", high))
+	ob.data.transform(Matrix.Scale(spec["scale"], 4))
+	ob.data.transform(Matrix.Rotation(rad(-90 if high else 90), 4, "Z"))
+	ob.data.transform(Matrix.Rotation(rad(spec["lift"]), 4, "X"))
+	ob.location = spec["at"]
+	if spec.get("sink"):
+		sink(ob, end, Matrix.Rotation(rad(spec["lift"]), 3, "X") @ Vector((0, 1, 0)), name)
 
 
 def mirrored(ob, name):
@@ -232,18 +308,25 @@ def mirrored(ob, name):
 	return twin
 
 
-horn.name, wing.name = "HornL", "WingL"
-hornR = mirrored(horn, "HornR")
-wingR = mirrored(wing, "WingR")
-wear = [horn, hornR, wing, wingR, tail]
-
-# a check that the flap axis lifts the tip: turn WingL's farthest point by +10 degrees about it
-far = max(wing.data.vertices, key=lambda v: v.co.length).co
-lifted = Matrix.Rotation(rad(10), 3, wing_axis) @ far
-print("FLAP CHECK tip z", round(far.z, 3), "->", round(lifted.z, 3))
+wear, axes = [], {}
+for name, spec in KIT["pieces"].items():
+	ob = parts[spec["part"]]
+	if spec["kind"] == "horn":
+		place_horn(ob, spec, name)
+	elif spec["kind"] == "wing":
+		axis = place_wing(ob, spec)
+		axes[name] = axis
+		if spec.get("twin"):
+			axes[spec["twin"]] = Vector((axis.x, -axis.y, axis.z))
+	else:
+		place_tail(ob, spec, name)
+	ob.name = name
+	wear.append(ob)
+	if spec.get("twin"):
+		wear.append(mirrored(ob, spec["twin"]))
 
 # texture at 1024
-img = bpy.data.images["Image_0"]
+img = [i for i in bpy.data.images if i.size[0] > 0][0]
 img.scale(TEXTURE, TEXTURE)
 img.filepath_raw = os.path.join(ROOT, KIT["texture"])
 img.file_format = "PNG"
@@ -318,6 +401,14 @@ for name, d in views.items():
 	cam.rotation_euler = (centre - cam.location).to_track_quat("-Z", "Y").to_euler()
 	scene.render.filepath = os.path.join(REVIEW, f"{name}.png")
 	bpy.ops.render.render(write_still=True)
+# the head close, from the front and from above the back, where horns and ears sit
+cam.data.ortho_scale = 0.9
+head = Vector((0, 0, 0.8))
+for name, d in {"head": Vector((0, -1, 0.15)), "headback": Vector((0.3, 1, 0.6))}.items():
+	cam.location = head + d.normalized() * 6
+	cam.rotation_euler = (head - cam.location).to_track_quat("-Z", "Y").to_euler()
+	scene.render.filepath = os.path.join(REVIEW, f"{name}.png")
+	bpy.ops.render.render(write_still=True)
 
 
 # numbers for the game, in Roblox mesh space: (X, Y, Z) = (-x, z, y)
@@ -337,17 +428,15 @@ for ob in wear:
 	total += len(ob.data.loop_triangles)
 	entry = dict(centre=rb(c), size=[round(size.x, 4), round(size.z, 4), round(size.y, 4)], anchor=rb(ob.location),
 		tris=len(ob.data.loop_triangles))
-	if ob.name == "WingL":
-		entry["axis"] = rb(wing_axis)
-	elif ob.name == "WingR":
-		entry["axis"] = rb(Vector((math.sin(sw), math.cos(sw), 0)))
+	if ob.name in axes:
+		entry["axis"] = rb(axes[ob.name])
 	out[ob.name] = entry
 out["triangles"] = total
 with open(os.path.join(ROOT, "wear.json"), "w") as f:
 	json.dump(out, f, indent=1)
 print("WEAR", json.dumps(out))
 
-# export the five pieces like the body
+# export the pieces like the body
 bpy.ops.object.select_all(action="DESELECT")
 for ob in wear:
 	ob.select_set(True)

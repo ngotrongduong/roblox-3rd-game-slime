@@ -1,6 +1,6 @@
 # Status
 
-## 2026-11-10 — Secret slimes wear their own pieces (Tempest Dragon, Steam Dragon)
+## 2026-11-10 — Secret slimes wear their own pieces (Tempest Dragon, Steam Dragon, Fire-Ice Chimera, Shadow Wolf)
 
 The owner sends a Meshy model per Secret slime (so far each one tail, one bat wing, one horn): `secret-black-blue`
 Tempest Dragon, `secret-blue-red` Steam Dragon. `tools/blender/wear_kit.ps1 <Kit>` (a table per kit in `wear_kit.py`)
@@ -15,6 +15,11 @@ Owner's note on the horns ("góc sừng của con steam dragon chưa đúng ... 
 base (found as the plane its bottom rests on; Steam's is the lip of a hollow cup) is now turned level, and the horn is
 sunk along its axis until everything below its collar is 0.03 inside the body; Steam's tips curl out to the sides
 (`curl = "out"`), Tempest keeps its old look. Seen close up in Play.
+Two more kits, the same day: `secret-navy-red` Fire-Ice Chimera (a red horn on its red side, a blue one on its blue
+side, a red-to-blue arrow tail; model 109191823877589) and `secret-black-gray` Shadow Wolf (two wolf ears at the
+shoulders, open to the front, and a bushy smoky tail; Tripo, model 89148182836943). `wear_kit.py` now takes any pieces
+per kit (`pieces`: horn for horns and ears, wing, tail; `twin` mirrors one into a pair; `level = false` keeps a part as
+the file stands it; a tail's `base` end and `sink`). Seen in Play from the front and the back.
 
 ## 2026-11-10 — Dungeon fight effects per monster, from the VFX library
 
