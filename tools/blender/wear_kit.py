@@ -430,6 +430,82 @@ KITS = {
 		),
 		body=(0.95, 0.5, 0.65, 1),
 	),
+	# Amethyst Unicorn (secret-purple-purple), 2026-11-10: the painting's crystal horn at the top front, a flowing mane
+	# and crystals low on the front. The file: the horn, the mane with small crystals in it, and a row of five crystals
+	# (small, middle, big, middle, small). The owner: the mane runs like a horse's from the top front of the head down
+	# the back to the feet, not at the sides of the face as the painting has it; flattened if too wide; nothing bent
+	"AmethystUnicorn": dict(
+		folder="amethyst_unicorn",
+		glb="purple_purple.glb",
+		out="AmethystUnicornWear",
+		texture="amethyst_unicorn_wear.png",
+		sort=lambda c: ("Horn" if c.z > 0.3 and c.x < 0 else ("Mane" if c.x > 0.15 else ("TipR" if c.x < -0.42 else
+			("GemR" if c.x < -0.32 else ("Big" if c.x < -0.2 else ("GemL" if c.x < -0.08 else "TipL")))))),
+		budget=dict(Horn=484, Mane=2600, TipR=26, GemR=64, Big=172, GemL=96, TipL=30),
+		pieces=dict(
+			Horn=dict(part="Horn", kind="horn", at=(0, -0.1, 0.94), scale=0.9, tilt_out=0, tilt_back=-15),
+			# (laid along the spine seen from the side: the file's hair arcs from its top front over and down, as a mane
+			# runs over a horse's neck; pitched steeper to fall down the back)
+			Mane=dict(part="Mane", kind="rigid", lay="side", at=(180, 0.7), scale=1.55, squash=(1, 0.55, 1), turn=-10,
+				tilt=65, tuck=0.3),
+			# (the file's row, worn across the lower front)
+			Big=dict(part="Big", kind="rigid", at=(0, 0.14), scale=0.8, tilt=-25),
+			GemL=dict(part="GemL", kind="rigid", at=(25, 0.15), scale=0.8, tilt=-25),
+			GemR=dict(part="GemR", kind="rigid", at=(-25, 0.15), scale=0.8, tilt=-25),
+			TipL=dict(part="TipL", kind="rigid", at=(43, 0.13), scale=0.8, tilt=-25),
+			TipR=dict(part="TipR", kind="rigid", at=(-43, 0.13), scale=0.8, tilt=-25),
+		),
+		body=(0.45, 0.2, 0.8, 1),
+	),
+	# Copper Beetle (secret-gray-orange), 2026-11-10: the painting is a beetle's shell over the whole body: a grey cap
+	# with a point, an orange shield down the middle, orange shoulder plates, grey plates below them and four claws at
+	# the feet. The file holds those pieces laid out as the painting draws them, with three small bands and two rivets.
+	# Worn on the back (the shell of a beetle; the front keeps the face), each plate as the file shapes it
+	"CopperBeetle": dict(
+		folder="copper_beetle",
+		glb="gray_orange.glb",
+		out="CopperBeetleWear",
+		texture="copper_beetle_wear.png",
+		# (the file's left, x < 0, is the slime's left once the plates face backward)
+		sort=lambda c: ("Cap" if c.z > 0.8 else (("ShoulderL" if c.x < 0 else "ShoulderR") if c.z > 0.6 and abs(c.x) > 0.15
+			else ("Shield" if c.z > 0.5 else (("PlateL" if c.x < 0 else "PlateR") if c.z > 0.35 else
+			(("ClawL1" if c.x < -0.2 else ("ClawL2" if c.x < 0 else ("ClawR2" if c.x < 0.2 else "ClawR1"))) if c.z < 0.15
+			else ("KnobL" if c.x < -0.35 else ("BandL" if c.x < -0.1 else ("BandC" if c.x < 0.1 else
+			("BandR" if c.x < 0.35 else "KnobR"))))))))),
+		# (the plates are worn twice, front and back: a little lower than the file for phones)
+		budget=dict(Cap=420, Shield=560, ShoulderL=400, ShoulderR=400, PlateL=350, PlateR=350, ClawL1=158, ClawL2=182,
+			ClawR2=178, ClawR1=148, KnobL=22, KnobR=20, BandL=124, BandC=130, BandR=142),
+		pieces=dict(
+			# (each plate turned and leaned to lie on the body the closest it can, its edges let a little into the jelly:
+			# set as they come, the curved plates stood off it like fins)
+			Cap=dict(part="Cap", kind="rigid", at=(180, 0.86), scale=1.1, tuck=0.1, fit=((-30, 30, 5), (20, 85, 5))),
+			# (the owner: "nhớ ghép cả giáp ở phần trước thân nữa": the shoulder and side plates on the front too, as the
+			# painting draws them, either side of the face; the shield stays on the back, off the face. Facing the front,
+			# the file's right-hand plates go on the slime's left)
+			# (at 50 degrees the shoulders touched the eyes)
+			FrontShoulderL=dict(part="ShoulderR", kind="rigid", at=(68, 0.66), scale=1.1, tuck=0.1,
+				fit=((-60, 60, 5), (-10, 70, 5))),
+			FrontShoulderR=dict(part="ShoulderL", kind="rigid", at=(-68, 0.66), scale=1.1, tuck=0.1,
+				fit=((-60, 60, 5), (-10, 70, 5))),
+			FrontPlateL=dict(part="PlateR", kind="rigid", at=(58, 0.34), scale=1.1, tuck=0.1,
+				fit=((-60, 60, 5), (-40, 40, 5))),
+			FrontPlateR=dict(part="PlateL", kind="rigid", at=(-58, 0.34), scale=1.1, tuck=0.1,
+				fit=((-60, 60, 5), (-40, 40, 5))),
+			Shield=dict(part="Shield", kind="rigid", at=(180, 0.55), scale=1.3, tuck=0.1, fit=((0, 0, 5), (-10, 50, 5))),
+			ShoulderL=dict(part="ShoulderL", kind="rigid", at=(135, 0.66), scale=1.1, tuck=0.1,
+				fit=((-60, 60, 5), (-10, 70, 5))),
+			ShoulderR=dict(part="ShoulderR", kind="rigid", at=(-135, 0.66), scale=1.1, tuck=0.1,
+				fit=((-60, 60, 5), (-10, 70, 5))),
+			PlateL=dict(part="PlateL", kind="rigid", at=(130, 0.36), scale=1.1, tuck=0.1, fit=((-60, 60, 5), (-40, 40, 5))),
+			PlateR=dict(part="PlateR", kind="rigid", at=(-130, 0.36), scale=1.1, tuck=0.1, fit=((-60, 60, 5), (-40, 40, 5))),
+			# (little legs at the feet, two a side)
+			ClawL1=dict(part="ClawL1", kind="rigid", at=(70, 0.11), scale=1.1, tilt=-20),
+			ClawL2=dict(part="ClawL2", kind="rigid", at=(120, 0.11), scale=1.1, tilt=-20),
+			ClawR2=dict(part="ClawR2", kind="rigid", at=(-120, 0.11), scale=1.1, tilt=-20),
+			ClawR1=dict(part="ClawR1", kind="rigid", at=(-70, 0.11), scale=1.1, tilt=-20),
+		),
+		body=(0.5, 0.5, 0.52, 1),
+	),
 }
 TEXTURE = 1024
 
@@ -901,6 +977,60 @@ def along(run):
 	return MERIDIAN[-1][0], MERIDIAN[-1][1]
 
 
+def rigid_frame(spec, turn, tilt):
+	# the turn of a rigid piece (file axes to body axes) and the way it moves in or out, for its `turn` and `tilt`
+	phi, t = rad(spec["at"][0]), rad(tilt)
+	out = Vector((math.sin(phi), -math.cos(phi), 0))
+	z = Vector((0, 0, 1))
+	look = out * math.cos(t) + z * math.sin(t)
+	up = -out * math.sin(t) + z * math.cos(t)
+	if spec.get("lay") == "side":
+		frame = Matrix((out, z.cross(out), z)).transposed()
+	else:
+		frame = Matrix(((-look).cross(up), -look, up)).transposed()
+	return frame @ Matrix.Rotation(rad(-turn), 3, "Y"), look
+
+
+def fit_rigid(ob, spec, name):
+	# `fit` = (turns, tilts), each (from, to, step): try every pair and keep the one that lays the most of the piece
+	# within 0.03 of the skin once it moves onto it (a long piece that should lie along the body, a mane)
+	import numpy as np
+	zs = np.arange(len(PROFILE)) * 0.05
+	prof = np.array(PROFILE)
+	co = np.array([v.co[:] for v in ob.data.vertices]) * spec["scale"]
+	phi, height = rad(spec["at"][0]), spec["at"][1]
+	r0 = skin_radius(height)
+	base = np.array((r0 * math.sin(phi), -r0 * math.cos(phi), height))
+
+	def out_of(p):
+		return np.hypot(p[:, 0], p[:, 1]) - np.interp(p[:, 2], zs, prof)
+
+	best = None
+	(t0, t1, ts), (l0, l1, ls) = spec["fit"]
+	for turn in range(t0, t1 + 1, ts):
+		for tilt in range(l0, l1 + 1, ls):
+			m, look = rigid_frame(spec, turn, tilt)
+			p = co @ np.array(m).T
+			lk = np.array(look[:])
+			near, far = -0.6, 1.0
+			for _ in range(30):
+				mid = (near + far) / 2
+				if -np.quantile(out_of(p + base + lk * mid), spec.get("tuck", 0)) > SEAT:
+					near = mid
+				else:
+					far = mid
+			q = p + base + lk * far
+			# `reach` = (lowest, highest): its lowest point must come down to `lowest`, its top stay under `highest`
+			low, top = spec.get("reach", (9, 9))
+			if q[:, 2].min() > low or q[:, 2].max() > top:
+				continue
+			touch = int((out_of(q) < 0.03).sum())
+			if not best or touch > best[0]:
+				best = (touch, turn, tilt)
+	print(f"FIT {name} turn {best[1]}, tilt {best[2]}: {best[0]} of {len(co)} vertices within 0.03 of the skin")
+	return dict(spec, turn=best[1], tilt=best[2])
+
+
 def place_rigid(ob, spec, name):
 	# a piece worn exactly as the file shapes it (the owner, 2026-11-10, of flowers and leaves bent onto the skin by
 	# `wrap` and `front`: "lưới của hoa và lá ... biến dạng", "hãy cố gắng giữ nguyên mesh ... không cần phải kéo để nó ôm
@@ -913,20 +1043,29 @@ def place_rigid(ob, spec, name):
 	lo = Vector((min(v.co.x for v in vs), min(v.co.y for v in vs), min(v.co.z for v in vs)))
 	hi = Vector((max(v.co.x for v in vs), max(v.co.y for v in vs), max(v.co.z for v in vs)))
 	rebase(ob, (lo + hi) / 2)
-	ob.data.transform(Matrix.Scale(spec["scale"], 4) @ Matrix.Rotation(rad(-spec.get("turn", 0)), 4, "Y"))
+	# `squash` scales the file's own axes (the owner, of a mane too wide: "có thể bóp hơi dẹp lại")
+	ob.data.transform(Matrix.Diagonal((*spec.get("squash", (1, 1, 1)), 1)))
+	# `shear` slides the file's X by its height (a mane whose locks fall back stood upright), still straight lines
+	ob.data.transform(Matrix.Shear("XY", 4, (spec.get("shear", 0), 0)))
+	if spec.get("fit"):
+		spec = fit_rigid(ob, spec, name)
+	ob.data.transform(Matrix.Scale(spec["scale"], 4))
 	if spec.get("flip"):
 		ob.data.transform(Matrix.Scale(-1, 4, (1, 0, 0)))
 		ob.data.flip_normals()
-	phi, height, t = rad(spec["at"][0]), spec["at"][1], rad(spec.get("tilt", 0))
-	out = Vector((math.sin(phi), -math.cos(phi), 0))
-	look = out * math.cos(t) + Vector((0, 0, 1)) * math.sin(t)
-	up = -out * math.sin(t) + Vector((0, 0, 1)) * math.cos(t)
-	ob.data.transform(Matrix(((-look).cross(up), -look, up)).transposed().to_4x4())
+	# `lay="side"`: a piece that runs over the body seen from its side (a mane): the file's X runs along `out`, its Z
+	# stays up, its front looks to the side; `turn` pitches it, and it moves along `look` all the same
+	frame, look = rigid_frame(spec, spec.get("turn", 0), spec.get("tilt", 0))
+	ob.data.transform(frame.to_4x4())
+	phi, height = rad(spec["at"][0]), spec["at"][1]
 	r0 = skin_radius(height)
 	base = Vector((r0 * math.sin(phi), -r0 * math.cos(phi), height))
 
+	# `tuck`: the share of the piece let in deeper than SEAT (a mane's stray locks, hidden in the jelly)
+	rank = int(spec.get("tuck", 0) * len(vs))
+
 	def depth(d):
-		return max(-outside(base + look * d + v.co) for v in vs)
+		return sorted((-outside(base + look * d + v.co) for v in vs), reverse=True)[rank]
 
 	near, far = -0.6, 1.0
 	for _ in range(40):
@@ -936,7 +1075,7 @@ def place_rigid(ob, spec, name):
 		else:
 			far = mid
 	at = base + look * far
-	deep = max(vs, key=lambda v: -outside(at + v.co)).co + at
+	deep = sorted(vs, key=lambda v: outside(at + v.co))[rank].co + at
 	across = math.hypot(deep.x, deep.y)
 	r = skin_radius(deep.z)
 	anchor = Vector((deep.x * r / across, deep.y * r / across, deep.z)) if across > 1e-6 else Vector((0, 0, deep.z))
@@ -1267,8 +1406,15 @@ def mirrored(ob, name):
 
 
 wear, axes, joints, rigs = [], {}, {}, []
+# a part worn twice (an armour plate on the front and again on the back) is copied before the first one moves
+pristine = {key: ob.data.copy() for key, ob in parts.items()}
+taken = set()
 for name, spec in KIT["pieces"].items():
 	ob = parts[spec["part"]]
+	if spec["part"] in taken:
+		ob = bpy.data.objects.new(name, pristine[spec["part"]].copy())
+		bpy.context.scene.collection.objects.link(ob)
+	taken.add(spec["part"])
 	if spec["kind"] == "horn":
 		place_horn(ob, spec, name)
 	elif spec["kind"] == "wing":

@@ -111,3 +111,14 @@ Fifteen Secrets dressed on 2026-11-10; these got a piece right in one or two rou
 | Curved armour plates (shoulder guards) as `front` or `wrap` stood off the body like fins from the game's camera: their own curve is kept as relief | left out (the skin already paints the armour); a strongly curved piece is not a plaque |
 | A leafy arch of hair or a flower crown drawn round the head in the painting: `front` at the painting's place matched it at the first build | `front`, `at` (0, 0.72-0.74), scale to the painting's width in body units |
 | Antlers behind the `front` hair hid in Play from the front | a step of scale (1.1 -> 1.4) so they rise above it |
+
+## 2026-11-10 (Amethyst Unicorn, Copper Beetle)
+
+| What went wrong | The fix |
+|---|---|
+| The unicorn's mane, worn `rigid` facing out of the back, touched the body at one lock and hung off it like a ponytail; turned, stretched or sheared it still stood off, and a `fit` search counting vertices near the skin chose odd poses (sideways, high) | the file draws the mane from the side, front to back: `lay="side"`; then the owner's sketch: pressed in with 30 % of it in the jelly (`tuck` 0.3), scale 1.55, a little pitch (turn -10), moved in steeply (tilt 65), width flattened (`squash` y 0.55). Set a mane by hand from `review/side.png`, not by `fit` |
+| `turn` on a side-laid piece: a positive turn swung the falling hair out backward like a tail | negative pitches its lower end in |
+| The beetle's curved plates as set stood off like fins again | `rigid` with `tuck` 0.1 and `fit` over turn and tilt: each lay on the body (shoulders and side plates turned about 60 degrees) |
+| The owner: "nhớ ghép cả giáp ở phần trước thân nữa" | the shoulder and side plates worn twice (front and back); at 50 degrees round the front shoulders touched the eyes, 68 clears them; the shield stays on the back |
+| `tests/spec/wear.luau` allowed no side of 1 or more; a mane to the feet is 1.12 long | the limit is 1.25 |
+| Config.luau neared Studio's 200000-character script limit with every kit | `Config.Wear` lives in `src/shared/ConfigWear.luau` |

@@ -57,6 +57,16 @@ orchestrator's (CLAUDE.md).
   only for flat plaques and vines that may bend. Keep nearly all their triangles: decimated hard, leaves break up.
 - **Tusks stand out of the face** (2026-11-10, Iron Boar: "nanh răng của con lợn rừng nằm ở phía trước mặt, không phải
   ở 2 bên"): low on the front either side of the mouth, pointing forward, tips curling up.
+- **Rigid pieces are pressed onto the body, some of them into the jelly** (2026-11-10, Amethyst Unicorn: "có thể đẩy
+  sát cái mái tóc về phía con slime như vậy, sẽ chấp nhận một phần tóc bị chìm vào trong thân", with his sketch): a
+  big rigid piece (a mane, an armour plate) lies as close as it can, its stray locks or edges let in (`tuck`), rather
+  than touching at one point and standing off. Still never bent; a mane too wide may be flattened (`squash`).
+- **A mane runs like a horse's** (2026-11-10, Amethyst Unicorn: "chạy dọc từ đỉnh đầu phía trước ra đằng sau lưng rồi
+  tới dưới chân ... Không tạo hình giống như trong hình mẫu là tóc ở 2 bên mặt"): from just behind the horn over the
+  head and down the back to the feet (`lay="side"`), never down the sides of the face.
+- **Armour goes round the body, front too** (2026-11-10, Copper Beetle: "nhớ ghép cả giáp ở phần trước thân nữa"):
+  the plates on the back and again on the front, either side of the face (a part may be worn twice); a plate that
+  would cover the face stays on the back.
 - Each Secret has its own design; one piece recoloured for another Secret is not a new design.
 - Low poly for cheap phones: each part keeps the triangles in its kit's `budget` (about 500 to 900).
 
@@ -97,8 +107,8 @@ orchestrator's (CLAUDE.md).
    A kit that moved on purpose goes through steps 7 and 8 too.
 7. **Upload** the FBX (and the texture, for a new kit): `kit-reference.md`, "Upload". Unchanged meshes keep their ids.
    The Studio id comes from the MCP's `list_roblox_studios`.
-8. **Config.Wear:** the Secret in `Secrets`, the kit in `Kits` with the model id in its comment, each piece's numbers
-   from `wear.json` and its motion (`kit-reference.md`, "Config").
+8. **Config.Wear** (in `src/shared/ConfigWear.luau`): the Secret in `Secrets`, the kit in `Kits` with the model id in
+   its comment, each piece's numbers from `wear.json` and its motion (`kit-reference.md`, "Config").
 9. **Check:** `& "C:\Roblox 3rd game\tools\check.ps1"` ends `CHECK OK` (`tests/spec/wear.luau` holds every piece on
    the skin and every pair mirrored).
 10. **See it in Play:** stop Play (MCP `start_stop_play`),
@@ -112,7 +122,7 @@ orchestrator's (CLAUDE.md).
     End by running `play_stage.luau` again so the owner's character stands in front of it, then send him the shots.
 11. **Finish:** a paragraph in `docs/STATUS.md` under today's section at the top (a new `## <date> — ...` section if
     there is none); commit only your own files: the kit folder's `.glb`, `.fbx`, `.png` and `wear.json`, `wear_kit.py`,
-    `Config.luau`, `docs/STATUS.md`, this skill if it changed (`git add` new ones first, then `commit --only`); tell the
+    `ConfigWear.luau`, `docs/STATUS.md`, this skill if it changed (`git add` new ones first, then `commit --only`); tell the
     owner in Vietnamese what he will see and what was not seen (a phone).
 
 ## Keeping this skill current

@@ -101,6 +101,16 @@ all of Peach Blossom's pieces now keep the file's 3D shape, with nearly all thei
 front either side of the mouth, pointing forward, tips curling up (`spin`, a new horn field). Models: Forest Dryad
 73928175279860, Iron Boar 122177229873839, Peach Blossom 136863691703075. Seen in Play from five sides; no other kit
 uses the new fields. Not seen: a phone.
+`secret-purple-purple` Amethyst Unicorn (model 130026127101028): the crystal horn at the top front, the mane from just
+behind it over the head and down the back to the feet like a horse's (the owner's rule and sketch: pressed onto the
+body, part of it in the jelly, flattened in width; never down the sides of the face), the file's row of five crystals
+across the lower front. `secret-gray-orange` Copper Beetle (model 136341424878040): the painting's shell, every plate
+as the file shapes it laid close on the body: the cap on the head, the shield down the back, shoulder and side plates
+on the back and again on the front either side of the face (the owner: "nhớ ghép cả giáp ở phần trước thân nữa"), four
+claws at the feet; left out: three small bands and two rivets. `rigid` gained `squash`, `tuck`, `fit` and `lay="side"`,
+and a part may be worn twice; Forest Dryad and Peach Blossom rebuilt to the same numbers. `Config.Wear` moved to
+`src/shared/ConfigWear.luau` (Config.luau neared Studio's script limit). All twenty dressed Secrets n/n in Play, the two
+seen from five sides. Not seen: a phone.
 
 ## 2026-11-10 — Dungeon fight effects per monster, from the VFX library
 
