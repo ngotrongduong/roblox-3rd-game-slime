@@ -603,10 +603,10 @@ KITS = {
 		sort=FOX_TAIL,
 		budget=FOX_BUDGET,
 		pieces=dict(
-			EarL=dict(part="WolfEarL", kind="horn", at=(0.34, 0.0, 0.68), scale=1.6, tilt_out=15, tilt_back=0,
-				level=False, foot="low"),
-			EarR=dict(part="WolfEarR", kind="horn", at=(-0.34, 0.0, 0.68), scale=1.6, tilt_out=15, tilt_back=0,
-				level=False, foot="low"),
+			EarL=dict(part="WolfEarL", kind="horn", at=(0.34, 0.0, 0.68), scale=1.6, tilt_out=28, tilt_back=-6,
+				level=False, foot="low", band=0.5, deep=0.025),
+			EarR=dict(part="WolfEarR", kind="horn", at=(-0.34, 0.0, 0.68), scale=1.6, tilt_out=28, tilt_back=-6,
+				level=False, foot="low", band=0.5, deep=0.025),
 			Tail=dict(part="WolfTail", kind="tail", base="-x", at=(0.0, 0.45, 0.2), scale=2.6, lift=0, sink=True),
 		),
 		body=(0.75, 0.82, 0.97, 1),
@@ -619,10 +619,10 @@ KITS = {
 		sort=FOX_TAIL,
 		budget=FOX_BUDGET,
 		pieces=dict(
-			EarL=dict(part="TigerEarL", kind="horn", at=(0.36, 0.0, 0.66), scale=1.6, tilt_out=25, tilt_back=0,
-				level=False, foot="low"),
-			EarR=dict(part="TigerEarR", kind="horn", at=(-0.36, 0.0, 0.66), scale=1.6, tilt_out=25, tilt_back=0,
-				level=False, foot="low"),
+			EarL=dict(part="TigerEarL", kind="horn", at=(0.36, 0.0, 0.66), scale=1.6, tilt_out=38, tilt_back=-6,
+				level=False, foot="low", band=0.5, deep=0.025),
+			EarR=dict(part="TigerEarR", kind="horn", at=(-0.36, 0.0, 0.66), scale=1.6, tilt_out=38, tilt_back=-6,
+				level=False, foot="low", band=0.5, deep=0.025),
 			Tail=dict(part="TigerTail", kind="tail", base="-x", at=(0.0, 0.45, 0.2), scale=2.6, lift=0, sink=True),
 		),
 		body=(1, 0.55, 0.15, 1),
@@ -635,10 +635,10 @@ KITS = {
 		sort=FOX_TAIL,
 		budget=FOX_BUDGET,
 		pieces=dict(
-			EarL=dict(part="CatEarL", kind="horn", at=(0.34, 0.0, 0.68), scale=1.6, tilt_out=15, tilt_back=0,
-				level=False, foot="low"),
-			EarR=dict(part="CatEarR", kind="horn", at=(-0.34, 0.0, 0.68), scale=1.6, tilt_out=15, tilt_back=0,
-				level=False, foot="low"),
+			EarL=dict(part="CatEarL", kind="horn", at=(0.34, 0.0, 0.68), scale=1.6, tilt_out=28, tilt_back=-6,
+				level=False, foot="low", band=0.5, deep=0.025),
+			EarR=dict(part="CatEarR", kind="horn", at=(-0.34, 0.0, 0.68), scale=1.6, tilt_out=28, tilt_back=-6,
+				level=False, foot="low", band=0.5, deep=0.025),
 			Tail=dict(part="CatTail", kind="tail", base="-x", at=(0.0, 0.45, 0.2), scale=2.6, lift=0, sink=True),
 		),
 		body=(0.6, 0.35, 0.8, 1),
@@ -651,10 +651,10 @@ KITS = {
 		sort=FOX_TAIL,
 		budget=FOX_BUDGET,
 		pieces=dict(
-			EarL=dict(part="FoxEarL", kind="horn", at=(0.34, 0.0, 0.7), scale=1.6, tilt_out=25, tilt_back=0,
-				level=False, foot="low"),
-			EarR=dict(part="FoxEarR", kind="horn", at=(-0.34, 0.0, 0.7), scale=1.6, tilt_out=25, tilt_back=0,
-				level=False, foot="low"),
+			EarL=dict(part="FoxEarL", kind="horn", at=(0.34, 0.0, 0.7), scale=1.6, tilt_out=34, tilt_back=-6,
+				level=False, foot="low", band=0.5, deep=0.025),
+			EarR=dict(part="FoxEarR", kind="horn", at=(-0.34, 0.0, 0.7), scale=1.6, tilt_out=34, tilt_back=-6,
+				level=False, foot="low", band=0.5, deep=0.025),
 			Tail=dict(part="FoxTail", kind="tail", base="-x", at=(0.0, 0.45, 0.2), scale=2.6, lift=0, sink=True),
 		),
 		body=(1, 0.75, 0.4, 1),
@@ -1063,9 +1063,16 @@ def place_horn(ob, spec, name):
 	turn = Matrix.Rotation(rad(side * spec["tilt_out"]), 3, "Y") @ Matrix.Rotation(rad(-spec["tilt_back"]), 3, "X")
 	ob.data.transform(turn.to_4x4())
 	ob.location = spec["at"]
-	seat(ob, foot, turn @ Vector((0, 0, 1)), spec.get("band", 0.3), name)
+	axis = turn @ Vector((0, 0, 1))
+	seat(ob, foot, axis, spec.get("band", 0.3), name)
+	# `deep`: pushed this much further in along the piece, so no sliver of light shows under its foot from any side
+	# (the owner, 2026-11-10, of the fox-file ears: "chưa được dính sát vào thân slime. vẫn còn khoảng hở nhỏ")
+	ob.location -= axis * spec.get("deep", 0)
 	top = max((ob.location + v.co).z for v in vs)
-	print(f"HORN {name} tip at height {top:.3f}")
+	# the lowest tenth of the piece along its axis: the share of it standing outside the skin (a gap under the foot)
+	low = sorted(vs, key=lambda v: v.co.dot(axis))[: max(1, len(vs) // 10)]
+	out = sum(outside(ob.location + v.co) > 0 for v in low)
+	print(f"HORN {name} tip at height {top:.3f}, {out} of the lowest {len(low)} vertices outside the skin")
 
 
 def place_wing(ob, spec):

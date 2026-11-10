@@ -24,6 +24,10 @@ orchestrator's (CLAUDE.md).
   rim of its foot goes under the skin, and where the shoulder slopes away the lowest part is drawn down onto it
   (`seat`). The detail at its foot (fur, a spiked collar, a band) must show.
 - **No base showing** (2026-11-10): no rim, hollow or gap under a piece from any side.
+- **Ears lean with the shoulder, joined tight** (2026-11-10, the fox-file ears: "chưa được dính sát vào thân slime. vẫn
+  còn khoảng hở nhỏ, đồng thời điều chỉnh lại góc độ"): an ear at a top corner leans out about 28-38 degrees with the
+  slope there, not upright, its foot drawn onto the skin over half its height (`band` 0.5) and set a little in
+  (`deep` 0.025); the run's `HORN` line must show 0 or 1 of its lowest vertices outside the skin.
 - **Vines grow out, not stuck on** (2026-11-10: "dây leo mọc vươn ra cả bên ngoài của slime"): what the painting draws
   round the outline stands out past the body (`frame`), only what lies on the back is laid on the skin (`wrap`).
 - **A bird's wings spread from the back** (2026-11-10: "tư thế tự nhiên của cánh chim thay vì chổng lên trên cao", then
