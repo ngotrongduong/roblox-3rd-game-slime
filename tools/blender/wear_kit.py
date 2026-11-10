@@ -101,20 +101,21 @@ KITS = {
 	# Midnight Raven (secret-black-navy), 2026-11-10: a pair of starry feathered wings, both in the file. The owner: the
 	# painting's wings are not right, set them where they sit well on its back; raised, they stood up too high; folded,
 	# at the sides or on the back, they were not what he wants: so they grow from the upper back and spread out
-	# sideways, level, as a bird's open wings ("xoay ngang như đang xòe cánh")
+	# sideways, level, as a bird's open wings ("xoay ngang như đang xòe cánh"); the file's right wing on the slime's left
+	# came out upside down ("vẫn bị lộn ngược"): seen from behind, each side wears the file's wing of the same side
 	"MidnightRaven": dict(
 		folder="midnight_raven",
 		glb="black_navy.glb",
 		out="MidnightRavenWear",
 		texture="midnight_raven_wear.png",
-		sort=lambda c: "WingL" if c.x > 0 else "WingR",
+		sort=lambda c: "WingL" if c.x < 0 else "WingR",
 		budget=dict(WingL=900, WingR=900),
 		pieces=dict(
 			# (his sketch over the back view: the roots near the spine at mid-back, the wings wide, past the body by most
-			# of their length, their tips drooping)
-			WingL=dict(part="WingL", kind="aim", root="-x", at=(0.17, 0.45, 0.53), scale=1.7, point=(0.95, 0.2, -0.3),
+			# of their length, the long feathers' tips rising and curling up at the outer end, the rest fanning below)
+			WingL=dict(part="WingL", kind="aim", root="+x", at=(0.17, 0.45, 0.53), scale=1.7, point=(0.95, 0.2, 0.33),
 				face=(0, 1, 0.2)),
-			WingR=dict(part="WingR", kind="aim", root="+x", at=(-0.17, 0.45, 0.53), scale=1.7, point=(0.95, 0.2, -0.3),
+			WingR=dict(part="WingR", kind="aim", root="-x", at=(-0.17, 0.45, 0.53), scale=1.7, point=(0.95, 0.2, 0.33),
 				face=(0, 1, 0.2)),
 		),
 		body=(0.05, 0.06, 0.2, 1),
@@ -540,8 +541,10 @@ def place_aim(ob, spec, name):
 	# chim", "phải ở đằng sau lưng của slime", "xoay ngang như đang xòe cánh"): its root (the end along X that `root`
 	# names) at `at`, turned so its long line (from the root to its farthest point) runs along `point` and its painted
 	# side (-Y in the file) looks along `face` (made square to `point`). The directions are for a piece on the slime's
-	# left (+X); one on its right (`at` x < 0) takes them mirrored. Returns the beat axis: the painted side's normal,
-	# signed so a positive turn lifts the tip, the wing beating in its own plane
+	# left (+X); one on its right (`at` x < 0) takes them mirrored. A turn cannot mirror: a piece whose painted side
+	# turns from the file's front to the slime's back must be the file's piece of the same side, or it comes out upside
+	# down (the run prints how upright the file's top stays). Returns the beat axis: the painted side's normal, signed
+	# so a positive turn lifts the tip, the wing beating in its own plane
 	vs = ob.data.vertices
 	rebase(ob, anchor_of(ob, "x", spec["root"] == "+x"))
 	ob.data.transform(Matrix.Scale(spec["scale"], 4))
@@ -556,11 +559,14 @@ def place_aim(ob, spec, name):
 	point.x *= m
 	face.x *= m
 	far = max(vs, key=lambda v: v.co.length).co.copy()
-	ob.data.transform((frame(point, face) @ frame(far, Vector((0, -1, 0))).transposed()).to_4x4())
+	turn = frame(point, face) @ frame(far, Vector((0, -1, 0))).transposed()
+	ob.data.transform(turn.to_4x4())
 	ob.location = spec["at"]
 	tip = max(vs, key=lambda v: v.co.length).co + ob.location
 	inside = sum(outside(ob.location + v.co) < 0 for v in vs)
-	print(f"AIM {name} tip at {tuple(round(x, 3) for x in tip)}, {inside} of {len(vs)} vertices inside the body")
+	upright = (turn @ Vector((0, 0, 1))).z
+	print(f"AIM {name} tip at {tuple(round(x, 3) for x in tip)}, {inside} of {len(vs)} vertices inside the body, "
+		f"upright {upright:+.2f}")
 	along = point.normalized()
 	normal = (face - along * face.dot(along)).normalized()
 	return normal if normal.cross(along).z > 0 else -normal

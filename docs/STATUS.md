@@ -34,7 +34,8 @@ a fresh agent found its gaps (colour ids, kinds the tool lacks, sort and budget 
 Three more kits, the same day: `secret-black-navy` Midnight Raven (two starry feathered wings; the owner: the painting's
 wings are wrong, raised they stood too high, folded at the sides or on the back they were not what he wants: so, as
 his sketch over the back view draws them, they grow from mid-back near the spine and spread wide and level out to the
-sides, tips drooping, beating slowly: kind `aim`; model 98666146416809), `secret-black-orange` Jack-o'-Slime (a sheet of pumpkin vines and leaves; the owner: the
+sides, the long feathers curling up at the ends, beating slowly: kind `aim`; model 105971591012484; the owner approved
+it as the standard for every bird's wing pair, pose, place and motion, in skill `slime-wear`), `secret-black-orange` Jack-o'-Slime (a sheet of pumpkin vines and leaves; the owner: the
 vines grow out past the body as his painting draws them, so a leafy vine rises off each shoulder and a curling vine runs
 down each side, upright and out past the outline, kind `frame`; vines at the foot in front and a big curly vine with
 leaves on the back lie on the skin, kind `wrap`; the face stays clear; model 104420315090131) and `secret-black-pink`

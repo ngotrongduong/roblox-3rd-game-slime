@@ -32,7 +32,7 @@ A piece, by `kind`:
 |---|---|
 | `horn` (horns and ears) | `part`; `at` where its foot's middle starts (then it is seated along its own axis); `scale`; `tilt_out` degrees leaning out to its side; `tilt_back` degrees, positive leans back; `curl` `"back"`, `"out"`, `"in"` or none (turns a tip that curls toward -X in the file); `level` (default true: turn its flat sole level; false: keep the file's turn, for a horn the file already has upright); `foot` (`"plane"` default: the flat sole or a hollow cup's lip; `"low"`: the lowest tenth, for soft fur); `band` (default 0.3: how far up its length the draw-down onto the skin fades); `twin` the mirrored copy's name |
 | `wing` (spread, a dragon's or a bat's) | `part`, `at` (the root), `scale`, `raise_` degrees tip up, `sweep` degrees back, `root` (`"+x"` default; `"-x"` for the file's right wing of a pair, spread to the slime's right), `twin` |
-| `aim` (set by where it points: a bird's open wing) | `part`, `root` (`"-x"`: the file's right wing, worn on the slime's LEFT; `"+x"` on its right), `at` the root just inside the skin (Midnight Raven: (+-0.17, 0.45, 0.53), mid-back near the spine), `scale`, `point` the direction from the root to its farthest point (the long feather's tip), `face` the way its painted side (-Y in the file) looks; both for the piece on the slime's left, mirrored for the right. Raven: `point` (0.95, 0.2, -0.3) spreads it level, a little back, tips drooping; `face` (0, 1, 0.2) shows it from behind. Its flap axis (in `wear.json`) beats the wing in its own plane, tip up for a positive turn |
+| `aim` (set by where it points: a bird's open wing) | `part`, `root` (which end along X is its root: `"+x"` for the file's left wing, whose root is its inner end), `at` the root just inside the skin, `scale`, `point` the direction from the root to its farthest point (the long feather's tip), `face` the way its painted side (-Y in the file) looks; both for the piece on the slime's left, mirrored for the right. With `face` to the back, each side wears the file's piece of the same side (seen from the file's front), or it comes out upside down. Its flap axis (in `wear.json`) beats the wing in its own plane, tip up for a positive turn. A bird's wing pair: the standard below |
 | `tail` | `part`, `base` `"+x"` or `"-x"` (its base end in the file), `at`, `scale`, `lift` degrees tip up (negative: down), `sink` true pushes its base end 0.03 into the body (not when its base has detail to show, a rose, a tuft) |
 | `wrap` (lying ON the skin: a vine on the back, a leaf) | `part`, `at` = (degrees around the body from the front, + toward the slime's left; height of its middle), `scale`, `turn` degrees in its own plane, `flip` |
 | `frame` (growing OUT past the body, as a painting draws vines round its outline) | `part`, `at` = (degrees around from the front; height of its middle; how far its middle stands from the middle line, about the skin radius there), `scale`, `yaw` degrees its plane turns to the back so it also shows from the side (30), `hug` 0-1 bends its inner edge along the outline (1 for a vine down the side, 0 for one rising off a shoulder), `turn`, `flip`; what falls inside the body is laid on the skin |
@@ -40,6 +40,23 @@ A piece, by `kind`:
 At +-90 degrees a `frame` is seen from the front exactly as the file is (the painting's view): a piece from the file's
 left half goes on the slime's right (`at` negative). Keep the face's zone clear (front, 35 degrees each way, heights
 0.35-0.68): the body's own painted texture often already carries what the painting shows on the front.
+
+### A bird's wing pair (the owner's standard, 2026-11-10)
+
+Every feathered wing pair is Midnight Raven's, the pose the owner approved; change only `scale` until the `AIM` tips
+stand at about x +-1.0 (Raven's file: 1.7):
+
+```python
+sort=lambda c: "WingL" if c.x < 0 else "WingR",   # the file's left wing (seen from its front) on the slime's left
+WingL=dict(part="WingL", kind="aim", root="+x", at=(0.17, 0.45, 0.53), scale=1.7, point=(0.95, 0.2, 0.33),
+	face=(0, 1, 0.2)),
+WingR=dict(part="WingR", kind="aim", root="-x", at=(-0.17, 0.45, 0.53), scale=1.7, point=(0.95, 0.2, 0.33),
+	face=(0, 1, 0.2)),
+```
+
+This assumes the file's wings stand as a pair seen from the front, roots at the inner bottom, tips up and out (as the
+image-to-3D files do). Both `AIM` lines must say `upright` above +0.5; a negative one is upside down: swap the sort.
+Config: `flap = { axis = <wear.json axis>, degrees = 10, hz = 0.6 }` on both.
 
 A pair of horns or ears the file holds both of (two ears, a red horn and a blue one) is two pieces with mirrored `at`,
 no `twin`; so is a pair of wings (`root` per wing). Another kind of piece needs the tool changed first (SKILL.md,
@@ -56,7 +73,7 @@ step 4).
 | `HORN <name> tip at height h` | the body's top is 1.0 |
 | `SINK Tail x, base at (...)` | how far a tail with `sink` was pushed in |
 | `FLAP CHECK tip z a -> b` | b above a, or the wing flaps down |
-| `AIM <name> tip at (...), n of m vertices inside the body` | where the tip went (x out to the side, y back, z height); a few vertices inside is the root on the skin; more than about a sixth inside: move `at` out |
+| `AIM <name> tip at (...), n of m vertices inside the body, upright u` | where the tip went (x out to the side, y back, z height); a few vertices inside is the root on the skin; more than about a sixth inside: move `at` out; `u` how far the file's up stays up: below 0 the piece is upside down (a turn cannot mirror: wear the file's piece of the other side) |
 | `WRAP <name> at d degrees, height h, anchor (...)` | where it lies on the skin |
 | `FRAME <name> at d degrees, height h, reach r, n of m vertices laid on the skin` | about half laid on the skin is a vine growing out of it; nearly none: it floats, lower `reach` |
 | `WEAR {...}` | what `wear.json` holds |

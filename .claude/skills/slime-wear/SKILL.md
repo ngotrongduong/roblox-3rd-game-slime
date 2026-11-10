@@ -29,8 +29,12 @@ orchestrator's (CLAUDE.md).
 - **A bird's wings spread from the back** (2026-11-10: "tư thế tự nhiên của cánh chim thay vì chổng lên trên cao", then
   "phải ở đằng sau lưng của slime, không phải ở bên cạnh", then "xoay ngang như đang xòe cánh chứ không phải tư thế
   cánh cụp lại", with his sketch): the roots near the spine at mid-back, the wings wide and level out to the sides,
-  past the body by most of their length, the tips drooping (`aim`). Never folded, never at the sides, never raised
-  high.
+  past the body by most of their length, the long feathers curling up at the outer ends, the rest fanning below
+  (`aim`). Never folded, never at the sides, never raised high, never upside down.
+- **Every bird's wing pair is worn the same way** (2026-11-10, approving Midnight Raven: "từ bây giờ, các cặp cánh dạng
+  cánh chim lắp cho slime đều giữ đúng theo tư thế và vị trí này. chuyển động cánh cũng giống như nhau"): copy
+  Midnight Raven's `aim` numbers (`kit-reference.md`, "A bird's wing pair") and its motion (`flap` 10 degrees, 0.6 Hz,
+  about the `wear.json` axis); only `scale` changes, to bring the span to Raven's (tips at about +-1.0).
 - **Tails and ears move** (2026-11-10: "gắn thêm chuyển động cho phần đuôi và tai"): a tail wags and trails the hop,
   an ear twitches now and then and trails the hop (`kit-reference.md`, "Config").
 - Each Secret has its own design; one piece recoloured for another Secret is not a new design.
