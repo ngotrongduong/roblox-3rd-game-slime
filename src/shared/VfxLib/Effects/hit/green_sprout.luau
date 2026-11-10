@@ -79,8 +79,10 @@ return {
 					zOffset = 0,
 				},
 				{
+					-- (leaves_solid: four leaves; each particle keeps the one it starts on. It was feathers_flip, which
+					-- is goo splats, not leaves)
 					name = "drift",
-					texture = "feathers_flip",
+					texture = "leaves_solid",
 					role = "keep",
 					color = { { 0, { 120, 200, 70 } }, { 1, { 255, 226, 90 } } },
 					count = 7,
@@ -95,8 +97,10 @@ return {
 					rotation = { 0, 359 },
 					rotSpeed = { -180, 180 },
 					flipbook = {
-						layout = "Grid4x4",
-						mode = "OneShot",
+						layout = "Grid2x2",
+						mode = "Loop",
+						fps = { 0, 0 },
+						random = true,
 					},
 					zOffset = 3,
 				},
