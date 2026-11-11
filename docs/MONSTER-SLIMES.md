@@ -4,7 +4,7 @@ The owner, 2026-11-11: the monsters of the Dungeon maps become slime monsters. T
 body), but they are not cute: they are menacing. Each region has a few signature monsters and a boss. Claude designs
 them; ChatGPT draws the concepts. This file is the plan; the pictures are in `art/concepts/monster_slimes/<map id>/`
 (`meadow`, `mushroom`, `lava`, `ice`), one PNG a monster named after it (`burrling.png`).
-3D models and putting them in the game come later.
+They are in the game since 2026-11-11 (see "In the game" at the end).
 
 ## The set
 
@@ -92,3 +92,29 @@ region. `art/concepts/monster_slimes/<region>/group.png` is that: ChatGPT redrew
 pictures on plain white, without smoke, mist, snow, sparks, motes, trails, breath or floating pieces. No flames either
 (the owner, the same day): the Wickling's wick is a molten point, the Scorchdart's and the Calderos's manes are molten
 jelly, the Pyrekeeper's brazier holds molten lava, and its floating shards became a ring set into its body.
+
+## In the game
+
+The owner made one 3D file a region from the group pictures and asked, 2026-11-11, for each monster split out, rigged
+and moving, then put in the game ("tách riêng từng con ra và gắn xương, gắn chuyển động cho chúng"; no GIFs, he checks
+them in the game). Done the same day:
+
+- **Split and rigged** in Blender (`tools/blender/monster_split.ps1`, `monster_rig.ps1` with one rig file a region):
+  `art/models/monster_slimes/<region>/<Name>/<Name>.fbx` and its 1024 texture, `rig_<region>.json`,
+  `<region>_rigged.blend`, `MOTION.md` (each monster's bones and moves). Every monster has a jelly cage (Body, Top,
+  Front, Back, Left, Right) for the slime's squash, stretch and lean, plus bones of its own pieces for most (Stinglob's
+  wings and sting, Glimlure's lure and tail, Rimesaw's spinning blade ring, Frostmaw's horns...). Regulars
+  up to 3000 triangles, mini-bosses 6000, bosses 8000. Built as tall as they stand in the game: 4.4, 3.6, 4.2, 3.8,
+  4.6, 8 and 10 studs by slot (swarmer to boss), drawn bigger by `Config.Dungeon.LookScale`.
+- **Moves**: Idle and Move (loops), Attack, Hit and Die (Die holds), each sampled at 30 frames a second into
+  `src/shared/MonsterClips/<Name>.luau` (`tools/blender/monster_clips.ps1 <region>`), with `peak` (when the attack lands)
+  so the fight times the blow. `shared/MonsterClip` plays them (walk while it moves, one-offs over it, a 0.15 s blend,
+  dying outranks all); `client/ClipRig` loads the mesh, makes its bones and moves them. The fight starts Attack so its
+  peak meets the hit, Hit on every blow taken, Die when it falls; a healer plays Attack when it mends.
+- **Uploaded** by `node tools/kit/upload_monsters.js`: `art/models/monster_slimes/ids.json`, copied into
+  `Config.Dungeon.Looks` (`clips`, `mesh`, `texture`, `height`, `shadow`; `turn` for the four whose model came turned
+  from the three-quarter picture: Glimlure 57, Scorchdart 30, Bilebloat -20, Blazegullet -15). Their names on screen are
+  the new ones. The Egg Heist creatures (`assets/MonsterKit.rbxm`) are no longer in the built game.
+- Seen in a Studio play test: all 28 in a line-up (`tools/dungeon/monster_lineup.luau`), and an Ice run to wave 8.
+  Known: Wickling's crust dips under the ground when it dies; the bodies melt past a clean puddle on Die; Frostmaw's jaw,
+  Blazegullet's lips and Magmaw's jaw move with the body (not cut apart). Not seen: a phone.

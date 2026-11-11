@@ -15,7 +15,7 @@ return {
 			monsters = {
 				{
 					id = "green_sprout",
-					name = "Twigling",
+					name = "Burrling",
 					role = "swarmer",
 					cost = 1,
 					attack = 1,
@@ -31,7 +31,7 @@ return {
 				},
 				{
 					id = "green_bee",
-					name = "Parrot",
+					name = "Stinglob",
 					role = "raider",
 					cost = 2,
 					attack = 3,
@@ -48,7 +48,7 @@ return {
 				},
 				{
 					id = "green_dandelion",
-					name = "Bloom Sprite",
+					name = "Gapebloom",
 					role = "spitter",
 					cost = 2,
 					attack = 3,
@@ -64,7 +64,7 @@ return {
 				},
 				{
 					id = "green_moth",
-					name = "Aurora Owl",
+					name = "Sapcaller",
 					role = "shaman",
 					cost = 2,
 					attack = 1,
@@ -81,7 +81,7 @@ return {
 				},
 				{
 					id = "green_snail",
-					name = "Hedgehog",
+					name = "Barkhide",
 					role = "armoured",
 					cost = 3,
 					attack = 3,
@@ -98,7 +98,7 @@ return {
 				},
 				{
 					id = "green_turtle",
-					name = "Mossback Gorilla",
+					name = "Rotbloom",
 					role = "miniboss",
 					attack = 5,
 					defence = 7,
@@ -142,7 +142,7 @@ return {
 			monsters = {
 				{
 					id = "dark_hare",
-					name = "Jackalope",
+					name = "Gloomtick",
 					role = "swarmer",
 					cost = 1,
 					attack = 1,
@@ -158,7 +158,7 @@ return {
 				},
 				{
 					id = "dark_bat",
-					name = "Cave Bat",
+					name = "Glimlure",
 					role = "raider",
 					cost = 2,
 					attack = 3,
@@ -175,7 +175,7 @@ return {
 				},
 				{
 					id = "dark_fox",
-					name = "Fairy Fox",
+					name = "Bilebloat",
 					role = "spitter",
 					cost = 2,
 					attack = 2,
@@ -192,7 +192,7 @@ return {
 				},
 				{
 					id = "dark_deer",
-					name = "Forest Deer",
+					name = "Hexcap",
 					role = "shaman",
 					cost = 2,
 					attack = 1,
@@ -210,7 +210,7 @@ return {
 				},
 				{
 					id = "dark_totem",
-					name = "Totem Golem",
+					name = "Ruingut",
 					role = "armoured",
 					cost = 3,
 					attack = 3,
@@ -227,7 +227,7 @@ return {
 				},
 				{
 					id = "dark_wyrm",
-					name = "Jungle Wyrm",
+					name = "Sporegorge",
 					role = "miniboss",
 					attack = 6,
 					defence = 3,
@@ -244,7 +244,7 @@ return {
 				},
 				{
 					id = "dark_bear",
-					name = "Mama Bear",
+					name = "Hollowheart",
 					role = "boss",
 					attack = 7,
 					defence = 5,
@@ -263,16 +263,15 @@ return {
 				},
 			} :: { any },
 		},
-		-- Ember Lava: the Grove's roles again, each a step stronger, with the owner's fire creatures from Egg Heist
-		-- (docs/DUNGEON_MAPS.md §3). The healer is the Inferno Dragon (a flier, small: the Meadow's Aurora Owl healer is the
-		-- same kind of motion; the Bestiary Imp is not rigged). The trophy is the Ember Core: the boss pays two, never
+		-- Ember Lava: the Grove's roles again, each a step stronger (docs/DUNGEON_MAPS.md §3; the monsters are
+		-- docs/MONSTER-SLIMES.md's). The healer is the Pyrekeeper. The trophy is the Ember Core: the boss pays two, never
 		-- fewer; the mini-boss, the spitter and the healer sometimes one.
 		lava = {
 			name = "Ember Lava",
 			monsters = {
 				{
 					id = "lava_newt",
-					name = "Fire Newt",
+					name = "Wickling",
 					role = "swarmer",
 					cost = 1,
 					attack = 2,
@@ -288,7 +287,7 @@ return {
 				},
 				{
 					id = "lava_wolf",
-					name = "Ember Wolf",
+					name = "Scorchdart",
 					role = "raider",
 					cost = 2,
 					attack = 4,
@@ -305,7 +304,7 @@ return {
 				},
 				{
 					id = "lava_phoenix",
-					name = "Phoenix",
+					name = "Blazegullet",
 					role = "spitter",
 					cost = 2,
 					attack = 3,
@@ -322,7 +321,7 @@ return {
 				},
 				{
 					id = "lava_drake",
-					name = "Inferno Dragon",
+					name = "Pyrekeeper",
 					role = "shaman",
 					cost = 2,
 					attack = 1,
@@ -340,7 +339,7 @@ return {
 				},
 				{
 					id = "lava_tortoise",
-					name = "Rock Tortoise",
+					name = "Basaltback",
 					role = "armoured",
 					cost = 3,
 					attack = 3,
@@ -357,7 +356,7 @@ return {
 				},
 				{
 					id = "lava_bull",
-					name = "Magma Bull",
+					name = "Magmaw",
 					role = "miniboss",
 					attack = 7,
 					defence = 4,
@@ -374,7 +373,7 @@ return {
 				},
 				{
 					id = "lava_golem",
-					name = "Magma Golem",
+					name = "Calderos",
 					role = "boss",
 					attack = 8,
 					defence = 6,
@@ -404,7 +403,7 @@ return {
 			monsters = {
 				{
 					id = "ice_fox",
-					name = "Arctic Fox",
+					name = "Frostnip",
 					role = "swarmer",
 					cost = 1,
 					attack = 3,
@@ -420,7 +419,7 @@ return {
 				},
 				{
 					id = "ice_leopard",
-					name = "Snow Leopard",
+					name = "Rimesaw",
 					role = "raider",
 					cost = 2,
 					attack = 5,
@@ -437,7 +436,7 @@ return {
 				},
 				{
 					id = "ice_wisp",
-					name = "Frost Wisp",
+					name = "Shardspire",
 					role = "spitter",
 					cost = 2,
 					attack = 4,
@@ -454,7 +453,7 @@ return {
 				},
 				{
 					id = "ice_penguin",
-					name = "Penguin",
+					name = "Snowshroud",
 					role = "shaman",
 					cost = 2,
 					attack = 1,
@@ -472,7 +471,7 @@ return {
 				},
 				{
 					id = "ice_golem",
-					name = "Ice Golem",
+					name = "Icebound",
 					role = "armoured",
 					cost = 3,
 					attack = 4,
@@ -489,7 +488,7 @@ return {
 				},
 				{
 					id = "ice_mammoth",
-					name = "Mammoth",
+					name = "Rimetusk",
 					role = "miniboss",
 					attack = 9,
 					defence = 5,
@@ -506,7 +505,7 @@ return {
 				},
 				{
 					id = "ice_yeti",
-					name = "Yeti",
+					name = "Frostmaw",
 					role = "boss",
 					attack = 10,
 					defence = 7,
@@ -1546,69 +1545,105 @@ return {
 		},
 		Sizes = { normal = 3, armoured = 4, miniboss = 7, boss = 10 },
 	},
-	-- Each monster's model: one of the owner's Egg Heist creatures (the owner, 2026-11-04: "use the many monster models
-	-- Egg Heist already has"), in ReplicatedStorage.MonsterKit by tools/kit/eggheist_models.luau and moved by its own
-	-- Egg Heist motion module `motion` (shared/Creatures, client/CreatureRig; client/MonsterLook, SlimeActor.dress).
-	-- `height` the model's height in studs, `hover` how high a flyer flies (it then flies, wings beating) with a `bob`
-	-- at `bobHz`. (A look may instead name `pieces`: a model of rigid pieces turned about their joints, shared/MonsterMotion;
-	-- the Blender builds of the owner's paintings in art/models/monsters/ are kept that way.)
+	-- Each monster's look: its monster slime (docs/MONSTER-SLIMES.md), the owner's 3D model split, rigged and given its
+	-- moves in Blender (tools/blender/monster_rig*.py, art/models/monster_slimes/<region>/), uploaded
+	-- (tools/kit/upload_monsters.js, ids.json): `clips` names its moves (shared/MonsterClips/<Name>, played by
+	-- client/ClipRig), `mesh` and `texture` its asset ids, `height` how tall it stands in studs (as it was built; a floater's
+	-- hover is in its moves), `shadow` for the mini-bosses and bosses, `turn` the degrees it is turned about its height so
+	-- its face looks where it goes (a few models came turned, as the concept pictures were three-quarter views; + brings a
+	-- face that looks to its left to the front). A look may instead name an Egg Heist creature
+	-- (`model` in ReplicatedStorage.MonsterKit moved by its `motion` module, shared/Creatures and client/CreatureRig, with
+	-- `hover`, `bob` and `bobHz` for a flyer) or `pieces` (rigid pieces turned about their joints, shared/MonsterMotion).
 	-- Every look's `height` (and its hover) is drawn this many times bigger: the monsters read small beside the 3-stud
 	-- slimes in a fight at the player's camera (2026-11-09). `Big` is for the looks with `shadow` (minibosses and
 	-- bosses), which are already tall.
 	LookScale = { Normal = 1.35, Big = 1.15 },
 	Looks = {
-		green_sprout = { model = "Twigling", motion = "pet_Twigling", height = 4.4 },
-		green_bee = { model = "Parrot", motion = "pet_Parrot", height = 3.6, hover = 3.5, bob = 0.15, bobHz = 1.5 },
-		green_dandelion = { model = "BloomSprite", motion = "pet_BloomSprite", height = 4.2 },
-		green_moth = { model = "AuroraOwl", motion = "pet_AuroraOwl", height = 3.8, hover = 3, bob = 0.25, bobHz = 1.2 },
-		green_snail = { model = "Hedgehog", motion = "pet_Hedgehog", height = 4.6 },
-		green_turtle = { model = "Gorilla", motion = "pet_Gorilla", height = 8, shadow = true },
-		green_boar = { model = "Triceratops", motion = "pet_Triceratops", height = 10, shadow = true },
-		-- the Mushroom Grove's (heights are first guesses, set by eye at the fight camera)
-		dark_hare = { model = "Jackalope", motion = "pet_Jackalope", height = 4.4 },
-		dark_bat = { model = "CaveBat", motion = "pet_CaveBat", height = 3.6, hover = 3.5, bob = 0.2, bobHz = 1.6 },
-		dark_fox = { model = "FairyFox", motion = "pet_FairyFox", height = 4.2 },
-		dark_deer = { model = "Deer", motion = "pet_Deer", height = 6 },
-		dark_totem = { model = "TotemGolem", motion = "pet_TotemGolem", height = 5.5 },
-		dark_wyrm = { model = "JungleWyrm", motion = "pet_JungleWyrm", height = 7, shadow = true },
-		dark_bear = { model = "Woods", motion = "boss_Woods", height = 11, shadow = true },
-		-- Ember Lava's (heights are first guesses, set by eye at the fight camera). The Phoenix and the Inferno Dragon fly.
-		lava_newt = { model = "FireNewt", motion = "pet_FireNewt", height = 4 },
-		lava_wolf = { model = "EmberWolf", motion = "pet_EmberWolf", height = 4.6 },
-		lava_phoenix = { model = "Phoenix", motion = "pet_Phoenix", height = 3.6, hover = 3.5, bob = 0.2, bobHz = 1.4 },
-		lava_drake = {
-			model = "InfernoDragon",
-			motion = "pet_InfernoDragon",
-			height = 3.8,
-			hover = 3,
-			bob = 0.25,
-			bobHz = 1.1,
-		},
-		lava_tortoise = { model = "RockTortoise", motion = "pet_RockTortoise", height = 5 },
-		lava_bull = { model = "MagmaBull", motion = "pet_MagmaBull", height = 8, shadow = true },
-		lava_golem = { model = "Volcano", motion = "boss_Volcano", height = 11, shadow = true },
-		-- Frozen Ice's (heights are first guesses, set by eye at the fight camera). The Frost Wisp floats; the Penguin, a walker,
-		-- heals; the Mammoth and the Yeti are big enough for a shadow.
-		ice_fox = { model = "ArcticFox", motion = "pet_ArcticFox", height = 4 },
-		ice_leopard = { model = "SnowLeopard", motion = "pet_SnowLeopard", height = 4.6 },
-		ice_wisp = {
-			model = "FrostWisp",
-			motion = "pet_FrostWisp",
-			height = 3,
-			hover = 3.5,
-			bob = 0.25,
-			bobHz = 1.3,
-		},
-		ice_penguin = { model = "Penguin", motion = "pet_Penguin", height = 3.5 },
-		ice_golem = { model = "IceGolem", motion = "pet_IceGolem", height = 5.5 },
-		ice_mammoth = { model = "Mammoth", motion = "pet_Mammoth", height = 9, shadow = true },
-		-- (the Yeti stands on a dark-blue contact shadow 6 across, so the white boss does not float on the white floor)
-		ice_yeti = {
-			model = "Peaks",
-			motion = "boss_Peaks",
-			height = 11,
+		-- Sunny Meadow's
+		green_sprout = { clips = "Burrling", mesh = 137807217575397, texture = 138681763611567, height = 4.4 },
+		green_bee = { clips = "Stinglob", mesh = 113014346736172, texture = 75158359280374, height = 3.6 },
+		green_dandelion = { clips = "Gapebloom", mesh = 93569552469358, texture = 135413526793030, height = 4.2 },
+		green_moth = { clips = "Sapcaller", mesh = 120737224081437, texture = 71772462336332, height = 3.8 },
+		green_snail = { clips = "Barkhide", mesh = 140178248884285, texture = 102872532900531, height = 4.6 },
+		green_turtle = {
+			clips = "Rotbloom",
+			mesh = 93464689205170,
+			texture = 138165822750225,
+			height = 8,
 			shadow = true,
-			contact = { width = 6, colour = "#26405f", alpha = 0.45 },
+		},
+		green_boar = {
+			clips = "Bramblehorn",
+			mesh = 123517482780418,
+			texture = 113411905560648,
+			height = 10,
+			shadow = true,
+		},
+		-- the Mushroom Grove's
+		dark_hare = { clips = "Gloomtick", mesh = 81502541674019, texture = 112116342243841, height = 4.4 },
+		dark_bat = { clips = "Glimlure", mesh = 74320947597347, texture = 75204701729024, height = 3.6, turn = 57 },
+		dark_fox = { clips = "Bilebloat", mesh = 101371378759876, texture = 108421618690524, height = 4.2, turn = -20 },
+		dark_deer = { clips = "Hexcap", mesh = 123670007933216, texture = 137125937387984, height = 3.8 },
+		dark_totem = { clips = "Ruingut", mesh = 106841847934251, texture = 105872266930309, height = 4.6 },
+		dark_wyrm = {
+			clips = "Sporegorge",
+			mesh = 92941475092637,
+			texture = 131395010003057,
+			height = 8,
+			shadow = true,
+		},
+		dark_bear = {
+			clips = "Hollowheart",
+			mesh = 80922916527388,
+			texture = 102830187428765,
+			height = 10,
+			shadow = true,
+		},
+		-- Ember Lava's
+		lava_newt = { clips = "Wickling", mesh = 107835269091363, texture = 79020227671379, height = 4.4 },
+		lava_wolf = { clips = "Scorchdart", mesh = 79283961500273, texture = 139885960871598, height = 3.6, turn = 30 },
+		lava_phoenix = {
+			clips = "Blazegullet",
+			mesh = 119982999618894,
+			texture = 79027366845168,
+			height = 4.2,
+			turn = -15,
+		},
+		lava_drake = { clips = "Pyrekeeper", mesh = 99465572241029, texture = 133586105790685, height = 3.8 },
+		lava_tortoise = { clips = "Basaltback", mesh = 124537289602580, texture = 102905861327564, height = 4.6 },
+		lava_bull = {
+			clips = "Magmaw",
+			mesh = 84598397307019,
+			texture = 101694948132599,
+			height = 8,
+			shadow = true,
+		},
+		lava_golem = {
+			clips = "Calderos",
+			mesh = 119811024837186,
+			texture = 115472744044897,
+			height = 10,
+			shadow = true,
+		},
+		-- Frozen Ice's (the Frostmaw is dark so that it reads on the white floor)
+		ice_fox = { clips = "Frostnip", mesh = 87406578571606, texture = 137195367943596, height = 4.4 },
+		ice_leopard = { clips = "Rimesaw", mesh = 113370508274803, texture = 134755381308207, height = 3.6 },
+		ice_wisp = { clips = "Shardspire", mesh = 93910658403605, texture = 113839119156842, height = 4.2 },
+		ice_penguin = { clips = "Snowshroud", mesh = 134787401494105, texture = 113926521902131, height = 3.8 },
+		ice_golem = { clips = "Icebound", mesh = 129447292939570, texture = 91773709005563, height = 4.6 },
+		ice_mammoth = {
+			clips = "Rimetusk",
+			mesh = 135170060162540,
+			texture = 99482423322194,
+			height = 8,
+			shadow = true,
+		},
+		ice_yeti = {
+			clips = "Frostmaw",
+			mesh = 70916405343821,
+			texture = 114276870471488,
+			height = 10,
+			shadow = true,
 		},
 	},
 
@@ -1689,6 +1724,8 @@ return {
 		-- A healer's mending: the picture over the one healed (studs across).
 		HealBurst = 4,
 		HealColour = "Green",
+		-- A monster slime healer's own healing move peaks this many seconds after the mending shows.
+		ClipHealLead = 0.15,
 		-- How often the portal prompts are looked at.
 		GateWatchSeconds = 1,
 	},

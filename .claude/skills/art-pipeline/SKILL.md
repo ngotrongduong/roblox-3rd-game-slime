@@ -77,6 +77,18 @@ Studio, File > Import 3D, picks the ready files and saves the place (Studio sign
 game). A model that came without a skeleton and must move gets one in Blender (skills `roblox-creature-rigging`,
 `roblox-creature-animation`).
 
+Moving monsters without the owner's import (the 28 monster slimes, 2026-11-11; `docs/MONSTER-SLIMES.md`): the owner's
+group `.glb` per region is split into one mesh each (`tools/blender/monster_split.ps1`), rigged and given Idle, Move,
+Attack, Hit and Die in Blender (`monster_rig.ps1`; every bone points up with no roll, so Roblox's import keeps its rest
+unturned), the actions are sampled into `src/shared/MonsterClips/<Name>.luau` (`monster_clips.ps1 <region>`), and
+`node tools/kit/upload_monsters.js <studio_id> <region>...` uploads each FBX as a Model by Open Cloud (from `art/models`,
+the approved folder), reads its mesh id with `InsertService:LoadAsset` and uploads its 1024 texture: `ids.json`. In the
+game `client/ClipRig` loads the mesh with `AssetService:CreateMeshPartAsync`, makes the bones by name at their rest points
+(the skin binds to them) and writes `Bone.Transform` each frame; no animation asset is uploaded. What went wrong once:
+an upload can fail with Open Cloud's "Unknown Error" (run again: done ones are skipped); textures show grey for the first
+seconds while they load; image-to-3D from a three-quarter concept picture can give a model turned away from the front:
+render every model's front view before it goes in, and turn it with its look's `turn`.
+
 Glow: no rarity glow on slimes or gear in the world (the owner's veto). Parts that give light by nature (a lantern, a
 glowing mushroom of the Mushroom Grove, a gem) may glow a little; never a whole body.
 

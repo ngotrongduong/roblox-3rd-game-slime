@@ -170,21 +170,21 @@ Config.Combat = {
 		rotten = { kind = "single", name = "Chomp", every = 5, factor = 1.6 },
 		toxic = { kind = "all", name = "Acid Rain", every = 5, factor = 0.45 },
 		plague = { kind = "all", name = "Plague Burst", every = 4, factor = 0.6, stun = 0.4 },
-		-- The two bosses of the Slime Dungeon's Sunny Meadow (Config.Dungeon): Bloomshell shakes every slime at once,
+		-- The two bosses of the Slime Dungeon's Sunny Meadow (Config.Dungeon): the Rotbloom shakes every slime at once,
 		-- Bramblehorn charges the target with a heavy blow that throws the thorns about it (the original's charge: x2.0 on
 		-- the target, x0.6 beside it).
 		bloomshell = { kind = "all", name = "Pollen Shockwave", every = 5, factor = 0.5, stun = 0.6 },
 		bramblehorn = { kind = "splash", name = "Thorn Charge", every = 4, factor = 2, splash = 0.6, spread = 2 },
-		-- The two of the Mushroom Grove: the Jungle Wyrm bursts a cloud of spores over every slime, Mama Bear slams the ground
-		-- under her target and the slimes beside it.
+		-- The two of the Mushroom Grove: the Sporegorge bursts a cloud of spores over every slime, the Hollowheart slams the
+		-- ground under its target and the slimes beside it.
 		sporeburst = { kind = "all", name = "Spore Burst", every = 4, factor = 0.5, stun = 0.5 },
 		bearslam = { kind = "splash", name = "Den Slam", every = 4, factor = 2.4, splash = 0.7, spread = 3 },
-		-- The two of Ember Lava: the Magma Bull stamps its target and the slimes beside it, the Magma Golem makes the ground
+		-- The two of Ember Lava: the Magmaw stamps its target and the slimes beside it, the Calderos makes the ground
 		-- erupt under every slime at once (a step heavier than the Grove's, as the map's monsters are).
 		lavastomp = { kind = "splash", name = "Magma Stomp", every = 4, factor = 2.6, splash = 0.75, spread = 3 },
 		eruption = { kind = "all", name = "Eruption", every = 5, factor = 0.6, stun = 0.6 },
-		-- The two of Frozen Ice, each a skill kind of its own: the Mammoth lowers its tusks and rams its target twice
-		-- (two blows that each weigh a step more than the Bull's share of a stomp), the Yeti howls a blizzard over every
+		-- The two of Frozen Ice, each a skill kind of its own: the Rimetusk lowers its tusks and rams its target twice
+		-- (two blows that each weigh a step more than the Magmaw's share of a stomp), the Frostmaw howls a blizzard over every
 		-- slime at once, and the cold holds each one a moment longer than the eruption's heat.
 		tuskcharge = { kind = "multi", name = "Tusk Charge", every = 4, factor = 1.4, hits = 2 },
 		blizzard = { kind = "all", name = "Blizzard", every = 5, factor = 0.65, stun = 0.7 },

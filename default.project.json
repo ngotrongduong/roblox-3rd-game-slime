@@ -10,9 +10,6 @@
 			"ClientKit": {
 				"$path": "assets/ClientKit.rbxm"
 			},
-			"MonsterKit": {
-				"$path": "assets/MonsterKit.rbxm"
-			},
 			"ArenaStage": {
 				"$path": "assets/ArenaStage.rbxm"
 			},

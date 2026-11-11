@@ -472,8 +472,25 @@ local function onEvents(events: { any })
 	end
 end
 
+-- The monster slimes of the map a run is on start loading as it begins, so their meshes are there by the first wave.
+local function prepareMap()
+	local mapId = player:GetAttribute("DungeonMap")
+	local map = if type(mapId) == "string" then (D.Maps :: any)[mapId] else nil
+	if map then
+		local ids = {}
+		for _, def in map.monsters do
+			table.insert(ids, def.id)
+		end
+		MonsterLook.prepare(ids)
+	end
+end
+
 function DungeonFight.start()
 	ZombieFight.setDungeon(onEvents)
+	player:GetAttributeChangedSignal("DungeonMap"):Connect(function()
+		safe("prepare", prepareMap)
+	end)
+	safe("prepare", prepareMap)
 end
 
 return DungeonFight

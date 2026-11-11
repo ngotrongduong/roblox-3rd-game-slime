@@ -25,7 +25,10 @@ kit.Name = "MonsterKit"
 local lines = {}
 local names = {}
 for _, look in Config.Dungeon.Looks do
-	table.insert(names, look.model)
+	-- (a monster slime's mesh is loaded from Roblox by the client: it is not in the kit)
+	if not (look :: any).clips then
+		table.insert(names, look.model)
+	end
 end
 table.sort(names)
 for _, name in names do

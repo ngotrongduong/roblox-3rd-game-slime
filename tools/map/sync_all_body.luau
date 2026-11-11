@@ -19,7 +19,8 @@ local targets = {
 	Client = folder(StarterPlayerScripts, "Client"),
 }
 targets.Creatures = folder(targets.Shared, "Creatures")
-local counts = { Shared = 0, Server = 0, Client = 0, Creatures = 0, VfxLib = 0 }
+targets.MonsterClips = folder(targets.Shared, "MonsterClips")
+local counts = { Shared = 0, Server = 0, Client = 0, Creatures = 0, MonsterClips = 0, VfxLib = 0 }
 local lib = Instance.new("ModuleScript")
 lib.Name = "VfxLib"
 for _, f in FILES do

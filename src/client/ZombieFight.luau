@@ -828,6 +828,12 @@ local function onAim(event: { [string]: any })
 	local gap = flat(to - from).Magnitude - radius(attacker) - radius(target)
 	local shot = styleOf(event.from).shot ~= nil
 	local reaching = not (s and s.kind == "all")
+	-- (a monster slime plays its own attack, timed so its blow lands as the wind-up and the lunge end)
+	local peak = SlimeActor.attackPeak(attacker)
+	if peak then
+		local lead = Config.Combat.WindupSeconds + (if shot then 0 else V.LungeSeconds * V.ContactShare)
+		SlimeActor.act(attacker, "Attack", math.max(0, peak - lead))
+	end
 	-- (in the Dungeon the server walks the fighters and announces a blow only once its fighter is in reach: no dash)
 	if
 		extras[event.from] == nil
@@ -874,6 +880,7 @@ local function impact(event: { [string]: any }, style: FightFx.Style)
 		FightFx.mark(style, skin, skin - dir * 3, heavy)
 	end
 	FightFx.goo(target.body, skin, dir, if heavy then F.Goo.count * 2 else F.Goo.count)
+	SlimeActor.act(target, "Hit")
 	play(target, to, dir * V.KnockStuds * (if heavy then V.CritKnock else 1), V.KnockSeconds, 0.2, V.HitStopSeconds)
 	local side = if math.random() < 0.5 then -1 else 1
 	SlimeActor.kick(target, "side", side * V.FlinchSide * (if heavy then 2 else 1))
@@ -1102,6 +1109,11 @@ local function onHeal(event: { [string]: any })
 	local target, to = find(event.to)
 	if healer then
 		SlimeActor.kick(healer, "puff", V.WindupPuff)
+		-- (a monster slime healer's own healing move peaks a moment after the mending shows)
+		local peak = SlimeActor.attackPeak(healer)
+		if peak then
+			SlimeActor.act(healer, "Attack", math.max(0, peak - Config.Dungeon.View.ClipHealLead))
+		end
 	end
 	if target and to then
 		local amount = math.max(1, math.floor((event.amount or 0) + 0.5))
@@ -1159,7 +1171,9 @@ local function fall(event: { [string]: any })
 		local at = spot or monster.stand
 		local centre = at + Vector3.new(0, body.Size.Y * 0.5, 0)
 		SlimeActor.kick(monster.actor, "squash", V.DeathSquash)
-		task.delay(V.DeathDelay, function()
+		-- (a monster slime dies its own way first and bursts as it ends)
+		local dying = SlimeActor.act(monster.actor, "Die")
+		task.delay(math.max(V.DeathDelay, dying), function()
 			safe("burst", function()
 				if own and own.fall then
 					-- (the effect's box stands on the ground where the monster fell)

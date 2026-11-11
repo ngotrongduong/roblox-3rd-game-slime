@@ -13,6 +13,7 @@ $sb = New-Object System.Text.StringBuilder
 $groups = @(
 	@{ Dir = "src\shared"; Dest = "Shared" },
 	@{ Dir = "src\shared\Creatures"; Dest = "Creatures" },
+	@{ Dir = "src\shared\MonsterClips"; Dest = "MonsterClips" },
 	@{ Dir = "src\server"; Dest = "Server" },
 	@{ Dir = "src\client"; Dest = "Client" }
 )

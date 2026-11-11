@@ -1,5 +1,14 @@
 # Status
 
+## 2026-11-11 — the 28 monster slimes are in the Dungeon, rigged and moving
+
+The owner's four 3D files (one a region) are split into 28 monsters, rigged and given Idle, Move, Attack, Hit and Die in
+Blender, uploaded, and every Dungeon monster now is its monster slime (`docs/MONSTER-SLIMES.md`, "In the game"): its
+mesh from Roblox, its moves sampled into `src/shared/MonsterClips` and played by `client/ClipRig`, the fight starting
+its attack so the blow lands on the hit. Their new names show over them. The Egg Heist creatures left the built game
+(`assets/MonsterKit.rbxm` stays in the repo). Seen in Studio: all 28 in a line-up, an Ice run to wave 8, no errors. The
+owner checks them in the game next ("khi nào xong hết tôi sẽ vào game kiểm tra 1 lượt"). Not seen: a phone.
+
 ## 2026-11-10 — Secret slimes wear their own pieces (Tempest Dragon, Steam Dragon, Fire-Ice Chimera, Shadow Wolf)
 
 The owner sends a Meshy model per Secret slime (so far each one tail, one bat wing, one horn): `secret-black-blue`

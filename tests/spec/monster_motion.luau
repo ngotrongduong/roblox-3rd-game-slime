@@ -1,6 +1,7 @@
--- The monsters' looks in Config.Dungeon.Looks: every Sunny Meadow monster is an Egg Heist creature in the kit whose own
--- motion fits its bones and walks; and the piece motion (shared/MonsterMotion): every piece turns about a real axis, the
--- two halves of a pair run apart, and walking legs rest when standing.
+-- The monsters' looks in Config.Dungeon.Looks that are not monster slimes (tests/spec/monster_clips has those): a look
+-- with an Egg Heist creature has it in the kit, its own motion fitting its bones and walking; and the piece motion
+-- (shared/MonsterMotion): every piece turns about a real axis, the two halves of a pair run apart, and walking legs rest
+-- when standing.
 local Config = require("../../src/shared/Config")
 local MonsterMotion = require("../../src/shared/MonsterMotion")
 local Creature = require("../../src/shared/Creature") :: any
@@ -42,7 +43,7 @@ return function(T: any)
 		T.ok(calm == 0 and math.abs(flick - math.rad(25)) < 1e-6, "flick " .. flick)
 	end)
 
-	T.test("every dungeon monster's Egg Heist creature is in the kit and walks by its own motion", function()
+	T.test("a look with an Egg Heist creature has it in the kit, walking by its own motion", function()
 		local kit = roblox.deserializeModel(fs.readFile("assets/MonsterKit.rbxm"))[1]
 		local defs: { any } = {}
 		for _, id in D.MapOrder do

@@ -26,6 +26,7 @@ local Gaits = require(ReplicatedStorage.Shared.Gaits)
 local SlimeShape = require(ReplicatedStorage.Shared.SlimeShape)
 local MonsterMotion = require(ReplicatedStorage.Shared.MonsterMotion)
 local CreatureRig = require(script.Parent.CreatureRig)
+local ClipRig = require(script.Parent.ClipRig)
 local SlimeFace = require(script.Parent.SlimeFace)
 local SlimeWear = require(script.Parent.SlimeWear)
 
@@ -104,6 +105,8 @@ export type Creature = {
 	-- flies it aloft
 	rig: CreatureRig.Rig?,
 	air: number,
+	-- a monster slime: its one skinned part plays its own actions (ClipRig), hop and float included
+	clip: ClipRig.Rig?,
 	-- a big monster's flat dark contact shadow on the floor (MonsterLook, the look's `contact`): it follows the ground spot
 	contact: BasePart?,
 }
@@ -380,8 +383,10 @@ local function tick(a: Slime, dt: number, write: boolean)
 		creature.last = at
 		local attack = math.clamp(pose.leanFwd * creature.attackGain, 0, 1)
 		local rig = creature.rig
-		-- (a creature with legs walks on them: it does not hop like the jelly under it)
-		local hop = if rig then 0 else pose.lift * s
+		local clip = creature.clip
+		-- (a creature with legs walks on them and a monster slime hops by its own actions: neither hops like the jelly
+		-- under it)
+		local hop = if rig or clip then 0 else pose.lift * s
 		local rise = hop + MonsterMotion.lift(creature.hover, creature.bob, creature.bobHz, now)
 		local middle = (creature.top - creature.hover) / 2
 		local contact = creature.contact
@@ -403,6 +408,11 @@ local function tick(a: Slime, dt: number, write: boolean)
 			parts[n] = creature.parts[1]
 			cfs[n] = place
 			CreatureRig.step(rig, dt, now, base, if dt > 0 then step / dt else 0, creature.air)
+		elseif clip then
+			n += 1
+			parts[n] = creature.parts[1]
+			cfs[n] = base * creature.fromJoints[1]
+			ClipRig.step(clip, now, dt, moving)
 		else
 			for i, part in creature.parts do
 				local rx, ry, rz = MonsterMotion.angles(creature.specs[i], now, moving, attack)
@@ -701,6 +711,24 @@ function Actor.dress(self: Slime, creature: Creature)
 		part.CanQuery = false
 		part.CanTouch = false
 	end
+end
+
+-- A dressed monster slime plays one of its actions once ("Attack", "Hit", "Die"), `into` seconds in: its length in
+-- seconds, 0 when it does not (any other look, or a weightier action is playing).
+function Actor.act(self: Slime, action: string, into: number?): number
+	local creature = self.creature
+	local clip = if creature then creature.clip else nil
+	if not clip then
+		return 0
+	end
+	return ClipRig.play(clip, action, workspace:GetServerTimeNow(), into or 0)
+end
+
+-- How many seconds into its Attack a dressed monster slime's blow lands; nil for any other look.
+function Actor.attackPeak(self: Slime): number?
+	local creature = self.creature
+	local clip = if creature then creature.clip else nil
+	return if clip then clip.player.set.data.peak else nil
 end
 
 -- How far above the body's centre a bar or a name goes: the slime's top, or a dressed creature's (a flyer floats high).

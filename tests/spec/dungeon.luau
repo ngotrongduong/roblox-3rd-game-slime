@@ -742,12 +742,13 @@ return function(T: any)
 				"the Frost Fang has its picture"
 			)
 			T.ok(table.find(D.DropOrder, "frost_fang") ~= nil, "the Frost Fang is shown in the drop order")
-			-- the map is the fourth and last, and every monster has a model, a motion and a way of fighting
+			-- the map is the fourth and last, and every monster has its monster slime (a mesh and its moves) and a way of
+			-- fighting
 			T.eq(D.MapOrder[#D.MapOrder], "ice")
 			T.eq(#D.MapOrder, 4)
 			for _, each in (D.Maps :: any).ice.monsters do
 				local look = D.Looks[each.id]
-				T.ok(look ~= nil and look.model ~= nil and look.motion ~= nil, each.id .. " has a model and a motion")
+				T.ok(look ~= nil and look.clips ~= nil and look.mesh ~= nil, each.id .. " has a mesh and its moves")
 				T.ok(D.View.Ways[each.kind] ~= nil or Config.Combat.Skills[each.kind] == nil, each.id .. " way")
 			end
 			-- every monster of the map is a step stronger than its role in Ember Lava
@@ -764,8 +765,11 @@ return function(T: any)
 				T.ok(ice.hp > lava.hp, role .. " has more health than Ember Lava's")
 				T.ok(ice.attack >= lava.attack, role .. " hits at least as hard")
 			end
-			-- the healer is not the Meadow's Aurora Owl
-			T.ok(D.Looks.ice_penguin.model ~= D.Looks.green_moth.model, "the healer is the Penguin, not the Owl")
+			-- the healer is not the Meadow's Sapcaller
+			T.ok(
+				D.Looks.ice_penguin.clips ~= D.Looks.green_moth.clips,
+				"the healer is the Snowshroud, not the Sapcaller"
+			)
 			-- the skills: a charge that rams its target twice, a blizzard that reaches all three
 			local function skillEvents(kind: string): { any }
 				local squad = {}

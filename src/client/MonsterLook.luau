@@ -1,6 +1,8 @@
 --!strict
 -- The one place where a Slime Dungeon monster gets its look. A monster with a model in ReplicatedStorage.MonsterKit is
 -- drawn on an unseen slime body that walks, hops and takes the hits (SlimeActor.dress), by Config.Dungeon.Looks:
+--   * a look with `clips` is one of the monster slimes (docs/MONSTER-SLIMES.md, the owner's 3D files rigged in Blender),
+--     its mesh loaded from Roblox, playing its own sampled actions (ClipRig);
 --   * a look with `motion` is one of the owner's Egg Heist creatures (assets/MonsterKit.rbxm by
 --     tools/kit/eggheist_models.luau), posed by its own motion module (CreatureRig);
 --   * a look with `pieces` is a model of rigid pieces (the Blender builds of art/models/monsters/), each turned about
@@ -12,6 +14,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Config = require(ReplicatedStorage.Shared.Config)
 local SkinIds = require(ReplicatedStorage.Shared.SkinIds)
+local ClipRig = require(script.Parent.ClipRig)
 local CreatureRig = require(script.Parent.CreatureRig)
 local SlimeActor = require(script.Parent.SlimeActor)
 local SlimeLook = require(script.Parent.SlimeLook)
@@ -193,6 +196,65 @@ local function rigOf(spec: any, kitModel: Model, holder: Model, scale: number): 
 	return creature
 end
 
+-- A monster slime (the look names its `clips`, Shared.MonsterClips, and its uploaded `mesh` and `texture`): its one
+-- skinned part, scaled to the look's height, stands as it was built on the monster's ground spot; ClipRig plays its
+-- actions, its hop and float among them. Nil while its mesh loads (the stand-in is drawn then) or without its data.
+local function clipOf(spec: any, holder: Model, scale: number): SlimeActor.Creature?
+	local data = ClipRig.data(spec.clips)
+	if not data then
+		if not warned[spec.clips] then
+			warned[spec.clips] = true
+			warn(Config.LogPrefix, "missing MonsterClips/" .. spec.clips .. "; drawing the stand-in")
+		end
+		return nil
+	end
+	local part = ClipRig.mesh(spec)
+	if not part then
+		return nil
+	end
+	local k = spec.height * scale / data.height
+	local rig = ClipRig.bind(part, data, k, math.random(), workspace:GetServerTimeNow())
+	local c = data.centre
+	local creature: SlimeActor.Creature = {
+		parts = { part },
+		specs = { {} :: any },
+		joints = { CFrame.new() },
+		fromJoints = { CFrame.new(Vector3.new(c[1], c[2], c[3]) * k) * CFrame.Angles(0, math.rad(spec.turn or 0), 0) },
+		hover = 0,
+		bob = 0,
+		bobHz = 0,
+		-- (a floater's own hover is in its actions)
+		top = spec.height * (1 + data.hover / data.height) * scale,
+		tilt = 0,
+		lean = spec.lean or 0.15,
+		attackGain = spec.attackGain or 2,
+		last = nil,
+		rig = nil,
+		air = 0,
+		contact = nil,
+		clip = rig,
+	}
+	local folder = Instance.new("Folder")
+	folder.Name = "Creature"
+	folder.Parent = holder
+	creature.contact = contactOf(spec, folder, scale)
+	part.CastShadow = spec.shadow == true
+	part.Parent = folder
+	return creature
+end
+
+-- Starts loading the meshes of the monster slimes a dungeon map sends (its monsters' looks), so they are there by the
+-- first wave.
+function MonsterLook.prepare(defIds: { string })
+	local looks: { [string]: any } = D.Looks :: any
+	for _, id in defIds do
+		local spec = looks[id]
+		if spec and spec.clips then
+			ClipRig.prepare(spec)
+		end
+	end
+end
+
 -- The monster's body at the origin (not parented), its emotion for SlimeActor, its size against a plain one, and its
 -- pieces when its model is in the kit (DungeonFight dresses the actor with them).
 function MonsterLook.build(monster: Monster): Look
@@ -208,12 +270,19 @@ function MonsterLook.build(monster: Monster): Look
 	end
 	model:ScaleTo(C.BodyHeight * size)
 	local spec = looks[monster.defId or ""]
-	local kitModel = if spec then source(spec.model) else nil
+	local kitModel = if spec and not spec.clips then source(spec.model) else nil
 	local creature = nil
-	if spec and kitModel then
+	if spec and spec.clips then
+		model:PivotTo(CFrame.new())
+		creature = clipOf(spec, model, if spec.shadow then D.LookScale.Big else D.LookScale.Normal)
+	elseif spec and kitModel then
 		model:PivotTo(CFrame.new())
 		local scale = if spec.shadow then D.LookScale.Big else D.LookScale.Normal
-		creature = if spec.motion then rigOf(spec, kitModel, model, scale) else creatureOf(spec, kitModel, model, scale)
+		if spec.motion then
+			creature = rigOf(spec, kitModel, model, scale)
+		else
+			creature = creatureOf(spec, kitModel, model, scale)
+		end
 	end
 	return { model = model, face = ZombieLook.look("rotten").face, size = size, creature = creature }
 end
