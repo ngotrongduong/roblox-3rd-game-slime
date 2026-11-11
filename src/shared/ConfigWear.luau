@@ -114,6 +114,10 @@ local Wear = {
 		["secret-yellow-yellow"] = "SunLion",
 		["secret-gray-pink"] = "RoseHedgehog",
 		["secret-red-yellow"] = "FireSalamander",
+		["secret-green-white"] = "LilySpirit",
+		["secret-green-yellow"] = "LemonGecko",
+		["secret-white-yellow"] = "DaisyChick",
+		["secret-purple-white"] = "MoonOrchid",
 	},
 	Kits = {
 		-- the owner's Meshy model art/models/accessories/tempest_dragon/neon_dragon_relics.glb, uploaded as model
@@ -1756,6 +1760,113 @@ local Wear = {
 					-- (a cotton tail's small wag)
 					flap = { axis = { 0, 1, 0 }, degrees = 10, hz = 0.9 },
 					lag = { axis = { 1, 0, 0 }, degrees = 10 },
+				},
+				-- the pink bow with its sakura charm at the foot of its right ear (2026-11-11, the owner's floral crown
+				-- file, art/models/accessories/sakura_bow, kit SakuraBow in wear_kit.py), uploaded as model 89760937609092
+				{
+					name = "Bow",
+					mesh = 127568419926723,
+					texture = "rbxassetid://112227895668767",
+					size = { 0.3669, 0.5305, 0.3634 },
+					at = { 0.5566, 0.6295, -0.0472 },
+					anchor = { 0.526, 0.3119, -0.0035 },
+					turn = { -23.3737, -6.8818, -40.0092 },
+				},
+			},
+		},
+		-- the owner's floral crown file (2026-11-11, "tách chúng ra rồi trang trí cho mấy con slime đó"): no painting shows
+		-- them, so each crown sits across the top front of the head, each charm at the side of the head clear of the face.
+		-- Lily Spirit: the lily-of-the-valley vine crown and the lily charm, art/models/accessories/lily_spirit, model
+		-- 107571426691299
+		LilySpirit = {
+			texture = "rbxassetid://123530594537960",
+			pieces = {
+				{
+					name = "Crown",
+					mesh = 129797056579739,
+					size = { 0.9469, 0.324, 0.3687 },
+					at = { 0, 0.7353, -0.1898 },
+					anchor = { -0.007, 0.8615, -0.1388 },
+					turn = { -8.9902, 0, 0 },
+				},
+				{
+					name = "Charm",
+					mesh = 91848309034393,
+					size = { 0.1241, 0.1798, 0.1599 },
+					at = { -0.1938, 0.2677, -0.4946 },
+					anchor = { -0.2078, 0.209, -0.4577 },
+					turn = { 133.946, 83.5369, -157.12 },
+				},
+			},
+		},
+		-- Lemon Gecko: the lemon crown and the lemon charm, art/models/accessories/lemon_gecko, model 110419457246053
+		LemonGecko = {
+			texture = "rbxassetid://101271448662765",
+			pieces = {
+				{
+					name = "Crown",
+					mesh = 128107175239773,
+					size = { 0.824, 0.2866, 0.2814 },
+					at = { 0, 0.8577, -0.1127 },
+					anchor = { 0.1109, 0.7985, -0.2176 },
+					turn = { -28.7941, 0, 0 },
+				},
+				{
+					name = "Charm",
+					mesh = 100968132917414,
+					size = { 0.1357, 0.2611, 0.1661 },
+					at = { -0.2053, 0.2762, -0.5112 },
+					anchor = { -0.185, 0.1516, -0.4335 },
+					turn = { -19.8622, 63.7994, -5.6339 },
+				},
+			},
+		},
+		-- Daisy Chick: the daisy headband and the daisy clip, art/models/accessories/daisy_chick, model 109973044006494
+		DaisyChick = {
+			texture = "rbxassetid://120388439509732",
+			pieces = {
+				{
+					name = "Band",
+					mesh = 100913825610570,
+					size = { 0.7288, 0.3635, 0.4936 },
+					at = { 0, 0.8335, -0.2148 },
+					anchor = { -0.0008, 0.9354, -0.0766 },
+				},
+				{
+					name = "Clip",
+					mesh = 110692835612301,
+					size = { 0.245, 0.2676, 0.2789 },
+					at = { -0.3319, 0.7146, -0.1641 },
+					anchor = { -0.3151, 0.7019, -0.2125 },
+				},
+			},
+		},
+		-- Moon Orchid: the moon tiara, the moon charm and the long lock of violet hair with an orchid down the back,
+		-- art/models/accessories/moon_orchid, model 100562823598542
+		MoonOrchid = {
+			texture = "rbxassetid://76789802695442",
+			pieces = {
+				{
+					name = "Tiara",
+					mesh = 76843779651528,
+					size = { 0.391, 0.0863, 0.4178 },
+					at = { 0.0321, 0.7707, -0.3113 },
+					anchor = { 0.0139, 0.9554, -0.0582 },
+					turn = { -33.3467, 0, -2.4789 },
+				},
+				{
+					name = "Charm",
+					mesh = 106536926032803,
+					size = { 0.2246, 0.2718, 0.2415 },
+					at = { 0.3323, 0.7241, -0.16 },
+					anchor = { 0.3428, 0.7322, -0.0437 },
+				},
+				{
+					name = "Hair",
+					mesh = 117082005576063,
+					size = { 0.6094, 0.4828, 0.6579 },
+					at = { 0, 0.6153, 0.4988 },
+					anchor = { 0.0903, 0.739, 0.3255 },
 				},
 			},
 		},

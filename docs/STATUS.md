@@ -183,6 +183,15 @@ piece (`Config.Wear` kits SunLion and RoseHedgehog; a piece may carry its own `t
 flame ears and flame tail, placed roughly like the foxes'. Models 108739731666477, 133933723128891, 109881506240835,
 99746958007317. Seen in Play.
 
+2026-11-11, the owner's floral crown file ("tách chúng ra rồi trang trí cho mấy con slime đó"): `FLORAL_CROWN` in
+`wear_kit.py` splits it into ten parts, worn rigid by five Secrets: Lily Spirit (`secret-green-white`) the lily vine
+crown and a lily charm, Lemon Gecko (`secret-green-yellow`) the lemon crown and a lemon charm, Daisy Chick
+(`secret-white-yellow`) the daisy headband and clip, Moon Orchid (`secret-purple-white`) the moon tiara, a charm and a
+lock of violet hair with an orchid down the back, Sakura Bunny (`secret-pink-white`) a pink bow at the foot of its ear.
+The owner then set them in the ear editor (the charms moved down onto the belly, the tiara narrowed); his squashed
+charm sizes were made even again. Models 107571426691299, 110419457246053, 109973044006494, 100562823598542,
+89760937609092. Seen in Play.
+
 ## 2026-11-10 — Dungeon fight effects per monster, from the VFX library
 
 The owner paused the old effect work and asked for each map group's skills to be rebuilt from his VFX library

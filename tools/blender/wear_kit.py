@@ -90,6 +90,32 @@ PHOENIX_TAIL = nearest(FlameEarR=(-0.257, 0.688), FlameEarL=(0.158, 0.698), Lion
 	FlameTail=(0.262, 0.315))
 PHOENIX_TAIL_BUDGET = dict(FlameEarR=348, FlameEarL=422, LionTail=706, FlameTail=500)
 
+
+# the owner's "floral crown 3d model.glb" (2026-11-11), seen from its front: top row (y > 0.1) a pink bow with a sakura
+# charm, a lily-of-the-valley vine crown with a lily charm under it, a lemon crown with a lemon charm; bottom row a
+# violet moon tiara with a moon charm under it, a long violet lock of hair with an orchid, a daisy headband and a daisy
+# clip. Many small loose bits each, so sorted by where they lie
+def FLORAL_CROWN(c):
+	if c.y > 0.1:
+		if c.x < -0.27:
+			return "Bow"
+		if c.x < 0.165:
+			return "LilyCrown" if c.z > 0.54 else "LilyDrop"
+		return "LemonCrown" if c.z > 0.55 else "LemonDrop"
+	if c.x > 0.36 and c.y < -0.05:
+		return "DaisyClip"
+	if c.x > 0.07:
+		return "DaisyBand"
+	if c.x < -0.28 and c.z < 0.215:
+		return "MoonDrop"
+	if c.x < -0.15 and c.z >= 0.215:
+		return "Tiara"
+	return "Hair"
+
+
+FLORAL_BUDGET = dict(Bow=700, LilyCrown=1300, LilyDrop=500, LemonCrown=1000, LemonDrop=500, Tiara=900, MoonDrop=400,
+	Hair=400, DaisyBand=800, DaisyClip=400)
+
 # `sort` says which part of the file a loose bit belongs to, by its middle; `budget` the triangles a part keeps;
 # `pieces` what is made of each part, in the order they are exported: kind (horn: horns and ears, wing, tail), where it
 # sits on the body (Blender axes, body height 1; +X is the slime's own left), size factor, turns in degrees, and `twin`,
@@ -658,6 +684,80 @@ KITS = {
 			Tail=dict(part="WolfTail", kind="tail", base="-x", at=(0.0, 0.45, 0.2), scale=2.6, lift=0, sink=True),
 		),
 		body=(0.75, 0.82, 0.97, 1),
+	),
+	# FLORAL_CROWN, 2026-11-11 ("tách chúng ra rồi trang trí cho mấy con slime đó"): no painting shows them, so each crown
+	# sits across the top front of the head as Peach Blossom's, each charm hangs at the side of the head clear of the face
+	# Lily Spirit (secret-green-white): the lily vine crown and the lily charm
+	"LilySpirit": dict(
+		folder="lily_spirit",
+		glb="floral_crown.glb",
+		out="LilySpiritWear",
+		texture="lily_spirit_wear.png",
+		sort=FLORAL_CROWN,
+		budget=FLORAL_BUDGET,
+		pieces=dict(
+			# (at 0.74 and 2.2 its ends hung down over the eyes; at 0.84 and 1.9 it hid behind the tip in Play)
+			Crown=dict(part="LilyCrown", kind="rigid", at=(0, 0.8), scale=2.4, tilt=45),
+			Charm=dict(part="LilyDrop", kind="rigid", at=(-62, 0.72), scale=2.0, tilt=20),
+		),
+		body=(0.75, 0.95, 0.7, 1),
+	),
+	# Lemon Gecko (secret-green-yellow): the lemon crown and the lemon charm
+	"LemonGecko": dict(
+		folder="lemon_gecko",
+		glb="floral_crown.glb",
+		out="LemonGeckoWear",
+		texture="lemon_gecko_wear.png",
+		sort=FLORAL_CROWN,
+		budget=FLORAL_BUDGET,
+		pieces=dict(
+			Crown=dict(part="LemonCrown", kind="rigid", at=(0, 0.8), scale=2.5, tilt=45),
+			Charm=dict(part="LemonDrop", kind="rigid", at=(-62, 0.72), scale=2.0, tilt=20),
+		),
+		body=(0.7, 0.9, 0.2, 1),
+	),
+	# Daisy Chick (secret-white-yellow): the daisy headband and the daisy clip
+	"DaisyChick": dict(
+		folder="daisy_chick",
+		glb="floral_crown.glb",
+		out="DaisyChickWear",
+		texture="daisy_chick_wear.png",
+		sort=FLORAL_CROWN,
+		budget=FLORAL_BUDGET,
+		pieces=dict(
+			Band=dict(part="DaisyBand", kind="rigid", at=(0, 0.82), scale=2.5, tilt=55),
+			Clip=dict(part="DaisyClip", kind="rigid", at=(62, 0.72), scale=2.0, tilt=20),
+		),
+		body=(1, 0.9, 0.4, 1),
+	),
+	# Moon Orchid (secret-purple-white): the moon tiara, the moon charm and the long lock of violet hair down the back
+	"MoonOrchid": dict(
+		folder="moon_orchid",
+		glb="floral_crown.glb",
+		out="MoonOrchidWear",
+		texture="moon_orchid_wear.png",
+		sort=FLORAL_CROWN,
+		budget=FLORAL_BUDGET,
+		pieces=dict(
+			Tiara=dict(part="Tiara", kind="rigid", at=(0, 0.8), scale=2.5, tilt=45),
+			Charm=dict(part="MoonDrop", kind="rigid", at=(-62, 0.72), scale=2.0, tilt=20),
+			Hair=dict(part="Hair", kind="rigid", at=(180, 0.6), scale=2.0, tilt=20),
+		),
+		body=(0.75, 0.6, 1, 1),
+	),
+	# Sakura Bunny's bow (secret-pink-white), worn beside its bunny ears (kit SakuraBunny; Config gives the piece this
+	# kit's texture): the pink bow with its sakura charm at the foot of its right ear
+	"SakuraBow": dict(
+		folder="sakura_bow",
+		glb="floral_crown.glb",
+		out="SakuraBowWear",
+		texture="sakura_bow_wear.png",
+		sort=FLORAL_CROWN,
+		budget=FLORAL_BUDGET,
+		pieces=dict(
+			Bow=dict(part="Bow", kind="rigid", at=(-70, 0.8), scale=1.6, tilt=35),
+		),
+		body=(1, 0.8, 0.88, 1),
 	),
 	# Sun Lion (secret-yellow-yellow), 2026-11-11: the golden lion's tail of PHOENIX_TAIL (its mane is its own model's,
 	# tools/blender/secret_mane.py)
