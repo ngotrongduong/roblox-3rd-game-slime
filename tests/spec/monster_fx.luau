@@ -71,6 +71,9 @@ return function(T)
 				ids[fx.effect] = true
 			end
 		end
+		-- (the bosses' bursts, named by client/ZombieFight)
+		ids["skill.monster_mark"] = true
+		ids["skill.monster_impact"] = true
 		for id in ids do
 			local kind, name = string.match(id, "^(%a+)%.([%w_]+)$")
 			if kind and imported(id) then
@@ -124,6 +127,27 @@ return function(T)
 						)
 					end
 				end
+			end
+		end
+	end)
+
+	-- (Fx.Burst: a boss's special with a wind-up is called its `windup` early, and its element has a mark, an impact and
+	-- a glow)
+	T.test("every boss's burst has its wind-up time, its mark, its impact and its glow", function()
+		local mark = require("../../src/shared/VfxLib/Effects/skill/monster_mark")
+		local impact = require("../../src/shared/VfxLib/Effects/skill/monster_impact")
+		for id, fx in D.Fx.Monsters do
+			for key, art in fx.skills or {} do
+				local s = (Config.Combat.Skills :: any)[key]
+				if art.windup then
+					T.ok(s and s.windup ~= nil, `{id}.skills.{key} has a wind-up, so a windup time`)
+					T.ok(fx.element ~= nil, `{id} has wind-ups, so an element`)
+				end
+			end
+			if fx.element then
+				T.ok(mark.variants[fx.element] ~= nil, `{id}: skill.monster_mark has {fx.element}`)
+				T.ok(impact.variants[fx.element] ~= nil, `{id}: skill.monster_impact has {fx.element}`)
+				T.ok(D.Fx.Burst.Glow[fx.element] ~= nil, `{id}: Fx.Burst.Glow has {fx.element}`)
 			end
 		end
 	end)

@@ -165,6 +165,9 @@ Config.Combat = {
 	--   any kind may carry `stun` (each foe it strikes is knocked off its beat) and `slow` + `slowSeconds` (each runs at
 	--   (1 - slow) speed meanwhile). mend: a healer's, on its heal turns: every `every`-th mending heals every wounded
 	--   team-mate by `share` x its attack. The monsters' own specials are in Config.Dungeon.Skills (copied in below).
+	--   any kind but mend may carry `windup`: it is called that many seconds before it lands instead of WindupSeconds,
+	--   and never lands sooner than that after the blow before (a boss's or mini-boss's, so its charge plays whole: the
+	--   wind-up effects are drawn for about 1.2 s, longer than any beat).
 	Skills = {
 		attack = { kind = "splash", name = "Goo Slam", every = 4, factor = 1.4, splash = 0.4, spread = 2 },
 		speed = { kind = "multi", name = "Dash Strike", every = 4, factor = 0.5, hits = 3 },
@@ -176,21 +179,45 @@ Config.Combat = {
 		-- The two bosses of the Slime Dungeon's Sunny Meadow (Config.Dungeon): the Rotbloom shakes every slime at once,
 		-- Bramblehorn charges the target with a heavy blow that throws the thorns about it (the original's charge: x2.0 on
 		-- the target, x0.6 beside it).
-		bloomshell = { kind = "all", name = "Pollen Shockwave", every = 5, factor = 0.5, stun = 0.6 },
-		bramblehorn = { kind = "splash", name = "Thorn Charge", every = 4, factor = 2, splash = 0.6, spread = 2 },
+		bloomshell = { kind = "all", name = "Pollen Shockwave", every = 5, factor = 0.5, stun = 0.6, windup = 1.2 },
+		bramblehorn = {
+			kind = "splash",
+			name = "Thorn Charge",
+			every = 4,
+			factor = 2,
+			splash = 0.6,
+			spread = 2,
+			windup = 1.2,
+		},
 		-- The two of the Mushroom Grove: the Sporegorge bursts a cloud of spores over every slime, the Hollowheart slams the
 		-- ground under its target and the slimes beside it.
-		sporeburst = { kind = "all", name = "Spore Burst", every = 4, factor = 0.5, stun = 0.5 },
-		bearslam = { kind = "splash", name = "Den Slam", every = 4, factor = 2.4, splash = 0.7, spread = 3 },
+		sporeburst = { kind = "all", name = "Spore Burst", every = 4, factor = 0.5, stun = 0.5, windup = 1.2 },
+		bearslam = {
+			kind = "splash",
+			name = "Den Slam",
+			every = 4,
+			factor = 2.4,
+			splash = 0.7,
+			spread = 3,
+			windup = 1.2,
+		},
 		-- The two of Ember Lava: the Magmaw stamps its target and the slimes beside it, the Calderos makes the ground
 		-- erupt under every slime at once (a step heavier than the Grove's, as the map's monsters are).
-		lavastomp = { kind = "splash", name = "Magma Stomp", every = 4, factor = 2.6, splash = 0.75, spread = 3 },
-		eruption = { kind = "all", name = "Eruption", every = 5, factor = 0.6, stun = 0.6 },
+		lavastomp = {
+			kind = "splash",
+			name = "Magma Stomp",
+			every = 4,
+			factor = 2.6,
+			splash = 0.75,
+			spread = 3,
+			windup = 1.2,
+		},
+		eruption = { kind = "all", name = "Eruption", every = 5, factor = 0.6, stun = 0.6, windup = 1.2 },
 		-- The two of Frozen Ice, each a skill kind of its own: the Rimetusk lowers its tusks and rams its target twice
 		-- (two blows that each weigh a step more than the Magmaw's share of a stomp), the Frostmaw howls a blizzard over every
 		-- slime at once, and the cold holds each one a moment longer than the eruption's heat.
-		tuskcharge = { kind = "multi", name = "Tusk Charge", every = 4, factor = 1.4, hits = 2 },
-		blizzard = { kind = "all", name = "Blizzard", every = 5, factor = 0.65, stun = 0.7 },
+		tuskcharge = { kind = "multi", name = "Tusk Charge", every = 4, factor = 1.4, hits = 2, windup = 1.2 },
+		blizzard = { kind = "all", name = "Blizzard", every = 5, factor = 0.65, stun = 0.7, windup = 1.2 },
 	},
 }
 

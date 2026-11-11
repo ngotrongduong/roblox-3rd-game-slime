@@ -11,7 +11,8 @@ return {
 	-- when the monster falls (see "Loot" below); an item is a key of Materials.
 	-- The monsters' specials (docs/MONSTER-SLIMES.md, "Attacks"), copied by Config into Config.Combat.Skills, which says what
 	-- each `kind` does. A monster's `skills` list (Maps) takes them in turn; each comes every `every` blows of the FIRST in
-	-- the list (every mending, for a mend). Numbers are a first guess the owner tunes by playing.
+	-- the list (every mending, for a mend). Numbers are a first guess the owner tunes by playing. A boss's and a mini-boss's
+	-- specials carry `windup` (Config.Combat.Skills): they are called that early, so their charge plays whole.
 	Skills = {
 		-- the Meadow
 		burr_roll = { kind = "multi", name = "Burr Roll", every = 4, factor = 0.7, hits = 2 },
@@ -19,9 +20,9 @@ return {
 		seed_volley = { kind = "multi", name = "Seed Volley", every = 4, factor = 0.5, hits = 3 },
 		bloom_mend = { kind = "mend", name = "Bloom Mend", every = 3, share = 0.6 },
 		bark_wall = { kind = "guard", name = "Bark Wall", every = 5, factor = 1, seconds = 3, defence = 1.3 },
-		root_snare = { kind = "single", name = "Root Snare", every = 5, factor = 1.6, stun = 1 },
-		bramble_burst = { kind = "all", name = "Bramble Burst", every = 4, factor = 0.6, stun = 0.4 },
-		horn_toss = { kind = "single", name = "Horn Toss", every = 4, factor = 2.6 },
+		root_snare = { kind = "single", name = "Root Snare", every = 5, factor = 1.6, stun = 1, windup = 1.2 },
+		bramble_burst = { kind = "all", name = "Bramble Burst", every = 4, factor = 0.6, stun = 0.4, windup = 1.2 },
+		horn_toss = { kind = "single", name = "Horn Toss", every = 4, factor = 2.6, windup = 1.2 },
 		-- the Mushroom Grove
 		mandible_frenzy = { kind = "multi", name = "Mandible Frenzy", every = 4, factor = 0.45, hits = 3 },
 		lure_flash = { kind = "single", name = "Lure Flash", every = 4, factor = 1.5, stun = 0.6 },
@@ -37,7 +38,7 @@ return {
 		},
 		hex_mend = { kind = "mend", name = "Hex Mend", every = 3, share = 0.6 },
 		rune_ward = { kind = "guard", name = "Rune Ward", every = 5, factor = 1, seconds = 3, defence = 1.3 },
-		gorge_bite = { kind = "single", name = "Gorge Bite", every = 4, factor = 2 },
+		gorge_bite = { kind = "single", name = "Gorge Bite", every = 4, factor = 2, windup = 1.2 },
 		root_grasp = {
 			kind = "all",
 			name = "Root Grasp",
@@ -45,17 +46,26 @@ return {
 			factor = 0.45,
 			slow = 0.5,
 			slowSeconds = 3,
+			windup = 1.2,
 		},
-		heart_pulse = { kind = "all", name = "Heart Pulse", every = 4, factor = 0.7, stun = 0.5 },
+		heart_pulse = { kind = "all", name = "Heart Pulse", every = 4, factor = 0.7, stun = 0.5, windup = 1.2 },
 		-- Ember Lava
 		flare_pop = { kind = "splash", name = "Flare Pop", every = 4, factor = 1, splash = 0.5, spread = 2 },
 		comet_dash = { kind = "multi", name = "Comet Dash", every = 4, factor = 0.9, hits = 2 },
 		fireball = { kind = "splash", name = "Fireball", every = 4, factor = 1.6, splash = 0.6, spread = 2 },
 		pyre_mend = { kind = "mend", name = "Pyre Mend", every = 3, share = 0.6 },
 		basalt_wall = { kind = "guard", name = "Basalt Wall", every = 5, factor = 1, seconds = 3, defence = 1.3 },
-		molten_chomp = { kind = "multi", name = "Molten Chomp", every = 4, factor = 1.2, hits = 2 },
-		mane_lash = { kind = "splash", name = "Mane Lash", every = 5, factor = 2, splash = 0.7, spread = 3 },
-		meteor_rain = { kind = "multi", name = "Meteor Rain", every = 5, factor = 0.9, hits = 3 },
+		molten_chomp = { kind = "multi", name = "Molten Chomp", every = 4, factor = 1.2, hits = 2, windup = 1.2 },
+		mane_lash = {
+			kind = "splash",
+			name = "Mane Lash",
+			every = 5,
+			factor = 2,
+			splash = 0.7,
+			spread = 3,
+			windup = 1.2,
+		},
+		meteor_rain = { kind = "multi", name = "Meteor Rain", every = 5, factor = 0.9, hits = 3, windup = 1.2 },
 		-- Frozen Ice
 		icicle_bite = {
 			kind = "single",
@@ -87,8 +97,9 @@ return {
 			spread = 3,
 			slow = 0.4,
 			slowSeconds = 2,
+			windup = 1.2,
 		},
-		glacier_gore = { kind = "single", name = "Glacier Gore", every = 5, factor = 2.8 },
+		glacier_gore = { kind = "single", name = "Glacier Gore", every = 5, factor = 2.8, windup = 1.2 },
 		frost_gale = {
 			kind = "splash",
 			name = "Frost Gale",
@@ -98,6 +109,7 @@ return {
 			spread = 3,
 			slow = 0.5,
 			slowSeconds = 2.5,
+			windup = 1.2,
 		},
 	},
 	Maps = {
@@ -2046,6 +2058,22 @@ return {
 		FallBox = 4,
 		-- a wind-up fades out this softly when its skill goes off
 		WindupFade = 0.15,
+		-- A boss's and a mini-boss's special (one with a `windup`) hits like a burst (the owner, 2026-11-12: drama like
+		-- Genshin Impact's, still no camera): all through its wind-up a mark on the ground shows where it comes down
+		-- (skill.monster_mark, the monster's `element` as its variant; MarkWide times wider round the caster for a special
+		-- that comes down there) and its body glows its element's Glow colour, up to GlowMost (1 = none) as the wind-up
+		-- ends; as it goes off the body flashes (FlashFill) and skill.monster_impact (the same variant) flares and marks the
+		-- ground under the release; each body it strikes freezes HitStopSeconds (a plain blow: View.HitStopSeconds) and
+		-- flashes white (HitFlash), both fading over FlashSeconds.
+		Burst = {
+			MarkWide = 2,
+			Glow = { meadow = "#9fe05a", grove = "#b48cff", lava = "#ff8c32", ice = "#6ab4ff" },
+			GlowMost = 0.6,
+			FlashFill = 0.3,
+			HitStopSeconds = 0.18,
+			HitFlash = 0.35,
+			FlashSeconds = 0.22,
+		},
 		Monsters = {
 			-- Meadow: leaves, wind, pollen, earth
 			green_sprout = { blow = "hit.green_sprout", fall = "hit.green_sprout" },
@@ -2069,6 +2097,7 @@ return {
 			green_turtle = {
 				blow = "hit.green_turtle",
 				fall = "hit.green_turtle",
+				element = "meadow",
 				skills = {
 					bloomshell = { windup = "skill.renewal_charge", release = "skill.pollen_shockwave", at = "caster" },
 					root_snare = {
@@ -2082,6 +2111,7 @@ return {
 			green_boar = {
 				blow = "hit.green_boar",
 				fall = "hit.green_boar",
+				element = "meadow",
 				skills = {
 					bramblehorn = { windup = "skill.bramble_rage", release = "burst.rock_smash", at = "target" },
 					bramble_burst = {
@@ -2127,6 +2157,7 @@ return {
 			dark_wyrm = {
 				blow = "hit.dark_wyrm",
 				fall = "hit.dark_wyrm",
+				element = "grove",
 				skills = {
 					sporeburst = { windup = "skill.void_charge", release = "skill.spore_burst", at = "caster" },
 					gorge_bite = {
@@ -2140,6 +2171,7 @@ return {
 			dark_bear = {
 				blow = "hit.dark_bear",
 				fall = "hit.dark_bear",
+				element = "grove",
 				skills = {
 					bearslam = {
 						windup = "skill.umbral_growl",
@@ -2196,6 +2228,7 @@ return {
 			lava_bull = {
 				blow = "hit.lava_bull",
 				fall = "hit.lava_bull",
+				element = "lava",
 				skills = {
 					lavastomp = { windup = "skill.meteor_charge", release = "skill.meteor_crash", at = "caster" },
 					molten_chomp = {
@@ -2209,6 +2242,7 @@ return {
 			lava_golem = {
 				blow = "hit.lava_golem",
 				fall = "hit.lava_golem",
+				element = "lava",
 				skills = {
 					eruption = { windup = "skill.phoenix_charge", release = "skill.flame_jet", at = "up" },
 					mane_lash = {
@@ -2254,6 +2288,7 @@ return {
 			ice_mammoth = {
 				blow = "hit.ice_mammoth",
 				fall = "hit.ice_mammoth",
+				element = "ice",
 				skills = {
 					tuskcharge = { windup = "skill.frost_charge", release = "skill.ice_spear", at = "target" },
 					frost_breath = {
@@ -2267,6 +2302,7 @@ return {
 			ice_yeti = {
 				blow = "hit.ice_yeti",
 				fall = "hit.ice_yeti",
+				element = "ice",
 				skills = {
 					blizzard = { windup = "skill.frost_howl", release = "skill.blizzard", at = "caster" },
 					glacier_gore = {

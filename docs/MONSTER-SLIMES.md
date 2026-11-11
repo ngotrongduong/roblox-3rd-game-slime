@@ -207,6 +207,28 @@ animals (2026-11-09) stay where they fit the new monster (Stinglob's sting, Blaz
 Sporegorge's spit, the ice ones...); the rest get blows of their own. The moves are the monster's Attack clip for now;
 the bosses' signature specials get clips of their own next.
 
+### Bursts (the owner, 2026-11-12: "battles as eye-catching and explosive as Genshin Impact's")
+
+A boss's and a mini-boss's specials (the 20 with a wind-up) are timed and layered the way a big blow is in an action
+game, without touching the camera (the fights' rule): a long readable wind-up, a release that is full size in a blink,
+a hold, then a slow fade, and the ground remembering the blow.
+- **The wind-up plays whole.** Each special carries `windup = 1.2` (its effects were drawn for about 1.2 s): the server
+  calls it that early instead of `WindupSeconds` (0.3), and its blow waits for it, since every beat is shorter (1 s at
+  most). Before this, only the first 0.3 s of every boss's charge was ever seen in a fight.
+- **A warning on the ground** (`skill.monster_mark`, one design per map): where it will come down (on the target's spot,
+  or `MarkWide` times wider round the caster for one that bursts there), a seal opening and turning, rings closing in,
+  the map's bits lifting. Cancelled as the release comes down.
+- **The body charges.** Its body glows its map's colour (`Fx.Burst.Glow`, a Highlight with no outline), stronger as the
+  wind-up ends, and flashes paler as it lets go.
+- **The impact** (`skill.monster_impact`, one design per map, on top of the special's own release): a starburst at the
+  heart of the blow for a fifth of a second (the action games' "impact frame", drawn in the world, not on the screen),
+  bright shards, a crisp shock ring racing out, then the ground marked for about two seconds (Meadow: a ring of pollen
+  and flowers opening; Grove: a violet rune, violet fumes, lime bubbles; Lava: cracks glowing in the dark rock, smoke and
+  embers; Ice: frozen ground, frost mist, glints).
+- **The hit lands heavier.** Every body it strikes (and the boss at its target) freezes `HitStopSeconds` 0.18 instead of
+  a plain blow's 0.08 and flashes white (`HitFlash`).
+The regulars' specials keep their single beat: the bursts are what a boss fight is remembered by.
+
 How they are placed (`client/ZombieFight`, found in the showroom 2026-11-12):
 - The wind-up is drawn at the release's scale (`fxScale`, up to `Fx.MaxScale` for a boss); at scale 1 a big monster's
   body hid it.

@@ -263,6 +263,34 @@ _G.MonsterShow = {
 				local charge = if art.windup
 					then VfxLib.play(art.windup, model, { follow = true, variant = art.variant, scale = scale })
 					else nil
+				-- (a boss's burst, as client/ZombieFight draws it: the mark where it comes down, the body's glow, the
+				-- impact; D.Fx.Burst)
+				local element = D.Fx.Monsters[id].element
+				local skill = (Config.Combat.Skills :: any)[key]
+				local burst = if element and skill and skill.windup then element else nil
+				local B = D.Fx.Burst
+				local tall = (a.actor :: any).body.Size.Y
+				local wide = 5 * scale
+				local landing = if art.at == "target"
+					then a.spot + Vector3.zAxis * TARGET + Vector3.new(0, 2.5, 0)
+					else a.spot + Vector3.new(0, tall * 0.5, 0)
+				local markScale = if art.at == "target" then scale else scale * B.MarkWide
+				local mark, glow
+				if burst then
+					local box = Vector3.new(wide, if art.at == "target" then 5 else tall, wide)
+					mark = VfxLib.play("skill.monster_mark", landing, { variant = burst, scale = markScale, size = box })
+					glow = Instance.new("Highlight")
+					glow.DepthMode = Enum.HighlightDepthMode.Occluded
+					glow.FillColor = Color3.fromHex(B.Glow[burst])
+					glow.FillTransparency = 1
+					glow.OutlineTransparency = 1
+					glow.Parent = model
+					game:GetService("TweenService")
+						:Create(glow, TweenInfo.new(1.2, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+							FillTransparency = B.GlowMost,
+						})
+						:Play()
+				end
 				SlimeActor.act(a.actor, "Attack")
 				if freezeAt then
 					task.delay(freezeAt, function()
@@ -284,11 +312,24 @@ _G.MonsterShow = {
 					if charge then
 						VfxLib.cancel(charge, D.Fx.WindupFade)
 					end
+					if mark then
+						VfxLib.cancel(mark, D.Fx.WindupFade)
+					end
+					if glow then
+						glow.FillColor = glow.FillColor:Lerp(Color3.new(1, 1, 1), 0.5)
+						glow.FillTransparency = B.FlashFill
+						game:GetService("TweenService")
+							:Create(glow, TweenInfo.new(B.FlashSeconds), { FillTransparency = 1 })
+							:Play()
+						game:GetService("Debris"):AddItem(glow, B.FlashSeconds + 0.1)
+					end
+					if burst then
+						local box = Vector3.new(wide, if art.at == "target" then 5 else tall, wide)
+						VfxLib.play("skill.monster_impact", landing, { variant = burst, scale = markScale, size = box })
+					end
 					-- (placed as client/ZombieFight's `release` does: its box is the body it lands on, on the floor; the
 					-- target a plain 5-stud slime)
-					local tall = (a.actor :: any).body.Size.Y
 					local body = a.spot + Vector3.new(0, tall * 0.5, 0)
-					local wide = 5 * scale
 					local opts: { [string]: any } = { scale = scale, variant = art.variant }
 					if art.at == "target" then
 						opts.from = body

@@ -54,6 +54,32 @@ return function(T: any)
 		end
 	end)
 
+	T.test("a special with a windup is announced that early, a plain blow WindupSeconds early", function()
+		local fight = Combat.new({ fighter("s") }, { fighter("f", "melee", { skills = { "horn_toss" } }) }, Rng.new(4))
+		local aimedAt: { [string]: number } = {}
+		local leads: { plain: { number }, special: { number } } = { plain = {}, special = {} }
+		for _ = 1, math.floor(40 / DT) do
+			for _, event in Combat.step(fight, DT) do
+				if event.from ~= "f" then
+					continue
+				end
+				if event.kind == "aim" then
+					aimedAt.f = fight.seconds
+				elseif event.kind == "hit" and aimedAt.f and (event.n == nil or event.n == 1) then
+					table.insert(if event.skill then leads.special else leads.plain, fight.seconds - aimedAt.f)
+					aimedAt.f = nil
+				end
+			end
+		end
+		T.ok(#leads.special >= 2 and #leads.plain >= 2, `blows of both kinds: {#leads.special} {#leads.plain}`)
+		for _, lead in leads.special do
+			T.near(lead, Config.Combat.Skills.horn_toss.windup, DT + 1e-6)
+		end
+		for _, lead in leads.plain do
+			T.near(lead, Config.Combat.WindupSeconds, DT + 1e-6)
+		end
+	end)
+
 	T.test("a fighter without skills fights as it did", function()
 		local fight = Combat.new({ fighter("s") }, { fighter("f", "melee") }, Rng.new(4))
 		for _, event in run(fight, 30) do

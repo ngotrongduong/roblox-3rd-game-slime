@@ -16,7 +16,7 @@ export type Unit = {
 	maxHp: number,
 	cooldown: number,
 	target: Unit?,
-	-- the coming blow has been announced (an "aim" event, WindupSeconds before it lands)
+	-- the coming blow has been announced (an "aim" event, WindupSeconds or its special's `windup` before it lands)
 	aimed: boolean,
 	-- how it fights: a slime's role (Combat.role), a zombie's kind
 	role: string,
@@ -408,6 +408,21 @@ local function nextKey(fighter: Unit): string?
 	return fighter.skills[fighter.specials % count + 1]
 end
 
+-- How many seconds before its next blow a fighter announces it: WindupSeconds, or the `windup` of the special that blow
+-- will be (a boss's, so its charge plays whole). A mend is decided on its heal turn and keeps the usual.
+local function leadOf(fighter: Unit): number
+	local c = Config.Combat
+	local key = nextKey(fighter)
+	local s = if key then (c.Skills :: any)[key] else nil
+	if s and s.windup and s.kind ~= "mend" then
+		local first = (c.Skills :: any)[fighter.skills[1]]
+		if (fighter.blows + 1) % first.every == 0 then
+			return s.windup
+		end
+	end
+	return c.WindupSeconds
+end
+
 -- The key of the "mend" special a healer's `count`-th mending is (every `every`-th mending), or nil.
 local function mendSpecial(healer: Unit, count: number): string?
 	local key = nextKey(healer)
@@ -589,13 +604,14 @@ function Combat.step(fight: Fight, dt: number): { Event }
 				end
 			end
 			local before = attacker.cooldown
+			local lead = leadOf(attacker)
 			-- (a stung fighter's beat runs slow)
 			attacker.cooldown -= dt * (if attacker.slowUntil > fight.seconds then 1 - attacker.slowBy else 1)
 			if not inReach then
-				attacker.cooldown = math.max(attacker.cooldown, math.min(before, c.WindupSeconds + 0.001))
+				attacker.cooldown = math.max(attacker.cooldown, math.min(before, lead + 0.001))
 			end
 			-- the blow is announced a moment before it lands, so the client can show the wind-up (and the skill's name)
-			if not attacker.aimed and attacker.cooldown <= c.WindupSeconds then
+			if not attacker.aimed and attacker.cooldown <= lead then
 				local target = attacker.target
 				if not target or target.hp <= 0 then
 					target = pick(fight, attacker)
@@ -603,7 +619,7 @@ function Combat.step(fight: Fight, dt: number): { Event }
 				end
 				if target and not canStrike(fight, attacker, target) then
 					-- (positional mode: a target picked just now is out of reach; it walks there first)
-					attacker.cooldown = c.WindupSeconds + 0.001
+					attacker.cooldown = lead + 0.001
 				elseif target then
 					attacker.aimed = true
 					local key = nextKey(attacker)
@@ -656,7 +672,7 @@ function Combat.step(fight: Fight, dt: number): { Event }
 				end
 				if target and not canStrike(fight, attacker, target) then
 					-- (positional mode: its target fell or went out of reach during the wind-up; it walks to it and aims again)
-					attacker.cooldown = c.WindupSeconds + 0.001
+					attacker.cooldown = leadOf(attacker) + 0.001
 					attacker.skillNext = false
 				elseif target then
 					attacker.blows += 1
@@ -666,6 +682,8 @@ function Combat.step(fight: Fight, dt: number): { Event }
 						blow(fight, attacker, target, 1, events)
 					end
 					attacker.skillNext = false
+					-- (a special with a wind-up longer than the beat waits for it: it lands its `windup` after this blow)
+					attacker.cooldown = math.max(attacker.cooldown, leadOf(attacker))
 				end
 			end
 		end

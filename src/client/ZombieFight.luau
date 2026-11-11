@@ -412,12 +412,46 @@ local function vfx(effect: string?, at: any, opts: { [string]: any }?): any
 	return live
 end
 
--- A skill's wind-up ends (it went off, or its caster fell).
-local function endCharge(id: string)
-	local live = charges[id]
-	charges[id] = nil
+-- ===== A boss's burst (DFx.Burst): the mark under where it comes down, the body's glow, the flash of what it strikes =====
+
+local marks: { [string]: any } = {}
+local glows: { [string]: Highlight } = {}
+
+-- A tint over a body (no outline, hidden behind walls).
+local function tint(model: Instance, colour: Color3, fill: number): Highlight
+	local glow = Instance.new("Highlight")
+	glow.DepthMode = Enum.HighlightDepthMode.Occluded
+	glow.FillColor = colour
+	glow.FillTransparency = fill
+	glow.OutlineTransparency = 1
+	glow.Parent = model
+	return glow
+end
+
+local function fadeTint(glow: Highlight)
+	local seconds = DFx.Burst.FlashSeconds
+	TweenService:Create(glow, TweenInfo.new(seconds, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+		FillTransparency = 1,
+	}):Play()
+	Debris:AddItem(glow, seconds + 0.1)
+end
+
+-- A skill's wind-up ends: it went off (`fired`: a boss's body flashes as it lets go), or its caster fell.
+local function endCharge(id: string, fired: boolean?)
+	local live, mark, glow = charges[id], marks[id], glows[id]
+	charges[id], marks[id], glows[id] = nil, nil, nil
 	if live then
 		pcall(VfxLib.cancel, live, DFx.WindupFade)
+	end
+	if mark then
+		pcall(VfxLib.cancel, mark, DFx.WindupFade)
+	end
+	if glow then
+		if fired then
+			glow.FillColor = glow.FillColor:Lerp(Color3.new(1, 1, 1), 0.5)
+			glow.FillTransparency = DFx.Burst.FlashFill
+		end
+		fadeTint(glow)
 	end
 end
 
@@ -643,6 +677,14 @@ local function skillOf(event: { [string]: any }): any
 	return if type(event.skill) == "string" then (Config.Combat.Skills :: any)[event.skill] else nil
 end
 
+-- The element of a boss's burst (DFx.Burst): a special with a `windup` struck by a monster with an `element`; nil for
+-- any other blow.
+local function burstOf(event: { [string]: any }): string?
+	local s = skillOf(event)
+	local fx = fxOf(event.from)
+	return if s and s.windup and fx and fx.element then fx.element else nil
+end
+
 -- How a skill looks (View.Skill.Looks).
 local function looksOf(event: { [string]: any }): { [string]: any }
 	return (V.Skill.Looks :: any)[event.skill] or {}
@@ -820,7 +862,9 @@ local function onAim(event: { [string]: any })
 	end
 	local s = skillOf(event)
 	local deeper = if s then V.Skill.Windup else 1
-	local special = specialOf(fxOf(event.from), event)
+	local fx = fxOf(event.from)
+	local special = specialOf(fx, event)
+	local windup = if s and s.windup then s.windup else Config.Combat.WindupSeconds
 	if s and special then
 		endCharge(event.from)
 		-- (an effect without that variant plays as it is: one variant name serves the wind-up and the release; the
@@ -830,6 +874,32 @@ local function onAim(event: { [string]: any })
 			attacker.model,
 			{ follow = true, variant = special.variant, scale = fxScale(event.from) }
 		)
+		if s.windup and fx.element then
+			-- a boss's burst: the ground marked where it comes down (as wide as its release there) and its body glowing
+			local B = DFx.Burst
+			local scale = fxScale(event.from)
+			local wide = 5 * scale
+			if special.at == "target" then
+				local tall = target.body.Size.Y
+				marks[event.from] = vfx("skill.monster_mark", to + Vector3.new(0, tall * 0.5, 0), {
+					variant = fx.element,
+					scale = scale,
+					size = Vector3.new(wide, tall, wide),
+				})
+			else
+				local tall = attacker.body.Size.Y
+				marks[event.from] = vfx("skill.monster_mark", from + Vector3.new(0, tall * 0.5, 0), {
+					variant = fx.element,
+					scale = scale * B.MarkWide,
+					size = Vector3.new(wide, tall, wide),
+				})
+			end
+			local glow = tint(attacker.model, Color3.fromHex(B.Glow[fx.element] or "#ffffff"), 1)
+			glows[event.from] = glow
+			TweenService:Create(glow, TweenInfo.new(windup, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+				FillTransparency = B.GlowMost,
+			}):Play()
+		end
 	end
 	if s then
 		floatText(
@@ -843,11 +913,20 @@ local function onAim(event: { [string]: any })
 	local gap = flat(to - from).Magnitude - radius(attacker) - radius(target)
 	local shot = styleOf(event.from).shot ~= nil
 	local reaching = not (s and s.kind == "all")
-	-- (a monster slime plays its own attack, timed so its blow lands as the wind-up and the lunge end)
+	-- (a monster slime plays its own attack, timed so its blow lands as the wind-up and the lunge end: a boss's long
+	-- wind-up waits for its start)
 	local peak = SlimeActor.attackPeak(attacker)
 	if peak then
-		local lead = Config.Combat.WindupSeconds + (if shot then 0 else V.LungeSeconds * V.ContactShare)
-		SlimeActor.act(attacker, "Attack", math.max(0, peak - lead))
+		local lead = windup + (if shot then 0 else V.LungeSeconds * V.ContactShare)
+		if lead > peak then
+			task.delay(lead - peak, function()
+				if not attacker.destroyed then
+					SlimeActor.act(attacker, "Attack", 0)
+				end
+			end)
+		else
+			SlimeActor.act(attacker, "Attack", peak - lead)
+		end
 	end
 	-- (in the Dungeon the server walks the fighters and announces a blow only once its fighter is in reach: no dash)
 	if
@@ -855,7 +934,7 @@ local function onAim(event: { [string]: any })
 		and reaching
 		and ((not shot and gap > V.Moves.Reach) or (shot and gap < V.Moves.TooClose))
 	then
-		reposition(event.from, Config.Combat.WindupSeconds * 0.8)
+		reposition(event.from, windup * 0.8)
 		return
 	end
 	local look = along(to - from, attacker.root.LookVector)
@@ -882,6 +961,8 @@ local function impact(event: { [string]: any }, style: FightFx.Style)
 	local height = target.body.Size.Y
 	local skin = to - dir * radius(target) * 0.8 + Vector3.new(0, height * 0.5, 0)
 	local fx = fxOf(event.from)
+	-- (a boss's burst strikes harder: the body freezes longer and flashes white)
+	local burst = burstOf(event)
 	if fx and fx.blow then
 		-- (a Dungeon monster's own blow; a ranged one's came with its shot, in strike)
 		if not (fx.shot and style.shot) then
@@ -896,7 +977,11 @@ local function impact(event: { [string]: any }, style: FightFx.Style)
 	end
 	FightFx.goo(target.body, skin, dir, if heavy then F.Goo.count * 2 else F.Goo.count)
 	SlimeActor.act(target, "Hit")
-	play(target, to, dir * V.KnockStuds * (if heavy then V.CritKnock else 1), V.KnockSeconds, 0.2, V.HitStopSeconds)
+	local stop = if burst then DFx.Burst.HitStopSeconds else V.HitStopSeconds
+	play(target, to, dir * V.KnockStuds * (if heavy then V.CritKnock else 1), V.KnockSeconds, 0.2, stop)
+	if burst then
+		fadeTint(tint(target.model, Color3.new(1, 1, 1), DFx.Burst.HitFlash))
+	end
 	local side = if math.random() < 0.5 then -1 else 1
 	SlimeActor.kick(target, "side", side * V.FlinchSide * (if heavy then 2 else 1))
 	SlimeActor.kick(target, "squash", V.FlinchSquash * (if heavy then 2 else 1))
@@ -944,7 +1029,9 @@ local function strike(event: { [string]: any }, style: FightFx.Style, land: () -
 		-- (the Dungeon's server strikes only in reach; a body still catching up its walk never lunges further than that)
 		reach = math.min(reach, Config.Dungeon.Move.MeleeStuds)
 	end
-	play(attacker, from, dir * reach, V.LungeSeconds, V.ContactShare, V.HitStopSeconds)
+	-- (a boss's burst holds it there as long as the body it strikes)
+	local stop = if burstOf(event) then DFx.Burst.HitStopSeconds else V.HitStopSeconds
+	play(attacker, from, dir * reach, V.LungeSeconds, V.ContactShare, stop)
 	SlimeActor.hop(attacker, V.LungeHop)
 	task.delay(contactSeconds(style), land)
 end
@@ -954,11 +1041,12 @@ end
 -- A Dungeon boss's skill goes off: its wind-up ends and its release plays (Config.Dungeon.Fx: on the caster's feet, on
 -- the target from the caster, or rising from the caster). True when it had one (the way's art is then left out).
 local function release(event: { [string]: any }, centre: Vector3?): boolean
-	local skill = specialOf(fxOf(event.from), event)
+	local fx = fxOf(event.from)
+	local skill = specialOf(fx, event)
 	if not skill then
 		return false
 	end
-	endCharge(event.from)
+	endCharge(event.from, true)
 	local caster, from = find(event.from)
 	local target, to = find(event.to)
 	if not caster or not from then
@@ -966,6 +1054,8 @@ local function release(event: { [string]: any }, centre: Vector3?): boolean
 	end
 	local scale = fxScale(event.from)
 	local opts: { [string]: any } = { scale = scale, variant = skill.variant }
+	-- (a boss's burst flares and marks the ground under its release: skill.monster_impact, DFx.Burst)
+	local burst = burstOf(event)
 	-- (its box is the body it lands on, standing on the floor: its `ground` pieces lie on the floor and its `body` ones
 	-- at that body's middle; a box of the effect's own size, as tall as a boss, put the rings under the floor)
 	local wide = 5 * scale
@@ -974,13 +1064,27 @@ local function release(event: { [string]: any }, centre: Vector3?): boolean
 		opts.from = from + Vector3.new(0, caster.body.Size.Y * 0.5, 0)
 		opts.size = Vector3.new(wide, tall, wide)
 		vfx(skill.release, to + Vector3.new(0, tall * 0.5, 0), opts)
-	elseif skill.at == "up" then
-		local base = from + Vector3.new(0, caster.body.Size.Y * 0.6, 0)
-		vfx(skill.release, CFrame.lookAt(base, base + Vector3.yAxis), opts)
+		if burst then
+			vfx(
+				"skill.monster_impact",
+				to + Vector3.new(0, tall * 0.5, 0),
+				{ scale = scale, variant = burst, size = opts.size }
+			)
+		end
 	else
+		if skill.at == "up" then
+			local base = from + Vector3.new(0, caster.body.Size.Y * 0.6, 0)
+			vfx(skill.release, CFrame.lookAt(base, base + Vector3.yAxis), opts)
+		end
 		local tall = caster.body.Size.Y
+		local at = (centre or from) + Vector3.new(0, tall * 0.5, 0)
 		opts.size = Vector3.new(wide, tall, wide)
-		vfx(skill.release, (centre or from) + Vector3.new(0, tall * 0.5, 0), opts)
+		if skill.at ~= "up" then
+			vfx(skill.release, at, opts)
+		end
+		if burst then
+			vfx("skill.monster_impact", at, { scale = scale * DFx.Burst.MarkWide, variant = burst, size = opts.size })
+		end
 	end
 	return true
 end
