@@ -2337,7 +2337,7 @@ return {
 	defaultVariant = "snow_rabbit",
 	source = {
 		from = "Goo Lineage V2 (2026-11-10): one small signature for each of its 66 Secret slimes",
-		art = "the library's pictures (ASSETS.md families) and pictures drawn for it, owner art kept as drawn",
+		art = "the library's pictures (ASSETS.md families) and pictures drawn for it, owner art kept as drawn; the owner's own 3D fish (models/fish/), rigged in Blender",
 		licence = "the owner's own, ChatGPT pictures made for the owner, and free Creator Store pictures already in the library",
 	},
 	notes = "Attach to a Secret slime's body with opts.variant = its name in snake case. The owner: simple, but fitting each slime, so every one has an identity of its own; small and quiet, but fitting and beautiful.",

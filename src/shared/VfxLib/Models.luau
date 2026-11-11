@@ -85,8 +85,9 @@ Models.list = {
 -- The library's swimming fish: small skinned MeshParts in their own painted texture, worn by an aura's `swimmers`
 -- (Builder: each rides its orbit head first, its tail sweeping side to side).
 --
--- A FISH (rigged by tools/blender/fish_rig.py in Goo Lineage, uploaded as one Model; its source in models/fish/):
---   mesh      the MeshPart's mesh asset id; texture: Models.FishTexture (all of one file share one picture)
+-- A FISH (rigged by tools/blender/fish_rig.py, first in Goo Lineage, uploaded as one Model; its source in models/fish/):
+--   mesh      the MeshPart's mesh asset id
+--   texture?  its picture's id (a packaged effect's fish carry it); else Models.FishTexture (one file shares one picture)
 --   size      the MeshPart's size at scale 1, its snout toward -Z (the front), its back up
 --   bones     its spine, snout to tail: each bone's rest frame in the part (point, X axis, Y axis, 9 numbers), as
 --             Roblox's import binds the skin to them; the client makes them, named `<key>_0`, `<key>_1`, ...
@@ -180,6 +181,13 @@ Models.fish = {
 function Models.add(key, entry)
 	if Models.list[key] == nil and type(entry) == "table" and entry.mesh ~= nil then
 		Models.list[key] = entry
+	end
+end
+
+-- A fish an effect brings with it (a packaged effect: `assets.fish`, each with its `texture`): kept only when new.
+function Models.addFish(key, entry)
+	if Models.fish[key] == nil and type(entry) == "table" and entry.mesh ~= nil then
+		Models.fish[key] = entry
 	end
 end
 

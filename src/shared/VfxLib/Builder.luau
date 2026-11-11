@@ -1940,7 +1940,7 @@ local function fishTemplate(key)
 	part.CanTouch = false
 	part.CastShadow = false
 	part.Massless = true
-	part.TextureID = `rbxassetid://{Models.FishTexture}`
+	part.TextureID = `rbxassetid://{fish.texture or Models.FishTexture}`
 	local parent, rest = part, CFrame.identity
 	for index, b in fish.bones do
 		local frame = CFrame.fromMatrix(
