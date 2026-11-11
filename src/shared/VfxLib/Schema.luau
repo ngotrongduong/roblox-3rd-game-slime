@@ -27,6 +27,10 @@
 --             { name, model (a key of Models), size? (0.3 to 2, of the model), colors | color | role (its tint),
 --             radius, low, high, turns, period, phase? }: one skinned MeshPart in the model's look, its bones laid along the loop each frame, its back
 --             kept up, its legs paddling
+--   swimmers  (an aura, up to Budget's `swimmers`) small 3D fish going round the host head first, each a SWIMMER:
+--             { name, model (a key of Models.fish), length (studs snout to tail at refHeight), orbit = { radius, period,
+--             phase?, y, bob?, sway? } (as a piece's orbit: its path wanders), swim? = { degrees, period } (its tail's
+--             sweep), secondary? }: one skinned MeshPart in its own picture, its tail sweeping side to side
 --   light     { role | color, brightness, range (studs at refHeight), keys = { { t, brightness } } (a one-shot's flare) }
 --   highlight (one-shot) { fill = role, outline = role, fillTransparency, outlineTransparency, seconds, max }: an outline
 --             on the instances the caller names (`opts.adornees`), fading out
@@ -217,6 +221,46 @@ local ENUMS = {
 }
 
 local textureProblem
+
+-- The first thing wrong with a SWIMMER (one of the library's fish going round an aura's host), or nil.
+function Schema.swimmerProblem(fields, swimmer, what)
+	if fields.kind ~= "aura" then
+		return `{what}: only an aura has swimmers`
+	end
+	if type(swimmer.name) ~= "string" then
+		return `{what}: a name`
+	end
+	if Models.fish[swimmer.model] == nil then
+		return `{what}: model is a key of Models.fish`
+	end
+	if type(swimmer.length) ~= "number" or swimmer.length <= 0 or swimmer.length > 3 then
+		return `{what}: length is studs from snout to tail at refHeight, over 0 and at most 3`
+	end
+	local orbit = swimmer.orbit
+	if
+		type(orbit) ~= "table"
+		or type(orbit.radius) ~= "number"
+		or type(orbit.y) ~= "number"
+		or type(orbit.period) ~= "number"
+		or orbit.period == 0
+	then
+		return `{what}: orbit \{ radius, period (not 0), phase?, y, bob?, sway? }`
+	end
+	for _, field in { "bob", "sway" } do
+		local beat = orbit[field]
+		if
+			beat ~= nil
+			and (type(beat) ~= "table" or type(beat[1]) ~= "number" or type(beat[2]) ~= "number" or beat[2] <= 0)
+		then
+			return `{what}: orbit {field} is \{ studs, period } with a period over 0 seconds`
+		end
+	end
+	local swim = swimmer.swim
+	if swim ~= nil and (type(swim) ~= "table" or (swim.period ~= nil and swim.period <= 0)) then
+		return `{what}: swim \{ degrees?, period? (over 0) }`
+	end
+	return nil
+end
 
 -- The first thing wrong with a SERPENT (an aura's dragon coiling round its host), or nil.
 function Schema.serpentProblem(fields, serpent, what)
@@ -1061,11 +1105,18 @@ function Schema.problem(effect, variantOf)
 			and #(fields.beams or {}) == 0
 			and #(fields.wings or {}) == 0
 			and #(fields.serpents or {}) == 0
+			and #(fields.swimmers or {}) == 0
 		then
 			return `{label}: nothing to draw`
 		end
 		for index, serpent in fields.serpents or {} do
 			local problem = Schema.serpentProblem(fields, serpent, `{label} serpent {index}`)
+			if problem then
+				return problem
+			end
+		end
+		for index, swimmer in fields.swimmers or {} do
+			local problem = Schema.swimmerProblem(fields, swimmer, `{label} swimmer {index}`)
 			if problem then
 				return problem
 			end

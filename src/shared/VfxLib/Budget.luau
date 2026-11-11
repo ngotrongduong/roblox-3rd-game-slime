@@ -20,8 +20,8 @@ Budget.SpreadRate = 3 -- a giant's particles a second may pass the rate this man
 -- The hard caps of a host, by kind of effect. `light` is the reach of a light in studs (0: none).
 Budget.Kinds = {
 	-- (an aura's side reaches 10: a Level 2 aura's own floor circle is 8-10 studs, cheap as it is few and flat; the area
-	-- still holds the whole, 2026-11-07)
-	aura = { emitters = 6, rate = 40, alive = 80, size = 10, area = 900, light = 32, lights = 1 },
+	-- still holds the whole, 2026-11-07; `swimmers`: small 3D fish going round it, one skinned MeshPart each)
+	aura = { emitters = 6, rate = 40, alive = 80, size = 10, area = 900, light = 32, lights = 1, swimmers = 6 },
 	trail = {
 		emitters = 7,
 		rate = 80,
@@ -65,7 +65,17 @@ Budget.Kinds = {
 -- three bodies, a dozen of them.
 Budget.Showcase = {
 	-- (`serpents`: a dragon coiling round the host, one long picture on one Trail or one 3D body)
-	aura = { emitters = 12, rate = 160, alive = 240, size = 20, area = 6000, light = 32, lights = 1, serpents = 1 },
+	aura = {
+		emitters = 12,
+		rate = 160,
+		alive = 240,
+		size = 20,
+		area = 6000,
+		light = 32,
+		lights = 1,
+		serpents = 1,
+		swimmers = 6,
+	},
 	-- (a showcase pair spreads as wide as two bodies and wears a second pair, a glow and riders off its feathers)
 	wings = {
 		emitters = 10,
@@ -456,6 +466,11 @@ function Budget.measure(effect, variantOf)
 			total.area += if serpent.model
 				then Models.list[serpent.model].area * (serpent.size or 1) ^ 2
 				else serpent.length * serpent.width
+		end
+		for _, swimmer in fields.swimmers or {} do
+			-- (a fish: one skinned MeshPart about half as tall as it is long)
+			total.parts += 1
+			total.area += swimmer.length * swimmer.length / 2
 		end
 		total.bands = #(fields.bands or {})
 		total.lights = if fields.light then 1 else 0

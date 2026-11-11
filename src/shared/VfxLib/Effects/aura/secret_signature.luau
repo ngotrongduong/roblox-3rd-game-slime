@@ -349,19 +349,14 @@ local function flutter(path, size)
 	})
 end
 
--- A companion that swims or flies head first round its wandering path: its attachment turns to where it goes and the
--- picture (drawn head UP) lies along its way.
-local function swimmer(path, size, light)
-	path.heading = true
-	return companion({
-		orbit = path,
-		direction = "Front",
-		speed = { 0.01, 0.01 },
-		spread = { 0, 0 },
-		orientation = "VelocityParallel",
-		size = { { 0, size }, { 1, size } },
-		lightEmission = light,
-	})
+-- One of the owner's 3D fish (Models.fish) swimming round it head first on a wandering path, its tail sweeping.
+local function fish(name, model, length, path)
+	return { name = name, model = model, length = length, orbit = path }
+end
+
+-- A place in a school going round together: its reach, how far behind the lead, its height; one beat of wandering.
+local function school(radius, phase, y)
+	return { radius = radius, period = 6, phase = phase, y = y, bob = { 0.3, 3.2 }, sway = { 0.25, 4.4 } }
 end
 
 -- A grey cloud hanging over its head and riding it, built of soft smoke puffs.
@@ -822,28 +817,39 @@ local variants = {
 	},
 	-- a white koi and a black koi swimming round it head first, always on opposite sides so they never touch, their
 	-- paths rising, falling, nearing and drawing off on beats of their own (2026-11-11, the owner)
+	-- (the owner's own 3D fish since 2026-11-11, rigged so their fan tails sweep as they swim: the pale ice one and the
+	-- dark silver one)
 	yin_yang_koi = {
+		swimmers = {
+			fish("light", "frost_white", 1.3, {
+				radius = 2.5,
+				period = 5,
+				phase = 0,
+				y = 1.8,
+				bob = { 0.35, 3.1 },
+				sway = { 0.3, 4.3 },
+			}),
+			fish("dark", "silver_ink", 1.3, {
+				radius = 2.5,
+				period = 5,
+				phase = 0.5,
+				y = 1.8,
+				bob = { 0.35, 3.7 },
+				sway = { 0.3, 5.1 },
+			}),
+		},
 		pieces = {
-			orbit(
-				"light",
-				"koi_top",
-				WHITE,
-				swimmer(
-					{ radius = 2, period = 5, phase = 0, y = 1.6, bob = { 0.35, 3.1 }, sway = { 0.3, 4.3 } },
-					0.5,
-					0.25
-				)
-			),
-			orbit(
-				"dark",
-				"koi_top",
-				{ 50, 48, 60 },
-				swimmer(
-					{ radius = 2, period = 5, phase = 0.5, y = 1.6, bob = { 0.35, 3.7 }, sway = { 0.3, 5.1 } },
-					0.5,
-					0
-				)
-			),
+			-- (a few bubbles rising off it, as if under water)
+			rise("bubbles", "bubble_gloss", { { 245, 250, 255 }, { 200, 215, 235 } }, {
+				radius = 1.85,
+				shape = "Cylinder",
+				shapeStyle = "Surface",
+				at = "feet",
+				rate = 1.2,
+				life = { 2, 2.6 },
+				size = { { 0, 0 }, { 0.2, 0.16 }, { 1, 0.12 } },
+				lightEmission = 0.3,
+			}),
 		},
 	},
 	-- pink pollen floating round it, rose twinkles rising
@@ -1595,62 +1601,28 @@ local variants = {
 	},
 	-- a school of koi in sunset colours swimming round it together, head first, each a little above, below, in or out
 	-- of the next as they wander (2026-11-11, the owner: "a school of many-coloured koi swimming round its body")
+	-- (the owner's own 3D fish since 2026-11-11, in warm sunset colours, their fan tails sweeping as they swim)
 	sunset_koi = {
+		swimmers = {
+			-- (out past its bulge, so its body never hides them)
+			fish("lead", "gold_ink", 1.25, school(2.6, 0, 1.8)),
+			fish("gold", "cream_gold", 1.15, school(2.95, -0.07, 1.35)),
+			fish("pink", "blossom_pink", 1.1, school(2.4, -0.1, 2.3)),
+			fish("blossom", "sakura_ink", 1.1, school(2.75, -0.16, 1.9)),
+			second(fish("moon", "moon_ink", 1.05, school(3.1, -0.2, 1.55))),
+		},
 		pieces = {
-			orbit(
-				"lead",
-				"koi_top",
-				{ 255, 150, 50 },
-				swimmer(
-					{ radius = 2.1, period = 6, phase = 0, y = 1.7, bob = { 0.3, 3.2 }, sway = { 0.25, 4.4 } },
-					0.42,
-					0.2
-				)
-			),
-			orbit(
-				"gold",
-				"koi_top",
-				{ 255, 210, 90 },
-				swimmer(
-					{ radius = 2.4, period = 6, phase = -0.07, y = 1.3, bob = { 0.3, 3.2 }, sway = { 0.25, 4.4 } },
-					0.36,
-					0.2
-				)
-			),
-			orbit(
-				"white",
-				"koi_top",
-				{ 255, 245, 235 },
-				swimmer(
-					{ radius = 1.8, period = 6, phase = -0.09, y = 2.1, bob = { 0.3, 3.2 }, sway = { 0.25, 4.4 } },
-					0.34,
-					0.2
-				)
-			),
-			second(
-				orbit(
-					"red",
-					"koi_top",
-					{ 235, 70, 50 },
-					swimmer(
-						{ radius = 2.2, period = 6, phase = -0.15, y = 1.8, bob = { 0.3, 3.2 }, sway = { 0.25, 4.4 } },
-						0.32,
-						0.1
-					)
-				)
-			),
-			second(
-				orbit(
-					"ink",
-					"koi_top",
-					{ 60, 55, 70 },
-					swimmer(
-						{ radius = 2.5, period = 6, phase = -0.18, y = 1.5, bob = { 0.3, 3.2 }, sway = { 0.25, 4.4 } },
-						0.3,
-						0
-					)
-				)
-			),
+			-- (a few bubbles rising off it, as if under water)
+			rise("bubbles", "bubble_gloss", { { 255, 240, 220 }, { 255, 200, 150 } }, {
+				radius = 1.85,
+				shape = "Cylinder",
+				shapeStyle = "Surface",
+				at = "feet",
+				rate = 1.2,
+				life = { 2, 2.6 },
+				size = { { 0, 0 }, { 0.2, 0.16 }, { 1, 0.12 } },
+				lightEmission = 0.3,
+			}),
 		},
 	},
 	-- copper glints sliding over its shell, copper dust lifting off

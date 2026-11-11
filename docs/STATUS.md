@@ -211,6 +211,13 @@ pet auras at a slime's size (`licks`, `embers`, `sparks` from `blazing_flames`; 
 Phoenix, Fire Salamander, the Chimera, Thunder Ram, Tempest Dragon and Shadow Wolf; the planets are twice the size. All
 seen in Play on the showcase stage (horn, lure and upright bats included).
 
+2026-11-11, the owner's eight decorative fish (`art/models/fish/decorative_fish.glb`): `tools/blender/fish_rig.py` (run by
+`fish_rig.ps1`) splits them, names them (`moon_ink`, `gold_ink`, `sakura_ink`, `silver_ink`, `frost_white`, `cream_gold`,
+`blossom_pink`, `lilac_white`), gives each a 4-bone spine and writes `fish.fbx` + `fish.json`. VfxLib gained `swimmers`
+(`Models.fish`, `Builder` `fishTemplate`/`placeSwimmer`: a fish rides an orbit head first, its tail sweeping in a wave down
+the bones; up to 6 an aura, full/half LOD only; Schema `swimmerProblem`). Yin-Yang Koi now has a white and a dark koi on
+opposite sides, Sunset Koi a school of five; their old flipbook koi are gone. Seen in Play; `lilac_white` is not used yet.
+
 ## 2026-11-10 — Dungeon fight effects per monster, from the VFX library
 
 The owner paused the old effect work and asked for each map group's skills to be rebuilt from his VFX library

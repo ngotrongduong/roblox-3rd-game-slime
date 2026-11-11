@@ -41,6 +41,10 @@ return function(T)
 				local motion = if piece.orbit then "orbit" else piece.at or "body"
 				table.insert(words, `{piece.texture}/{motion}`)
 			end
+			-- (its fish are part of its design)
+			for _, swimmer in variant.swimmers or {} do
+				table.insert(words, `fish:{swimmer.model}`)
+			end
 			table.sort(words)
 			local key = table.concat(words, "+")
 			T.ok(seen[key] == nil, `{name} repeats {seen[key]}`)

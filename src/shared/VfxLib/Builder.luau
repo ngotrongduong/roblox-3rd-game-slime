@@ -36,6 +36,9 @@ Builder.DriftRise = 0.35
 Builder.HangDrag = 4
 Builder.timeScale = 1 -- 0 freezes every particle of the library (the showroom's shots)
 Builder.LegSwing = 18 -- degrees a 3D serpent's legs paddle each way as it flies
+Builder.SwimDegrees = 16 -- degrees a swimming fish's tail bones each sweep, side to side (they add up toward the tip)
+Builder.SwimPeriod = 0.9 -- seconds of one sweep
+Builder.SwimLag = 0.7 -- radians the sweep runs late in each bone toward the tail
 Builder.LegPeriod = 1.6 -- seconds of one paddle
 
 -- The engine's own reads, which Lune's fake Roblox cannot make: the tests put their own here.
@@ -1904,6 +1907,138 @@ local function wearModel(handle, entry)
 	placeModelSerpent(entry, handle.serpentClock)
 end
 
+-- Where a point riding an orbit is at `clock`, in the carrier's frame (`entry`: its orbit, radius and height in studs).
+local function orbitPoint(entry, clock)
+	local orbit = entry.orbit
+	local angle = (clock / orbit.period + (orbit.phase or 0)) * 2 * math.pi
+	local radius, y = entry.radius, entry.y
+	-- (a wandering path: its height and its reach rise and fall on beats of their own)
+	if orbit.bob then
+		y += math.sin(clock / orbit.bob[2] * 2 * math.pi) * orbit.bob[1] * entry.scale
+	end
+	if orbit.sway then
+		radius += math.sin(clock / orbit.sway[2] * 2 * math.pi) * orbit.sway[1] * entry.scale
+	end
+	return Vector3.new(math.cos(angle) * radius, y, math.sin(angle) * radius), angle
+end
+
+-- A fish's MeshPart in its own picture with its bones (by the names its skin was made with, at their rest frames),
+-- built once for each fish (it loads its mesh) and cloned for each swimmer.
+local fishTemplates = {}
+
+local function fishTemplate(key)
+	local template = fishTemplates[key]
+	if template then
+		return template
+	end
+	local fish = Models.fish[key]
+	local part = Builder.engine.meshPart(fish.mesh)
+	part.Name = key
+	part.Anchored = false
+	part.CanCollide = false
+	part.CanQuery = false
+	part.CanTouch = false
+	part.CastShadow = false
+	part.Massless = true
+	part.TextureID = `rbxassetid://{Models.FishTexture}`
+	local parent, rest = part, CFrame.identity
+	for index, b in fish.bones do
+		local frame = CFrame.fromMatrix(
+			Vector3.new(b[1], b[2], b[3]),
+			Vector3.new(b[4], b[5], b[6]),
+			Vector3.new(b[7], b[8], b[9])
+		)
+		local bone = Instance.new("Bone")
+		bone.Name = `{key}_{index - 1}`
+		bone.CFrame = rest:Inverse() * frame
+		bone.Parent = parent
+		parent, rest = bone, frame
+	end
+	fishTemplates[key] = part
+	return part
+end
+
+-- Moves a swimmer to `clock`: head first along its path (it tilts as the path climbs or falls), its tail sweeping side
+-- to side, a wave running from the head back, the head barely turning.
+local function placeSwimmer(handle, entry, clock)
+	local at = orbitPoint(entry, clock)
+	local ahead = orbitPoint(entry, clock + 0.05)
+	local turn = CFrame.lookAt(at, ahead)
+	if entry.joint and not entry.part.Anchored then
+		entry.joint.C0 = turn
+	else
+		entry.part.CFrame = handle.carrier.CFrame * turn
+	end
+	local swim = entry.swimmer.swim or {}
+	local beat = (clock / (swim.period or Builder.SwimPeriod) + entry.beat) * 2 * math.pi
+	local reach = math.rad(swim.degrees or Builder.SwimDegrees)
+	local count = #entry.bones
+	for k, bone in entry.bones do
+		local share = if k == 1 then 0.2 else (k - 1) / (count - 1)
+		bone.Transform = CFrame.fromAxisAngle(entry.axes[k], reach * share * math.sin(beat - (k - 1) * Builder.SwimLag))
+	end
+end
+
+-- Puts a swimmer's fish on its host once its mesh has loaded (run apart: loading yields), its length in studs at the
+-- host's scale.
+local function wearFish(handle, entry)
+	local key = entry.swimmer.model
+	local ok, template = pcall(fishTemplate, key)
+	if not ok then
+		warn(`VfxLib: {handle.id} could not load its fish {key} ({template})`)
+		return
+	end
+	if handle.dead then
+		return
+	end
+	local fish = Models.fish[key]
+	local scale = entry.swimmer.length * entry.scale / fish.size[3]
+	local part = template:Clone()
+	part.Size *= scale
+	entry.bones, entry.axes = {}, {}
+	local parent: Instance = part
+	for index, b in fish.bones do
+		local bone = parent:FindFirstChild(`{key}_{index - 1}`) :: Bone
+		bone.CFrame = bone.CFrame.Rotation + bone.CFrame.Position * scale
+		-- (the sweep turns it about the fish's up, in the bone's own frame)
+		local frame = CFrame.fromMatrix(Vector3.zero, Vector3.new(b[4], b[5], b[6]), Vector3.new(b[7], b[8], b[9]))
+		entry.bones[index] = bone
+		entry.axes[index] = frame:VectorToObjectSpace(Vector3.yAxis)
+		parent = bone
+	end
+	if handle.carrier.Anchored then
+		part.Anchored = true
+	else
+		-- (a Weld, not a WeldConstraint: its C0 carries the fish round without moving the host)
+		local joint = Instance.new("Weld")
+		joint.Part0 = handle.carrier
+		joint.Part1 = part
+		joint.Parent = part
+		entry.joint = joint
+	end
+	part.Transparency = if entry.hidden then 1 else 0
+	entry.part = part
+	placeSwimmer(handle, entry, handle.serpentClock or 0)
+	part.Parent = handle.folder
+end
+
+-- A SWIMMER of an aura: one of the library's fish (Models.fish) going round the host on its orbit, head first.
+local function makeSwimmer(handle, swimmer)
+	local orbit = swimmer.orbit
+	local entry = {
+		swimmer = swimmer,
+		orbit = orbit,
+		scale = handle.scale,
+		y = -handle.size.Y / 2 + orbit.y * handle.scale,
+		radius = orbit.radius * handle.scale,
+		-- (each fish on a beat of its own, so a school never sweeps as one)
+		beat = (orbit.phase or 0) * 3.7,
+		hidden = false,
+	}
+	task.spawn(wearFish, handle, entry)
+	return entry
+end
+
 -- A SERPENT of an aura: one long picture (`texture`, head first, uncut) on a Trail whose two attachments fly the loop
 -- on the carrier: the Trail bends the picture smoothly along any curve, with no joint anywhere (the owner, on four
 -- beams end to end: "where they meet does not look good when it turns").
@@ -2013,6 +2148,7 @@ function Builder.attach(effect, host, opts)
 		flaps = {},
 		wings = {},
 		serpents = {},
+		swimmers = {},
 		wingTick = 0,
 		partsLeft = kindBudget.parts or 0,
 		items = {},
@@ -2056,6 +2192,15 @@ function Builder.attach(effect, host, opts)
 			break
 		end
 		table.insert(handle.serpents, makeSerpent(handle, serpent))
+	end
+
+	for index, swimmer in fields.swimmers or {} do
+		if index > (kindBudget.swimmers or 0) then
+			break
+		end
+		if Quality.secondary() or not swimmer.secondary then
+			table.insert(handle.swimmers, makeSwimmer(handle, swimmer))
+		end
 	end
 
 	local specs = {}
@@ -2246,6 +2391,19 @@ function Builder.update(handle, info)
 	if clock then
 		handle.serpentClock = clock
 	end
+	for _, entry in handle.swimmers do
+		local on = mode == "full" or mode == "half"
+		if entry.hidden ~= not on then
+			entry.hidden = not on
+			if entry.part then
+				entry.part.Transparency = if on then 0 else 1
+			end
+		end
+		-- (a fish swims on every frame, near or far, or it would stutter round the host)
+		if clock and on and entry.part then
+			placeSwimmer(handle, entry, clock)
+		end
+	end
 	if clock and (mode == "full" or mode == "half") then
 		-- (a serpent glides on: every frame, near or far, or its body would stutter round the host)
 		local eye = nil
@@ -2287,18 +2445,8 @@ function Builder.update(handle, info)
 	if clock then
 		if mode ~= "off" and mode ~= "ribbon" then
 			for _, entry in handle.orbits do
-				local orbit = entry.orbit
-				local angle = (clock / orbit.period + (orbit.phase or 0)) * 2 * math.pi
-				local radius, y = entry.radius, entry.y
-				-- (a wandering path: its height and its reach rise and fall on beats of their own)
-				if orbit.bob then
-					y += math.sin(clock / orbit.bob[2] * 2 * math.pi) * orbit.bob[1] * entry.scale
-				end
-				if orbit.sway then
-					radius += math.sin(clock / orbit.sway[2] * 2 * math.pi) * orbit.sway[1] * entry.scale
-				end
-				local at = Vector3.new(math.cos(angle) * radius, y, math.sin(angle) * radius)
-				if orbit.heading then
+				local at, angle = orbitPoint(entry, clock)
+				if entry.orbit.heading then
 					-- (Front, -Z, along the way it goes round)
 					entry.attachment.CFrame = CFrame.lookAt(at, at + Vector3.new(-math.sin(angle), 0, math.cos(angle)))
 				else
