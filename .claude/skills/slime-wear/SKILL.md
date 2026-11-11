@@ -153,6 +153,9 @@ orchestrator's (CLAUDE.md).
     painting does. Look at all five next to the painting: pieces on the skin, no gap, the detail at their foot showing,
     the place and size the painting gives. A piece that only moves keeps its mesh ids; change `at` and `anchor` alone.
     End by running `play_stage.luau` again so the owner's character stands in front of it, then send him the shots.
+    For the owner to review every Secret at once with its signature effect (2026-11-11): in Play run
+    `showcase_stage.luau` (Server: a grass stage over the map, his character at its front) and then `showcase.luau`
+    (Client: all 66, 11 to a row in the original order, a numbered name tag at each one's feet).
 11. **Finish:** a paragraph in `docs/STATUS.md` under today's section at the top (a new `## <date> — ...` section if
     there is none); commit only your own files: the kit folder's `.glb`, `.fbx`, `.png` and `wear.json`, `wear_kit.py`,
     `ConfigWear.luau`, `docs/STATUS.md`, this skill if it changed (`git add` new ones first, then `commit --only`); tell the
