@@ -1,5 +1,18 @@
 # Status
 
+## 2026-11-12 — a loading screen that hides the start's hitches
+
+The owner asked for a game loader (less lag when the game starts) and a loading screen that is not boring.
+`src/first/Loader.client.luau` (Rojo puts it in `ReplicatedFirst.Loading`; numbers in `src/first/LoadingConfig.luau`,
+since Config has not arrived when it starts) is the original's screen (`docs/reference/03-shell-ui-world.md` §3): the
+owner's meadow (`scene.loading.png`, uploaded), the navy slime bouncing (tap it: a big hop and a "Boing! xN" count), a
+gold bar and rotating tips. It waits for the game, the player's farm, the ground streamed around the character, the
+first screen's pictures (every `Config.Ui.Icons` id and the HUD) and 15 smooth frames, each step capped, with a Play
+button after 20 s; the log prints each step's seconds. `tools/build_publish.luau` and `tools/map/sync_all.ps1` carry it,
+and the build no longer asks for the old MonsterKit (the monsters are uploaded meshes now). Seen in Studio: about 20 s
+there, most of it the server building the plot (1-12 s in Studio, which runs both sides on one machine). Not seen: a
+phone, a real server.
+
 ## 2026-11-11 — the 28 monster slimes are in the Dungeon, rigged and moving
 
 The owner's four 3D files (one a region) are split into 28 monsters, rigged and given Idle, Move, Attack, Hit and Die in

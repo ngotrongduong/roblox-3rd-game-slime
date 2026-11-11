@@ -52,14 +52,15 @@ end
 
 replaceCode("ServerScriptService", {}, "Server")
 replaceCode("StarterPlayer", { "StarterPlayerScripts" }, "Client")
+replaceCode("ReplicatedFirst", {}, "Loading")
 local shared = place:GetService("ReplicatedStorage"):FindFirstChild("Shared")
 if shared then
 	shared:Destroy()
 end
 code:GetService("ReplicatedStorage").Shared:Clone().Parent = place:GetService("ReplicatedStorage")
--- The Arena scene (tools/map/build_arena_stage.luau, assets/ArenaStage.rbxm) and the Dungeon's monster models
--- (tools/kit/export_monsters.luau, assets/MonsterKit.rbxm) are carried by the Rojo build, so they come from the code build
--- like Shared, and an older copy left in the work place never goes along.
+-- The Arena scene (tools/map/build_arena_stage.luau, assets/ArenaStage.rbxm) is carried by the Rojo build, so it comes
+-- from the code build like Shared, and an older copy left in the work place never goes along. The old MonsterKit goes
+-- too: the monsters are uploaded meshes now (Config.Dungeon.Looks, client/ClipRig), not models in the place.
 for _, name in { "ArenaStage", "MonsterKit" } do
 	local old = place:GetService("ReplicatedStorage"):FindFirstChild(name)
 	if old then
@@ -149,9 +150,6 @@ if not place:GetService("ReplicatedStorage"):FindFirstChild("ClientKit") then
 	problem("no ReplicatedStorage.ClientKit")
 end
 -- The Arena scene (client/ArenaStage): without it a fight is replayed in front of the player.
-if not place:GetService("ReplicatedStorage"):FindFirstChild("MonsterKit") then
-	problem("no ReplicatedStorage.MonsterKit (run lune run tools/kit/export_monsters.luau, then tools/check.ps1)")
-end
 if not place:GetService("ReplicatedStorage"):FindFirstChild("ArenaStage") then
 	problem("no ReplicatedStorage.ArenaStage (run lune run tools/map/build_arena_stage.luau, then tools/check.ps1)")
 end
@@ -174,6 +172,7 @@ for _, service in place:GetChildren() do
 				not string.find(name, "^ServerScriptService%.Server%.")
 				and not string.find(name, "^StarterPlayer%.StarterPlayerScripts%.Client%.")
 				and not string.find(name, "^ReplicatedStorage%.Shared%.")
+				and not string.find(name, "^ReplicatedFirst%.Loading%.")
 			then
 				problem("a script from outside the repo: " .. name)
 			end

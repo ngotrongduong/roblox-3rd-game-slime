@@ -17,10 +17,11 @@ local targets = {
 	Shared = folder(ReplicatedStorage, "Shared"),
 	Server = folder(ServerScriptService, "Server"),
 	Client = folder(StarterPlayerScripts, "Client"),
+	Loading = folder(game:GetService("ReplicatedFirst"), "Loading"),
 }
 targets.Creatures = folder(targets.Shared, "Creatures")
 targets.MonsterClips = folder(targets.Shared, "MonsterClips")
-local counts = { Shared = 0, Server = 0, Client = 0, Creatures = 0, MonsterClips = 0, VfxLib = 0 }
+local counts = { Shared = 0, Server = 0, Client = 0, Creatures = 0, MonsterClips = 0, VfxLib = 0, Loading = 0 }
 local lib = Instance.new("ModuleScript")
 lib.Name = "VfxLib"
 for _, f in FILES do
@@ -147,10 +148,11 @@ end
 looks.Parent = kit
 
 return string.format(
-	"synced shared %d, vfxlib %d, server %d, client %d; ClientKit %s",
+	"synced shared %d, vfxlib %d, server %d, client %d, loading %d; ClientKit %s",
 	counts.Shared,
 	counts.VfxLib,
 	counts.Server,
 	counts.Client,
+	counts.Loading,
 	kitNote
 )

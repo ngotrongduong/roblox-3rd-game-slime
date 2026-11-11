@@ -15,7 +15,8 @@ $groups = @(
 	@{ Dir = "src\shared\Creatures"; Dest = "Creatures" },
 	@{ Dir = "src\shared\MonsterClips"; Dest = "MonsterClips" },
 	@{ Dir = "src\server"; Dest = "Server" },
-	@{ Dir = "src\client"; Dest = "Client" }
+	@{ Dir = "src\client"; Dest = "Client" },
+	@{ Dir = "src\first"; Dest = "Loading" }
 )
 foreach ($g in $groups) {
 	foreach ($f in Get-ChildItem (Join-Path $root $g.Dir) -Filter *.luau) {
