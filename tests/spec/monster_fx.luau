@@ -2,9 +2,23 @@
 -- they name is imported from the VFX library, every special's art belongs to a special the monster has, and every body
 -- effect rides a bone its rig has.
 local fs = require("@lune/fs")
+local luau = require("@lune/luau")
+local roblox = require("@lune/roblox")
+local Builder = require("../../src/shared/VfxLib/Builder")
 local Config = require("../../src/shared/Config")
 
 local D = Config.Dungeon
+
+-- (the library's Schema reads Roblox's Enum, which Lune keeps out of a module's globals: it is loaded with Enum given)
+local Schema = luau.load(fs.readFile("src/shared/VfxLib/Schema.luau"), {
+	debugName = "VfxLib/Schema",
+	environment = {
+		Enum = roblox.Enum,
+		require = function(path: string)
+			return require(`../../src/shared/VfxLib/{string.sub(path, 3)}`)
+		end,
+	},
+})()
 
 local function imported(id: string): boolean
 	local kind, name = string.match(id, "^(%a+)%.([%w_]+)$")
@@ -30,6 +44,39 @@ return function(T)
 		for id, look in D.Looks do
 			for _, fx in look.fx or {} do
 				T.ok(imported(fx.effect), `{id} body effect {fx.effect}`)
+			end
+		end
+	end)
+
+	-- (the library refuses an effect with one bad piece whole, in Play: a negative `lift` on Frostmaw's drift took every
+	-- monster's body effect away, 2026-11-12)
+	T.test("every monster effect passes the library's schema", function()
+		local ids: { [string]: boolean } = {}
+		for _, fx in D.Fx.Monsters do
+			for _, field in { "blow", "fall", "heal" } do
+				if fx[field] then
+					ids[fx[field]] = true
+				end
+			end
+			for _, art in fx.skills or {} do
+				for _, field in { "windup", "release" } do
+					if art[field] then
+						ids[art[field]] = true
+					end
+				end
+			end
+		end
+		for _, look in D.Looks do
+			for _, fx in look.fx or {} do
+				ids[fx.effect] = true
+			end
+		end
+		for id in ids do
+			local kind, name = string.match(id, "^(%a+)%.([%w_]+)$")
+			if kind and imported(id) then
+				local effect = require(`../../src/shared/VfxLib/Effects/{kind}/{name}`)
+				local problem = Schema.problem(effect, Builder.variantOf)
+				T.ok(problem == nil, `{id}: {problem}`)
 			end
 		end
 	end)
