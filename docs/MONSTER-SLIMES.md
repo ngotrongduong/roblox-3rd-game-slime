@@ -89,6 +89,6 @@ Wickling's and the Basaltback's). One contact sheet per region: `art/concepts/mo
 
 The owner, 2026-11-11, after seeing the sheets: the monsters alone, no effects, no surroundings, no text, one picture a
 region. `art/concepts/monster_slimes/<region>/group.png` is that: ChatGPT redrew each region's seven together from their
-pictures on plain white, without smoke, mist, snow, sparks, motes, trails, breath or floating pieces. A flame that is part
-of a body stays (the Wickling's wick, the Scorchdart's mane, the Pyrekeeper's brazier, the Calderos's mane), and the
-Pyrekeeper's floating shards became a ring set into its body.
+pictures on plain white, without smoke, mist, snow, sparks, motes, trails, breath or floating pieces. No flames either
+(the owner, the same day): the Wickling's wick is a molten point, the Scorchdart's and the Calderos's manes are molten
+jelly, the Pyrekeeper's brazier holds molten lava, and its floating shards became a ring set into its body.
