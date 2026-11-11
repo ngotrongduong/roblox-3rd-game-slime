@@ -2972,7 +2972,9 @@ function Builder.play(effect, at, opts)
 		longest = 0,
 	}
 
-	local function emitterParent(piece)
+	-- (`shrink`: the budget's cut of the piece's pictures, which its `radius` takes too: at a boss's scale a spread kept
+	-- whole stood its pictures, cut to half, far behind the boss, up by the horizon; Goo Lineage, 2026-11-12)
+	local function emitterParent(piece, shrink)
 		if piece.ride then
 			-- (born on a rolling beam's middle and going with it: moved each step, see `live.riding`; its box, when it has
 			-- one, lies along the beam)
@@ -3009,7 +3011,7 @@ function Builder.play(effect, at, opts)
 		if piece.box or piece.radius then
 			local partSize
 			if piece.radius then
-				local across = piece.radius * 2 * scale
+				local across = piece.radius * 2 * scale * (shrink or 1)
 				partSize = Vector3.new(across, across, across)
 			else
 				partSize = Vector3.new(size.X * piece.box[1], size.Y * piece.box[2], size.Z * piece.box[3])
@@ -3250,7 +3252,7 @@ function Builder.play(effect, at, opts)
 	for _, spec in specs do
 		local piece = spec.piece
 		local emitter = makeEmitter(piece, spec, ctx)
-		local parent = emitterParent(piece)
+		local parent = emitterParent(piece, spec.shrink)
 		if piece.upright == "in" and parent:IsA("Attachment") then
 			-- (standing facing the play's middle from where it is, level: a portal turned to the target)
 			local position = parent.CFrame.Position

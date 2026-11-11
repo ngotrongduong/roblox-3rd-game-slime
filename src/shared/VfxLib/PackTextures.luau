@@ -1005,6 +1005,8 @@ return {
 	},
 	embers_fly = {
 		id = 1084996976,
+		black = true,
+		look = "one soft ember on black",
 		from = "a free Creator Store pack in the owner's inventory, rebuilt without scripts (inv_aura_red/aura/Torso/Embers1 Embers1)",
 	},
 	emote_angry = {
@@ -1356,7 +1358,8 @@ return {
 	},
 	flower_bloom_flip = {
 		id = 15855917528,
-		look = "a flower blooming and fading, 4 x 4",
+		-- (its last frames read as a brown cloud on a boss's burst: Goo Lineage, 2026-11-12)
+		look = "a flower blooming and fading, 4 x 4; the fading frames are loose tan curls, keep it under about 6 studs",
 		from = "a free Creator Store pack in the owner's inventory, never baked yet (inv_sanz_auras/inv_sanz_auras/Aura_BlindObsession/UpperTorso/Attachment7/ParticleEmitter)",
 	},
 	flower_burst_flip = {
@@ -1674,6 +1677,8 @@ return {
 	},
 	mote_glow = {
 		id = 9591714216,
+		black = true,
+		look = "a four-point star mote on black",
 		from = "a free Creator Store pack in the owner's inventory, rebuilt without scripts (inv_aura_hyper/Part/glowSmall glowSmall)",
 	},
 	motes_glow_flip = {
@@ -1732,6 +1737,8 @@ return {
 	},
 	nova_core = {
 		id = 1084962479,
+		black = true,
+		look = "a white disc in a soft glow, on black",
 		from = "a free Creator Store pack in the owner's inventory, rebuilt without scripts (inv_particle_pack/nova/Torso/Attachment/Core Core)",
 	},
 	nova_flare = {
@@ -2214,6 +2221,9 @@ return {
 	},
 	rune_ring_broken = {
 		id = 133073163609304,
+		-- (worn solid on the Grove's floor it lay as a big dark tile: Goo Lineage, 2026-11-12)
+		black = true,
+		look = "a broken ring of thin white strokes, black-backed",
 		from = "a free Creator Store pack in the owner's inventory, rebuilt without scripts (inv_sanz_auras/Aura_FlameCrown/HumanoidRootPart/Attachment12/Rune_Heal_In003 Rune_Heal_In003)",
 	},
 	rune_ring_ornate = {
@@ -2867,6 +2877,7 @@ return {
 	},
 	star_glow = {
 		id = 9591714714,
+		black = true,
 		look = "a soft four-point star glow on black",
 		from = "a free Creator Store pack in the owner's inventory, never baked yet (inv_aura_hyper/inv_aura_hyper/Part/Attachment/glow)",
 	},

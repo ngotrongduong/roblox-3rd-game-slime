@@ -66,7 +66,8 @@
 -- A PIECE (one ParticleEmitter; numbers in studs and seconds at refHeight; enum fields take the engine's names):
 --   name      unique in the effect           texture   a key of Textures (never an id)
 --   at        an anchor (Anchors)             box       { x, y, z }: born anywhere in this share of the host's box
---   radius    studs: born on/in a sphere of this radius (with shape = "Sphere")
+--   radius    studs: born on/in a sphere of this radius (with shape = "Sphere"); on a one-shot the budget's cut of
+--             its pictures shrinks it too
 --   role      a palette role, or "keep" (the picture's own colours)          color  colours of its own (Palette)
 --   rate      particles a second (lasting)    count     particles at once (one-shot), at `delay` seconds
 --   bursts    { { t, n } }: several bursts     stream    { from, to, rate = { a, b }, burst = n }: a rate for a while
@@ -1141,7 +1142,13 @@ function Schema.problem(effect, variantOf)
 			end
 		end
 		for index, piece in fields.pieces do
-			local problem = Schema.pieceProblem(fields, piece, `{label} piece {index}`, oneShot)
+			-- (named too: a game reading the warning finds the piece without counting)
+			local problem = Schema.pieceProblem(
+				fields,
+				piece,
+				`{label} piece {index}{if type(piece.name) == "string" then " (" .. piece.name .. ")" else ""}`,
+				oneShot
+			)
 			if problem then
 				return problem
 			end

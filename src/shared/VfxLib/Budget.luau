@@ -164,12 +164,14 @@ function Budget.burstArea(spec)
 	return (spec.count or 0) * side * side
 end
 
+-- (`spec.shrink` keeps the whole cut: a one-shot's spread shrinks with its pictures, Builder's play)
 function Budget.scaleSize(spec, k)
 	local points = {}
 	for index, point in spec.size do
 		points[index] = { point[1], point[2] * k, (point[3] or 0) * k }
 	end
 	spec.size = points
+	spec.shrink = (spec.shrink or 1) * k
 end
 
 local function sum(specs, field)
