@@ -71,9 +71,10 @@ return function(T)
 				ids[fx.effect] = true
 			end
 		end
-		-- (the bosses' bursts, named by client/ZombieFight)
+		-- (the bosses' bursts and the regulars' pops, named by client/ZombieFight)
 		ids["skill.monster_mark"] = true
 		ids["skill.monster_impact"] = true
+		ids["hit.monster_pop"] = true
 		for id in ids do
 			local kind, name = string.match(id, "^(%a+)%.([%w_]+)$")
 			if kind and imported(id) then
@@ -148,6 +149,32 @@ return function(T)
 				T.ok(mark.variants[fx.element] ~= nil, `{id}: skill.monster_mark has {fx.element}`)
 				T.ok(impact.variants[fx.element] ~= nil, `{id}: skill.monster_impact has {fx.element}`)
 				T.ok(D.Fx.Burst.Glow[fx.element] ~= nil, `{id}: Fx.Burst.Glow has {fx.element}`)
+			end
+		end
+	end)
+
+	-- (Fx.Pop: a regular monster's attacking special has a shorter tell, and its element a pop)
+	T.test("every regular monster's attacking special pops", function()
+		local pop = require("../../src/shared/VfxLib/Effects/hit/monster_pop")
+		for _, map in D.Maps do
+			for _, monster in map.monsters do
+				if monster.role == "boss" or monster.role == "miniboss" then
+					continue
+				end
+				for _, key in monster.skills or {} do
+					local s = (Config.Combat.Skills :: any)[key]
+					if s.kind == "mend" or s.kind == "guard" then
+						continue
+					end
+					local fx = D.Fx.Monsters[monster.id]
+					local art = fx and fx.skills and fx.skills[key]
+					T.ok(s.windup ~= nil, `{monster.id}'s {key} has a windup time`)
+					T.ok(art == nil or art.windup == nil, `{monster.id}'s {key} pops, it has no wind-up art`)
+					T.ok(fx and fx.element ~= nil, `{monster.id} has an element`)
+					if fx and fx.element then
+						T.ok(pop.variants[fx.element] ~= nil, `hit.monster_pop has {fx.element}`)
+					end
+				end
 			end
 		end
 	end)

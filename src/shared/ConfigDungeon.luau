@@ -12,20 +12,21 @@ return {
 	-- The monsters' specials (docs/MONSTER-SLIMES.md, "Attacks"), copied by Config into Config.Combat.Skills, which says what
 	-- each `kind` does. A monster's `skills` list (Maps) takes them in turn; each comes every `every` blows of the FIRST in
 	-- the list (every mending, for a mend). Numbers are a first guess the owner tunes by playing. A boss's and a mini-boss's
-	-- specials carry `windup` (Config.Combat.Skills): they are called that early, so their charge plays whole.
+	-- specials carry `windup` (Config.Combat.Skills): they are called that early, so their charge plays whole; a regular
+	-- monster's attacking special a shorter one, for a readable tell before it pops (Fx.Pop).
 	Skills = {
 		-- the Meadow
-		burr_roll = { kind = "multi", name = "Burr Roll", every = 4, factor = 0.7, hits = 2 },
-		honey_lance = { kind = "single", name = "Honey Lance", every = 4, factor = 1.8 },
-		seed_volley = { kind = "multi", name = "Seed Volley", every = 4, factor = 0.5, hits = 3 },
+		burr_roll = { kind = "multi", name = "Burr Roll", every = 4, factor = 0.7, hits = 2, windup = 0.6 },
+		honey_lance = { kind = "single", name = "Honey Lance", every = 4, factor = 1.8, windup = 0.6 },
+		seed_volley = { kind = "multi", name = "Seed Volley", every = 4, factor = 0.5, hits = 3, windup = 0.6 },
 		bloom_mend = { kind = "mend", name = "Bloom Mend", every = 3, share = 0.6 },
 		bark_wall = { kind = "guard", name = "Bark Wall", every = 5, factor = 1, seconds = 3, defence = 1.3 },
 		root_snare = { kind = "single", name = "Root Snare", every = 5, factor = 1.6, stun = 1, windup = 1.2 },
 		bramble_burst = { kind = "all", name = "Bramble Burst", every = 4, factor = 0.6, stun = 0.4, windup = 1.2 },
 		horn_toss = { kind = "single", name = "Horn Toss", every = 4, factor = 2.6, windup = 1.2 },
 		-- the Mushroom Grove
-		mandible_frenzy = { kind = "multi", name = "Mandible Frenzy", every = 4, factor = 0.45, hits = 3 },
-		lure_flash = { kind = "single", name = "Lure Flash", every = 4, factor = 1.5, stun = 0.6 },
+		mandible_frenzy = { kind = "multi", name = "Mandible Frenzy", every = 4, factor = 0.45, hits = 3, windup = 0.6 },
+		lure_flash = { kind = "single", name = "Lure Flash", every = 4, factor = 1.5, stun = 0.6, windup = 0.6 },
 		acid_splash = {
 			kind = "splash",
 			name = "Acid Splash",
@@ -35,6 +36,7 @@ return {
 			spread = 2,
 			slow = 0.3,
 			slowSeconds = 2,
+			windup = 0.6,
 		},
 		hex_mend = { kind = "mend", name = "Hex Mend", every = 3, share = 0.6 },
 		rune_ward = { kind = "guard", name = "Rune Ward", every = 5, factor = 1, seconds = 3, defence = 1.3 },
@@ -50,9 +52,25 @@ return {
 		},
 		heart_pulse = { kind = "all", name = "Heart Pulse", every = 4, factor = 0.7, stun = 0.5, windup = 1.2 },
 		-- Ember Lava
-		flare_pop = { kind = "splash", name = "Flare Pop", every = 4, factor = 1, splash = 0.5, spread = 2 },
-		comet_dash = { kind = "multi", name = "Comet Dash", every = 4, factor = 0.9, hits = 2 },
-		fireball = { kind = "splash", name = "Fireball", every = 4, factor = 1.6, splash = 0.6, spread = 2 },
+		flare_pop = {
+			kind = "splash",
+			name = "Flare Pop",
+			every = 4,
+			factor = 1,
+			splash = 0.5,
+			spread = 2,
+			windup = 0.6,
+		},
+		comet_dash = { kind = "multi", name = "Comet Dash", every = 4, factor = 0.9, hits = 2, windup = 0.6 },
+		fireball = {
+			kind = "splash",
+			name = "Fireball",
+			every = 4,
+			factor = 1.6,
+			splash = 0.6,
+			spread = 2,
+			windup = 0.6,
+		},
 		pyre_mend = { kind = "mend", name = "Pyre Mend", every = 3, share = 0.6 },
 		basalt_wall = { kind = "guard", name = "Basalt Wall", every = 5, factor = 1, seconds = 3, defence = 1.3 },
 		molten_chomp = { kind = "multi", name = "Molten Chomp", every = 4, factor = 1.2, hits = 2, windup = 1.2 },
@@ -74,8 +92,9 @@ return {
 			factor = 1.4,
 			slow = 0.4,
 			slowSeconds = 1.5,
+			windup = 0.6,
 		},
-		saw_spin = { kind = "multi", name = "Saw Spin", every = 4, factor = 0.5, hits = 3 },
+		saw_spin = { kind = "multi", name = "Saw Spin", every = 4, factor = 0.5, hits = 3, windup = 0.6 },
 		crystal_burst = {
 			kind = "splash",
 			name = "Crystal Burst",
@@ -85,6 +104,7 @@ return {
 			spread = 2,
 			slow = 0.3,
 			slowSeconds = 2,
+			windup = 0.6,
 		},
 		frost_mend = { kind = "mend", name = "Frost Mend", every = 3, share = 0.6 },
 		ice_wall = { kind = "guard", name = "Ice Wall", every = 5, factor = 1, seconds = 3, defence = 1.3 },
@@ -2058,7 +2078,7 @@ return {
 		FallBox = 4,
 		-- a wind-up fades out this softly when its skill goes off
 		WindupFade = 0.15,
-		-- A boss's and a mini-boss's special (one with a `windup`) hits like a burst (the owner, 2026-11-12: drama like
+		-- A boss's and a mini-boss's special (one with a `windup` and wind-up art) hits like a burst (the owner, 2026-11-12: drama like
 		-- Genshin Impact's, still no camera): all through its wind-up a mark on the ground shows where it comes down
 		-- (skill.monster_mark, the monster's `element` as its variant; MarkWide times wider round the caster for a special
 		-- that comes down there) and its body glows its element's Glow colour, up to GlowMost (1 = none) as the wind-up
@@ -2074,11 +2094,25 @@ return {
 			HitFlash = 0.35,
 			FlashSeconds = 0.22,
 		},
+		-- A regular monster's attacking special (one with a `windup` but no wind-up art of its own) pops, a step below a
+		-- burst so the bosses still stand out: its body glows its element's Burst.Glow colour up to GlowMost through the
+		-- shorter wind-up and flashes as it lets go; its first blow on the one it aims at plays hit.monster_pop (the
+		-- element as its variant) over the blow and freezes that body HitStopSeconds with a white flash (HitFlash).
+		Pop = {
+			GlowMost = 0.65,
+			HitStopSeconds = 0.12,
+			HitFlash = 0.55,
+		},
 		Monsters = {
 			-- Meadow: leaves, wind, pollen, earth
-			green_sprout = { blow = "hit.green_sprout", fall = "hit.green_sprout" },
-			green_bee = { blow = "hit.green_bee", fall = "hit.green_bee" },
-			green_dandelion = { blow = "hit.green_dandelion", shot = true, fall = "hit.green_dandelion" },
+			green_sprout = { blow = "hit.green_sprout", fall = "hit.green_sprout", element = "meadow" },
+			green_bee = { blow = "hit.green_bee", fall = "hit.green_bee", element = "meadow" },
+			green_dandelion = {
+				blow = "hit.green_dandelion",
+				shot = true,
+				fall = "hit.green_dandelion",
+				element = "meadow",
+			},
 			green_moth = {
 				blow = "hit.green_moth",
 				heal = "burst.moth_mend",
@@ -2129,12 +2163,13 @@ return {
 				},
 			},
 			-- Mushroom: spores, toxic, violet arcane
-			dark_hare = { blow = "hit.dark_hare", fall = "hit.dark_hare" },
-			dark_bat = { blow = "hit.dark_bat", fall = "hit.dark_bat" },
+			dark_hare = { blow = "hit.dark_hare", fall = "hit.dark_hare", element = "grove" },
+			dark_bat = { blow = "hit.dark_bat", fall = "hit.dark_bat", element = "grove" },
 			dark_fox = {
 				blow = "hit.dark_fox",
 				shot = true,
 				fall = "hit.dark_fox",
+				element = "grove",
 				skills = {
 					acid_splash = { release = "skill.monster_special", at = "target", variant = "acid_splash" },
 				},
@@ -2197,15 +2232,17 @@ return {
 			lava_newt = {
 				blow = "hit.lava_newt",
 				fall = "hit.lava_newt",
+				element = "lava",
 				skills = {
 					flare_pop = { release = "skill.monster_special", at = "target", variant = "flare_pop" },
 				},
 			},
-			lava_wolf = { blow = "hit.lava_wolf", fall = "hit.lava_wolf" },
+			lava_wolf = { blow = "hit.lava_wolf", fall = "hit.lava_wolf", element = "lava" },
 			lava_phoenix = {
 				blow = "hit.lava_phoenix",
 				shot = true,
 				fall = "hit.lava_phoenix",
+				element = "lava",
 				skills = {
 					fireball = { release = "skill.monster_special", at = "target", variant = "fireball" },
 				},
@@ -2260,12 +2297,13 @@ return {
 				},
 			},
 			-- Ice: frost, snow, crystal shards
-			ice_fox = { blow = "hit.ice_fox", fall = "hit.ice_fox" },
-			ice_leopard = { blow = "hit.ice_leopard", fall = "hit.ice_leopard" },
+			ice_fox = { blow = "hit.ice_fox", fall = "hit.ice_fox", element = "ice" },
+			ice_leopard = { blow = "hit.ice_leopard", fall = "hit.ice_leopard", element = "ice" },
 			ice_wisp = {
 				blow = "hit.ice_wisp",
 				shot = true,
 				fall = "hit.ice_wisp",
+				element = "ice",
 				skills = {
 					crystal_burst = { release = "skill.monster_special", at = "target", variant = "crystal_burst" },
 				},

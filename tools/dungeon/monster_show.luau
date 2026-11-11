@@ -236,8 +236,48 @@ task.spawn(function()
 end)
 
 local VfxLib = require(ReplicatedStorage.Shared.VfxLib)
+local TweenService = game:GetService("TweenService")
 local TARGET = 8 -- studs in front of the monster where a special aimed at a target lands
 local frozen: { [ParticleEmitter]: number } = {}
+
+-- (`freezeAt` seconds from now every particle stops where it is, for a picture; the library's clock too: with only the
+-- particles stopped, a wind-up was cleaned up before the shot was taken)
+local function freezeLater(freezeAt: number?)
+	if not freezeAt then
+		return
+	end
+	task.delay(freezeAt, function()
+		VfxLib.freeze(true)
+		for _, d in workspace:GetDescendants() do
+			if d:IsA("ParticleEmitter") and d.TimeScale > 0 then
+				frozen[d] = d.TimeScale
+				d.TimeScale = 0
+			end
+		end
+	end)
+end
+
+-- A body glowing its element through a wind-up (client/ZombieFight's tint), and its flash as it lets go.
+local function glowOn(model: Instance, element: string, seconds: number, most: number): Highlight
+	local glow = Instance.new("Highlight")
+	glow.DepthMode = Enum.HighlightDepthMode.Occluded
+	glow.FillColor = Color3.fromHex(D.Fx.Burst.Glow[element])
+	glow.FillTransparency = 1
+	glow.OutlineTransparency = 1
+	glow.Parent = model
+	TweenService:Create(glow, TweenInfo.new(seconds, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+		FillTransparency = most,
+	}):Play()
+	return glow
+end
+
+local function flashOff(glow: Highlight)
+	local B = D.Fx.Burst
+	glow.FillColor = glow.FillColor:Lerp(Color3.new(1, 1, 1), 0.5)
+	glow.FillTransparency = B.FlashFill
+	TweenService:Create(glow, TweenInfo.new(B.FlashSeconds), { FillTransparency = 1 }):Play()
+	game:GetService("Debris"):AddItem(glow, B.FlashSeconds + 0.1)
+end
 
 _G.MonsterShow = {
 	focus = function(id: string?)
@@ -267,7 +307,7 @@ _G.MonsterShow = {
 				-- impact; D.Fx.Burst)
 				local element = D.Fx.Monsters[id].element
 				local skill = (Config.Combat.Skills :: any)[key]
-				local burst = if element and skill and skill.windup then element else nil
+				local burst = if element and skill and skill.windup and art.windup then element else nil
 				local B = D.Fx.Burst
 				local tall = (a.actor :: any).body.Size.Y
 				local wide = 5 * scale
@@ -279,32 +319,10 @@ _G.MonsterShow = {
 				if burst then
 					local box = Vector3.new(wide, if art.at == "target" then 5 else tall, wide)
 					mark = VfxLib.play("skill.monster_mark", landing, { variant = burst, scale = markScale, size = box })
-					glow = Instance.new("Highlight")
-					glow.DepthMode = Enum.HighlightDepthMode.Occluded
-					glow.FillColor = Color3.fromHex(B.Glow[burst])
-					glow.FillTransparency = 1
-					glow.OutlineTransparency = 1
-					glow.Parent = model
-					game:GetService("TweenService")
-						:Create(glow, TweenInfo.new(1.2, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
-							FillTransparency = B.GlowMost,
-						})
-						:Play()
+					glow = glowOn(model, burst, 1.2, B.GlowMost)
 				end
 				SlimeActor.act(a.actor, "Attack")
-				if freezeAt then
-					task.delay(freezeAt, function()
-						-- (the library's clock too: with only the particles stopped, a wind-up was cleaned up before
-						-- the shot was taken)
-						VfxLib.freeze(true)
-						for _, d in workspace:GetDescendants() do
-							if d:IsA("ParticleEmitter") and d.TimeScale > 0 then
-								frozen[d] = d.TimeScale
-								d.TimeScale = 0
-							end
-						end
-					end)
-				end
+				freezeLater(freezeAt)
 				task.delay(1.2, function()
 					if freezeAt and freezeAt < 1.2 then
 						return -- (a picture of the wind-up: no release)
@@ -316,12 +334,7 @@ _G.MonsterShow = {
 						VfxLib.cancel(mark, D.Fx.WindupFade)
 					end
 					if glow then
-						glow.FillColor = glow.FillColor:Lerp(Color3.new(1, 1, 1), 0.5)
-						glow.FillTransparency = B.FlashFill
-						game:GetService("TweenService")
-							:Create(glow, TweenInfo.new(B.FlashSeconds), { FillTransparency = 1 })
-							:Play()
-						game:GetService("Debris"):AddItem(glow, B.FlashSeconds + 0.1)
+						flashOff(glow)
 					end
 					if burst then
 						local box = Vector3.new(wide, if art.at == "target" then 5 else tall, wide)
@@ -342,6 +355,46 @@ _G.MonsterShow = {
 						opts.size = Vector3.new(wide, tall, wide)
 						VfxLib.play(art.release, body, opts)
 					end
+				end)
+				return id .. " " .. key
+			end
+		end
+		return id .. " is not shown"
+	end,
+	-- A regular monster's special as client/ZombieFight draws it (D.Fx.Pop): its body glowing through the wind-up, then
+	-- its blow, its release when it has one, and hit.monster_pop on a plain 5-stud target TARGET studs ahead.
+	pop = function(id: string, key: string, freezeAt: number?): string
+		local fx = D.Fx.Monsters[id]
+		local skill = (Config.Combat.Skills :: any)[key]
+		if not fx or not fx.element or not skill or not skill.windup then
+			return "no pop for " .. id .. " " .. key
+		end
+		for _, a in actors do
+			if a.id == id then
+				local sizes = D.StandIn.Sizes :: any
+				local scale = math.clamp((sizes[a.role] or sizes.normal) / sizes.normal * D.Fx.Scale, 1, D.Fx.MaxScale)
+				local mid = a.spot + Vector3.new(0, a.top * 0.45, TARGET / 2)
+				local back = math.max(a.top * 3, 26)
+				focusId = nil
+				specialView = CFrame.lookAt(mid + Vector3.new(back * 0.75, back * 0.45, back * 0.55), mid)
+				local glow = glowOn((a.actor :: any).model, fx.element, skill.windup, D.Fx.Pop.GlowMost)
+				SlimeActor.act(a.actor, "Attack")
+				freezeLater(freezeAt)
+				task.delay(skill.windup, function()
+					if freezeAt and freezeAt < skill.windup then
+						return -- (a picture of the wind-up)
+					end
+					flashOff(glow)
+					local wide = 5 * scale
+					local spot = a.spot + Vector3.zAxis * TARGET + Vector3.new(0, 2.5, 0)
+					local box = Vector3.new(wide, 5, wide)
+					VfxLib.play(fx.blow, spot - Vector3.zAxis * 2, { scale = scale, variant = D.Fx.SkillVariant })
+					local art = fx.skills and fx.skills[key]
+					if art and art.release then
+						local from = a.spot + Vector3.new(0, (a.actor :: any).body.Size.Y * 0.5, 0)
+						VfxLib.play(art.release, spot, { scale = scale, variant = art.variant, from = from, size = box })
+					end
+					VfxLib.play("hit.monster_pop", spot, { variant = fx.element, scale = scale, size = box })
 				end)
 				return id .. " " .. key
 			end

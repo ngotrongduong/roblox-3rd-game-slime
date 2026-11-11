@@ -227,7 +227,20 @@ a hold, then a slow fade, and the ground remembering the blow.
   embers; Ice: frozen ground, frost mist, glints).
 - **The hit lands heavier.** Every body it strikes (and the boss at its target) freezes `HitStopSeconds` 0.18 instead of
   a plain blow's 0.08 and flashes white (`HitFlash`).
-The regulars' specials keep their single beat: the bursts are what a boss fight is remembered by.
+
+**Pops** (the owner, 2026-11-12, "làm tiếp": the regulars too). The 12 regular monsters' attacking specials (the
+swarmer's, the raider's and the spitter's on each map; mends and walls stay as they are) get the same beats a step
+smaller, so the bursts are still what a boss fight is remembered by, and on a cheap tier, since a room of regulars
+lets one off about every second:
+- **A short tell.** `windup = 0.6`: the body glows its map's colour (`Fx.Pop.GlowMost` 0.65, softer than a boss's 0.6 over a shorter time; 0.75 was barely seen) and
+  flashes as it lets go. No ground warning and no wind-up art.
+- **The pop** (`hit.monster_pop`, one design per map, over the monster's own blow, on its first blow on the fighter it
+  aimed at): a hit pop for a few frames, a quick ring over the ground and the map's element sprayed out (Meadow: a gold
+  pop, a fringed ring, pink and white petals; Grove: a violet splat, a lime bubble ring, spores; Lava: an orange pop, a
+  ring bursting into flecks, embers; Ice: a deep blue splat, a cracked ring, crystal shards). Gone in under a second;
+  nothing stays on the ground.
+- **A firmer hit:** that body freezes `Fx.Pop.HitStopSeconds` 0.12 (a plain blow 0.08, a burst 0.18) and flashes white
+  (`HitFlash` 0.55, paler than a burst's).
 
 How they are placed (`client/ZombieFight`, found in the showroom 2026-11-12):
 - The wind-up is drawn at the release's scale (`fxScale`, up to `Fx.MaxScale` for a boss); at scale 1 a big monster's
