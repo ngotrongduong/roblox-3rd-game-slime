@@ -1821,17 +1821,11 @@ local Wear = {
 				},
 			},
 		},
-		-- Daisy Chick: the daisy headband and the daisy clip, art/models/accessories/daisy_chick, model 109973044006494
+		-- Daisy Chick: the daisy clip, art/models/accessories/daisy_chick, model 109973044006494 (its daisy headband, mesh
+		-- 100913825610570, taken off by the owner 2026-11-11)
 		DaisyChick = {
 			texture = "rbxassetid://120388439509732",
 			pieces = {
-				{
-					name = "Band",
-					mesh = 100913825610570,
-					size = { 0.7288, 0.3635, 0.4936 },
-					at = { 0, 0.8335, -0.2148 },
-					anchor = { -0.0008, 0.9354, -0.0766 },
-				},
 				{
 					name = "Clip",
 					mesh = 110692835612301,
@@ -1841,8 +1835,8 @@ local Wear = {
 				},
 			},
 		},
-		-- Moon Orchid: the moon tiara, the moon charm and the long lock of violet hair with an orchid down the back,
-		-- art/models/accessories/moon_orchid, model 100562823598542
+		-- Moon Orchid: the moon tiara and the moon charm, art/models/accessories/moon_orchid, model 100562823598542 (its
+		-- lock of violet hair down the back, mesh 117082005576063, taken off by the owner 2026-11-11)
 		MoonOrchid = {
 			texture = "rbxassetid://76789802695442",
 			pieces = {
@@ -1860,13 +1854,6 @@ local Wear = {
 					size = { 0.2246, 0.2718, 0.2415 },
 					at = { 0.3323, 0.7241, -0.16 },
 					anchor = { 0.3428, 0.7322, -0.0437 },
-				},
-				{
-					name = "Hair",
-					mesh = 117082005576063,
-					size = { 0.6094, 0.4828, 0.6579 },
-					at = { 0, 0.6153, 0.4988 },
-					anchor = { 0.0903, 0.739, 0.3255 },
 				},
 			},
 		},

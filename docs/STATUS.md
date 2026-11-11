@@ -189,7 +189,7 @@ crown and a lily charm, Lemon Gecko (`secret-green-yellow`) the lemon crown and 
 (`secret-white-yellow`) the daisy headband and clip, Moon Orchid (`secret-purple-white`) the moon tiara, a charm and a
 lock of violet hair with an orchid down the back, Sakura Bunny (`secret-pink-white`) a pink bow at the foot of its ear.
 The owner then set them in the ear editor (the charms moved down onto the belly, the tiara narrowed); his squashed
-charm sizes were made even again. Models 107571426691299, 110419457246053, 109973044006494, 100562823598542,
+charm sizes were made even again; then he took off Moon Orchid's hair and Daisy Chick's headband. Models 107571426691299, 110419457246053, 109973044006494, 100562823598542,
 89760937609092. Seen in Play.
 
 ## 2026-11-10 — Dungeon fight effects per monster, from the VFX library
