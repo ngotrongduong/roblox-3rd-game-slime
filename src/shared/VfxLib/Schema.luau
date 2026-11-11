@@ -588,6 +588,17 @@ function Schema.pieceProblem(_effect, piece, what, oneShot)
 	if piece.drift ~= nil and piece.drift ~= "fall" and piece.drift ~= "rise" and piece.drift ~= "hang" then
 		return `{what}: drift is fall, rise or hang`
 	end
+	if piece.orbit ~= nil then
+		for _, field in { "bob", "sway" } do
+			local beat = piece.orbit[field]
+			if beat ~= nil and (not isPair(beat) or beat[2] == nil or beat[2] <= 0) then
+				return `{what}: orbit {field} is \{ studs, period } with a period over 0 seconds`
+			end
+		end
+		if piece.orbit.heading ~= nil and piece.orbit.heading ~= true then
+			return `{what}: orbit heading is true or left out`
+		end
+	end
 	if piece.flap ~= nil then
 		if piece.pose == nil or oneShot then
 			return `{what}: flap swings a posed picture of a lasting effect (a wing): it needs a pose`
