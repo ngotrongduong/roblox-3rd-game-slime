@@ -86,3 +86,9 @@ Ice pictures and the see-through Meadow ones (Stinglob's wings, Sapcaller's puff
 `unmix_magenta.py` rule of skill `chatgpt-art`). Redrawn after review: Rotbloom (its first flower was a toothed mouth
 like the Gapebloom's), Bramblehorn (its face was the Barkhide's) and Calderos twice (a crater, then chimneys: the
 Wickling's and the Basaltback's). One contact sheet per region: `art/concepts/monster_slimes/<region>/sheet.png`.
+
+The owner, 2026-11-11, after seeing the sheets: the monsters alone, no effects, no surroundings, no text, one picture a
+region. `art/concepts/monster_slimes/<region>/group.png` is that: ChatGPT redrew each region's seven together from their
+pictures on plain white, without smoke, mist, snow, sparks, motes, trails, breath or floating pieces. A flame that is part
+of a body stays (the Wickling's wick, the Scorchdart's mane, the Pyrekeeper's brazier, the Calderos's mane), and the
+Pyrekeeper's floating shards became a ring set into its body.
