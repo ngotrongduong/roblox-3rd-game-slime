@@ -75,7 +75,10 @@
 --   shapeStyle Volume | Surface               shapeInOut Outward | Inward | InAndOut      shapePartial 0..1
 --   flipbook  { layout = Grid2x2 | Grid4x4 | Grid8x8, mode = Loop | OneShot | PingPong | Random, fps = { a, b }, random }
 --   locked    LockedToPart (lasting: true by default)     flat  true: lies on the ground (rings, sigils)
---   drift     fall | rise | hang (an acceleration sized to the host)       orbit  { radius, period, phase, y }
+--   drift     fall | rise | hang (an acceleration sized to the host)       orbit  { radius, period, phase, y, bob?, sway?, heading? }
+--             (bob = { studs, period }: up and down; sway = { studs, period }: in and out, so a companion's path wanders;
+--             heading = true: its attachment turns to where it goes, Front ahead: with direction Front and
+--             VelocityParallel, a locked fish swims head first)
 --   aim       degrees: the mark lies across the blow (`opts.angle`)       motion "run": its rate follows the run
 --   idle      the share it keeps standing still               secondary  true: not made on Low quality
 --   spin      (one-shot, with a box or radius) turns a second of its box about its up axis: particles LOCKED to it

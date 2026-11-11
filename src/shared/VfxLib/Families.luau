@@ -889,6 +889,7 @@ Families.List = {
 			"moth_flip",
 			"parchment",
 			"peppermint_candy",
+			"candy_rain_flip",
 			"pumpkin_flip",
 			"shield_icon",
 			"skull_bolt",

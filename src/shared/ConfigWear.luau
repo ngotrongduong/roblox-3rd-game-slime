@@ -1053,8 +1053,10 @@ local Wear = {
 					size = { 0.1291, 0.2906, 0.2241 },
 					-- (the owner: on the forehead under the top of the head, the tip leaning out forward; and a little
 					-- deeper in the body: 0.04 further in along the horn than the build seated it)
-					at = { -0.008, 0.8331, -0.3548 },
+					-- (stood upright about its foot, 2026-11-11: the owner saw it lean to one side)
+					at = { -0.0487, 0.8221, -0.3548 },
 					anchor = { 0, 0.723, -0.2689 },
+					turn = { 0, 0, 22 },
 				},
 				{
 					name = "Mane",
@@ -1679,9 +1681,11 @@ local Wear = {
 					name = "Lure",
 					mesh = 74881771902573,
 					size = { 0.3114, 0.3695, 0.2889 },
-					at = { 0, 0.9439, -0.2789 },
-					anchor = { 0.0972, 0.7688, -0.2774 },
-					turn = { 20.8905, 0, 0 },
+					-- (its arc turned to the front and its foot to the middle, 2026-11-11: the owner wants it centred
+					-- before the forehead)
+					at = { -0.0318, 0.9439, -0.3693 },
+					anchor = { 0, 0.7688, -0.2939 },
+					turn = { 48.1362, -61.3925, 44.4126 },
 					-- (the lure bobs as the slime hops)
 					lag = { axis = { 1, 0, 0 }, degrees = 14 },
 				},

@@ -448,7 +448,10 @@ local function parentFor(handle, piece)
 		local orbit = piece.orbit
 		local y = -size.Y / 2 + orbit.y * scale
 		local attachment = newAttachment(handle.carrier, "Orbit", Vector3.new(orbit.radius * scale, y, 0))
-		table.insert(handle.orbits, { attachment = attachment, orbit = orbit, y = y, radius = orbit.radius * scale })
+		table.insert(
+			handle.orbits,
+			{ attachment = attachment, orbit = orbit, y = y, radius = orbit.radius * scale, scale = scale }
+		)
 		return attachment
 	end
 	local at = piece.at or "body"
@@ -2286,8 +2289,21 @@ function Builder.update(handle, info)
 			for _, entry in handle.orbits do
 				local orbit = entry.orbit
 				local angle = (clock / orbit.period + (orbit.phase or 0)) * 2 * math.pi
-				entry.attachment.Position =
-					Vector3.new(math.cos(angle) * entry.radius, entry.y, math.sin(angle) * entry.radius)
+				local radius, y = entry.radius, entry.y
+				-- (a wandering path: its height and its reach rise and fall on beats of their own)
+				if orbit.bob then
+					y += math.sin(clock / orbit.bob[2] * 2 * math.pi) * orbit.bob[1] * entry.scale
+				end
+				if orbit.sway then
+					radius += math.sin(clock / orbit.sway[2] * 2 * math.pi) * orbit.sway[1] * entry.scale
+				end
+				local at = Vector3.new(math.cos(angle) * radius, y, math.sin(angle) * radius)
+				if orbit.heading then
+					-- (Front, -Z, along the way it goes round)
+					entry.attachment.CFrame = CFrame.lookAt(at, at + Vector3.new(-math.sin(angle), 0, math.cos(angle)))
+				else
+					entry.attachment.Position = at
+				end
 			end
 			for _, entry in handle.flaps do
 				-- (a soft beat: a sine, the far edge up and down about the spine's front-to-back line)

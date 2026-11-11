@@ -191,6 +191,25 @@ lock of violet hair with an orchid down the back, Sakura Bunny (`secret-pink-whi
 The owner then set them in the ear editor (the charms moved down onto the belly, the tiara narrowed); his squashed
 charm sizes were made even again; then he took off Moon Orchid's hair and Daisy Chick's headband. Models 107571426691299, 110419457246053, 109973044006494, 100562823598542,
 89760937609092. Seen in Play.
+2026-11-11, the owner reviewed all 66 Secrets on the showcase stage (`.claude/skills/slime-wear/showcase_stage.luau` +
+`showcase.luau`) and listed what to change in `aura.secret_signature`: every size x1.7 and rate x1.5 now (`GROW`,
+`MORE`), the effect `mid` (up to six pieces, 40 a second), and per Secret: a candy rain (new `candy_rain_flip`, ChatGPT,
+not red or white) on Peppermint; more petals (Moon Orchid, Rose Fairy); frosty steam and brighter snow (Arctic Wolf); a
+cloud bank at the feet (Cloud Sheep); two koi swimming round on opposite sides (Yin-Yang) and a school of five (Sunset
+Koi); pink and green bubbles (Watermelon Frog), more bubbles and hearts; three butterflies or moths always circling
+(Dream Butterfly, Twilight Moth); the bats turned upright (Gothic Bat); real licking fire and embers (Sun Phoenix, Fire
+Salamander, the Chimera's fire side, snow falling on its ice side); stars of three kinds (Star Owl, Galaxy Whale's ring);
+crackling sparks over the body (Thunder Ram, bigger bolts on Tempest Dragon); Christmas lights blinking in four colours
+(Holly Deer); rising bubbles (Lagoon Turtle, Void Kraken, Deep-Sea Leviathan, whose lure light now flashes); a grey cloud
+with a lightning strike (Storm Shark) or rain (Raincloud Ram); shadow smoke at the feet (Shadow Wolf); a little solar
+system (Universe Slime); drifting mist instead of the cartoon cloud (Sky Island Turtle). The runtime's orbits gained
+`bob`, `sway` (a wandering path) and `heading` (a fish swims head first). In ConfigWear the Amethyst Unicorn's horn
+stands upright and the Leviathan's lure arcs forward from the middle of its forehead. Then, at the owner's word ("we have
+an effect library: take from it what can be used"), the fire, lightning and shadow pieces are the library's own Level 1
+pet auras at a slime's size (`licks`, `embers`, `sparks` from `blazing_flames`; `bolts`, `zaps`, `charge` from
+`electric_bolts`; `shadow_wisps`' dark smoke and wisps; the owner's `frozen_snowfall` flakes on Arctic Wolf), on Sun
+Phoenix, Fire Salamander, the Chimera, Thunder Ram, Tempest Dragon and Shadow Wolf; the planets are twice the size. All
+seen in Play on the showcase stage (horn, lure and upright bats included).
 
 ## 2026-11-10 — Dungeon fight effects per monster, from the VFX library
 

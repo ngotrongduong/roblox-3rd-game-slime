@@ -20,14 +20,16 @@ return function(T)
 		T.eq(SecretFx.variant("white"), nil)
 	end)
 
-	T.test("each variant is one or two pieces, the cheap tier's rate", function()
+	-- (mid since 2026-11-11, the owner asking for more and companions: an aura's caps, 6 emitters and 40 a second)
+	T.test("each variant is one to six pieces, an aura's rate", function()
+		T.eq(effect.tier, "mid")
 		for name, variant in effect.variants do
-			T.ok(#variant.pieces >= 1 and #variant.pieces <= 2, name)
+			T.ok(#variant.pieces >= 1 and #variant.pieces <= 6, name)
 			local rate = 0
 			for _, piece in variant.pieces do
 				rate += piece.rate
 			end
-			T.ok(rate <= 20, `{name} gives {rate} a second`)
+			T.ok(rate <= 40, `{name} gives {rate} a second`)
 		end
 	end)
 

@@ -282,6 +282,8 @@ Textures.Images = {
 	lemon_slice = { id = 103054104053485, from = SKILL_ART }, -- a lemon slice
 	peach_blossom = { id = 110052652170210, from = SKILL_ART }, -- a pink peach blossom, yellow stamens
 	peppermint_candy = { id = 114832500049402, from = SKILL_ART }, -- a red-and-white peppermint swirl candy
+	-- (2026-11-11, the owner: candies raining on the Peppermint Slime, none red or white)
+	candy_rain_flip = { id = 87877814374887, from = SKILL_ART }, -- four candies: lemon, blue swirl, gumdrop, lollipop (2 x 2)
 
 	-- Rendered by EffectCraft from a recipe (2026-11-09, tools/effectcraft/recipes/<key>.json, flipbook.ps1 -Black):
 	-- white on black, tinted, 4 x 4

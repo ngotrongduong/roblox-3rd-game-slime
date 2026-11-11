@@ -28,17 +28,18 @@ local LIME = { 190, 240, 70 }
 local AQUA = { 70, 205, 230 }
 local CYAN = { 60, 230, 255 }
 local SKY = { 130, 200, 255 }
-local BLUE = { 70, 140, 255 }
 local CORAL = { 255, 160, 150 }
 local MAGENTA = { 230, 50, 160 }
 local COPPER = { 215, 120, 55 }
 local BROWN = { 140, 85, 45 }
 local TAN = { 205, 175, 125 }
-local SEED = { 35, 28, 28 }
 -- Every size below times this. The first round drew everything 1.8 times bigger so nothing was lost at the village's
 -- camera distance; the owner then asked for small and quiet, so the pieces are now near their real size and reach the
--- eye by their picture and motion, not by bulk.
-local GROW = 1.25
+-- eye by their picture and motion, not by bulk. Third round (2026-11-11), the owner looking at all 66 side by side:
+-- "fair, but a little bigger and a little more, so they are easier to see": every size and every rate (but a
+-- companion's, one picture always there) go up again.
+local GROW = 1.7
+local MORE = 1.5
 
 local function with(base, over)
 	local out = table.clone(base)
@@ -338,6 +339,272 @@ local function companion(over)
 	}, over)
 end
 
+-- A companion with beating wings (butterfly_flip, moth_flip) wandering round its path, facing the camera.
+local function flutter(path, size)
+	return companion({
+		flipbook = FLAP,
+		orbit = path,
+		size = { { 0, size }, { 1, size } },
+		lightEmission = 0.3,
+	})
+end
+
+-- A companion that swims or flies head first round its wandering path: its attachment turns to where it goes and the
+-- picture (drawn head UP) lies along its way.
+local function swimmer(path, size, light)
+	path.heading = true
+	return companion({
+		orbit = path,
+		direction = "Front",
+		speed = { 0.01, 0.01 },
+		spread = { 0, 0 },
+		orientation = "VelocityParallel",
+		size = { { 0, size }, { 1, size } },
+		lightEmission = light,
+	})
+end
+
+-- A grey cloud hanging over its head and riding it, built of soft smoke puffs.
+local function stormCloud(color)
+	return crown("cloud", "smoke_cloud_soft", color, {
+		lift = 1.3,
+		box = { 0.7, 0.08, 0.5 },
+		rate = 4,
+		life = { 2.4, 3 },
+		size = { { 0, 0.55 }, { 0.5, 0.8 }, { 1, 0.85 } },
+		transparency = { { 0, 1 }, { 0.3, 0.05 }, { 0.7, 0.1 }, { 1, 1 } },
+		rotation = { -180, 180 },
+		rotSpeed = { -8, 8 },
+		lightEmission = 0,
+	})
+end
+
+-- Now and then a bolt of lightning striking from that cloud down onto its head.
+local function strike(color)
+	return crown("strike", "bolts_comic", color, {
+		lift = 0.55,
+		box = { 0.25, 0, 0.2 },
+		flipbook = TWO,
+		rate = 0.35,
+		life = { 0.18, 0.24 },
+		size = { { 0, 1.1 }, { 1, 1.2 } },
+		transparency = { { 0, 0 }, { 0.6, 0 }, { 1, 1 } },
+		rotation = { 0, 0 },
+		rotSpeed = { 0, 0 },
+		orientation = "FacingCameraWorldUp",
+		lightEmission = 1,
+	})
+end
+
+-- A planet going round it (radius, seconds a turn, where it starts, height, size).
+local function planet(radius, period, phase, y, size)
+	return companion({
+		orbit = { radius = radius, period = period, phase = phase, y = y },
+		size = { { 0, size }, { 1, size } },
+		lightEmission = 0.15,
+	})
+end
+
+-- A drift of cloud going slowly round it, its puffs swelling and thinning behind it.
+local function mist(phase)
+	return {
+		orbit = { radius = 2.1, period = 9, phase = phase, y = 2, bob = { 0.25, 4.3 } },
+		rate = 3,
+		life = { 2.4, 3 },
+		size = { { 0, 0.45 }, { 0.5, 0.75 }, { 1, 0.85 } },
+		transparency = { { 0, 1 }, { 0.25, 0.2 }, { 0.7, 0.35 }, { 1, 1 } },
+		speed = { 0.05, 0.15 },
+		spread = { 180, 180 },
+		rotation = { -180, 180 },
+		rotSpeed = { -8, 8 },
+		lightEmission = 0.3,
+		locked = false,
+	}
+end
+
+-- A Christmas-tree light on the skin, blinking on and off twice before it goes out.
+local function fairyLight(name, color)
+	return pop(name, "glow_dot", color, {
+		radius = 1.65,
+		shapePartial = 0.7,
+		rate = 2.5,
+		life = { 2, 2.4 },
+		size = { { 0, 0.2 }, { 1, 0.2 } },
+		transparency = {
+			{ 0, 1 },
+			{ 0.05, 0 },
+			{ 0.3, 0 },
+			{ 0.35, 1 },
+			{ 0.5, 1 },
+			{ 0.55, 0 },
+			{ 0.8, 0 },
+			{ 0.85, 1 },
+			{ 1, 1 },
+		},
+		rotSpeed = { 0, 0 },
+		lightEmission = 1,
+	})
+end
+
+-- Pieces of the library's own Level 1 pet auras (effects/aura/blazing_flames, electric_bolts, shadow_wisps), worn at a
+-- slime's size: their studs and speeds are for a 5-stud pet, so three fifths of them (2026-11-11, the owner: "we have
+-- an effect library: take from it the effects that can be used").
+local LIB = 0.6
+local function libSize(keys)
+	local out = {}
+	for index, key in keys do
+		out[index] = { key[1], key[2] * LIB / GROW }
+	end
+	return out
+end
+
+-- blazing_flames' Licks: upright tongues of fire licking up round the body.
+local function licks(color, over)
+	return with({
+		name = "licks",
+		texture = "flame_tongue_flip",
+		color = color,
+		at = "waist",
+		box = { 0.9, 0.3, 0.9 },
+		shape = "Box",
+		orientation = "FacingCameraWorldUp",
+		direction = "Top",
+		speed = { 1 * LIB, 2.2 * LIB },
+		spread = { 10, 10 },
+		accel = { 0, 3 * LIB, 0 },
+		rate = 7,
+		life = { 0.55, 0.8 },
+		size = libSize({ { 0, 1.6 }, { 0.4, 2.4 }, { 1, 2 } }),
+		transparency = { { 0, 1 }, { 0.15, 0.1 }, { 0.7, 0.3 }, { 1, 1 } },
+		rotation = { -10, 10 },
+		flipbook = { layout = "Grid4x4", mode = "OneShot" },
+		lightEmission = 1,
+		brightness = 2.5,
+		locked = false,
+	}, over)
+end
+
+-- blazing_flames' Embers: glowing embers drifting up off the body.
+local function embers(color, over)
+	return with({
+		name = "embers",
+		texture = "embers_fly",
+		color = color,
+		at = "body",
+		box = { 1, 0.6, 1 },
+		shape = "Box",
+		direction = "Top",
+		speed = { 1 * LIB, 2.5 * LIB },
+		spread = { 25, 25 },
+		accel = { 0, 2.5 * LIB, 0 },
+		rate = 4,
+		life = { 0.8, 1.3 },
+		size = libSize({ { 0, 0 }, { 0.2, 0.4 }, { 1, 0 } }),
+		transparency = { { 0, 0 }, { 1, 0.3 } },
+		rotation = { -180, 180 },
+		lightEmission = 1,
+		brightness = 3,
+		locked = false,
+	}, over)
+end
+
+-- blazing_flames' Sparks: hot sparks shot up, stretched along their flight.
+local function sparks(color, over)
+	return with({
+		name = "sparks",
+		texture = "ember_streak",
+		color = color,
+		at = "waist",
+		box = { 0.8, 0.2, 0.8 },
+		shape = "Box",
+		direction = "Top",
+		speed = { 4 * LIB, 8 * LIB },
+		spread = { 30, 30 },
+		drag = 2.5,
+		rate = 3,
+		life = { 0.3, 0.6 },
+		size = libSize({ { 0, 0 }, { 0.15, 0.5 }, { 1, 0 } }),
+		transparency = { { 0, 0 }, { 1, 0 } },
+		squash = { { 0, -0.6 }, { 1, 0 } },
+		orientation = "VelocityParallel",
+		lightEmission = 1,
+		brightness = 4,
+		locked = false,
+	}, over)
+end
+
+-- electric_bolts' Bolts: short zigzag bolts snapping round the body.
+local function bolts(color, over)
+	return with({
+		name = "bolts",
+		texture = "bolt_flip_a",
+		color = color,
+		at = "body",
+		box = { 0.9, 0.8, 0.9 },
+		shape = "Box",
+		rate = 5,
+		life = { 0.15, 0.22 },
+		size = libSize({ { 0, 2.6 }, { 1, 3 } }),
+		transparency = { { 0, 0 }, { 0.6, 0 }, { 1, 1 } },
+		speed = { 0, 0 },
+		rotation = { -180, 180 },
+		flipbook = { layout = "Grid2x2", mode = "OneShot" },
+		lightEmission = 1,
+		brightness = 4,
+		zOffset = 0.5,
+		locked = true,
+	}, over)
+end
+
+-- electric_bolts' Sparks: white-hot sparks flying off the skin, stretched along their flight.
+local function zaps(color, over)
+	return with({
+		name = "zaps",
+		texture = "spark_dot",
+		color = color,
+		at = "body",
+		radius = 1.5,
+		shape = "Sphere",
+		shapeStyle = "Surface",
+		shapeInOut = "Outward",
+		shapePartial = 0.6,
+		direction = "Top",
+		speed = { 6 * LIB, 12 * LIB },
+		drag = 4,
+		rate = 6,
+		life = { 0.25, 0.45 },
+		size = libSize({ { 0, 0.35 }, { 1, 0.08 } }),
+		transparency = { { 0, 0 }, { 0.8, 0.2 }, { 1, 1 } },
+		squash = { { 0, -0.6 }, { 1, -0.6 } },
+		orientation = "VelocityParallel",
+		lightEmission = 1,
+		brightness = 3,
+		locked = false,
+	}, over)
+end
+
+-- electric_bolts' Charge: a faint glow of charge behind the body.
+local function charge(color)
+	return {
+		name = "charge",
+		texture = "glow_soft",
+		color = color,
+		at = "body",
+		rate = 1,
+		life = { 1, 1.4 },
+		size = libSize({ { 0, 4 }, { 1, 4.6 } }),
+		transparency = { { 0, 1 }, { 0.4, 0.75 }, { 1, 1 } },
+		speed = { 0, 0 },
+		rotation = { -180, 180 },
+		lightEmission = 1,
+		brightness = 3,
+		zOffset = -1,
+		locked = true,
+		secondary = true,
+	}
+end
+
+local FIRE = { { 255, 240, 170 }, { 255, 150, 40 }, { 225, 55, 20 } }
 local variants = {
 	-- white + white: snowflakes drifting down on it, puffs of snow kicked up as it hops
 	snow_rabbit = {
@@ -432,18 +699,24 @@ local variants = {
 			})),
 		},
 	},
-	-- peppermint candies floating up off it, turning; mint sparkles winking on its stripes
+	-- candies of every colour but its own red and white raining down on it, tumbling; mint sparkles winking on its
+	-- stripes (2026-11-11, the owner: "let candies fall like rain, not red and white")
 	peppermint_slime = {
 		pieces = {
-			skin("candies", "peppermint_candy", nil, {
+			fall("candies", "candy_rain_flip", nil, {
 				role = "keep",
-				rate = 1.2,
-				life = { 1.8, 2.2 },
-				speed = { 0.2, 0.4 },
-				accel = { 0, 0.5, 0 },
-				size = { { 0, 0 }, { 0.15, 0.24 }, { 0.85, 0.24 }, { 1, 0 } },
+				-- (each candy keeps the frame it starts on)
+				flipbook = LEAVES,
+				box = { 1.3, 0, 1.3 },
+				rate = 4,
+				life = { 1.3, 1.6 },
+				speed = { 0.5, 1 },
+				spread = { 10, 10 },
+				accel = { 0, -3, 0 },
+				drag = 0.3,
+				size = { { 0, 0 }, { 0.08, 0.26 }, { 0.9, 0.26 }, { 1, 0 } },
 				transparency = { { 0, 0 }, { 1, 0 } },
-				rotSpeed = { -90, 90 },
+				rotSpeed = { -120, 120 },
 				lightEmission = 0,
 			}),
 			second(pop("mint", "sparkStar", MINT, { rate = 2.5, lightEmission = 0.5 })),
@@ -452,9 +725,11 @@ local variants = {
 	-- lilac orchid petals falling slowly, violet moon twinkles round it
 	moon_orchid = {
 		pieces = {
+			-- (twice the petals since 2026-11-11: the owner found them too few)
 			fall("petals", "petals_small_flip", LILAC, {
 				flipbook = PETALS,
-				rate = 3,
+				rate = 6,
+				box = { 1.4, 0, 1.4 },
 				accel = { 0, -0.9, 0 },
 				size = { { 0, 0 }, { 0.12, 0.36 }, { 0.85, 0.32 }, { 1, 0 } },
 				rotSpeed = { -30, 30 },
@@ -469,91 +744,132 @@ local variants = {
 			),
 		},
 	},
-	-- snowflakes hanging in the cold air round it, an icy wind curling round its fur
+	-- bright snowflakes hanging in the cold air round it, frosty steam breathing up off it (2026-11-11: the owner found
+	-- the curling wind a poor white smoke and the flakes faint and few)
 	arctic_wolf = {
 		pieces = {
-			hang("frost", "snow_crystals_flip", ICY, {
+			hang("frost", "snow_crystals_flip", SNOW, {
 				flipbook = SNOWFLAKES,
-				rate = 3.5,
-				size = { { 0, 0 }, { 0.3, 0.2 }, { 0.7, 0.2 }, { 1, 0 } },
+				radius = 2.3,
+				rate = 6,
+				size = { { 0, 0 }, { 0.3, 0.26 }, { 0.7, 0.26 }, { 1, 0 } },
 				speed = { 0.1, 0.3 },
-				lightEmission = 0.4,
+				lightEmission = 0.7,
 			}),
-			second(orbit("wind", "gust_curl", { WHITE, ICY }, {
-				rate = 2,
-				life = { 1, 1.3 },
-				orbit = { radius = 1.75, period = 2.2, phase = 0, y = 1.2 },
-				size = { { 0, 0.36 }, { 1, 0.46 } },
-				transparency = { { 0, 1 }, { 0.25, 0.25 }, { 1, 1 } },
-				rotation = { -15, 15 },
-				lightEmission = 0.3,
+			-- (the library's frozen_snowfall: the owner's own small flakes falling round it, drawn on black so added)
+			fall("snowfall", "fx_snowflakes", SNOW, {
+				box = { 1.25, 0, 1.25 },
+				flipbook = { layout = "Grid2x2", mode = "Random" },
+				rate = 8,
+				life = { 1.8, 2.2 },
+				speed = { 1.9 * LIB, 2.6 * LIB },
+				spread = { 12, 12 },
+				accel = { 0, 0, 0 },
+				size = libSize({ { 0, 0.25 }, { 0.15, 0.36 }, { 1, 0.3 } }),
+				transparency = { { 0, 1 }, { 0.12, 0.05 }, { 0.8, 0.15 }, { 1, 1 } },
+				lightEmission = 1,
+			}),
+			second(rise("steam", "steam_puff", { { 240, 248, 255 }, { 205, 230, 255 } }, {
+				at = "feet",
+				-- (born on a ring round its feet: under it the body hides them)
+				radius = 1.85,
+				shape = "Cylinder",
+				shapeStyle = "Surface",
+				rate = 2.2,
+				life = { 2.2, 2.8 },
+				speed = { 0.3, 0.6 },
+				spread = { 20, 20 },
+				accel = { 0, 0.25, 0 },
+				drag = 0.6,
+				size = { { 0, 0.35 }, { 1, 1 } },
+				transparency = { { 0, 1 }, { 0.25, 0.45 }, { 0.6, 0.6 }, { 1, 1 } },
+				rotSpeed = { -20, 20 },
+				lightEmission = 0.15,
 			})),
 		},
 	},
-	-- its own little cloud floating over its head, wisps of wool drifting off it
+	-- standing on its own soft bank of cloud, puffs of it billowing round its body (2026-11-11: the owner found the
+	-- cartoon cloud over its head poor and asked for cotton, cloud or steam floating under and round it)
 	cloud_sheep = {
 		pieces = {
-			crown("cloud", "cloud_cartoon", WHITE, {
-				lift = 0.5,
-				box = { 0, 0, 0 },
-				rate = 0.5,
-				life = { 4, 4 },
-				size = { { 0, 0.48 }, { 1, 0.48 } },
-				transparency = { { 0, 1 }, { 0.25, 0.05 }, { 0.75, 0.05 }, { 1, 1 } },
-				rotation = { -8, 8 },
-				rotSpeed = { -4, 4 },
-				lightEmission = 0.35,
-				steady = true,
+			rise("bank", "smoke_cloud_soft", WHITE, {
+				at = "feet",
+				radius = 1.7,
+				shape = "Cylinder",
+				shapeStyle = "Surface",
+				rate = 3,
+				life = { 3, 4 },
+				speed = { 0.05, 0.2 },
+				spread = { 60, 60 },
+				accel = { 0, 0, 0 },
+				drag = 0.5,
+				size = { { 0, 0.5 }, { 0.5, 1 }, { 1, 1.1 } },
+				transparency = { { 0, 1 }, { 0.3, 0.15 }, { 0.7, 0.3 }, { 1, 1 } },
+				rotSpeed = { -10, 10 },
+				lightEmission = 0.25,
 			}),
-			second(hang("wool", "puff_solid", WHITE, { at = "crown", radius = 0.9, rate = 1.5, lightEmission = 0 })),
+			second(hang("puffs", "smoke_cloud_soft_b", WHITE, {
+				radius = 2.2,
+				rate = 1.5,
+				life = { 2.6, 3.4 },
+				speed = { 0.05, 0.2 },
+				size = { { 0, 0.3 }, { 0.5, 0.6 }, { 1, 0.7 } },
+				transparency = { { 0, 1 }, { 0.3, 0.3 }, { 0.7, 0.4 }, { 1, 1 } },
+				rotSpeed = { -10, 10 },
+				lightEmission = 0.25,
+			})),
 		},
 	},
-	-- a white koi and a black koi leaping out of it in arcs, head first
+	-- a white koi and a black koi swimming round it head first, always on opposite sides so they never touch, their
+	-- paths rising, falling, nearing and drawing off on beats of their own (2026-11-11, the owner)
 	yin_yang_koi = {
 		pieces = {
-			spray("light", "koi_top", WHITE, {
-				rate = 0.9,
-				life = { 0.9, 1.1 },
-				speed = { 3, 3.8 },
-				spread = { 30, 30 },
-				accel = { 0, -8, 0 },
-				size = { { 0, 0.32 }, { 1, 0.32 } },
-				transparency = { { 0, 0 }, { 0.85, 0 }, { 1, 1 } },
-				orientation = "VelocityParallel",
-				rotation = { 0, 0 },
-				rotSpeed = { 0, 0 },
-				lightEmission = 0.2,
-			}),
-			second(spray("dark", "koi_top", { 50, 48, 60 }, {
-				rate = 0.9,
-				life = { 0.9, 1.1 },
-				speed = { 3, 3.8 },
-				spread = { 30, 30 },
-				accel = { 0, -8, 0 },
-				size = { { 0, 0.32 }, { 1, 0.32 } },
-				transparency = { { 0, 0 }, { 0.85, 0 }, { 1, 1 } },
-				orientation = "VelocityParallel",
-				rotation = { 0, 0 },
-				rotSpeed = { 0, 0 },
-				lightEmission = 0,
-			})),
+			orbit(
+				"light",
+				"koi_top",
+				WHITE,
+				swimmer(
+					{ radius = 2, period = 5, phase = 0, y = 1.6, bob = { 0.35, 3.1 }, sway = { 0.3, 4.3 } },
+					0.5,
+					0.25
+				)
+			),
+			orbit(
+				"dark",
+				"koi_top",
+				{ 50, 48, 60 },
+				swimmer(
+					{ radius = 2, period = 5, phase = 0.5, y = 1.6, bob = { 0.35, 3.7 }, sway = { 0.3, 5.1 } },
+					0.5,
+					0
+				)
+			),
 		},
 	},
 	-- pink pollen floating round it, rose twinkles rising
 	rose_fairy = {
 		pieces = {
+			-- (rose petals falling, the pollen and twinkles bigger and more: 2026-11-11, the owner saw almost nothing)
+			fall("petals", "petals_small_flip", { PINK, { 235, 80, 130 } }, {
+				flipbook = PETALS,
+				box = { 1.4, 0, 1.4 },
+				rate = 5,
+				accel = { 0.5, -1.1, 0 },
+				size = { { 0, 0 }, { 0.12, 0.36 }, { 0.85, 0.32 }, { 1, 0 } },
+				rotSpeed = { -30, 30 },
+			}),
 			hang(
 				"pollen",
 				"dot_round",
 				PINK,
-				{ rate = 4, size = { { 0, 0 }, { 0.3, 0.12 }, { 0.7, 0.12 }, { 1, 0 } } }
+				{ rate = 5, size = { { 0, 0 }, { 0.3, 0.18 }, { 0.7, 0.18 }, { 1, 0 } }, lightEmission = 0.5 }
 			),
 			second(
 				skin(
 					"twinkle",
 					"sparkStar",
-					PINK,
-					{ rate = 2, size = { { 0, 0 }, { 0.3, 0.24 }, { 1, 0 } }, lightEmission = 0.4 }
+					{ 255, 190, 220 },
+					{ rate = 3.5, size = { { 0, 0 }, { 0.3, 0.32 }, { 1, 0 } }, lightEmission = 0.6 }
 				)
 			),
 		},
@@ -578,16 +894,40 @@ local variants = {
 			})),
 		},
 	},
-	-- seeds spat up out of its top, a little pink juice with them
+	-- watermelon-pink and rind-green bubbles rising round it from its feet to over its head (2026-11-11, the owner)
 	watermelon_frog = {
 		pieces = {
-			spray("seeds", "blob_solid", SEED, { rate = 1.5, size = { { 0, 0.1 }, { 1, 0.08 } }, lightEmission = 0 }),
-			second(spray("juice", "droplet_gloss", { 255, 90, 120 }, {
+			rise("pink", "bubble_gloss", { 255, 110, 140 }, {
+				at = "feet",
+				-- (born on a ring round its feet: under it the body hides them)
+				radius = 1.85,
+				shape = "Cylinder",
+				shapeStyle = "Surface",
 				rate = 2.5,
-				speed = { 2, 3.5 },
-				size = { { 0, 0.14 }, { 1, 0.1 } },
-				orientation = "VelocityParallel",
-				rotation = { 180, 180 },
+				life = { 2.2, 2.8 },
+				speed = { 0.8, 1.2 },
+				spread = { 10, 10 },
+				accel = { 0, 0.3, 0 },
+				size = { { 0, 0 }, { 0.15, 0.24 }, { 0.9, 0.26 }, { 1, 0 } },
+				transparency = { { 0, 0 }, { 0.8, 0.05 }, { 1, 1 } },
+				rotation = { 0, 0 },
+				rotSpeed = { 0, 0 },
+				lightEmission = 0.2,
+			}),
+			second(rise("green", "bubble_gloss", { 110, 215, 90 }, {
+				at = "feet",
+				-- (born on a ring round its feet: under it the body hides them)
+				radius = 1.85,
+				shape = "Cylinder",
+				shapeStyle = "Surface",
+				rate = 2.5,
+				life = { 2.2, 2.8 },
+				speed = { 0.8, 1.2 },
+				spread = { 10, 10 },
+				accel = { 0, 0.3, 0 },
+				size = { { 0, 0 }, { 0.15, 0.2 }, { 0.9, 0.22 }, { 1, 0 } },
+				transparency = { { 0, 0 }, { 0.8, 0.05 }, { 1, 1 } },
+				rotation = { 0, 0 },
 				rotSpeed = { 0, 0 },
 				lightEmission = 0.2,
 			})),
@@ -596,10 +936,11 @@ local variants = {
 	-- coral-pink bubbles rising from its gills, little peach ones between them
 	coral_axolotl = {
 		pieces = {
+			-- (more bubbles since 2026-11-11, the owner)
 			rise("bubbles", "bubble_gloss", CORAL, {
 				at = "head",
-				box = { 1, 0.2, 0.9 },
-				rate = 2,
+				box = { 1.4, 0.2, 1.2 },
+				rate = 4,
 				life = { 1.6, 2 },
 				speed = { 0.5, 0.9 },
 				size = { { 0, 0 }, { 0.2, 0.22 }, { 1, 0.18 } },
@@ -610,8 +951,8 @@ local variants = {
 			}),
 			second(rise("fizz", "bubble_gloss", { 255, 205, 160 }, {
 				at = "head",
-				box = { 1, 0.2, 0.9 },
-				rate = 2.5,
+				box = { 1.4, 0.2, 1.2 },
+				rate = 4,
 				size = { { 0, 0 }, { 0.2, 0.11 }, { 1, 0.09 } },
 				speed = { 0.9, 1.4 },
 				rotation = { 0, 0 },
@@ -622,10 +963,11 @@ local variants = {
 	-- chubby pink hearts floating up off it, swaying; a pink feather now and then
 	lovebird_slime = {
 		pieces = {
+			-- (more hearts since 2026-11-11, the owner)
 			rise("hearts", "heart_puffy", { PINK, { 235, 70, 100 } }, {
 				at = "chest",
-				box = { 1, 0.3, 1 },
-				rate = 2,
+				box = { 1.6, 0.3, 1.6 },
+				rate = 4.5,
 				life = { 1.6, 2 },
 				speed = { 0.5, 0.9 },
 				accel = { 0, 0.3, 0 },
@@ -642,36 +984,70 @@ local variants = {
 			})),
 		},
 	},
-	-- little pink-to-violet butterflies fluttering round it, dream dust drifting free
+	-- three pink-to-violet butterflies always fluttering round it on paths of their own, dream dust drifting free
+	-- (2026-11-11, the owner: "2 or 3 butterflies always flying round")
 	dream_butterfly = {
 		pieces = {
-			hang("butterflies", "butterfly_flip", { PINK, VIOLET }, {
-				flipbook = FLAP,
-				rate = 1.2,
-				life = { 2.6, 3.2 },
-				size = { { 0, 0 }, { 0.15, 0.36 }, { 0.85, 0.36 }, { 1, 0 } },
-				transparency = { { 0, 0 }, { 1, 0 } },
-				speed = { 0.4, 0.8 },
-				rotation = { -25, 25 },
-				rotSpeed = { -15, 15 },
-				lightEmission = 0.2,
-			}),
+			orbit(
+				"butterfly1",
+				"butterfly_flip",
+				PINK,
+				flutter({ radius = 2, period = 5, phase = 0, y = 2, bob = { 0.4, 1.7 }, sway = { 0.35, 3.3 } }, 0.36)
+			),
+			orbit(
+				"butterfly2",
+				"butterfly_flip",
+				VIOLET,
+				flutter(
+					{ radius = 2.3, period = 6.5, phase = 0.4, y = 1.3, bob = { 0.35, 2.1 }, sway = { 0.4, 2.9 } },
+					0.32
+				)
+			),
+			second(
+				orbit(
+					"butterfly3",
+					"butterfly_flip",
+					{ 235, 150, 255 },
+					flutter(
+						{ radius = 1.8, period = -7, phase = 0.7, y = 2.7, bob = { 0.3, 1.9 }, sway = { 0.3, 4.1 } },
+						0.28
+					)
+				)
+			),
 			second(hang("dust", "star4_drift", LILAC, { rate = 4, speed = { 0.3, 0.7 } })),
 		},
 	},
-	-- a pale moth circling it as round a lamp, a pink crescent glowing on its head
+	-- pale moths circling it as round a lamp, a pink crescent glowing on its head (three since 2026-11-11, the owner)
 	twilight_moth = {
 		pieces = {
 			orbit(
 				"moth",
 				"moth_flip",
 				{ 255, 215, 235 },
-				companion({
-					flipbook = FLAP,
-					orbit = { radius = 1.8, period = 4, phase = 0, y = 2.3 },
-					size = { { 0, 0.36 }, { 1, 0.36 } },
-					lightEmission = 0.3,
-				})
+				flutter(
+					{ radius = 1.8, period = 4, phase = 0, y = 2.3, bob = { 0.35, 1.6 }, sway = { 0.3, 2.7 } },
+					0.36
+				)
+			),
+			orbit(
+				"moth2",
+				"moth_flip",
+				{ 240, 200, 255 },
+				flutter(
+					{ radius = 2.2, period = 5.5, phase = 0.35, y = 1.6, bob = { 0.3, 2.2 }, sway = { 0.35, 3.4 } },
+					0.32
+				)
+			),
+			second(
+				orbit(
+					"moth3",
+					"moth_flip",
+					{ 255, 230, 210 },
+					flutter(
+						{ radius = 1.6, period = -6, phase = 0.7, y = 2.9, bob = { 0.25, 1.9 }, sway = { 0.3, 3.9 } },
+						0.28
+					)
+				)
 			),
 			second(crown("moon", "crescent_smile", PINK, {
 				lift = 0.3,
@@ -715,7 +1091,8 @@ local variants = {
 	-- little plum bats fluttering out of it, dark red roses drifting down
 	gothic_bat = {
 		pieces = {
-			-- (bats_flip is 2 x 2: wings open and folded, drawn head to the left, so turned a quarter to stand upright)
+			-- (bats_flip is 2 x 2: wings open and folded, drawn head to the left, so turned a quarter to stand upright:
+			-- -90; the first turn, +90, stood them on their heads, 2026-11-11)
 			rise("bats", "bats_flip", { 70, 30, 70 }, {
 				flipbook = flip("Grid2x2", "Loop", { 8, 12 }),
 				rate = 1.5,
@@ -724,7 +1101,7 @@ local variants = {
 				spread = { 70, 70 },
 				size = { { 0, 0.2 }, { 0.3, 0.4 }, { 1, 0.34 } },
 				transparency = { { 0, 0 }, { 0.8, 0 }, { 1, 1 } },
-				rotation = { 80, 100 },
+				rotation = { -100, -80 },
 				rotSpeed = { 0, 0 },
 				lightEmission = 0,
 			}),
@@ -790,19 +1167,30 @@ local variants = {
 	-- a flame crest on its crown, golden feathers drifting down
 	sun_phoenix = {
 		pieces = {
-			rise("crest", "flame_tip", { GOLD, ORANGE }, {
+			-- (real licking fire on its crest and real embers flying off it since 2026-11-11: the owner found the plain
+			-- flame tips not true to life)
+			rise("crest", "flame_beautiful_flip", nil, {
+				role = "keep",
+				flipbook = { layout = "Grid8x8", mode = "OneShot" },
 				at = "head",
-				box = { 0.35, 0, 0.2 },
-				rate = 8,
-				life = { 0.5, 0.7 },
-				speed = { 1, 1.6 },
-				spread = { 15, 15 },
-				size = { { 0, 0.38 }, { 1, 0 } },
+				box = { 0.5, 0, 0.3 },
+				rate = 7,
+				life = { 0.6, 0.8 },
+				speed = { 0.6, 1 },
+				spread = { 10, 10 },
+				accel = { 0, 1.5, 0 },
+				size = { { 0, 0.5 }, { 1, 0.7 } },
+				transparency = { { 0, 0 }, { 0.8, 0 }, { 1, 1 } },
 				rotation = { 0, 0 },
 				rotSpeed = { 0, 0 },
 				orientation = "FacingCameraWorldUp",
-				lightEmission = 0.5,
+				lightEmission = 0.4,
 			}),
+			-- (the library's blazing_flames embers and hot sparks since its second look: the owner still found the
+			-- sparks flying off it untrue)
+			licks({ { 255, 245, 190 }, { 255, 185, 50 }, { 240, 90, 20 } }, { rate = 5 }),
+			embers({ { 255, 230, 140 }, { 255, 140, 30 } }, { at = "head", box = { 0.8, 0.3, 0.6 }, rate = 5 }),
+			sparks({ { 255, 250, 210 }, { 255, 190, 60 } }, { at = "head", box = { 0.6, 0, 0.4 }, rate = 3 }),
 			second(
 				fall(
 					"feathers",
@@ -817,31 +1205,41 @@ local variants = {
 	fire_salamander = {
 		pieces = {
 			-- (full-colour curls of fire: their yellow hearts still read on its red skin)
+			-- (more fire since 2026-11-11, the owner: twice the curls, bigger, and licking flames on its crown)
 			skin("flames", "fire_curl_flip", nil, {
 				role = "keep",
 				flipbook = FOUR,
-				rate = 5,
+				rate = 10,
 				life = { 0.7, 0.9 },
 				speed = { 0.3, 0.5 },
 				accel = { 0, 2, 0 },
-				size = { { 0, 0.36 }, { 1, 0.44 } },
+				size = { { 0, 0.44 }, { 1, 0.54 } },
 				transparency = { { 0, 0 }, { 1, 0 } },
 				rotation = { 0, 0 },
 				rotSpeed = { 0, 0 },
 				orientation = "FacingCameraWorldUp",
 				lightEmission = 0.2,
 			}),
-			second(skin("sparks", "ember_streak", { YELLOW, ORANGE }, {
-				rate = 1.5,
-				life = { 0.4, 0.6 },
-				speed = { 1.5, 2.5 },
-				accel = { 0, -3, 0 },
-				size = { { 0, 0.2 }, { 1, 0.06 } },
-				orientation = "VelocityParallel",
+			rise("blaze", "flame_beautiful_flip", nil, {
+				role = "keep",
+				flipbook = { layout = "Grid8x8", mode = "OneShot" },
+				at = "head",
+				box = { 0.9, 0, 0.7 },
+				rate = 6,
+				life = { 0.6, 0.8 },
+				speed = { 0.6, 1 },
+				spread = { 10, 10 },
+				accel = { 0, 1.5, 0 },
+				size = { { 0, 0.45 }, { 1, 0.6 } },
+				transparency = { { 0, 0 }, { 0.8, 0 }, { 1, 1 } },
 				rotation = { 0, 0 },
 				rotSpeed = { 0, 0 },
-				lightEmission = 0.7,
-			})),
+				orientation = "FacingCameraWorldUp",
+				lightEmission = 0.4,
+			}),
+			-- (the library's blazing_flames: tongues of fire licking up all round it, and its hot sparks)
+			licks(FIRE, { rate = 6 }),
+			second(sparks({ { 255, 250, 210 }, { 255, 170, 40 } }, { rate = 2.5 })),
 		},
 	},
 	-- purple feathers turning to gold as they rise round it, a gold glint on its crest
@@ -869,13 +1267,31 @@ local variants = {
 	-- small yellow stars blinking on round it, a navy feather now and then
 	star_owl = {
 		pieces = {
+			-- (more stars of more sizes and shapes since 2026-11-11, the owner: fat stars, long twinkles, sharp glints)
 			pop("stars", "star_fat", YELLOW, {
-				radius = 1.8,
+				radius = 2.2,
 				shapeStyle = "Volume",
-				rate = 3,
-				size = { { 0, 0 }, { 0.35, 0.26 }, { 1, 0 } },
+				rate = 4,
+				size = { { 0, 0 }, { 0.35, 0.3 }, { 1, 0 } },
 				lightEmission = 0.5,
 			}),
+			hang("twinkles", "star_twinkle_long", { 255, 245, 190 }, {
+				radius = 2.4,
+				rate = 3,
+				life = { 1, 1.6 },
+				speed = { 0.05, 0.2 },
+				size = { { 0, 0 }, { 0.4, 0.5 }, { 1, 0 } },
+				rotation = { 0, 0 },
+				rotSpeed = { -20, 20 },
+				lightEmission = 0.8,
+			}),
+			second(pop("glints", "star_glint_sharp", { 200, 225, 255 }, {
+				radius = 2,
+				shapeStyle = "Volume",
+				rate = 3,
+				size = { { 0, 0 }, { 0.35, 0.18 }, { 1, 0 } },
+				lightEmission = 0.8,
+			})),
 			second(fall("feather", "feather", NAVY, {
 				rate = 0.8,
 				size = { { 0, 0 }, { 0.12, 0.3 }, { 0.85, 0.28 }, { 1, 0 } },
@@ -883,23 +1299,28 @@ local variants = {
 			})),
 		},
 	},
-	-- yellow lightning snapping round its horns, static sparkles crackling in its wool
+	-- yellow electric sparks flashing all over its body, static sparkles crackling in its wool
 	thunder_ram = {
 		pieces = {
-			pop("bolts", "bolts_comic", { 255, 250, 170 }, {
-				at = "head",
-				radius = 1.1,
-				flipbook = TWO,
-				rate = 3,
-				life = { 0.3, 0.4 },
-				size = { { 0, 0.5 }, { 1, 0.6 } },
-				lightEmission = 0.8,
+			-- (the library's electric_bolts in its own yellow since 2026-11-11: the owner found the comic bolts at its
+			-- horns poor and asked for electric sparks flashing all round its body)
+			-- (born just outside its skin, where the body cannot hide them; dimmer, so its yellow reads)
+			bolts({ { 255, 250, 200 }, { 255, 225, 70 }, { 255, 180, 20 } }, {
+				radius = 1.75,
+				shape = "Sphere",
+				shapeStyle = "Surface",
+				shapePartial = 0.75,
+				direction = "Top",
+				rate = 6,
+				brightness = 1.6,
 			}),
+			zaps({ { 255, 255, 235 }, { 255, 230, 120 } }),
 			second(pop("static", "sparkStar", { 255, 240, 150 }, {
 				rate = 3,
 				size = { { 0, 0 }, { 0.35, 0.24 }, { 1, 0 } },
 				lightEmission = 0.7,
 			})),
+			charge({ 255, 210, 60 }),
 		},
 	},
 	-- little honeybees buzzing round it, honey dripping off it
@@ -975,15 +1396,14 @@ local variants = {
 			})),
 		},
 	},
-	-- red holly berries round its antlers, holly leaves between them
+	-- Christmas-tree lights of four colours twinkling on and off all round its body, holly leaves round its antlers
+	-- (2026-11-11, the owner: "like the coloured blinking lights on a Christmas tree")
 	holly_deer = {
 		pieces = {
-			pop(
-				"berries",
-				"blob_solid",
-				RED,
-				{ at = "head", radius = 0.8, rate = 3, size = { { 0, 0 }, { 0.3, 0.2 }, { 1, 0 } } }
-			),
+			fairyLight("red", { 255, 60, 60 }),
+			fairyLight("green", { 90, 255, 110 }),
+			fairyLight("gold", { 255, 215, 70 }),
+			second(fairyLight("blue", { 80, 160, 255 })),
 			second(pop("holly", "leaves_solid", GREEN, {
 				at = "head",
 				radius = 1,
@@ -1014,20 +1434,38 @@ local variants = {
 			})),
 		},
 	},
-	-- lagoon water dripping off its shell, sunlight glinting on the water round it
+	-- lagoon water dripping off its shell, aqua bubbles rising round it, sunlight glinting on the water (more and bigger
+	-- since 2026-11-11, the owner)
 	lagoon_turtle = {
 		pieces = {
 			drip("water", "droplet_gloss", AQUA, {
-				box = { 1.1, 0.3, 1.1 },
-				rate = 2,
-				size = { { 0, 0 }, { 0.2, 0.2 }, { 1, 0.17 } },
+				box = { 1.4, 0.3, 1.4 },
+				rate = 4,
+				size = { { 0, 0 }, { 0.2, 0.26 }, { 1, 0.22 } },
 				lightEmission = 0.3,
 			}),
-			second(hang("glints", "sparkStar", { 200, 250, 255 }, {
-				radius = 2,
+			rise("bubbles", "bubble_gloss", AQUA, {
+				at = "feet",
+				-- (born on a ring round its feet: under it the body hides them)
+				radius = 1.85,
+				shape = "Cylinder",
+				shapeStyle = "Surface",
 				rate = 3,
+				life = { 2, 2.6 },
+				speed = { 0.8, 1.2 },
+				spread = { 10, 10 },
+				accel = { 0, 0.3, 0 },
+				size = { { 0, 0 }, { 0.15, 0.22 }, { 0.9, 0.26 }, { 1, 0 } },
+				transparency = { { 0, 0 }, { 0.8, 0.05 }, { 1, 1 } },
+				rotation = { 0, 0 },
+				rotSpeed = { 0, 0 },
+				lightEmission = 0.2,
+			}),
+			second(hang("glints", "sparkStar", { 200, 250, 255 }, {
+				radius = 2.2,
+				rate = 5,
 				life = { 0.8, 1.2 },
-				size = { { 0, 0 }, { 0.4, 0.22 }, { 1, 0 } },
+				size = { { 0, 0 }, { 0.4, 0.3 }, { 1, 0 } },
 				lightEmission = 0.8,
 			})),
 		},
@@ -1155,31 +1593,64 @@ local variants = {
 			})),
 		},
 	},
-	-- now and then a golden koi leaping out of it in the evening light, water drops flung off with it
+	-- a school of koi in sunset colours swimming round it together, head first, each a little above, below, in or out
+	-- of the next as they wander (2026-11-11, the owner: "a school of many-coloured koi swimming round its body")
 	sunset_koi = {
 		pieces = {
-			spray("koi", "koi_top", { { 255, 200, 90 }, { 255, 120, 70 } }, {
-				rate = 0.6,
-				life = { 1, 1.2 },
-				speed = { 3.2, 4 },
-				spread = { 25, 25 },
-				accel = { 0, -8, 0 },
-				size = { { 0, 0.34 }, { 1, 0.34 } },
-				transparency = { { 0, 0 }, { 0.85, 0 }, { 1, 1 } },
-				orientation = "VelocityParallel",
-				rotation = { 0, 0 },
-				rotSpeed = { 0, 0 },
-				lightEmission = 0.2,
-			}),
-			second(spray("drops", "droplet_gloss", SKY, {
-				rate = 2,
-				speed = { 2, 3 },
-				spread = { 35, 35 },
-				size = { { 0, 0.12 }, { 1, 0.09 } },
-				orientation = "VelocityParallel",
-				rotation = { 180, 180 },
-				rotSpeed = { 0, 0 },
-			})),
+			orbit(
+				"lead",
+				"koi_top",
+				{ 255, 150, 50 },
+				swimmer(
+					{ radius = 2.1, period = 6, phase = 0, y = 1.7, bob = { 0.3, 3.2 }, sway = { 0.25, 4.4 } },
+					0.42,
+					0.2
+				)
+			),
+			orbit(
+				"gold",
+				"koi_top",
+				{ 255, 210, 90 },
+				swimmer(
+					{ radius = 2.4, period = 6, phase = -0.07, y = 1.3, bob = { 0.3, 3.2 }, sway = { 0.25, 4.4 } },
+					0.36,
+					0.2
+				)
+			),
+			orbit(
+				"white",
+				"koi_top",
+				{ 255, 245, 235 },
+				swimmer(
+					{ radius = 1.8, period = 6, phase = -0.09, y = 2.1, bob = { 0.3, 3.2 }, sway = { 0.25, 4.4 } },
+					0.34,
+					0.2
+				)
+			),
+			second(
+				orbit(
+					"red",
+					"koi_top",
+					{ 235, 70, 50 },
+					swimmer(
+						{ radius = 2.2, period = 6, phase = -0.15, y = 1.8, bob = { 0.3, 3.2 }, sway = { 0.25, 4.4 } },
+						0.32,
+						0.1
+					)
+				)
+			),
+			second(
+				orbit(
+					"ink",
+					"koi_top",
+					{ 60, 55, 70 },
+					swimmer(
+						{ radius = 2.5, period = 6, phase = -0.18, y = 1.5, bob = { 0.3, 3.2 }, sway = { 0.25, 4.4 } },
+						0.3,
+						0
+					)
+				)
+			),
 		},
 	},
 	-- copper glints sliding over its shell, copper dust lifting off
@@ -1274,29 +1745,43 @@ local variants = {
 			})),
 		},
 	},
-	-- flames rising on its fiery side, snow crystals on its frozen side
+	-- its fiery side ablaze with real licking fire and embers, snow falling on its frozen side (2026-11-11, the owner:
+	-- "snow falling on one side, fire blazing on the other")
 	fire_ice_chimera = {
 		pieces = {
-			rise("fire", "flame_tip", { YELLOW, ORANGE, RED }, {
-				box = { 0.15, 0.5, 0.5 },
-				pose = { at = { 1.75, 0.3, 0 } },
+			rise("fire", "flame_beautiful_flip", nil, {
+				role = "keep",
+				flipbook = { layout = "Grid8x8", mode = "OneShot" },
+				box = { 0.15, 0.5, 0.7 },
+				pose = { at = { 1.6, 0.4, 0 } },
 				rate = 7,
-				life = { 0.5, 0.7 },
-				size = { { 0, 0.4 }, { 1, 0 } },
+				life = { 0.6, 0.8 },
+				speed = { 0.6, 1 },
+				spread = { 10, 10 },
+				accel = { 0, 1.5, 0 },
+				size = { { 0, 0.5 }, { 1, 0.65 } },
+				transparency = { { 0, 0 }, { 0.8, 0 }, { 1, 1 } },
 				rotation = { 0, 0 },
 				rotSpeed = { 0, 0 },
 				orientation = "FacingCameraWorldUp",
-				lightEmission = 0.5,
+				lightEmission = 0.4,
 			}),
-			rise("ice", "snow_crystals_flip", ICY, {
-				box = { 0.15, 0.5, 0.5 },
-				pose = { at = { -1.75, 0.3, 0 } },
-				rate = 5,
-				speed = { 0.2, 0.4 },
-				accel = { 0, -0.6, 0 },
-				size = { { 0, 0 }, { 0.2, 0.24 }, { 1, 0 } },
+			-- (the library's blazing_flames tongues and embers on that side only)
+			licks(FIRE, { box = { 0.2, 0.3, 0.7 }, pose = { at = { 1.3, 0, 0 } }, rate = 6 }),
+			second(embers({ { 255, 230, 140 }, { 255, 140, 30 } }, {
+				box = { 0.15, 0.5, 0.7 },
+				pose = { at = { 1.7, 0.6, 0 } },
+			})),
+			fall("snow", "snow_crystals_flip", SNOW, {
 				flipbook = SNOWFLAKES,
-				lightEmission = 0.3,
+				box = { 0.45, 0, 0.9 },
+				pose = { at = { -1.1, 0.2, 0 } },
+				rate = 7,
+				life = { 2, 2.6 },
+				spread = { 20, 20 },
+				accel = { 0, -1.2, 0 },
+				size = { { 0, 0 }, { 0.12, 0.26 }, { 0.85, 0.24 }, { 1, 0 } },
+				lightEmission = 0.6,
 			}),
 		},
 	},
@@ -1380,6 +1865,21 @@ local variants = {
 				size = { { 0, 0.36 }, { 1, 0.18 } },
 				lightEmission = 0.6,
 			}),
+			-- (stars circling it, leaving short trails, since 2026-11-11, the owner)
+			orbit("ring1", "star_fat", { 255, 240, 180 }, {
+				orbit = { radius = 2.1, period = 3.5, phase = 0, y = 2, bob = { 0.3, 2.6 } },
+				rate = 6,
+				life = { 0.7, 0.8 },
+				size = { { 0, 0.3 }, { 1, 0 } },
+				lightEmission = 0.7,
+			}),
+			second(orbit("ring2", "star_fat", { 200, 190, 255 }, {
+				orbit = { radius = 2.4, period = -4.5, phase = 0.5, y = 1.2, bob = { 0.3, 3.1 } },
+				rate = 6,
+				life = { 0.7, 0.8 },
+				size = { { 0, 0.26 }, { 1, 0 } },
+				lightEmission = 0.7,
+			})),
 			second(spray("spout", "droplet_gloss", SKY, {
 				rate = 4,
 				speed = { 4, 5.5 },
@@ -1426,6 +1926,24 @@ local variants = {
 				size = { { 0, 0 }, { 0.3, 0.2 }, { 0.7, 0.2 }, { 1, 0 } },
 				lightEmission = 0.3,
 			}),
+			-- (deep-sea bubbles rising round it since 2026-11-11, the owner)
+			rise("bubbles", "bubble_gloss", { 185, 140, 255 }, {
+				at = "feet",
+				-- (born on a ring round its feet: under it the body hides them)
+				radius = 1.85,
+				shape = "Cylinder",
+				shapeStyle = "Surface",
+				rate = 3,
+				life = { 2, 2.6 },
+				speed = { 0.8, 1.2 },
+				spread = { 10, 10 },
+				accel = { 0, 0.3, 0 },
+				size = { { 0, 0 }, { 0.15, 0.22 }, { 0.9, 0.26 }, { 1, 0 } },
+				transparency = { { 0, 0 }, { 0.8, 0.05 }, { 1, 1 } },
+				rotation = { 0, 0 },
+				rotSpeed = { 0, 0 },
+				lightEmission = 0.2,
+			}),
 			second(
 				skin(
 					"curls",
@@ -1445,10 +1963,28 @@ local variants = {
 				pose = { at = { 0, 0.35, -1.1 } },
 				rate = 0.5,
 				life = { 4, 4 },
-				size = { { 0, 0.2 }, { 0.5, 0.25 }, { 1, 0.2 } },
-				transparency = { { 0, 1 }, { 0.2, 0 }, { 0.8, 0 }, { 1, 1 } },
-				lightEmission = 0.8,
+				-- (a soft glow that flashes bright now and then, 2026-11-11, the owner)
+				size = { { 0, 0.2 }, { 0.45, 0.22 }, { 0.5, 0.55 }, { 0.6, 0.22 }, { 1, 0.2 } },
+				transparency = { { 0, 1 }, { 0.15, 0.1 }, { 0.5, 0 }, { 0.85, 0.1 }, { 1, 1 } },
+				lightEmission = 1,
 				steady = true,
+			}),
+			rise("bubbles", "bubble_gloss", { 150, 235, 255 }, {
+				at = "feet",
+				-- (born on a ring round its feet: under it the body hides them)
+				radius = 1.85,
+				shape = "Cylinder",
+				shapeStyle = "Surface",
+				rate = 3,
+				life = { 2, 2.6 },
+				speed = { 0.8, 1.2 },
+				spread = { 10, 10 },
+				accel = { 0, 0.3, 0 },
+				size = { { 0, 0 }, { 0.15, 0.22 }, { 0.9, 0.26 }, { 1, 0 } },
+				transparency = { { 0, 0 }, { 0.8, 0.05 }, { 1, 1 } },
+				rotation = { 0, 0 },
+				rotSpeed = { 0, 0 },
+				lightEmission = 0.2,
 			}),
 			second(
 				hang(
@@ -1460,24 +1996,12 @@ local variants = {
 			),
 		},
 	},
-	-- storm rain lashing slantwise round it in the wind, sea spray bursting at its base
+	-- a grey storm cloud over its head, now and then a bolt of lightning striking down onto it, sea spray at its base
+	-- (2026-11-11, the owner)
 	storm_shark = {
 		pieces = {
-			fall("rain", "rain_streak", nil, {
-				role = "keep",
-				box = { 2.2, 0, 2.2 },
-				rate = 10,
-				life = { 0.55, 0.7 },
-				size = { { 0, 0.36 }, { 1, 0.36 } },
-				transparency = { { 0, 0.1 }, { 1, 0.4 } },
-				speed = { 6, 7 },
-				spread = { 0, 0 },
-				accel = { 2, 0, 0 },
-				drag = 0,
-				rotation = { -14, -10 },
-				rotSpeed = { 0, 0 },
-				orientation = "FacingCameraWorldUp",
-			}),
+			stormCloud({ 105, 110, 125 }),
+			strike({ 225, 240, 255 }),
 			second(kick("spray", "water_curls_flip", { WHITE, SKY }, {
 				idle = 0.35,
 				rate = 6,
@@ -1526,46 +2050,64 @@ local variants = {
 			second(kick("dust", "smoke_puff_flip", TAN, { flipbook = FOUR, idle = 0.2, rate = 5 })),
 		},
 	},
-	-- shadow smoke streaming off its back as it runs, dark wisps lifting off it
+	-- black-grey shadow smoke pooling round its feet, veiling its lower body but seen through, dark wisps lifting off
+	-- it (2026-11-11, the owner)
 	shadow_wolf = {
 		pieces = {
-			kick("shadow", "smoke_puff_flip", { 35, 30, 45 }, {
-				at = "back",
-				box = { 0.6, 0.6, 0 },
-				idle = 0.3,
-				rate = 5,
-				life = { 0.6, 0.9 },
-				speed = { 0.2, 0.5 },
-				flipbook = FOUR,
-				transparency = { { 0, 0.4 }, { 1, 1 } },
-			}),
-			second(skin("wisps", "dark_wisp_b", DARK, {
-				rate = 2,
-				size = { { 0, 0.4 }, { 1, 0.9 } },
-				transparency = { { 0, 1 }, { 0.3, 0.5 }, { 1, 1 } },
+			-- (the library's shadow_wisps smoke since its second look)
+			rise("shadow", "smoke_dark", { { 90, 86, 100 }, { 45, 42, 55 } }, {
+				at = "feet",
+				-- (born on a ring round its feet: under it the body hides them)
+				radius = 1.85,
+				shape = "Cylinder",
+				shapeStyle = "Surface",
+				rate = 4,
+				life = { 2.4, 3 },
+				speed = { 0.1, 0.3 },
+				spread = { 60, 60 },
+				accel = { 0, 0, 0 },
+				drag = 0.6,
+				size = { { 0, 0.5 }, { 0.5, 0.95 }, { 1, 1.05 } },
+				transparency = { { 0, 1 }, { 0.3, 0.4 }, { 0.7, 0.5 }, { 1, 1 } },
+				rotSpeed = { -12, 12 },
 				lightEmission = 0,
+			}),
+			-- (shadow_wisps' own jagged wisps licking up round it like black flames)
+			second(rise("wisps", "dark_wisp_a", { { 70, 60, 90 }, DARK }, {
+				box = { 0.9, 0.6, 0.9 },
+				shape = "Box",
+				speed = { 2 * LIB, 4 * LIB },
+				spread = { 20, 20 },
+				accel = { 0, 6 * LIB, 0 },
+				drag = 1,
+				rate = 4,
+				life = { 0.45, 0.65 },
+				size = libSize({ { 0, 2.8 }, { 0.4, 4 }, { 1, 0 } }),
+				transparency = { { 0, 1 }, { 0.25, 0.25 }, { 0.7, 0.35 }, { 1, 1 } },
+				rotation = { -30, 30 },
+				rotSpeed = { -100, 100 },
+				orientation = "VelocityParallel",
+				lightEmission = 0,
+				zOffset = -0.5,
 			})),
 		},
 	},
-	-- stars twinkling in the night round it, a tiny planet going round it
+	-- a little solar system: planets of their own colours and sizes going round it, the near ones faster, stars
+	-- twinkling in the night round them (2026-11-11, the owner: "a few planets turning round it, like the solar system")
 	universe_slime = {
 		pieces = {
+			-- (twice the size since their first look: as specks they read as nothing)
+			orbit("mercury", "ball_shaded", { 255, 150, 80 }, planet(1.9, 3.5, 0, 1.9, 0.4)),
+			orbit("earth", "ball_shaded", AQUA, planet(2.4, 5, 0.35, 1.7, 0.55)),
+			orbit("giant", "ball_shaded", { 255, 205, 120 }, planet(2.9, 7.5, 0.7, 1.5, 0.75)),
+			second(orbit("ice", "ball_shaded", { 175, 140, 255 }, planet(3.3, 10, 0.15, 1.35, 0.5))),
 			pop("stars", "star_twinkle", { 255, 245, 210 }, {
-				radius = 1.9,
+				radius = 2.4,
 				shapeStyle = "Volume",
 				rate = 4,
 				size = { { 0, 0 }, { 0.35, 0.28 }, { 1, 0 } },
 				lightEmission = 0.7,
 			}),
-			second(orbit(
-				"planet",
-				"ball_shaded",
-				AQUA,
-				companion({
-					orbit = { radius = 1.9, period = 4, phase = 0, y = 2.2 },
-					size = { { 0, 0.3 }, { 1, 0.3 } },
-				})
-			)),
 		},
 	},
 	-- little down feathers drifting off it, clouds puffing under its feet as it trots
@@ -1627,20 +2169,12 @@ local variants = {
 			})),
 		},
 	},
-	-- two small clouds floating round its island shell, its waterfall trickling off
+	-- two soft drifts of cloud floating round its island shell, leaving wisps of mist behind, its waterfall trickling
+	-- off (2026-11-11: the owner found the cartoon cloud poor and asked for cloud, smoke or steam)
 	sky_island_turtle = {
 		pieces = {
-			orbit("clouds", "cloud_cartoon", WHITE, {
-				rate = 0.5,
-				life = { 4.05, 4.05 },
-				orbit = { radius = 1.9, period = 8, phase = 0, y = 2.3 },
-				size = { { 0, 0.44 }, { 1, 0.44 } },
-				transparency = { { 0, 0 }, { 1, 0 } },
-				rotation = { -5, 5 },
-				locked = true,
-				steady = true,
-				lightEmission = 0.35,
-			}),
+			orbit("clouds", "smoke_cloud_soft", WHITE, mist(0)),
+			second(orbit("clouds2", "smoke_cloud_soft_b", WHITE, mist(0.5))),
 			second(drip("waterfall", "droplet_gloss", AQUA, {
 				at = "chest",
 				box = { 0.3, 0, 0.3 },
@@ -1743,18 +2277,27 @@ local variants = {
 			second(hang("stardust", "star4_drift", { SKY, NAVY }, { rate = 2.5 })),
 		},
 	},
-	-- blue raindrops falling on it, grey wool puffs round its storm-cloud horns
+	-- a grey rain cloud over its head, rain pouring from it onto the ram, grey wool puffs round its storm-cloud horns
+	-- (the cloud since 2026-11-11, the owner)
 	raincloud_ram = {
 		pieces = {
-			fall("rain", "droplet_gloss", BLUE, {
-				rate = 6,
-				life = { 0.9, 1.2 },
-				accel = { 0, -6, 0 },
+			stormCloud({ 140, 148, 160 }),
+			fall("rain", "rain_streak", nil, {
+				role = "keep",
+				at = "crown",
+				lift = 1.1,
+				box = { 0.65, 0, 0.45 },
+				rate = 14,
+				life = { 0.35, 0.45 },
+				size = { { 0, 0.3 }, { 1, 0.3 } },
+				transparency = { { 0, 0.1 }, { 1, 0.3 } },
+				speed = { 6, 7 },
+				spread = { 0, 0 },
+				accel = { 0, -4, 0 },
 				drag = 0,
 				rotation = { 0, 0 },
 				rotSpeed = { 0, 0 },
 				orientation = "FacingCameraWorldUp",
-				size = { { 0, 0 }, { 0.1, 0.17 }, { 1, 0.15 } },
 			}),
 			second(hang("wool", "puff_solid", GRAY, { at = "head", radius = 1.1, rate = 1.5, lightEmission = 0 })),
 		},
@@ -1771,14 +2314,23 @@ local variants = {
 				flipbook = FOUR,
 				lightEmission = 0,
 			}),
-			second(pop("bolts", "bolts_comic", CYAN, {
-				radius = 1.6,
+			-- (bigger bolts and more of them since 2026-11-11: the owner found them too small to read; the library's
+			-- electric_bolts, a third bigger than a pet's, its white sparks and its charge)
+			bolts({ { 235, 255, 255 }, { 110, 230, 255 }, { 30, 160, 255 } }, {
+				rate = 6,
+				size = libSize({ { 0, 3.4 }, { 1, 4 } }),
+			}),
+			pop("arcs", "bolts_comic", CYAN, {
+				radius = 1.8,
+				shapePartial = 0.75,
 				flipbook = TWO,
-				rate = 2.5,
+				rate = 3,
 				life = { 0.25, 0.35 },
-				size = { { 0, 0.5 }, { 1, 0.6 } },
-				lightEmission = 0.8,
-			})),
+				size = { { 0, 0.85 }, { 1, 1 } },
+				lightEmission = 1,
+			}),
+			zaps({ { 235, 255, 255 }, { 120, 230, 255 } }, { rate = 5 }),
+			charge({ 60, 180, 255 }),
 		},
 	},
 }
@@ -1790,6 +2342,9 @@ for _, variant in variants do
 			grown[index] = { key[1], key[2] * GROW, if key[3] then key[3] * GROW else nil }
 		end
 		piece.size = grown
+		if not piece.steady then
+			piece.rate *= MORE
+		end
 	end
 end
 
@@ -1797,7 +2352,8 @@ return {
 	id = "aura.secret_signature",
 	name = "Secret Signatures",
 	kind = "aura",
-	tier = "cheap",
+	-- (mid since 2026-11-11: some Secrets wear a few companions, planets, lights or fish each one emitter)
+	tier = "mid",
 	host = "slime",
 	refHeight = 3,
 	tags = { "slime", "secret", "signature", "per_creature", "no_ground_disc", "no_rings", "no_rarity_glow" },
