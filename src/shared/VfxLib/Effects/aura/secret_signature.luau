@@ -356,7 +356,7 @@ end
 
 -- A place in a school going round together: its reach, how far behind the lead, its height; one beat of wandering.
 local function school(radius, phase, y)
-	return { radius = radius, period = 6, phase = phase, y = y, bob = { 0.3, 3.2 }, sway = { 0.25, 4.4 } }
+	return { radius = radius, period = 8.5, phase = phase, y = y, bob = { 0.3, 3.2 }, sway = { 0.25, 4.4 } }
 end
 
 -- A grey cloud hanging over its head and riding it, built of soft smoke puffs.
@@ -823,7 +823,7 @@ local variants = {
 		swimmers = {
 			fish("light", "frost_white", 1.3, {
 				radius = 2.5,
-				period = 5,
+				period = 7,
 				phase = 0,
 				y = 1.8,
 				bob = { 0.35, 3.1 },
@@ -831,7 +831,7 @@ local variants = {
 			}),
 			fish("dark", "silver_ink", 1.3, {
 				radius = 2.5,
-				period = 5,
+				period = 7,
 				phase = 0.5,
 				y = 1.8,
 				bob = { 0.35, 3.7 },

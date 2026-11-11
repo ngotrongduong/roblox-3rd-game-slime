@@ -37,7 +37,7 @@ Builder.HangDrag = 4
 Builder.timeScale = 1 -- 0 freezes every particle of the library (the showroom's shots)
 Builder.LegSwing = 18 -- degrees a 3D serpent's legs paddle each way as it flies
 Builder.SwimDegrees = 16 -- degrees a swimming fish's tail bones each sweep, side to side (they add up toward the tip)
-Builder.SwimPeriod = 0.9 -- seconds of one sweep
+Builder.SwimPeriod = 1.2 -- seconds of one sweep (slowed at the owner's word, 2026-11-11)
 Builder.SwimLag = 0.7 -- radians the sweep runs late in each bone toward the tail
 Builder.LegPeriod = 1.6 -- seconds of one paddle
 
