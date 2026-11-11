@@ -9,12 +9,104 @@ return {
 	-- health and stings it slow; healer mends its wounded team-mates; bloomshell and bramblehorn are the two bosses with a
 	-- skill of their own). `drops` (docs/SMITHY.md §2): a list of lines { item, chance, min, max }, each rolled on its own
 	-- when the monster falls (see "Loot" below); an item is a key of Materials.
+	-- The monsters' specials (docs/MONSTER-SLIMES.md, "Attacks"), copied by Config into Config.Combat.Skills, which says what
+	-- each `kind` does. A monster's `skills` list (Maps) takes them in turn; each comes every `every` blows of the FIRST in
+	-- the list (every mending, for a mend). Numbers are a first guess the owner tunes by playing.
+	Skills = {
+		-- the Meadow
+		burr_roll = { kind = "multi", name = "Burr Roll", every = 4, factor = 0.7, hits = 2 },
+		honey_lance = { kind = "single", name = "Honey Lance", every = 4, factor = 1.8 },
+		seed_volley = { kind = "multi", name = "Seed Volley", every = 4, factor = 0.5, hits = 3 },
+		bloom_mend = { kind = "mend", name = "Bloom Mend", every = 3, share = 0.6 },
+		bark_wall = { kind = "guard", name = "Bark Wall", every = 5, factor = 1, seconds = 3, defence = 1.3 },
+		root_snare = { kind = "single", name = "Root Snare", every = 5, factor = 1.6, stun = 1 },
+		bramble_burst = { kind = "all", name = "Bramble Burst", every = 4, factor = 0.6, stun = 0.4 },
+		horn_toss = { kind = "single", name = "Horn Toss", every = 4, factor = 2.6 },
+		-- the Mushroom Grove
+		mandible_frenzy = { kind = "multi", name = "Mandible Frenzy", every = 4, factor = 0.45, hits = 3 },
+		lure_flash = { kind = "single", name = "Lure Flash", every = 4, factor = 1.5, stun = 0.6 },
+		acid_splash = {
+			kind = "splash",
+			name = "Acid Splash",
+			every = 4,
+			factor = 1.2,
+			splash = 0.5,
+			spread = 2,
+			slow = 0.3,
+			slowSeconds = 2,
+		},
+		hex_mend = { kind = "mend", name = "Hex Mend", every = 3, share = 0.6 },
+		rune_ward = { kind = "guard", name = "Rune Ward", every = 5, factor = 1, seconds = 3, defence = 1.3 },
+		gorge_bite = { kind = "single", name = "Gorge Bite", every = 4, factor = 2 },
+		root_grasp = {
+			kind = "all",
+			name = "Root Grasp",
+			every = 4,
+			factor = 0.45,
+			slow = 0.5,
+			slowSeconds = 3,
+		},
+		heart_pulse = { kind = "all", name = "Heart Pulse", every = 4, factor = 0.7, stun = 0.5 },
+		-- Ember Lava
+		flare_pop = { kind = "splash", name = "Flare Pop", every = 4, factor = 1, splash = 0.5, spread = 2 },
+		comet_dash = { kind = "multi", name = "Comet Dash", every = 4, factor = 0.9, hits = 2 },
+		fireball = { kind = "splash", name = "Fireball", every = 4, factor = 1.6, splash = 0.6, spread = 2 },
+		pyre_mend = { kind = "mend", name = "Pyre Mend", every = 3, share = 0.6 },
+		basalt_wall = { kind = "guard", name = "Basalt Wall", every = 5, factor = 1, seconds = 3, defence = 1.3 },
+		molten_chomp = { kind = "multi", name = "Molten Chomp", every = 4, factor = 1.2, hits = 2 },
+		mane_lash = { kind = "splash", name = "Mane Lash", every = 5, factor = 2, splash = 0.7, spread = 3 },
+		meteor_rain = { kind = "multi", name = "Meteor Rain", every = 5, factor = 0.9, hits = 3 },
+		-- Frozen Ice
+		icicle_bite = {
+			kind = "single",
+			name = "Icicle Bite",
+			every = 4,
+			factor = 1.4,
+			slow = 0.4,
+			slowSeconds = 1.5,
+		},
+		saw_spin = { kind = "multi", name = "Saw Spin", every = 4, factor = 0.5, hits = 3 },
+		crystal_burst = {
+			kind = "splash",
+			name = "Crystal Burst",
+			every = 4,
+			factor = 1.3,
+			splash = 0.6,
+			spread = 2,
+			slow = 0.3,
+			slowSeconds = 2,
+		},
+		frost_mend = { kind = "mend", name = "Frost Mend", every = 3, share = 0.6 },
+		ice_wall = { kind = "guard", name = "Ice Wall", every = 5, factor = 1, seconds = 3, defence = 1.3 },
+		frost_breath = {
+			kind = "splash",
+			name = "Frost Breath",
+			every = 4,
+			factor = 1,
+			splash = 0.6,
+			spread = 3,
+			slow = 0.4,
+			slowSeconds = 2,
+		},
+		glacier_gore = { kind = "single", name = "Glacier Gore", every = 5, factor = 2.8 },
+		frost_gale = {
+			kind = "splash",
+			name = "Frost Gale",
+			every = 5,
+			factor = 1.2,
+			splash = 0.7,
+			spread = 3,
+			slow = 0.5,
+			slowSeconds = 2.5,
+		},
+	},
 	Maps = {
 		meadow = {
 			name = "Sunny Meadow",
 			monsters = {
 				{
 					id = "green_sprout",
+					skills = { "burr_roll" },
 					name = "Burrling",
 					role = "swarmer",
 					cost = 1,
@@ -31,6 +123,7 @@ return {
 				},
 				{
 					id = "green_bee",
+					skills = { "honey_lance" },
 					name = "Stinglob",
 					role = "raider",
 					cost = 2,
@@ -48,6 +141,7 @@ return {
 				},
 				{
 					id = "green_dandelion",
+					skills = { "seed_volley" },
 					name = "Gapebloom",
 					role = "spitter",
 					cost = 2,
@@ -64,6 +158,7 @@ return {
 				},
 				{
 					id = "green_moth",
+					skills = { "bloom_mend" },
 					name = "Sapcaller",
 					role = "shaman",
 					cost = 2,
@@ -81,6 +176,7 @@ return {
 				},
 				{
 					id = "green_snail",
+					skills = { "bark_wall" },
 					name = "Barkhide",
 					role = "armoured",
 					cost = 3,
@@ -98,6 +194,7 @@ return {
 				},
 				{
 					id = "green_turtle",
+					skills = { "bloomshell", "root_snare" },
 					name = "Rotbloom",
 					role = "miniboss",
 					attack = 5,
@@ -115,6 +212,7 @@ return {
 				},
 				{
 					id = "green_boar",
+					skills = { "bramblehorn", "bramble_burst", "horn_toss" },
 					name = "Bramblehorn",
 					role = "boss",
 					attack = 7,
@@ -142,6 +240,7 @@ return {
 			monsters = {
 				{
 					id = "dark_hare",
+					skills = { "mandible_frenzy" },
 					name = "Gloomtick",
 					role = "swarmer",
 					cost = 1,
@@ -158,6 +257,7 @@ return {
 				},
 				{
 					id = "dark_bat",
+					skills = { "lure_flash" },
 					name = "Glimlure",
 					role = "raider",
 					cost = 2,
@@ -175,6 +275,7 @@ return {
 				},
 				{
 					id = "dark_fox",
+					skills = { "acid_splash" },
 					name = "Bilebloat",
 					role = "spitter",
 					cost = 2,
@@ -192,6 +293,7 @@ return {
 				},
 				{
 					id = "dark_deer",
+					skills = { "hex_mend" },
 					name = "Hexcap",
 					role = "shaman",
 					cost = 2,
@@ -210,6 +312,7 @@ return {
 				},
 				{
 					id = "dark_totem",
+					skills = { "rune_ward" },
 					name = "Ruingut",
 					role = "armoured",
 					cost = 3,
@@ -227,6 +330,7 @@ return {
 				},
 				{
 					id = "dark_wyrm",
+					skills = { "sporeburst", "gorge_bite" },
 					name = "Sporegorge",
 					role = "miniboss",
 					attack = 6,
@@ -244,6 +348,7 @@ return {
 				},
 				{
 					id = "dark_bear",
+					skills = { "bearslam", "root_grasp", "heart_pulse" },
 					name = "Hollowheart",
 					role = "boss",
 					attack = 7,
@@ -271,6 +376,7 @@ return {
 			monsters = {
 				{
 					id = "lava_newt",
+					skills = { "flare_pop" },
 					name = "Wickling",
 					role = "swarmer",
 					cost = 1,
@@ -287,6 +393,7 @@ return {
 				},
 				{
 					id = "lava_wolf",
+					skills = { "comet_dash" },
 					name = "Scorchdart",
 					role = "raider",
 					cost = 2,
@@ -304,6 +411,7 @@ return {
 				},
 				{
 					id = "lava_phoenix",
+					skills = { "fireball" },
 					name = "Blazegullet",
 					role = "spitter",
 					cost = 2,
@@ -321,6 +429,7 @@ return {
 				},
 				{
 					id = "lava_drake",
+					skills = { "pyre_mend" },
 					name = "Pyrekeeper",
 					role = "shaman",
 					cost = 2,
@@ -339,6 +448,7 @@ return {
 				},
 				{
 					id = "lava_tortoise",
+					skills = { "basalt_wall" },
 					name = "Basaltback",
 					role = "armoured",
 					cost = 3,
@@ -356,6 +466,7 @@ return {
 				},
 				{
 					id = "lava_bull",
+					skills = { "lavastomp", "molten_chomp" },
 					name = "Magmaw",
 					role = "miniboss",
 					attack = 7,
@@ -373,6 +484,7 @@ return {
 				},
 				{
 					id = "lava_golem",
+					skills = { "eruption", "mane_lash", "meteor_rain" },
 					name = "Calderos",
 					role = "boss",
 					attack = 8,
@@ -403,6 +515,7 @@ return {
 			monsters = {
 				{
 					id = "ice_fox",
+					skills = { "icicle_bite" },
 					name = "Frostnip",
 					role = "swarmer",
 					cost = 1,
@@ -419,6 +532,7 @@ return {
 				},
 				{
 					id = "ice_leopard",
+					skills = { "saw_spin" },
 					name = "Rimesaw",
 					role = "raider",
 					cost = 2,
@@ -436,6 +550,7 @@ return {
 				},
 				{
 					id = "ice_wisp",
+					skills = { "crystal_burst" },
 					name = "Shardspire",
 					role = "spitter",
 					cost = 2,
@@ -453,6 +568,7 @@ return {
 				},
 				{
 					id = "ice_penguin",
+					skills = { "frost_mend" },
 					name = "Snowshroud",
 					role = "shaman",
 					cost = 2,
@@ -471,6 +587,7 @@ return {
 				},
 				{
 					id = "ice_golem",
+					skills = { "ice_wall" },
 					name = "Icebound",
 					role = "armoured",
 					cost = 3,
@@ -488,6 +605,7 @@ return {
 				},
 				{
 					id = "ice_mammoth",
+					skills = { "tuskcharge", "frost_breath" },
 					name = "Rimetusk",
 					role = "miniboss",
 					attack = 9,
@@ -505,6 +623,7 @@ return {
 				},
 				{
 					id = "ice_yeti",
+					skills = { "blizzard", "glacier_gore", "frost_gale" },
 					name = "Frostmaw",
 					role = "boss",
 					attack = 10,
@@ -1557,13 +1676,31 @@ return {
 	-- Every look's `height` (and its hover) is drawn this many times bigger: the monsters read small beside the 3-stud
 	-- slimes in a fight at the player's camera (2026-11-09). `Big` is for the looks with `shadow` (minibosses and
 	-- bosses), which are already tall.
+	-- `fx`: the effects on its body where the owner's painting had them (the owner, 2026-11-11: fire on the Lava ones,
+	-- poison bubbles or smoke on the toxic ones, only where it is needed; docs/MONSTER-SLIMES.md): each a VFX library
+	-- `effect` (and `variant`) on an invisible box of `size` studs as built that rides the `bone`, `at` studs as built from
+	-- the bone's rest point (in the model's axes as built), client/ClipRig.anchor.
 	LookScale = { Normal = 1.35, Big = 1.15 },
 	Looks = {
 		-- Sunny Meadow's
 		green_sprout = { clips = "Burrling", mesh = 137807217575397, texture = 138681763611567, height = 4.4 },
 		green_bee = { clips = "Stinglob", mesh = 113014346736172, texture = 75158359280374, height = 3.6 },
 		green_dandelion = { clips = "Gapebloom", mesh = 93569552469358, texture = 135413526793030, height = 4.2 },
-		green_moth = { clips = "Sapcaller", mesh = 120737224081437, texture = 71772462336332, height = 3.8 },
+		green_moth = {
+			clips = "Sapcaller",
+			mesh = 120737224081437,
+			texture = 71772462336332,
+			height = 3.8,
+			fx = {
+				{
+					effect = "aura.monster_signature",
+					variant = "sapcaller",
+					bone = "Stalk3",
+					at = { -0.2, 0.6, 0.2 },
+					size = 2.6,
+				},
+			},
+		},
 		green_snail = { clips = "Barkhide", mesh = 140178248884285, texture = 102872532900531, height = 4.6 },
 		green_turtle = {
 			clips = "Rotbloom",
@@ -1571,6 +1708,15 @@ return {
 			texture = 138165822750225,
 			height = 8,
 			shadow = true,
+			fx = {
+				{
+					effect = "aura.monster_signature",
+					variant = "rotbloom",
+					bone = "Flower",
+					at = { 0, 0.6, 0 },
+					size = 5,
+				},
+			},
 		},
 		green_boar = {
 			clips = "Bramblehorn",
@@ -1581,9 +1727,41 @@ return {
 		},
 		-- the Mushroom Grove's
 		dark_hare = { clips = "Gloomtick", mesh = 81502541674019, texture = 112116342243841, height = 4.4 },
-		dark_bat = { clips = "Glimlure", mesh = 74320947597347, texture = 75204701729024, height = 3.6, turn = 57 },
-		dark_fox = { clips = "Bilebloat", mesh = 101371378759876, texture = 108421618690524, height = 4.2, turn = -20 },
-		dark_deer = { clips = "Hexcap", mesh = 123670007933216, texture = 137125937387984, height = 3.8 },
+		dark_bat = {
+			clips = "Glimlure",
+			mesh = 74320947597347,
+			texture = 75204701729024,
+			height = 3.6,
+			turn = 57,
+			fx = {
+				{
+					effect = "aura.monster_signature",
+					variant = "glimlure",
+					bone = "Lure2",
+					at = { 0.5, 0.35, -0.12 },
+					size = 1,
+				},
+			},
+		},
+		dark_fox = {
+			clips = "Bilebloat",
+			mesh = 101371378759876,
+			texture = 108421618690524,
+			height = 4.2,
+			turn = -20,
+			fx = {
+				{ effect = "aura.monster_signature", variant = "bilebloat", bone = "Body", at = { 0, 1, 0 }, size = 4 },
+			},
+		},
+		dark_deer = {
+			clips = "Hexcap",
+			mesh = 123670007933216,
+			texture = 137125937387984,
+			height = 3.8,
+			fx = {
+				{ effect = "aura.monster_signature", variant = "hexcap", bone = "Cap", at = { 0, 0.4, 0 }, size = 3.5 },
+			},
+		},
 		dark_totem = { clips = "Ruingut", mesh = 106841847934251, texture = 105872266930309, height = 4.6 },
 		dark_wyrm = {
 			clips = "Sporegorge",
@@ -1591,6 +1769,9 @@ return {
 			texture = 131395010003057,
 			height = 8,
 			shadow = true,
+			fx = {
+				{ effect = "aura.monster_signature", variant = "sporegorge", bone = "Top", at = { 0, 1, 0 }, size = 6 },
+			},
 		},
 		dark_bear = {
 			clips = "Hollowheart",
@@ -1598,18 +1779,79 @@ return {
 			texture = 102830187428765,
 			height = 10,
 			shadow = true,
+			fx = {
+				{
+					effect = "aura.monster_signature",
+					variant = "hollowheart",
+					bone = "Crown",
+					at = { 0, 2.5, 0 },
+					size = 9,
+				},
+			},
 		},
 		-- Ember Lava's
-		lava_newt = { clips = "Wickling", mesh = 107835269091363, texture = 79020227671379, height = 4.4 },
-		lava_wolf = { clips = "Scorchdart", mesh = 79283961500273, texture = 139885960871598, height = 3.6, turn = 30 },
+		lava_newt = {
+			clips = "Wickling",
+			mesh = 107835269091363,
+			texture = 79020227671379,
+			height = 4.4,
+			fx = {
+				{
+					effect = "aura.monster_signature",
+					variant = "wickling",
+					bone = "Wick2",
+					at = { -0.46, 0.42, 0.15 },
+					size = 1.2,
+				},
+			},
+		},
+		lava_wolf = {
+			clips = "Scorchdart",
+			mesh = 79283961500273,
+			texture = 139885960871598,
+			height = 3.6,
+			turn = 30,
+			fx = {
+				{
+					effect = "aura.monster_signature",
+					variant = "scorchdart",
+					bone = "Spine3",
+					at = { 0, 0.25, 0 },
+					size = 2.5,
+				},
+			},
+		},
 		lava_phoenix = {
 			clips = "Blazegullet",
 			mesh = 119982999618894,
 			texture = 79027366845168,
 			height = 4.2,
 			turn = -15,
+			fx = {
+				{
+					effect = "aura.monster_signature",
+					variant = "blazegullet",
+					bone = "Top",
+					at = { 0, -0.3, -0.9 },
+					size = 2,
+				},
+			},
 		},
-		lava_drake = { clips = "Pyrekeeper", mesh = 99465572241029, texture = 133586105790685, height = 3.8 },
+		lava_drake = {
+			clips = "Pyrekeeper",
+			mesh = 99465572241029,
+			texture = 133586105790685,
+			height = 3.8,
+			fx = {
+				{
+					effect = "aura.monster_signature",
+					variant = "pyrekeeper",
+					bone = "Brazier",
+					at = { 0, 0.7, -0.3 },
+					size = 2,
+				},
+			},
+		},
 		lava_tortoise = { clips = "Basaltback", mesh = 124537289602580, texture = 102905861327564, height = 4.6 },
 		lava_bull = {
 			clips = "Magmaw",
@@ -1617,6 +1859,15 @@ return {
 			texture = 101694948132599,
 			height = 8,
 			shadow = true,
+			fx = {
+				{
+					effect = "aura.monster_signature",
+					variant = "magmaw",
+					bone = "Jaw",
+					at = { 0, 0.6, -2.3 },
+					size = 4,
+				},
+			},
 		},
 		lava_golem = {
 			clips = "Calderos",
@@ -1624,12 +1875,36 @@ return {
 			texture = 115472744044897,
 			height = 10,
 			shadow = true,
+			fx = {
+				{
+					effect = "aura.monster_signature",
+					variant = "calderos",
+					bone = "Mane2",
+					at = { -1.2, 0.3, 1.7 },
+					size = 8,
+				},
+			},
 		},
 		-- Frozen Ice's (the Frostmaw is dark so that it reads on the white floor)
 		ice_fox = { clips = "Frostnip", mesh = 87406578571606, texture = 137195367943596, height = 4.4 },
 		ice_leopard = { clips = "Rimesaw", mesh = 113370508274803, texture = 134755381308207, height = 3.6 },
 		ice_wisp = { clips = "Shardspire", mesh = 93910658403605, texture = 113839119156842, height = 4.2 },
-		ice_penguin = { clips = "Snowshroud", mesh = 134787401494105, texture = 113926521902131, height = 3.8 },
+		ice_penguin = {
+			clips = "Snowshroud",
+			mesh = 134787401494105,
+			texture = 113926521902131,
+			height = 3.8,
+			fx = {
+				{
+					effect = "aura.monster_signature",
+					variant = "snowshroud",
+					bone = "Body",
+					-- (the anchor's bottom on the ground: its mist curls round the hem)
+					at = { 0, 1.5, 0 },
+					size = 4,
+				},
+			},
+		},
 		ice_golem = { clips = "Icebound", mesh = 129447292939570, texture = 91773709005563, height = 4.6 },
 		ice_mammoth = {
 			clips = "Rimetusk",
@@ -1637,6 +1912,15 @@ return {
 			texture = 99482423322194,
 			height = 8,
 			shadow = true,
+			fx = {
+				{
+					effect = "aura.monster_signature",
+					variant = "rimetusk",
+					bone = "Front",
+					at = { 0.3, 1.1, -0.4 },
+					size = 3.5,
+				},
+			},
 		},
 		ice_yeti = {
 			clips = "Frostmaw",
@@ -1644,6 +1928,16 @@ return {
 			texture = 114276870471488,
 			height = 10,
 			shadow = true,
+			fx = {
+				{
+					effect = "aura.monster_signature",
+					variant = "frostmaw",
+					bone = "Body",
+					-- (the anchor's bottom on the ground: its snow whirls round the base)
+					at = { 0, 3.2, 0 },
+					size = 11,
+				},
+			},
 		},
 	},
 
@@ -1733,11 +2027,13 @@ return {
 	-- ===== Fight effects by monster (client/ZombieFight with src/shared/VfxLib; design: docs/DUNGEON_MAPS.md) =====
 	-- Each monster's own looks from the owner's VFX library, themed to its map (the owner, 2026-11-09): `blow` plays on
 	-- the one it hits (and, for a ranged one, `shot` flies there first: the same effect with its projectile), `fall` is
-	-- its burst when it falls (that effect's FallVariant), a healer's `heal` plays over the one it mends, and a mini-boss
-	-- or boss's `skill` has its wind-up on the caster when the skill is called, its release (`at`: on the caster's feet,
-	-- on the target with the caster as `from`, or rising straight up from the caster) when it comes down, and its blows
-	-- land as the blow's SkillVariant. A monster left out keeps the battle art of its kind (Ways). The slimes' own blows
-	-- and the village zombies never use these.
+	-- its burst when it falls (that effect's FallVariant), a healer's `heal` plays over the one it mends, and each of its
+	-- specials (`skills`, by the key in Skills above) has its wind-up on the caster when the special is called, its release
+	-- (`at`: on the caster's feet, on the target with the caster as `from`, or rising straight up from the caster) when it
+	-- comes down (a wall's and a mend's on the caster), and its blows land as the blow's SkillVariant. A special's `variant`
+	-- names its own look in both its wind-up and its release (skill.monster_windup and skill.monster_special have one
+	-- variant per special; a regular's special has no wind-up). A monster left out keeps the battle art of its kind
+	-- (Ways). The slimes' own blows and the village zombies never use these.
 	Fx = {
 		FallVariant = "death",
 		SkillVariant = "skill",
@@ -1755,65 +2051,237 @@ return {
 			green_sprout = { blow = "hit.green_sprout", fall = "hit.green_sprout" },
 			green_bee = { blow = "hit.green_bee", fall = "hit.green_bee" },
 			green_dandelion = { blow = "hit.green_dandelion", shot = true, fall = "hit.green_dandelion" },
-			green_moth = { blow = "hit.green_moth", heal = "burst.moth_mend", fall = "hit.green_moth" },
-			green_snail = { blow = "hit.green_snail", fall = "hit.green_snail" },
+			green_moth = {
+				blow = "hit.green_moth",
+				heal = "burst.moth_mend",
+				fall = "hit.green_moth",
+				skills = {
+					bloom_mend = { release = "skill.monster_special", at = "caster", variant = "bloom_mend" },
+				},
+			},
+			green_snail = {
+				blow = "hit.green_snail",
+				fall = "hit.green_snail",
+				skills = {
+					bark_wall = { release = "skill.monster_special", at = "caster", variant = "bark_wall" },
+				},
+			},
 			green_turtle = {
 				blow = "hit.green_turtle",
 				fall = "hit.green_turtle",
-				skill = { windup = "skill.renewal_charge", release = "skill.pollen_shockwave", at = "caster" },
+				skills = {
+					bloomshell = { windup = "skill.renewal_charge", release = "skill.pollen_shockwave", at = "caster" },
+					root_snare = {
+						windup = "skill.monster_windup",
+						release = "skill.monster_special",
+						at = "target",
+						variant = "root_snare",
+					},
+				},
 			},
 			green_boar = {
 				blow = "hit.green_boar",
 				fall = "hit.green_boar",
-				skill = { windup = "skill.bramble_rage", release = "burst.rock_smash", at = "target" },
+				skills = {
+					bramblehorn = { windup = "skill.bramble_rage", release = "burst.rock_smash", at = "target" },
+					bramble_burst = {
+						windup = "skill.monster_windup",
+						release = "skill.monster_special",
+						at = "caster",
+						variant = "bramble_burst",
+					},
+					horn_toss = {
+						windup = "skill.monster_windup",
+						release = "skill.monster_special",
+						at = "target",
+						variant = "horn_toss",
+					},
+				},
 			},
 			-- Mushroom: spores, toxic, violet arcane
 			dark_hare = { blow = "hit.dark_hare", fall = "hit.dark_hare" },
 			dark_bat = { blow = "hit.dark_bat", fall = "hit.dark_bat" },
-			dark_fox = { blow = "hit.dark_fox", shot = true, fall = "hit.dark_fox" },
-			dark_deer = { blow = "hit.dark_deer", heal = "burst.deer_mend", fall = "hit.dark_deer" },
-			dark_totem = { blow = "hit.dark_totem", fall = "hit.dark_totem" },
+			dark_fox = {
+				blow = "hit.dark_fox",
+				shot = true,
+				fall = "hit.dark_fox",
+				skills = {
+					acid_splash = { release = "skill.monster_special", at = "target", variant = "acid_splash" },
+				},
+			},
+			dark_deer = {
+				blow = "hit.dark_deer",
+				heal = "burst.deer_mend",
+				fall = "hit.dark_deer",
+				skills = {
+					hex_mend = { release = "skill.monster_special", at = "caster", variant = "hex_mend" },
+				},
+			},
+			dark_totem = {
+				blow = "hit.dark_totem",
+				fall = "hit.dark_totem",
+				skills = {
+					rune_ward = { release = "skill.monster_special", at = "caster", variant = "rune_ward" },
+				},
+			},
 			dark_wyrm = {
 				blow = "hit.dark_wyrm",
 				fall = "hit.dark_wyrm",
-				skill = { windup = "skill.void_charge", release = "skill.spore_burst", at = "caster" },
+				skills = {
+					sporeburst = { windup = "skill.void_charge", release = "skill.spore_burst", at = "caster" },
+					gorge_bite = {
+						windup = "skill.monster_windup",
+						release = "skill.monster_special",
+						at = "target",
+						variant = "gorge_bite",
+					},
+				},
 			},
 			dark_bear = {
 				blow = "hit.dark_bear",
 				fall = "hit.dark_bear",
-				skill = { windup = "skill.umbral_growl", release = "skill.leap_slam", variant = "lv2", at = "caster" },
+				skills = {
+					bearslam = {
+						windup = "skill.umbral_growl",
+						release = "skill.leap_slam",
+						variant = "lv2",
+						at = "caster",
+					},
+					root_grasp = {
+						windup = "skill.monster_windup",
+						release = "skill.monster_special",
+						at = "caster",
+						variant = "root_grasp",
+					},
+					heart_pulse = {
+						windup = "skill.monster_windup",
+						release = "skill.monster_special",
+						at = "caster",
+						variant = "heart_pulse",
+					},
+				},
 			},
 			-- Lava: fire, magma, explosions
-			lava_newt = { blow = "hit.lava_newt", fall = "hit.lava_newt" },
+			lava_newt = {
+				blow = "hit.lava_newt",
+				fall = "hit.lava_newt",
+				skills = {
+					flare_pop = { release = "skill.monster_special", at = "target", variant = "flare_pop" },
+				},
+			},
 			lava_wolf = { blow = "hit.lava_wolf", fall = "hit.lava_wolf" },
-			lava_phoenix = { blow = "hit.lava_phoenix", shot = true, fall = "hit.lava_phoenix" },
-			lava_drake = { blow = "hit.lava_drake", heal = "burst.drake_mend", fall = "hit.lava_drake" },
-			lava_tortoise = { blow = "hit.lava_tortoise", fall = "hit.lava_tortoise" },
+			lava_phoenix = {
+				blow = "hit.lava_phoenix",
+				shot = true,
+				fall = "hit.lava_phoenix",
+				skills = {
+					fireball = { release = "skill.monster_special", at = "target", variant = "fireball" },
+				},
+			},
+			lava_drake = {
+				blow = "hit.lava_drake",
+				heal = "burst.drake_mend",
+				fall = "hit.lava_drake",
+				skills = {
+					pyre_mend = { release = "skill.monster_special", at = "caster", variant = "pyre_mend" },
+				},
+			},
+			lava_tortoise = {
+				blow = "hit.lava_tortoise",
+				fall = "hit.lava_tortoise",
+				skills = {
+					basalt_wall = { release = "skill.monster_special", at = "caster", variant = "basalt_wall" },
+				},
+			},
 			lava_bull = {
 				blow = "hit.lava_bull",
 				fall = "hit.lava_bull",
-				skill = { windup = "skill.meteor_charge", release = "skill.meteor_crash", at = "caster" },
+				skills = {
+					lavastomp = { windup = "skill.meteor_charge", release = "skill.meteor_crash", at = "caster" },
+					molten_chomp = {
+						windup = "skill.monster_windup",
+						release = "skill.monster_special",
+						at = "target",
+						variant = "molten_chomp",
+					},
+				},
 			},
 			lava_golem = {
 				blow = "hit.lava_golem",
 				fall = "hit.lava_golem",
-				skill = { windup = "skill.phoenix_charge", release = "skill.flame_jet", at = "up" },
+				skills = {
+					eruption = { windup = "skill.phoenix_charge", release = "skill.flame_jet", at = "up" },
+					mane_lash = {
+						windup = "skill.monster_windup",
+						release = "skill.monster_special",
+						at = "target",
+						variant = "mane_lash",
+					},
+					meteor_rain = {
+						windup = "skill.monster_windup",
+						release = "skill.monster_special",
+						at = "target",
+						variant = "meteor_rain",
+					},
+				},
 			},
 			-- Ice: frost, snow, crystal shards
 			ice_fox = { blow = "hit.ice_fox", fall = "hit.ice_fox" },
 			ice_leopard = { blow = "hit.ice_leopard", fall = "hit.ice_leopard" },
-			ice_wisp = { blow = "hit.ice_wisp", shot = true, fall = "hit.ice_wisp" },
-			ice_penguin = { blow = "hit.ice_penguin", heal = "burst.penguin_mend", fall = "hit.ice_penguin" },
-			ice_golem = { blow = "hit.ice_golem", fall = "hit.ice_golem" },
+			ice_wisp = {
+				blow = "hit.ice_wisp",
+				shot = true,
+				fall = "hit.ice_wisp",
+				skills = {
+					crystal_burst = { release = "skill.monster_special", at = "target", variant = "crystal_burst" },
+				},
+			},
+			ice_penguin = {
+				blow = "hit.ice_penguin",
+				heal = "burst.penguin_mend",
+				fall = "hit.ice_penguin",
+				skills = {
+					frost_mend = { release = "skill.monster_special", at = "caster", variant = "frost_mend" },
+				},
+			},
+			ice_golem = {
+				blow = "hit.ice_golem",
+				fall = "hit.ice_golem",
+				skills = {
+					ice_wall = { release = "skill.monster_special", at = "caster", variant = "ice_wall" },
+				},
+			},
 			ice_mammoth = {
 				blow = "hit.ice_mammoth",
 				fall = "hit.ice_mammoth",
-				skill = { windup = "skill.frost_charge", release = "skill.ice_spear", at = "target" },
+				skills = {
+					tuskcharge = { windup = "skill.frost_charge", release = "skill.ice_spear", at = "target" },
+					frost_breath = {
+						windup = "skill.monster_windup",
+						release = "skill.monster_special",
+						at = "target",
+						variant = "frost_breath",
+					},
+				},
 			},
 			ice_yeti = {
 				blow = "hit.ice_yeti",
 				fall = "hit.ice_yeti",
-				skill = { windup = "skill.frost_howl", release = "skill.blizzard", at = "caster" },
+				skills = {
+					blizzard = { windup = "skill.frost_howl", release = "skill.blizzard", at = "caster" },
+					glacier_gore = {
+						windup = "skill.monster_windup",
+						release = "skill.monster_special",
+						at = "target",
+						variant = "glacier_gore",
+					},
+					frost_gale = {
+						windup = "skill.monster_windup",
+						release = "skill.monster_special",
+						at = "target",
+						variant = "frost_gale",
+					},
+				},
 			},
 		},
 	},

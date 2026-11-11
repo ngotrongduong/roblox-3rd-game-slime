@@ -19,6 +19,7 @@ local CreatureRig = require(script.Parent.CreatureRig)
 local SlimeActor = require(script.Parent.SlimeActor)
 local SlimeLook = require(script.Parent.SlimeLook)
 local ZombieLook = require(script.Parent.ZombieLook)
+local VfxLib = require(ReplicatedStorage.Shared.VfxLib)
 
 local D = Config.Dungeon
 local C = Config.VillageClient
@@ -240,6 +241,24 @@ local function clipOf(spec: any, holder: Model, scale: number): SlimeActor.Creat
 	creature.contact = contactOf(spec, folder, scale)
 	part.CastShadow = spec.shadow == true
 	part.Parent = folder
+	-- its body effects (the look's `fx`: flames, smoke, bubbles...), each on an anchor riding its bone; the offset is
+	-- turned back by the look's `turn`, so the anchor's front is the monster's
+	for _, fx in spec.fx or {} do
+		local at = fx.at or { 0, 0, 0 }
+		local offset = CFrame.new(at[1], at[2], at[3]) * CFrame.Angles(0, -math.rad(spec.turn or 0), 0)
+		local anchor = ClipRig.anchor(rig, fx.bone, offset, fx.size or 1)
+		if anchor then
+			anchor.Parent = folder
+			local ok, problem = pcall(VfxLib.attach, anchor, fx.effect, { weld = true, variant = fx.variant })
+			if not ok and not warned[fx.effect] then
+				warned[fx.effect] = true
+				warn(Config.LogPrefix, "monster", spec.clips, "effect", fx.effect, "failed:", problem)
+			end
+		elseif not warned[spec.clips .. fx.bone] then
+			warned[spec.clips .. fx.bone] = true
+			warn(Config.LogPrefix, "monster", spec.clips, "has no bone", fx.bone, "for", fx.effect)
+		end
+	end
 	return creature
 end
 

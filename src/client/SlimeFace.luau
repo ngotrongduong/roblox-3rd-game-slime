@@ -638,18 +638,20 @@ function Face.update(
 		cfs[n] = frame(plate, bones, self.scale, feet)
 	end
 
-	-- the emote: a pop-up beside the head, or a lasting effect over it
+	-- the emote: a pop-up beside the head, or a lasting effect over it. Its part goes with the head even while nothing
+	-- shows: left where it was made (the world's origin), it stretched the model's box, and an effect played on the
+	-- model (VfxLib places it by that box) came down far away (2026-11-12).
+	local mode = self.emoteMode
+	local side = if mode == "pop" or mode == "zzz" then -EMOTE_RIGHT else 0
+	local x, y, z = SlimeShape.deform(side, 0.95, 0, bones)
+	-- z's and hearts are born at the top of the head: the billboard's bottom edge sits there; the orbit's ring circles
+	-- just above the head
+	local streamH = C.EmoteSize * STREAM_H
+	local lift = if mode == "pop" then EMOTE_UP elseif mode == "orbit" then 0.08 + 0.12 * streamH else streamH / 2
+	n += 1
+	parts[n] = self.emote
+	cfs[n] = feet * CFrame.new(Vector3.new(x, y + lift, z) * self.scale)
 	if self.emoteGui.Enabled then
-		local mode = self.emoteMode
-		local side = if mode == "pop" or mode == "zzz" then -EMOTE_RIGHT else 0
-		local x, y, z = SlimeShape.deform(side, 0.95, 0, bones)
-		-- z's and hearts are born at the top of the head: the billboard's bottom edge sits there; the orbit's ring
-		-- circles just above the head
-		local streamH = C.EmoteSize * STREAM_H
-		local lift = if mode == "pop" then EMOTE_UP elseif mode == "orbit" then 0.08 + 0.12 * streamH else streamH / 2
-		n += 1
-		parts[n] = self.emote
-		cfs[n] = feet * CFrame.new(Vector3.new(x, y + lift, z) * self.scale)
 		self.emoteT += dt
 		local t = self.emoteT
 		if mode == "pop" then

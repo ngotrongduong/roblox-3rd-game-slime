@@ -13,8 +13,13 @@ local MonsterClip = require(ReplicatedStorage.Shared.MonsterClip)
 
 local ClipRig = {}
 
+-- An invisible part riding a bone (ClipRig.anchor): a body effect's host.
+type Anchor = { part: BasePart, bone: Bone, offset: CFrame }
+
 export type Rig = {
 	bones: { Bone },
+	named: { [string]: Bone },
+	anchors: { Anchor },
 	player: MonsterClip.Player,
 	scale: number,
 }
@@ -91,7 +96,45 @@ function ClipRig.bind(part: MeshPart, data: MonsterClip.Data, scale: number, see
 	for i, name in set.bones do
 		bones[i] = made[name]
 	end
-	return { bones = bones, player = MonsterClip.new(set, seed, now), scale = scale }
+	return { bones = bones, named = made, anchors = {}, player = MonsterClip.new(set, seed, now), scale = scale }
+end
+
+-- An invisible anchored cube of `size` studs as built, kept every frame at `offset` from the bone `boneName` (its
+-- position in studs as built; the rig's scale is put on here) and turned with it: the host of a body effect (the look's
+-- `fx`). Nil when the rig has no such bone. The caller parents it.
+function ClipRig.anchor(r: Rig, boneName: string, offset: CFrame, size: number): BasePart?
+	local bone = r.named[boneName]
+	if not bone then
+		return nil
+	end
+	local part = Instance.new("Part")
+	part.Name = "FxAnchor"
+	part.Size = Vector3.one * size * r.scale
+	part.Transparency = 1
+	part.Anchored = true
+	part.CanCollide = false
+	part.CanQuery = false
+	part.CanTouch = false
+	part.CastShadow = false
+	local anchor: Anchor =
+		{ part = part :: BasePart, bone = bone, offset = offset.Rotation + offset.Position * r.scale }
+	table.insert(r.anchors, anchor)
+	return part
+end
+
+-- Puts the rig's anchors where their bones are this frame, for one BulkMoveTo: `mesh` is the skinned part where it still
+-- stands, `place` where it goes; their CFrames are added to `parts` and `cfs` after the n-th. Returns the new n.
+function ClipRig.place(r: Rig, mesh: BasePart, place: CFrame, parts: { BasePart }, cfs: { CFrame }, n: number): number
+	if #r.anchors == 0 then
+		return n
+	end
+	local back = mesh.CFrame:Inverse()
+	for _, a in r.anchors do
+		n += 1
+		parts[n] = a.part
+		cfs[n] = place * (back * a.bone.TransformedWorldCFrame) * a.offset
+	end
+	return n
 end
 
 -- Plays an action once (MonsterClip.play): its length, 0 when it does not play.

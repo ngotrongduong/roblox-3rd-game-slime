@@ -19,6 +19,8 @@ export type Monster = {
 	name: string,
 	defRole: string,
 	kind: string,
+	-- its specials (keys of Config.Combat.Skills), taken in turn by Combat
+	skills: { string }?,
 	attack: number,
 	defence: number,
 	speed: number,
@@ -81,6 +83,7 @@ local function monster(def: any, level: number, wave: number, id: string): Monst
 		name = def.name,
 		defRole = def.role,
 		kind = def.kind,
+		skills = def.skills,
 		attack = stats.attack,
 		defence = stats.defence,
 		speed = stats.speed,

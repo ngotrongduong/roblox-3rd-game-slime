@@ -409,10 +409,12 @@ local function tick(a: Slime, dt: number, write: boolean)
 			cfs[n] = place
 			CreatureRig.step(rig, dt, now, base, if dt > 0 then step / dt else 0, creature.air)
 		elseif clip then
+			local place = base * creature.fromJoints[1]
 			n += 1
 			parts[n] = creature.parts[1]
-			cfs[n] = base * creature.fromJoints[1]
+			cfs[n] = place
 			ClipRig.step(clip, now, dt, moving)
+			n = ClipRig.place(clip, creature.parts[1], place, parts, cfs, n)
 		else
 			for i, part in creature.parts do
 				local rx, ry, rz = MonsterMotion.angles(creature.specs[i], now, moving, attack)

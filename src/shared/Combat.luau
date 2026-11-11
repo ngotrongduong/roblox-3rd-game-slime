@@ -23,8 +23,15 @@ export type Unit = {
 	-- blows struck so far (every Skills[role].every-th is its skill), and whether the coming one is
 	blows: number,
 	skillNext: boolean,
-	-- a guard covers its team-mates until this many seconds into the fight
+	-- its specials (keys of Config.Combat.Skills) taken in turn, how many have been struck, the key of the coming one,
+	-- and how many times a healer has mended (a mend special comes on its heal turns, not its blows)
+	skills: { string },
+	specials: number,
+	skillKey: string,
+	mends: number,
+	-- a guard covers its team-mates until this many seconds into the fight, its defence times guardMul meanwhile
 	guardUntil: number,
+	guardMul: number,
 	-- stung slow: until this many seconds into the fight its beat runs at (1 - slowBy) speed
 	slowUntil: number,
 	slowBy: number,
@@ -83,6 +90,8 @@ export type Fighter = {
 	maxHp: number?,
 	role: string?,
 	kind: string?,
+	-- its specials (keys of Config.Combat.Skills), taken in turn; left out, { role } when the role has a skill
+	skills: { string }?,
 	-- where it starts in the positional mode (flat, from the arena's middle)
 	x: number?,
 	z: number?,
@@ -136,8 +145,13 @@ local function unit(fighter: Fighter, side: string, rng: Rng): Unit
 	local c = Config.Combat
 	local role = fighter.role or fighter.kind or ""
 	-- (each counts its blows from its own start, so fighters of one kind do not strike their skills all together)
-	local s = (c.Skills :: any)[role]
-	local blows = if s then math.floor(rng:next() * s.every) else 0
+	local list: { string } = fighter.skills or {}
+	if not fighter.skills and (c.Skills :: any)[role] then
+		list = { role }
+	end
+	local s = (c.Skills :: any)[list[1] or ""]
+	local start = if s then math.floor(rng:next() * s.every) else 0
+	local isMend = s ~= nil and s.kind == "mend"
 	return {
 		id = fighter.id,
 		side = side,
@@ -149,9 +163,14 @@ local function unit(fighter: Fighter, side: string, rng: Rng): Unit
 		cooldown = c.OpeningCooldown + rng:next() * c.OpeningSpread,
 		aimed = false,
 		role = role,
-		blows = blows,
+		blows = if isMend then 0 else start,
 		skillNext = false,
+		skills = list,
+		specials = 0,
+		skillKey = "",
+		mends = if isMend then start else 0,
 		guardUntil = 0,
+		guardMul = 1,
 		slowUntil = 0,
 		slowBy = 0,
 		x = fighter.x or 0,
@@ -261,7 +280,8 @@ local function blow(
 	target: Unit,
 	factor: number,
 	events: { Event },
-	extra: { [string]: any }?
+	extra: { [string]: any }?,
+	special: any?
 )
 	local c = Config.Combat
 	local guard = guardOf(fight, target)
@@ -282,7 +302,7 @@ local function blow(
 		table.insert(events, event("dodge"))
 		return
 	end
-	local defence = struck.defence * (if guard then (c.Skills :: any).defence.defence else 1)
+	local defence = struck.defence * (if guard then guard.guardMul else 1)
 	local amount = Combat.damage(attacker.attack, defence) * factor
 	local crit = (attacker.side == "squad" or fight.fair == true)
 		and fight.rng:next() < math.min(c.CritCap, c.CritBase + attacker.speed * c.CritPerSpeed)
@@ -298,6 +318,17 @@ local function blow(
 		struck.slowUntil = fight.seconds + sting.seconds
 		struck.slowBy = sting.slow
 		hit.slow = true
+	end
+	if special and struck.hp > 0 then
+		-- (a special's own riders: "all" knocks its foes off the beat itself; a several-blow one only on its first blow)
+		if special.stun and special.kind ~= "all" and (extra == nil or extra.n == nil or extra.n == 1) then
+			struck.cooldown += special.stun
+		end
+		if special.slow then
+			struck.slowUntil = fight.seconds + special.slowSeconds
+			struck.slowBy = special.slow
+			hit.slow = true
+		end
 	end
 	table.insert(events, hit)
 	if struck.hp <= 0 then
@@ -318,10 +349,17 @@ end
 
 -- The fighter's skill (Config.Combat.Skills, by its way of fighting) instead of a plain blow.
 local function skill(fight: Fight, attacker: Unit, target: Unit, events: { Event })
-	local s = (Config.Combat.Skills :: any)[attacker.role]
-	local extra = { skill = attacker.role }
+	local key = attacker.skillKey
+	local s = (Config.Combat.Skills :: any)[key]
+	if s.kind == "mend" then
+		-- (its wounded were mended or fell during the wind-up: a plain blow, and the mend still to come)
+		blow(fight, attacker, target, 1, events)
+		return
+	end
+	attacker.specials += 1
+	local extra = { skill = key }
 	if s.kind == "splash" then
-		blow(fight, attacker, target, s.factor, events, extra)
+		blow(fight, attacker, target, s.factor, events, extra, s)
 		-- (beside it: in the positional mode only foes near the target)
 		local others: { Unit } = {}
 		for _, other in foesOf(fight, attacker) do
@@ -332,36 +370,57 @@ local function skill(fight: Fight, attacker: Unit, target: Unit, events: { Event
 		for index = 1, math.min(s.spread, #others) do
 			local other = others[index]
 			if other.hp > 0 then
-				blow(fight, attacker, other, s.splash, events, { skill = attacker.role, splash = true })
+				blow(fight, attacker, other, s.splash, events, { skill = key, splash = true }, s)
 			end
 		end
 	elseif s.kind == "multi" then
 		for n = 1, s.hits do
 			if target.hp > 0 then
-				blow(fight, attacker, target, s.factor, events, { skill = attacker.role, n = n })
+				blow(fight, attacker, target, s.factor, events, { skill = key, n = n }, s)
 			end
 		end
 	elseif s.kind == "guard" then
 		attacker.guardUntil = fight.seconds + s.seconds
-		table.insert(events, { kind = "guard", from = attacker.id, to = attacker.id, skill = attacker.role })
-		blow(fight, attacker, target, s.factor, events, extra)
+		attacker.guardMul = s.defence
+		table.insert(events, { kind = "guard", from = attacker.id, to = attacker.id, skill = key })
+		blow(fight, attacker, target, s.factor, events, extra, s)
 	elseif s.kind == "all" then
 		for _, foe in foesOf(fight, attacker) do
 			-- (a guard may already have fallen taking an earlier foe's blow; in the positional mode it reaches only foes near)
 			if foe.hp <= 0 or not within(fight, attacker, foe, Config.Dungeon.Move.AreaStuds) then
 				continue
 			end
-			blow(fight, attacker, foe, s.factor, events, extra)
+			blow(fight, attacker, foe, s.factor, events, extra, s)
 			-- (knocked off its beat)
 			foe.cooldown += s.stun or 0
 		end
 	else
-		blow(fight, attacker, target, s.factor, events, extra)
+		blow(fight, attacker, target, s.factor, events, extra, s)
 	end
 end
 
+-- The key of the special that comes next for the fighter (its list taken in turn), or nil when it has none.
+local function nextKey(fighter: Unit): string?
+	local count = #fighter.skills
+	if count == 0 then
+		return nil
+	end
+	return fighter.skills[fighter.specials % count + 1]
+end
+
+-- The key of the "mend" special a healer's `count`-th mending is (every `every`-th mending), or nil.
+local function mendSpecial(healer: Unit, count: number): string?
+	local key = nextKey(healer)
+	local s = if key then (Config.Combat.Skills :: any)[key] else nil
+	if s and s.kind == "mend" and count % s.every == 0 then
+		return key
+	end
+	return nil
+end
+
 -- A healer's turn (Config.Combat.Heals): the most wounded living team-mate gets back a share of its attack instead of a
--- blow. False, and nothing done, when it is no healer or nobody is hurt.
+-- blow. False, and nothing done, when it is no healer or nobody is hurt. Every `every`-th mending of a healer with a
+-- "mend" special heals every wounded living team-mate by `share` times its attack each.
 local function heal(fight: Fight, healer: Unit, events: { Event }): boolean
 	local h = (Config.Combat.Heals :: any)[healer.role]
 	if not h then
@@ -369,8 +428,10 @@ local function heal(fight: Fight, healer: Unit, events: { Event }): boolean
 	end
 	local worst: Unit? = nil
 	local worstShare = 1
+	local wounded: { Unit } = {}
 	for _, other in fight.units do
 		if other ~= healer and other.side == healer.side and other.hp > 0 and other.hp < other.maxHp then
+			table.insert(wounded, other)
 			local share = other.hp / other.maxHp
 			if share < worstShare then
 				worst, worstShare = other, share
@@ -379,6 +440,19 @@ local function heal(fight: Fight, healer: Unit, events: { Event }): boolean
 	end
 	if not worst then
 		return false
+	end
+	healer.mends += 1
+	local key = mendSpecial(healer, healer.mends)
+	if key then
+		local s = (Config.Combat.Skills :: any)[key]
+		healer.specials += 1
+		for _, other in wounded do
+			local given = math.min(other.maxHp - other.hp, healer.attack * s.share)
+			other.hp += given
+			table.insert(events, { kind = "heal", from = healer.id, to = other.id, amount = given, skill = key })
+		end
+		healer.cooldown += h.extraCooldown
+		return true
 	end
 	local amount = math.min(worst.maxHp - worst.hp, healer.attack * h.share)
 	worst.hp += amount
@@ -532,13 +606,34 @@ function Combat.step(fight: Fight, dt: number): { Event }
 					attacker.cooldown = c.WindupSeconds + 0.001
 				elseif target then
 					attacker.aimed = true
-					local s = (c.Skills :: any)[attacker.role]
-					attacker.skillNext = s ~= nil and (attacker.blows + 1) % s.every == 0
+					local key = nextKey(attacker)
+					local s = if key then (c.Skills :: any)[key] else nil
+					if s and s.kind == "mend" then
+						-- (a mend special is announced on the heal turn; a healer with nobody wounded strikes a plain blow)
+						attacker.skillNext = false
+						if mendSpecial(attacker, attacker.mends + 1) then
+							for _, other in fight.units do
+								if
+									other ~= attacker
+									and other.side == attacker.side
+									and other.hp > 0
+									and other.hp < other.maxHp
+								then
+									attacker.skillNext = true
+									break
+								end
+							end
+						end
+					else
+						local first = (c.Skills :: any)[attacker.skills[1]]
+						attacker.skillNext = s ~= nil and (attacker.blows + 1) % first.every == 0
+					end
+					attacker.skillKey = key or ""
 					table.insert(events, {
 						kind = "aim",
 						from = attacker.id,
 						to = target.id,
-						skill = if attacker.skillNext then attacker.role else nil,
+						skill = if attacker.skillNext then key else nil,
 					})
 				end
 			end

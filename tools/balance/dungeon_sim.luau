@@ -2,8 +2,9 @@
 -- How teams of 4 fare in a full 10-wave Slime Dungeon run on the real Combat and Dungeon rules: the average wave they
 -- reach (the wave they fell in, 10 for a cleared run), the share of runs cleared and the average length. The team keeps its
 -- health from wave to wave. Spawning as in play: one monster every SpawnSeconds while fewer than MaxAlive stand.
---   lune run tools/balance/dungeon_sim.luau [seeds] [dungeonLevel] [StatScale] [WaveGrowth]
--- (the last two try other values of Config.Dungeon's without editing it)
+--   lune run tools/balance/dungeon_sim.luau [seeds] [dungeonLevel] [StatScale] [WaveGrowth] [map] [plain]
+-- (StatScale and WaveGrowth try other values of Config.Dungeon's without editing it; `map` is a Config.Dungeon.Maps id,
+-- meadow when left out; `plain` takes the monsters' own specials away, to see what they add)
 local process = require("@lune/process")
 local Combat = require("../../src/shared/Combat")
 local Config = require("../../src/shared/Config")
@@ -16,6 +17,12 @@ local LEVEL = tonumber(process.args[2]) or 1
 local D = Config.Dungeon
 D.StatScale = tonumber(process.args[3]) or D.StatScale
 D.WaveGrowth = tonumber(process.args[4]) or D.WaveGrowth
+local MAP = process.args[5] or "meadow"
+if process.args[6] == "plain" then
+	for _, monster in D.Maps[MAP].monsters do
+		monster.skills = nil
+	end
+end
 local STEP = Config.Zombies.FightStepSeconds
 
 -- A team of 4: `slimeLevel` nil is the four starters, otherwise the level shared evenly over the four stats (as fight_sim).
@@ -56,7 +63,7 @@ local function run(slimeLevel: number?, tier: string?, seed: number): (number, b
 	fight.open = true
 	local waveSeed = seed * 31
 	for wave = 1, D.Waves do
-		local queue = Dungeon.plan("meadow", LEVEL, wave, waveSeed)
+		local queue = Dungeon.plan(MAP, LEVEL, wave, waveSeed)
 		local next = 1
 		local sinceSpawn = D.SpawnSeconds
 		local started = fight.seconds
@@ -91,7 +98,9 @@ end
 
 print(
 	string.format(
-		"Slime Dungeon, dungeon level %d, %d seeds a team (StatScale %.2f, WaveGrowth %.2f)",
+		"Slime Dungeon, %s%s, dungeon level %d, %d seeds a team (StatScale %.2f, WaveGrowth %.2f)",
+		MAP,
+		if process.args[6] == "plain" then " without its specials" else "",
 		LEVEL,
 		SEEDS,
 		D.StatScale,

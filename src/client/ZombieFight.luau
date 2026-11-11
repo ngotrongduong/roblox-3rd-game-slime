@@ -382,6 +382,15 @@ local function fxOf(id: string?): any
 	return if extra then extra.fx else nil
 end
 
+-- The art of the special an event struck: the monster's `skills[key]` (a mini-boss or boss has several, a regular one),
+-- or its one `skill`; nil for a plain blow or a monster without.
+local function specialOf(fx: any, event: { [string]: any }): any
+	if not fx or type(event.skill) ~= "string" then
+		return nil
+	end
+	return if fx.skills then fx.skills[event.skill] else fx.skill
+end
+
 local function fxScale(id: string?): number
 	local extra = if id then extras[id] else nil
 	return math.clamp((if extra then extra.size else 1) * DFx.Scale, 1, DFx.MaxScale)
@@ -811,10 +820,16 @@ local function onAim(event: { [string]: any })
 	end
 	local s = skillOf(event)
 	local deeper = if s then V.Skill.Windup else 1
-	local fx = fxOf(event.from)
-	if s and fx and fx.skill then
+	local special = specialOf(fxOf(event.from), event)
+	if s and special then
 		endCharge(event.from)
-		charges[event.from] = vfx(fx.skill.windup, attacker.model, { follow = true })
+		-- (an effect without that variant plays as it is: one variant name serves the wind-up and the release; the
+		-- wind-up is drawn as big as the release, or a big monster's body hides it)
+		charges[event.from] = vfx(
+			special.windup,
+			attacker.model,
+			{ follow = true, variant = special.variant, scale = fxScale(event.from) }
+		)
 	end
 	if s then
 		floatText(
@@ -872,7 +887,7 @@ local function impact(event: { [string]: any }, style: FightFx.Style)
 		if not (fx.shot and style.shot) then
 			vfx(fx.blow, skin, {
 				scale = fxScale(event.from),
-				variant = if s and fx.skill then DFx.SkillVariant else nil,
+				variant = if s then DFx.SkillVariant else nil,
 				angle = math.random(-25, 25),
 			})
 		end
@@ -885,7 +900,7 @@ local function impact(event: { [string]: any }, style: FightFx.Style)
 	local side = if math.random() < 0.5 then -1 else 1
 	SlimeActor.kick(target, "side", side * V.FlinchSide * (if heavy then 2 else 1))
 	SlimeActor.kick(target, "squash", V.FlinchSquash * (if heavy then 2 else 1))
-	if type(event.guard) == "string" then
+	if type(event.guard) == "string" and not fxOf(event.guard) then
 		local guard = V.Skill.Looks.defence
 		FightFx.burst(guard.burst, skin, V.Skill.Burst * 0.5, nil)
 	end
@@ -939,26 +954,33 @@ end
 -- A Dungeon boss's skill goes off: its wind-up ends and its release plays (Config.Dungeon.Fx: on the caster's feet, on
 -- the target from the caster, or rising from the caster). True when it had one (the way's art is then left out).
 local function release(event: { [string]: any }, centre: Vector3?): boolean
-	local fx = fxOf(event.from)
-	local skill = if fx then fx.skill else nil
+	local skill = specialOf(fxOf(event.from), event)
 	if not skill then
 		return false
 	end
 	endCharge(event.from)
 	local caster, from = find(event.from)
-	local _, to = find(event.to)
+	local target, to = find(event.to)
 	if not caster or not from then
 		return true
 	end
-	local opts: { [string]: any } = { scale = fxScale(event.from), variant = skill.variant }
+	local scale = fxScale(event.from)
+	local opts: { [string]: any } = { scale = scale, variant = skill.variant }
+	-- (its box is the body it lands on, standing on the floor: its `ground` pieces lie on the floor and its `body` ones
+	-- at that body's middle; a box of the effect's own size, as tall as a boss, put the rings under the floor)
+	local wide = 5 * scale
 	if skill.at == "target" and to then
+		local tall = if target then target.body.Size.Y else caster.body.Size.Y
 		opts.from = from + Vector3.new(0, caster.body.Size.Y * 0.5, 0)
-		vfx(skill.release, to, opts)
+		opts.size = Vector3.new(wide, tall, wide)
+		vfx(skill.release, to + Vector3.new(0, tall * 0.5, 0), opts)
 	elseif skill.at == "up" then
 		local base = from + Vector3.new(0, caster.body.Size.Y * 0.6, 0)
 		vfx(skill.release, CFrame.lookAt(base, base + Vector3.yAxis), opts)
 	else
-		vfx(skill.release, (centre or from) + Vector3.new(0, caster.body.Size.Y * 0.5, 0), opts)
+		local tall = caster.body.Size.Y
+		opts.size = Vector3.new(wide, tall, wide)
+		vfx(skill.release, (centre or from) + Vector3.new(0, tall * 0.5, 0), opts)
 	end
 	return true
 end
@@ -1021,7 +1043,17 @@ local function deliver(event: { [string]: any }, style: FightFx.Style, first: bo
 	local s = skillOf(event)
 	local K = V.Skill
 	if not s or (s.kind ~= "multi" and s.kind ~= "all" and s.kind ~= "splash") then
-		strike(event, style, land)
+		if s and first and specialOf(fxOf(event.from), event) then
+			-- (a Dungeon monster's one heavy special: its release goes off as the blow lands)
+			strike(event, style, function()
+				safe("release", function()
+					release(event, nil)
+				end)
+				land()
+			end)
+		else
+			strike(event, style, land)
+		end
 	elseif s.kind == "multi" then
 		if first then
 			local attacker, from = find(event.from)
@@ -1045,7 +1077,7 @@ local function deliver(event: { [string]: any }, style: FightFx.Style, first: bo
 		end
 		local target, to = find(event.to)
 		local own = fxOf(event.from)
-		if looks.rain and target and to and not (own and own.skill) then
+		if looks.rain and target and to and not specialOf(own, event) then
 			local skin = to + Vector3.new(0, target.body.Size.Y * 0.5, 0)
 			FightFx.shot(looks.rain, skin + Vector3.new(0, K.RainHeight, 0), skin, function()
 				safe("rain", function()
@@ -1098,15 +1130,24 @@ local function onGuard(event: { [string]: any })
 	end
 	local looks = V.Skill.Looks.defence
 	SlimeActor.kick(guard, "puff", V.WindupPuff * V.Skill.Windup)
+	if release(event, nil) then
+		-- (a Dungeon monster's wall is its own art, on itself)
+		return
+	end
 	FightFx.burst(looks.burst, at + Vector3.new(0, guard.body.Size.Y * 0.5, 0), V.Skill.Burst, looks.bits)
 	FightFx.ring(looks.ring, at, V.Skill.Ring * 0.8)
 end
 
 -- A healer mends a team-mate (the Dungeon's monsters do): the healer puffs up, the mended one gets the cross and a green
--- number.
+-- number. A mend special heals them all at once, one event each: its release goes off once, on the healer.
+local mended: { [string]: number } = {}
 local function onHeal(event: { [string]: any })
 	local healer = find(event.from)
 	local target, to = find(event.to)
+	if event.skill and os.clock() - (mended[event.from] or -1) > 0.5 then
+		mended[event.from] = os.clock()
+		release(event, nil)
+	end
 	if healer then
 		SlimeActor.kick(healer, "puff", V.WindupPuff)
 		-- (a monster slime healer's own healing move peaks a moment after the mending shows)
@@ -1504,6 +1545,7 @@ function ZombieFight.endDungeon()
 		homes[id], targets[id] = nil, nil
 	end
 	table.clear(extras)
+	table.clear(mended)
 	fights[0] = nil
 	arena = nil
 end

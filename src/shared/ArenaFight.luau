@@ -16,6 +16,7 @@ export type Fighter = {
 	maxHp: number?,
 	role: string?,
 	kind: string?,
+	skills: { string }?,
 	-- (where it starts in a positional fight, which the Arena never is: Combat.Fighter's fields, kept so the types agree)
 	x: number?,
 	z: number?,

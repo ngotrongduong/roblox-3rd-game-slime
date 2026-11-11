@@ -118,3 +118,120 @@ them in the game). Done the same day:
 - Seen in a Studio play test: all 28 in a line-up (`tools/dungeon/monster_lineup.luau`), and an Ice run to wave 8.
   Known: Wickling's crust dips under the ground when it dies; the bodies melt past a clean puddle on Die; Frostmaw's jaw,
   Blazegullet's lips and Magmaw's jaw move with the body (not cut apart). Not seen: a phone.
+- Showroom for the owner: `tools/dungeon/monster_show.luau` (one region at a time on a stage over the farm, names
+  over them, the camera held in front, every move in turn).
+
+## Effects on their bodies, and their attacks (the owner, 2026-11-11)
+
+After seeing them move: "some monsters need effects, above all the fire ones: the 3D build dropped every flame, put
+them back where they were; poison ones get poison (bubbles, toxic smoke); the others alike, only where needed. Then
+design attacks fitting each one, and the bosses a few signature attacks. Look in the effects library first; build what
+is missing and add it to the library."
+
+### Body effects (lasting, riding a bone, only where the painting had one)
+
+From each region's `sheet.png` (the pictures before the "no effects" redraw). One effect, `aura.monster_signature`
+(`src/shared/VfxLib/Effects/aura/`), with a variant of its own design per monster (named after it, its numbers studs on
+an anchor of its `refHeight`); cheap or mid by the library's budget. The game rides each on an invisible anchor kept on
+the bone's spot every frame (`Config.Dungeon.Looks[id].fx`, `size` = the variant's `refHeight`), so it follows the hop,
+the squash and the attack. Tuned on the showroom's bright grass and sky (the worst case, 2026-11-12): fire is full-colour
+flipbooks solid from birth with little light (fully added fire washed out to white), poison and pollen are solid puffs and
+glossy bubbles in the painting's neon lime, gold and teal, molten drips glossy drops; the Lava and Mushroom maps are darker.
+
+| Monster | What | Where |
+|---|---|---|
+| Wickling | a small candle flame flickering on the wick, a few embers | the wick's tip (Wick2) |
+| Scorchdart | a flame mane streaming back off its back, longer while it darts | its back (Spine) |
+| Blazegullet | two smoke curls rising from its nostrils, now and then an ember | over its snout (Top) |
+| Pyrekeeper | a pale golden flame burning in its brazier, sparks rising | the bowl (Brazier) |
+| Magmaw | molten drips falling from its teeth, heat embers out of the maw | the mouth (Jaw) |
+| Calderos | a roaring mane of fire up and back from its head, embers | the mane (Mane) |
+| Bilebloat | toxic green bubbles swelling and popping on its skin, drool from the spout | the body, the spout (Lips) |
+| Sporegorge | green toxic mist curling up from its split sacs, spores | the sacs |
+| Hexcap | glowing spore orbs floating round its cap | the cap (Cap) |
+| Hollowheart | faint teal spores drifting down from the mushrooms in its crown | the crown (Crown) |
+| Glimlure | the lure's teal glow (a soft light and motes) | the lure's tip |
+| Sapcaller | dandelion seeds drifting off its puff, golden pollen motes | the puff |
+| Rotbloom | pollen dust puffing up out of the flower's middle | the flower |
+| Rimetusk | frost breath puffing from its mouth | its front (Front) |
+| Snowshroud | frost mist curling round its hem, a few flakes | its foot (Body) |
+| Frostmaw | snow and wind swirling round its base, flakes | its foot (Body) |
+
+Left without: the ones whose look is all in their body (Burrling, Stinglob, Gapebloom, Barkhide, Gloomtick, Ruingut,
+Basaltback, Frostnip, Rimesaw, Shardspire, Icebound) and Bramblehorn.
+
+### Attacks
+
+Every monster keeps its plain blow (its `blow`, and a spitter's `shot`) and gains a special of its own, struck instead of
+every few blows like the slimes' skills. A mini-boss has two specials and a boss three, taken in turn. A special's name
+is called out over the monster as the slimes' are. Numbers are a first guess the owner tunes by playing (`factor` is a
+blow's weight against a plain one; `stun` knocks each one struck off its beat; `slow` slows it for a while; `guard`
+takes the blows aimed at team-mates near it; `mend` heals every wounded team-mate).
+
+| Monster | Special(s) | What it does |
+|---|---|---|
+| Burrling | Burr Roll | rolls through its target: 2 blows x 0.7 |
+| Stinglob | Honey Lance | a deep dive-sting: 1 blow x 1.8 |
+| Gapebloom | Seed Volley | three seeds: 3 blows x 0.5 |
+| Sapcaller | Bloom Mend | every 3rd mending heals every wounded team-mate |
+| Barkhide | Bark Wall | guards its team-mates 3 s, defence x 1.3 |
+| Gloomtick | Mandible Frenzy | 3 blows x 0.45 |
+| Glimlure | Lure Flash | the lure dazzles, then the bite: x 1.5, stun 0.6 s |
+| Bilebloat | Acid Splash | x 1.2 on the target, 2 beside it x 0.5, slowed 30% for 2 s |
+| Hexcap | Hex Mend | as Bloom Mend |
+| Ruingut | Rune Ward | guard, as Bark Wall |
+| Wickling | Flare Pop | x 1.0 on the target, 2 beside it x 0.5 |
+| Scorchdart | Comet Dash | 2 blows x 0.9 |
+| Blazegullet | Fireball | x 1.6 on the target, 2 beside it x 0.6 |
+| Pyrekeeper | Pyre Mend | as Bloom Mend |
+| Basaltback | Basalt Wall | guard, as Bark Wall |
+| Frostnip | Icicle Bite | x 1.4, slowed 40% for 1.5 s |
+| Rimesaw | Saw Spin | 3 blows x 0.5 |
+| Shardspire | Crystal Burst | x 1.3 on the target, 2 beside it x 0.6, slowed 30% for 2 s |
+| Snowshroud | Frost Mend | as Bloom Mend |
+| Icebound | Ice Wall | guard, as Bark Wall |
+| Rotbloom | Pollen Shockwave; Root Snare | every slime x 0.5, stun 0.6; roots grab its target x 1.6, stun 1 s |
+| Sporegorge | Spore Burst; Gorge Bite | every slime x 0.5, stun 0.5; one huge bite x 2.0 |
+| Magmaw | Magma Stomp; Molten Chomp | target x 2.6, 3 beside it x 0.75; 2 bites x 1.2 |
+| Rimetusk | Tusk Charge; Frost Breath | 2 rams x 1.4; target x 1.0, 3 beside it x 0.6, slowed 40% for 2 s |
+| Bramblehorn | Thorn Charge; Bramble Burst; Horn Toss | target x 2, 2 beside x 0.6; thorns shoot out at every slime x 0.6, stun 0.4; hooks one and tosses it x 2.6 |
+| Hollowheart | Den Slam; Root Grasp; Heart Pulse | target x 2.4, 3 beside x 0.7; dead roots hold every slime x 0.45, slowed 50% for 3 s; a teal rune wave x 0.7, stun 0.5 |
+| Calderos | Eruption; Mane Lash; Meteor Rain | every slime x 0.6, stun 0.6; the fire mane whips its target x 2.0, 3 beside x 0.7; 3 magma rocks on one slime x 0.9 |
+| Frostmaw | Blizzard; Glacier Gore; Frost Gale | every slime x 0.65, stun 0.7; the horns x 2.8; the roar's freezing wind, target x 1.2, 3 beside x 0.7, slowed 50% for 2.5 s |
+
+Art: each special has its own look, named by its `variant` in `Config.Dungeon.Fx`: a release in
+`skill.monster_special` (on itself, on the target, or rising), and for the bosses' and mini-bosses' specials a wind-up of
+the same name in `skill.monster_windup`, played on the monster about 1.2 s before; its blows land as the blow effect's
+`skill` variant. One design each, solid pictures first so they read on the bright maps. The plain blows made for the old
+animals (2026-11-09) stay where they fit the new monster (Stinglob's sting, Blazegullet's firebolt, Bramblehorn's gore,
+Sporegorge's spit, the ice ones...); the rest get blows of their own. The moves are the monster's Attack clip for now;
+the bosses' signature specials get clips of their own next.
+
+How they are placed (`client/ZombieFight`, found in the showroom 2026-11-12):
+- The wind-up is drawn at the release's scale (`fxScale`, up to `Fx.MaxScale` for a boss); at scale 1 a big monster's
+  body hid it.
+- A release's box is the body it lands on, standing on the floor: its `ground` pieces lie on the floor and its `body` ones
+  at the body's middle. A box of the effect's own size, as tall as a boss, put the rings under the floor.
+- Flat rings sit a hair over the floor (`offset` 0.1) and are drawn toward the camera (`zOffset` 0.5); on the floor
+  itself, the floor hid them.
+- The face's emote part follows the head even while it shows nothing. Left at the world's origin, it stretched the
+  model's box, and every effect played on the model came down about 150 studs away.
+- `mote_glow` draws a dark square on a bright map; motes use `dot_round`. `embers_fly` is dark-backed too and is worn at
+  lightEmission 1. The packs' 4 x 4 explosion is pixelated this big; the library's sharp redraw
+  (`explosion_sharp_1..3`) plays instead.
+- Ice and frost are a deep ice blue with little light of their own (lightEmission 0.1 to 0.15), never near-white: the
+  Ice map's floor (`#ddebf5`) swallowed the pale blues. No light on an ice wind-up (it burnt the white floor to white),
+  and no black-backed floor art there (`floor_snow` is added and vanished): Penguin's ring is `ring_crescents`. The
+  body effects too: Frostmaw's whirl and snow drift and Rimetusk's breath are ice blue, the drift and Snowshroud's mist
+  solid puffs and wisps (thin `smoke_tufts_flip` vanished, full-colour `smoke_frost` read as grey dirt). A body effect
+  goes round OUTSIDE the body: Frostmaw's whirls at 5 units were inside its 13-stud body. A `radius` makes a cube as tall
+  as it is wide (a ring of smoke round the feet rose to the shoulders): a low ring is a `box` (`lift` below 0 is refused
+  on a lasting effect, and a refused piece takes the whole effect, every monster's, away).
+- A boss's wind-up starts outside its body (its body hid rings and streams drawn close in), and a big pop on a body is
+  raised so the floor does not cut it flat. Measure, do not work it out: a boss's streams play at scale 2.2, but its
+  rings and flashes are bursts and the library's burst-area cap shrinks them together, down to half (Frostmaw's rings
+  play at about 1.05 to 1.43). The probe is in the showroom: the emitters' sizes and places while frozen.
+- `tools/dungeon/monster_show.luau`'s `special(id, key, [freeze at])` plays one special in the showroom, and can freeze
+  it for a picture (`thaw()` lets it go on). Freezing stops the library's clock too (`VfxLib.freeze`): with only the
+  particles stopped, a wind-up was cleaned up before the picture. The stage takes the map's own floor colour: effects
+  judged on a green stage read wrong on the Ice map's white one.

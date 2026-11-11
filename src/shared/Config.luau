@@ -162,6 +162,9 @@ Config.Combat = {
 	--   splash: the target, and up to `spread` others beside it at `splash`;   multi: `hits` quick blows at the target;
 	--   guard: for `seconds` the guard takes every blow aimed at a team-mate, its defence times `defence`;
 	--   all: every foe at once, each knocked `stun` seconds off its beat;   single: one heavy blow.
+	--   any kind may carry `stun` (each foe it strikes is knocked off its beat) and `slow` + `slowSeconds` (each runs at
+	--   (1 - slow) speed meanwhile). mend: a healer's, on its heal turns: every `every`-th mending heals every wounded
+	--   team-mate by `share` x its attack. The monsters' own specials are in Config.Dungeon.Skills (copied in below).
 	Skills = {
 		attack = { kind = "splash", name = "Goo Slam", every = 4, factor = 1.4, splash = 0.4, spread = 2 },
 		speed = { kind = "multi", name = "Dash Strike", every = 4, factor = 0.5, hits = 3 },
@@ -872,6 +875,10 @@ Config.Zombies = if script then require(script.Parent.ConfigZombies) else requir
 -- a set number of them, stronger from wave to wave and from dungeon level to dungeon level. The numbers are the original's
 -- (docs/reference/02-battle.md §5 waves, §6 level ladder, §7 roster, §13 loot); the rules are shared/Dungeon.
 Config.Dungeon = if script then require(script.Parent.ConfigDungeon) else require("./ConfigDungeon")
+-- The monsters' specials (Config.Dungeon.Skills) join the skills Combat looks up, by their key.
+for key, skill in Config.Dungeon.Skills do
+	(Config.Combat.Skills :: any)[key] = skill
+end
 
 -- Gear and the Smithy (the owner, 2026-11-04; docs/SMITHY.md): three slots on every slime, four tiers, a piece each crafted
 -- from dungeon drops at the Blacksmith. Gear adds flat points to a slime's stats in every fight (shared/Gear.bonus); it
