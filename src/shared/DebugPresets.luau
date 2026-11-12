@@ -307,13 +307,24 @@ local function fillTeams(farm: Farm, now: number)
 	end
 end
 
--- Every team member wears the three pieces of one tier (one more of each is made for it; the bag keeps its own).
+-- Every team member wears the three pieces of one tier (one more of each is made for it; the bag keeps its own); its
+-- weapon's family goes round the families member by member, so the teams show every class (docs/WEAPONS.md).
 local function wearTier(farm: Farm, tier: string)
+	local families: { string } = {}
+	for _, gearId in Config.Smithy.GearOrder do
+		local def: any = Gear.get(gearId)
+		if def and def.slot == "hand" and type(def.family) == "string" and not table.find(families, def.family) then
+			table.insert(families, def.family)
+		end
+	end
+	local member = 0
 	for _, team in farm.teams do
 		for _, slimeId in team.members do
+			member += 1
+			local family = families[(member - 1) % math.max(1, #families) + 1]
 			for _, gearId in Config.Smithy.GearOrder do
 				local def: any = Gear.get(gearId)
-				if def and def.tier == tier then
+				if def and def.tier == tier and (def.slot ~= "hand" or family == nil or def.family == family) then
 					farm.gear[gearId] = (farm.gear[gearId] or 0) + 1
 					Gear.equip(farm, slimeId, gearId)
 				end

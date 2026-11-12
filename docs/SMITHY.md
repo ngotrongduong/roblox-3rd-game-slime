@@ -44,6 +44,8 @@ Three slots on every slime: **Weapon** (attack), **Head** (a helm: defence and h
 Charm since the owner's word, 2026-11-04; the saved ids stay `hand`, `head`, `tail`.)
 Gear adds flat points to the slime's stats in every fight (dungeon and zombies); it never changes the slime's own stats,
 its level or its price. Four tiers, the rarity colour shown only on screens (the original's veto: no glow in the world).
+The weapon also gives the slime its class (2026-11-12): six families, 24 weapons, in `docs/WEAPONS.md` §4; the swords
+below are one of them. The Smithy's Weapon tab shows one family at a time (a row of their pictures under the tabs).
 
 | Tier | Rarity | Colour |
 |---|---|---|
@@ -60,10 +62,10 @@ its level or its price. Four tiers, the rarity colour shown only on screens (the
 | `sword-iron` | Iron Sword | hand | iron | 2 | | | |
 | `helm-iron` | Iron Helm | head | iron | | 2 | | 10 |
 | `charm-iron` | Iron Charm | tail | iron | | | 1 | 10 |
-| `sword-core` | Core Blade | hand | core | 4 | | 1 | |
+| `sword-core` | Runeblade | hand | core | 4 | | 1 | |
 | `helm-core` | Core Helm | head | core | | 3 | | 30 |
 | `charm-core` | Core Charm | tail | core | 1 | | 3 | |
-| `sword-bramble` | Bramble Sword | hand | bramble | 5 | | 1 | 20 |
+| `sword-bramble` | Dawnbreaker | hand | bramble | 5 | | 1 | 20 |
 | `helm-bramble` | Bramble Crown | head | bramble | 2 | 4 | | 40 |
 | `charm-bramble` | Bramble Charm | tail | bramble | | 2 | 3 | 30 |
 
@@ -77,10 +79,10 @@ its level or its price. Four tiers, the rarity colour shown only on screens (the
 | Iron Sword | ore 4, wood 2 | 25 |
 | Iron Helm | ore 5 | 25 |
 | Iron Charm | ore 3, wood 2 | 25 |
-| Core Blade | ore 8, Core Fragment 6, Monster Core 1 | 150 |
+| Runeblade | ore 8, Core Fragment 6, Monster Core 1 | 150 |
 | Core Helm | ore 8, Core Fragment 6, Monster Core 1 | 150 |
 | Core Charm | wood 6, Core Fragment 6, Monster Core 1 | 150 |
-| Bramble Sword | Bramble Horn 4, Core Fragment 12, Monster Core 2, Boss Essence 1 | 400 |
+| Dawnbreaker | Bramble Horn 4, Core Fragment 12, Monster Core 2, Boss Essence 1 | 400 |
 | Bramble Crown | Bramble Horn 4, Core Fragment 12, Monster Core 2, Boss Essence 1 | 400 |
 | Bramble Charm | Bramble Horn 4, Core Fragment 12, Monster Core 2, Boss Essence 1 | 400 |
 

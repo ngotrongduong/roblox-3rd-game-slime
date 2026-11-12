@@ -1,4 +1,5 @@
 --!strict
+local Classes = if script then require(script.Parent.Classes) else require("./Classes")
 local Combat = if script then require(script.Parent.Combat) else require("./Combat")
 local Config = if script then require(script.Parent.Config) else require("./Config")
 local FarmState = if script then require(script.Parent.FarmState) else require("./FarmState")
@@ -15,6 +16,8 @@ export type Fighter = {
 	hp: number,
 	maxHp: number?,
 	role: string?,
+	class: string?,
+	tier: number?,
 	kind: string?,
 	skills: { string }?,
 	-- (where it starts in a positional fight, which the Arena never is: Combat.Fighter's fields, kept so the types agree)
@@ -39,7 +42,9 @@ function ArenaFight.fighter(slime: Slime, prefix: string): Fighter
 		hp = stats.hp + bonus.hp,
 		maxHp = stats.hp + bonus.hp,
 	}
-	fighter.role = Combat.role(fighter, slime.seed)
+	fighter.class, fighter.tier = Classes.ofSlime(slime)
+	fighter.role = fighter.class or Combat.role(fighter, slime.seed)
+	fighter.skills = if fighter.class then {} else nil
 	return fighter
 end
 

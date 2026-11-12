@@ -110,7 +110,8 @@ local function gearSet(tier: string?): { [string]: string }
 		return worn
 	end
 	for id, piece in Config.Smithy.Gear do
-		if piece.tier == tier then
+		-- (the sword as its weapon: one family, so the class stays the same from run to run)
+		if piece.tier == tier and (piece.family == nil or piece.family == "sword") then
 			worn[piece.slot] = id
 		end
 	end

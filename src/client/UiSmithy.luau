@@ -1,6 +1,6 @@
 --!strict
--- The Blacksmith (docs/SMITHY.md §6): its prompt in the Market and the Smithy sheet. Tabs Weapon / Head / Charm, a card for each
--- piece of the tab (its picture on the rarity colour, name, the points it adds, how many wait in the bag, the materials as
+-- The Blacksmith (docs/SMITHY.md §6): its prompt in the Market and the Smithy sheet. Tabs Weapon / Head / Charm (the Weapon tab
+-- one weapon family at a time), a card for each piece of the tab (its picture on the rarity colour, name, the points it adds, how many wait in the bag, the materials as
 -- picture and have/need, the coins, and Craft). It reads what the server publishes (the root's Materials, GearBag and Coins
 -- attributes) and asks through Remotes.Village (SmithyCraft); the server decides and checks the distance, so a button it
 -- would refuse is greyed. This file also lends the gear pictures, the stat tags and the reason texts to UiGearSlots (the
@@ -368,6 +368,35 @@ local function openSheet(context: Context, point: Vector3)
 		SortOrder = Enum.SortOrder.LayoutOrder,
 	}, tabs)
 	local tabButtons: { [string]: TextButton } = {}
+	-- The Weapon tab has one row more: a picture a weapon family (sword, shield, bow, ...; docs/WEAPONS.md §4), in the order
+	-- its pieces come in GearOrder, each shown by its first piece; the list then holds that family's tiers only.
+	local families: { { family: string, icon: string } } = {}
+	for _, gearId in S.GearOrder do
+		local def: any = Gear.get(gearId)
+		if def and def.slot == "hand" and type(def.family) == "string" then
+			local seen = false
+			for _, entry in families do
+				seen = seen or entry.family == def.family
+			end
+			if not seen then
+				table.insert(families, { family = def.family, icon = def.icon or "" })
+			end
+		end
+	end
+	local family: string? = if families[1] then families[1].family else nil
+	local familyRow = UiKit.make("Frame", {
+		Name = "Families",
+		BackgroundTransparency = 1,
+		Position = UDim2.fromOffset(0, U.Touch + U.Gap),
+		Size = UDim2.new(1, 0, 0, U.Touch),
+	}, modal.content)
+	UiKit.make("UIListLayout", {
+		FillDirection = Enum.FillDirection.Horizontal,
+		HorizontalAlignment = Enum.HorizontalAlignment.Center,
+		Padding = UDim.new(0, U.Gap),
+		SortOrder = Enum.SortOrder.LayoutOrder,
+	}, familyRow)
+	local familyButtons: { [string]: TextButton } = {}
 	local list = UiKit.make("ScrollingFrame", {
 		Name = "Pieces",
 		BackgroundTransparency = 1,
@@ -387,10 +416,15 @@ local function openSheet(context: Context, point: Vector3)
 	local function build()
 		UiKit.clear(list)
 		updates = {}
+		local filtered = tab == "hand" and family ~= nil
+		familyRow.Visible = filtered
+		local top = if filtered then 2 * (U.Touch + U.Gap) else U.Touch + U.Gap
+		list.Position = UDim2.fromOffset(0, top)
+		list.Size = UDim2.new(1, 0, 1, -top)
 		local order = 0
 		for _, gearId in S.GearOrder do
 			local def: any = Gear.get(gearId)
-			if def and def.slot == tab then
+			if def and def.slot == tab and (not filtered or def.family == family) then
 				order += 1
 				table.insert(
 					updates,
@@ -419,6 +453,33 @@ local function openSheet(context: Context, point: Vector3)
 				tick()
 			end,
 		})
+	end
+
+	for index, entry in families do
+		local button = UiKit.button(familyRow, {
+			Name = entry.family,
+			Style = if entry.family == family then "primary" else "secondary",
+			Size = UDim2.fromOffset(U.Touch, U.Touch),
+			LayoutOrder = index,
+			OnClick = function()
+				family = entry.family
+				for id, other in familyButtons do
+					UiKit.setStyle(other, if id == entry.family then "primary" else "secondary")
+				end
+				build()
+				tick()
+			end,
+		})
+		familyButtons[entry.family] = button
+		local body = button:FindFirstChild("Visual") and (button :: any).Visual:FindFirstChild("Body")
+		UiKit.make("ImageLabel", {
+			Name = "Picture",
+			BackgroundTransparency = 1,
+			Image = entry.icon,
+			ScaleType = Enum.ScaleType.Fit,
+			Size = UDim2.fromOffset(U.Touch - 12, U.Touch - 12),
+			LayoutOrder = 1,
+		}, body)
 	end
 
 	tick = function()

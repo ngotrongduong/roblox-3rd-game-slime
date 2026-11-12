@@ -318,3 +318,43 @@ a Studio play test.
 | Rework the all-slime boss stuns | Partly | The owner just approved them; they stay short and now count in the stun count. |
 | Floating wand, twin daggers | No | The owner's one-hand-anchor rule. |
 | Alchemist with two or three effects a skill | No | Young players: one clear effect a skill; it also keeps the Alchemist from being needed everywhere. |
+
+## 13. As built (steps 1-2, 2026-11-12)
+
+Built: the rules core and the six Common classes in `Combat`, their numbers in `Config.Classes`
+(`src/shared/ConfigClasses.luau`), the class from the weapon worn (`Classes.ofSlime`), the 24 weapons at the Smithy (one
+family a time on its Weapon tab; icons cut from the owner's `equip-*.png`), tests in `tests/spec/classes.luau`. Seen in a
+Studio dungeon run with both debug teams: every class casts its skill, no errors. Every tier uses the Common skill until
+steps 4-5.
+
+Simpler than §2-§3 for now (each is a later fix, none changes a rule the owner sees):
+- No threat table: a monster's target is still today's pick by its kind; a Guardian draws foes by Taunt and Pull (Pull 3).
+- Ranged slimes do not shoot while walking (80%) and the Healer and Alchemist do not back away; Rangers and Mages hop.
+- A dash does not check that its landing spot is free; a hop with no free spot of its three tries is skipped.
+- Heals look at health now, not at blows on their way; a Mend with nobody below 60% still spends its cooldown.
+- A boss special that was cancelled still counts for the 8 s gap. The Ranger does not prefer foes in its danger range.
+
+### First sweep (`tools/balance/class_sim.luau`, positional, Common unless named)
+
+Dungeon, meadow, slimes level 60, 30 runs a probe: every team of four clears level 2 or 3 (four of one class, Brawlers,
+mixed: no class breaks the dungeon); GWRH with Mythic weapons clears 4. Rangers and Mages stand out of the danger range
+56-68% of the time. Mend is cast about once a run (the plain heal does the work).
+
+Team against team, slimes level 20, 1000 fights each, sides swapped (first team's wins / draws):
+
+| Match-up | Wins | Draws | Reading |
+|---|---|---|---|
+| GHHR against WRMA | 83% | 12% | healing stalls: too strong |
+| RRMH against WWGA | 90% | 0% | melee does not reach range |
+| GGHA against WRMA (wood, iron, core, bramble) | 7%, 5%, 16%, 0% | 1-4% | the protected back row is broken easily (no Rogue needed; the defence is too weak, not too strong) |
+| HHGW against WWRM | 59% | 19% | two Healers stall four hitters: fails |
+| GWRH against GMAH | 98% | 2% | GMAH has no way to win: fails |
+| GMMH against GWRH | 5% | 8% | the tank-and-mages clump is no farm |
+| GWRH Mythic against GWRH Common | 100% | 0% | far over 60-65% at level 20 (flat weapon points, §4's watch) |
+| WWWW, GGGG, RRRR, MMMM, AAAA against GWRH | 50%, 0%, 55%, 5%, 0% | 0% | four Rangers or Warriors match the mixed team |
+| HHHH against GWRH | 0% | 100% | four Healers can neither win nor lose: a stall |
+| BBBB (no weapons) against GWRH | 26% | 0% | a weapon is worth having |
+
+What to tune first (step 7, before the arena uses classes): heals (the Healer's plain heal and its 0.3 weight), the
+Guardian's survival and Taunt, melee reach against ranged (the walk, the dash, the hop's cooldown), and the weapons'
+flat points at low levels.

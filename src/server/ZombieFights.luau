@@ -605,7 +605,7 @@ local function beginFight(session: Session, team: March, farm: any, now: number)
 		local slime = FarmState.findSlime(farm, id)
 		if slime then
 			local fighter: any = Zombies.fighter(slime, now, 1 - (session.wounds[id] or 0))
-			fighter.role = Combat.role(fighter, slime.seed)
+			fighter.role = fighter.class or Combat.role(fighter, slime.seed)
 			table.insert(fighters, fighter)
 			table.insert(here, id)
 			roles[id] = fighter.role

@@ -2,6 +2,8 @@
 -- The zombie slimes outside the village (the owner, 2026-11-02): groups a little around the player's own level, rarer
 -- kinds worth more, and coins for every slime killed on either side, by its level and rarity.
 local Boosts = if script then require(script.Parent.Boosts) else require("./Boosts")
+local Classes = if script then require(script.Parent.Classes) else require("./Classes")
+local Combat = if script then require(script.Parent.Combat) else require("./Combat")
 local Config = if script then require(script.Parent.Config) else require("./Config")
 local FarmState = if script then require(script.Parent.FarmState) else require("./FarmState")
 local Food = if script then require(script.Parent.Food) else require("./Food")
@@ -346,7 +348,18 @@ function Zombies.fighter(
 	slime: Slime,
 	now: number,
 	hpShare: number
-): { id: string, attack: number, defence: number, speed: number, hp: number, maxHp: number }
+): {
+	id: string,
+	attack: number,
+	defence: number,
+	speed: number,
+	hp: number,
+	maxHp: number,
+	role: string?,
+	class: string?,
+	tier: number?,
+	skills: { string }?,
+}
 	local factor = if Needs.isHungry(slime.needs) then Config.Needs.HungryWorkFactor else 1
 	local stats =
 		{ attack = slime.stats.attack, defence = slime.stats.defence, speed = slime.stats.speed, hp = slime.stats.hp }
@@ -359,14 +372,20 @@ function Zombies.fighter(
 	for key, points in bonus do
 		(stats :: any)[key] += points
 	end
-	return {
+	local class, tier = Classes.ofSlime(slime)
+	local fighter: any = {
 		id = slime.id,
 		attack = stats.attack * factor,
 		defence = stats.defence,
 		speed = stats.speed,
 		hp = stats.hp * math.clamp(hpShare, 0, 1),
 		maxHp = stats.hp,
+		class = class,
+		tier = tier,
+		skills = if class then {} else nil,
 	}
+	fighter.role = class or Combat.role(fighter, slime.seed)
+	return fighter
 end
 
 -- A slime becomes a ghost: its 15 minutes start (the village's one rule for a fallen slime). False when it is gone or is

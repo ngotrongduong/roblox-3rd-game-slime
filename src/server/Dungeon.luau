@@ -548,7 +548,7 @@ local function startRun(run: Run, farm: any, level: number, ids: { string }, now
 		local slime = FarmState.findSlime(farm, id)
 		if slime then
 			local fighter: any = Zombies.fighter(slime, now, 1 - ZombieFights.woundOf(run.player, id))
-			fighter.role = Combat.role(fighter, slime.seed)
+			fighter.role = fighter.class or Combat.role(fighter, slime.seed)
 			fighter.x, fighter.z = DungeonRules.squadSpot(index, #ids)
 			table.insert(fighters, fighter)
 			roles[id] = fighter.role
@@ -560,7 +560,7 @@ local function startRun(run: Run, farm: any, level: number, ids: { string }, now
 		end
 	end
 	-- (positional: the fighters walk into reach, at their own speed)
-	local fight = Combat.new(fighters, {}, run.rng, { moves = true })
+	local fight = Combat.new(fighters, {}, run.rng, { moves = true, radius = D.ArenaRadius })
 	-- (the queue brings monsters in one by one: the fight does not end when the monsters in it are down)
 	fight.open = true
 	run.fight = fight

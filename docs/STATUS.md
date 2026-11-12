@@ -1,5 +1,17 @@
 # Status
 
+## 2026-11-12 — weapon classes built (steps 1-2): the weapon gives the class, six Common classes fight
+
+The owner said "Bắt đầu xây". `docs/WEAPONS.md` steps 1-2 are in: the rules core in `Combat` (magic damage, heal
+weight, flat crit, dodge on plain blows, skills on cooldowns, stun count, boss specials 8 s apart, melt, taunt), the six
+Common classes with their brains and signature skills (Guardian Taunt and Intercept, Warrior Dash Strike, Ranger Piercing
+Shot and hop, Mage Arcane Barrage and hop, Healer heals and Mend, Alchemist Acid Rain), numbers in `Config.Classes`;
+the 24 weapons at the Smithy (one family a time on the Weapon tab, icons from the owner's equip art); a slime with no
+weapon is a Brawler as before. Seen in Studio: dungeon runs with both debug teams, every class casting, no errors; the
+Smithy's family row. The first sweep (`tools/balance/class_sim.luau`, WEAPONS.md §13) shows heals too strong, ranged
+beating melee, the Guardian too weak and Mythic too far over Common at level 20: tuning is step 7. Next: step 3, the
+weapons in hand (models, swings, projectiles, skill effects through the VFX library). Not seen: a phone.
+
 ## 2026-11-12 — weapons, classes and skills designed (with ChatGPT); dungeon fixes
 
 The owner asked for slimes that hold and swing weapons, a class and its skills and AI from the weapon, fewer skills at a

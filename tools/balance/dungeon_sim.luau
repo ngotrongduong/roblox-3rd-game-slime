@@ -26,7 +26,7 @@ end
 local STEP = Config.Zombies.FightStepSeconds
 
 -- A team of 4: `slimeLevel` nil is the four starters, otherwise the level shared evenly over the four stats (as fight_sim).
--- `tier` puts that tier's three pieces of gear on every slime (Config.Smithy).
+-- `tier` puts that tier's three pieces of gear on every slime (Config.Smithy), the sword as its weapon.
 local function team(slimeLevel: number?, tier: string?): { any }
 	local out = {}
 	for index = 1, Config.Zombies.TeamSize do
@@ -37,7 +37,7 @@ local function team(slimeLevel: number?, tier: string?): { any }
 		end
 		if tier then
 			for _, piece in Config.Smithy.Gear do
-				if piece.tier == tier then
+				if piece.tier == tier and (piece.family == nil or piece.family == "sword") then
 					for key, points in piece.stats do
 						stats[key] += points
 					end

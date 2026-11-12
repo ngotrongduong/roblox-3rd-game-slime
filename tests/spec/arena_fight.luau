@@ -13,12 +13,7 @@ return function(T)
 		slime.needs.fullness = 0
 		slime.buff = { stat = "attack", percent = 100, untilTime = 1e10 }
 		slime.ghostUntil = 1e10
-		for id, piece in Config.Smithy.Gear do
-			if piece.slot == "hand" then
-				slime.gear.hand = id
-				break
-			end
-		end
+		slime.gear.hand = "sword-wood"
 		T.ok(slime.gear.hand)
 		local bonus = Gear.bonus(slime)
 		local a = ArenaFight.fighter(slime, "a:")
@@ -30,7 +25,10 @@ return function(T)
 		T.eq(a.speed, 2 + bonus.speed)
 		T.eq(a.hp, 50 + bonus.hp)
 		T.eq(a.maxHp, a.hp)
-		T.eq(a.role, Combat.role(a, slime.seed))
+		T.eq(a.role, "warrior")
+		T.eq(a.class, "warrior")
+		T.eq(a.tier, 1)
+		T.same(a.skills, {})
 		d.id = a.id
 		T.same(a, d)
 		T.eq(ArenaFight.power({ a }), math.round(a.attack + a.defence + a.speed + a.hp / Config.Stats.HpPerLevel))

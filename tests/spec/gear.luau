@@ -60,12 +60,12 @@ end
 
 return function(T: any)
 	T.test("every piece has a slot, a tier and stats; every recipe makes a piece that exists", function()
-		T.eq(#S.GearOrder, 12)
+		T.eq(#S.GearOrder, 32)
 		local recipes = 0
 		for _ in S.Recipes do
 			recipes += 1
 		end
-		T.eq(recipes, 12)
+		T.eq(recipes, 32)
 		for _, id in S.GearOrder do
 			local piece = S.Gear[id]
 			T.ok(piece ~= nil, id .. " is defined")
@@ -150,6 +150,12 @@ return function(T: any)
 
 	T.test("equip and unequip move pieces and never change how many of each there are", function()
 		local farm = rich()
+		-- Crafting all 32 pieces needs more drops than the original twelve-piece fixture.
+		for _, recipe in S.Recipes do
+			for material, amount in recipe.materials do
+				farm.materials[material] += amount
+			end
+		end
 		for _, id in S.GearOrder do
 			T.ok(Gear.craft(farm, id))
 		end
