@@ -48,6 +48,9 @@ end
 function Lod.levels(handles, eye, look)
 	local entries = {}
 	for _, handle in handles do
+		if handle.fading then
+			continue -- (on its way off: it takes no one's place)
+		end
 		local at = rootPosition(handle)
 		local offset = at - eye
 		local distance = offset.Magnitude
@@ -98,6 +101,13 @@ function Lod.step(dt, camera)
 	end
 	for index = #Lod.handles, 1, -1 do
 		local handle = Lod.handles[index]
+		if handle.fading and not handle.dead then
+			-- (taken off softly, Builder.release: gone once what it had out has faded)
+			handle.fading -= dt
+			if handle.fading <= 0 then
+				Builder.detach(handle)
+			end
+		end
 		if handle.dead or not handle.folder.Parent then
 			handle.dead = true
 			table.remove(Lod.handles, index)
@@ -123,6 +133,9 @@ function Lod.step(dt, camera)
 		end
 	end
 	for _, handle in Lod.handles do
+		if handle.fading then
+			continue -- (its emitters stay off)
+		end
 		local level = levels and levels[handle]
 		local info = { clock = Lod.clock }
 		if check then

@@ -111,7 +111,7 @@ local function setAura(h: Held)
 	if want and not h.aura then
 		local id = W.Fx.Aura .. h.family
 		if has(id) then
-			local ok, handle = pcall(VfxLib.attach, part, id, { variant = h.tier })
+			local ok, handle = pcall(VfxLib.attach, part, id, { variant = h.tier, weld = true })
 			h.aura = if ok then handle else nil
 		end
 	elseif not want and h.aura then
@@ -261,10 +261,14 @@ function SlimeWeapon.cue(model: Model, cast: boolean, strikeIn: number)
 			if h.cue ~= cue or not part or not part.Parent then
 				return
 			end
-			local ok, handle = pcall(VfxLib.attach, part, trailId, { variant = h.tier })
+			-- (welded: the weapon is anchored and moved every frame, the effect must ride it)
+			local ok, handle = pcall(VfxLib.attach, part, trailId, { variant = h.tier, weld = true })
 			if ok and handle then
+				-- (it fades out softly; a newer move that took the same trail over takes it off itself)
 				task.delay(seconds, function()
-					pcall(VfxLib.detach, handle)
+					if h.cue == cue then
+						pcall(VfxLib.detach, handle)
+					end
 				end)
 			end
 		end)
@@ -286,10 +290,9 @@ function SlimeWeapon.remove(model: Model)
 		return
 	end
 	held[model] = nil
-	if h.aura then
-		pcall(VfxLib.detach, h.aura)
-	end
 	if h.part then
+		-- (its aura and any trail go at once)
+		pcall(VfxLib.detach, h.part, nil, 0)
 		h.part:Destroy()
 	end
 end

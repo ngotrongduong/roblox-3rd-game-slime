@@ -57,7 +57,9 @@
 --             effect) `peak`: the moment after it is put on that its preview is shot (a serpent where it shows best)
 --   start     (lasting) an effect of pieces played once when it is put on (`opts.burst`): a buff's "dish eaten"
 --   variants  { name = fields }: a variant lays its fields over the effect; `extra` pieces are added, `drop` names
---             removed (`opts.variant`); defaultVariant names the one used when none is asked
+--             removed (`opts.variant`); defaultVariant names the one used when none is asked. A variant's own `tier`
+--             promises less than the effect's (a rarity ladder: the wooden rung cheap, the legendary one mid) and is
+--             held to it alone
 --   grades    { name = { rate, size, count, alpha } }: multipliers by rarity (`opts.grade`)
 --   idle      (lasting) the share of `motion = "run"` pieces (and of a trail's light) that stays while the host stands
 --   source    { from = where it was lifted, art = whose pictures, licence }
@@ -149,8 +151,11 @@
 --   wing
 -- A BAND (one Trail): texture, colors | role, width, life, glow, alpha, taper, y (its middle over the feet), length
 --   (studs between two repeats of the picture; none: stretched), shift (seconds round its colour loop), phase, span,
---   blade { base, tip } (a weapon's trail: shares of the host's longest side, from its negative end; width unused),
---   face (false: a flat ribbon in the world, as a blade's arc; true by default: it faces the camera).
+--   blade { base, tip } (a weapon's trail: shares of the host's longest side, from its negative end, -0.5 to 1.5: a
+--   smear flung a little past the weapon's end, as a swung bag's goo; width unused),
+--   axis (with blade: X | Y | Z, the host's side the weapon's length runs along, when it is not the longest: an
+--   alchemy kit wider than it is tall), face (false: a flat ribbon in the world, as a blade's arc; true by default: it
+--   faces the camera). A weapon's trail taken off (VfxLib.detach) fades: its ribbon and sparks end their lives.
 -- A BEAM (one Beam of a one-shot; studs at refHeight in the play's frame: -z ahead, +y up, +x right):
 --   name, texture, colors | role, from { x, y, z }, to { x, y, z }, bulge { x, y, z } (both control points pushed this
 --   way: an arc), width { atFrom, atTo }, delay, life (seconds), transparency / grow { { t, v } } (over its life; grow
@@ -1176,16 +1181,19 @@ function Schema.problem(effect, variantOf)
 				if
 					not isPair(blade)
 					or blade[2] == nil
-					or blade[1] < 0
-					or blade[1] > 1
-					or blade[2] < 0
-					or blade[2] > 1
+					or math.min(blade[1], blade[2]) < -0.5
+					or math.max(blade[1], blade[2]) > 1.5
 				then
-					return `{label} band {index}: blade is \{ base, tip \}, shares 0 to 1 of the weapon's length`
+					return `{label} band {index}: blade is \{ base, tip \}, shares -0.5 to 1.5 of the weapon's length`
 				end
 				if math.abs(blade[2] - blade[1]) < 0.1 then
 					return `{label} band {index}: a blade band spans at least a tenth of the weapon`
 				end
+				if band.axis ~= nil and band.axis ~= "X" and band.axis ~= "Y" and band.axis ~= "Z" then
+					return `{label} band {index}: axis is X, Y or Z (the weapon's side its length runs along)`
+				end
+			elseif band.axis ~= nil then
+				return `{label} band {index}: axis is a blade band's`
 			elseif type(band.width) ~= "number" or band.width <= 0 or band.width > 6 then
 				return `{label} band {index}: width is over 0 up to 6 studs`
 			end
@@ -1409,6 +1417,24 @@ function Schema.problem(effect, variantOf)
 	local order = { cheap = 1, mid = 2, heavy = 3 }
 	if order[fits] > order[effect.tier] then
 		return `{effect.id}: promises {effect.tier} but costs {fits}`
+	end
+	-- (a variant may promise less than the effect: the plain rungs of a rarity ladder are cheap, the rich ones mid)
+	for _, name in variantNames(effect) do
+		local own = effect.variants[name].tier
+		if own ~= nil then
+			if order[own] == nil then
+				return `{effect.id} variant {name}: tier is cheap, mid or heavy`
+			end
+			if order[own] > order[effect.tier] then
+				return `{effect.id} variant {name}: promises {own}, more than the effect's {effect.tier}`
+			end
+			local alone = table.clone(variantOf(effect, name))
+			alone.variants = nil
+			local costs = Budget.tierOf(kind, Budget.measure(alone, variantOf))
+			if order[costs] > order[own] then
+				return `{effect.id} variant {name}: promises {own} but costs {costs}`
+			end
+		end
 	end
 	return nil
 end

@@ -488,7 +488,10 @@ Known misses, kept for the sweep after steps 4-6:
   Piercing Shot strike like a crit.
 - **Rarity layers** come from the VFX library (`trail.weapon_<family>`, `burst.weapon_cast_<family>`,
   `aura.weapon_<family>` with the tier as the variant, the aura from Epic up): SlimeWeapon plays each as soon as the
-  library has it and leaves it out until then. Asked of the library session on 2026-11-12; not imported yet.
+  library has it and leaves it out until then. The six trails are in (library cdf384f): each move draws its family's
+  ribbon and what it sheds, one rung a tier (Common a pale streak, Legendary a crimson and gold arc with starlight and
+  embers), attached `weld = true` because the weapon is anchored and moved every frame (without it the ribbon stayed
+  where it was put and drew nothing). Seen in Studio (`review/trail-*.jpg`). The cast bursts and the auras follow.
 - Seen in a Studio play test (`docs/weapons/review/`): the back, the left and the hand places from behind and in front,
   and a real Dungeon run (arrows, orbs, pierce and magic marks drawn). Not yet built: weapons on the Arena's replay bodies
   and on the zombie march.

@@ -482,12 +482,17 @@ local function makeBand(handle, band, index)
 	local b = handle.budget
 	local a0, a1
 	if band.blade then
-		-- (the blade is the host's longest side; shares of it from its negative end)
-		local axis = if size.Y >= size.X and size.Y >= size.Z
-			then Vector3.new(0, 1, 0)
-			elseif size.X >= size.Z then Vector3.new(1, 0, 0)
-			else Vector3.new(0, 0, 1)
-		local length = math.max(size.X, size.Y, size.Z)
+		-- (the blade runs along the band's `axis` of the host, else its longest side; shares of it from its negative end:
+		-- an alchemy kit is wider than it is tall, its length still up its Y)
+		local axis = if band.axis == "X" or (band.axis == nil and size.X > size.Y and size.X >= size.Z)
+			then Vector3.new(1, 0, 0)
+			elseif band.axis == "Z" or (band.axis == nil and size.Z > size.Y and size.Z > size.X) then Vector3.new(
+				0,
+				0,
+				1
+			)
+			else Vector3.new(0, 1, 0)
+		local length = size:Dot(axis)
 		a0 = newAttachment(handle.carrier, `Band{index}Tip`, axis * length * (band.blade[2] - 0.5))
 		a1 = newAttachment(handle.carrier, `Band{index}Base`, axis * length * (band.blade[1] - 0.5))
 	else
@@ -2141,7 +2146,8 @@ function Builder.attach(effect, host, opts)
 		move = move,
 		budget = kindBudget,
 		opts = opts,
-		behind = fields.kind == "trail",
+		-- (a runner's trail is laid behind its back; a weapon's on the weapon itself)
+		behind = fields.kind == "trail" and fields.host ~= "weapon",
 		parts = {},
 		anchors = {},
 		orbits = {},
@@ -2301,6 +2307,34 @@ function Builder.detach(handle)
 	handle.dead = true
 	if handle.folder then
 		handle.folder:Destroy()
+	end
+end
+
+-- How long what a lasting effect has out lingers once nothing new is born: its longest ribbon or particle life (a
+-- second at most).
+function Builder.lingering(handle)
+	local longest = 0
+	for _, item in handle.folder:GetDescendants() do
+		if item:IsA("Trail") then
+			longest = math.max(longest, item.Lifetime)
+		elseif item:IsA("ParticleEmitter") then
+			longest = math.max(longest, item.Lifetime.Max)
+		end
+	end
+	return math.min(longest, 1)
+end
+
+-- Takes a lasting effect off softly (a weapon's trail as the blow ends): nothing new is born, what is out lives on (a
+-- ribbon fades from its tail, the particles end their lives) and `seconds` later it is gone: Lod's loop counts them.
+function Builder.release(handle, seconds)
+	if handle.dead or handle.fading then
+		return
+	end
+	handle.fading = seconds
+	for _, item in handle.folder:GetDescendants() do
+		if item:IsA("ParticleEmitter") or item:IsA("Trail") or item:IsA("Light") then
+			item.Enabled = false
+		end
 	end
 end
 

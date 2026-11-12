@@ -16,9 +16,12 @@ focus and staff at the right; every blow and cast moves the weapon with its own 
 - Seen in Studio: the back, left and hand places from behind and in front, a full Frozen Ice run (arrows, orbs, marks),
   no errors (`docs/weapons/review/`).
 
-Not done: the rarity layers (trails, cast bursts, auras) come from the VFX library, asked of its session and not
-imported yet; weapons on the Arena's replay bodies and the zombie march; the higher-tier skills (steps 4-5). Not seen: a
-phone, the owner.
+- **Swing trails** from the VFX library (cdf384f): every family's move leaves its ribbon, finer each tier (the Legendary
+  sword a crimson and gold arc with starlight and embers). Seen in a lineup and riding the weapons in a Dungeon run.
+
+Not done: the cast bursts and the Epic-and-up auras (the library builds them next); weapons on the Arena's replay
+bodies and the zombie march; the higher-tier skills (steps 4-5). Not seen: a phone, the owner, the trails on the snow
+map up close.
 
 ## 2026-11-12 — classes balanced for the Arena; Legendary, a fifth weapon rarity; the owner's 30 weapon models in
 

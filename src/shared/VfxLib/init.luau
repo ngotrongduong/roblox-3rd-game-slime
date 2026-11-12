@@ -4,7 +4,9 @@
 --
 --   VfxLib.setup{ quality = { get, subscribe }, textures = { key = id }, log = "[Game]", effects = folder, start }
 --   VfxLib.attach(host, id, opts)   a lasting effect (aura, trail, buff, wings, world) on a Part / Model / character
---   VfxLib.detach(handleOrHost, id) takes it off (every library effect of the host when no id)
+--   VfxLib.detach(handleOrHost, id, fade) takes it off (every library effect of the host when no id); `fade` seconds:
+--                                   softly, what it has out lives on and fades (a weapon's trail does so by default:
+--                                   its ribbon and sparks end their lives; 0: at once)
 --   VfxLib.update(handle, info)     optional: a run speed of your own ({ speed }); otherwise the loop measures it
 --   VfxLib.play(id, at, opts)       a one-shot (hit, burst, reveal, skill) at a Vector3 / CFrame / host
 --   VfxLib.stop(live)               ends a one-shot at once (gone this frame)
@@ -138,11 +140,25 @@ end
 local function handlesOf(host)
 	local found = {}
 	for _, handle in Lod.handles do
-		if handle.host == host and not handle.dead then
+		-- (one on its way off is not worn any more: the next blow's trail is a new one)
+		if handle.host == host and not handle.dead and not handle.fading then
 			table.insert(found, handle)
 		end
 	end
 	return found
+end
+
+-- Off at once, or softly over `fade` seconds (a weapon's trail by default: as long as its ribbon and sparks live).
+local function takeOff(handle, fade)
+	local effect = handle.effect
+	if fade == nil and effect.kind == "trail" and effect.host == "weapon" then
+		fade = Builder.lingering(handle)
+	end
+	if fade and fade > 0 then
+		Builder.release(handle, fade)
+	else
+		Builder.detach(handle)
+	end
 end
 
 function VfxLib.attach(host, id, opts)
@@ -181,14 +197,16 @@ function VfxLib.attach(host, id, opts)
 	return handle
 end
 
-function VfxLib.detach(target, id)
+function VfxLib.detach(target, id, fade)
 	if type(target) == "table" and target.folder then
-		Builder.detach(target)
+		if not target.dead then
+			takeOff(target, if type(id) == "number" then id else fade)
+		end
 		return
 	end
 	for _, handle in handlesOf(target) do
 		if id == nil or handle.id == id then
-			Builder.detach(handle)
+			takeOff(handle, fade)
 		end
 	end
 end
@@ -243,7 +261,7 @@ end
 function VfxLib.refresh()
 	local old = table.clone(Lod.handles)
 	for _, handle in old do
-		if not handle.dead then
+		if not handle.dead and not handle.fading then
 			Builder.detach(handle)
 			local fresh = Builder.attach(handle.effect, handle.host, handle.opts)
 			if fresh then
