@@ -29,7 +29,7 @@ export type Context = {
 	open: (id: string, height: number, tick: () -> (), point: Vector3?, range: number) -> UiKit.Modal,
 }
 type Notice = { team: number, dead: number, coins: number }
-type TeamChip = { root: Frame, icon: ImageLabel, track: Frame, fill: Frame, key: string }
+type TeamChip = { root: GuiObject, icon: ImageLabel, track: Frame, fill: Frame, key: string }
 
 local UiTeams = {}
 local ctx: Context? = nil
@@ -145,8 +145,13 @@ end
 
 -- ===== The team sheet at the gate =====
 
-local function openTeams(point: Vector3)
+-- From the gate (`point`: it closes when the player walks off) or from a team's chip (`teamIndex`: that team's tab; it
+-- stays open wherever the player goes).
+local function openTeams(point: Vector3?, teamIndex: number?)
 	local c = context()
+	if teamIndex then
+		tab = teamIndex
+	end
 	local busy = false
 	local slotsKey = ""
 	local tick: () -> () = function() end
@@ -726,6 +731,8 @@ end
 
 -- ===== The team chips (left edge) =====
 
+-- A team's chip: a square button with its number in the corner, its state's picture in the middle and, while it is out,
+-- its march under it. A tap opens its team's sheet wherever the player is (the owner, 2026-11-12).
 local function chipFor(index: number): TeamChip
 	local item = chips[index]
 	if item then
@@ -733,30 +740,40 @@ local function chipFor(index: number): TeamChip
 	end
 	local host = chipsHost
 	assert(host, "UiTeams.start first")
-	local box, body = UiKit.skin(host, "Wood", "Card", {
+	local box = UiKit.button(host, {
 		Name = "Team" .. index,
-		Size = UDim2.fromOffset(U.ChipHeight + 30, U.ChipHeight),
+		Style = "secondary",
+		Size = UDim2.fromOffset(U.Touch, U.Touch),
 		LayoutOrder = index,
+		OnClick = function()
+			openTeams(nil, index)
+		end,
 	})
-	UiKit.label(body, tostring(index), U.TextNormal, "Brown", {
-		Size = UDim2.new(0, 18, 1, -V.ChipBarHeight - 2),
-		TextXAlignment = Enum.TextXAlignment.Center,
+	local body = box:FindFirstChild("Visual") :: Instance
+	UiKit.label(body, tostring(index), U.TextSmall, "Brown", {
+		Position = UDim2.fromOffset(5, 2),
+		Size = UDim2.fromOffset(14, U.TextSmall),
+		TextXAlignment = Enum.TextXAlignment.Left,
+		ZIndex = 4,
 	})
 	local icon = UiKit.make("ImageLabel", {
 		Name = "State",
 		BackgroundTransparency = 1,
 		ScaleType = Enum.ScaleType.Fit,
-		Position = UDim2.fromOffset(22, 0),
-		Size = UDim2.fromOffset(U.IconNormal - 4, U.IconNormal - 4),
+		AnchorPoint = Vector2.new(0.5, 0.5),
+		Position = UDim2.new(0.5, 3, 0.5, 1),
+		Size = UDim2.fromOffset(U.IconNormal, U.IconNormal),
+		ZIndex = 3,
 	}, body)
 	local track = UiKit.make("Frame", {
 		Name = "Track",
-		AnchorPoint = Vector2.new(0, 1),
-		Position = UDim2.fromScale(0, 1),
-		Size = UDim2.new(1, 0, 0, V.ChipBarHeight),
+		AnchorPoint = Vector2.new(0.5, 1),
+		Position = UDim2.new(0.5, 0, 1, -5),
+		Size = UDim2.new(1, -12, 0, V.ChipBarHeight),
 		BackgroundColor3 = UiKit.colour("Track"),
 		BorderSizePixel = 0,
 		Visible = false,
+		ZIndex = 4,
 	}, body)
 	UiKit.make("UICorner", { CornerRadius = UDim.new(0.5, 0) }, track)
 	local fill = UiKit.make("Frame", {
@@ -938,24 +955,25 @@ function UiTeams.start(context_: Context)
 	-- the group prompt (F, "Attack") opens the attack sheet
 	ZombieWorld.setOpener(openAttack)
 
-	-- the chips: a column on the left edge, above the chip of the dead
+	-- the chips: square buttons two to a row on the left edge, above the chip of the dead (six would not fit in one column
+	-- above the middle of a phone)
+	local rows = math.ceil(Z.Teams / U.TeamChipColumns)
 	local column = UiKit.make("Frame", {
 		Name = "TeamChips",
 		BackgroundTransparency = 1,
 		AnchorPoint = Vector2.new(0, 1),
 		Position = UDim2.new(0, U.Edge, 0.5, -V.ChipLift),
-		-- (a column holds U.TeamChipRows chips, the rest start a second one: six would not fit above the middle of a phone)
 		Size = UDim2.fromOffset(
-			(U.ChipHeight + 30) * math.ceil(Z.Teams / U.TeamChipRows)
-				+ U.Gap * (math.ceil(Z.Teams / U.TeamChipRows) - 1),
-			(U.ChipHeight + U.Gap) * U.TeamChipRows
+			U.Touch * U.TeamChipColumns + U.Gap * (U.TeamChipColumns - 1),
+			(U.Touch + U.Gap) * rows
 		),
 	}, UiKit.root())
-	UiKit.make("UIListLayout", {
-		FillDirection = Enum.FillDirection.Vertical,
-		Wraps = true,
+	UiKit.make("UIGridLayout", {
+		CellSize = UDim2.fromOffset(U.Touch, U.Touch),
+		CellPadding = UDim2.fromOffset(U.Gap, U.Gap),
+		FillDirection = Enum.FillDirection.Horizontal,
+		FillDirectionMaxCells = U.TeamChipColumns,
 		VerticalAlignment = Enum.VerticalAlignment.Bottom,
-		Padding = UDim.new(0, U.Gap),
 		SortOrder = Enum.SortOrder.LayoutOrder,
 	}, column)
 	chipsHost = column

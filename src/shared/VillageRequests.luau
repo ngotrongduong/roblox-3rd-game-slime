@@ -21,7 +21,6 @@ export type Env = {
 	atMarket: () -> boolean,
 	-- The Blacksmith's stall: within Config.Market.SmithyRangeStuds plus its slack.
 	atSmithy: () -> boolean,
-	nearGate: () -> boolean,
 	teamOut: (team: number) -> boolean,
 	attack: (farm: any, team: number, groupId: string, now: number) -> (boolean, string?),
 	clearWounds: (slimeId: string) -> (),
@@ -234,10 +233,8 @@ function VillageRequests.run(farm: any, data: any, now: number, env: Env): (bool
 	elseif action == "UpgradeArea" then
 		return Village.upgrade(farm, data.areaId, env.freeUpgrades)
 	elseif action == "SetTeam" then
-		-- the line-ups are set at the village gate, never while that team is out
-		if not env.nearGate() then
-			return false, "TOO_FAR"
-		elseif env.teamOut(data.team) then
+		-- the line-ups are set anywhere (a team's chip opens its sheet: the owner, 2026-11-12), never while that team is out
+		if env.teamOut(data.team) then
 			return false, "TEAM_OUT"
 		end
 		return Zombies.setTeam(farm, data.team, data.slimeIds, now, env.isOut)

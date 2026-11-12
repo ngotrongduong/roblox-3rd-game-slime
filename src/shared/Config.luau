@@ -1319,6 +1319,9 @@ Config.Brain = {
 	MaxFriends = 3,
 	NearbyStuds = 25,
 	PlayerStuds = 30,
+	-- a slime walking to the player follows them only while they stay this close: one who went far (into the Dungeon, out
+	-- to a march) is not walked after across the world
+	PlayerFollowStuds = 60,
 	StopStuds = 4,
 	SpotSpread = 4,
 	SpotSpreadPlaces = 6,

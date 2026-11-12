@@ -75,6 +75,8 @@ type Anim = {
 	out: number,
 	hold: number,
 	stay: boolean,
+	-- where the body was against `home` when this move began (a blow landing mid-knock): eased away over the move
+	carry: Vector3,
 }
 
 local ZombieFight = {}
@@ -217,7 +219,12 @@ local function stepAnims()
 			local elapsed = now - anim.start
 			safe("motion", function()
 				local k = shapeOf(anim, elapsed)
-				SlimeActor.setCFrame(anim.actor, CFrame.new(anim.home + anim.delta * k) * anim.actor.root.Rotation)
+				local t = math.clamp(elapsed / anim.duration, 0, 1)
+				local carried = anim.carry * (1 - t * t * (3 - 2 * t))
+				SlimeActor.setCFrame(
+					anim.actor,
+					CFrame.new(anim.home + anim.delta * k + carried) * anim.actor.root.Rotation
+				)
 			end)
 			if elapsed >= anim.duration + anim.hold and anims[index] == anim then
 				table.remove(anims, index)
@@ -287,6 +294,16 @@ local function play(
 	hold: number?,
 	stay: boolean?
 )
+	-- A move cut short by another (blows landing faster than a knock-back comes back) starts from where the body is and
+	-- comes back to where it stood, never from the half-way place: knock-backs that added up walked a boss away.
+	local carry = Vector3.zero
+	for _, running in anims do
+		if running.actor == actor and not running.stay then
+			home = running.home
+			local off = actor.root.Position - home
+			carry = Vector3.new(off.X, 0, off.Z)
+		end
+	end
 	stopAnim(actor)
 	-- (a lunge or a knock-back takes the body over from its walk; the next "move" from the server sets it going again)
 	walks[actor] = nil
@@ -299,6 +316,7 @@ local function play(
 		out = out or 0.5,
 		hold = hold or 0,
 		stay = stay == true,
+		carry = carry,
 	})
 	if not animLoop then
 		animLoop = RunService.RenderStepped:Connect(stepAnims)
@@ -1008,7 +1026,9 @@ local function impact(event: { [string]: any }, style: FightFx.Style)
 	FightFx.goo(target.body, skin, dir, if heavy then F.Goo.count * 2 else F.Goo.count)
 	SlimeActor.act(target, "Hit")
 	local stop = if burst then DFx.Burst.HitStopSeconds elseif pop then DFx.Pop.HitStopSeconds else V.HitStopSeconds
-	play(target, to, dir * V.KnockStuds * (if heavy then V.CritKnock else 1), V.KnockSeconds, 0.2, stop)
+	-- (a big body is heavy: a boss hardly moves)
+	local weight = math.max(1, if extras[event.to] then extras[event.to].size else 1) ^ V.KnockWeight
+	play(target, to, dir * V.KnockStuds * (if heavy then V.CritKnock else 1) / weight, V.KnockSeconds, 0.2, stop)
 	if burst or pop then
 		fadeTint(tint(target.model, Color3.new(1, 1, 1), if burst then DFx.Burst.HitFlash else DFx.Pop.HitFlash))
 	end

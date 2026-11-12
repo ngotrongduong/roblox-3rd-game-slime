@@ -17,9 +17,6 @@ local function env(changes: { [string]: any }?): any
 		atMarket = function()
 			return true
 		end,
-		nearGate = function()
-			return true
-		end,
 		teamOut = function()
 			return false
 		end,
@@ -165,10 +162,10 @@ return function(T: any)
 		T.eq(farm.coins, 0)
 	end)
 
-	T.test("teams change only at the gate and while home", function()
+	T.test("teams change anywhere, only while home", function()
 		local farm = FarmKit.farm(NOW)
 		local set = { action = "SetTeam", team = 1, slimeIds = {} }
-		T.eq(select(2, VillageRequests.run(farm, set, NOW, env({ nearGate = refuse }))), "TOO_FAR")
+		T.eq(select(1, VillageRequests.run(farm, set, NOW, env())), true)
 		T.eq(select(2, VillageRequests.run(farm, set, NOW, env({ teamOut = isOut }))), "TEAM_OUT")
 		local again = { action = "SetTeamRepeat", team = 1, on = true }
 		T.eq(select(2, VillageRequests.run(farm, again, NOW, env())), "NO_MEMBERS")

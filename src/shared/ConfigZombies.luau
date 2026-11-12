@@ -168,6 +168,8 @@ return {
 		KnockStuds = 1.4,
 		KnockSeconds = 0.32,
 		CritKnock = 1.7,
+		-- the knock-back taken is divided by the body's size (Dungeon monsters' look size, 1 or more) to this power
+		KnockWeight = 2,
 		-- A skill (Config.Combat.Skills): its name called out once over the one who strikes it (TextSize, Colour), a deeper
 		-- wind-up (Windup times the usual). Goo Slam and Belly Bounce leap (Leap studs) and their blows land when they come
 		-- down (CastSeconds), as do those of a skill that strikes everyone; Dash Strike's blows come MultiGap apart; acid

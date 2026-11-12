@@ -920,15 +920,6 @@ function ZombieFights.near(player: Player, point: Vector3, range: number): boole
 	return near(player, point, range)
 end
 
--- Whether the player stands at the team banner inside their own village gate, where the teams' line-ups are set.
-function ZombieFights.nearGate(player: Player): boolean
-	local plot = Plots.of(player)
-	if not plot then
-		return false
-	end
-	return near(player, Layout.plotMuster(plot).Position, Config.Zombies.GateRangeStuds)
-end
-
 -- The team banner, a waving flag, stands inside the gate of every village built (its owner's prompt is UiTeams'); its
 -- cloth flies away from the path (the muster frame's -X).
 local function placeBanner(plot: number, model: Model)

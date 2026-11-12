@@ -60,9 +60,6 @@ local function envOf(player: Player): VillageRequests.Env
 				Config.Market.SmithyRangeStuds + Config.Market.SmithyRangeSlackStuds
 			)
 		end,
-		nearGate = function(): boolean
-			return ZombieFights.nearGate(player)
-		end,
 		teamOut = function(team: number): boolean
 			return ZombieFights.teamOut(player, team)
 		end,

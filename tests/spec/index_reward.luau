@@ -48,9 +48,6 @@ local function env(changes: { [string]: any }?): any
 		atMarket = function()
 			return true
 		end,
-		nearGate = function()
-			return true
-		end,
 		teamOut = function()
 			return false
 		end,

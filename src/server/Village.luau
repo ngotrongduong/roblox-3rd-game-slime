@@ -1255,11 +1255,16 @@ local function refreshMoving(
 		return
 	end
 	actor.lastRefresh = clock
+	local fraction = VillagePath.progress(actor.legStart, actor.legEnd, clock, actor.gait)
+	local position = if actor.index == 0
+		then point(actor.current)
+		else point(actor.from):Lerp(point(actor.to), fraction)
 	local target: Spot? = nil
 	if action.kind == "player" then
 		local character = player.Character
 		local root = if character then character:FindFirstChild("HumanoidRootPart") else nil
-		if root and root:IsA("BasePart") then
+		-- (a player who went far away is not followed: the slime ends at where they last were)
+		if root and root:IsA("BasePart") and (root.Position - position).Magnitude <= Config.Brain.PlayerFollowStuds then
 			target = {
 				id = "player",
 				area = actor.current.area,
@@ -1287,10 +1292,6 @@ local function refreshMoving(
 	if not target then
 		return
 	end
-	local fraction = VillagePath.progress(actor.legStart, actor.legEnd, clock, actor.gait)
-	local position = if actor.index == 0
-		then point(actor.current)
-		else point(actor.from):Lerp(point(actor.to), fraction)
 	local start: Spot = { id = "via", area = actor.from.area, x = position.X, y = position.Y, z = position.Z }
 	target = stopShort(start, target)
 	local destination = if actor.index == 0 then actor.current else actor.route[#actor.route]

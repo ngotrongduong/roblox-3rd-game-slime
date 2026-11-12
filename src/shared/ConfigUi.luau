@@ -240,9 +240,9 @@ return {
 	-- pixels, and the strip's.
 	VipBadge = { Size = 40, Gap = 8, HudSize = 30 },
 	-- The team tabs of the gate sheet narrow to this when the header is short, so six fit (never under it), and the team
-	-- chips on the left edge stand this many to a column before they start a second one.
+	-- chips on the left edge stand this many to a row.
 	TabMin = 34,
-	TeamChipRows = 3,
+	TeamChipColumns = 2,
 	-- The Smithy sheet and the slime card's gear slots (UiSmithy, UiGearSlots), pixels: the sheet's height, a piece's card, its
 	-- picture, a cost's picture, a stat tag, a worn slot's picture and cell, a row of the picker.
 	Gear = {
