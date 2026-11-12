@@ -30,8 +30,9 @@ return {
 	-- One card is a team just below (beating it pays BelowShare and moves no rank): rivals above are all stronger, so a
 	-- settled team would otherwise lose almost every fight (balance/arena_sim: 2-3% wins).
 	BelowOpponents = 1,
-	-- Bound replay size and resolve stalemates as successful defences.
-	MaxFightSeconds = 120,
+	-- Bound replay size. A fight still on at the limit goes to the side with more slimes standing, then the more health in
+	-- percent, then the more damage dealt; only an exact tie is a successful defence (docs/WEAPONS.md §7).
+	MaxFightSeconds = 90,
 	-- Stop new attacks five minutes before rollover; allow fifteen minutes for results to settle.
 	LockSeconds = 300,
 	FinalizeSeconds = 900,

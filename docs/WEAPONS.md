@@ -19,14 +19,15 @@ headless simulator (§10) settles them before they ship, and the owner tunes by 
 |---|---|
 | Classes | Six, one a weapon family: **Guardian** (Shield), **Warrior** (Sword), **Ranger** (Bow), **Mage** (Arcane Focus), **Healer** (Healing Staff), **Alchemist** (Alchemy Kit). A slime with no weapon stays a **Brawler** (today's role from its strongest stat, with today's four skills). |
 | Rogue, Bard | Not at launch. Rogue comes only if the protected-backline test (§10) fails; Bard's job (team buff) is the Alchemist's Tonic. |
-| Rarity and skills | Common: the full class AI + its signature skill. Uncommon: + a 2nd skill. Epic: + a 3rd skill. Mythic: + the ultimate. The skill that IS the class's job is always the signature, so a Common weapon is simple, never broken. |
-| Rarity and power | Same classes, same stats: a Mythic team should beat a Common one about 60-65% of the time; a well-built Common team beats a badly built Mythic one. |
-| Getting weapons | Crafted on purpose at the Smithy from dungeon and camp drops (the tiers wood, iron, core, bramble = Common, Uncommon, Epic, Mythic). Never Robux, never a lottery, no mastery system on top. |
+| Rarity and skills | Common: the full class AI + its signature skill. Uncommon: + a 2nd skill. Epic: + a 3rd skill. Mythic: + the ultimate. Legendary: + its trait (§3.7). The skill that IS the class's job is always the signature, so a Common weapon is simple, never broken. |
+| Legendary (the owner, 2026-11-12) | A fifth rarity above Mythic, weapons only (Head and Charm stop at Mythic), from the owner's own 3D set: one weapon of each family (§4). |
+| Rarity and power | A tier up is a stronger team, as a higher level is: at the same slime stats it wins nearly always. What is held is the edge at the same Arena power (the matching counts gear points): measured in §13, about 55-62% a tier up from Common, 75-85% for Mythic, 80-90% for Legendary, since the owner's weapon points sit in the stat the class uses. A well-built Common team still beats a badly built Mythic or Legendary one. (Was "Mythic over Common 60-65% at the same stats": the sim's fights between equal slimes are too even for any stat gap to give that.) |
+| Getting weapons | Crafted on purpose at the Smithy from dungeon and camp drops (the tiers wood, iron, core, bramble, legend = Common, Uncommon, Epic, Mythic, Legendary). Never Robux, never a lottery, no mastery system on top. |
 | Skills | On cooldowns in seconds. A skill takes the place of the next plain blow: more skills give more choices, not free extra hits. |
 | Ultimate | No energy bar. First ready 12 s into a fight or wave, then every 24 s; two ultimates of one team start at least 1.5 s apart. Its build-up shows as a charge effect on the slime (art), never a bar. |
 | Team settings | The formation comes from the weapons (rings, §6), with a front / middle / back choice per slime; one of three tactics: Balanced, Focus Fire, Protect Backline. |
 | Dungeon | One team a run (the owner, 2026-11-10: `Config.Dungeon.RunTeams = 1`). Support skills touch their own team only. |
-| Visuals | One weapon at the hand anchor on one side, the tail item on the other, both swapping with facing; the sword swings in a big arc, the staff rises on a cast; every weapon its own projectile and hit art; rarity shows on screens only (the original's veto: no glow in the world). |
+| Visuals | One weapon at the hand anchor on one side, the tail item on the other, both swapping with facing; the sword swings in a big arc, the staff rises on a cast; every weapon its own projectile and hit art. The owner (2026-11-12): the higher the rarity, the more and finer effects a weapon carries and the better it moves (§9); this lifts the original's "no glow in the world" for weapons, but the effects are crafted from art, never a plain glow or aura (what that veto was against). |
 
 ## 2. Shared rules (every class)
 
@@ -37,7 +38,10 @@ headless simulator (§10) settles them before they ship, and the owner tunes by 
   of a step (a monster at 32 studs/s crosses 3.2 a step).
 - **Beat.** Today's beat, `Combat.cooldown(speed)` (1 / (1 + 0.04 x SPD) s, floor 0.25 s), times the class's ratio (§3).
 - **Damage.** Physical as today: `ATK x factor x 0.3 x (1 - min(0.75, DEF / (DEF + 50)))`. Magic counts the target's DEF
-  as 65% of it. Heals and barriers use the same 0.3 weight (`ATK x factor x 0.3`), with no DEF.
+  as 65% of it. Heals and barriers weigh what the healer's own blow would take off a slime as strong as itself: the same
+  formula with its ATK as the DEF (`ATK x factor x 0.3 x (1 - min(0.75, ATK / (ATK + 50)))`), so heals keep pace with blows
+  at every level (with no armour at all, a heal at level 60 was a third stronger than the blows it answered, at level 200
+  twice; balance pass, 2026-11-12).
 - **Speed.** It keeps the beat and the walk. Crit no longer grows with it: a flat 10% crit at x1.6 on plain damaging blows
   only (a big hit is fun to see; never a skill, never a heal). Dodge stays only against plain basic blows (never a skill, a
   monster's special, an area, a telegraphed blow or poison): 0.5% per SPD, cap 20%. (SPD 20 dodges 10% of plain blows,
@@ -71,22 +75,26 @@ ranged slime keeps its distance by its hop.
 
 | Class | Weapon | Plain blow | Beat ratio | Reach | Stays at | Ring |
 |---|---|---|---|---|---|---|
-| Guardian | Shield | 0.75 physical | 1.15 | 6 | in melee, near the one it protects | front |
-| Warrior | Sword | 1.0 physical | 1.0 | 6 | in melee | front or middle |
-| Ranger | Bow | 0.95 physical | 1.05 | 16 | 11-14 | middle |
-| Mage | Arcane Focus | 0.85 magic | 1.15 | 16 | 10-13 | middle |
-| Healer | Healing Staff | a heal of 1.0 on the most hurt below 90%; else a 0.65 magic bolt | 1.15 | 15 | 9-12 | back |
-| Alchemist | Alchemy Kit | 0.75 magic flask | 1.2 | 14 | 10-12 | back |
+| Guardian | Shield | 0.8 physical | 1.1 | 6 | in melee, near the one it protects | front |
+| Warrior | Sword | 1.05 physical | 1.0 | 6 | in melee | front or middle |
+| Ranger | Bow | 1.05 physical | 1.0 | 16 | 11-14 | middle |
+| Mage | Arcane Focus | 0.9 magic | 1.0 | 16 | 10-13 | middle |
+| Healer | Healing Staff | a heal of 0.9 on the most hurt below 90%; else a 0.65 magic bolt | 1.15 | 15 | 9-12 | back |
+| Alchemist | Alchemy Kit | 0.9 magic flask | 1.0 | 14 | 10-12 | back |
 | Brawler | none | today's | 1.0 | 6 | in melee | front |
+
+(The balance pass of 2026-11-12 set these: with the first numbers a slime with a weapon fought worse than one without,
+since a Brawler's skill comes every 4-5 blows and a class's only every 8-10 s. §13.)
 
 ### 3.1 Guardian (Shield): gather, protect, last
 
-Passive **Intercept** (every tier): once every 8 s, a direct blow at a protected team-mate within 9 studs is 70% taken by
-the Guardian instead. Areas are not intercepted.
+Passive **Shield** (every tier): it always takes 20% less damage; its Taunt raises that to 35% while it lasts (the
+strongest only, §2). Passive **Intercept** (every tier): once every 8 s, a direct blow at a protected team-mate within 9
+studs is 70% taken by the Guardian instead. Areas are not intercepted.
 
 | Tier | Skill | What it does | Cooldown |
 |---|---|---|---|
-| Common | **Taunt** | Up to 3 foes attacking within 18 must attack the Guardian for 4 s; it takes 25% less damage meanwhile. | 8 s |
+| Common | **Taunt** | Up to 3 foes attacking within 18 must attack the Guardian for 4 s; it takes 35% less damage meanwhile. | 8 s |
 | Uncommon | **Shield Bash** | 1.15 physical, stun 0.5 s. | 11 s |
 | Epic | **Shield Wall** | Up to 2 team-mates within 16 take 15% less damage for 3.5 s. | 17 s |
 | Mythic | **Bulwark** (ultimate) | The whole team takes 18% less damage for 4 s; new stuns on it last 25% less. | 12 s, then 24 s |
@@ -99,7 +107,7 @@ raider reaches a back-row slime; Bash on a foe hurting a team-mate; Wall before 
 
 | Tier | Skill | What it does | Cooldown |
 |---|---|---|---|
-| Common | **Dash Strike** | Rushes up to 18 at a foe 7-18 away along a free path, 1.35 physical. | 9 s |
+| Common | **Dash Strike** | Rushes up to 18 at a foe 7-18 away along a free path, 1.5 physical. | 6 s |
 | Uncommon | **Area Slash** | 1.2 on the target, 0.55 on up to 2 others within 7 (cap 3). | 8 s |
 | Epic | **Breaker Strike** | 1.45 physical, ignores 20% of its DEF. | 12 s |
 | Mythic | **Whirlwind** (ultimate) | 0.8 s wind-up, 1.6 on the target, 0.7 on up to 3 others within 9 (cap 4). | 12 s, then 24 s |
@@ -115,7 +123,7 @@ every 6 s; no invulnerability, and its beat runs on (the hop resets nothing).
 
 | Tier | Skill | What it does | Cooldown |
 |---|---|---|---|
-| Common | **Piercing Shot** | 1.35 physical ignoring 25% DEF, and 0.55 on one foe lined up behind (cap 2). | 9 s |
+| Common | **Piercing Shot** | 1.35 physical ignoring 25% DEF, and 0.55 on one foe lined up behind (cap 2). | 6 s |
 | Uncommon | **Arrow Volley** | 0.85 on the target, 0.6 on up to 4 others within 9 of it (cap 5). | 12 s |
 | Epic | **Snare Arrow** | 0.9 physical and a 25% slow for 2.5 s (a boss 15% for 1.5 s). | 13 s |
 | Mythic | **Arrow Rain** (ultimate) | 1.2 s warning on the ground, then 1.3 on the target, 0.7 on up to 4 others within 9 (cap 5). | 12 s, then 24 s |
@@ -129,7 +137,7 @@ Passive **Hop**, as the Ranger's but every 9 s (the owner: archers and mages bot
 
 | Tier | Skill | What it does | Cooldown |
 |---|---|---|---|
-| Common | **Arcane Barrage** | 1.15 magic on the target, 0.4 on up to 2 others within 7 (cap 3). | 8 s |
+| Common | **Arcane Barrage** | 1.2 magic on the target, 0.4 on up to 2 others within 7 (cap 3). | 6 s |
 | Uncommon | **Frost Burst** | Within 8 of a foe: 0.9 on it, 0.45 on up to 3 others (cap 4), all slowed 25% for 2.5 s. | 13 s |
 | Epic | **Arcane Lance** | 1.55 magic on one foe; 35% more against a barrier. | 12 s |
 | Mythic | **Meteor** (ultimate) | 1.5 s warning on the ground, then 1.65 on the target, 0.85 on up to 3 others within 9 (cap 4). | 12 s, then 24 s |
@@ -163,7 +171,7 @@ effect a skill.
 
 | Tier | Skill | What it does | Cooldown |
 |---|---|---|---|
-| Common | **Acid Rain** | Within 8 of a foe: 0.9 magic on it, 0.45 on up to 2 others (cap 3); their armour melts 20% for 4 s. | 10 s |
+| Common | **Acid Rain** | Within 8 of a foe: 0.9 magic on it, 0.45 on up to 2 others (cap 3); their armour melts 20% for 4 s. | 8 s |
 | Uncommon | **Squad Tonic** | Its team deals 20% more damage for 4 s. | 18 s |
 | Epic | **Cursed Flask** | One foe: heals on it are 35% weaker for 5 s (no damage). | 12 s |
 | Mythic | **Catalyst Cloud** (ultimate) | Within 10 of a foe: 1.15 on it, 0.55 on up to 3 others (cap 4); armour melts 25% for 4 s. | 12 s, then 24 s |
@@ -172,25 +180,45 @@ AI: stays back, 10-12 from the foes; Acid Rain on the armoured and on tight grou
 being healed; Tonic when two or more team-mates will hit during it. Watch: it must not become a member of every winning
 team (§10).
 
+### 3.7 Legendary traits (the owner's fifth rarity, 2026-11-12)
+
+A Legendary weapon has the Mythic kit and one trait: a passive, one clear effect, that makes the class's job grander
+rather than adding a fifth button. Built with the ultimates (step 5); until then a Legendary weapon fights with its
+Common skill and its stats.
+
+| Class | Trait | What it does |
+|---|---|---|
+| Guardian | **Last Stand** | Once a fight, a blow that would make it fall leaves it at 1 HP, and it taunts at once if a foe is in range. |
+| Warrior | **Momentum** | A foe it finishes makes its Dash Strike ready again. |
+| Ranger | **Hawkeye** | Every 4th plain arrow also strikes one foe lined up behind (0.55, as Piercing Shot's). |
+| Mage | **Echo** | Arcane Barrage strikes again 0.6 s later at half its weight. |
+| Healer | **Overflow** | What a plain heal would waste becomes a barrier on the same slime, up to 10% of its max HP, for 4 s. |
+| Alchemist | **Lingering Brew** | Its armour melts last 2 s longer. |
+
 ## 4. Weapons
 
-Six families x four tiers = 24 weapons in the Weapon slot (saved as `hand`, as today). The class is the family of the
+Six families x five tiers = 30 weapons in the Weapon slot (saved as `hand`, as today). The class is the family of the
 weapon worn; nothing else is saved for it. Today's swords keep their ids and become the Warrior's. Names are the owner's
 own from the original where it had one. Stats are flat points, as all gear today (`docs/SMITHY.md` §3), each family
 leaning on its own stat as in the original.
 
-| Family | Common (wood) | Uncommon (iron) | Epic (core) | Mythic (bramble) |
-|---|---|---|---|---|
-| Sword | Wooden Sword `sword-wood` ATK 1 | Iron Sword `sword-iron` ATK 2 | Runeblade `sword-core` ATK 4 SPD 1 | Dawnbreaker `sword-bramble` ATK 5 SPD 1 HP 20 |
-| Shield | Wooden Shield `shield-wood` DEF 1 | Iron Shield `shield-iron` DEF 2 HP 10 | Warden Shield `shield-core` DEF 4 HP 20 | Aegis of Goo `shield-bramble` DEF 5 HP 40 |
-| Bow | Wooden Bow `bow-wood` ATK 1 | Iron Bow `bow-iron` ATK 2 SPD 1 | Windwhisper Bow `bow-core` ATK 3 SPD 2 | Starfall Bow `bow-bramble` ATK 5 SPD 2 HP 20 |
-| Arcane Focus | Arcane Focus `focus-wood` ATK 1 | Iron-bound Focus `focus-iron` ATK 2 SPD 1 | Prism Focus `focus-core` ATK 3 SPD 2 | Mythic Focus `focus-bramble` ATK 5 SPD 2 HP 20 |
-| Healing Staff | Healing Staff `staff-wood` HP 10 | Iron-shod Staff `staff-iron` DEF 1 HP 20 | Enchanted Staff `staff-core` ATK 1 DEF 1 HP 40 | Lifebloom Staff `staff-bramble` ATK 2 DEF 1 HP 50 |
-| Alchemy Kit | Alchemy Kit `kit-wood` SPD 1 | Iron Kit `kit-iron` SPD 2 HP 10 | Alchemist's Satchel `kit-core` ATK 1 SPD 3 | Philosopher's Kit `kit-bramble` ATK 2 SPD 4 HP 20 |
+| Family | Common (wood) | Uncommon (iron) | Epic (core) | Mythic (bramble) | Legendary (legend) |
+|---|---|---|---|---|---|
+| Sword | Wooden Sword `sword-wood` ATK 1 | Iron Sword `sword-iron` ATK 2 | Runeblade `sword-core` ATK 4 SPD 1 | Dawnbreaker `sword-bramble` ATK 5 SPD 1 HP 20 | Sunfire Blade `sword-legend` ATK 7 SPD 2 HP 30 |
+| Shield | Wooden Shield `shield-wood` DEF 1 | Iron Shield `shield-iron` DEF 2 HP 10 | Warden Shield `shield-core` DEF 4 HP 20 | Aegis of Goo `shield-bramble` DEF 5 HP 40 | Royal Bastion `shield-legend` DEF 7 HP 50 |
+| Bow | Wooden Bow `bow-wood` ATK 1 | Iron Bow `bow-iron` ATK 2 SPD 1 | Windwhisper Bow `bow-core` ATK 3 SPD 2 | Starfall Bow `bow-bramble` ATK 5 SPD 2 HP 20 | Moonsong Bow `bow-legend` ATK 6 SPD 3 HP 30 |
+| Arcane Focus | Arcane Focus `focus-wood` ATK 1 | Iron-bound Focus `focus-iron` ATK 2 SPD 1 | Prism Focus `focus-core` ATK 3 SPD 2 | Mythic Focus `focus-bramble` ATK 5 SPD 2 HP 20 | Astral Scepter `focus-legend` ATK 6 SPD 3 HP 30 |
+| Healing Staff | Healing Staff `staff-wood` HP 10 | Iron-shod Staff `staff-iron` DEF 1 HP 20 | Enchanted Staff `staff-core` ATK 1 DEF 1 HP 40 | Lifebloom Staff `staff-bramble` ATK 2 DEF 1 HP 50 | Everbloom Staff `staff-legend` ATK 3 DEF 2 HP 70 |
+| Alchemy Kit | Alchemy Kit `kit-wood` SPD 1 | Iron Kit `kit-iron` SPD 2 HP 10 | Alchemist's Satchel `kit-core` ATK 1 SPD 3 | Philosopher's Kit `kit-bramble` ATK 2 SPD 4 HP 20 | Grand Elixir Pack `kit-legend` ATK 3 SPD 6 HP 30 |
+
+The Legendary names are ours, from the look of the owner's set; each is about 12 level points (Mythic 8-9). Its pictures
+are renders of his models with a dark line like the painted ones (`tools/blender/weapon_icons.ps1`), not drawings.
 
 Recipes: one recipe a tier for every family (the owner: few drops, recipes easy to read), today's sword recipes: wood 3;
 ore 4 + wood 2 + 25 coins; ore 8 + Core Fragment 6 + Monster Core 1 + 150 coins; Bramble Horn 4 + Core Fragment 12 +
-Monster Core 2 + Boss Essence 1 + 400 coins. Head and Charm stay as they are: small stats, no skills.
+Monster Core 2 + Boss Essence 1 + 400 coins; Legendary: Ember Core 4 + Frost Fang 4 + Monster Core 3 + Boss Essence 2 +
+1000 coins (the trophies of the two hardest maps, which had no use yet). Head and Charm stay as they are: small stats, no
+skills, no Legendary.
 
 Watch: flat points weigh far more at low levels (a Dawnbreaker's +5 ATK on a slime of ATK 1). The simulator measures
 Mythic against Common at levels 4, 10, 20 and late; if the gap is far past 65% at low levels, the stat points shrink, the
@@ -229,7 +257,9 @@ Saved on the team (`formation` per slot, `tactic`); a team that has none is Bala
 Same brains for attacker and defender. The defence is snapshotted when a fight is made. Heals and new barriers fade as a
 fight drags: full to 30 s, 80% at 45 s, 60% at 60 s, 40% from 75 s; the limit drops from 120 s to 90 s and a timeout is
 no longer a free defence win: most slimes standing, then the most health in percent, then the most damage dealt; an exact
-tie is a draw. Duplicate classes are allowed.
+tie is a successful defence (the Arena's results have no draws). Duplicate classes are allowed. Built 2026-11-12
+(`Config.Classes.HealFade`, `ArenaFight.simulate`). An Arena fight is not positional (no walking, so no range and no
+hop): the classes meet there by their blows, skills, heals and taunts alone.
 
 ## 8. Bosses
 
@@ -241,10 +271,16 @@ slime can step out of and targeted heavy hits the Guardian and the Healer can an
 
 ## 9. Looks
 
-- **Models**: 24 low-poly weapons after the owner's own pictures (`equip-<family>[-iron|-enchanted|-mythic].png`; the
-  wood tier is the plain one), through his image-to-3D or Blender (skill `meshy-multiview`, agent `model-artist`), at
-  the size of a slime's hand; the CC0 Quaternius Medieval Weapons pack (`art/library/quaternius/`) only as a shape
-  reference or where his art has none. Each tier is its own model: no recolours.
+- **Models**: the owner's own (2026-11-12, `art/models/weapons/source/`): six Meshy files, one a family with its four
+  tiers in a row from wood to Mythic (`sword`, `shield`, `bow`, `crystal_staves` = Arcane Focus, `druid_stave` = Healing
+  Staff, `kit`), about 5000 triangles a file, and the Legendary set (`legendary.glb`, all six in a 3 x 2 grid, about 16500
+  triangles). Step 3 cuts each weapon out (as `tools/blender/weapon_icons.py` does), sizes it to a slime's hand and
+  lightens it for phones. Each tier is its own model: no recolours.
+- **Rarity** (the owner, 2026-11-12): the higher the tier, the more and finer the weapon's effects and the better its
+  motion. Common moves cleanly with its plain swing and hit; each tier up adds its own designed layer (a swing trail, then
+  sparkles or motes in the weapon's colours, then a signature burst on its skill), and the Legendary set the grandest: its
+  own idle shimmer of the weapon's gems and a richer motion. Every layer from art in the VFX library, its own design per
+  family and tier, never a plain glow or aura, and within the phone budgets.
 - **Holding**: the weapon at the slime's hand anchor on one side, its Charm on the other, both swapping with facing
   (the original's rule); the body's squash and lean drive every move.
 - **Moves** (the original's timings): sword swing 0.34 s, a big arc, and cleave 0.5; bow draw 0.42 and volley 0.62;
@@ -252,7 +288,7 @@ slime can step out of and targeted heavy hits the Guardian and the Healer can an
   bastion 0.55; a gentle idle sway each.
 - **Effects**: every skill its own design in the VFX library (`C:\roblox-vfx-library`, through its session): six
   projectiles (arrow, arcane bolt, flask, heal mote, and the sword's and shield's swing trails), six hit effects, 24 skill
-  effects with their warnings on the ground, the ultimates' charge. Rarity never glows.
+  effects with their warnings on the ground, the ultimates' charge, and the rarity layers above.
 - Taunt reads as monsters turning to the Guardian, a Ward as a bubble, armour melt as the monster's own drip; no camera
   effects in fights (the owner's rule).
 
@@ -271,8 +307,11 @@ overheal, time out of reach, target switches, casts, stun and taunt uptime, figh
   only comes at Epic: two Common Healers must not stall four Common hitters on Focus Fire; Guardian, Guardian, Mage, Healer
   against stunning monsters and a mini-boss (can stuns lock it?); Guardian, Warrior, Ranger, Healer against Guardian,
   Mage, Alchemist, Healer (do both have a way to win?).
-- Rarity: Mythic against Common of the same build 60-65%; four of one class never the best; a speed-bred slime is not
-  the best build nor a dead one; the Alchemist is not in every winning team.
+- Rarity: each tier against Common at the same Arena power (§1), and a well-built Common team against badly built Mythic
+  and Legendary ones; four of one class never the best; a speed-bred slime is not the best build nor a dead one; the
+  Alchemist is not in every winning team.
+- Team fights are measured as the Arena fights them (`ArenaFight.simulate`: not positional, heals fading, the timeout
+  rule); the positional dungeon part measures range, hops and the monsters.
 - Ranged against fast monsters (the biggest risk ChatGPT names): how long Rangers and Mages really spend at their range;
   if too little, the monsters' blow commitment and the hop are tuned before anything else.
 - Targets: a fight of four against four lasts about 25 s (today's tuning) and never past 90 s in the arena; overheal under
@@ -288,12 +327,13 @@ a Studio play test.
    The Brawler keeps fighting as today.
 2. **Common classes**: the six brains (range bands, hop, intercept, leash, targets) and the six signature skills; the 24
    weapons and their recipes at the Smithy; the class from the weapon worn; the simulator and its first sweep.
-3. **Weapons in hand**: the six Common models (then the other tiers), held and swung, the projectiles and the signature
-   skills' effects; seen by the owner in a dungeon run.
+3. **Weapons in hand**: the owner's 30 models (§9), held and swung, the projectiles and the signature skills' effects,
+   more and finer effects and motion the higher the rarity; seen by the owner in a dungeon run.
 4. **Uncommon and Epic skills** with their effects.
-5. **Mythic ultimates** with the stagger and their charge effects.
+5. **Mythic ultimates** with the stagger and their charge effects; the Legendary traits (§3.7).
 6. **Team sheet**: rows and the three fight modes (saved per team).
-7. **Arena** rules (§7) and the full balance sweep (§10); numbers into `Config.Classes`.
+7. **Arena** rules (§7) and the full balance sweep (§10); numbers into `Config.Classes`. (The owner chose to balance before
+   step 3: the Arena rules and a first tuning of the Common classes are in, §13; the sweep is run again after steps 4-6.)
 
 ## 12. The debate with ChatGPT (2026-11-12)
 
@@ -336,6 +376,9 @@ Simpler than §2-§3 for now (each is a later fix, none changes a rule the owner
 
 ### First sweep (`tools/balance/class_sim.luau`, positional, Common unless named)
 
+Its team table fought team against team positionally, which the Arena never does; the balance pass below measures them
+as the Arena fights.
+
 Dungeon, meadow, slimes level 60, 30 runs a probe: every team of four clears level 2 or 3 (four of one class, Brawlers,
 mixed: no class breaks the dungeon); GWRH with Mythic weapons clears 4. Rangers and Mages stand out of the danger range
 56-68% of the time. Mend is cast about once a run (the plain heal does the work).
@@ -358,3 +401,62 @@ Team against team, slimes level 20 and 60, 1000 fights each, sides swapped (firs
 What to tune first (step 7, before the arena uses classes): heals (the Healer's plain heal and Mend at the 0.3 weight;
 the arena's heal fade of §7 is not built yet), melee reach against ranged (the walk, the dash, the hop's cooldown), the
 weapons' stat gap between tiers, and what a class adds over a Brawler at high levels.
+
+### Balance pass (2026-11-12, the owner chose to balance before step 3)
+
+The sim's team and tier parts now run the Arena's own fight (`ArenaFight.simulate`); the dungeon part stays positional.
+What changed:
+- **Heals**: `Combat.healAmount(attack, factor) = Combat.damage(attack, attack) x factor`, what the healer's blow would
+  take off a slime as strong as itself. The old weight (attack x 0.3) grew with attack while blows shrink by defence, so
+  heals outran damage at high levels. The plain heal is 0.9 of that.
+- **The Arena's rules (§7)**: heals fade from 30 s (80% at 45 s, 60% at 60, 40% at 75; `Config.Classes.HealFade`, Arena
+  only), the limit is 90 s, and a fight at the limit goes to more slimes standing, then more health in percent, then more
+  damage dealt; only an exact tie lets the defender hold (the limit was a free defence win).
+- **The classes** (`ConfigClasses`): a weapon made a slime weaker than a Brawler, whose skills come every 4-5 blows while
+  the class skills waited 6-10 s. Warrior and Ranger now beat at 1.0 with factor 1.05, Mage and Alchemist 1.0 / 0.9,
+  Guardian 1.1 / 0.8 and always takes 20% less (Shield; 35% while taunting), Healer 1.15 / 0.65. Dash Strike 1.5 every
+  6 s, Piercing Shot every 6 s, Arcane Barrage 1.2 (splash 0.4) every 6 s, Acid Rain every 8 s.
+- **Legendary** (§1, §4): the fifth weapon tier, about 12 level points a weapon.
+
+Team against team, 1000 seeded fights each, sides swapped (the first team's wins; Common weapons):
+
+| Match-up | Level 20 | Level 60 | Level 120 | Reading |
+|---|---|---|---|---|
+| GWRH mirror | 52% | 50% | 51% | fair |
+| GHHR against WRMA | 66% | 66% | 60% | healing helps, no stall (at most 2% reach the limit) |
+| RRMH against WWGA | 61% | 47% | 41% | melee reaches range |
+| GGHA against WRMA | 32% | 64% | 73% | inside 65-70% up to 60, a little over at 120 |
+| HHGW against WWRM | 51% | 65% | 76% | two Healers grow strong late |
+| GWRH against GMAH | 88% | 63% | 42% | GMAH weak early, fine later |
+| GMMH against GWRH | 27% | 42% | 57% | the tank-and-mages clump is no farm |
+| GWRH against WRMA (one Healer against none) | 85% | 71% | 62% | |
+| WWWW, GGGG, RRRR, MMMM, AAAA against GWRH | 42, 0, 34, 15, 0% | 32, 3, 29, 20, 18% | 25, 5, 25, 35, 55% | no four of one class the best, but AAAA at 120 |
+| HHHH against GWRH | 0% | 0% | 0% | 98-99% reach the limit and lose on the rule: no stall win |
+| GWRH against BBBB (no weapons) | 97% | 71% | 52% | a class adds little at 120 |
+
+One Healer heals 27-34% of the damage its team takes; two, 46-60%. Fights last 42-66 s (Healer teams the longest).
+
+Tiers against Common, slimes level 60, GWRH and WRMA (first team's wins):
+
+| Tier | Same stats | Same Arena power (the Common team gets the weapons' level points) |
+|---|---|---|
+| Uncommon | 84%, 76% | 59%, 52% |
+| Epic | 100%, 94% | 77%, 52% |
+| Mythic | 100%, 100% | 86%, 75% |
+| Legendary | 100%, 100% | 90%, 78% |
+
+A good Common GWRH against badly built Mythic and Legendary teams of four of one class: 0-6%, except HHHH, which it
+beats at the limit every time. GWRH against BBBB at the same Arena power: 54%.
+
+Dungeon (meadow, level 60, 30 runs a probe): every team of four clears level 2 or 3, GWRH with Mythic weapons clears 4;
+Rangers and Mages stand out of danger 54-63% of the time; one Healer heals about 430 a run.
+
+Known misses, kept for the sweep after steps 4-6:
+- **Rarity outweighs the build.** With the owner's own stat points a Mythic or Legendary team beats a well-built Common
+  one whatever its classes, and at the same Arena power the higher tier still wins 75-90% (target about 63%): a weapon's
+  points, all in a few stats, are worth more than the same points spread over levels. The levers: smaller weapon points,
+  or an Arena power that counts a weapon's points more. The owner's numbers are kept until he says otherwise.
+- At level 20 GMAH has little way against GWRH (88%); at 120 a class adds little over a Brawler and AAAA beats GWRH 55%:
+  the late game rests on the skills of steps 4-5.
+- Fights run 42-66 s, not the 25 s §10 hoped for (the Guardian's Shield and the heal weight); only four Healers reach
+  90 s.

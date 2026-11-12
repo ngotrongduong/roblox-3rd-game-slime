@@ -98,6 +98,36 @@ return function(T: any)
 				stats = { attack = 2, speed = 4, hp = 20 },
 				icon = "rbxassetid://96985155253549",
 			},
+			["sword-legend"] = {
+				name = "Sunfire Blade",
+				stats = { attack = 7, speed = 2, hp = 30 },
+				icon = "rbxassetid://132802169884969",
+			},
+			["shield-legend"] = {
+				name = "Royal Bastion",
+				stats = { defence = 7, hp = 50 },
+				icon = "rbxassetid://121255860151167",
+			},
+			["bow-legend"] = {
+				name = "Moonsong Bow",
+				stats = { attack = 6, speed = 3, hp = 30 },
+				icon = "rbxassetid://100440456507272",
+			},
+			["focus-legend"] = {
+				name = "Astral Scepter",
+				stats = { attack = 6, speed = 3, hp = 30 },
+				icon = "rbxassetid://124216830470375",
+			},
+			["staff-legend"] = {
+				name = "Everbloom Staff",
+				stats = { attack = 3, defence = 2, hp = 70 },
+				icon = "rbxassetid://107335820651194",
+			},
+			["kit-legend"] = {
+				name = "Grand Elixir Pack",
+				stats = { attack = 3, speed = 6, hp = 30 },
+				icon = "rbxassetid://71919804799017",
+			},
 		}
 		for id, want in expected do
 			local got = Config.Smithy.Gear[id]
@@ -111,8 +141,10 @@ return function(T: any)
 				table.insert(order, family .. "-" .. tier)
 			end
 		end
+		-- (Legendary is weapons only: no helm or charm)
+		table.insert(order, "sword-legend")
 		for _, family in { "shield", "bow", "focus", "staff", "kit" } do
-			for _, tier in { "wood", "iron", "core", "bramble" } do
+			for _, tier in { "wood", "iron", "core", "bramble", "legend" } do
 				table.insert(order, family .. "-" .. tier)
 			end
 		end
@@ -125,9 +157,11 @@ return function(T: any)
 			staff = "healer",
 			kit = "alchemist",
 		})
-		T.same(Config.Classes.Tiers, { wood = 1, iron = 2, core = 3, bramble = 4 })
+		T.same(Config.Classes.Tiers, { wood = 1, iron = 2, core = 3, bramble = 4, legend = 5 })
+		T.same(Config.Smithy.TierOrder, { "wood", "iron", "core", "bramble", "legend" })
+		T.eq(Config.Smithy.Tiers.legend.rarity, "Legendary")
 	end)
-	T.test("all 24 weapons grant their family class and tier with matching recipes", function()
+	T.test("all 30 weapons grant their family class and tier with matching recipes", function()
 		local count = 0
 		local seen = {}
 		for _, id in Config.Smithy.GearOrder do
@@ -147,7 +181,7 @@ return function(T: any)
 				T.same(recipe.materials, sword.materials)
 			end
 		end
-		T.eq(count, 24)
+		T.eq(count, 30)
 		for family, class in Config.Classes.Families do
 			for tier, index in Config.Classes.Tiers do
 				local got, rank = Classes.ofSlime({ gear = { hand = family .. "-" .. tier } })
@@ -239,15 +273,16 @@ return function(T: any)
 		return nil
 	end
 
-	T.test("magic counts DEF at 0.65, heals weigh as damage with no DEF", function()
+	T.test("magic counts DEF at 0.65, a heal weighs the healer's blow on a slime of its own strength", function()
 		local c = Config.Combat
 		local physical = Combat.damage(10, 50)
 		local magic = Combat.damage(10, 50, true)
 		T.near(physical, 10 * c.DamageScale * (1 - 50 / 100), 1e-9)
 		T.near(magic, 10 * c.DamageScale * (1 - 32.5 / 82.5), 1e-9)
 		T.ok(magic > physical)
-		T.eq(Config.Classes.HealWeight, c.DamageScale)
-		T.near(Combat.healAmount(10, 4), 10 * 4 * c.DamageScale, 1e-9)
+		T.near(Combat.healAmount(10, 4), 10 * c.DamageScale * (1 - 10 / 60) * 4, 1e-9)
+		-- (so a heal keeps pace with blows: at ATK 50 it is half its old weight, as a blow on DEF 50 is)
+		T.near(Combat.healAmount(50, 1) / Combat.damage(50, 50), 1, 1e-9)
 		T.eq(c.CritPerSpeed, 0)
 		T.eq(c.DodgeCap, 0.2)
 	end)
@@ -360,7 +395,7 @@ return function(T: any)
 			T.eq(f.target, g)
 			T.near(f.tauntUntil, at + 4, 1e-9)
 		end
-		T.near(g.effects.taken.value, 0.25, 1e-9)
+		T.near(g.effects.taken.value, Skills.taunt.taken, 1e-9)
 		T.near(g.skillReady, at + Skills.taunt.cooldown, 1e-9)
 		run(fight, 4.1)
 		-- (let them aim again: their next aim finds the taunt over and picks by its own rule)
@@ -402,7 +437,8 @@ return function(T: any)
 		T.near(hits[1][1].amount, full * 0.3, 1e-9)
 		T.eq(hits[1][2].to, "g")
 		T.eq(hits[1][2].guard, "g")
-		T.near(hits[1][2].amount, full * 0.7, 1e-9)
+		-- (the Guardian's share comes through its shield: it always takes `taken` less)
+		T.near(hits[1][2].amount, full * 0.7 * (1 - Config.Classes.Kinds.guardian.taken), 1e-9)
 		T.eq(#hits[2], 1, "not again before 8 s")
 		local intercepted = 0
 		for _, batch in hits do
@@ -428,7 +464,7 @@ return function(T: any)
 		T.ok(hit ~= nil and hit.to == "m" and hit.guard == nil)
 	end)
 
-	T.test("Dash Strike: 1.35 when ready; positional it dashes from 7-18 and walks from farther", function()
+	T.test("Dash Strike when ready; positional it dashes from 7-18 and walks from farther", function()
 		local fight = Combat.new({ slime("w", "warrior") }, { foe("f", { defence = 10 }) }, Rng.new(4))
 		unitOf(fight, "w").skillReady = 0
 		freeze(unitOf(fight, "f"))
@@ -436,7 +472,7 @@ return function(T: any)
 			return event.kind == "hit" and event.from == "w"
 		end)
 		T.eq(hit.skill, "dash_strike")
-		T.near(hit.amount, Combat.damage(10, 10) * 1.35, 1e-9)
+		T.near(hit.amount, Combat.damage(10, 10) * Skills.dash_strike.factor, 1e-9)
 		local near = Combat.new(
 			{ slime("w", "warrior", { x = 0, z = 0 }) },
 			{ foe("f", { x = 12, z = 0 }) },
@@ -496,7 +532,7 @@ return function(T: any)
 		T.ok(hits[1].ranged, "a ranger's blow is ranged")
 	end)
 
-	T.test("Arcane Barrage: 1.15 magic on the target, 0.4 on up to 2 others", function()
+	T.test("Arcane Barrage: magic on the target and a smaller share on up to 2 others", function()
 		local fight = Combat.new({ slime("m", "mage") }, {
 			foe("a", { defence = 20 }),
 			foe("b", { defence = 20 }),
@@ -514,10 +550,10 @@ return function(T: any)
 			end
 		end
 		T.eq(#hits, 3)
-		T.near(hits[1].amount, Combat.damage(10, 20, true) * 1.15, 1e-9)
+		T.near(hits[1].amount, Combat.damage(10, 20, true) * Skills.arcane_barrage.factor, 1e-9)
 		for index = 2, 3 do
 			T.eq(hits[index].splash, true)
-			T.near(hits[index].amount, Combat.damage(10, 20, true) * 0.4, 1e-9)
+			T.near(hits[index].amount, Combat.damage(10, 20, true) * Skills.arcane_barrage.splash, 1e-9)
 		end
 	end)
 
@@ -547,7 +583,7 @@ return function(T: any)
 		end)
 		T.eq(plain.kind, "heal")
 		T.eq(plain.skill, nil)
-		T.near(plain.amount, Combat.healAmount(10, 1), 1e-9)
+		T.near(plain.amount, Combat.healAmount(10, Config.Classes.PlainHeal), 1e-9)
 		local _, well = healerFight(0.95, 0)
 		local bolt = firstOf(well, function(event: any): boolean
 			return event.from == "h" and (event.kind == "heal" or event.kind == "hit")
@@ -599,7 +635,7 @@ return function(T: any)
 		local next = firstOf(run(fight, 3), function(event: any): boolean
 			return event.kind == "hit" and event.from == "a"
 		end)
-		local want = Combat.damage(10, 30 * 0.8, true) * 0.75
+		local want = Combat.damage(10, 30 * 0.8, true) * Config.Classes.Kinds.alchemist.factor
 		T.near(next.amount, if next.crit then want * Config.Combat.CritFactor else want, 1e-9)
 	end)
 

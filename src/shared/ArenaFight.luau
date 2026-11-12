@@ -95,19 +95,54 @@ function ArenaFight.simulate(attackers: { Fighter }, defenders: { Fighter }, see
 		end
 		return out
 	end
-	local fight = Combat.new(side(attackers, "a:"), side(defenders, "d:"), Rng.new(seed), { fair = true })
+	local fight = Combat.new(side(attackers, "a:"), side(defenders, "d:"), Rng.new(seed), { fair = true, fade = true })
 	local steps: { { t: number, events: Events } } = {}
 	local dt, limit = Config.Zombies.FightStepSeconds, Config.Arena.MaxFightSeconds
+	-- the damage each side has dealt, for a fight that runs to the limit
+	local dealt: { [string]: number } = { a = 0, d = 0 }
 	-- Compute the endpoint from the step number so floating-point drift cannot add a step past the deadline.
 	for index = 1, math.ceil(limit / dt) do
 		local endpoint = math.min(index * dt, limit)
 		local events = Combat.step(fight, endpoint - fight.seconds)
+		for _, event in events do
+			if event.kind == "hit" and event.amount and event.from then
+				local by = event.from:sub(1, 1)
+				dealt[by] = (dealt[by] or 0) + event.amount
+			end
+		end
 		if #events > 0 then
 			table.insert(steps, { t = fight.seconds, events = events })
 		end
 		if fight.winner then
 			break
 		end
+	end
+	if not fight.winner then
+		-- (at the limit: more slimes standing, then more health in percent, then more damage dealt; a tie holds)
+		local standing: { [string]: number } = { squad = 0, foe = 0 }
+		local health: { [string]: number } = { squad = 0, foe = 0 }
+		local full: { [string]: number } = { squad = 0, foe = 0 }
+		for _, u in fight.units do
+			full[u.side] += u.maxHp
+			if u.hp > 0 then
+				standing[u.side] += 1
+				health[u.side] += u.hp
+			end
+		end
+		local function ahead(a: number, d: number): boolean?
+			if math.abs(a - d) < 1e-9 then
+				return nil
+			end
+			return a > d
+		end
+		local won = ahead(standing.squad, standing.foe)
+		if won == nil then
+			won = ahead(health.squad / math.max(1, full.squad), health.foe / math.max(1, full.foe))
+		end
+		if won == nil then
+			won = ahead(dealt.a, dealt.d)
+		end
+		return { won = won == true, seconds = fight.seconds, steps = steps }
 	end
 	return { won = fight.winner == "squad", seconds = fight.seconds, steps = steps }
 end

@@ -69,6 +69,7 @@ export type Unit = {
 }
 -- `open`: more foes are still to come (the dungeon's queue), so the fight does not end when the foes in it are down; a
 -- squad wiped out ends it all the same. `radius`: in the positional mode, how far from the middle anyone may hop.
+-- `fade`: heals weaken as the fight drags on (the Arena's, Config.Classes.HealFade).
 export type Fight = {
 	units: { Unit },
 	rng: Rng,
@@ -78,6 +79,7 @@ export type Fight = {
 	fair: boolean?,
 	moves: boolean?,
 	radius: number?,
+	fade: boolean?,
 }
 -- `skill` is the way of fighting whose skill struck (a key of Config.Combat.Skills); `n` the blow's number in a
 -- several-blow skill; `splash` a blow that struck beside the target; `guard` the guard that took a blow aimed elsewhere;
@@ -148,9 +150,10 @@ function Combat.damage(raw: number, defence: number, magic: boolean?): number
 	return math.max(c.MinDamage, raw * c.DamageScale * (1 - reduction))
 end
 
--- A class heal: `factor` times the healer's attack at the damage weight, no armour.
+-- A class heal: `factor` times what the healer's own blow would take off a slime as strong as itself (its attack at the
+-- damage weight, through armour the size of its attack), so heals keep pace with blows at every level.
 function Combat.healAmount(attack: number, factor: number): number
-	return attack * factor * Config.Classes.HealWeight
+	return Combat.damage(attack, attack) * factor
 end
 
 function Combat.cooldown(speed: number): number
@@ -253,7 +256,7 @@ function Combat.new(
 	squad: { Fighter },
 	foes: { Fighter },
 	rng: Rng,
-	opts: { fair: boolean?, moves: boolean?, radius: number? }?
+	opts: { fair: boolean?, moves: boolean?, radius: number?, fade: boolean? }?
 ): Fight
 	local units: { Unit } = {}
 	for _, fighter in squad do
@@ -269,6 +272,7 @@ function Combat.new(
 		fair = if opts then opts.fair else nil,
 		moves = if opts then opts.moves else nil,
 		radius = if opts then opts.radius else nil,
+		fade = if opts then opts.fade else nil,
 	}
 end
 
@@ -517,7 +521,13 @@ local function blow(
 			* (if u == guard then u.guardMul else 1)
 			* (1 - effectOf(fight, u, "melt"))
 			* (1 - (if how and how.ignore then how.ignore else 0))
-		return Combat.damage(attacker.attack, defence, how and how.magic) * factor * (1 - effectOf(fight, u, "taken"))
+		-- (a class that always takes less, the Guardian behind its shield, counts as an effect of that kind that never ends)
+		local own = kindOf(u)
+		local taken = math.max(
+			effectOf(fight, u, "taken"),
+			math.min(if own and own.taken then own.taken else 0, Config.Classes.Effects.taken)
+		)
+		return Combat.damage(attacker.attack, defence, how and how.magic) * factor * (1 - taken)
 	end
 	local crit = plain
 		and (attacker.side == "squad" or fight.fair == true)
@@ -729,8 +739,28 @@ local function lowestMate(fight: Fight, u: Unit, studs: number, below: number): 
 	return best
 end
 
-local function classHeal(healer: Unit, mate: Unit, factor: number, events: { Event }, key: string?)
-	local amount = math.min(mate.maxHp - mate.hp, Combat.healAmount(healer.attack, factor))
+-- The share of a heal that still lands now: 1, or in a fight that fades heals the HealFade curve (straight between its
+-- points, its first share before them and its last after).
+local function healShare(fight: Fight): number
+	local curve = Config.Classes.HealFade
+	if not fight.fade then
+		return 1
+	end
+	local t = fight.seconds
+	if t <= curve[1][1] then
+		return curve[1][2]
+	end
+	for index = 2, #curve do
+		local a, b = curve[index - 1], curve[index]
+		if t <= b[1] then
+			return a[2] + (b[2] - a[2]) * (t - a[1]) / (b[1] - a[1])
+		end
+	end
+	return curve[#curve][2]
+end
+
+local function classHeal(fight: Fight, healer: Unit, mate: Unit, factor: number, events: { Event }, key: string?)
+	local amount = math.min(mate.maxHp - mate.hp, Combat.healAmount(healer.attack, factor) * healShare(fight))
 	mate.hp += amount
 	table.insert(events, { kind = "heal", from = healer.id, to = mate.id, amount = amount, skill = key })
 end
@@ -872,7 +902,7 @@ local function classAct(fight: Fight, u: Unit, target: Unit, events: { Event })
 		elseif key == "mend" then
 			local mate = lowestMate(fight, u, s.range, 1)
 			if mate then
-				classHeal(u, mate, s.factor, events, key)
+				classHeal(fight, u, mate, s.factor, events, key)
 				return
 			end
 		elseif key == "dash_strike" then
@@ -908,7 +938,7 @@ local function classAct(fight: Fight, u: Unit, target: Unit, events: { Event })
 	if u.class == "healer" then
 		local mate = lowestMate(fight, u, kind.reach, K.HealThreshold)
 		if mate then
-			classHeal(u, mate, K.PlainHeal, events)
+			classHeal(fight, u, mate, K.PlainHeal, events)
 			return
 		end
 	end

@@ -1,14 +1,18 @@
 --!nocheck
--- The weapon classes on the real Combat (docs/WEAPONS.md §10), positional as in the Slime Dungeon. First sweep:
---   dungeon: each team of four (four of one class, Brawlers, mixed) in full 10-wave runs on the meadow: the highest
---     dungeon level it clears in half the runs or more; then, at that level, the share of the time Rangers and Mages stand
---     out of the danger range, the skills cast and each class's share of the damage.
---   teams: team against team (the hard match-ups of §10, rarity, four of one class against a mixed team): the first team's
---     share of wins with the sides swapped every other seed, the draws (past 90 s, §7) and the average length.
+-- The weapon classes on the real Combat (docs/WEAPONS.md §10):
+--   dungeon: each team of four (four of one class, Brawlers, mixed) in full 10-wave runs on the meadow, positional as in
+--     the Slime Dungeon: the highest dungeon level it clears in half the runs or more; then, at that level, the share of
+--     the time Rangers and Mages stand out of the danger range, the skills cast and each class's share of the damage.
+--   teams: team against team as the Arena fights them (ArenaFight.simulate: not positional, heals fading, the timeout
+--     decided by who stands): the hard match-ups of §10 and four of one class against a mixed team. The first team's share
+--     of wins (it attacks on odd seeds, defends on even ones), its healing as a share of the damage it took, the length.
+--   tiers: each tier's team against the same team with Common weapons, at the same slime stats and at the same Arena power
+--     (the Common slimes get the level points the better weapons add, as the Arena's matching counts them).
 --   lune run tools/balance/class_sim.luau [seeds] [part] [slimeLevel]
 -- (a team is its letters: G guardian, W warrior, R ranger, M mage, H healer, A alchemist, B a Brawler with no weapon;
--- `part` is dungeon or teams, both when left out; the slimes are level 20 when slimeLevel is left out)
+-- `part` is dungeon, teams or tiers, all when left out; the slimes are level 20 when slimeLevel is left out)
 local process = require("@lune/process")
+local ArenaFight = require("../../src/shared/ArenaFight")
 local Combat = require("../../src/shared/Combat")
 local Config = require("../../src/shared/Config")
 local Dungeon = require("../../src/shared/Dungeon")
@@ -22,17 +26,16 @@ local D = Config.Dungeon
 local K = Config.Classes
 local STEP = Config.Zombies.FightStepSeconds
 local MAP = "meadow"
-local DRAW_SECONDS = 90
 local LETTERS = { G = "guardian", W = "warrior", R = "ranger", M = "mage", H = "healer", A = "alchemist" }
 local FAMILY = {}
 for family, class in K.Families do
 	FAMILY[class] = family
 end
 
--- A slime of `level` (spread evenly over its stats, as dungeon_sim) holding its class's weapon of `tier`; a Brawler holds
--- none and fights by its strongest stat, as today.
-local function slime(id: string, letter: string, tier: string, seed: number): any
-	local share = LEVEL / #Stats.Keys
+-- A slime of LEVEL (and `extra` level points; spread evenly over its stats, as dungeon_sim) holding its class's weapon
+-- of `tier`; a Brawler holds none and fights by its strongest stat, as today.
+local function slime(id: string, letter: string, tier: string, seed: number, extra: number?): any
+	local share = (LEVEL + (extra or 0)) / #Stats.Keys
 	local f: any = { id = id, attack = share, defence = share, speed = share, hp = share * Config.Stats.HpPerLevel }
 	local class = LETTERS[letter]
 	if class then
@@ -48,11 +51,25 @@ local function slime(id: string, letter: string, tier: string, seed: number): an
 	return f
 end
 
+-- The level points a weapon adds, as the Arena's power counts them (hp per level).
+local function points(letter: string, tier: string): number
+	local class = LETTERS[letter]
+	if not class then
+		return 0
+	end
+	local sum = 0
+	for key, n in Config.Smithy.Gear[FAMILY[class] .. "-" .. tier].stats do
+		sum += if key == "hp" then n / Config.Stats.HpPerLevel else n
+	end
+	return sum
+end
+
 -- The team in the dungeon's squad row; `flip` stands it on the far side of the middle (the other team of a match-up).
-local function team(letters: string, tier: string, prefix: string, seed: number, flip: boolean): { any }
+-- `extras` are each slime's extra level points.
+local function team(letters: string, tier: string, prefix: string, seed: number, flip: boolean, extras: { number }?): { any }
 	local out = {}
 	for index = 1, #letters do
-		local f = slime(prefix .. index, letters:sub(index, index), tier, seed + index)
+		local f = slime(prefix .. index, letters:sub(index, index), tier, seed + index, extras and extras[index])
 		local x, z = Dungeon.squadSpot(index, #letters)
 		f.x, f.z = if flip then -x else x, if flip then -z else z
 		table.insert(out, f)
@@ -236,63 +253,108 @@ if PART == nil or PART == "dungeon" then
 	print("")
 end
 
--- One match-up: the first team's win share, the draw share and the average length (sides swapped every other seed).
-local function matchUp(a: string, tierA: string, b: string, tierB: string): (number, number, number)
-	local wins, draws, seconds = 0, 0, 0
+-- One match-up as the Arena fights it: the first team attacks on odd seeds and defends on even ones. Its win share, the
+-- share of fights that ran to the time limit, its healing as a share of the damage it took, and the average length.
+-- `extras` are the second team's slimes' extra level points.
+local function matchUp(a: string, tierA: string, b: string, tierB: string, extras: { number }?): (number, number, number, number)
+	local wins, timeouts, seconds, healed, taken = 0, 0, 0, 0, 0
 	for seed = 1, SEEDS do
-		local aFirst = seed % 2 == 1
-		local first = team(a, tierA, "a", seed, not aFirst)
-		local second = team(b, tierB, "b", seed * 7, aFirst)
-		local fight = if aFirst
-			then Combat.new(first, second, Rng.new(seed), { moves = true, radius = D.ArenaRadius })
-			else Combat.new(second, first, Rng.new(seed), { moves = true, radius = D.ArenaRadius })
-		while not fight.winner and fight.seconds < DRAW_SECONDS do
-			Combat.step(fight, STEP)
-		end
-		seconds += fight.seconds
-		if not fight.winner then
-			draws += 1
-		elseif (fight.winner == "squad") == aFirst then
-			wins += 1
+		local aAttacks = seed % 2 == 1
+		local first = team(a, tierA, "a", seed, false)
+		local second = team(b, tierB, "b", seed * 7, false, extras)
+		local replay = if aAttacks
+			then ArenaFight.simulate(first, second, seed)
+			else ArenaFight.simulate(second, first, seed)
+		seconds += replay.seconds
+		timeouts += if replay.seconds >= Config.Arena.MaxFightSeconds - 1e-6 then 1 else 0
+		wins += if replay.won == aAttacks then 1 else 0
+		-- (the first team's fighters are "a:a1" or "d:a1": the letter after the side's prefix)
+		for _, step in replay.steps do
+			for _, event in step.events do
+				if event.kind == "heal" and event.amount and event.from:sub(3, 3) == "a" then
+					healed += event.amount
+				elseif event.kind == "hit" and event.amount and event.to:sub(3, 3) == "a" then
+					taken += event.amount
+				end
+			end
 		end
 	end
-	return wins / SEEDS, draws / SEEDS, seconds / SEEDS
+	return wins / SEEDS, timeouts / SEEDS, healed / math.max(1e-9, taken), seconds / SEEDS
 end
 
+local function matchRow(a: string, tierA: string, b: string, tierB: string, question: string, extras: { number }?)
+	local win, timeout, heal, seconds = matchUp(a, tierA, b, tierB, extras)
+	print(
+		string.format(
+			"| %s %s | %s %s | %s | %.0f%% | %.0f%% | %.0f%% | %.0f |",
+			a,
+			tierA,
+			b,
+			tierB,
+			question,
+			win * 100,
+			timeout * 100,
+			heal * 100,
+			seconds
+		)
+	)
+end
+
+local HEADER = "| first team | second team | question | first wins | to the limit | first healed / taken | seconds |"
+
 if PART == nil or PART == "teams" then
-	print(string.format("## Team against team, slimes level %d, %d seeds", LEVEL, SEEDS))
+	print(string.format("## Team against team (the Arena's fight), slimes level %d, %d seeds", LEVEL, SEEDS))
 	print("")
-	print("| first team | second team | question | first wins | draws | seconds |")
-	print("|---|---|---|---|---|---|")
+	print(HEADER)
+	print("|---|---|---|---|---|---|---|")
 	local rows = {
+		{ "GWRH", "wood", "GWRH", "wood", "the mirror (50%)" },
 		{ "GHHR", "wood", "WRMA", "wood", "can healing stall?" },
-		{ "RRMH", "wood", "WWGA", "wood", "can melee reach range?" },
+		{ "RRMH", "wood", "WWGA", "wood", "ranged against melee" },
 		{ "GGHA", "wood", "WRMA", "wood", "protected back row (65-70% at most)" },
-		{ "GGHA", "iron", "WRMA", "iron", "protected back row (65-70% at most)" },
-		{ "GGHA", "core", "WRMA", "core", "protected back row (65-70% at most)" },
-		{ "GGHA", "bramble", "WRMA", "bramble", "protected back row (65-70% at most)" },
 		{ "HHGW", "wood", "WWRM", "wood", "two Healers against hitters" },
 		{ "GWRH", "wood", "GMAH", "wood", "both have a way to win" },
 		{ "GMMH", "wood", "GWRH", "wood", "tank and mages clump" },
-		{ "GWRH", "bramble", "GWRH", "wood", "Mythic over Common (60-65%)" },
+		{ "GWRH", "wood", "WRMA", "wood", "one Healer against none" },
 	}
 	for _, letter in { "W", "G", "R", "M", "H", "A", "B" } do
 		table.insert(rows, { string.rep(letter, 4), "wood", "GWRH", "wood", "four of one class never the best" })
 	end
+	table.insert(rows, { "GWRH", "wood", "BBBB", "wood", "weapons over none, same stats" })
 	for _, row in rows do
-		local win, draw, seconds = matchUp(row[1], row[2], row[3], row[4])
-		print(
-			string.format(
-				"| %s %s | %s %s | %s | %.0f%% | %.0f%% | %.0f |",
-				row[1],
-				row[2],
-				row[3],
-				row[4],
-				row[5],
-				win * 100,
-				draw * 100,
-				seconds
-			)
-		)
+		matchRow(row[1], row[2], row[3], row[4], row[5])
 	end
+	print("")
+end
+
+if PART == nil or PART == "tiers" then
+	print(string.format("## Tiers against Common (the Arena's fight), slimes level %d, %d seeds", LEVEL, SEEDS))
+	print("")
+	print(HEADER)
+	print("|---|---|---|---|---|---|---|")
+	for _, letters in { "GWRH", "WRMA" } do
+		for index = 2, #Config.Smithy.TierOrder do
+			local tier = Config.Smithy.TierOrder[index]
+			matchRow(letters, tier, letters, "wood", "same stats")
+			local extras = {}
+			for slot = 1, #letters do
+				local letter = letters:sub(slot, slot)
+				extras[slot] = points(letter, tier) - points(letter, "wood")
+			end
+			matchRow(letters, tier, letters, "wood", "same Arena power", extras)
+		end
+	end
+	-- a well-built Common team against badly built Mythic and Legendary ones, at the same slime stats
+	for _, letter in { "W", "G", "M", "A", "H" } do
+		for _, tier in { "bramble", "legend" } do
+			matchRow("GWRH", "wood", string.rep(letter, 4), tier, "a good Common build against a poor one")
+		end
+	end
+	-- (the Brawlers get the level points the Common weapons add: the class against none at the same power)
+	local extras = {}
+	for slot = 1, 4 do
+		extras[slot] = points(("GWRH"):sub(slot, slot), "wood")
+	end
+	matchRow("GWRH", "wood", "BBBB", "wood", "weapons over none, same Arena power", extras)
+	print("")
 end

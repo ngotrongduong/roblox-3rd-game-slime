@@ -44,8 +44,10 @@ Three slots on every slime: **Weapon** (attack), **Head** (a helm: defence and h
 Charm since the owner's word, 2026-11-04; the saved ids stay `hand`, `head`, `tail`.)
 Gear adds flat points to the slime's stats in every fight (dungeon and zombies); it never changes the slime's own stats,
 its level or its price. Four tiers, the rarity colour shown only on screens (the original's veto: no glow in the world).
-The weapon also gives the slime its class (2026-11-12): six families, 24 weapons, in `docs/WEAPONS.md` §4; the swords
+The weapon also gives the slime its class (2026-11-12): six families, 30 weapons, in `docs/WEAPONS.md` §4; the swords
 below are one of them. The Smithy's Weapon tab shows one family at a time (a row of their pictures under the tabs).
+Weapons have a fifth tier, Legendary (the owner, 2026-11-12, his own 3D set; Head and Charm stop at Mythic), crafted
+from the trophies of Ember Lava and Frozen Ice (`docs/WEAPONS.md` §4); a weapon's looks grow with its rarity (§9 there).
 
 | Tier | Rarity | Colour |
 |---|---|---|
@@ -53,6 +55,7 @@ below are one of them. The Smithy's Weapon tab shows one family at a time (a row
 | iron | Uncommon | #3a9b3a |
 | core | Epic | #8a4fd0 |
 | bramble | Mythic | #f08a24 |
+| legend | Legendary (weapons only) | #f7c600 |
 
 | id | Name | Slot | Tier | ATK | DEF | SPD | HP |
 |---|---|---|---|---|---|---|---|

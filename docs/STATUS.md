@@ -1,5 +1,27 @@
 # Status
 
+## 2026-11-12 — classes balanced for the Arena; Legendary, a fifth weapon rarity; the owner's 30 weapon models in
+
+The owner chose "balance first", then sent his 3D weapons (six Meshy files, a family's four tiers in a row each) and a
+Legendary set ("a new grade ... rarity: Legendary"), and asked that higher rarities carry more and finer effects and move
+better. Done:
+- **Balance** (`docs/WEAPONS.md` §13): the first sweep had fought team against team positionally, which the Arena never
+  does; the sim now runs `ArenaFight.simulate` itself. Heals weigh like a blow on a slime of the healer's own strength
+  (they had outgrown blows at high levels); the Arena's rules of §7 are in (heals fade from 30 s, 90 s limit, the timeout
+  goes to who stands, then health, then damage; was a free defence win). The Guardian always takes 20% less (35% while
+  taunting); the damage classes beat at 1.0 with signature skills every 6-8 s (a weapon had made a slime weaker than a
+  Brawler). Measured at level 60: mirror 50%, weapons over none 71%, one Healer heals 27-34% of the damage taken, every
+  hard match-up of §10 inside 35-66%, no four of one class above 32%.
+- **Legendary**: a fifth tier `legend` for weapons (Head and Charm stop at Mythic), six weapons (Sunfire Blade, Royal
+  Bastion, Moonsong Bow, Astral Scepter, Everbloom Staff, Grand Elixir Pack), about 12 level points each, crafted from
+  the Ember Lava and Frozen Ice trophies (4 + 4, Monster Core 3, Boss Essence 2, 1000 coins), pictures rendered from his
+  set (`tools/blender/weapon_icons.ps1`); traits designed (§3.7), built with the ultimates in step 5. Seen in Studio:
+  the Smithy's Legendary card, gold, with picture, stats and recipe.
+- **Models**: all seven files in `art/models/weapons/source/`, looked at (`tools/blender/weapon_look.ps1`); step 3 cuts
+  and holds them. The owner's rule on rarity looks is in WEAPONS.md §1 and §9.
+
+Not done: weapons in hand (step 3, next), the higher-tier skills (steps 4-5). Not seen: a phone.
+
 ## 2026-11-12 — weapon classes built (steps 1-2): the weapon gives the class, six Common classes fight
 
 The owner said "Bắt đầu xây". `docs/WEAPONS.md` steps 1-2 are in: the rules core in `Combat` (magic damage, heal

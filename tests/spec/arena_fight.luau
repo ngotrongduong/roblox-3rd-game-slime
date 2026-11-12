@@ -110,11 +110,17 @@ return function(T)
 			T.ok(ids[entry.id])
 		end
 	end)
-	T.test("timeout is a defender win at exactly the configured deadline", function()
+	T.test("a fight at the deadline goes to more standing, then more health in percent", function()
 		local tank = { id = "same", attack = 0, defence = 0, speed = 0, hp = 1e9 }
-		local replay = ArenaFight.simulate({ tank }, { tank }, 123)
-		T.eq(replay.won, false)
+		local other = { id = "other", attack = 0, defence = 0, speed = 0, hp = 1e9 }
+		local replay = ArenaFight.simulate({ tank, other }, { tank }, 123)
 		T.eq(replay.seconds, Config.Arena.MaxFightSeconds)
+		T.eq(replay.won, true, "two standing beat one")
+		T.eq(ArenaFight.simulate({ tank }, { tank, other }, 123).won, false)
+		-- (one side starts at half health: the other is ahead in percent)
+		local wounded = { id = "same", attack = 0, defence = 0, speed = 0, hp = 1e9, maxHp = 2e9 }
+		T.eq(ArenaFight.simulate({ wounded }, { tank }, 123).won, false)
+		T.eq(ArenaFight.simulate({ tank }, { wounded }, 123).won, true)
 		T.eq(tank.id, "same")
 		T.eq(tank.hp, 1e9)
 	end)

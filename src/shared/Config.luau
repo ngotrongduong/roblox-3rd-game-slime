@@ -897,9 +897,8 @@ Config.Flag = {
 	TrainingHeight = 9.5,
 }
 
--- Weapon classes share the combat weight so heals stay on the same scale as blows.
+-- The weapon classes (docs/WEAPONS.md); their skills join the skills Combat looks up, by their key.
 Config.Classes = if script then require(script.Parent.ConfigClasses) else require("./ConfigClasses")
-Config.Classes.HealWeight = Config.Combat.DamageScale
 for key, skill in Config.Classes.Skills do
 	(Config.Combat.Skills :: any)[key] = skill
 end
@@ -916,6 +915,10 @@ for key, skill in Config.Dungeon.Skills do
 	(Config.Combat.Skills :: any)[key] = skill
 end
 
+-- (one Legendary recipe for all six weapon families; each recipe gets its own copy below)
+local LEGEND_COINS = 1000
+local LEGEND_RECIPE = { ember_core = 4, frost_fang = 4, monster_core = 3, boss_essence = 2 }
+
 -- Gear and the Smithy (the owner, 2026-11-04; docs/SMITHY.md): three slots on every slime, four tiers, a piece each crafted
 -- from dungeon drops at the Blacksmith. Gear adds flat points to a slime's stats in every fight (shared/Gear.bonus); it
 -- never changes the slime's own stats, level or price. Rules: shared/Gear; requests: shared/VillageRequests.
@@ -926,13 +929,15 @@ Config.Smithy = {
 	Slots = { "hand", "head", "tail" },
 	-- (the owner, 2026-11-04: the hand slot shows as Weapon, the tail slot as Charm; the saved ids stay)
 	SlotNames = { hand = "Weapon", head = "Head", tail = "Charm" },
-	-- Tiers from the weakest. The rarity colour is only for screens (the original's veto: no glow in the world).
-	TierOrder = { "wood", "iron", "core", "bramble" },
+	-- Tiers from the weakest. The rarity colour is only for screens (the original's veto: no glow in the world). Legendary
+	-- (the owner, 2026-11-12, his own 3D set) is weapons only: Head and Charm stop at Mythic.
+	TierOrder = { "wood", "iron", "core", "bramble", "legend" },
 	Tiers = {
 		wood = { rarity = "Common", colour = "#8f97a0" },
 		iron = { rarity = "Uncommon", colour = "#3a9b3a" },
 		core = { rarity = "Epic", colour = "#8a4fd0" },
 		bramble = { rarity = "Mythic", colour = "#f08a24" },
+		legend = { rarity = "Legendary", colour = "#f7c600" },
 	},
 	-- Every piece of gear: its name, slot, tier and the flat points it adds (stat keys of shared/Stats; a stat left out adds
 	-- nothing). A hand piece is a weapon, a head piece a helm, a tail piece a charm.
@@ -949,26 +954,32 @@ Config.Smithy = {
 		"sword-bramble",
 		"helm-bramble",
 		"charm-bramble",
+		"sword-legend",
 		"shield-wood",
 		"shield-iron",
 		"shield-core",
 		"shield-bramble",
+		"shield-legend",
 		"bow-wood",
 		"bow-iron",
 		"bow-core",
 		"bow-bramble",
+		"bow-legend",
 		"focus-wood",
 		"focus-iron",
 		"focus-core",
 		"focus-bramble",
+		"focus-legend",
 		"staff-wood",
 		"staff-iron",
 		"staff-core",
 		"staff-bramble",
+		"staff-legend",
 		"kit-wood",
 		"kit-iron",
 		"kit-core",
 		"kit-bramble",
+		"kit-legend",
 	},
 	Gear = {
 		-- Weapons use the owner's original art; each family grants its class at every tier.
@@ -1132,6 +1143,56 @@ Config.Smithy = {
 			stats = { attack = 2, speed = 4, hp = 20 },
 			icon = "rbxassetid://96985155253549",
 		},
+		-- Legendary: the owner's own 3D set (art/models/weapons/source/legendary.glb); the pictures are renders of it
+		-- (tools/blender/weapon_icons.ps1). About 12 level points each, a third over Mythic.
+		["sword-legend"] = {
+			name = "Sunfire Blade",
+			slot = "hand",
+			family = "sword",
+			tier = "legend",
+			stats = { attack = 7, speed = 2, hp = 30 },
+			icon = "rbxassetid://132802169884969",
+		},
+		["shield-legend"] = {
+			name = "Royal Bastion",
+			slot = "hand",
+			family = "shield",
+			tier = "legend",
+			stats = { defence = 7, hp = 50 },
+			icon = "rbxassetid://121255860151167",
+		},
+		["bow-legend"] = {
+			name = "Moonsong Bow",
+			slot = "hand",
+			family = "bow",
+			tier = "legend",
+			stats = { attack = 6, speed = 3, hp = 30 },
+			icon = "rbxassetid://100440456507272",
+		},
+		["focus-legend"] = {
+			name = "Astral Scepter",
+			slot = "hand",
+			family = "focus",
+			tier = "legend",
+			stats = { attack = 6, speed = 3, hp = 30 },
+			icon = "rbxassetid://124216830470375",
+		},
+		["staff-legend"] = {
+			name = "Everbloom Staff",
+			slot = "hand",
+			family = "staff",
+			tier = "legend",
+			stats = { attack = 3, defence = 2, hp = 70 },
+			icon = "rbxassetid://107335820651194",
+		},
+		["kit-legend"] = {
+			name = "Grand Elixir Pack",
+			slot = "hand",
+			family = "kit",
+			tier = "legend",
+			stats = { attack = 3, speed = 6, hp = 30 },
+			icon = "rbxassetid://71919804799017",
+		},
 		-- (`icon`: ChatGPT, 2026-11-04, in the style of the drop icons; art/icons/gear_*.png)
 		["sword-wood"] = {
 			name = "Wooden Sword",
@@ -1293,6 +1354,14 @@ Config.Smithy = {
 			materials = { boar_tusk = 4, rare_part = 12, monster_core = 2, boss_essence = 1 },
 			coins = 400,
 		},
+		-- Legendary, one recipe for every family: the trophies of the two hardest maps (Ember Lava's and Frozen Ice's
+		-- bosses pay two each), so the top tier is the reward for clearing them.
+		["sword-legend"] = { gear = "sword-legend", materials = table.clone(LEGEND_RECIPE), coins = LEGEND_COINS },
+		["shield-legend"] = { gear = "shield-legend", materials = table.clone(LEGEND_RECIPE), coins = LEGEND_COINS },
+		["bow-legend"] = { gear = "bow-legend", materials = table.clone(LEGEND_RECIPE), coins = LEGEND_COINS },
+		["focus-legend"] = { gear = "focus-legend", materials = table.clone(LEGEND_RECIPE), coins = LEGEND_COINS },
+		["staff-legend"] = { gear = "staff-legend", materials = table.clone(LEGEND_RECIPE), coins = LEGEND_COINS },
+		["kit-legend"] = { gear = "kit-legend", materials = table.clone(LEGEND_RECIPE), coins = LEGEND_COINS },
 	},
 }
 
