@@ -1,5 +1,17 @@
 # Status
 
+## 2026-11-12 — weapons, classes and skills designed (with ChatGPT); dungeon fixes
+
+The owner asked for slimes that hold and swing weapons, a class and its skills and AI from the weapon, fewer skills at a
+lower rarity, and support and counter classes, argued out with ChatGPT. Three rounds later the design is
+`docs/WEAPONS.md`: his original's six families (Guardian/Shield, Warrior/Sword, Ranger/Bow, Mage/Arcane Focus,
+Healer/Healing Staff, Alchemist/Alchemy Kit) plus the weaponless Brawler; Common = full AI + the signature skill,
+Uncommon and Epic one skill more each, Mythic the ultimate; cooldown ultimates, taunt, stun count, threat, three fight
+modes and the rings on the team sheet; its §11 is the build order (next: the rules core). Nothing of it is built yet.
+Fixed before it (bc6cb40): village slimes no longer follow the player into the Dungeon (`Config.Brain.PlayerFollowStuds`),
+knock-backs no longer add up and a big body is heavy (`KnockWeight`; not measured in a boss fight), the team chips are a
+2 x 2 grid and a tap opens that team's sheet anywhere.
+
 ## 2026-11-12 — a loading screen that hides the start's hitches
 
 The owner asked for a game loader (less lag when the game starts) and a loading screen that is not boring.
