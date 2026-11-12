@@ -6,6 +6,7 @@
 -- and its name and level over it. It also turns a fallen monster's drops into pictures floating up where it fell, keeps the
 -- health bars to what the arena publishes, and clears everything when the run ends. No camera effects. One error never stops
 -- the drawing: per-event work is in pcall.
+local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenService = game:GetService("TweenService")
@@ -18,6 +19,7 @@ local FightFx = require(script.Parent.FightFx)
 local MonsterLook = require(script.Parent.MonsterLook)
 local SlimeActor = require(script.Parent.SlimeActor)
 local SlimeLook = require(script.Parent.SlimeLook)
+local SlimeWeapon = require(script.Parent.SlimeWeapon)
 local UiDungeon = require(script.Parent.UiDungeon)
 local ZombieFight = require(script.Parent.ZombieFight)
 local ZombieTeams = require(script.Parent.ZombieTeams)
@@ -164,6 +166,12 @@ local function addSquad(id: string, role: string, spot: Vector3, facing: Vector3
 		return
 	end
 	actor.body.CanCollide = false
+	-- its weapon, drawn from its back into its hand as it comes in (SlimeWeapon)
+	local ok, worn = pcall(function(): any
+		return HttpService:JSONDecode(tostring(node:GetAttribute("Gear") or ""))
+	end)
+	SlimeWeapon.wear(model, if ok and type(worn) == "table" and type(worn.hand) == "string" then worn.hand else nil)
+	SlimeWeapon.fight(model, true)
 	-- (the real health comes from the arena; until it is there the bar is full)
 	local hp = healthNode(1, 1)
 	bodies[id] = { actor = actor, model = model, node = hp, foe = false, tag = nil }

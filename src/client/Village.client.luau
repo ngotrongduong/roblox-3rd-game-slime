@@ -1,5 +1,6 @@
 --!strict
 -- Client-side village inhabitants. The server owns every action and leg clock; this script only draws them.
+local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
@@ -10,6 +11,7 @@ local ProgressClock = require(script.Parent.ProgressClock)
 local SecretFx = require(ReplicatedStorage.Shared.SecretFx)
 local SlimeActor = require(script.Parent.SlimeActor)
 local SlimeLook = require(script.Parent.SlimeLook)
+local SlimeWeapon = require(script.Parent.SlimeWeapon)
 local VfxLib = require(ReplicatedStorage.Shared.VfxLib)
 local VillagePath = require(ReplicatedStorage.Shared.VillagePath)
 local WorkMoves = require(script.Parent.WorkMoves)
@@ -174,6 +176,22 @@ local function withinReach(entry: Entry, margin: number): boolean
 	return (camera.CFrame.Position - origin).Magnitude < C.MaxDrawDistance * margin
 end
 
+-- Its weapon across its back (the Alchemy Kit at its left): the hand of what it wears (SlimeWeapon; a ghost wears none).
+local function wearWeapon(entry: Entry)
+	local model = entry.model
+	if not model then
+		return
+	end
+	local hand: string? = nil
+	if entry.config:GetAttribute("Ghost") ~= true then
+		local ok, worn = pcall(function(): any
+			return HttpService:JSONDecode(stringAttr(entry.config, "Gear", ""))
+		end)
+		hand = if ok and type(worn) == "table" and type(worn.hand) == "string" then worn.hand else nil
+	end
+	SlimeWeapon.wear(model, hand)
+end
+
 local function refreshLook(entry: Entry)
 	local config = entry.config
 	-- Out on a zombie squad: the fight draws the slime (ZombieFight), the village draws nothing until it is back.
@@ -237,6 +255,7 @@ local function refreshLook(entry: Entry)
 	model.Parent = renderFolder
 	entry.model = model
 	entry.actor = SlimeActor.new(model, stringAttr(config, "Emotion", "normal"))
+	wearWeapon(entry)
 	-- a Secret slime wears its own signature effect, welded to its body (SlimeActor moves the anchored body)
 	local variant = SecretFx.variant(stringAttr(config, "SecretId", ""))
 	local body = model:FindFirstChild("SlimeBody")
@@ -930,6 +949,12 @@ local function addSlime(village: Village, child: Instance)
 			end)
 		)
 	end
+	table.insert(
+		entry.connections,
+		child:GetAttributeChangedSignal("Gear"):Connect(function()
+			wearWeapon(entry)
+		end)
+	)
 	refreshLook(entry)
 end
 

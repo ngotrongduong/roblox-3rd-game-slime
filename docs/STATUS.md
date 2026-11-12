@@ -1,5 +1,25 @@
 # Status
 
+## 2026-11-12 — weapons in hand (step 3): worn on the back, held in a fight, swung, shot and cast
+
+The owner said "Làm bước 3" and set one rule for where weapons sit: at rest and in the village every weapon is slung
+across the back, the Alchemy Kit always at the slime's left; in a fight the shield and the bow are in front, the sword,
+focus and staff at the right; every blow and cast moves the weapon with its own effect. Done (`docs/WEAPONS.md` §14):
+- **Models**: the owner's seven files cut into 30 weapons by `tools/blender/weapon_kit.ps1`, uploaded, named in
+  `Config.Weapons.Models`.
+- **Wearing and moves** (`client/SlimeWeapon`, `shared/WeaponMoves`): village slimes wear theirs on the back, Dungeon
+  squads draw them as a fight begins and put them away when they fall; each family's attack and cast move (the
+  original's) is timed so its blow meets the server's hit.
+- **Shots and skills**: arrows from the bow, orbs from the focus, bolts of light from the staff, flasks from the kit,
+  each with the owner's battle-art marks; Taunt rings, Arcane Barrage orbs, Acid Rain flasks, Mend light, the healer's
+  heal mote. `tests/spec/weapons.luau` holds the placement rule, the models and the moves.
+- Seen in Studio: the back, left and hand places from behind and in front, a full Frozen Ice run (arrows, orbs, marks),
+  no errors (`docs/weapons/review/`).
+
+Not done: the rarity layers (trails, cast bursts, auras) come from the VFX library, asked of its session and not
+imported yet; weapons on the Arena's replay bodies and the zombie march; the higher-tier skills (steps 4-5). Not seen: a
+phone, the owner.
+
 ## 2026-11-12 — classes balanced for the Arena; Legendary, a fifth weapon rarity; the owner's 30 weapon models in
 
 The owner chose "balance first", then sent his 3D weapons (six Meshy files, a family's four tiers in a row each) and a

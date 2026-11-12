@@ -16,6 +16,7 @@ local TweenService = game:GetService("TweenService")
 local Config = require(ReplicatedStorage.Shared.Config)
 local FightFx = require(script.Parent.FightFx)
 local SlimeActor = require(script.Parent.SlimeActor)
+local SlimeWeapon = require(script.Parent.SlimeWeapon)
 local UiKit = require(script.Parent.UiKit)
 local UiTeams = require(script.Parent.UiTeams)
 local VfxLib = require(ReplicatedStorage.Shared.VfxLib)
@@ -966,6 +967,10 @@ local function onAim(event: { [string]: any })
 			SlimeActor.act(attacker, "Attack", peak - lead)
 		end
 	end
+	-- (a slime with a weapon in hand moves it too: the swing, the draw, the cast, timed so its blow meets the strike)
+	if SlimeWeapon.familyOf(attacker.model) then
+		SlimeWeapon.cue(attacker.model, s ~= nil, windup + (if shot then 0 else V.LungeSeconds * V.ContactShare))
+	end
 	-- (in the Dungeon the server walks the fighters and announces a blow only once its fighter is in reach: no dash)
 	if
 		extras[event.from] == nil
@@ -1049,6 +1054,12 @@ local function impact(event: { [string]: any }, style: FightFx.Style)
 	)
 end
 
+-- Where a shot leaves its shooter: a slime's weapon (the bow, the focus, the staff's head, the kit), else its mouth.
+local function muzzle(shooter: SlimeActor.Slime, from: Vector3, dir: Vector3): Vector3
+	local head = SlimeWeapon.headOf(shooter.model)
+	return if head then head.Position else from + dir * radius(shooter) + Vector3.new(0, shooter.body.Size.Y * 0.6, 0)
+end
+
 -- The attacker's move: a spitter spits, the rest lunge to the skin of their target and hold a beat there. `land` runs
 -- when the blow arrives.
 local function strike(event: { [string]: any }, style: FightFx.Style, land: () -> ())
@@ -1062,7 +1073,7 @@ local function strike(event: { [string]: any }, style: FightFx.Style, land: () -
 	local dir = along(line, attacker.root.LookVector)
 	if style.shot then
 		SlimeActor.kick(attacker, "lean", 1.5)
-		local mouth = from + dir * radius(attacker) + Vector3.new(0, attacker.body.Size.Y * 0.6, 0)
+		local mouth = muzzle(attacker, from, dir)
 		local skin = to - dir * radius(target) + Vector3.new(0, target.body.Size.Y * 0.5, 0)
 		local fx = fxOf(event.from)
 		if fx and fx.shot and fx.blow then
@@ -1244,6 +1255,16 @@ local function deliver(event: { [string]: any }, style: FightFx.Style, first: bo
 				end)
 				land()
 			end)
+		elseif looks.fire and target and to and not specialOf(own, event) then
+			-- (one shot from the caster's weapon at every foe it strikes, the splashed ones a beat later)
+			local caster, from = find(event.from)
+			local skin = to + Vector3.new(0, target.body.Size.Y * 0.5, 0)
+			local mouth = if caster and from
+				then muzzle(caster, from, along(to - from, caster.root.LookVector))
+				else skin
+			task.delay(if event.splash then K.MultiGap else 0, function()
+				FightFx.shot(looks.fire, mouth, skin, land)
+			end)
 		else
 			task.delay(K.CastSeconds + (if event.splash then K.MultiGap else 0), land)
 		end
@@ -1321,12 +1342,56 @@ local function onHeal(event: { [string]: any })
 		local amount = math.max(1, math.floor((event.amount or 0) + 0.5))
 		local P = Config.Dungeon.View
 		local fx = fxOf(event.from)
-		if fx and fx.heal then
-			vfx(fx.heal, target.model, nil)
-		else
-			FightFx.burst("healCross", to + Vector3.new(0, target.body.Size.Y * 0.5, 0), P.HealBurst, nil)
+		local centre = to + Vector3.new(0, target.body.Size.Y * 0.5, 0)
+		local function mend()
+			if fx and fx.heal then
+				vfx(fx.heal, target.model, nil)
+			else
+				FightFx.burst("healCross", centre, P.HealBurst, nil)
+				-- (a Healer's Mend blooms with healing light on the one it mends)
+				local looks = looksOf(event)
+				if looks.burst then
+					FightFx.burst(looks.burst, centre, V.Skill.Burst * 0.6, looks.bits)
+				end
+				if looks.ring then
+					FightFx.ring(looks.ring, to, V.Skill.Ring * 0.5)
+				end
+			end
+			floatText(
+				to + Vector3.new(0, target.body.Size.Y, 0),
+				"+" .. amount,
+				UiKit.colour(P.HealColour),
+				V.HitTextSize
+			)
 		end
-		floatText(to + Vector3.new(0, target.body.Size.Y, 0), "+" .. amount, UiKit.colour(P.HealColour), V.HitTextSize)
+		-- (a slime with a staff sends its healing light from the staff's head)
+		local head = if healer and healer ~= target then SlimeWeapon.headOf(healer.model) else nil
+		if head and not fx then
+			FightFx.shot(V.Skill.HealShot, head.Position, centre, mend)
+		else
+			mend()
+		end
+	end
+end
+
+-- A Guardian's Taunt: its shield rings out once (on the first foe of the batch) and every foe it pulls is marked.
+local taunted: { [string]: number } = {}
+local function onTaunt(event: { [string]: any })
+	local guard, at = find(event.from)
+	local foe, there = find(event.to)
+	local looks = looksOf(event)
+	if guard and at and os.clock() - (taunted[event.from] or -1) > 0.5 then
+		taunted[event.from] = os.clock()
+		SlimeActor.kick(guard, "puff", V.WindupPuff * V.Skill.Windup)
+		if looks.burst then
+			FightFx.burst(looks.burst, at + Vector3.new(0, guard.body.Size.Y * 0.5, 0), V.Skill.Burst, looks.bits)
+		end
+		if looks.ring then
+			FightFx.ring(looks.ring, at, V.Skill.Ring)
+		end
+	end
+	if foe and there and looks.mark then
+		FightFx.ring(looks.mark, there, foe.body.Size.X * 1.6)
 	end
 end
 
@@ -1425,6 +1490,7 @@ local function fall(event: { [string]: any })
 				if actor then
 					SlimeActor.setEmotion(actor, "sad")
 					SlimeActor.kick(actor, "turn", V.FallTurn)
+					SlimeWeapon.fight(actor.model, false)
 					FightFx.stars(actor.body.Position + Vector3.new(0, actor.body.Size.Y * 0.6, 0), V.StarSize)
 					for _, part in actor.model:GetDescendants() do
 						if part:IsA("MeshPart") then
@@ -1603,6 +1669,8 @@ local function onEvents(payload: any)
 				onFallen(event)
 			elseif kind == "heal" then
 				onHeal(event)
+			elseif kind == "taunt" then
+				onTaunt(event)
 			elseif kind == "end" then
 				onEnd(payload.team, event)
 			elseif kind == "home" then

@@ -235,7 +235,18 @@ return {
 					rain = "sparkStar",
 					rainRing = "ring",
 				},
+				-- The weapon classes' signature skills (Config.Classes.Skills; the weapon's own move is SlimeWeapon's): the
+				-- Guardian's Taunt rings out from its shield and rings every foe it pulls (`mark`); the Mage's Arcane
+				-- Barrage fires an orb from its focus at every foe it strikes (`fire`); the Alchemist's Acid Rain drops
+				-- flasks out of the sky; the Healer's Mend blooms with healing light on the one it mends. (Dash Strike and
+				-- Piercing Shot are one heavy blow each: the slash and the arrow, struck like a crit.)
+				taunt = { burst = "shockwave", bits = "sparkStar", ring = "ringShock", mark = "ring" },
+				arcane_barrage = { burst = "burstArcane", bits = "moteArcane", fire = "magicOrb" },
+				acid_rain = { burst = "burstAcid", bits = "acidDrop", rain = "flask", rainRing = "ringAcid" },
+				mend = { burst = "burstHeal", bits = "moteHeal", ring = "ringHeal" },
 			},
+			-- what a slime's weapon sends to the one it heals (client/ZombieFight onHeal)
+			HealShot = "moteHeal",
 		},
 		-- A winning team cheers (Config.Zombies.CheerSeconds): this many hops each, CheerGap apart, the next slime a bit
 		-- later than the last.
@@ -320,11 +331,21 @@ return {
 				ringArcane = 70489654789239,
 				moteArcane = 118302010408844,
 				healCross = 110992077814805,
+				-- the weapon classes' shots and marks (uploaded 2026-11-12, the same owner's art)
+				arrow = 82413238923480,
+				magicOrb = 105805604631830,
+				flask = 71171803781285,
+				lightBolt = 71287933984411,
+				pierceHit = 89533625695233,
+				magicHit = 139805158816337,
+				moteHeal = 96459906984856,
+				burstHeal = 82104024519535,
+				ringHeal = 136978294933550,
 			},
 			-- How a blow looks, by the attacker: a slime by its role (Config.Combat.Roles), a zombie by its kind. Every one
 			-- its own art (the owner: never one effect recoloured). mark = the picture at the point of the hit (studs);
-			-- bits = what flies off it; slash = the mark lies across the line of the blow; shot = spat from afar instead of
-			-- a lunge; death / ring = a zombie's burst and the ring on the ground where it falls.
+			-- bits = what flies off it; slash = the mark lies across the line of the blow (along = along it); shot = spat
+			-- or shot from afar instead of a lunge; death / ring = a zombie's burst and the ring on the ground where it falls.
 			Styles = {
 				attack = { mark = "burstShock", bits = "moteShock", size = 3.4 },
 				defence = { mark = "holyHit", bits = "sparkStar", size = 3 },
@@ -370,6 +391,16 @@ return {
 					death = "burstAcid",
 					ring = "ringArcane",
 				},
+				-- The six weapon classes (Config.Classes, a squad slime fights by its weapon), as the original marks a blow
+				-- by the attacker's weapon: the sword's slash, the shield's impact, the bow's arrow and pierce (lying along
+				-- the shot), the focus's orb and magic hit, the staff's bolt of light and holy hit, the kit's flask and acid
+				-- splash. Ranged marks at half size (the owner's veto: they piled up).
+				warrior = { mark = "slashArc", bits = "moteShock", size = 3.6, slash = true },
+				guardian = { mark = "burstShock", bits = "sparkStar", size = 3 },
+				ranger = { mark = "pierceHit", bits = "sparkStar", size = 2.4, shot = "arrow", along = true },
+				mage = { mark = "magicHit", bits = "moteArcane", size = 1.9, shot = "magicOrb" },
+				healer = { mark = "holyHit", bits = "moteHeal", size = 1.7, shot = "lightBolt" },
+				alchemist = { mark = "acidSplat", bits = "acidDrop", size = 1.9, shot = "flask" },
 			},
 			MarkSeconds = 0.34,
 			MarkSwell = 1.35,

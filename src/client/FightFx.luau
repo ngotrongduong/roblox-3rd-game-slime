@@ -19,6 +19,7 @@ export type Style = {
 	bits: string?,
 	size: number,
 	slash: boolean?,
+	along: boolean?,
 	shot: string?,
 	death: string?,
 	ring: string?,
@@ -133,6 +134,9 @@ function FightFx.mark(style: Style, at: Vector3, from: Vector3, crit: boolean)
 		-- across the blow, sweeping through it
 		local across = screenAngle(from, at) + 90
 		flash(anchor, style.mark, size, F.MarkSeconds, across - 40, 260)
+	elseif style.along then
+		-- (a pierce points along the shot and does not spin)
+		flash(anchor, style.mark, size, F.MarkSeconds, screenAngle(from, at), 0)
 	else
 		flash(anchor, style.mark, size, F.MarkSeconds)
 	end

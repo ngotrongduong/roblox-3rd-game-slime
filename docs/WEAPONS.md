@@ -281,8 +281,11 @@ slime can step out of and targeted heavy hits the Guardian and the Healer can an
   sparkles or motes in the weapon's colours, then a signature burst on its skill), and the Legendary set the grandest: its
   own idle shimmer of the weapon's gems and a richer motion. Every layer from art in the VFX library, its own design per
   family and tier, never a plain glow or aura, and within the phone budgets.
-- **Holding**: the weapon at the slime's hand anchor on one side, its Charm on the other, both swapping with facing
-  (the original's rule); the body's squash and lean drive every move.
+- **Holding** (the owner, 2026-11-12, one rule for every slime): at rest, in the village and between fights, the sword,
+  shield, bow, focus and staff are slung across the back; the Alchemy Kit is always at the slime's left, at rest and in a
+  fight. In a fight the shield and the bow are in front, the sword, the focus and the staff at the right. Every blow and
+  cast has its own weapon move (the sword swings, the staff and focus swing or twirl to cast) with its motion or spell
+  effect. The body's squash and lean carry the weapon.
 - **Moves** (the original's timings): sword swing 0.34 s, a big arc, and cleave 0.5; bow draw 0.42 and volley 0.62;
   staff raise 0.6 and channel 0.85; focus orbit 0.55 and surge 0.75; kit shake 0.45 and fling 0.58; shield brace 0.4 and
   bastion 0.55; a gentle idle sway each.
@@ -460,3 +463,32 @@ Known misses, kept for the sweep after steps 4-6:
   the late game rests on the skills of steps 4-5.
 - Fights run 42-66 s, not the 25 s §10 hoped for (the Guardian's Shield and the heal weight); only four Healers reach
   90 s.
+
+## 14. As built (step 3, 2026-11-12): weapons in hand
+
+- **Models**: `tools/blender/weapon_kit.py` (run by `weapon_kit.ps1`) cuts the owner's seven files into 30 weapons (each
+  family's four tiers by their gaps, the Legendary grid by its 3 x 2 cells), centres each and writes one FBX and one
+  1024 texture a file to `art/models/weapons/` (its renders, `review/kit_*.png`, stay out of git); 480-2850 triangles a weapon, Legendary
+  up to 4255. Uploaded on the owner's account; the mesh ids and sizes are `Config.Weapons.Models` (`ConfigWeapons`).
+- **Wearing** (`client/SlimeWeapon`): a slime whose hand gear is a weapon carries its model (the village from the
+  slime's `Gear` attribute, the Dungeon squad from its node's). It rides the skin like a worn piece (SlimeActor's loop),
+  sways gently, and goes from the back to the hand in 0.35 s. Places and turns per family in `Config.Weapons.Families`
+  (body units: one body height, +X the slime's right, -Z its front); every slung piece leans its head up at the right.
+  Size: the family's Common piece is `length` bodies tall, the other tiers keep their size against it, Legendary 1.12
+  times. A slime that falls puts its weapon away.
+- **Moves** (`shared/WeaponMoves`, the original's timings): each family's attack and cast move, started so its strike
+  (`WeaponMoves.Strike`) meets the blow the server announced (the "aim" event, ZombieFight). The sword's swing and cleave
+  stop just above the ground (the original's flat arc drove the blade into it).
+- **Shots and marks** (the owner's battle art, `View.Fx.Styles`): the Ranger shoots an arrow from its bow and marks a
+  pierce along the shot, the Mage an orb from its focus and a magic hit, the Healer a bolt of light from its staff and
+  sends a heal mote to the one it mends, the Alchemist throws a flask and splashes acid, the Warrior's mark is the slash,
+  the Guardian's the impact. Ranged marks at half size.
+- **Skills** (`View.Skill.Looks`): Taunt rings out from the Guardian and rings every foe it pulls; Arcane Barrage fires an
+  orb from the focus at every foe struck; Acid Rain drops flasks from the sky; Mend blooms with heal light. Dash Strike and
+  Piercing Shot strike like a crit.
+- **Rarity layers** come from the VFX library (`trail.weapon_<family>`, `burst.weapon_cast_<family>`,
+  `aura.weapon_<family>` with the tier as the variant, the aura from Epic up): SlimeWeapon plays each as soon as the
+  library has it and leaves it out until then. Asked of the library session on 2026-11-12; not imported yet.
+- Seen in a Studio play test (`docs/weapons/review/`): the back, the left and the hand places from behind and in front,
+  and a real Dungeon run (arrows, orbs, pierce and magic marks drawn). Not yet built: weapons on the Arena's replay bodies
+  and on the zombie march.

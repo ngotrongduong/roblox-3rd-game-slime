@@ -2596,6 +2596,9 @@ Config.Slime = {
 -- Drawn by client/SlimeWear; the kits grow with every Secret dressed, so they live in ConfigWear.
 Config.Wear = if script then require(script.Parent.ConfigWear) else require("./ConfigWear")
 
+-- ===== The weapons the slimes hold and wear (docs/WEAPONS.md §9): the owner's models, places and moves =====
+Config.Weapons = if script then require(script.Parent.ConfigWeapons) else require("./ConfigWeapons")
+
 -- ===== Gaits: how a slime moves along a leg =====
 -- (the owner chose them in the movement lab, 2026-10-29: tools/slime/hop_lab_lanes.luau; docs/GAMEPLAY.md 10.1;
 -- chosen by shared Gaits.choose, timed by VillagePath, played by SlimeActor / SlimeMotion).

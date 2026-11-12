@@ -29,6 +29,7 @@ local CreatureRig = require(script.Parent.CreatureRig)
 local ClipRig = require(script.Parent.ClipRig)
 local SlimeFace = require(script.Parent.SlimeFace)
 local SlimeWear = require(script.Parent.SlimeWear)
+local SlimeWeapon = require(script.Parent.SlimeWeapon)
 
 local C = Config.Slime
 -- The village's presentation numbers (ghost float, separation, facing, carried items).
@@ -440,6 +441,8 @@ local function tick(a: Slime, dt: number, write: boolean)
 	end
 	-- a Secret slime's own pieces ride its skin (SlimeWear)
 	n = SlimeWear.pose(a.model, feet, bones, s, os.clock(), parts, cfs, n)
+	-- and its weapon, on its back or in hand (SlimeWeapon)
+	n = SlimeWeapon.pose(a.model, feet, bones, s, os.clock(), parts, cfs, n)
 	local blinked = SlimeFace.update(a.face, dt, bones, feet, parts, cfs)
 	if blinked then
 		SlimeMotion.kick(a.motion, "squash", C.BlinkBodyKick)
@@ -761,6 +764,7 @@ end
 function Actor.destroy(self: Slime)
 	Actor.detach(self)
 	Actor.unhold(self)
+	SlimeWeapon.remove(self.model)
 	self.destroyed = true
 	SlimeFace.destroy(self.face)
 end
