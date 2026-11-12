@@ -18,10 +18,12 @@ focus and staff at the right; every blow and cast moves the weapon with its own 
 
 - **Swing trails** from the VFX library (cdf384f): every family's move leaves its ribbon, finer each tier (the Legendary
   sword a crimson and gold arc with starlight and embers). Seen in a lineup and riding the weapons in a Dungeon run.
+- **Cast bursts and auras** from the library (80de5f4): every cast goes off at the weapon's head (the Legendary shield's
+  golden dome, the Everbloom staff's leaves of light), and Epic-and-up weapons wear their aura while in hand. Seen in a
+  lineup and a Frozen Ice run.
 
-Not done: the cast bursts and the Epic-and-up auras (the library builds them next); weapons on the Arena's replay
-bodies and the zombie march; the higher-tier skills (steps 4-5). Not seen: a phone, the owner, the trails on the snow
-map up close.
+Not done: weapons on the Arena's replay bodies and the zombie march; the higher-tier skills (steps 4-5). Not seen: a
+phone, the owner.
 
 ## 2026-11-12 — classes balanced for the Arena; Legendary, a fifth weapon rarity; the owner's 30 weapon models in
 

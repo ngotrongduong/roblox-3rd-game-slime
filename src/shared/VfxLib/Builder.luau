@@ -2288,7 +2288,10 @@ function Builder.attach(effect, host, opts)
 
 	folder.Parent = opts.parent or host
 	if root then
-		if root.Anchored and not opts.weld then
+		-- (an anchored host stays where it is, a statue or a pedestal, and anchors what it wears; a weapon is anchored too
+		-- but moved by the game, BulkMoveTo each frame: what it wears is welded to it, or it is left behind, seen in Goo
+		-- Lineage 2026-11-12)
+		if root.Anchored and not (opts.weld or fields.host == "weapon") then
 			carrier.Anchored = true
 			for _, part in handle.parts do
 				part.Anchored = true

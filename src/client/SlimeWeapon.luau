@@ -276,9 +276,11 @@ function SlimeWeapon.cue(model: Model, cast: boolean, strikeIn: number)
 	local castId = W.Fx.Cast .. h.family
 	if cast and has(castId) then
 		task.delay(math.max(0, strikeIn), function()
-			local head = SlimeWeapon.headOf(model)
-			if h.cue == cue and head then
-				pcall(VfxLib.play, castId, head, { variant = h.tier })
+			-- (at the weapon's head, up along it: the library's frame; the bow's shot along its +X, the kit's head its
+			-- handle end)
+			local part = h.part
+			if h.cue == cue and part and part.Parent then
+				pcall(VfxLib.play, castId, part.CFrame * CFrame.new(0, part.Size.Y / 2, 0), { variant = h.tier })
 			end
 		end)
 	end

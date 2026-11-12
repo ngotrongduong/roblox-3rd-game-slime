@@ -491,7 +491,10 @@ Known misses, kept for the sweep after steps 4-6:
   library has it and leaves it out until then. The six trails are in (library cdf384f): each move draws its family's
   ribbon and what it sheds, one rung a tier (Common a pale streak, Legendary a crimson and gold arc with starlight and
   embers), attached `weld = true` because the weapon is anchored and moved every frame (without it the ribbon stayed
-  where it was put and drew nothing). Seen in Studio (`review/trail-*.jpg`). The cast bursts and the auras follow.
+  where it was put and drew nothing). The cast bursts (library 80de5f4) go off at the weapon's head as a cast lands
+(the library's frame: up along the weapon, the bow's shot along its +X, the kit's head its handle end); the auras ride
+Epic, Mythic and Legendary weapons while they are in hand. Seen in Studio (`review/trail-*.jpg`, `cast-*.jpg`,
+`dungeon-auras.jpg`: on the Frozen Ice snow).
 - Seen in a Studio play test (`docs/weapons/review/`): the back, the left and the hand places from behind and in front,
   and a real Dungeon run (arrows, orbs, pierce and magic marks drawn). Not yet built: weapons on the Arena's replay bodies
   and on the zombie march.
