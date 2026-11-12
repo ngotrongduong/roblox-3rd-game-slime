@@ -18,6 +18,10 @@ return {
 	-- Small level variation and one favoured stat give teams different roles at the same bot strength.
 	BotLevelSpread = 0.1,
 	BotFavouriteWeight = 2,
+	-- Bots hold weapons as players' slimes do (the owner, 2026-11-13): a team of TeamSize different classes, all at the
+	-- highest weapon tier (wood, iron, core, bramble, legend) whose level here its team's level reaches: the bottom holds
+	-- Common, the top Mythic, the Champions Legendary. The weapon's stats are not added: a bot's level already counts its gear.
+	BotTierLevels = { 0, 30, 60, 100, 160 },
 	-- Champions offer a challenge beyond the ladder: a quarter above the rank 1 bot, a stretch even for a near-maxed team.
 	ChampionLevel = function(_season: number): number
 		return 190

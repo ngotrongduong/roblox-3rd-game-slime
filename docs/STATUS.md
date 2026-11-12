@@ -15,8 +15,10 @@ fought by each fighter's place like the Dungeon; slimes there showed no weapon o
   less `EdgeMargin`; the replay walks the bodies and each slime holds its weapon (`hand` in the replay's view).
 - Seen in Studio: a camp-3 fight at level 85 (bodies walk, weapons from back to hand, skills, two slimes fell) and
   three Arena replays (walking, weapons in hand, skill bursts, Victory), no script error. Not seen: a clear frame of
-  the arrow passing several foes (the tests check who is struck), a phone, the owner. Arena bots have no class, so
-  they hold no weapon.
+  the arrow passing several foes (the tests check who is struck), a phone, the owner.
+- **Arena bots hold weapons** (the owner's yes, the same day): four different classes a team at the tier of its level
+  (`Config.Arena.BotTierLevels`, Common to Legendary), skills and all, power unchanged; `arena_sim` moved by noise
+  only. Seen in an Arena replay: the rival team in its row, each with its weapon in hand.
 
 ## 2026-11-13 — longer ranged reach, skill power by rarity, single and area targets, effects that last show
 

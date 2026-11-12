@@ -272,6 +272,13 @@ tie is a successful defence (the Arena's results have no draws). Duplicate class
 range and hop inside the field (`Config.Arena.View.Replay.FieldRadius` less `EdgeMargin`); both sides walk at slime
 speed. The replay walks the bodies by the fight's moves and each slime holds its weapon.
 
+The Arena's bots hold weapons too (the owner, 2026-11-13; `ArenaBots.team`): four different classes a team, shuffled
+by a stream of their own, all at the tier their level reaches (`Config.Arena.BotTierLevels`: Common from the bottom,
+Uncommon from level 30, Epic 60, Mythic 100, Legendary 160, so the top bot is Mythic and the Champions Legendary). The
+weapon's stats are not added (a bot's level already counts its gear), so its power is unchanged. `arena_sim` (40
+samples, 2 seasons) before and after: the static ranks of every stage moved by at most a dozen places (month 3: 19 to
+10), only the bare starter team now wins nobody (946 to 1001), as the calibration meant.
+
 ## 8. Bosses
 
 Boss telegraphs stay as the owner approved them (1.2 s). The all-slime stuns (0.5-0.7 s) stay but count in the slimes'

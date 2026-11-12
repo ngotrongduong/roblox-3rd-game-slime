@@ -2,7 +2,6 @@
 local Bots = require("../../src/shared/ArenaBots")
 local Fight = require("../../src/shared/ArenaFight")
 local Colours = require("../../src/shared/Colours")
-local Combat = require("../../src/shared/Combat")
 local Config = require("../../src/shared/Config")
 local Stats = require("../../src/shared/Stats")
 
@@ -54,7 +53,6 @@ return function(T)
 	end)
 	T.test("NPCs use full-health common slimes with stats measured in slime levels", function()
 		local c = Config.Arena
-		local roles = {}
 		for _, id in { "b1", "b200", "b500", "b1000", "c1" } do
 			local team = Bots.team(202611, id)
 			local base = if Bots.isChampion(id) then c.ChampionLevel(202611) else Bots.level(id)
@@ -69,19 +67,40 @@ return function(T)
 				local level = Stats.level(fighter)
 				T.ok(level >= math.floor(base * (1 - c.BotLevelSpread)))
 				T.ok(level <= math.ceil(base * (1 + c.BotLevelSpread)))
-				T.eq(fighter.role, Combat.role(fighter, 0))
-				roles[fighter.role] = true
 				T.ok(Colours.isValid(team.looks[index].Colour))
 				T.eq(team.looks[index].DualId, nil)
 				T.eq(team.looks[index].SecretId, nil)
 				T.eq(team.looks[index].Material, nil)
 			end
 		end
-		local roleCount = 0
-		for _ in roles do
-			roleCount += 1
+	end)
+	T.test("NPCs hold weapons: different classes, the tier of their level", function()
+		local c = Config.Arena
+		T.eq(Bots.tier(c.BotLevelMin), 1)
+		T.eq(Bots.tier(c.BotLevelMax), 4)
+		T.eq(Bots.tier(c.ChampionLevel(202611)), 5)
+		local classes = {}
+		for _, id in { "b1", "b200", "b500", "b1000", "c1" } do
+			local team = Bots.team(202611, id)
+			local base = if Bots.isChampion(id) then c.ChampionLevel(202611) else Bots.level(id)
+			local inTeam = {}
+			for index, fighter in team.fighters do
+				local class = fighter.class :: string
+				T.ok(Config.Classes.Kinds[class] ~= nil)
+				T.ok(not inTeam[class], "a team's classes differ")
+				inTeam[class], classes[class] = true, true
+				T.eq(fighter.role, class)
+				T.eq(fighter.tier, Bots.tier(base))
+				T.same(fighter.skills, {})
+				-- the replay shows that weapon in hand
+				T.ok(Fight.view(team.fighters, "d:")[index].hand ~= nil)
+			end
 		end
-		T.eq(roleCount, #Config.Combat.Roles)
+		local count = 0
+		for _ in classes do
+			count += 1
+		end
+		T.ok(count >= 5, "the teams use most classes")
 	end)
 	T.test("NPC names and identifiers clearly distinguish rivals and champions", function()
 		T.ok(Bots.isBot("b1"))

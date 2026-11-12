@@ -1,5 +1,6 @@
 --!strict
 local ArenaFight = if script then require(script.Parent.ArenaFight) else require("./ArenaFight")
+local Classes = if script then require(script.Parent.Classes) else require("./Classes")
 local Colours = if script then require(script.Parent.Colours) else require("./Colours")
 local Combat = if script then require(script.Parent.Combat) else require("./Combat")
 local Config = if script then require(script.Parent.Config) else require("./Config")
@@ -39,10 +40,38 @@ function ArenaBots.name(id: string): string
 	return prefix .. rng:pick(c.NameStarts) .. rng:pick(c.NameEnds)
 end
 
+-- The weapon tier (1 wood .. 5 legend) a bot team of this level holds (Config.Arena.BotTierLevels).
+function ArenaBots.tier(level: number): number
+	local tier = 1
+	for index, from in Config.Arena.BotTierLevels do
+		if level >= from then
+			tier = index
+		end
+	end
+	return tier
+end
+
+-- TeamSize different classes for a team, shuffled by its own stream so the stats and looks stay as they were.
+local function classesOf(season: number, id: string): { string }
+	local classes: { string } = {}
+	for class in Config.Classes.Kinds :: { [string]: any } do
+		table.insert(classes, class)
+	end
+	table.sort(classes)
+	local rng = Rng.new(Rng.hash("arena:class:" .. season .. ":" .. id))
+	for index = #classes, 2, -1 do
+		local other = rng:int(1, index)
+		classes[index], classes[other] = classes[other], classes[index]
+	end
+	return classes
+end
+
 function ArenaBots.team(season: number, id: string): Team
 	assert(ArenaBots.isBot(id) or ArenaBots.isChampion(id), "Unknown Arena NPC")
 	local c = Config.Arena
 	local level = if ArenaBots.isChampion(id) then c.ChampionLevel(season) else ArenaBots.level(id)
+	local tier = ArenaBots.tier(level)
+	local classes = classesOf(season, id)
 	local rng = Rng.new(Rng.hash("arena:" .. season .. ":" .. id))
 	local fighters: { Fighter } = {}
 	local looks: { Look } = {}
@@ -64,7 +93,12 @@ function ArenaBots.team(season: number, id: string): Team
 			hp = stats.hp,
 			maxHp = stats.hp,
 		}
-		fighter.role = Combat.role(fighter, seed)
+		-- (a class with no weapon of this tier, which Config.Smithy never leaves, fights as a plain slime)
+		local class = classes[(index - 1) % #classes + 1]
+		if Classes.handOf(class, tier) then
+			fighter.class, fighter.tier, fighter.skills = class, tier, {}
+		end
+		fighter.role = fighter.class or Combat.role(fighter, seed)
 		table.insert(fighters, fighter)
 		table.insert(looks, { Colour = rng:pick(Colours.Ids) })
 	end
