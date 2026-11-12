@@ -236,6 +236,12 @@ function SlimeWeapon.familyOf(model: Model): string?
 	return if h then h.family else nil
 end
 
+-- The weapon's tier (wood, iron, core, bramble, legend), or nil when the slime holds none.
+function SlimeWeapon.tierOf(model: Model): string?
+	local h = held[model]
+	return if h then h.tier else nil
+end
+
 -- A blow (`cast` false) or a cast (true) lands in `strikeIn` seconds: the family's move starts so its strike meets it,
 -- with its trail while it plays and, for a cast, its burst at the head as it goes off.
 function SlimeWeapon.cue(model: Model, cast: boolean, strikeIn: number)

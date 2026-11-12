@@ -483,9 +483,11 @@ Known misses, kept for the sweep after steps 4-6:
   pierce along the shot, the Mage an orb from its focus and a magic hit, the Healer a bolt of light from its staff and
   sends a heal mote to the one it mends, the Alchemist throws a flask and splashes acid, the Warrior's mark is the slash,
   the Guardian's the impact. Ranged marks at half size.
-- **Skills** (`View.Skill.Looks`): Taunt rings out from the Guardian and rings every foe it pulls; Arcane Barrage fires an
-  orb from the focus at every foe struck; Acid Rain drops flasks from the sky; Mend blooms with heal light. Dash Strike and
-  Piercing Shot strike like a crit.
+- **Skills** (`View.Skill.Looks`): the library's own skills where it has one, at the level of the weapon's tier: Dash
+  Strike is its Flash Step (the cuts open as the blow lands), Piercing Shot its Piercing Arrow, Mend its Blessing Light,
+  and Arcane Barrage's orbs burst in its Ether Burst. Taunt (rings from the shield, a ring on every foe pulled) and Acid
+  Rain (flasks from the sky) stand in with the owner's battle art. Every one of the 24 skills against the library, the
+  fourteen missing pieces with a look proposed for each, and the redo of the weapon effects: `weapons/SKILL-VFX.md`.
 - **Rarity layers** come from the VFX library (`trail.weapon_<family>`, `burst.weapon_cast_<family>`,
   `aura.weapon_<family>` with the tier as the variant, the aura from Epic up): SlimeWeapon plays each as soon as the
   library has it and leaves it out until then. The six trails are in (library cdf384f): each move draws its family's

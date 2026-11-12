@@ -1,5 +1,24 @@
 # Status
 
+## 2026-11-12 — skill effects from the library; the missing ones listed; weapon effects to be redone
+
+The owner asked to redo the skill effects from our VFX library, to list and design the ones it lacks (he builds those
+himself), and to redo the weapon effects: more striking at every tier, every weapon its own. Done
+(`docs/weapons/SKILL-VFX.md`):
+- **In the game**: Dash Strike plays the library's Flash Step (its cuts open as the blow lands), Piercing Shot its
+  Piercing Arrow, Mend its Blessing Light, Arcane Barrage's orbs burst in its Ether Burst; each at the level of the
+  caster's weapon tier (`View.Skill.Levels`, `TierScale`). Seen in a Frozen Ice run and a lineup, no errors.
+- **The map of the 24 skills**: 15 have a library skill (the four in, and Bulwark, Area Slash, Breaker Strike,
+  Whirlwind, Arrow Volley, Snare Arrow, Arrow Rain, Arcane Lance, Meteor, Healing Ring, Sanctuary for steps 4-5); 9
+  have none (Taunt, Shield Bash, Shield Wall, Frost Burst, Ward, Acid Rain, Squad Tonic, Cursed Flask, Catalyst Cloud).
+  Fourteen pieces in all are missing (those nine, Arcane Barrage's missiles, three wind-ups, Arrow Rain's warning),
+  each with a proposed look.
+- **Weapon effects**: the new rule (every weapon its own look from its model, a whole layer more at every tier, read
+  from the gameplay camera and on the snow) and a theme for each of the 30, sent to the library session to build.
+
+Not done: the library's new weapon effects (in the library session); the fourteen missing skills (the owner builds
+them). Seen only on the snow map, where the library's white light is faint. Not seen: a phone, the owner.
+
 ## 2026-11-12 — weapons in hand (step 3): worn on the back, held in a fight, swung, shot and cast
 
 The owner said "Làm bước 3" and set one rule for where weapons sit: at rest and in the village every weapon is slung

@@ -723,6 +723,49 @@ local function looksOf(event: { [string]: any }): { [string]: any }
 	return (V.Skill.Looks :: any)[event.skill] or {}
 end
 
+-- A weapon class's skill the VFX library draws (its look's `vfx`), or nil: a Dungeon monster keeps its own art.
+local function libraryLook(event: { [string]: any }): { [string]: any }?
+	local look = looksOf(event)
+	return if look.vfx and not fxOf(event.from) then look else nil
+end
+
+-- A library skill's level and size for its caster: its weapon's tier (Common's with none in hand).
+local function levelOf(caster: SlimeActor.Slime?): (string, number)
+	local tier = (if caster then SlimeWeapon.tierOf(caster.model) else nil) or "wood"
+	return (V.Skill.Levels :: any)[tier] or "lv1", (V.Skill.TierScale :: any)[tier] or 1
+end
+
+-- How long after it is played a library skill's blow lands: its `impact` marker at that level.
+local function landingOf(look: { [string]: any }, level: string): number
+	local effect = VfxLib.get(look.vfx)
+	local variant = if effect and effect.variants then effect.variants[level] else nil
+	local markers = (variant and variant.markers) or (effect and effect.markers) or {}
+	return markers[look.impact] or F.ShotSeconds
+end
+
+-- A library skill played on a body: at its middle, in a box as tall as it (its ground pieces lie on the floor), thrown
+-- from `source` when it has a flight.
+local function playOn(
+	look: { [string]: any },
+	level: string,
+	scale: number,
+	body: SlimeActor.Slime,
+	at: Vector3,
+	source: Vector3?
+)
+	local tall = body.body.Size.Y
+	local wide = 5 * scale
+	return vfx(look.vfx, at + Vector3.new(0, tall * 0.5, 0), {
+		variant = level,
+		scale = scale,
+		from = source,
+		size = Vector3.new(wide, tall, wide),
+	})
+end
+
+-- When a skill played from its aim (Dash Strike's dash) lands, by its caster: its blow waits for it.
+local leads: { [string]: number } = {}
+
 -- ===== Health bars =====
 
 local function dropBar(id: string)
@@ -902,6 +945,13 @@ local function onAim(event: { [string]: any })
 	if s and (special or pop) then
 		endCharge(event.from)
 	end
+	local drawn = if s then libraryLook(event) else nil
+	if drawn and drawn.aim then
+		-- (Dash Strike: the library's streak flies along the dash from where it starts; its blow lands on the marker)
+		local level, scale = levelOf(attacker)
+		playOn(drawn, level, scale, target, to, from + Vector3.new(0, attacker.body.Size.Y * 0.5, 0))
+		leads[event.from] = os.clock() + landingOf(drawn, level)
+	end
 	if s and special then
 		-- (an effect without that variant plays as it is: one variant name serves the wind-up and the release; the
 		-- wind-up is drawn as big as the release, or a big monster's body hides it)
@@ -1016,7 +1066,8 @@ local function impact(event: { [string]: any }, style: FightFx.Style)
 				angle = math.random(-25, 25),
 			})
 		end
-	else
+	elseif not (s and looksOf(event).ownHit) then
+		-- (a class skill the library draws brings its own hit)
 		FightFx.mark(style, skin, skin - dir * 3, heavy)
 	end
 	if pop then
@@ -1098,6 +1149,40 @@ local function strike(event: { [string]: any }, style: FightFx.Style, land: () -
 	play(attacker, from, dir * reach, V.LungeSeconds, V.ContactShare, stop)
 	SlimeActor.hop(attacker, V.LungeHop)
 	task.delay(contactSeconds(style), land)
+end
+
+-- A class skill the library draws, struck with one blow (and a splash behind): a melee one lunges and lands when the
+-- effect played at its aim says (Dash Strike's cuts opening); a shot's library projectile leaves the weapon and the blow
+-- lands on its marker, the foe it flies on through a beat later.
+local function libraryStrike(
+	event: { [string]: any },
+	style: FightFx.Style,
+	look: { [string]: any },
+	first: boolean,
+	land: () -> ()
+)
+	local attacker, from = find(event.from)
+	local target, to = find(event.to)
+	local K = V.Skill
+	if not attacker or not from or not target or not to then
+		task.delay(contactSeconds(style), land)
+		return
+	end
+	if look.aim then
+		if first then
+			strike(event, style, function() end)
+		end
+		local wait = math.max((leads[event.from] or 0) - os.clock(), contactSeconds(style))
+		task.delay(wait + (if first then 0 else K.MultiGap), land)
+		return
+	end
+	local level, scale = levelOf(attacker)
+	if first then
+		SlimeActor.kick(attacker, "lean", 1.5)
+		local mouth = muzzle(attacker, from, along(to - from, attacker.root.LookVector))
+		playOn(look, level, scale, target, to, mouth)
+	end
+	task.delay(landingOf(look, level) + (if first then 0 else K.MultiGap), land)
 end
 
 -- The one who strikes a skill moves once for all its blows: Goo Slam leaps onto its target, Belly Bounce leaps where it
@@ -1210,7 +1295,10 @@ end
 local function deliver(event: { [string]: any }, style: FightFx.Style, first: boolean, land: () -> ())
 	local s = skillOf(event)
 	local K = V.Skill
-	if not s or (s.kind ~= "multi" and s.kind ~= "all" and s.kind ~= "splash") then
+	local drawn = if s then libraryLook(event) else nil
+	if drawn and s.kind ~= "multi" and s.kind ~= "all" and s.kind ~= "splash" then
+		libraryStrike(event, style, drawn, first, land)
+	elseif not s or (s.kind ~= "multi" and s.kind ~= "all" and s.kind ~= "splash") then
 		if s and first and specialOf(fxOf(event.from), event) then
 			-- (a Dungeon monster's one heavy special: its release goes off as the blow lands)
 			strike(event, style, function()
@@ -1263,7 +1351,14 @@ local function deliver(event: { [string]: any }, style: FightFx.Style, first: bo
 				then muzzle(caster, from, along(to - from, caster.root.LookVector))
 				else skin
 			task.delay(if event.splash then K.MultiGap else 0, function()
-				FightFx.shot(looks.fire, mouth, skin, land)
+				FightFx.shot(looks.fire, mouth, skin, function()
+					if looks.hitVfx then
+						-- (each bursts where it lands, a splashed foe's smaller; bigger the higher the weapon's tier)
+						local _, scale = levelOf(caster)
+						vfx(looks.hitVfx, skin, { scale = scale * (if event.splash then 0.7 else 1) })
+					end
+					land()
+				end)
 			end)
 		else
 			task.delay(K.CastSeconds + (if event.splash then K.MultiGap else 0), land)
@@ -1343,26 +1438,30 @@ local function onHeal(event: { [string]: any })
 		local P = Config.Dungeon.View
 		local fx = fxOf(event.from)
 		local centre = to + Vector3.new(0, target.body.Size.Y * 0.5, 0)
-		local function mend()
-			if fx and fx.heal then
-				vfx(fx.heal, target.model, nil)
-			else
-				FightFx.burst("healCross", centre, P.HealBurst, nil)
-				-- (a Healer's Mend blooms with healing light on the one it mends)
-				local looks = looksOf(event)
-				if looks.burst then
-					FightFx.burst(looks.burst, centre, V.Skill.Burst * 0.6, looks.bits)
-				end
-				if looks.ring then
-					FightFx.ring(looks.ring, to, V.Skill.Ring * 0.5)
-				end
-			end
+		local function healNumber()
 			floatText(
 				to + Vector3.new(0, target.body.Size.Y, 0),
 				"+" .. amount,
 				UiKit.colour(P.HealColour),
 				V.HitTextSize
 			)
+		end
+		local look = if event.skill then libraryLook(event) else nil
+		if look then
+			-- (a Healer's Mend: the library's light falls from the sky on the one it mends, its number as the light
+			-- reaches it)
+			local level, scale = levelOf(healer)
+			vfx(look.vfx, target.model, { variant = level, scale = scale })
+			task.delay(landingOf(look, level), healNumber)
+			return
+		end
+		local function mend()
+			if fx and fx.heal then
+				vfx(fx.heal, target.model, nil)
+			else
+				FightFx.burst("healCross", centre, P.HealBurst, nil)
+			end
+			healNumber()
 		end
 		-- (a slime with a staff sends its healing light from the staff's head)
 		local head = if healer and healer ~= target then SlimeWeapon.headOf(healer.model) else nil
