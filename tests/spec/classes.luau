@@ -338,6 +338,44 @@ return function(T: any)
 		end
 	)
 
+	T.test("stuns, slows and walls say how long they show on everyone they are on", function()
+		local function statuses(foes: { any }, seconds: number): { any }
+			local fight = Combat.new({ slime("s"), slime("t") }, foes, Rng.new(3))
+			for _, id in { "s", "t" } do
+				freeze(unitOf(fight, id), unitOf(fight, foes[1].id))
+			end
+			local out: { any } = {}
+			for _, event in run(fight, seconds) do
+				if event.kind == "status" then
+					table.insert(out, event)
+				end
+			end
+			return out
+		end
+		-- a stun on all: each slime struck is stunned as long as it is held off its beat (the first in full)
+		local stunned: { [string]: number } = {}
+		for _, event in statuses({ foe("f", { skills = { "bramble_burst" }, speed = 40, attack = 1 }) }, 20) do
+			if event.status == "stunned" and not stunned[event.to] then
+				T.eq(event.from, "f")
+				T.eq(event.skill, "bramble_burst")
+				stunned[event.to] = event.seconds
+			end
+		end
+		T.near(stunned.s, Skills.bramble_burst.stun, 1e-9)
+		T.near(stunned.t, Skills.bramble_burst.stun, 1e-9)
+		-- a hunter's sting slows the one it stings
+		local slowed = statuses({ foe("h", { kind = "hunter", speed = 40, attack = 1 }) }, 5)
+		T.ok(#slowed > 0, "the sting shows")
+		T.eq(slowed[1].status, "slowed")
+		T.eq(slowed[1].seconds, Config.Combat.Stings.hunter.seconds)
+		-- a wall shows on the one that holds it up
+		local walls = statuses({ foe("w", { skills = { "bark_wall" }, speed = 40, attack = 1 }) }, 20)
+		local guarded = firstOf(walls, function(event: any): boolean
+			return event.status == "guarded"
+		end)
+		T.ok(guarded ~= nil and guarded.to == "w" and guarded.seconds == Skills.bark_wall.seconds, "the wall shows")
+	end)
+
 	T.test("a wind-up special begins at least SpecialGap after the last, with its full wind-up", function()
 		local fight = Combat.new(
 			{ slime("s") },
@@ -376,12 +414,16 @@ return function(T: any)
 		end
 		g.skillReady = 0
 		local taunts: { any } = {}
+		local statuses: { [string]: string } = {}
 		local at = 0
 		for _ = 1, 100 do
 			for _, event in Combat.step(fight, DT) do
 				if event.kind == "taunt" then
 					table.insert(taunts, event)
 					at = fight.seconds
+				elseif event.kind == "status" then
+					T.eq(event.seconds, Skills.taunt.seconds)
+					statuses[event.to] = event.status
 				end
 			end
 			if #taunts > 0 then
@@ -389,6 +431,11 @@ return function(T: any)
 			end
 		end
 		T.eq(#taunts, Skills.taunt.count)
+		-- (every foe pulled shows it is taunted; the Guardian shows its shield)
+		for _, event in taunts do
+			T.eq(statuses[event.to], "taunted")
+		end
+		T.eq(statuses.g, "shielded")
 		for _, event in taunts do
 			local f = unitOf(fight, event.to)
 			T.eq(f.tauntBy, g)
@@ -472,7 +519,9 @@ return function(T: any)
 			return event.kind == "hit" and event.from == "w"
 		end)
 		T.eq(hit.skill, "dash_strike")
-		T.near(hit.amount, Combat.damage(10, 10) * Skills.dash_strike.factor, 1e-9)
+		-- (a Common weapon's skill: SkillPower[1] of the Warrior's plain blow)
+		local plainFactor = Config.Classes.Kinds.warrior.factor
+		T.near(hit.amount, Combat.damage(10, 10) * plainFactor * Config.Classes.SkillPower[1], 1e-9)
 		local near = Combat.new(
 			{ slime("w", "warrior", { x = 0, z = 0 }) },
 			{ foe("f", { x = 12, z = 0 }) },
@@ -506,7 +555,7 @@ return function(T: any)
 		T.ok(walked ~= nil and walked.dash == nil, "walks first from 40 studs")
 	end)
 
-	T.test("Piercing Shot: 1.35 ignoring 25% DEF, 0.55 on the one lined up behind", function()
+	T.test("Piercing Shot: SkillPower ignoring 25% DEF, on its one foe only", function()
 		local fight = Combat.new({ slime("r", "ranger", { x = 0, z = 0 }) }, {
 			foe("t", { x = 10, z = 0, defence = 20 }),
 			foe("b", { x = 15, z = 0.5, defence = 20 }),
@@ -523,38 +572,79 @@ return function(T: any)
 				table.insert(hits, event)
 			end
 		end
-		T.eq(#hits, 2)
+		T.eq(#hits, 1, "a single-target skill strikes one foe")
 		T.eq(hits[1].to, "t")
-		T.near(hits[1].amount, Combat.damage(10, 15) * 1.35, 1e-9)
-		T.eq(hits[2].to, "b")
-		T.eq(hits[2].splash, true)
-		T.near(hits[2].amount, Combat.damage(10, 15) * 0.55, 1e-9)
+		local weight = Config.Classes.Kinds.ranger.factor * Config.Classes.SkillPower[1]
+		T.near(hits[1].amount, Combat.damage(10, 15) * weight, 1e-9)
 		T.ok(hits[1].ranged, "a ranger's blow is ranged")
 	end)
 
-	T.test("Arcane Barrage: magic on the target and a smaller share on up to 2 others", function()
-		local fight = Combat.new({ slime("m", "mage") }, {
+	T.test("an attack skill weighs SkillPower of its class's plain blow at its weapon's tier", function()
+		for tier = 1, 5 do
+			local fight = Combat.new(
+				{ slime("w", "warrior", { tier = tier }) },
+				{ foe("f", { defence = 10 }) },
+				Rng.new(4)
+			)
+			unitOf(fight, "w").skillReady = 0
+			freeze(unitOf(fight, "f"))
+			local hit = firstOf(run(fight, 3), function(event: any): boolean
+				return event.kind == "hit" and event.from == "w"
+			end)
+			local want = Combat.damage(10, 10) * Config.Classes.Kinds.warrior.factor * Config.Classes.SkillPower[tier]
+			T.eq(hit.skill, "dash_strike")
+			T.near(hit.amount, want, 1e-9, "tier " .. tier)
+		end
+		T.same(Config.Classes.SkillPower, { 1.1, 1.2, 1.3, 1.4, 1.5 })
+	end)
+
+	T.test("Arcane Barrage: every foe within its radius, as hard as the target; no places: cap foes", function()
+		local weight = Config.Classes.Kinds.mage.factor * Config.Classes.SkillPower[1]
+		local function barrage(fight: any, ids: { string }): { any }
+			unitOf(fight, "m").skillReady = 0
+			for _, id in ids do
+				freeze(unitOf(fight, id))
+			end
+			local hits: { any } = {}
+			for _, event in run(fight, 3) do
+				if event.kind == "hit" and event.skill == "arcane_barrage" then
+					table.insert(hits, event)
+				end
+			end
+			return hits
+		end
+		local loose = Combat.new({ slime("m", "mage") }, {
 			foe("a", { defence = 20 }),
 			foe("b", { defence = 20 }),
 			foe("c", { defence = 20 }),
 			foe("d", { defence = 20 }),
 		}, Rng.new(6))
-		unitOf(fight, "m").skillReady = 0
-		for _, id in { "a", "b", "c", "d" } do
-			freeze(unitOf(fight, id))
+		local hits = barrage(loose, { "a", "b", "c", "d" })
+		T.eq(#hits, Skills.arcane_barrage.cap)
+		for index, hit in hits do
+			T.eq(hit.splash, if index == 1 then nil else true)
+			T.near(hit.amount, Combat.damage(10, 20, true) * weight, 1e-9)
 		end
-		local hits: { any } = {}
-		for _, event in run(fight, 3) do
-			if event.kind == "hit" and event.skill == "arcane_barrage" then
-				table.insert(hits, event)
-			end
+		-- positional: the five within 7 of the target, never the one 10 away
+		local placed = Combat.new({ slime("m", "mage", { x = 0, z = 0 }) }, {
+			foe("t", { x = 20, z = 0, defence = 20 }),
+			foe("p", { x = 23, z = 0, defence = 20 }),
+			foe("q", { x = 20, z = 4, defence = 20 }),
+			foe("s", { x = 17, z = -3, defence = 20 }),
+			foe("u", { x = 24, z = -4, defence = 20 }),
+			foe("far", { x = 30, z = 0, defence = 20 }),
+		}, Rng.new(6), { moves = true })
+		unitOf(placed, "m").target = unitOf(placed, "t")
+		local struck: { [string]: boolean } = {}
+		local count = 0
+		for _, hit in barrage(placed, { "t", "p", "q", "s", "u", "far" }) do
+			struck[hit.to] = true
+			count += 1
+			T.near(hit.amount, Combat.damage(10, 20, true) * weight, 1e-9)
 		end
-		T.eq(#hits, 3)
-		T.near(hits[1].amount, Combat.damage(10, 20, true) * Skills.arcane_barrage.factor, 1e-9)
-		for index = 2, 3 do
-			T.eq(hits[index].splash, true)
-			T.near(hits[index].amount, Combat.damage(10, 20, true) * Skills.arcane_barrage.splash, 1e-9)
-		end
+		T.eq(count, 5)
+		T.ok(struck.t and struck.p and struck.q and struck.s and struck.u, "all within the area")
+		T.ok(not struck.far, "none outside it")
 	end)
 
 	T.test("Healer heals below 90% instead of striking, Mends below 60%, bolts otherwise, never overheals", function()
@@ -624,10 +714,36 @@ return function(T: any)
 		T.eq(#hits, 3)
 		T.eq(hits[1].to, "c")
 		T.eq(hits[1].melt, true)
-		T.near(hits[1].amount, Combat.damage(10, 30, true) * 0.9, 1e-9)
+		local weight = Config.Classes.Kinds.alchemist.factor * Config.Classes.SkillPower[1]
+		T.near(hits[1].amount, Combat.damage(10, 30, true) * weight, 1e-9)
 		for _, event in hits do
 			T.ok(event.to ~= "lone", "the lone foe is spared")
 			T.near(unitOf(fight, event.to).effects.melt.value, 0.2, 1e-9)
+		end
+		-- (each melted foe says so, for as long as the melt lasts)
+		local melted: { [string]: boolean } = {}
+		for _, event in hits do
+			melted[event.to] = false
+		end
+		local fight2 = Combat.new({ slime("a", "alchemist", { x = 0, z = 0 }) }, {
+			foe("b", { x = 0, z = 12, defence = 10 }),
+			foe("c", { x = 2, z = 12, defence = 30 }),
+			foe("d", { x = 0, z = 14, defence = 10 }),
+		}, Rng.new(8), { moves = true })
+		unitOf(fight2, "a").skillReady = 0
+		for _, id in { "b", "c", "d" } do
+			freeze(unitOf(fight2, id))
+		end
+		for _, event in run(fight2, 3) do
+			if event.kind == "status" and event.status == "melted" then
+				T.eq(event.from, "a")
+				T.eq(event.skill, "acid_rain")
+				T.eq(event.seconds, Skills.acid_rain.seconds)
+				melted[event.to] = true
+			end
+		end
+		for id, seen in melted do
+			T.ok(seen, id .. " shows its melt")
 		end
 		-- the melt lowers DEF: the next blow on c counts 20% less of it
 		local c = unitOf(fight, "c")

@@ -86,7 +86,9 @@ export type Fight = {
 -- `ranged` a blow from a fighter that keeps its distance; `slow` a sting that slowed its target; `melt` a blow that
 -- melted its target's armour. A "heal" event carries the health given back in `amount`. A "move" event (positional mode
 -- only) says a fighter walks: it stands at (x, z) and goes to (tx, tz), which it reaches in `seconds`; `dash` a Warrior's
--- rush, `hop` a Ranger's or Mage's jump away. A "taunt" event: `from` taunted `to`.
+-- rush, `hop` a Ranger's or Mage's jump away. A "taunt" event: `from` taunted `to`. A "status" event: a lasting effect
+-- (`status`: taunted, shielded, melted, slowed, stunned, guarded) is on `to` for `seconds` from now, put on by `from`
+-- with `skill`; sent each time it is put on or renewed, so the client can show it as long as it lasts.
 export type Event = {
 	kind: string,
 	from: string?,
@@ -107,6 +109,7 @@ export type Event = {
 	seconds: number?,
 	dash: boolean?,
 	hop: boolean?,
+	status: string?,
 }
 -- `maxHp` is the full health when the fighter starts wounded (hp below it); left out, hp is the full health.
 -- `role` is a slime's way of fighting (Combat.role), `kind` a zombie's kind; either sets whom it goes for.
@@ -307,18 +310,29 @@ local function effectOf(fight: Fight, u: Unit, kind: string): number
 	return 0
 end
 
--- (the strongest only: a weaker one while a stronger lasts does nothing; as strong or stronger renews it)
-local function addEffect(fight: Fight, u: Unit, kind: string, value: number, seconds: number)
+-- A lasting effect shows on the one it is on: the "status" event (Event) that says so, when there are events to send.
+local function status(events: { Event }?, from: Unit?, u: Unit, name: string, seconds: number, key: string?)
+	if events and seconds > 0 then
+		local by = if from then from.id else nil
+		table.insert(events, { kind = "status", from = by, to = u.id, status = name, seconds = seconds, skill = key })
+	end
+end
+
+-- (the strongest only: a weaker one while a stronger lasts does nothing; as strong or stronger renews it) True when it
+-- was put on.
+local function addEffect(fight: Fight, u: Unit, kind: string, value: number, seconds: number): boolean
 	local e = u.effects[kind]
 	if e and e.untilAt > fight.seconds and e.value > value then
-		return
+		return false
 	end
 	u.effects[kind] = { value = value, untilAt = fight.seconds + seconds }
+	return true
 end
 
 -- Every stun that knocks a unit off its beat goes through here: within StunWindow the 1st counts full, the next ones by
 -- StunSteps, then none until older ones age out. A boss is never stunned; a mini-boss MiniStunCap at most, then free.
-function Combat.stun(fight: Fight, u: Unit, seconds: number)
+-- With `events`, a stun that counted says so ("stunned", as long as it holds the unit off its beat).
+function Combat.stun(fight: Fight, u: Unit, seconds: number, events: { Event }?, from: Unit?, key: string?)
 	local K = Config.Classes
 	if seconds <= 0 or u.rank == "boss" then
 		return
@@ -329,6 +343,7 @@ function Combat.stun(fight: Fight, u: Unit, seconds: number)
 		end
 		u.cooldown += math.min(seconds, K.MiniStunCap)
 		u.stunFree = fight.seconds + K.MiniStunFree
+		status(events, from, u, "stunned", math.min(seconds, K.MiniStunCap), key)
 		return
 	end
 	local kept: { number } = {}
@@ -341,6 +356,7 @@ function Combat.stun(fight: Fight, u: Unit, seconds: number)
 	if share > 0 then
 		u.cooldown += seconds * share
 		table.insert(kept, fight.seconds)
+		status(events, from, u, "stunned", seconds * share, key)
 	end
 	u.stuns = kept
 end
@@ -552,24 +568,34 @@ local function blow(
 		if index == 1 then
 			-- (only a plain blow stings: a skill has its own weight)
 			local sting = if plain then (c.Stings :: any)[attacker.role] else nil
+			-- (its lasting riders go out after the hit that brought them)
+			local riders: { Event } = {}
 			if sting and u.hp > 0 then
 				u.slowUntil = fight.seconds + sting.seconds
 				u.slowBy = sting.slow
 				hit.slow = true
+				status(riders, attacker, u, "slowed", sting.seconds, nil)
 			end
 			if special and u.hp > 0 then
+				local key = if extra then extra.skill else nil
 				-- (a special's own riders: "all" knocks its foes off the beat itself; a several-blow one only on its first blow)
 				if special.stun and special.kind ~= "all" and (extra == nil or extra.n == nil or extra.n == 1) then
-					Combat.stun(fight, u, special.stun)
+					Combat.stun(fight, u, special.stun, riders, attacker, key)
 				end
 				if special.slow then
 					u.slowUntil = fight.seconds + special.slowSeconds
 					u.slowBy = special.slow
 					hit.slow = true
+					status(riders, attacker, u, "slowed", special.slowSeconds, key)
 				end
 			end
+			table.insert(events, hit)
+			for _, rider in riders do
+				table.insert(events, rider)
+			end
+		else
+			table.insert(events, hit)
 		end
-		table.insert(events, hit)
 		if u.hp <= 0 then
 			table.insert(events, event("fallen", u))
 		end
@@ -623,6 +649,7 @@ local function skill(fight: Fight, attacker: Unit, target: Unit, events: { Event
 		attacker.guardUntil = fight.seconds + s.seconds
 		attacker.guardMul = s.defence
 		table.insert(events, { kind = "guard", from = attacker.id, to = attacker.id, skill = key })
+		status(events, attacker, attacker, "guarded", s.seconds, key)
 		blow(fight, attacker, target, s.factor, events, extra, s)
 	elseif s.kind == "all" then
 		for _, foe in foesOf(fight, attacker) do
@@ -632,7 +659,9 @@ local function skill(fight: Fight, attacker: Unit, target: Unit, events: { Event
 			end
 			blow(fight, attacker, foe, s.factor, events, extra, s)
 			-- (knocked off its beat)
-			Combat.stun(fight, foe, s.stun or 0)
+			if foe.hp > 0 then
+				Combat.stun(fight, foe, s.stun or 0, events, attacker, key)
+			end
 		end
 	else
 		blow(fight, attacker, target, s.factor, events, extra, s)
@@ -817,9 +846,15 @@ local function densest(fight: Fight, u: Unit, radius: number, canHit: (Unit) -> 
 	return best
 end
 
--- An area skill: the target, then up to `spread` others within `radius` of it (nearest first) at `splash`; `melt` on
--- every one it strikes when the skill has one.
-local function area(fight: Fight, u: Unit, target: Unit, key: string, events: { Event }, how: How)
+-- What a class's attack skill weighs against a plain blow: its plain factor times SkillPower at its weapon's tier.
+local function skillWeight(u: Unit): number
+	local power = Config.Classes.SkillPower
+	return kindOf(u).factor * power[math.clamp(u.tier or 1, 1, #power)]
+end
+
+-- An area skill: the target and every other foe within `radius` of it (nearest first; a fight with no places strikes
+-- `cap` foes in all), each at `weight`; `melt` on every one it strikes when the skill has one.
+local function area(fight: Fight, u: Unit, target: Unit, key: string, weight: number, events: { Event }, how: How)
 	local s = (Config.Combat.Skills :: any)[key]
 	local others: { Unit } = {}
 	for _, other in foesOf(fight, u) do
@@ -833,15 +868,17 @@ local function area(fight: Fight, u: Unit, target: Unit, key: string, events: { 
 		end)
 	end
 	local struck = { target }
-	blow(fight, u, target, s.factor, events, { skill = key, melt = if s.melt then true else nil }, s, how)
-	for index = 1, math.min(s.spread, #others) do
-		local other = others[index]
+	blow(fight, u, target, weight, events, { skill = key, melt = if s.melt then true else nil }, s, how)
+	for index, other in others do
+		if not fight.moves and index >= s.cap then
+			break
+		end
 		table.insert(struck, other)
 		blow(
 			fight,
 			u,
 			other,
-			s.splash,
+			weight,
 			events,
 			{ skill = key, splash = true, melt = if s.melt then true else nil },
 			s,
@@ -850,8 +887,8 @@ local function area(fight: Fight, u: Unit, target: Unit, key: string, events: { 
 	end
 	if s.melt then
 		for _, each in struck do
-			if each.hp > 0 then
-				addEffect(fight, each, "melt", s.melt, s.seconds)
+			if each.hp > 0 and addEffect(fight, each, "melt", s.melt, s.seconds) then
+				status(events, u, each, "melted", s.seconds, key)
 			end
 		end
 	end
@@ -896,8 +933,11 @@ local function classAct(fight: Fight, u: Unit, target: Unit, events: { Event })
 				foe.tauntBy, foe.tauntUntil, foe.target = u, fight.seconds + s.seconds, u
 				local taunt: any = { kind = "taunt", from = u.id, to = foe.id, skill = key, seconds = s.seconds }
 				table.insert(events, taunt)
+				status(events, u, foe, "taunted", s.seconds, key)
 			end
-			addEffect(fight, u, "taken", s.taken, s.seconds)
+			if addEffect(fight, u, "taken", s.taken, s.seconds) then
+				status(events, u, u, "shielded", s.seconds, key)
+			end
 			return
 		elseif key == "mend" then
 			local mate = lowestMate(fight, u, s.range, 1)
@@ -906,32 +946,14 @@ local function classAct(fight: Fight, u: Unit, target: Unit, events: { Event })
 				return
 			end
 		elseif key == "dash_strike" then
-			blow(fight, u, target, s.factor, events, { skill = key }, s)
+			blow(fight, u, target, skillWeight(u), events, { skill = key }, s)
 			return
 		elseif key == "piercing_shot" then
-			local how = { ignore = s.ignore }
-			blow(fight, u, target, s.factor, events, { skill = key }, s, how)
-			if fight.moves then
-				-- (one foe lined up behind the target: near it, farther from the Ranger, within `degrees` of the line)
-				local d0 = distance(u, target)
-				local behind: Unit? = nil
-				local bestD = math.huge
-				for _, other in foesOf(fight, u) do
-					local d = distance(u, other)
-					if other ~= target and d > d0 and distance(target, other) <= s.radius and d0 > 1e-6 then
-						local dot = ((target.x - u.x) * (other.x - u.x) + (target.z - u.z) * (other.z - u.z)) / (d0 * d)
-						if dot >= math.cos(math.rad(s.degrees)) and distance(target, other) < bestD then
-							behind, bestD = other, distance(target, other)
-						end
-					end
-				end
-				if behind then
-					blow(fight, u, behind, s.splash, events, { skill = key, splash = true }, s, how)
-				end
-			end
+			-- (one foe only: it pierces armour, not bodies)
+			blow(fight, u, target, skillWeight(u), events, { skill = key }, s, { ignore = s.ignore })
 			return
 		else
-			area(fight, u, target, key, events, { magic = kind.magic })
+			area(fight, u, target, key, skillWeight(u), events, { magic = kind.magic })
 			return
 		end
 	end

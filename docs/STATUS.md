@@ -1,5 +1,22 @@
 # Status
 
+## 2026-11-13 — longer ranged reach, skill power by rarity, single and area targets, effects that last show
+
+The owner: ranged reach 1.5 times; an attack skill weighs the plain blow times the weapon's rarity (Common 1.1,
+Uncommon 1.2, ...) plus the weapon's own effect; single-target skills hit one foe, area skills every foe in the area;
+buffs and debuffs show on every fighter under them while they last. Done (`docs/WEAPONS.md` §2-3,
+`docs/weapons/SKILL-VFX.md` §6):
+- **Reach**: Bow and Focus 24, Staff 22.5, Kit 21 (`Config.Classes.Kinds`); Mend's range 22.5.
+- **Skill power**: `Config.Classes.SkillPower` = 1.1, 1.2, 1.3, 1.4, 1.5 by tier, on Dash Strike, Piercing Shot,
+  Arcane Barrage and Acid Rain (a Common Dash Strike is now 1.1 x 1.05 of an ATK blow, it was 1.5).
+- **Targets**: Piercing Shot strikes its foe only; Barrage and Acid Rain every foe within 7 / 8 of the target at full
+  weight (the camps and the Arena, which have no places: 3 foes).
+- **Effects that last**: a `status` event; taunted, shielded, guarded, stunned, melted and slowed each have a look worn
+  on the body for as long as they last. Seen in a Frozen Ice run (taunt marks and Guardian shields, on the right
+  fighters); the acid melt and the slow are ordered from the library and show nothing until they come.
+
+Not done: the library's acid melt and slow; a balance sweep with the new numbers. Not seen: a phone, the owner.
+
 ## 2026-11-12 — skill effects from the library; the missing ones listed; weapon effects to be redone
 
 The owner asked to redo the skill effects from our VFX library, to list and design the ones it lacks (he builds those

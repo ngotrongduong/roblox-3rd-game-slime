@@ -13,13 +13,19 @@ return {
 	Tiers = { wood = 1, iron = 2, core = 3, bramble = 4, legend = 5 },
 	Kinds = {
 		-- (`taken`: the Guardian always takes that share less, behind its shield; its Taunt raises it while it lasts)
+		-- (the ranged reaches are 1.5 times the first ones, the owner, 2026-11-13: 16, 16, 15, 14)
 		guardian = { beat = 1.1, factor = 0.8, magic = false, reach = 6, pull = 3, skill = "taunt", taken = 0.2 },
 		warrior = { beat = 1, factor = 1.05, magic = false, reach = 6, pull = 1, skill = "dash_strike" },
-		ranger = { beat = 1, factor = 1.05, magic = false, reach = 16, pull = 1, skill = "piercing_shot" },
-		mage = { beat = 1, factor = 0.9, magic = true, reach = 16, pull = 1, skill = "arcane_barrage" },
-		healer = { beat = 1.15, factor = 0.65, magic = true, reach = 15, pull = 1, skill = "mend" },
-		alchemist = { beat = 1, factor = 0.9, magic = true, reach = 14, pull = 1, skill = "acid_rain" },
+		ranger = { beat = 1, factor = 1.05, magic = false, reach = 24, pull = 1, skill = "piercing_shot" },
+		mage = { beat = 1, factor = 0.9, magic = true, reach = 24, pull = 1, skill = "arcane_barrage" },
+		healer = { beat = 1.15, factor = 0.65, magic = true, reach = 22.5, pull = 1, skill = "mend" },
+		alchemist = { beat = 1, factor = 0.9, magic = true, reach = 21, pull = 1, skill = "acid_rain" },
 	},
+	-- An attack skill weighs this many of its class's plain blows, by the weapon's tier (the owner, 2026-11-13: Common
+	-- 1.1, Uncommon 1.2, ...), on every foe it strikes, so a better weapon's skill counts at every level; its own effect
+	-- (the dash, the armour it ignores or melts) comes on top. A single-target skill strikes its target only; an area
+	-- skill every foe within its `radius` of the target (a fight with no places, the camps and the Arena: `cap` foes).
+	SkillPower = { 1.1, 1.2, 1.3, 1.4, 1.5 },
 	-- 'every' keeps the shared skill catalogue compatible with its older consumers; classes use seconds instead.
 	Skills = {
 		taunt = {
@@ -38,43 +44,21 @@ return {
 			kind = "single",
 			every = 1,
 			cooldown = 6,
-			factor = 1.5,
 			minStuds = 7,
 			maxStuds = 18,
 			seconds = 0.2,
 		},
-		piercing_shot = {
-			name = "Piercing Shot",
-			kind = "single",
-			every = 1,
-			cooldown = 6,
-			factor = 1.35,
-			ignore = 0.25,
-			splash = 0.55,
-			spread = 1,
-			radius = 8,
-			degrees = 30,
-		},
-		arcane_barrage = {
-			name = "Arcane Barrage",
-			kind = "splash",
-			every = 1,
-			cooldown = 6,
-			factor = 1.2,
-			splash = 0.4,
-			spread = 2,
-			radius = 7,
-		},
-		mend = { name = "Mend", kind = "single", every = 1, cooldown = 8, factor = 4, threshold = 0.6, range = 15 },
+		piercing_shot = { name = "Piercing Shot", kind = "single", every = 1, cooldown = 6, ignore = 0.25 },
+		arcane_barrage = { name = "Arcane Barrage", kind = "splash", every = 1, cooldown = 6, radius = 7, cap = 3 },
+		-- (a heal, not an attack: `factor` heals, SkillPower leaves it alone)
+		mend = { name = "Mend", kind = "single", every = 1, cooldown = 8, factor = 4, threshold = 0.6, range = 22.5 },
 		acid_rain = {
 			name = "Acid Rain",
 			kind = "splash",
 			every = 1,
 			cooldown = 8,
-			factor = 0.9,
-			splash = 0.45,
-			spread = 2,
 			radius = 8,
+			cap = 3,
 			melt = 0.2,
 			seconds = 4,
 		},

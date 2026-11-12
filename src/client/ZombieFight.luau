@@ -1151,9 +1151,9 @@ local function strike(event: { [string]: any }, style: FightFx.Style, land: () -
 	task.delay(contactSeconds(style), land)
 end
 
--- A class skill the library draws, struck with one blow (and a splash behind): a melee one lunges and lands when the
--- effect played at its aim says (Dash Strike's cuts opening); a shot's library projectile leaves the weapon and the blow
--- lands on its marker, the foe it flies on through a beat later.
+-- A class skill the library draws, struck with one blow at one foe: a melee one lunges and lands when the effect played
+-- at its aim says (Dash Strike's cuts opening); a shot's library projectile leaves the weapon and the blow lands on its
+-- marker.
 local function libraryStrike(
 	event: { [string]: any },
 	style: FightFx.Style,
@@ -1353,9 +1353,9 @@ local function deliver(event: { [string]: any }, style: FightFx.Style, first: bo
 			task.delay(if event.splash then K.MultiGap else 0, function()
 				FightFx.shot(looks.fire, mouth, skin, function()
 					if looks.hitVfx then
-						-- (each bursts where it lands, a splashed foe's smaller; bigger the higher the weapon's tier)
+						-- (each bursts where it lands, as hard as the rest; bigger the higher the weapon's tier)
 						local _, scale = levelOf(caster)
-						vfx(looks.hitVfx, skin, { scale = scale * (if event.splash then 0.7 else 1) })
+						vfx(looks.hitVfx, skin, { scale = scale })
 					end
 					land()
 				end)
@@ -1494,6 +1494,113 @@ local function onTaunt(event: { [string]: any })
 	end
 end
 
+-- When the blow an event came with reaches its target (after the lunge, the spit, the skill's cast or rain).
+local function blowLanding(event: { [string]: any }): number
+	local style = if type(event.from) == "string" then styleOf(event.from) else FightFx.style(nil)
+	local s = skillOf(event)
+	local landing = contactSeconds(style)
+	if s and s.kind == "multi" then
+		landing += ((if type(event.n) == "number" then event.n else 1) - 1) * V.Skill.MultiGap
+	elseif s and (s.kind == "all" or s.kind == "splash") then
+		landing = if looksOf(event).rain
+			then F.ShotSeconds
+			else V.Skill.CastSeconds + (if event.splash then V.Skill.MultiGap else 0)
+	end
+	return landing
+end
+
+-- ===== Lasting effects: each shows on the one it is on while it lasts (a "status" event, View.Status) =====
+
+type Worn = { handle: any, untilAt: number, from: string? }
+local worn: { [string]: { [string]: Worn } } = {}
+
+local function takeOff(id: string, name: string)
+	local on = worn[id]
+	local each = if on then on[name] else nil
+	if on and each then
+		on[name] = nil
+		pcall(VfxLib.detach, each.handle, V.Status.FadeSeconds)
+	end
+end
+
+-- A fighter fell, or its fight is over: what it wears goes, and what it put on others only while it stands (a taunt).
+local function takeOffAll(id: string)
+	local own = worn[id]
+	if own then
+		for name in own do
+			takeOff(id, name)
+		end
+	end
+	worn[id] = nil
+	for other, on in worn do
+		for name, each in on do
+			local look = (V.Status.Looks :: any)[name]
+			if each.from == id and look and look.whileFrom then
+				takeOff(other, name)
+			end
+		end
+	end
+end
+
+local function wear(event: { [string]: any }, look: { [string]: any })
+	local id, name, seconds = event.to, event.status, event.seconds
+	local actor = find(id)
+	if not actor or actor.destroyed then
+		return
+	end
+	local on = worn[id] or {}
+	worn[id] = on
+	local untilAt = os.clock() + seconds
+	local each: Worn? = on[name]
+	if each then
+		-- (renewed: it lasts longer, nothing new is put on)
+		each.untilAt = math.max(each.untilAt, untilAt)
+	else
+		local caster = if type(event.from) == "string" then find(event.from) else nil
+		local tier = if caster then SlimeWeapon.tierOf(caster.model) else nil
+		-- (on the body part, welded, as the village's slimes wear theirs: on the whole model the box of a slime and its
+		-- weapon and wear is far wider than the slime, and the look stood beside it, seen 2026-11-13)
+		local opts: { [string]: any } = {
+			variant = (if look.variants then look.variants[event.skill or ""] else nil) or look.variant,
+			grade = if look.graded then (V.Status.Grades :: any)[tier or "wood"] else nil,
+			weld = true,
+		}
+		if look.minHeight and actor.body.Size.Y < look.minHeight then
+			opts.height = look.minHeight
+		end
+		local ok, handle = pcall(VfxLib.attach, actor.body, look.vfx, opts)
+		if not ok or not handle then
+			return
+		end
+		local made: Worn = { handle = handle, untilAt = untilAt, from = event.from }
+		on[name] = made
+		each = made
+	end
+	local kept = each :: Worn
+	task.delay(seconds, function()
+		safe("status", function()
+			if worn[id] and worn[id][name] == kept and os.clock() >= kept.untilAt - 0.05 then
+				takeOff(id, name)
+			end
+		end)
+	end)
+end
+
+-- A lasting effect was put on (or renewed): it shows as the blow that brought it lands (a taunt or a wall at once).
+local function onStatus(event: { [string]: any })
+	local name = event.status
+	local look = if type(name) == "string" then (V.Status.Looks :: any)[name] else nil
+	if type(event.to) ~= "string" or type(event.seconds) ~= "number" or not look or not VfxLib.get(look.vfx) then
+		return
+	end
+	local wait = if look.atOnce then 0 else blowLanding(event)
+	task.delay(wait, function()
+		safe("status", function()
+			wear(event, look)
+		end)
+	end)
+end
+
 -- A miss: the blow comes, the target is already stepping aside and leaves fading copies of itself.
 local function onDodge(event: { [string]: any }, first: boolean)
 	local style = styleOf(event.from)
@@ -1522,6 +1629,7 @@ end
 local function fall(event: { [string]: any })
 	local id: string = event.to
 	local coins: number = event.coins or 0
+	takeOffAll(id)
 	local actor, spot, foe = find(id)
 	local size = V.RewardTextSize
 	local monster = extras[id]
@@ -1617,18 +1725,8 @@ end
 
 -- A fall shows when the blow that caused it lands (after the lunge or the spit), not before.
 local function onFallen(event: { [string]: any })
-	local style = if type(event.from) == "string" then styleOf(event.from) else FightFx.style(nil)
 	-- (as deliver lands a skill's blows)
-	local s = skillOf(event)
-	local landing = contactSeconds(style)
-	if s and s.kind == "multi" then
-		landing += ((if type(event.n) == "number" then event.n else 1) - 1) * V.Skill.MultiGap
-	elseif s and (s.kind == "all" or s.kind == "splash") then
-		landing = if looksOf(event).rain
-			then F.ShotSeconds
-			else V.Skill.CastSeconds + (if event.splash then V.Skill.MultiGap else 0)
-	end
-	task.delay(landing + V.HitStopSeconds, function()
+	task.delay(blowLanding(event) + V.HitStopSeconds, function()
 		safe("fall", function()
 			fall(event)
 		end)
@@ -1678,9 +1776,11 @@ local function onEnd(teamIndex: number, event: { [string]: any })
 	end
 	for _, id in fight.order do
 		dropBar(id)
+		takeOffAll(id)
 	end
 	for _, id in foes do
 		dropBar(id)
+		takeOffAll(id)
 	end
 	if event.winner == "squad" then
 		-- (after the last blow has landed)
@@ -1770,6 +1870,8 @@ local function onEvents(payload: any)
 				onHeal(event)
 			elseif kind == "taunt" then
 				onTaunt(event)
+			elseif kind == "status" then
+				onStatus(event)
 			elseif kind == "end" then
 				onEnd(payload.team, event)
 			elseif kind == "home" then
@@ -1801,6 +1903,7 @@ end
 function ZombieFight.adopt(id: string, extra: Extra)
 	homes[id], targets[id] = nil, nil
 	dropBar(id)
+	takeOffAll(id)
 	extras[id] = extra
 	local fight = fights[0]
 	if fight then

@@ -238,7 +238,7 @@ return {
 				-- The weapon classes' signature skills (Config.Classes.Skills; the weapon's own move is SlimeWeapon's). Those
 				-- the VFX library has a skill for play it (`vfx`, at the level of the caster's weapon tier, Levels): Dash
 				-- Strike's Flash Step streaks along the dash from the aim (`aim`) and its cuts open on the foe as the blow
-				-- lands; Piercing Shot's arrow flies from the bow through the foe; Mend's Blessing Light falls from the sky
+				-- lands; Piercing Shot's arrow flies from the bow into its one foe; Mend's Blessing Light falls from the sky
 				-- on the one mended. A blow lands on the effect's marker (`impact`); the library draws its own hit
 				-- (`ownHit`, no mark of the class's). The rest stand in with the owner's battle art until the library has
 				-- them (docs/weapons/SKILL-VFX.md): Taunt rings out from the shield and rings every foe it pulls (`mark`);
@@ -257,6 +257,39 @@ return {
 			TierScale = { wood = 1, iron = 1.05, core = 1.1, bramble = 1.2, legend = 1.35 },
 			-- what a slime's weapon sends to the one it heals (client/ZombieFight onHeal)
 			HealShot = "moteHeal",
+		},
+		-- A lasting effect shows on everyone it is on for as long as it lasts (the owner, 2026-11-13; a "status" event of
+		-- Combat): the library effect worn (`vfx` and its `variant`, by the skill that put it on in `variants`; `graded`:
+		-- its grade by the caster's weapon tier, Grades), drawn as if its wearer were at least `minHeight` studs tall so
+		-- it reads from the fight's camera; put on as the blow that brought it lands (`atOnce`: as it is cast), taken off
+		-- with a FadeSeconds fade when it ends or its wearer falls, and with `whileFrom` also when the one who put it on
+		-- falls (a taunt). An effect the library does not have yet shows nothing (docs/weapons/SKILL-VFX.md §6).
+		Status = {
+			FadeSeconds = 0.3,
+			Looks = {
+				-- a Guardian's Taunt: every foe it pulls is angry at it; meanwhile its shields breathe on the Guardian
+				taunted = { vfx = "buff.emote", variant = "angry", minHeight = 6, whileFrom = true, atOnce = true },
+				shielded = { vfx = "buff.stat_set", variant = "defence", graded = true, minHeight = 4, atOnce = true },
+				-- Acid Rain eats at the armour of every foe it strikes
+				melted = { vfx = "buff.acid_melt" },
+				-- a sting or a monster's special: its own kind of slow
+				slowed = {
+					vfx = "buff.slowed",
+					variant = "sting",
+					variants = {
+						acid_splash = "acid",
+						root_grasp = "roots",
+						icicle_bite = "frost",
+						crystal_burst = "frost",
+						frost_breath = "frost",
+						frost_gale = "frost",
+					},
+				},
+				stunned = { vfx = "buff.emote", variant = "confused", minHeight = 6 },
+				-- Jelly Guard and the monsters' walls, while they cover their team-mates
+				guarded = { vfx = "buff.stat_set", variant = "defence", minHeight = 4, atOnce = true },
+			},
+			Grades = { wood = "common", iron = "uncommon", core = "rare", bramble = "epic", legend = "epic" },
 		},
 		-- A winning team cheers (Config.Zombies.CheerSeconds): this many hops each, CheerGap apart, the next slime a bit
 		-- later than the last.

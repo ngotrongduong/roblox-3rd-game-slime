@@ -48,9 +48,16 @@ headless simulator (§10) settles them before they ship, and the owner tunes by 
   about 6% of all damage; the beat is then 1.73x as fast, while ATK 20 hits 20x as hard: speed stays useful, not best.)
 - **Skills.** A skill's cooldown starts when it is cast. It is used only when it is worth it (a heal that would mostly be
   wasted, a Tonic with no one to buff, an area with no one in it: never).
-- **Areas.** Every area skill names its cap and its smaller share on the ones beside the target.
+- **Skill power** (the owner, 2026-11-13). An attack skill weighs its class's plain blow times the weapon's rarity:
+  Common 1.1, Uncommon 1.2, Rare 1.3, Epic 1.4, Legendary 1.5 (`Config.Classes.SkillPower`), on every foe it strikes; its
+  own effect (the dash, the armour it ignores or melts) comes on top. So a better weapon's skill still counts at later
+  levels. Heals keep their own weights.
+- **Targets** (the owner, 2026-11-13). A single-target skill strikes its target and nobody else. An area skill strikes
+  every foe within its radius of the target, all at the same weight; in a fight without places (the camps, the Arena)
+  it strikes its cap.
 - **Effects.** Slows: the strongest only, at most 35% (a boss 15%). Damage taken lowered: at most 40% in all. Damage dealt
   raised: at most +25% in all. Armour melt, anti-heal, Tonic and barriers: the strongest of a kind only, never added up.
+  Every fighter under an effect wears its look for as long as it lasts (the owner, 2026-11-13; `SKILL-VFX.md` §6).
 - **Stuns.** Each target counts the stuns that land on it in the last 10 s: full, half, a quarter, then none. Bosses
   cannot be stunned; a mini-boss at most 0.3 s, then 6 s free. Slimes obey the same count (the bosses' all-slime stuns).
 - **Taunt.** A taunted monster must target the Guardian; it is never pulled or moved, it walks there itself (that walk is
@@ -70,17 +77,18 @@ headless simulator (§10) settles them before they ship, and the owner tunes by 
 ## 3. The classes
 
 Distances in studs: slimes are about 3 wide and keep 3.5 apart; melee reach is 6 (`Config.Dungeon.Move.MeleeStuds`),
-the bow's 16 (`RangedStuds`). Monsters walk twice as fast as a slime of the same SPD, so a slime never out-walks one: a
-ranged slime keeps its distance by its hop.
+a weapon's own in `Config.Classes.Kinds` (the ranged ones 1.5 times the first 16, 16, 15, 14: the owner, 2026-11-13;
+a ranged monster keeps `RangedStuds`, 16). Monsters walk twice as fast as a slime of the same SPD, so a slime never
+out-walks one: a ranged slime keeps its distance by its hop.
 
 | Class | Weapon | Plain blow | Beat ratio | Reach | Stays at | Ring |
 |---|---|---|---|---|---|---|
 | Guardian | Shield | 0.8 physical | 1.1 | 6 | in melee, near the one it protects | front |
 | Warrior | Sword | 1.05 physical | 1.0 | 6 | in melee | front or middle |
-| Ranger | Bow | 1.05 physical | 1.0 | 16 | 11-14 | middle |
-| Mage | Arcane Focus | 0.9 magic | 1.0 | 16 | 10-13 | middle |
-| Healer | Healing Staff | a heal of 0.9 on the most hurt below 90%; else a 0.65 magic bolt | 1.15 | 15 | 9-12 | back |
-| Alchemist | Alchemy Kit | 0.9 magic flask | 1.0 | 14 | 10-12 | back |
+| Ranger | Bow | 1.05 physical | 1.0 | 24 | 11-14 | middle |
+| Mage | Arcane Focus | 0.9 magic | 1.0 | 24 | 10-13 | middle |
+| Healer | Healing Staff | a heal of 0.9 on the most hurt below 90%; else a 0.65 magic bolt | 1.15 | 22.5 | 9-12 | back |
+| Alchemist | Alchemy Kit | 0.9 magic flask | 1.0 | 21 | 10-12 | back |
 | Brawler | none | today's | 1.0 | 6 | in melee | front |
 
 (The balance pass of 2026-11-12 set these: with the first numbers a slime with a weapon fought worse than one without,
@@ -107,7 +115,7 @@ raider reaches a back-row slime; Bash on a foe hurting a team-mate; Wall before 
 
 | Tier | Skill | What it does | Cooldown |
 |---|---|---|---|
-| Common | **Dash Strike** | Rushes up to 18 at a foe 7-18 away along a free path, 1.5 physical. | 6 s |
+| Common | **Dash Strike** | Rushes up to 18 at a foe 7-18 away along a free path, one physical blow at skill power. | 6 s |
 | Uncommon | **Area Slash** | 1.2 on the target, 0.55 on up to 2 others within 7 (cap 3). | 8 s |
 | Epic | **Breaker Strike** | 1.45 physical, ignores 20% of its DEF. | 12 s |
 | Mythic | **Whirlwind** (ultimate) | 0.8 s wind-up, 1.6 on the target, 0.7 on up to 3 others within 9 (cap 4). | 12 s, then 24 s |
@@ -123,7 +131,7 @@ every 6 s; no invulnerability, and its beat runs on (the hop resets nothing).
 
 | Tier | Skill | What it does | Cooldown |
 |---|---|---|---|
-| Common | **Piercing Shot** | 1.35 physical ignoring 25% DEF, and 0.55 on one foe lined up behind (cap 2). | 6 s |
+| Common | **Piercing Shot** | One foe only: a physical blow at skill power that ignores 25% of its DEF. | 6 s |
 | Uncommon | **Arrow Volley** | 0.85 on the target, 0.6 on up to 4 others within 9 of it (cap 5). | 12 s |
 | Epic | **Snare Arrow** | 0.9 physical and a 25% slow for 2.5 s (a boss 15% for 1.5 s). | 13 s |
 | Mythic | **Arrow Rain** (ultimate) | 1.2 s warning on the ground, then 1.3 on the target, 0.7 on up to 4 others within 9 (cap 5). | 12 s, then 24 s |
@@ -137,7 +145,7 @@ Passive **Hop**, as the Ranger's but every 9 s (the owner: archers and mages bot
 
 | Tier | Skill | What it does | Cooldown |
 |---|---|---|---|
-| Common | **Arcane Barrage** | 1.2 magic on the target, 0.4 on up to 2 others within 7 (cap 3). | 6 s |
+| Common | **Arcane Barrage** | Magic at skill power on the target and every foe within 7 of it (no places: cap 3). | 6 s |
 | Uncommon | **Frost Burst** | Within 8 of a foe: 0.9 on it, 0.45 on up to 3 others (cap 4), all slowed 25% for 2.5 s. | 13 s |
 | Epic | **Arcane Lance** | 1.55 magic on one foe; 35% more against a barrier. | 12 s |
 | Mythic | **Meteor** (ultimate) | 1.5 s warning on the ground, then 1.65 on the target, 0.85 on up to 3 others within 9 (cap 4). | 12 s, then 24 s |
@@ -152,7 +160,7 @@ the one with the least predicted health; only with everyone well does it throw a
 
 | Tier | Skill | What it does | Cooldown |
 |---|---|---|---|
-| Common | **Mend** | A heal of 4.0 on a team-mate whose predicted health falls below 60%, within 15. | 8 s |
+| Common | **Mend** | A heal of 4.0 on a team-mate whose predicted health falls below 60%, within 22.5. | 8 s |
 | Uncommon | **Healing Ring** | 0.7 on each of up to 4 hurt team-mates within 11 of one of them. | 16 s |
 | Epic | **Ward** | A barrier of 2.5 on a team-mate within 15, at most 20% of its max HP, for 5 s. | 14 s |
 | Mythic | **Sanctuary** (ultimate) | 1.1 on each of up to 4 team-mates; new stuns on them last 25% less for 3 s. | 12 s, then 24 s |
@@ -171,7 +179,7 @@ effect a skill.
 
 | Tier | Skill | What it does | Cooldown |
 |---|---|---|---|
-| Common | **Acid Rain** | Within 8 of a foe: 0.9 magic on it, 0.45 on up to 2 others (cap 3); their armour melts 20% for 4 s. | 8 s |
+| Common | **Acid Rain** | Magic at skill power on a foe and every foe within 8 of it (no places: cap 3); their armour melts 20% for 4 s. | 8 s |
 | Uncommon | **Squad Tonic** | Its team deals 20% more damage for 4 s. | 18 s |
 | Epic | **Cursed Flask** | One foe: heals on it are 35% weaker for 5 s (no damage). | 12 s |
 | Mythic | **Catalyst Cloud** (ultimate) | Within 10 of a foe: 1.15 on it, 0.55 on up to 3 others (cap 4); armour melts 25% for 4 s. | 12 s, then 24 s |
@@ -190,7 +198,7 @@ Common skill and its stats.
 |---|---|---|
 | Guardian | **Last Stand** | Once a fight, a blow that would make it fall leaves it at 1 HP, and it taunts at once if a foe is in range. |
 | Warrior | **Momentum** | A foe it finishes makes its Dash Strike ready again. |
-| Ranger | **Hawkeye** | Every 4th plain arrow also strikes one foe lined up behind (0.55, as Piercing Shot's). |
+| Ranger | **Hawkeye** | Every 4th plain arrow also strikes one foe lined up behind (0.55). |
 | Mage | **Echo** | Arcane Barrage strikes again 0.6 s later at half its weight. |
 | Healer | **Overflow** | What a plain heal would waste becomes a barrier on the same slime, up to 10% of its max HP, for 4 s. |
 | Alchemist | **Lingering Brew** | Its armour melts last 2 s longer. |

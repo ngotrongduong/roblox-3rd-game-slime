@@ -10,7 +10,7 @@ The library is `C:\roblox-vfx-library` (`CATALOG.md`); the game plays its effect
 | Skill | Library effect | How it plays |
 |---|---|---|
 | Dash Strike (Warrior) | `skill.flash_step` | From the aim: a white streak along the dash, the cuts hang on the foe and open as the blow lands (its `impact` marker, 0.56 s). |
-| Piercing Shot (Ranger) | `skill.piercing_arrow` | The arrow leaves the bow, strikes at 0.22 s and flies on through the foe behind. |
+| Piercing Shot (Ranger) | `skill.piercing_arrow` | The arrow leaves the bow and strikes its one foe at 0.22 s (since 2026-11-13 it hits nobody behind it). |
 | Mend (Healer) | `skill.blessing_light` | A ray of light falls from the sky on the one mended; the number shows as it reaches them (0.25 s). |
 | Arcane Barrage (Mage) | `burst.ether_burst` on each foe | The focus still fires the owner's orbs; each bursts in the library's Ether Burst where it lands. |
 
@@ -148,3 +148,23 @@ What the owner saw: the trails, cast bursts and auras of step 3 (`trail.weapon_<
 
 The pictures: `art/models/weapons/review/<family>_front.png` and `legendary_front.png` in the game folder (renders of
 the owner's models; on disk, not in git).
+
+## 6. Effects that last: every fighter under one shows it (2026-11-13)
+
+The owner: a buff or a debuff shows its own look on EVERY fighter it is on, for as long as it lasts (a heal over time, a
+poison). The fight sends a `status` event each time one is put on or renewed (`Combat.luau`: who, on whom, what, how
+long, which skill); `client/ZombieFight` puts the look on the fighter's body (welded, so it follows every hop), keeps it
+while renewed, and takes it off when it runs out, when the fighter falls or when the fight ends. The looks are
+`View.Status.Looks` (`ConfigZombies.luau`).
+
+| Status | From | Look | Seen |
+|---|---|---|---|
+| taunted | Taunt, on every foe pulled (off when the Guardian falls) | `buff.emote` "angry": a red anger mark over the head | yes, Frozen Ice |
+| shielded | Taunt, on the Guardian | `buff.stat_set` "defence": shields circling it, finer with its shield's tier | yes |
+| guarded | Bark Wall and other guards | `buff.stat_set` "defence" | yes |
+| stunned | stuns (Bramble Burst, Shield Bash, bosses), as long as the stun really lasts | `buff.emote` "confused" over the head | placement only |
+| melted | Acid Rain, on every foe struck | `buff.acid_melt` | **not yet**: ordered from the library |
+| slowed | stings and the monsters' slowing specials (acid, roots, frost) | `buff.slowed`, variants `sting`, `acid`, `roots`, `frost` by skill | **not yet**: ordered from the library |
+
+Until the library delivers `buff.acid_melt` and `buff.slowed`, those two statuses show nothing (the game checks the
+effect exists before it puts it on).
