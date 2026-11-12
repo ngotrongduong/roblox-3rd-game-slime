@@ -8,8 +8,8 @@ Common classes with their brains and signature skills (Guardian Taunt and Interc
 Shot and hop, Mage Arcane Barrage and hop, Healer heals and Mend, Alchemist Acid Rain), numbers in `Config.Classes`;
 the 24 weapons at the Smithy (one family a time on the Weapon tab, icons from the owner's equip art); a slime with no
 weapon is a Brawler as before. Seen in Studio: dungeon runs with both debug teams, every class casting, no errors; the
-Smithy's family row. The first sweep (`tools/balance/class_sim.luau`, WEAPONS.md §13) shows heals too strong, ranged
-beating melee, the Guardian too weak and Mythic too far over Common at level 20: tuning is step 7. Next: step 3, the
+Smithy's family row. The first sweep (`tools/balance/class_sim.luau`, WEAPONS.md §13) shows heals too strong (stalls),
+ranged beating melee, Mythic winning 100% over Common, and little gain over a Brawler at level 60: tuning is step 7. Next: step 3, the
 weapons in hand (models, swings, projectiles, skill effects through the VFX library). Not seen: a phone.
 
 ## 2026-11-12 — weapons, classes and skills designed (with ChatGPT); dungeon fixes

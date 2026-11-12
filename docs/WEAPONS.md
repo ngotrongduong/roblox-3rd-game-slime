@@ -340,21 +340,21 @@ Dungeon, meadow, slimes level 60, 30 runs a probe: every team of four clears lev
 mixed: no class breaks the dungeon); GWRH with Mythic weapons clears 4. Rangers and Mages stand out of the danger range
 56-68% of the time. Mend is cast about once a run (the plain heal does the work).
 
-Team against team, slimes level 20, 1000 fights each, sides swapped (first team's wins / draws):
+Team against team, slimes level 20 and 60, 1000 fights each, sides swapped (first team's wins, draws in brackets):
 
-| Match-up | Wins | Draws | Reading |
+| Match-up | Level 20 | Level 60 | Reading |
 |---|---|---|---|
-| GHHR against WRMA | 83% | 12% | healing stalls: too strong |
-| RRMH against WWGA | 90% | 0% | melee does not reach range |
-| GGHA against WRMA (wood, iron, core, bramble) | 7%, 5%, 16%, 0% | 1-4% | the protected back row is broken easily (no Rogue needed; the defence is too weak, not too strong) |
-| HHGW against WWRM | 59% | 19% | two Healers stall four hitters: fails |
-| GWRH against GMAH | 98% | 2% | GMAH has no way to win: fails |
-| GMMH against GWRH | 5% | 8% | the tank-and-mages clump is no farm |
-| GWRH Mythic against GWRH Common | 100% | 0% | far over 60-65% at level 20 (flat weapon points, §4's watch) |
-| WWWW, GGGG, RRRR, MMMM, AAAA against GWRH | 50%, 0%, 55%, 5%, 0% | 0% | four Rangers or Warriors match the mixed team |
-| HHHH against GWRH | 0% | 100% | four Healers can neither win nor lose: a stall |
-| BBBB (no weapons) against GWRH | 26% | 0% | a weapon is worth having |
+| GHHR against WRMA | 83% (12%) | 98% (1%) | healing wins and stalls: too strong |
+| RRMH against WWGA | 90% | 86% | melee does not reach range |
+| GGHA against WRMA (wood, iron, core, bramble) | 7, 5, 16, 0% | 62, 54, 61, 43% | inside 65-70% at 60, broken easily at 20: no Rogue needed |
+| HHGW against WWRM | 59% (19%) | 93% (4%) | two Healers stall four hitters: fails |
+| GWRH against GMAH | 98% (2%) | 88% (11%) | GMAH has hardly a way to win: fails |
+| GMMH against GWRH | 5% (8%) | 13% (17%) | the tank-and-mages clump is no farm |
+| GWRH Mythic against GWRH Common | 100% | 100% | far over 60-65% (the weapons' stat gap, §4's watch) |
+| WWWW, GGGG, RRRR, MMMM, AAAA against GWRH | 50, 0, 55, 5, 0% | 27, 0, 32, 5, 0% | no four of one class beats the mixed team at 60 |
+| HHHH against GWRH | 0% (100%) | 0% (100%) | four Healers can neither win nor lose: a stall |
+| BBBB (no weapons) against GWRH | 26% | 46% | at 60 a class adds little over today's Brawler |
 
-What to tune first (step 7, before the arena uses classes): heals (the Healer's plain heal and its 0.3 weight), the
-Guardian's survival and Taunt, melee reach against ranged (the walk, the dash, the hop's cooldown), and the weapons'
-flat points at low levels.
+What to tune first (step 7, before the arena uses classes): heals (the Healer's plain heal and Mend at the 0.3 weight;
+the arena's heal fade of §7 is not built yet), melee reach against ranged (the walk, the dash, the hop's cooldown), the
+weapons' stat gap between tiers, and what a class adds over a Brawler at high levels.
