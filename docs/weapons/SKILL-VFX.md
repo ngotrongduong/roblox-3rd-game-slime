@@ -10,7 +10,7 @@ The library is `C:\roblox-vfx-library` (`CATALOG.md`); the game plays its effect
 | Skill | Library effect | How it plays |
 |---|---|---|
 | Dash Strike (Warrior) | `skill.flash_step` | From the aim: a white streak along the dash, the cuts hang on the foe and open as the blow lands (its `impact` marker, 0.56 s). |
-| Piercing Shot (Ranger) | `skill.piercing_arrow` | The arrow leaves the bow and strikes its one foe at 0.22 s (since 2026-11-13 it hits nobody behind it). |
+| Piercing Shot (Ranger) | `skill.piercing_arrow` | The arrow leaves the bow and flies through every foe on its line to the farthest (the owner, 2026-11-13): each takes its blow as the arrow passes (the landing time by its distance, not before `PierceEarliest` of it) and wears the hit mark. |
 | Mend (Healer) | `skill.blessing_light` | A ray of light falls from the sky on the one mended; the number shows as it reaches them (0.25 s). |
 | Arcane Barrage (Mage) | `burst.ether_burst` on each foe | The focus still fires the owner's orbs; each bursts in the library's Ether Burst where it lands. |
 

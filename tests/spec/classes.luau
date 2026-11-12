@@ -555,15 +555,21 @@ return function(T: any)
 		T.ok(walked ~= nil and walked.dash == nil, "walks first from 40 studs")
 	end)
 
-	T.test("Piercing Shot: SkillPower ignoring 25% DEF, on its one foe only", function()
+	T.test("Piercing Shot: SkillPower ignoring 25% DEF, on every foe on its arrow's flight", function()
+		local s = Config.Classes.Skills.piercing_shot
 		local fight = Combat.new({ slime("r", "ranger", { x = 0, z = 0 }) }, {
 			foe("t", { x = 10, z = 0, defence = 20 }),
+			-- (on the flight, beyond the target and before it)
 			foe("b", { x = 15, z = 0.5, defence = 20 }),
-			foe("o", { x = 10, z = 7, defence = 20 }),
+			foe("n", { x = 4, z = -1, defence = 20 }),
+			-- (off it, past its end and behind the bow)
+			foe("o", { x = 10, z = s.width + 1, defence = 20 }),
+			foe("e", { x = s.length + 2, z = 0, defence = 20 }),
+			foe("h", { x = -5, z = 0, defence = 20 }),
 		}, Rng.new(5), { moves = true })
 		local r = unitOf(fight, "r")
 		r.skillReady, r.target = 0, unitOf(fight, "t")
-		for _, id in { "t", "b", "o" } do
+		for _, id in { "t", "b", "n", "o", "e", "h" } do
 			freeze(unitOf(fight, id))
 		end
 		local hits: { any } = {}
@@ -572,11 +578,27 @@ return function(T: any)
 				table.insert(hits, event)
 			end
 		end
-		T.eq(#hits, 1, "a single-target skill strikes one foe")
-		T.eq(hits[1].to, "t")
+		T.eq(#hits, 3, "the three on its flight")
+		T.same({ hits[1].to, hits[2].to, hits[3].to }, { "n", "t", "b" }, "nearest the bow first")
 		local weight = Config.Classes.Kinds.ranger.factor * Config.Classes.SkillPower[1]
-		T.near(hits[1].amount, Combat.damage(10, 15) * weight, 1e-9)
-		T.ok(hits[1].ranged, "a ranger's blow is ranged")
+		for _, hit in hits do
+			T.near(hit.amount, Combat.damage(10, 15) * weight, 1e-9, "as hard on " .. hit.to)
+			T.ok(hit.ranged, "a ranger's blow is ranged")
+			T.ok((hit.to == "t") == (hit.splash == nil), "only the target is not a splash")
+		end
+		-- (a quick fight with no places: its target only)
+		local quick = Combat.new({ slime("r", "ranger") }, { foe("t"), foe("b") }, Rng.new(5))
+		local q = unitOf(quick, "r")
+		q.skillReady, q.target = 0, unitOf(quick, "t")
+		freeze(unitOf(quick, "t"))
+		freeze(unitOf(quick, "b"))
+		local struck = 0
+		for _, event in run(quick, 3) do
+			if event.kind == "hit" and event.from == "r" and event.skill then
+				struck += 1
+			end
+		end
+		T.eq(struck, 1)
 	end)
 
 	T.test("an attack skill weighs SkillPower of its class's plain blow at its weapon's tier", function()

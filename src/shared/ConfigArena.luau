@@ -245,7 +245,10 @@ return {
 		-- the lead-in and the hold at the end, the speed of the x2 button, the ray that finds the ground, the side label
 		-- (wider than the Dungeon squad's: on the stage camera, ~100 studs off, 4.2 and 6.5 piled eight slimes into one heap)
 		Replay = {
+			-- (the fight is fought on this field by places since 2026-11-13: ArenaFight.spot; nobody hops past FieldRadius
+			-- less EdgeMargin)
 			FieldRadius = 22,
+			EdgeMargin = 3,
 			SideGap = 8,
 			Spacing = 5.2,
 			Stagger = 1.4,

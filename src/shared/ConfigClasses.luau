@@ -23,8 +23,9 @@ return {
 	},
 	-- An attack skill weighs this many of its class's plain blows, by the weapon's tier (the owner, 2026-11-13: Common
 	-- 1.1, Uncommon 1.2, ...), on every foe it strikes, so a better weapon's skill counts at every level; its own effect
-	-- (the dash, the armour it ignores or melts) comes on top. A single-target skill strikes its target only; an area
-	-- skill every foe within its `radius` of the target (a fight with no places, the camps and the Arena: `cap` foes).
+	-- (the dash, the armour it ignores or melts) comes on top. A single-target skill strikes its target only (Piercing
+	-- Shot: every foe on its arrow's flight); an area skill every foe within its `radius` of the target (a quick fight with
+	-- no places, the tools' and tests': `cap` foes).
 	SkillPower = { 1.1, 1.2, 1.3, 1.4, 1.5 },
 	-- 'every' keeps the shared skill catalogue compatible with its older consumers; classes use seconds instead.
 	Skills = {
@@ -48,7 +49,17 @@ return {
 			maxStuds = 18,
 			seconds = 0.2,
 		},
-		piercing_shot = { name = "Piercing Shot", kind = "single", every = 1, cooldown = 6, ignore = 0.25 },
+		-- (its arrow flies `length` studs from the bow, through its target, and strikes every foe within `width` of its
+		-- flight: the owner, 2026-11-13)
+		piercing_shot = {
+			name = "Piercing Shot",
+			kind = "single",
+			every = 1,
+			cooldown = 6,
+			ignore = 0.25,
+			length = 36,
+			width = 2.5,
+		},
 		arcane_barrage = { name = "Arcane Barrage", kind = "splash", every = 1, cooldown = 6, radius = 7, cap = 3 },
 		-- (a heal, not an attack: `factor` heals, SkillPower leaves it alone)
 		mend = { name = "Mend", kind = "single", every = 1, cooldown = 8, factor = 4, threshold = 0.6, range = 22.5 },

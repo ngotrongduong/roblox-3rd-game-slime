@@ -1,7 +1,8 @@
 --!strict
--- A fight between two sides, pure and seeded: the original's formulas (docs/reference/02-battle.md §8) without its
--- positions. Where units stand is for the client to draw; a hit lands when its cooldown ends. Only the Slime Dungeon
--- turns on the positional mode (Combat.new's `moves`), where fighters walk into reach before they aim.
+-- A fight between two sides, pure and seeded: the original's formulas (docs/reference/02-battle.md §8). Every fight of the
+-- game (the Slime Dungeon, the camps, the Arena) runs in the positional mode (Combat.new's `moves`, the owner, 2026-11-13:
+-- one equipment system, the same fight everywhere), where fighters walk into reach before they aim; without it (the
+-- tools' and tests' quick fights) a hit lands when its cooldown ends, wherever the fighters are.
 -- A slime with a weapon fights by its class (docs/WEAPONS.md, Config.Classes): its own beat, reach, plain blow and one
 -- skill on a cooldown in seconds; a slime without one is a Brawler and fights by its role, as before.
 local Config = if script then require(script.Parent.Config) else require("./Config")
@@ -252,7 +253,7 @@ local function unit(fighter: Fighter, side: string, rng: Rng): Unit
 	}
 end
 
--- `moves` turns on the positional mode (only the dungeon does): each fighter has a place and walks toward its target at
+-- `moves` turns on the positional mode (every fight of the game): each fighter has a place and walks toward its target at
 -- Combat.walkSpeed until it is in reach (Config.Dungeon.Move), and neither aims nor strikes before. Off, a blow lands when
 -- its cooldown ends, wherever the fighters are. `radius` bounds the hops of the positional mode.
 function Combat.new(
@@ -894,6 +895,36 @@ local function area(fight: Fight, u: Unit, target: Unit, key: string, weight: nu
 	end
 end
 
+-- Piercing Shot: the arrow flies from the bow through its target and on to `length` studs from the bow, and strikes
+-- every foe within `width` of its flight, nearest the bow first, each at `weight` (the owner, 2026-11-13). A fight with no
+-- places strikes its target only.
+local function pierce(fight: Fight, u: Unit, target: Unit, key: string, weight: number, events: { Event })
+	local s = (Config.Combat.Skills :: any)[key]
+	local struck = { target }
+	local along: { [Unit]: number } = { [target] = distance(u, target) }
+	local d = along[target]
+	if fight.moves and d > 1e-6 then
+		local dx, dz = (target.x - u.x) / d, (target.z - u.z) / d
+		for _, other in foesOf(fight, u) do
+			if other ~= target then
+				local ox, oz = other.x - u.x, other.z - u.z
+				local t = ox * dx + oz * dz
+				if t > 0 and t <= s.length and math.abs(ox * dz - oz * dx) <= s.width then
+					table.insert(struck, other)
+					along[other] = t
+				end
+			end
+		end
+		table.sort(struck, function(a, b)
+			return along[a] < along[b]
+		end)
+	end
+	for _, each in struck do
+		local extra = { skill = key, splash = if each ~= target then true else nil }
+		blow(fight, u, each, weight, events, extra, s, { ignore = s.ignore })
+	end
+end
+
 -- The class skill a unit announces with this blow (its key), or nil: only when it is ready and worth it. Acid Rain turns
 -- the unit to the densest group it can reach.
 local function classAim(fight: Fight, u: Unit, target: Unit, canHit: (Unit) -> boolean): string?
@@ -949,8 +980,7 @@ local function classAct(fight: Fight, u: Unit, target: Unit, events: { Event })
 			blow(fight, u, target, skillWeight(u), events, { skill = key }, s)
 			return
 		elseif key == "piercing_shot" then
-			-- (one foe only: it pierces armour, not bodies)
-			blow(fight, u, target, skillWeight(u), events, { skill = key }, s, { ignore = s.ignore })
+			pierce(fight, u, target, key, skillWeight(u), events)
 			return
 		else
 			area(fight, u, target, key, skillWeight(u), events, { magic = kind.magic })
@@ -1035,7 +1065,8 @@ local function walk(fight: Fight, attacker: Unit, target: Unit, dt: number, even
 		slotX = target.x + math.cos(chosen) * reach
 		slotZ = target.z + math.sin(chosen) * reach
 	end
-	local speed = Combat.walkSpeed(attacker.speed, attacker.side ~= "squad")
+	-- (monsters walk faster; in a fair fight, the Arena's, both sides are slimes and walk alike)
+	local speed = Combat.walkSpeed(attacker.speed, attacker.side ~= "squad" and not fight.fair)
 		* (if attacker.slowUntil > fight.seconds then 1 - attacker.slowBy else 1)
 	speed = math.max(speed, 1e-3)
 	local gx, gz = slotX - attacker.x, slotZ - attacker.z

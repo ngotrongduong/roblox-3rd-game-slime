@@ -20,7 +20,7 @@ export type Fighter = {
 	tier: number?,
 	kind: string?,
 	skills: { string }?,
-	-- (where it starts in a positional fight, which the Arena never is: Combat.Fighter's fields, kept so the types agree)
+	-- (where it starts on the field: set by simulate, ArenaFight.spot)
 	x: number?,
 	z: number?,
 }
@@ -82,20 +82,37 @@ function ArenaFight.snapshot(farm: Farm, slimeIds: { string }): Snapshot?
 	return { fighters = fighters, looks = looks, power = ArenaFight.power(fighters) }
 end
 
+-- Where the `index`-th of `count` fighters of a side starts, flat from the field's middle: +z is the attackers' side (the
+-- player's, in the replay), x across it; side by side, every other one a step back. The replay stands its bodies here.
+function ArenaFight.spot(index: number, count: number, attacker: boolean): (number, number)
+	local R = Config.Arena.View.Replay
+	local sign = if attacker then 1 else -1
+	return (index - (count + 1) / 2) * R.Spacing * sign, (R.SideGap - (index % 2) * R.Stagger) * sign
+end
+
+-- The fight is fought by places, as the Slime Dungeon's (the owner, 2026-11-13: one equipment system, the same fight
+-- everywhere): both teams start on their side of the field and walk into reach.
 function ArenaFight.simulate(attackers: { Fighter }, defenders: { Fighter }, seed: number): Replay
 	local function side(fighters: { Fighter }, prefix: string): { Fighter }
 		local out: { Fighter } = {}
 		local seen: { [string]: boolean } = {}
-		for _, fighter in fighters do
+		for index, fighter in fighters do
 			assert(not seen[fighter.id], "Arena fighter ids must be unique within a team")
 			seen[fighter.id] = true
 			local copy = table.clone(fighter)
 			copy.id = prefix .. fighter.id
+			copy.x, copy.z = ArenaFight.spot(index, #fighters, prefix == "a:")
 			table.insert(out, copy)
 		end
 		return out
 	end
-	local fight = Combat.new(side(attackers, "a:"), side(defenders, "d:"), Rng.new(seed), { fair = true, fade = true })
+	local R = Config.Arena.View.Replay
+	local fight = Combat.new(
+		side(attackers, "a:"),
+		side(defenders, "d:"),
+		Rng.new(seed),
+		{ fair = true, fade = true, moves = true, radius = R.FieldRadius - R.EdgeMargin }
+	)
 	local steps: { { t: number, events: Events } } = {}
 	local dt, limit = Config.Zombies.FightStepSeconds, Config.Arena.MaxFightSeconds
 	-- the damage each side has dealt, for a fight that runs to the limit
@@ -148,17 +165,20 @@ function ArenaFight.simulate(attackers: { Fighter }, defenders: { Fighter }, see
 end
 
 -- What the replay needs of one side, in team order (the order of its looks): the event id simulate gives each fighter
--- (prefix "a:" or "d:"), its role and its health.
+-- (prefix "a:" or "d:"), its role, its health and the weapon it holds (`hand`, a gear id; nil for a Brawler).
 function ArenaFight.view(
 	fighters: { Fighter },
 	prefix: string
-): { { id: string, role: string?, hp: number, maxHp: number } }
+): { { id: string, role: string?, hp: number, maxHp: number, hand: string? } }
 	local out = {}
 	for _, fighter in fighters do
-		table.insert(
-			out,
-			{ id = prefix .. fighter.id, role = fighter.role, hp = fighter.hp, maxHp = fighter.maxHp or fighter.hp }
-		)
+		table.insert(out, {
+			id = prefix .. fighter.id,
+			role = fighter.role,
+			hp = fighter.hp,
+			maxHp = fighter.maxHp or fighter.hp,
+			hand = Classes.handOf(fighter.class, fighter.tier),
+		})
 	end
 	return out
 end

@@ -601,11 +601,20 @@ local function beginFight(session: Session, team: March, farm: any, now: number)
 	local fighters: { any } = {}
 	local here: { string } = {}
 	local roles: { [string]: string } = {}
-	for _, id in team.members do
+	-- (positional, as in the Slime Dungeon: everyone starts where its body stands, flat from the group's position, and
+	-- walks into reach; the team in its formation at the end of its march, the zombies on their ring)
+	local centre = group.position
+	local way = Vector3.new(team.spot.X - session.gate.X, 0, team.spot.Z - session.gate.Z)
+	local dir = if way.Magnitude > 0.01 then way.Unit else Vector3.zAxis
+	local endX, endZ = team.spot.X - centre.X, team.spot.Z - centre.Z
+	local spots: { [string]: { number } } = {}
+	for slot, id in team.members do
 		local slime = FarmState.findSlime(farm, id)
 		if slime then
 			local fighter: any = Zombies.fighter(slime, now, 1 - (session.wounds[id] or 0))
 			fighter.role = fighter.class or Combat.role(fighter, slime.seed)
+			fighter.x, fighter.z = Zombies.formation(endX, endZ, dir.X, dir.Z, slot, #team.members)
+			spots[id] = { fighter.x, fighter.z }
 			table.insert(fighters, fighter)
 			table.insert(here, id)
 			roles[id] = fighter.role
@@ -626,7 +635,18 @@ local function beginFight(session: Session, team: March, farm: any, now: number)
 		arriveHome(session, team)
 		return
 	end
-	local fight = Combat.new(fighters, group.zombies :: any, session.rng)
+	local ring: { any } = table.clone(group.zombies :: any)
+	table.sort(ring, function(a: any, b: any): boolean
+		return a.id < b.id
+	end)
+	local foes: { any } = {}
+	for index, zombie in ring do
+		local foe = table.clone(zombie)
+		foe.x, foe.z = Zombies.ringSpot(index, #ring)
+		spots[foe.id] = { foe.x, foe.z }
+		table.insert(foes, foe)
+	end
+	local fight = Combat.new(fighters, foes, session.rng, { moves = true, radius = Config.Zombies.FieldRadius })
 	team.fight = fight
 	team.coins, team.dead = 0, 0
 	team.nodes = {}
@@ -647,7 +667,17 @@ local function beginFight(session: Session, team: March, farm: any, now: number)
 	group.state = "fighting"
 	group.quietSince = now
 	publishGroup(group)
-	fire(session, team.index, { { kind = "start", group = group.id, members = table.clone(here), roles = roles } })
+	-- (`centre` and `spots`: where the fight's places are in the world, so each body goes to its own)
+	fire(session, team.index, {
+		{
+			kind = "start",
+			group = group.id,
+			members = table.clone(here),
+			roles = roles,
+			centre = { centre.X, centre.Z },
+			spots = spots,
+		},
+	})
 	print(Config.LogPrefix, "zombies: team", team.index, "met", group.id, "level", group.zombies[1].level)
 end
 

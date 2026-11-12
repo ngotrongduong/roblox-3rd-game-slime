@@ -342,6 +342,33 @@ function Zombies.homeOffset(slice: number, camp: number, index: number): (number
 	return radius * math.sin(angle), gateRadius - radius * math.cos(angle)
 end
 
+-- Where a camp fight's fighters stand as it begins, flat from the group's position; the server places the fight by these
+-- and the client its bodies, so both agree. A team member: at the far end of its march (`endX, endZ`, come the way
+-- `dirX, dirZ`), side by side across that way, every other one a step behind.
+function Zombies.formation(
+	endX: number,
+	endZ: number,
+	dirX: number,
+	dirZ: number,
+	slot: number,
+	count: number
+): (number, number)
+	local V = Config.Zombies.View
+	local across = (slot - (count + 1) / 2) * V.FormationSpacing
+	local back = (slot % 2) * V.FormationStagger
+	return endX - dirZ * across - dirX * back, endZ + dirX * across - dirZ * back
+end
+
+-- One of the group's zombies (`index` of `count`, in id order): on a ring round the group's position.
+function Zombies.ringSpot(index: number, count: number): (number, number)
+	if count <= 1 then
+		return 0, 0
+	end
+	local angle = (index - 1) / count * math.pi * 2 + math.pi / 4
+	local spread = Config.Zombies.View.SpreadStuds
+	return math.cos(angle) * spread, math.sin(angle) * spread
+end
+
 -- A slime as it fights: hungry at half strength (docs/MAP.md), its dish buff on top, and the health it has left
 -- (`hpShare`, 0 to 1 of its full health; a wound is kept after a fight).
 function Zombies.fighter(

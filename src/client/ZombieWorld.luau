@@ -14,6 +14,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Config = require(ReplicatedStorage.Shared.Config)
 local Layout = require(ReplicatedStorage.Shared.Layout)
 local VillagePath = require(ReplicatedStorage.Shared.VillagePath)
+local Zombies = require(ReplicatedStorage.Shared.Zombies)
 local SlimeActor = require(script.Parent.SlimeActor)
 local ZombieLook = require(script.Parent.ZombieLook)
 local ZombieTeams = require(script.Parent.ZombieTeams)
@@ -185,7 +186,8 @@ local function draw(entry: Entry)
 	entry.model, entry.actor = model, actor
 end
 
--- Spreads the group's zombies on a ring round its position, in a stable order.
+-- Spreads the group's zombies on a ring round its position, in a stable order (Zombies.ringSpot: where a fight on them
+-- places them too).
 local function layout(group: Group)
 	local list: { Entry } = {}
 	for _, entry in group.entries do
@@ -196,11 +198,8 @@ local function layout(group: Group)
 	end)
 	local facing = ZombieWorld.towardVillage(group.position, group.slice)
 	for index, entry in list do
-		local angle = (index - 1) / #list * math.pi * 2 + math.pi / 4
-		local offset = if #list == 1
-			then Vector3.zero
-			else Vector3.new(math.cos(angle), 0, math.sin(angle)) * V.SpreadStuds
-		entry.spot = group.position + offset
+		local x, z = Zombies.ringSpot(index, #list)
+		entry.spot = group.position + Vector3.new(x, 0, z)
 		entry.facing = facing
 		-- a body that is drawn already is put back on its place
 		if entry.model then

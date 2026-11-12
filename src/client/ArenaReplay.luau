@@ -11,11 +11,13 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
 
+local ArenaFight = require(ReplicatedStorage.Shared.ArenaFight)
 local Config = require(ReplicatedStorage.Shared.Config)
 local ArenaStage = require(script.Parent.ArenaStage)
 local FightFx = require(script.Parent.FightFx)
 local SlimeActor = require(script.Parent.SlimeActor)
 local SlimeLook = require(script.Parent.SlimeLook)
+local SlimeWeapon = require(script.Parent.SlimeWeapon)
 local UiKit = require(script.Parent.UiKit)
 local ZombieFight = require(script.Parent.ZombieFight)
 
@@ -30,6 +32,8 @@ type Unit = {
 	role: string,
 	maxHp: number,
 	look: { [string]: any },
+	-- the weapon in its hand (a gear id), nil for a Brawler
+	hand: string?,
 }
 type Body = {
 	unit: Unit,
@@ -53,6 +57,10 @@ type Session = {
 	connection: RBXScriptConnection?,
 	onDone: (() -> ())?,
 	done: boolean,
+	-- the field's frame: its middle, and the ways its places count along (ArenaFight.spot: x across, z to the player)
+	centre: Vector3,
+	across: Vector3,
+	toPlayer: Vector3,
 }
 
 local ArenaReplay = {}
@@ -131,9 +139,11 @@ local function gather(answer: any, prefix: string, side: any, mine: boolean): { 
 		local id: string = order[index] or (prefix .. "_" .. tostring(index))
 		local roleName = role[id]
 		local maxHp: number? = nil
+		local hand: string? = nil
 		if type(entry) == "table" and type(entry.id) == "string" then
 			id = if string.sub(entry.id, 1, 2) == prefix then entry.id else prefix .. entry.id
 			roleName = if type(entry.role) == "string" then entry.role else roleName
+			hand = if type(entry.hand) == "string" then entry.hand else nil
 			maxHp = if type(entry.maxHp) == "number"
 				then entry.maxHp
 				elseif type(entry.hp) == "number" then entry.hp
@@ -151,6 +161,7 @@ local function gather(answer: any, prefix: string, side: any, mine: boolean): { 
 			role = roleName or "attack",
 			maxHp = maxHp :: number,
 			look = if type(look) == "table" then look else {},
+			hand = hand,
 		})
 	end
 	return units
@@ -280,6 +291,9 @@ local function addBody(session: Session, unit: Unit, spot: Vector3, facing: Vect
 		return
 	end
 	actor.body.CanCollide = false
+	-- its weapon in hand, as in the Slime Dungeon
+	SlimeWeapon.wear(model, unit.hand)
+	SlimeWeapon.fight(model, true, true)
 	local node = healthNode(unit.maxHp)
 	session.bodies[unit.id] = { unit = unit, actor = actor, model = model, node = node }
 	ZombieFight.adopt(unit.id, {
@@ -301,10 +315,17 @@ local function addBody(session: Session, unit: Unit, spot: Vector3, facing: Vect
 	SlimeActor.hop(actor, V.PopHop)
 end
 
--- Both teams stand facing each other across the middle; the attackers on the player's side.
+-- A place of the fight (flat from the field's middle, ArenaFight.spot's frame) in the world.
+local function placeOf(session: Session, x: number, z: number): Vector3
+	return session.centre + session.across * x + session.toPlayer * z
+end
+
+-- Both teams stand facing each other across the middle, where the fight places them (ArenaFight.spot); the attackers on
+-- the player's side.
 local function setUp(session: Session, answer: any, centre: Vector3, toPlayer: Vector3)
 	ZombieFight.setArena(centre, R.FieldRadius)
-	local across = Vector3.new(-toPlayer.Z, 0, toPlayer.X)
+	session.centre, session.toPlayer = centre, toPlayer
+	session.across = Vector3.new(-toPlayer.Z, 0, toPlayer.X)
 	local sides: { any } = if type(answer.sides) == "table"
 		then { answer.sides.attacker, answer.sides.defender }
 		else {}
@@ -314,9 +335,8 @@ local function setUp(session: Session, answer: any, centre: Vector3, toPlayer: V
 		local sign = if mine then 1 else -1
 		for index, unit in units do
 			table.insert(session.units, unit)
-			local x = (index - (#units + 1) / 2) * R.Spacing * sign
-			local back = (R.SideGap - (index % 2) * R.Stagger) * sign
-			addBody(session, unit, centre + across * x + toPlayer * back, -toPlayer * sign)
+			local x, z = ArenaFight.spot(index, #units, mine)
+			addBody(session, unit, placeOf(session, x, z), -toPlayer * sign)
 		end
 		local info = sides[sideIndex]
 		local name = if type(info) == "table" and type(info.name) == "string" then info.name else ""
@@ -342,7 +362,8 @@ local function endEvent(session: Session): { any }
 	return { { kind = "end", winner = if session.won then "squad" else "foe" } }
 end
 
--- A step: the bars move with its blows at once (as the Dungeon's do), then the fight draws it.
+-- A step: the bars move with its blows at once (as the Dungeon's do), the fighters walk where it says (at the replay's
+-- speed), then the fight draws it.
 local function playStep(session: Session, step: any)
 	local events = list(step.events)
 	for _, event in events do
@@ -352,6 +373,18 @@ local function playStep(session: Session, step: any)
 			elseif event.kind == "heal" then
 				moveHealth(session, event.to, event.amount)
 			end
+		elseif
+			type(event) == "table"
+			and event.kind == "move"
+			and type(event.from) == "string"
+			and type(event.tx) == "number"
+			and type(event.tz) == "number"
+			and type(event.seconds) == "number"
+		then
+			local to = placeOf(session, event.tx, event.tz)
+			safe("move", function()
+				ZombieFight.walk(event.from, to, event.seconds / session.speed)
+			end)
 		end
 	end
 	feed(events)
@@ -498,6 +531,9 @@ function ArenaReplay.play(answer: any, onDone: (() -> ())?)
 		connection = nil,
 		onDone = onDone,
 		done = false,
+		centre = Vector3.zero,
+		across = Vector3.xAxis,
+		toPlayer = Vector3.zAxis,
 	}
 	current = session
 	-- The screen fades, the scene is up, and then the teams are stood on its field (a stop() or a failure meanwhile ends it all).

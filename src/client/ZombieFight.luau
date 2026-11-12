@@ -41,6 +41,8 @@ type Fight = {
 	-- the zombies of the group when the fight began (a group beaten or left is respawned with new ids at once)
 	foes: { string },
 	over: boolean,
+	-- a camp fight's middle (the group's position, flat): its "move" events are flat from here
+	centre: Vector3?,
 }
 type Bar = {
 	gui: BillboardGui,
@@ -93,6 +95,13 @@ local warned: { [string]: boolean } = {}
 local extras: { [string]: Extra } = {}
 local arena: { centre: Vector3, radius: number }? = nil
 local dungeonHandler: ((events: { any }) -> ())? = nil
+-- The fighters of a camp fight, fought by places as the Dungeon's (the server walks them; nothing here dashes or circles)
+local placed: { [string]: boolean } = {}
+
+-- Whether the server walks this fighter (the Dungeon's, the Arena's and a camp's: every fight since 2026-11-13).
+local function byPlaces(id: string): boolean
+	return extras[id] ~= nil or placed[id] == true
+end
 
 local function safe(label: string, work: () -> ())
 	local ok, err = pcall(function(): any
@@ -766,6 +775,11 @@ end
 -- When a skill played from its aim (Dash Strike's dash) lands, by its caster: its blow waits for it.
 local leads: { [string]: number } = {}
 
+-- A piercing skill's arrow (its look's `pierce`), by its caster: everyone its batch strikes, and the farthest of them,
+-- where the arrow is aimed and its own hit plays (the others get the mark of the blow as it passes).
+local lines: { [string]: { string } } = {}
+local aims: { [string]: string } = {}
+
 -- ===== Health bars =====
 
 local function dropBar(id: string)
@@ -923,8 +937,37 @@ local function onStart(teamIndex: number, event: { [string]: any })
 		homes[id], targets[id] = nil, nil
 		ZombieMarch.settle(id)
 	end
+	-- a fight by places (every camp fight since 2026-11-13): each body goes to the place it starts from (the team is
+	-- there already, at the end of its march; a zombie that had roamed off walks back to its ring)
+	local centre = event.centre
+	if type(centre) == "table" and type(centre[1]) == "number" and type(centre[2]) == "number" then
+		fight.centre = Vector3.new(centre[1], 0, centre[2])
+		local middle = fight.centre :: Vector3
+		for id, spot in (if type(event.spots) == "table" then event.spots else {}) :: { [string]: any } do
+			if type(id) == "string" and type(spot) == "table" and type(spot[1]) == "number" then
+				placed[id] = true
+				ZombieFight.walk(id, Vector3.new(middle.X + spot[1], 0, middle.Z + spot[2]), 0)
+			end
+		end
+	end
 	sync(fight)
 	syncLoop()
+end
+
+-- A camp fighter walks (a "move" event, flat from the fight's middle); the Dungeon's and the Arena's walk through
+-- client/DungeonFight and client/ArenaReplay, which know their fields.
+local function onMove(teamIndex: number, event: { [string]: any })
+	local fight = fights[teamIndex]
+	local centre = if fight then fight.centre else nil
+	if
+		centre
+		and type(event.from) == "string"
+		and type(event.tx) == "number"
+		and type(event.tz) == "number"
+		and type(event.seconds) == "number"
+	then
+		ZombieFight.walk(event.from, Vector3.new(centre.X + event.tx, 0, centre.Z + event.tz), event.seconds)
+	end
 end
 
 -- A blow is coming: the attacker turns to its target and winds up (a squash; a spitter puffs up). One too far to reach
@@ -1021,9 +1064,9 @@ local function onAim(event: { [string]: any })
 	if SlimeWeapon.familyOf(attacker.model) then
 		SlimeWeapon.cue(attacker.model, s ~= nil, windup + (if shot then 0 else V.LungeSeconds * V.ContactShare))
 	end
-	-- (in the Dungeon the server walks the fighters and announces a blow only once its fighter is in reach: no dash)
+	-- (where the server walks the fighters it announces a blow only once its fighter is in reach: no dash)
 	if
-		extras[event.from] == nil
+		not byPlaces(event.from)
 		and reaching
 		and ((not shot and gap > V.Moves.Reach) or (shot and gap < V.Moves.TooClose))
 	then
@@ -1066,8 +1109,8 @@ local function impact(event: { [string]: any }, style: FightFx.Style)
 				angle = math.random(-25, 25),
 			})
 		end
-	elseif not (s and looksOf(event).ownHit) then
-		-- (a class skill the library draws brings its own hit)
+	elseif not (s and looksOf(event).ownHit) or (looksOf(event).pierce and aims[event.from] ~= event.to) then
+		-- (a class skill the library draws brings its own hit; a piercing arrow's only where it is aimed)
 		FightFx.mark(style, skin, skin - dir * 3, heavy)
 	end
 	if pop then
@@ -1137,8 +1180,8 @@ local function strike(event: { [string]: any }, style: FightFx.Style, land: () -
 		return
 	end
 	local reach = math.max(0, line.Magnitude - (radius(attacker) + radius(target)) * 0.85)
-	if extras[event.from] then
-		-- (the Dungeon's server strikes only in reach; a body still catching up its walk never lunges further than that)
+	if byPlaces(event.from) then
+		-- (the server strikes only in reach; a body still catching up its walk never lunges further than that)
 		reach = math.min(reach, Config.Dungeon.Move.MeleeStuds)
 	end
 	-- (a boss's burst and a regular's pop hold it there as long as the body it strikes)
@@ -1177,6 +1220,27 @@ local function libraryStrike(
 		return
 	end
 	local level, scale = levelOf(attacker)
+	if look.pierce then
+		-- (the arrow flies through them all to the farthest; each blow lands as it passes)
+		local far, farAt, farId = target, to, event.to
+		local farthest = flat(to - from).Magnitude
+		local struck: { string } = lines[event.from] or {}
+		for _, other in struck do
+			local body, at = find(other)
+			if body and at and flat(at - from).Magnitude > farthest then
+				far, farAt, farId, farthest = body, at, other, flat(at - from).Magnitude
+			end
+		end
+		if first then
+			aims[event.from] = farId
+			SlimeActor.kick(attacker, "lean", 1.5)
+			local mouth = muzzle(attacker, from, along(farAt - from, attacker.root.LookVector))
+			playOn(look, level, scale, far, farAt, mouth)
+		end
+		local share = math.clamp(flat(to - from).Magnitude / math.max(farthest, 1e-3), K.PierceEarliest, 1)
+		task.delay(landingOf(look, level) * share, land)
+		return
+	end
 	if first then
 		SlimeActor.kick(attacker, "lean", 1.5)
 		local mouth = muzzle(attacker, from, along(to - from, attacker.root.LookVector))
@@ -1368,8 +1432,8 @@ end
 
 -- After its blow, once back from the lunge, the attacker takes its place again (a fast one circles to a new flank).
 local function afterBlow(event: { [string]: any }, style: FightFx.Style)
-	if extras[event.from] then
-		-- (the Dungeon's fighters keep the place the server walked them to)
+	if byPlaces(event.from) then
+		-- (the fighters keep the place the server walked them to)
 		return
 	end
 	local back = if style.shot then 0 else V.LungeSeconds * (1 - V.ContactShare) + V.HitStopSeconds
@@ -1811,10 +1875,10 @@ local function onEnd(teamIndex: number, event: { [string]: any })
 			fights[teamIndex] = nil
 		end
 		for _, id in fight.order do
-			homes[id], targets[id] = nil, nil
+			homes[id], targets[id], placed[id] = nil, nil, nil
 		end
 		for _, id in foes do
-			homes[id], targets[id] = nil, nil
+			homes[id], targets[id], placed[id] = nil, nil, nil
 			dropBar(id)
 		end
 	end)
@@ -1844,8 +1908,25 @@ local function onEvents(payload: any)
 			handler(payload.events)
 		end)
 	end
-	-- (a skill's blows come together in one batch; its caster moves for the first of them only)
+	-- (a skill's blows come together in one batch; its caster moves for the first of them only; a piercing arrow's blows
+	-- are gathered first, so it is aimed at the farthest)
 	local casting: { [string]: boolean } = {}
+	local gathered: { [string]: boolean } = {}
+	for _, event in payload.events do
+		if
+			type(event) == "table"
+			and (event.kind == "hit" or event.kind == "dodge")
+			and type(event.from) == "string"
+			and type(event.to) == "string"
+			and looksOf(event).pierce
+		then
+			if not gathered[event.from] then
+				gathered[event.from] = true
+				lines[event.from] = {}
+			end
+			table.insert(lines[event.from], event.to)
+		end
+	end
 	for _, event in payload.events do
 		safe("event " .. tostring(event.kind), function()
 			local kind = event.kind
@@ -1872,6 +1953,8 @@ local function onEvents(payload: any)
 				onTaunt(event)
 			elseif kind == "status" then
 				onStatus(event)
+			elseif kind == "move" then
+				onMove(payload.team, event)
 			elseif kind == "end" then
 				onEnd(payload.team, event)
 			elseif kind == "home" then
@@ -1917,17 +2000,16 @@ end
 -- from where its body is now (a lunge or knock-back in progress is cut short where it is), hopping, facing where it goes. It
 -- never goes faster than Config.Dungeon.View.WalkCatchUp times the fastest walk, so a fighter that has fallen behind catches
 -- up smoothly and never jumps.
+-- A camp's fighter (a body of the march or a zombie) walks the same way.
 function ZombieFight.walk(id: string, to: Vector3, seconds: number)
 	local extra = extras[id]
-	if not extra or extra.dead or extra.actor.destroyed then
+	local actor = if extra then extra.actor else find(id)
+	if not actor or actor.destroyed or (extra and extra.dead) or (not extra and ZombieWorld.isDead(id)) then
 		return
 	end
-	local actor = extra.actor
 	-- (from where the body is this frame: mid-walk, mid-lunge or mid-knock alike)
-	local _, at = find(id)
-	local from: Vector3 = at or extra.stand
+	local from = groundFor(actor.root.Position)
 	stopAnim(actor)
-	from = groundFor(from)
 	local spot = groundFor(to)
 	local line = flat(spot - from)
 	local length = line.Magnitude

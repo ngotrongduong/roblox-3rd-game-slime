@@ -14,4 +14,23 @@ function Classes.ofSlime(slime: any): (string?, number?)
 	return (Config.Classes.Families :: any)[piece.family], (Config.Classes.Tiers :: any)[piece.tier]
 end
 
+-- The hand gear of a class at a tier (one weapon each, Config.Smithy.Gear), nil for a Brawler: what an Arena team shows
+-- in hand from the class and tier its snapshot keeps.
+function Classes.handOf(class: string?, tier: number?): string?
+	if not class or not tier then
+		return nil
+	end
+	for id, piece in Config.Smithy.Gear :: any do
+		if
+			piece.slot == "hand"
+			and piece.family
+			and (Config.Classes.Families :: any)[piece.family] == class
+			and (Config.Classes.Tiers :: any)[piece.tier] == tier
+		then
+			return id
+		end
+	end
+	return nil
+end
+
 return Classes

@@ -9,6 +9,7 @@
 -- Every player's teams are drawn, not only the viewer's own: the viewer's first, then those of other players nearest the
 -- camera first, at most View.MaxOtherBodies bodies of other players at once. Another player's team marches and stands at its
 -- group; the fight itself (hits, numbers, bars) is drawn for the viewer's own teams only, the server tells only them.
+local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
@@ -16,8 +17,10 @@ local RunService = game:GetService("RunService")
 local Config = require(ReplicatedStorage.Shared.Config)
 local Gaits = require(ReplicatedStorage.Shared.Gaits)
 local VillagePath = require(ReplicatedStorage.Shared.VillagePath)
+local Zombies = require(ReplicatedStorage.Shared.Zombies)
 local SlimeActor = require(script.Parent.SlimeActor)
 local SlimeLook = require(script.Parent.SlimeLook)
+local SlimeWeapon = require(script.Parent.SlimeWeapon)
 local ZombieTeams = require(script.Parent.ZombieTeams)
 local ZombieWorld = require(script.Parent.ZombieWorld)
 
@@ -88,11 +91,12 @@ local function lead(team: ZombieTeams.Team): Vector3
 	return if flat.Magnitude > 0.01 then flat.Unit else Vector3.zAxis
 end
 
--- Where a member stands beside the team's line (side by side, every other one a step behind).
+-- Where a member stands beside the team's line (side by side, every other one a step behind; Zombies.formation, where
+-- the server places it for the fight too).
 local function offsetOf(team: ZombieTeams.Team, slot: number, count: number): Vector3
 	local dir = lead(team)
-	local across = Vector3.new(-dir.Z, 0, dir.X)
-	return across * ((slot - (count + 1) / 2) * V.FormationSpacing) - dir * ((slot % 2) * V.FormationStagger)
+	local x, z = Zombies.formation(0, 0, dir.X, dir.Z, slot, count)
+	return Vector3.new(x, 0, z)
 end
 
 local function ground(point: Vector3): Vector3
@@ -146,6 +150,8 @@ local function travel(body: Body, team: ZombieTeams.Team, now: number)
 	body.mode, body.key = "travel", key
 	body.facing = lead(team)
 	body.stand = ground(team.to + offset)
+	-- (on the march its weapon rides on its back)
+	SlimeWeapon.fight(body.model, false)
 	SlimeActor.setTravel(
 		body.actor,
 		ground(fromPoint:Lerp(toPoint, a)),
@@ -171,6 +177,8 @@ local function stand(body: Body, team: ZombieTeams.Team)
 	body.mode, body.key = "stand", key
 	body.facing = lead(team)
 	body.stand = ground(team.to + offset)
+	-- (at its group it draws its weapon, as in the Slime Dungeon)
+	SlimeWeapon.fight(body.model, true)
 	local actor = body.actor
 	actor.travelFrom, actor.travelTo = nil, nil
 	SlimeActor.setCFrame(actor, CFrame.lookAt(body.stand, body.stand + body.facing))
@@ -231,6 +239,11 @@ local function build(
 		return nil
 	end
 	actor.body.CanCollide = false
+	-- its weapon (the gear its slime wears, as the village and the Slime Dungeon show it)
+	local ok, worn = pcall(function(): any
+		return HttpService:JSONDecode(tostring(node:GetAttribute("Gear") or ""))
+	end)
+	SlimeWeapon.wear(model, if ok and type(worn) == "table" and type(worn.hand) == "string" then worn.hand else nil)
 	local body: Body = {
 		id = keyOf(village, id),
 		village = village,

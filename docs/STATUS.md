@@ -1,5 +1,23 @@
 # Status
 
+## 2026-11-13 — one fight everywhere: camps and the Arena by places, Piercing Shot pierces, weapons drawn
+
+The owner: Piercing Shot must fly through, every foe on the arrow's path takes the blow; the camps and the Arena must be
+fought by each fighter's place like the Dungeon; slimes there showed no weapon or skill; fights are the same everywhere
+(one equipment system). Done (`docs/WEAPONS.md` §2, §3.3, §7; `docs/weapons/SKILL-VFX.md` §1):
+- **Piercing Shot**: every foe within 36 studs along the arrow and 2.5 either side takes the full skill blow, nearest
+  first (`Config.Classes.Skills.piercing_shot` length, width); the arrow flies to the farthest and each foe is struck as
+  it passes.
+- **Camps**: the fight is positional (`Config.Zombies.FieldRadius` 30): the team stands in its march formation, the
+  zombies on their ring (`Zombies.formation`, `Zombies.ringSpot`, shared by server and client), and the bodies walk by
+  the server's moves. March bodies wear their weapon on the back and draw it at the fight.
+- **Arena**: positional too, two rows facing (`ArenaFight.spot`), both sides at slime walking speed, inside the field
+  less `EdgeMargin`; the replay walks the bodies and each slime holds its weapon (`hand` in the replay's view).
+- Seen in Studio: a camp-3 fight at level 85 (bodies walk, weapons from back to hand, skills, two slimes fell) and
+  three Arena replays (walking, weapons in hand, skill bursts, Victory), no script error. Not seen: a clear frame of
+  the arrow passing several foes (the tests check who is struck), a phone, the owner. Arena bots have no class, so
+  they hold no weapon.
+
 ## 2026-11-13 — longer ranged reach, skill power by rarity, single and area targets, effects that last show
 
 The owner: ranged reach 1.5 times; an attack skill weighs the plain blow times the weapon's rarity (Common 1.1,

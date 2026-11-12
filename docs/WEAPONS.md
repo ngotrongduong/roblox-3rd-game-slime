@@ -53,8 +53,9 @@ headless simulator (§10) settles them before they ship, and the owner tunes by 
   own effect (the dash, the armour it ignores or melts) comes on top. So a better weapon's skill still counts at later
   levels. Heals keep their own weights.
 - **Targets** (the owner, 2026-11-13). A single-target skill strikes its target and nobody else. An area skill strikes
-  every foe within its radius of the target, all at the same weight; in a fight without places (the camps, the Arena)
-  it strikes its cap.
+  every foe within its radius of the target, all at the same weight. Piercing Shot strikes every foe on its arrow's
+  flight (§3.3). Every fight of the game is fought by places, the Dungeon, the camps and the Arena alike (one equipment
+  system everywhere, the owner, 2026-11-13); only the tools' quick fights have none, and there a skill strikes its cap.
 - **Effects.** Slows: the strongest only, at most 35% (a boss 15%). Damage taken lowered: at most 40% in all. Damage dealt
   raised: at most +25% in all. Armour melt, anti-heal, Tonic and barriers: the strongest of a kind only, never added up.
   Every fighter under an effect wears its look for as long as it lasts (the owner, 2026-11-13; `SKILL-VFX.md` §6).
@@ -131,7 +132,7 @@ every 6 s; no invulnerability, and its beat runs on (the hop resets nothing).
 
 | Tier | Skill | What it does | Cooldown |
 |---|---|---|---|
-| Common | **Piercing Shot** | One foe only: a physical blow at skill power that ignores 25% of its DEF. | 6 s |
+| Common | **Piercing Shot** | The arrow flies through: every foe on its flight, 36 studs long and 2.5 either side, takes a physical blow at skill power that ignores 25% of its DEF (the owner, 2026-11-13). | 6 s |
 | Uncommon | **Arrow Volley** | 0.85 on the target, 0.6 on up to 4 others within 9 of it (cap 5). | 12 s |
 | Epic | **Snare Arrow** | 0.9 physical and a 25% slow for 2.5 s (a boss 15% for 1.5 s). | 13 s |
 | Mythic | **Arrow Rain** (ultimate) | 1.2 s warning on the ground, then 1.3 on the target, 0.7 on up to 4 others within 9 (cap 5). | 12 s, then 24 s |
@@ -266,8 +267,10 @@ Same brains for attacker and defender. The defence is snapshotted when a fight i
 fight drags: full to 30 s, 80% at 45 s, 60% at 60 s, 40% from 75 s; the limit drops from 120 s to 90 s and a timeout is
 no longer a free defence win: most slimes standing, then the most health in percent, then the most damage dealt; an exact
 tie is a successful defence (the Arena's results have no draws). Duplicate classes are allowed. Built 2026-11-12
-(`Config.Classes.HealFade`, `ArenaFight.simulate`). An Arena fight is not positional (no walking, so no range and no
-hop): the classes meet there by their blows, skills, heals and taunts alone.
+(`Config.Classes.HealFade`, `ArenaFight.simulate`). Since 2026-11-13 an Arena fight is positional like the Dungeon's
+(the owner: one fight everywhere): both teams stand in two rows facing each other (`ArenaFight.spot`), walk, keep their
+range and hop inside the field (`Config.Arena.View.Replay.FieldRadius` less `EdgeMargin`); both sides walk at slime
+speed. The replay walks the bodies by the fight's moves and each slime holds its weapon.
 
 ## 8. Bosses
 
@@ -321,8 +324,8 @@ overheal, time out of reach, target switches, casts, stun and taunt uptime, figh
 - Rarity: each tier against Common at the same Arena power (§1), and a well-built Common team against badly built Mythic
   and Legendary ones; four of one class never the best; a speed-bred slime is not the best build nor a dead one; the
   Alchemist is not in every winning team.
-- Team fights are measured as the Arena fights them (`ArenaFight.simulate`: not positional, heals fading, the timeout
-  rule); the positional dungeon part measures range, hops and the monsters.
+- Team fights are measured as the Arena fights them (`ArenaFight.simulate`: positional since 2026-11-13, heals fading,
+  the timeout rule); the dungeon part measures range, hops and the monsters.
 - Ranged against fast monsters (the biggest risk ChatGPT names): how long Rangers and Mages really spend at their range;
   if too little, the monsters' blow commitment and the hop are tuned before anything else.
 - Targets: a fight of four against four lasts about 25 s (today's tuning) and never past 90 s in the arena; overheal under

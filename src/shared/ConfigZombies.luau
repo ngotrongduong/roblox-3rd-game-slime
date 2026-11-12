@@ -68,6 +68,9 @@ return {
 	-- and back the same way; the slowest member sets the pace.
 	MarchStandOffStuds = 11,
 	MarchGait = "walk",
+	-- A camp fight is fought by places, as the Slime Dungeon's (the owner, 2026-11-13): nobody hops farther than this from
+	-- the group's position.
+	FieldRadius = 30,
 	-- A team that won stays on the field this long to cheer before it marches home.
 	CheerSeconds = 2.2,
 	-- A wound heals this share of a slime's health a minute while it is home (2: a full heal in 30 s). The owner,
@@ -238,7 +241,9 @@ return {
 				-- The weapon classes' signature skills (Config.Classes.Skills; the weapon's own move is SlimeWeapon's). Those
 				-- the VFX library has a skill for play it (`vfx`, at the level of the caster's weapon tier, Levels): Dash
 				-- Strike's Flash Step streaks along the dash from the aim (`aim`) and its cuts open on the foe as the blow
-				-- lands; Piercing Shot's arrow flies from the bow into its one foe; Mend's Blessing Light falls from the sky
+				-- lands; Piercing Shot's arrow flies from the bow through every foe it strikes to the farthest (`pierce`:
+				-- its own hit there, a mark on the rest as it passes, each blow landing at its share of the flight, never
+				-- before PierceEarliest of it); Mend's Blessing Light falls from the sky
 				-- on the one mended. A blow lands on the effect's marker (`impact`); the library draws its own hit
 				-- (`ownHit`, no mark of the class's). The rest stand in with the owner's battle art until the library has
 				-- them (docs/weapons/SKILL-VFX.md): Taunt rings out from the shield and rings every foe it pulls (`mark`);
@@ -246,11 +251,12 @@ return {
 				-- library's Ether Burst (`hitVfx`); Acid Rain drops flasks out of the sky.
 				taunt = { burst = "shockwave", bits = "sparkStar", ring = "ringShock", mark = "ring" },
 				dash_strike = { vfx = "skill.flash_step", aim = true, impact = "impact", ownHit = true },
-				piercing_shot = { vfx = "skill.piercing_arrow", impact = "impact", ownHit = true },
+				piercing_shot = { vfx = "skill.piercing_arrow", impact = "impact", ownHit = true, pierce = true },
 				arcane_barrage = { fire = "magicOrb", hitVfx = "burst.ether_burst", ownHit = true },
 				acid_rain = { burst = "burstAcid", bits = "acidDrop", rain = "flask", rainRing = "ringAcid" },
 				mend = { vfx = "skill.blessing_light", impact = "heal" },
 			},
+			PierceEarliest = 0.3,
 			-- A library skill's level by the caster's weapon tier (a slime with no weapon in hand plays Common's), and how
 			-- much bigger it is drawn: the higher the tier, the grander.
 			Levels = { wood = "lv1", iron = "lv1", core = "lv2", bramble = "lv3", legend = "lv3" },
