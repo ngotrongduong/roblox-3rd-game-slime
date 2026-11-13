@@ -25,6 +25,14 @@ anchors at the hub, spawn, the server `World` module loading this terrain and `w
 fights in the zones (M5), then own models for the interim pieces (gates, crown, stone bridge, altars: §5).
 The old valley shows on the far south horizon of the new world until M4 removes it.
 
+**Gates through Meshy (started, stopped at the usage limit).** Meshy's Image to 3D has a **Smart Topology** tab
+(Meshy T2.5: ONE picture, a poly count typed in, Texture on with Meshy N1 2K = 15 credits, about 40 s, no Remesh
+needed; no multi-view there). Sources cut from `world_ref_3`: `art/turnaround/<root|ember|frost>_gate/source.png`.
+Generated and textured in the owner's Meshy workspace (top of the list): **Ember Gate** 3,110 triangles, **Root
+Gate** 3,939 triangles; credits 718 -> 688. **Left:** generate the Frost Gate the same way (poly count 3000), take
+the three GLB files, upload them to Roblox, and swap them for the RuinArch in `tools/world/build_sites.luau`.
+The Texture switch may already be on after a reload: read `aria-checked` before clicking it.
+
 ## 2026-11-14 — fight effects audit; wave 1: the slimes' side raised to the monsters' level
 
 The owner: audit weapons, monsters, monster skills, slime skills and battle effects, and raise the visuals as far as
