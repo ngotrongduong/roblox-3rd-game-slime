@@ -2063,6 +2063,59 @@ local function wearFish(handle, entry)
 	part.Parent = handle.folder
 end
 
+-- An aura's DOME: the library's half sphere (Models.Dome) over the host in ForceField, its rim at the host's feet;
+-- loaded once a game (it yields: run apart), cloned for each host.
+local domeTemplate = nil
+
+local function wearDome(handle, dome)
+	if not domeTemplate then
+		local ok, part = pcall(Builder.engine.meshPart, Models.Dome)
+		if not ok then
+			warn(`VfxLib: {handle.id} could not load its dome ({part})`)
+			return
+		end
+		part.Name = "Dome"
+		part.Anchored = false
+		part.CanCollide = false
+		part.CanQuery = false
+		part.CanTouch = false
+		part.CastShadow = false
+		part.Massless = true
+		part.Material = Enum.Material.ForceField
+		domeTemplate = part
+	end
+	if handle.dead then
+		return
+	end
+	local radius = dome.radius * handle.scale
+	local layers = { { dome.transparency or 0, "" } }
+	if dome.fill then
+		-- (a faint Neon copy under it: a body that still reads over a bright sky, lesson 152)
+		table.insert(layers, { dome.fill, "Neon" })
+	end
+	handle.domeParts = {}
+	for _, layer in layers do
+		local part = domeTemplate:Clone()
+		part.Size = Vector3.new(2 * radius, radius, 2 * radius)
+		part.Color = Palette.color3(dome.color)
+		if layer[2] == "Neon" then
+			part.Material = Enum.Material.Neon
+			part.Size *= 0.98
+		elseif dome.texture then
+			part.TextureID = Textures.url(dome.texture)
+		end
+		part.Transparency = if handle.domeHidden then 1 else layer[1]
+		part.CFrame = handle.carrier.CFrame * CFrame.new(0, (part.Size.Y - handle.size.Y) / 2, 0)
+		if handle.carrier.Anchored then
+			part.Anchored = true
+		else
+			weld(handle.carrier, part)
+		end
+		part.Parent = handle.folder
+		table.insert(handle.domeParts, { part, layer[1] })
+	end
+end
+
 -- A SWIMMER of an aura: one of the library's fish (Models.fish) going round the host on its orbit, head first.
 local function makeSwimmer(handle, swimmer)
 	local orbit = swimmer.orbit
@@ -2282,7 +2335,8 @@ local function makeSerpent(handle, serpent)
 	end
 	trail.Color = Palette.sequence(Palette.resolve(handle.effect, serpent, handle.opts.palette))
 		or ColorSequence.new(Color3.new(1, 1, 1))
-	trail.Transparency = NumberSequence.new(0)
+	-- (its tail fades when asked: a ribbon's end melts into the air, no hard edge; CGHOW's ribbon trail)
+	trail.Transparency = NumberSequence.new(0, serpent.fade or 0)
 	trail.WidthScale = NumberSequence.new(1, serpent.taper or 1)
 	entry.trail = trail
 	placeSerpent(entry, 0)
@@ -2397,6 +2451,26 @@ function Builder.attach(effect, host, opts)
 			break
 		end
 		table.insert(handle.cards, makeCard(handle, card))
+	end
+
+	local glaze = fields.glaze
+	if glaze and typeof(host) == "Instance" then
+		-- (the host's own body glazed: a Highlight's fill over it and a bright rim, as CGHOW's ice body's fresnel
+		-- material, 2026-11-14; a Highlight draws the whole model, so a character turns to ice, not a box)
+		local highlight = Instance.new("Highlight")
+		highlight.Name = "VfxGlaze"
+		highlight.Adornee = host
+		highlight.DepthMode = Enum.HighlightDepthMode.Occluded
+		highlight.FillColor = Palette.color3(glaze.fill)
+		highlight.OutlineColor = Palette.color3(glaze.outline or glaze.fill)
+		highlight.FillTransparency = glaze.fillTransparency or 0.5
+		highlight.OutlineTransparency = glaze.outlineTransparency or 0.2
+		highlight.Parent = folder
+		handle.glaze = highlight
+	end
+
+	if fields.dome then
+		task.spawn(wearDome, handle, fields.dome)
 	end
 
 	local beamsLeft = kindBudget.spirals or 0
@@ -2636,6 +2710,22 @@ function Builder.update(handle, info)
 			end
 		elseif entry.hidden ~= not on then
 			showModelSerpent(entry, on)
+		end
+	end
+	if handle.glaze then
+		-- (far off the glaze goes: a Highlight costs a draw of the whole model)
+		local on = mode == "full" or mode == "half"
+		if handle.glaze.Enabled ~= on then
+			handle.glaze.Enabled = on
+		end
+	end
+	if handle.effect.dome then
+		local hidden = not (mode == "full" or mode == "half")
+		if handle.domeHidden ~= hidden then
+			handle.domeHidden = hidden
+			for _, entry in handle.domeParts or {} do
+				entry[1].Transparency = if hidden then 1 else entry[2]
+			end
 		end
 	end
 	local clock = info.clock

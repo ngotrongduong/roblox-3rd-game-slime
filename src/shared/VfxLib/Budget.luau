@@ -78,7 +78,9 @@ Budget.Kinds = {
 -- TerKungTH's ground aura brought down to a phone (docs/vfx/references/terkungth-ground-aura.md): layers as wide as
 -- three bodies, a dozen of them.
 Budget.Showcase = {
-	-- (`serpents`: a dragon coiling round the host, one long picture on one Trail or one 3D body)
+	-- (`serpents`: a dragon coiling round the host, one long picture on one Trail or one 3D body; or ribbons orbiting
+	-- it, CGHOW's ribbon trail (2026-11-14): three ribbons, each a bright core, a flame and a smoke under it, a Trail
+	-- each, cheap as a quad strip; their area still counts)
 	aura = {
 		emitters = 12,
 		rate = 160,
@@ -87,7 +89,7 @@ Budget.Showcase = {
 		area = 6000,
 		light = 32,
 		lights = 1,
-		serpents = 1,
+		serpents = 9,
 		swimmers = 6,
 		cards = 2,
 		spirals = 32,
@@ -534,6 +536,12 @@ function Budget.measure(effect, variantOf)
 			local round = 2 * math.pi * turns * (spiral.radius[1] + spiral.radius[2]) / 2
 			local length = math.sqrt(round * round + (spiral.high - spiral.low) ^ 2)
 			total.area += length * (spiral.width[1] + spiral.width[2]) / 2
+		end
+		if fields.dome then
+			-- (a dome: one MeshPart, about its circle's area seen from the gameplay camera; its fill another)
+			local layers = if fields.dome.fill then 2 else 1
+			total.parts += layers
+			total.area += layers * math.pi * fields.dome.radius ^ 2
 		end
 		total.bands = #(fields.bands or {})
 		total.lights = if fields.light then 1 else 0

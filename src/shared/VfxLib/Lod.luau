@@ -20,6 +20,9 @@ Lod.MaxFull = 8 -- hosts with every layer (Quality.full scales it)
 Lod.MaxLights = 4 -- hosts with a light (Quality.lights scales it)
 Lod.MaxShowcase = 1 -- showcase (heavy) effects with every layer: the rest of them run at half
 Lod.Behind = 8 -- studs behind the camera that a host may stand and still be drawn (its effect reaches round it)
+-- Every lasting effect full with its light, wherever it stands: the showroom on the owner's PC only (VfxLib.setup
+-- { lod = "everything" }), never a game: it drops every limit above.
+Lod.everything = false
 
 Lod.handles = {} -- the lasting effects
 Lod.shots = {} -- the one-shots
@@ -68,7 +71,9 @@ function Lod.levels(handles, eye, look)
 		local d = entry.distance
 		local showcase = entry.handle.effect and entry.handle.effect.tier == "heavy"
 		local mode
-		if entry.behind or d > Quality.distance(Lod.Far) then
+		if Lod.everything then
+			mode = "full"
+		elseif entry.behind or d > Quality.distance(Lod.Far) then
 			mode = "off"
 		elseif d > Quality.distance(Lod.Half) then
 			mode = if #entry.handle.bands > 0 then "ribbon" else "off"
@@ -82,7 +87,10 @@ function Lod.levels(handles, eye, look)
 			end
 		end
 		local light = false
-		if mode == "full" and entry.handle.light and lightsUsed < lights then
+		if Lod.everything then
+			-- (the quality still says whether lights shine at all: Low has none)
+			light = entry.handle.light ~= nil and lights > 0
+		elseif mode == "full" and entry.handle.light and lightsUsed < lights then
 			light = true
 			lightsUsed += 1
 		end

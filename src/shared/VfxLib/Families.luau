@@ -11,6 +11,9 @@ Families.List = {
 		name = "fire",
 		about = "flames, fireballs, fire flipbooks, embers on fire: a skill's fire, a burning aura, a phoenix",
 		keys = {
+			"cg_toon_flame_flip",
+			"cg_explosion_flip",
+			"cg_real_flame_flip",
 			"awakening_flash",
 			"balance_sign",
 			"embers_flip",
@@ -72,6 +75,10 @@ Families.List = {
 		name = "smoke",
 		about = "smoke, dust, steam, ash, dark wisps, splats: the body under a blast, a dark aura, what lingers",
 		keys = {
+			"cg_smoke_ribbon",
+			"cg_smoke_wisp_flip",
+			"cg_shock_ring",
+			"cg_shock_wedge_flip",
 			"ash_cloud",
 			"ash_puffs_flip",
 			"aura_puffs_flip",
@@ -291,6 +298,7 @@ Families.List = {
 		name = "glow",
 		about = "soft discs, orbs, blobs, cores: the light of a core, a charge, a fill, an eclipse",
 		keys = {
+			"cg_toon_orb",
 			"ball_shaded",
 			"blob_solid",
 			"bloom_soft",
@@ -400,6 +408,9 @@ Families.List = {
 		name = "ring",
 		about = "rings and shockwaves, flat or facing: a pulse, a shock racing out, a portal's rim",
 		keys = {
+			"cg_portal_ring",
+			"cg_skull_ring",
+			"cg_portal_ring2",
 			"abstract_swirl",
 			"aether_swirl_a",
 			"burst_ring_flip",
@@ -487,6 +498,7 @@ Families.List = {
 		name = "circle",
 		about = "floor art and magic circles: rune rings, sigils, seals; one aura or skill each (floor_*)",
 		keys = {
+			"cg_magic_circle",
 			"flash_huge",
 			"floor_aether",
 			"floor_arcane",
@@ -536,6 +548,9 @@ Families.List = {
 		name = "slash",
 		about = "crescents, arcs, swooshes, claw marks: a blade's path, a cut, a swing",
 		keys = {
+			"cg_slash_bright_flip",
+			"cg_slash_dark_flip",
+			"cg_orb_crescent_flip",
 			"arc_crescent_thin",
 			"arc_faint",
 			"arc_faint_b",
@@ -582,6 +597,7 @@ Families.List = {
 		name = "wind",
 		about = "speed streaks, wind spins and curls: a dash, a cyclone, rising air",
 		keys = {
+			"cg_wisp_ribbon",
 			"beam_wind",
 			"curls_flip",
 			"feathers_streaks",
@@ -626,6 +642,9 @@ Families.List = {
 		name = "lightning",
 		about = "bolts, arcs, crackles, static: storms, electricity, energy",
 		keys = {
+			"cg_bolt_painted",
+			"cg_bolt_shadow",
+			"cg_orb_crackle_flip",
 			"arc_branch_flip",
 			"arc_snap",
 			"aura_glow",
@@ -676,6 +695,8 @@ Families.List = {
 		name = "beam",
 		about = "pictures for a Beam or a Trail, drawn along its length: streaks, mists, flame bands, chains",
 		keys = {
+			"cg_glitter_ribbon",
+			"cg_meteor_head",
 			"arcane_band",
 			"band_white",
 			"beam_blob",
@@ -784,6 +805,7 @@ Families.List = {
 		name = "ice",
 		about = "snowflakes, frost, ice shards",
 		keys = {
+			"cg_icicle_burst_flip",
 			"frost_wisp_flip",
 			"fx_snowflakes",
 			"ice_shards_flip",
@@ -847,6 +869,7 @@ Families.List = {
 		name = "symbol",
 		about = "icons and signs: hearts, clocks, digits, emotes, UI frames, masks, text; the owner's stat icons",
 		keys = {
+			"cg_ghost_skull",
 			"alchemy_flip",
 			"anchor",
 			"bar_solid",

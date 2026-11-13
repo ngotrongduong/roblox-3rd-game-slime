@@ -17,10 +17,12 @@
 --   bands     (trail) the Trails behind the runner, each a BAND (below)
 --   wings     (wings) the pairs of wings on the back, each a WING (below): a flat picture on a Beam from its root to its
 --             tip, the left one the right's mirror, beating about the spine
---   serpents  (a heavy aura, one) a dragon coiling round the host, each a SERPENT: { name, texture (one whole long
---             picture, head at the top: tools/chatgpt/prepare_beam.py --turn --length=1024), length, width, taper?,
---             colors | color | role, glow, radius (studs from the host's middle), low, high (studs over the feet it climbs
---             between), turns (round the host in a loop, whole, - the other way), period (seconds a loop), phase?,
+--   serpents  (a heavy aura, up to Budget's `serpents`) a dragon coiling round the host, or ribbons orbiting it, each a
+--             SERPENT: { name, texture (one whole long picture, head at the top: tools/chatgpt/prepare_beam.py --turn
+--             --length=1024), length, width, taper?, fade? (0..1: how see-through its tail end is, its head solid),
+--             colors | color | role (head to tail), glow (0: drawn normal, a dark smoke), radius (studs from the host's
+--             middle), low, high (studs over the feet it climbs between; the same: a flat orbit), turns (round the host
+--             in a loop, whole, - the other way), period (seconds a loop), phase?,
 --             side? }: its head climbs round the host from low to high and back down and a Trail lays the picture, uncut,
 --             along the path just flown; `side` = true for a picture drawn from the side (its back at the picture's left
 --             edge): the ribbon is turned to the camera by hand, its back kept up all round the loop. Or a 3D body:
@@ -48,6 +50,14 @@
 --             Beam a half turn, curved, turned to the camera.
 --             Its colours: `color` (one, or several from low to high) or a `role`
 --   light   { role | color, brightness, range (studs at refHeight), keys = { { t, brightness } } (a one-shot's flare) }
+--   glaze     (a mid or heavy aura on a body) { fill = { r, g, b }, outline? = { r, g, b }, fillTransparency? (0.5),
+--             outlineTransparency? (0.2) }: the host's own body glazed by a Highlight while it is worn, a colour over
+--             it and a bright rim (CGHOW's ice body, 2026-11-14); off when Lod turns the aura to a ribbon or off
+--   dome      (a mid or heavy aura) { radius (studs at refHeight, 1 to 10), color = { r, g, b }, texture? (a key of
+--             Textures: the streaks the ForceField draws over it, its light edges; none: a plain bubble), transparency?
+--             (0..1, 0), fill? (0..1: the transparency of a Neon copy under it, a faint body, lesson 152) }: a real 3D half sphere (Models.Dome, made in Blender) over the host, its rim on the floor at the
+--             host's feet, in ForceField: see-through, lit at its edges, the picture's streaks flowing over it by
+--             themselves (CGHOW's magic dome, lesson 314); hidden when Lod turns the aura to a ribbon or off
 --   highlight (one-shot) { fill = role, outline = role, fillTransparency, outlineTransparency, seconds, max }: an outline
 --             on the instances the caller names (`opts.adornees`), fading out
 --   projectile (one-shot) a PIECE that flies from `opts.from` to the spot first: { texture, size, seconds, arc, ... };
@@ -427,6 +437,9 @@ function Schema.serpentProblem(fields, serpent, what)
 	end
 	if serpent.taper ~= nil and (type(serpent.taper) ~= "number" or serpent.taper < 0 or serpent.taper > 1) then
 		return `{what}: taper is 0 to 1`
+	end
+	if serpent.fade ~= nil and (type(serpent.fade) ~= "number" or serpent.fade < 0 or serpent.fade > 1) then
+		return `{what}: fade is 0 to 1`
 	end
 	if serpent.phase ~= nil and type(serpent.phase) ~= "number" then
 		return `{what}: phase is a share of a turn`
@@ -1265,6 +1278,49 @@ function Schema.problem(effect, variantOf)
 		if fields.shell ~= nil then
 			-- (a glow of the host's own mesh, tried on the held weapons 2026-11-13: it hid their detail, lesson 292)
 			return `{label}: no shell (it hides the host's detail)`
+		end
+		if fields.glaze ~= nil then
+			local glaze = fields.glaze
+			local function triple(value)
+				return type(value) == "table" and #value == 3 and type(value[1]) == "number"
+			end
+			if fields.kind ~= "aura" or (fields.tier ~= "mid" and fields.tier ~= "heavy") then
+				return `{label}: only a mid or heavy aura has a glaze (a Highlight: a client draws 31 at most)`
+			end
+			if fields.host ~= "character" and fields.host ~= "pet" and fields.host ~= "slime" then
+				return `{label}: a glaze is for a body (character, pet, slime), not a weapon's detail (lesson 292)`
+			end
+			if not triple(glaze.fill) or (glaze.outline ~= nil and not triple(glaze.outline)) then
+				return `{label}: glaze fill (and outline) are \{ r, g, b \}`
+			end
+			for _, field in { "fillTransparency", "outlineTransparency" } do
+				local value = glaze[field]
+				if value ~= nil and (type(value) ~= "number" or value < 0 or value > 1) then
+					return `{label}: glaze {field} is 0 to 1`
+				end
+			end
+		end
+		if fields.dome ~= nil then
+			local dome = fields.dome
+			if fields.kind ~= "aura" or (fields.tier ~= "mid" and fields.tier ~= "heavy") then
+				return `{label}: only a mid or heavy aura has a dome`
+			end
+			if type(dome.radius) ~= "number" or dome.radius < 1 or dome.radius > 10 then
+				return `{label}: dome radius is 1 to 10 studs`
+			end
+			local color = dome.color
+			if type(color) ~= "table" or #color ~= 3 or type(color[1]) ~= "number" then
+				return `{label}: dome color is \{ r, g, b \}`
+			end
+			if dome.texture ~= nil and Textures.url(dome.texture) == "" then
+				return `{label}: dome texture {dome.texture} is not a picture of Textures`
+			end
+			for _, field in { "transparency", "fill" } do
+				local alpha = dome[field]
+				if alpha ~= nil and (type(alpha) ~= "number" or alpha < 0 or alpha > 1) then
+					return `{label}: dome {field} is 0 to 1`
+				end
+			end
 		end
 		for index, serpent in fields.serpents or {} do
 			local problem = Schema.serpentProblem(fields, serpent, `{label} serpent {index}`)

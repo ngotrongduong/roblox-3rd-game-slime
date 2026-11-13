@@ -343,6 +343,40 @@ Textures.Images = {
 	satchel_aura_flip = { id = 113100218045348, from = SKILL_ART }, -- violet light swirls round a satchel, red and blue potion drops glow at its sides, bubbles rise
 	philosopher_aura_flip = { id = 97738691526775, from = SKILL_ART }, -- a golden alchemy circle turns round a kit, a teal star pulses in it, a flask and a sprout glow
 	elixir_aura_flip = { id = 135061578142484, from = SKILL_ART }, -- a golden halo over a kit, its gem pulses violet, violet wisps curl up its sides, rainbow bubbles drift
+	-- CGHOW's tutorials rebuilt (2026-11-14, docs/vfx/references/cghow/): ChatGPT drew each tutorial's texture or clip.
+	-- A Trail's or a Beam's strip, its rows along the length (prepare_beam.py --turn); on black, added:
+	cg_wisp_ribbon = { id = 82914236264617, black = true, from = SKILL_ART }, -- white wispy flame streaks, a ribbon's panning noise
+	cg_bolt_painted = { id = 88009824863279, black = true, from = SKILL_ART }, -- a painted lightning bolt, thin side forks
+	-- (the bolt's dark copy: white, its brightness grown a little as its alpha; drawn normal, tinted near black)
+	cg_bolt_shadow = { id = 110138047767663, from = SKILL_ART }, -- the painted bolt as a soft white mask
+	-- (grey smoke unmixed off magenta, its soft edges kept grey: drawn normal, tinted near black under a ribbon)
+	cg_smoke_ribbon = { id = 133453421105790, from = SKILL_ART }, -- a long twisting ribbon of soft smoke
+	-- One picture, on black, added:
+	cg_portal_ring = { id = 70577391153201, black = true, from = SKILL_ART }, -- a ring of swirling cloudy energy, an empty middle
+	cg_portal_ring2 = { id = 102971491853958, black = true, from = SKILL_ART }, -- the same ring drawn again, other swirls
+	-- One picture, keyed off magenta, drawn normal:
+	cg_shock_ring = { id = 114654811814867, from = SKILL_ART }, -- a dust shockwave from above: billows outside, streaks inside
+	cg_toon_orb = { id = 127573468211667, from = SKILL_ART }, -- a toon energy ball: a black outline, violet to pink, a glow at the bottom (worn untinted)
+	-- 4 x 4: the dust ring cut into 16 wedges, each pointing UP (outward); a random still frame each (CGHOW's random UV crop)
+	cg_shock_wedge_flip = { id = 85342935339300, from = SKILL_ART },
+	-- ChatGPT clips, 4 x 4 OneShot (clip_frames.py; --black: light on black turned to alpha, drawn normal):
+	cg_slash_bright_flip = { id = 97948882327740, from = SKILL_ART }, -- a white-hot pink and orange crescent burns away into embers (untinted)
+	cg_slash_dark_flip = { id = 83951442178482, from = SKILL_ART }, -- a smoky black crescent with red embers erodes from its tail (untinted)
+	cg_toon_flame_flip = { id = 98117628563425, from = SKILL_ART }, -- a flat cel-shaded flame grows, licks, tears off flakes, dies (untinted)
+	cg_orb_crescent_flip = { id = 114464439130592, from = SKILL_ART }, -- a white crescent sweeps round a circle, grows and fades
+	cg_orb_crackle_flip = { id = 133862210395509, from = SKILL_ART }, -- a thin ring, little lightning crackles flickering round it
+	-- CGHOW wave 2 (2026-11-14). One picture, on black, added:
+	cg_skull_ring = { id = 136287156489052, black = true, from = SKILL_ART }, -- a thin glowing ring from above, wisps and sparkles off its rim
+	cg_ghost_skull = { id = 134889046198551, black = true, from = SKILL_ART }, -- a ghostly skull of soft light, a wispy tail below
+	cg_magic_circle = { id = 139438382052444, black = true, from = SKILL_ART }, -- two rings, a band of glyphs, a six-pointed star inside
+	-- (a Trail's and a Beam's strips, rows along the length, on black, added)
+	cg_glitter_ribbon = { id = 76230896540517, black = true, from = SKILL_ART }, -- a thin wavy core strewn with tiny star sparkles
+	cg_meteor_head = { id = 72502416454354, black = true, from = SKILL_ART }, -- a white-hot ball at the bottom, its fire tail streaming up
+	-- ChatGPT clips, 4 x 4 OneShot (clip_frames.py; --black: light on black turned to alpha, drawn normal):
+	cg_icicle_burst_flip = { id = 134710232167326, from = SKILL_ART }, -- a fan of pale blue icicles erupts from the ground, stands, shatters (untinted)
+	cg_explosion_flip = { id = 124460687506440, from = SKILL_ART }, -- a flash swells to a rolling fireball, cools to red, smoke thins away (untinted)
+	cg_smoke_wisp_flip = { id = 123326402301210, from = SKILL_ART }, -- a grey wisp of smoke rises, curls into tendrils, dissolves (tinted)
+	cg_real_flame_flip = { id = 107156124653527, from = SKILL_ART }, -- a realistic flame tongue buds, licks up, tears off, dies to an ember (untinted)
 }
 
 -- The pictures of the packs that the baker met (tools/bake.luau writes them here: `lune run tools/bake.luau`). Each is

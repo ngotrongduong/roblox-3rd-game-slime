@@ -178,3 +178,26 @@ Both came from the library on 2026-11-13. The first cut (e2037cf) hid the slime 
 `frost`'s flat wall: its ring was emitted round the slime's head. The library's 1da91f8 lays every slow on a flat ring
 on the ground just outside the body, all six pictures ChatGPT clips: honey strands to a puddle, a low crust of frost
 shards, sludge heaps, roots to 2.2 studs. Seen again on the game's slime mesh from close by: the slime stays clear.
+
+## 7. The slimes' side raised to the monsters' level (2026-11-14, wave 1)
+
+From the audit of 2026-11-14 (`docs/STATUS.md`). All of it is data in `Config.Zombies.View`; `client/ZombieFight` plays it.
+
+| Moment | Look | Where |
+|---|---|---|
+| A slime aims a skill | its body glows in its way's colour, rising through the aim | `Skill.Power.Glow`, `GlowMost` |
+| The skill lets go | the glow flashes white and fades | `letGo` |
+| A crit or a heavy skill blow lands | hit-stop 0.13 s, a white flash on the one struck | `View.Hard` |
+| A crit, by class | Warrior `hit.blade_cross`, Guardian `hit.comic_punch`, Ranger `hit.side_gust`, Mage `hit.shard_nova`, Healer `hit.holy` crit, Alchemist `burst.stylized_blast`, sized by the weapon's tier | `Fx.CritLooks` |
+| Goo Slam lands | `burst.cghow_dust_shockwave` on the floor | `Skill.Looks.attack.lib` |
+| Belly Bounce lands | `burst.prism_pop` on the floor | `Skill.Looks.hp.lib` |
+| Taunt | `burst.shield_up` round the Guardian | `Skill.Looks.taunt.lib` |
+| Acid Rain, each foe struck | `hit.acid_splat` | `Skill.Looks.acid_rain.hitVfx` |
+| A slime falls | `burst.smoke_poof` | `FallVfx` |
+| The winners cheer | `burst.reward_glitter` | `CheerVfx` |
+| A big monster falls | `skill.monster_impact` in its element | `Dungeon.Fx.FallImpactSize` |
+
+A floor effect is played at the body's middle with a `size` box, so its ground pieces lie on the floor (`onFloor`).
+Taunt and Acid Rain are still stand-ins from the library's general shelf: their own designs stay on the list of §3.
+Seen on a test row and in a real run on Frozen Ice; white hits read pale on the snow (§1), the weapon impact ladder
+of wave 2 is drawn with colour and dark edges for that.

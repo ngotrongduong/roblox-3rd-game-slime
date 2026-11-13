@@ -1,5 +1,37 @@
 # Status
 
+## 2026-11-14 — fight effects audit; wave 1: the slimes' side raised to the monsters' level
+
+The owner: audit weapons, monsters, monster skills, slime skills and battle effects, and raise the visuals as far as
+possible with the VFX library's showroom (whole, in part or combined), Genshin Impact as the bar.
+
+**Audit.** The monsters (28, their specials, the bosses' Burst and the regulars' Pop) already play the library end to
+end. The slimes lagged: a crit was only a bigger 2D mark, their skills had no wind-up glow, no release flash and no
+hit-stop, Taunt, Acid Rain, Goo Slam and Belly Bounce were 2D stand-ins, a fall was stars only, a win had no effect.
+Weapons: trail, cast and aura by tier are in; the plain blow's impact is the same flat mark at every tier. Only the six
+Common class skills are built.
+
+**Wave 1, done** (`Config.Zombies.View`, `client/ZombieFight`, VfxLib a6e5ca3, 93 effects):
+- Every slime skill: the caster glows in its way's colour through the aim (`Skill.Power`), flashes as it lets go, and a
+  crit or a heavy skill blow gets hit-stop 0.13 s and a white flash (`View.Hard`).
+- A crit has its class's own burst over the mark, sized by the weapon's tier (`Fx.CritLooks`: Warrior
+  `hit.blade_cross`, Guardian `hit.comic_punch`, Ranger `hit.side_gust`, Mage `hit.shard_nova`, Healer `hit.holy`
+  crit, Alchemist `burst.stylized_blast`).
+- Goo Slam lands in `burst.cghow_dust_shockwave`, Belly Bounce in `burst.prism_pop`, Taunt raises `burst.shield_up`,
+  Acid Rain splashes `hit.acid_splat` on each foe.
+- A slime falls in `burst.smoke_poof`; the winners cheer in `burst.reward_glitter`; a big monster (size
+  `Dungeon.Fx.FallImpactSize` or more) marks the ground in its element as it falls.
+- Test: every library effect the slimes' fight names is imported (`tests/spec/monster_fx.luau`).
+
+**Seen** in a MapWork play test (Frozen Ice, phone frame, 24-35 studs): each new effect on a test row at the game's
+camera distance; a real Dungeon run of 8 waves played `burst.shield_up`, `hit.blade_cross` and `skill.monster_impact`
+with no warning or error. **Not verified:** each moment framed in a live fight (they last 0.3 s), the four darker
+maps, a real phone. White additive hits still read pale on the snow.
+
+**Next (wave 2, in the VFX library first):** a weapon's own impact per family and tier (30 designs, with colour and
+dark edges that hold on a bright map), the 14 class-skill pieces of `docs/weapons/SKILL-VFX.md` §3, a short charge per
+class that fits a 0.3 s aim; then the skills of Uncommon to Legendary.
+
 ## 2026-11-14 — favorite the game and join the group: a big gift each, the tutorial's last step
 
 The owner: every game asks players to favorite it and join its community, with a big reward; put it at the end of the

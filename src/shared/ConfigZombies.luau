@@ -173,6 +173,10 @@ return {
 		CritKnock = 1.7,
 		-- the knock-back taken is divided by the body's size (Dungeon monsters' look size, 1 or more) to this power
 		KnockWeight = 2,
+		-- A blow that lands hard (a crit, or the heavy blow of a slime's or a zombie's skill): the bodies freeze this long
+		-- and the one struck flashes white (HitFlash: how see-through the flash starts). A Dungeon monster's burst and pop
+		-- have their own (Config.Dungeon.Fx).
+		Hard = { HitStopSeconds = 0.13, HitFlash = 0.5 },
 		-- A skill (Config.Combat.Skills): its name called out once over the one who strikes it (TextSize, Colour), a deeper
 		-- wind-up (Windup times the usual). Goo Slam and Belly Bounce leap (Leap studs) and their blows land when they come
 		-- down (CastSeconds), as do those of a skill that strikes everyone; Dash Strike's blows come MultiGap apart; acid
@@ -189,6 +193,29 @@ return {
 			RainHeight = 10,
 			Burst = 5,
 			Ring = 11,
+			-- A slime's or a zombie's skill is felt before it lands (the owner, 2026-11-14: as rich as the monsters'
+			-- bursts): its body glows its way's colour through the wind-up (down to GlowMost see-through) and flashes as
+			-- it lets go.
+			Power = {
+				GlowMost = 0.5,
+				Glow = {
+					attack = "#ffb347",
+					speed = "#7fe3ff",
+					defence = "#ffe58a",
+					hp = "#ff8fa8",
+					rotten = "#9bbf4a",
+					toxic = "#7dff5a",
+					plague = "#b06cff",
+					warrior = "#ffd9a0",
+					guardian = "#8fc7ff",
+					ranger = "#a8ff9a",
+					mage = "#c79bff",
+					healer = "#fff2a8",
+					alchemist = "#8dff6a",
+				},
+			},
+			-- (`lib`: a VFX library effect played where the skill bursts, on top of the owner's art, `libScale` times its
+			-- size: Goo Slam's landing throws a ring of dust, Belly Bounce's a whirl of sparks)
 			Looks = {
 				attack = {
 					leap = true,
@@ -197,8 +224,17 @@ return {
 					bits = "moteShock",
 					ring = "groundCrack",
 					ring2 = "ringShock",
+					lib = "burst.cghow_dust_shockwave",
+					libScale = 0.8,
 				},
-				hp = { leap = true, burst = "shockwave", bits = "moteShock", ring = "ring" },
+				hp = {
+					leap = true,
+					burst = "shockwave",
+					bits = "moteShock",
+					ring = "ring",
+					lib = "burst.prism_pop",
+					libScale = 1.2,
+				},
 				defence = { burst = "holyHit", bits = "sparkStar", ring = "ring" },
 				toxic = { burst = "burstAcid", bits = "acidDrop", rain = "acidDrop", rainRing = "ringAcid" },
 				plague = { burst = "burstArcane", bits = "spore", ring = "ringArcane" },
@@ -248,12 +284,28 @@ return {
 				-- (`ownHit`, no mark of the class's). The rest stand in with the owner's battle art until the library has
 				-- them (docs/weapons/SKILL-VFX.md): Taunt rings out from the shield and rings every foe it pulls (`mark`);
 				-- Arcane Barrage fires an orb from the focus at every foe it strikes (`fire`), each bursting in the
-				-- library's Ether Burst (`hitVfx`); Acid Rain drops flasks out of the sky.
-				taunt = { burst = "shockwave", bits = "sparkStar", ring = "ringShock", mark = "ring" },
+				-- library's Ether Burst (`hitVfx`); Acid Rain drops flasks out of the sky, each breaking in the library's
+				-- Acid Splat on the foe it falls on; Taunt's shield stands over the Guardian for a moment (`lib`).
+				taunt = {
+					burst = "shockwave",
+					bits = "sparkStar",
+					ring = "ringShock",
+					mark = "ring",
+					lib = "burst.shield_up",
+					libScale = 1.4,
+				},
 				dash_strike = { vfx = "skill.flash_step", aim = true, impact = "impact", ownHit = true },
 				piercing_shot = { vfx = "skill.piercing_arrow", impact = "impact", ownHit = true, pierce = true },
 				arcane_barrage = { fire = "magicOrb", hitVfx = "burst.ether_burst", ownHit = true },
-				acid_rain = { burst = "burstAcid", bits = "acidDrop", rain = "flask", rainRing = "ringAcid" },
+				acid_rain = {
+					burst = "burstAcid",
+					bits = "acidDrop",
+					rain = "flask",
+					rainRing = "ringAcid",
+					hitVfx = "hit.acid_splat",
+					hitScale = 1.2,
+					ownHit = true,
+				},
 				mend = { vfx = "skill.blessing_light", impact = "heal" },
 			},
 			PierceEarliest = 0.3,
@@ -306,6 +358,10 @@ return {
 		-- A slime that falls twists (a kick into its turn spring) under rising stars (studs).
 		FallTurn = 3,
 		StarSize = 0.9,
+		-- (VFX library effects with the stars: a slime that falls goes in a puff of smoke, one that cheers in glitter)
+		FallVfx = "burst.smoke_poof",
+		CheerVfx = "burst.reward_glitter",
+		CheerVfxScale = 0.6,
 		-- Health just lost stays white this long on a bar, then drains.
 		BarLagSeconds = 0.25,
 		BarDrainSeconds = 0.35,
@@ -455,6 +511,17 @@ return {
 			MarkSwell = 1.35,
 			CritScale = 1.35,
 			CritSparks = 7,
+			-- A weapon class's crit bursts in a VFX library effect of its own over its mark (`scale` times its size, and
+			-- bigger the higher the weapon's tier, Skill.TierScale): crossed blades, a comic punch, a gust along the arrow,
+			-- a nova of shards, a holy flare, a flask going off.
+			CritLooks = {
+				warrior = { vfx = "hit.blade_cross", scale = 1.5 },
+				guardian = { vfx = "hit.comic_punch", scale = 1.5 },
+				ranger = { vfx = "hit.side_gust", scale = 1.2 },
+				mage = { vfx = "hit.shard_nova", scale = 1.3 },
+				healer = { vfx = "hit.holy", variant = "crit", scale = 1.5 },
+				alchemist = { vfx = "burst.stylized_blast", scale = 0.5 },
+			},
 			Bits = 5,
 			-- A spit flies this long, this big (studs).
 			ShotSeconds = 0.24,

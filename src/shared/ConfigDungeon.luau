@@ -2076,6 +2076,8 @@ return {
 		ShotSeconds = 0.3,
 		-- the height of the box the monsters' hit effects were made for (their refHeight): a fall stands it on the ground
 		FallBox = 4,
+		-- a monster at least this big (its look's size: the bosses) also marks the ground in its map's element as it falls
+		FallImpactSize = 1.6,
 		-- a wind-up fades out this softly when its skill goes off
 		WindupFade = 0.15,
 		-- A boss's and a mini-boss's special (one with a `windup` and wind-up art) hits like a burst (the owner, 2026-11-12: drama like

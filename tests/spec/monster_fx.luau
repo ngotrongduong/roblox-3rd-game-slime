@@ -48,6 +48,26 @@ return function(T)
 		end
 	end)
 
+	T.test("every library effect of the slimes' fight is imported", function()
+		local V = Config.Zombies.View
+		for name, look in V.Skill.Looks :: any do
+			for _, field in { "vfx", "hitVfx", "lib" } do
+				if look[field] then
+					T.ok(imported(look[field]), `Skill.Looks.{name}.{field} {look[field]}`)
+				end
+			end
+		end
+		for way, look in V.Fx.CritLooks :: any do
+			T.ok(imported(look.vfx), `CritLooks.{way} {look.vfx}`)
+			T.ok(V.Fx.Styles[way] ~= nil, `CritLooks.{way} is a way of fighting`)
+		end
+		T.ok(imported(V.FallVfx), V.FallVfx)
+		T.ok(imported(V.CheerVfx), V.CheerVfx)
+		for way in V.Skill.Power.Glow do
+			T.ok(V.Fx.Styles[way] ~= nil, `Power.Glow.{way} is a way of fighting`)
+		end
+	end)
+
 	-- (the library refuses an effect with one bad piece whole, in Play: a negative `lift` on Frostmaw's drift took every
 	-- monster's body effect away, 2026-11-12)
 	T.test("every monster effect passes the library's schema", function()

@@ -177,6 +177,10 @@ Models.fish = {
 	},
 }
 
+-- An aura's `dome`: an open half sphere of radius 1 (a 2 x 1 x 2 MeshPart, its rim at the bottom), UVs wrapping the
+-- picture twice round it and from the rim up to the top (tools/blender/dome.py, models/dome.glb, Studio Import 3D)
+Models.Dome = 117271829701905
+
 -- A model an effect brings with it (a packaged effect: `assets.models`): kept only when the key is new.
 function Models.add(key, entry)
 	if Models.list[key] == nil and type(entry) == "table" and entry.mesh ~= nil then

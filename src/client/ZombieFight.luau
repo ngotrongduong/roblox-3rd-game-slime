@@ -727,6 +727,38 @@ local function popHit(event: { [string]: any }): string?
 	return if pop and event.splash ~= true and (type(event.n) ~= "number" or event.n <= 1) then pop else nil
 end
 
+-- A blow that lands hard (View.Hard): a crit, or the heavy blow of a slime's or a zombie's skill (not a splash, not one
+-- of a flurry). A Dungeon monster's burst and pop have their own.
+local function hardOf(event: { [string]: any }): boolean
+	local s = skillOf(event)
+	return event.crit == true or (s ~= nil and s.kind ~= "multi" and event.splash ~= true and not fxOf(event.from))
+end
+
+-- A slime's or a zombie's skill goes off (View.Skill.Power): its body flashes its way's colour, out of the glow of its
+-- wind-up when it had one. A Dungeon monster keeps its own.
+local function letGo(id: string)
+	local colour = (V.Skill.Power.Glow :: any)[wayOf(id)]
+	local actor = find(id)
+	if fxOf(id) or not colour or not actor then
+		return
+	end
+	if not glows[id] then
+		glows[id] = tint(actor.model, Color3.fromHex(colour), 1)
+	end
+	endCharge(id, true)
+end
+
+-- A library effect standing on the floor at `at`: its box is as tall as the body there (its ground pieces lie on the
+-- floor, its body ones at that body's middle), as the monsters' are played.
+local function onFloor(effect: string?, at: Vector3, tall: number, scale: number?, variant: string?)
+	local wide = 5 * (scale or 1)
+	return vfx(effect, at + Vector3.new(0, tall * 0.5, 0), {
+		scale = scale,
+		variant = variant,
+		size = Vector3.new(wide, tall, wide),
+	})
+end
+
 -- How a skill looks (View.Skill.Looks).
 local function looksOf(event: { [string]: any }): { [string]: any }
 	return (V.Skill.Looks :: any)[event.skill] or {}
@@ -1033,6 +1065,22 @@ local function onAim(event: { [string]: any })
 			FillTransparency = if burst then DFx.Burst.GlowMost else DFx.Pop.GlowMost,
 		}):Play()
 	end
+	local power = if s and not fx then (V.Skill.Power.Glow :: any)[wayOf(event.from)] else nil
+	if power then
+		-- a slime's or a zombie's skill: its body glows its way's colour through the wind-up (letGo flashes it as the
+		-- skill goes off; a skill that never does, its target gone, lets the glow go a moment later)
+		endCharge(event.from)
+		local glow = tint(attacker.model, Color3.fromHex(power), 1)
+		glows[event.from] = glow
+		TweenService:Create(glow, TweenInfo.new(windup, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+			FillTransparency = V.Skill.Power.GlowMost,
+		}):Play()
+		task.delay(windup + 1, function()
+			if glows[event.from] == glow then
+				endCharge(event.from)
+			end
+		end)
+	end
 	if s then
 		floatText(
 			from + Vector3.new(0, attacker.body.Size.Y + 1.5, 0),
@@ -1089,10 +1137,11 @@ local function impact(event: { [string]: any }, style: FightFx.Style)
 	if not target or not to then
 		return
 	end
-	local _, from = find(event.from)
+	local attacker, from = find(event.from)
 	local crit = event.crit == true
 	local s = skillOf(event)
 	local heavy = crit or (s ~= nil and s.kind ~= "multi" and event.splash ~= true)
+	local hard = hardOf(event)
 	local dir = along(to - (from or to - target.root.LookVector), -target.root.LookVector)
 	local height = target.body.Size.Y
 	local skin = to - dir * radius(target) * 0.8 + Vector3.new(0, height * 0.5, 0)
@@ -1112,6 +1161,12 @@ local function impact(event: { [string]: any }, style: FightFx.Style)
 	elseif not (s and looksOf(event).ownHit) or (looksOf(event).pierce and aims[event.from] ~= event.to) then
 		-- (a class skill the library draws brings its own hit; a piercing arrow's only where it is aimed)
 		FightFx.mark(style, skin, skin - dir * 3, heavy)
+		local own = if crit then (F.CritLooks :: any)[wayOf(event.from)] else nil
+		if own then
+			-- (a weapon class's crit: its own library burst over the mark, facing along the blow, bigger by the tier)
+			local _, scale = levelOf(attacker)
+			vfx(own.vfx, CFrame.lookAt(skin, skin + dir), { variant = own.variant, scale = scale * (own.scale or 1) })
+		end
 	end
 	if pop then
 		-- (its box is the body it strikes, standing on the floor: the ring lies there)
@@ -1124,12 +1179,17 @@ local function impact(event: { [string]: any }, style: FightFx.Style)
 	end
 	FightFx.goo(target.body, skin, dir, if heavy then F.Goo.count * 2 else F.Goo.count)
 	SlimeActor.act(target, "Hit")
-	local stop = if burst then DFx.Burst.HitStopSeconds elseif pop then DFx.Pop.HitStopSeconds else V.HitStopSeconds
+	local stop = if burst
+		then DFx.Burst.HitStopSeconds
+		elseif pop then DFx.Pop.HitStopSeconds
+		elseif hard then V.Hard.HitStopSeconds
+		else V.HitStopSeconds
 	-- (a big body is heavy: a boss hardly moves)
 	local weight = math.max(1, if extras[event.to] then extras[event.to].size else 1) ^ V.KnockWeight
 	play(target, to, dir * V.KnockStuds * (if heavy then V.CritKnock else 1) / weight, V.KnockSeconds, 0.2, stop)
-	if burst or pop then
-		fadeTint(tint(target.model, Color3.new(1, 1, 1), if burst then DFx.Burst.HitFlash else DFx.Pop.HitFlash))
+	if burst or pop or hard then
+		local flash = if burst then DFx.Burst.HitFlash elseif pop then DFx.Pop.HitFlash else V.Hard.HitFlash
+		fadeTint(tint(target.model, Color3.new(1, 1, 1), flash))
 	end
 	local side = if math.random() < 0.5 then -1 else 1
 	SlimeActor.kick(target, "side", side * V.FlinchSide * (if heavy then 2 else 1))
@@ -1188,6 +1248,7 @@ local function strike(event: { [string]: any }, style: FightFx.Style, land: () -
 	local stop = if burstOf(event)
 		then DFx.Burst.HitStopSeconds
 		elseif popHit(event) then DFx.Pop.HitStopSeconds
+		elseif hardOf(event) then V.Hard.HitStopSeconds
 		else V.HitStopSeconds
 	play(attacker, from, dir * reach, V.LungeSeconds, V.ContactShare, stop)
 	SlimeActor.hop(attacker, V.LungeHop)
@@ -1349,6 +1410,7 @@ local function cast(event: { [string]: any }, looks: { [string]: any })
 			if looks.ring2 then
 				FightFx.ring(looks.ring2, centre, K.Ring * 0.7)
 			end
+			onFloor(looks.lib, centre, caster.body.Size.Y, looks.libScale)
 		end)
 	end)
 end
@@ -1404,6 +1466,11 @@ local function deliver(event: { [string]: any }, style: FightFx.Style, first: bo
 					if looks.rainRing then
 						FightFx.ring(looks.rainRing, to, K.Ring * 0.45)
 					end
+					if looks.hitVfx then
+						-- (an Alchemist's flask breaks on the foe: the library's splash, bigger by the kit's tier)
+						local _, scale = levelOf((find(event.from)))
+						vfx(looks.hitVfx, skin, { scale = scale * (looks.hitScale or 1) })
+					end
 				end)
 				land()
 			end)
@@ -1452,6 +1519,8 @@ local function onHit(event: { [string]: any }, first: boolean)
 	if first and popOf(event) then
 		-- (a regular's pop lets go: its glow flashes and fades; a burst's goes with its release)
 		endCharge(event.from, true)
+	elseif first and skillOf(event) then
+		letGo(event.from)
 	end
 	deliver(event, style, first, function()
 		safe("impact", function()
@@ -1471,6 +1540,7 @@ local function onGuard(event: { [string]: any })
 	end
 	local looks = V.Skill.Looks.defence
 	SlimeActor.kick(guard, "puff", V.WindupPuff * V.Skill.Windup)
+	letGo(event.from)
 	if release(event, nil) then
 		-- (a Dungeon monster's wall is its own art, on itself)
 		return
@@ -1487,6 +1557,7 @@ local function onHeal(event: { [string]: any })
 	local target, to = find(event.to)
 	if event.skill and os.clock() - (mended[event.from] or -1) > 0.5 then
 		mended[event.from] = os.clock()
+		letGo(event.from)
 		release(event, nil)
 	end
 	if healer then
@@ -1552,6 +1623,8 @@ local function onTaunt(event: { [string]: any })
 		if looks.ring then
 			FightFx.ring(looks.ring, at, V.Skill.Ring)
 		end
+		letGo(event.from)
+		onFloor(looks.lib, at, guard.body.Size.Y, looks.libScale)
 	end
 	if foe and there and looks.mark then
 		FightFx.ring(looks.mark, there, foe.body.Size.X * 1.6)
@@ -1718,6 +1791,10 @@ local function fall(event: { [string]: any })
 					local scale = bigness * DFx.Scale
 					local up = DFx.FallBox * scale * 0.5
 					vfx(own.fall, at + Vector3.new(0, up, 0), { scale = scale, variant = DFx.FallVariant })
+					if own.element and monster.size >= DFx.FallImpactSize then
+						-- (a boss's fall shakes its ground: the flash, the shock ring and the mark of its map's element)
+						onFloor("skill.monster_impact", at, body.Size.Y, scale, own.element)
+					end
 				else
 					FightFx.burst(style.death or "burstShock", centre, F.DeathBurst * bigness, style.bits)
 					FightFx.ring(style.ring or "ringShock", at, F.DeathRing * bigness)
@@ -1763,6 +1840,7 @@ local function fall(event: { [string]: any })
 					SlimeActor.kick(actor, "turn", V.FallTurn)
 					SlimeWeapon.fight(actor.model, false)
 					FightFx.stars(actor.body.Position + Vector3.new(0, actor.body.Size.Y * 0.6, 0), V.StarSize)
+					vfx(V.FallVfx, actor.body.Position, nil)
 					for _, part in actor.model:GetDescendants() do
 						if part:IsA("MeshPart") then
 							TweenService
@@ -1810,6 +1888,8 @@ local function cheer(fight: Fight)
 				if not actor.destroyed then
 					SlimeActor.setEmotion(actor, "happy")
 					FightFx.stars(actor.body.Position + Vector3.new(0, actor.body.Size.Y * 0.6, 0), V.StarSize)
+					local tall = actor.body.Size.Y
+					onFloor(V.CheerVfx, actor.body.Position - Vector3.new(0, tall * 0.5, 0), tall, V.CheerVfxScale)
 				end
 			end)
 			for hop = 0, V.CheerHops - 1 do

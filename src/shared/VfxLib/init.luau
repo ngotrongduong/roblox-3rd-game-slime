@@ -2,7 +2,9 @@
 -- (Effects/<kind>.<name> modules, see Schema), this runs them. Client only: the server announces a moment, each client
 -- draws it.
 --
---   VfxLib.setup{ quality = { get, subscribe }, textures = { key = id }, log = "[Game]", effects = folder, start }
+--   VfxLib.setup{ quality = { get, subscribe }, textures = { key = id }, log = "[Game]", effects = folder, start,
+--                 lod }                    (lod = "everything": every effect full and lit wherever it stands, the
+--                                          showroom only; a game leaves it out)
 --   VfxLib.attach(host, id, opts)   a lasting effect (aura, trail, buff, wings, world) on a Part / Model / character
 --   VfxLib.detach(handleOrHost, id, fade) takes it off (every library effect of the host when no id); `fade` seconds:
 --                                   softly, what it has out lives on and fades (a weapon's trail does so by default:
@@ -91,6 +93,9 @@ function VfxLib.setup(options)
 	end
 	if options.quality then
 		Quality.plug(options.quality.get, options.quality.subscribe)
+	end
+	if options.lod ~= nil then
+		Lod.everything = options.lod == "everything"
 	end
 	local folder = options.effects
 	if folder == nil and typeof(script) == "Instance" then

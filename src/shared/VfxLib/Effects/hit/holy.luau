@@ -1,0 +1,76 @@
+-- A blow turned by a guard: the owner's golden sunburst of rays flashing on the spot, with silver stars thrown off.
+-- Goo Lineage's defence style (FightFx.mark, Styles.defence).
+local MARK = 3
+
+return {
+	id = "hit.holy",
+	name = "Holy Strike",
+	kind = "hit",
+	tier = "cheap",
+	host = "slime",
+	refHeight = 3,
+	tags = { "impact", "holy", "light", "defence", "owner_art", "cartoon" },
+	blend = "normal",
+	palette = {},
+	tintable = false,
+	pieces = {
+		{
+			name = "sunburst",
+			texture = "holyHit",
+			role = "keep",
+			count = 1,
+			life = { 0.34, 0.34 },
+			size = { { 0, MARK * 0.75 }, { 1, MARK * 1.35 } },
+			transparency = { { 0, 0.7 }, { 0.12, 0.02 }, { 0.55, 0.1 }, { 1, 1 } },
+			rotation = { 0, 359 },
+			rotSpeed = { -70, 70 },
+			zOffset = 2,
+		},
+		{
+			name = "stars",
+			texture = "sparkStar",
+			role = "keep",
+			count = 5,
+			life = { 0.45, 0.75 },
+			size = { { 0, MARK * 0.18 }, { 1, MARK * 0.18 * 0.3 } },
+			transparency = { { 0, 0 }, { 1, 1 } },
+			speed = { 8.4, 14 },
+			spread = { 180, 180 },
+			direction = "Top",
+			accel = { 0, -28, 0 },
+			drag = 1.5,
+			rotation = { 0, 359 },
+			rotSpeed = { -180, 180 },
+			zOffset = 3,
+		},
+	},
+	variants = {
+		crit = {
+			fit = 1.35,
+			extra = {
+				{
+					name = "critStars",
+					texture = "sparkStar",
+					role = "keep",
+					count = 7,
+					life = { 0.45, 0.75 },
+					size = { { 0, MARK * 0.2 }, { 1, MARK * 0.2 * 0.3 } },
+					transparency = { { 0, 0 }, { 1, 1 } },
+					speed = { 10.8, 18 },
+					spread = { 180, 180 },
+					direction = "Top",
+					accel = { 0, -28, 0 },
+					drag = 1.5,
+					rotation = { 0, 359 },
+					rotSpeed = { -180, 180 },
+					zOffset = 3,
+				},
+			},
+		},
+	},
+	source = {
+		from = "Goo Lineage FightFx.mark, Styles.defence (holyHit + sparkStar)",
+		art = "the owner's battle art (battlefx-*.png), uploaded 2026-11-03",
+		licence = "the owner's own",
+	},
+}
