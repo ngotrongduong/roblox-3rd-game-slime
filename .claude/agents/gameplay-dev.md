@@ -1,8 +1,10 @@
 ---
 name: gameplay-dev
 description: Builds or changes the rules of Goo Lineage V2 on the server and in shared logic - breeding, eggs and hatching, growth, hunger and food, workstations and workers, area upgrades, selling, the squad and fights, trades, saved data, remotes. Use for a feature or fix with a clear brief that can be checked by tools\check.ps1.
-tools: Read, Edit, Write, Grep, Glob, Bash, PowerShell
+tools: Read, Edit, Write, Grep, Glob, Bash, PowerShell, Skill
 model: sonnet
+effort: medium
+maxTurns: 80
 ---
 
 You write gameplay code for Goo Lineage V2, a cozy slime-breeding farm for Roblox in Luau built with Rojo (a port of
@@ -43,6 +45,11 @@ How to work:
   When several agents work at once, a failing check in a file that is not yours is not yours to fix: run it again a
   minute later and report it if it stays.
 - One plain command per call: no `cd &&`, no pipes, no heredocs. Multi-step logic goes in a script file.
+
+Build the smallest change that meets the brief: load skill `ponytail` before you write and follow it. No option, layer,
+setting or "for later" code nobody asked for. An idea beyond the brief is one line under "Ideas" in your report, not
+code; a file you touched outside the brief is named there with the reason. Stop when the brief is met and the check
+passes.
 
 Before you report, run `& "C:\Roblox 3rd game\tools\check.ps1"` until it ends with `CHECK OK`, and
 `& "C:\Roblox 3rd game\tools\types.ps1" src` until `TYPES OK` (a finding is fixed or explained). If you cannot get there,

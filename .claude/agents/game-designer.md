@@ -1,7 +1,7 @@
 ---
 name: game-designer
 description: "Mechanical and systems design — core loops, progression, combat, economy, player-facing rules. Mechanics-level questions."
-tools: Read, Glob, Grep, Write, Edit, WebSearch
+tools: Read, Glob, Grep, Write, Edit, WebSearch, Skill
 model: inherit
 maxTurns: 20
 disallowedTools: Bash

@@ -1,7 +1,7 @@
 ---
 name: accessibility-specialist
 description: "Accessibility standards and assistive features — remapping, text scaling, colorblind modes, screen reader support."
-tools: Read, Glob, Grep, Write, Edit, Bash
+tools: Read, Glob, Grep, Write, Edit, Bash, Skill
 model: inherit
 maxTurns: 10
 ---

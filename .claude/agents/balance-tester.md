@@ -1,8 +1,10 @@
 ---
 name: balance-tester
 description: Measures the pacing and economy of Goo Lineage V2 without Roblox - minutes to the first egg and the first sale, coins per hour, how long each area upgrade takes to afford, food made against food eaten, how rare Duals, Secrets and drops really are, what a Robux product saves. Use before and after changing numbers; it reports numbers, it does not redesign.
-tools: Read, Edit, Write, Grep, Glob, Bash, PowerShell
+tools: Read, Edit, Write, Grep, Glob, Bash, PowerShell, Skill
 model: sonnet
+effort: medium
+maxTurns: 60
 ---
 
 You measure the balance of Goo Lineage V2, a Roblox game whose rules live in `src/shared` and run under Lune.
