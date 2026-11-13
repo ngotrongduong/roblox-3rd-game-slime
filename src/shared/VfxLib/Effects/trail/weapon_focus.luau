@@ -231,7 +231,7 @@ return {
 	},
 	source = {
 		from = "the library, for Goo Lineage's held weapons (docs/vfx/plans/2026-11-12-weapons.md, redone 2026-11-13)",
-		art = "ribbon_blade (drawn in code for the library); the owner's arcane motes (moteArcane: Goo Lineage's own, kept as drawn) and spark star (sparkStar, tinted); free Creator Store pack textures (no scripts: glow_dot_small, star_glint_sharp, needle_glow, beam_ribbons, shard_flat, star_twinkle, beam_twist, star_flare, beam_starlight, beam_smoke_soft, star_fat, galaxy_spiral); arcane_band, leaves_solid (ChatGPT for the library); dust_ring (EffectCraft)",
+		art = "ribbon_blade (ChatGPT for the library: tools/chatgpt/ribbon_cut.py); the owner's arcane motes (moteArcane: Goo Lineage's own, kept as drawn) and spark star (sparkStar, tinted); free Creator Store pack textures (no scripts: glow_dot_small, star_glint_sharp, needle_glow, beam_ribbons, shard_flat, star_twinkle, beam_twist, star_flare, beam_starlight, beam_smoke_soft, star_fat, galaxy_spiral); arcane_band, leaves_solid (ChatGPT for the library); dust_ring (EffectCraft)",
 		licence = "the owner's own art; Creator Store free assets (no scripts kept)",
 	},
 	notes = "Attach to the focus's MeshPart (its length up its Y, the gem at the top) as a cast or an attack starts, variant = the rarity (wood, iron, core, bramble, legend); VfxLib.detach(handle) as the move ends lets the ribbon and what was shed fade. Wood and iron are cheap (one ribbon, two small pieces), core to legend mid; bramble and legend light the fight.",

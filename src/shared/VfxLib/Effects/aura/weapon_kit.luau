@@ -72,8 +72,8 @@ local function glint(texture, color, rate, size)
 	}
 end
 
--- (each particle keeps one of the four signs of the sheet, still)
-local ONE_OF = { layout = "Grid2x2", mode = "Loop", fps = { 0, 0 }, random = true }
+-- (the sign and the flask are ChatGPT clips: each particle plays its clip once over its life)
+local ONCE = { layout = "Grid4x4", mode = "OneShot" }
 
 return {
 	id = "aura.weapon_kit",
@@ -96,16 +96,17 @@ return {
 		bramble = {
 			pieces = {
 				glow({ 90, 225, 170 }, 2.8),
-				-- (the four alchemy signs going round the bag, leaving a few behind as they go)
+				-- (alchemy sigils going round the bag, left behind as they go: each draws itself, glints, bursts into
+				-- bubbles)
 				{
 					name = "signs",
-					texture = "glyph_alchemy",
+					texture = "alchemy_flip",
 					color = { { 255, 230, 140 }, { 150, 245, 190 } },
 					orbit = { radius = 0.9, period = 3, phase = 0, y = 1.6 },
-					rate = 3,
-					life = { 0.9, 1.2 },
-					size = { { 0, 0 }, { 0.2, 0.7 }, { 1, 0.45 } },
-					transparency = { { 0, 0.1 }, { 0.7, 0.25 }, { 1, 1 } },
+					rate = 2,
+					life = { 1, 1.2 },
+					size = { { 0, 0.75 }, { 1, 0.7 } },
+					transparency = { { 0, 0.05 }, { 0.85, 0.1 }, { 1, 1 } },
 					speed = { 0.1, 0.3 },
 					spread = { 180, 180 },
 					accel = { 0, 0.5, 0 },
@@ -113,7 +114,7 @@ return {
 					lightEmission = 0,
 					brightness = 1.4,
 					locked = false,
-					flipbook = ONE_OF,
+					flipbook = ONCE,
 				},
 				{
 					-- a drop of the game's acid dripping from the bag now and then (kept as drawn)
@@ -163,20 +164,20 @@ return {
 					brightness = 1.3,
 					locked = false,
 				},
-				-- (a golden flask standing over the bag like a crown: one always there, breathing as the next takes its
-				-- place)
+				-- (a golden flask standing over the bag like a crown, brewed again and again: it pops up, sloshes, pops
+				-- its cork, glints, bursts into bubbles, and the next one is already popping up)
 				{
 					name = "flask",
-					texture = "glyph_flask",
+					texture = "flask_flip",
 					color = { 255, 210, 90 },
 					at = "crown",
-					rate = 1 / 2.2,
+					rate = 1 / 2,
 					steady = true,
-					life = { 2.3, 2.3 },
-					size = { { 0, 0.85 }, { 0.15, 1.2 }, { 0.85, 1.2 }, { 1, 1 } },
-					transparency = { { 0, 1 }, { 0.12, 0.05 }, { 0.88, 0.05 }, { 1, 1 } },
-					rotation = { -8, 8 },
-					rotSpeed = { -6, 6 },
+					life = { 1.8, 1.8 },
+					size = { { 0, 1.25 }, { 1, 1.25 } },
+					transparency = { { 0, 0 }, { 0.9, 0 }, { 1, 1 } },
+					rotation = { -5, 5 },
+					flipbook = ONCE,
 					orientation = "FacingCameraWorldUp",
 					lightEmission = 0,
 					brightness = 1.6,
@@ -195,7 +196,7 @@ return {
 	},
 	source = {
 		from = "the library, for Goo Lineage's held weapons (docs/vfx/plans/2026-11-12-weapons.md, redone 2026-11-13)",
-		art = "glyph_alchemy, glyph_flask (drawn in code for the library); the owner's acid drop (acidDrop: Goo Lineage's own, kept as drawn); free Creator Store pack textures (no scripts: glow_soft, star_glint_sharp, star_twinkle); bubble_gloss (ChatGPT for the library)",
+		art = "alchemy_flip, flask_flip (ChatGPT clips drawn for the library: tools/chatgpt/clip_frames.py); the owner's acid drop (acidDrop: Goo Lineage's own, kept as drawn); free Creator Store pack textures (no scripts: glow_soft, star_glint_sharp, star_twinkle); bubble_gloss (ChatGPT for the library)",
 		licence = "the owner's own art; Creator Store free assets (no scripts kept)",
 	},
 	notes = "VfxLib.attach(kitMeshPart, id, { variant = rarity }) while a core, bramble or legend kit is held; VfxLib.detach(handle) when it is put away. Core is cheap (no light), bramble and legend mid with a small light.",

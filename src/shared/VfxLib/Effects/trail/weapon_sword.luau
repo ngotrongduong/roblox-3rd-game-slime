@@ -133,8 +133,10 @@ return {
 			},
 			pieces = {
 				glint("sparkStar", { { 255, 240, 255 }, { 200, 150, 255 } }, 7, 1.1),
-				shed("runes", "glyph_rune", { { 235, 215, 255 }, { 175, 125, 255 } }, 10, { 0.6, 0.85 }, 0.7, {
-					size = { { 0, 0.3 }, { 0.2, 0.75 }, { 1, 0.5 } },
+				-- (each rune unfolds, turns and shatters over its life: the clip)
+				shed("runes", "rune_flip", { { 235, 215, 255 }, { 175, 125, 255 } }, 8, { 0.7, 0.9 }, 0.85, {
+					size = { { 0, 0.85 }, { 1, 0.8 } },
+					flipbook = { layout = "Grid4x4", mode = "OneShot" },
 					speed = { 0.3, 1 },
 					accel = { 0, 1.2, 0 },
 					rotation = { -15, 15 },
@@ -221,7 +223,7 @@ return {
 	},
 	source = {
 		from = "the library, for Goo Lineage's held weapons (docs/vfx/plans/2026-11-12-weapons.md, redone 2026-11-13)",
-		art = "ribbon_blade, glyph_rune (drawn in code for the library); free Creator Store pack textures (no scripts: shard_flat, smoke_soft, star_glint_sharp, spark_dot, streak_slash, glow_dot_small, beam_light_shafts, star_flare, beam_flame_soft, fire_specks, fire_curl_flip); down_feather (ChatGPT for the library); the owner's spark star (sparkStar, tinted)",
+		art = "ribbon_blade (ChatGPT for the library: tools/chatgpt/ribbon_cut.py), rune_flip (a ChatGPT clip: tools/chatgpt/clip_frames.py); free Creator Store pack textures (no scripts: shard_flat, smoke_soft, star_glint_sharp, spark_dot, streak_slash, glow_dot_small, beam_light_shafts, star_flare, beam_flame_soft, fire_specks, fire_curl_flip); down_feather (ChatGPT for the library); the owner's spark star (sparkStar, tinted)",
 		licence = "the owner's own art; Creator Store free assets (no scripts kept)",
 	},
 	notes = "Attach to the sword's MeshPart (its length up its Y, the grip at the bottom) as an attack starts, variant = the rarity (wood, iron, core, bramble, legend); VfxLib.detach(handle) as the move ends lets the ribbon and what was shed fade. Wood and iron are cheap (one ribbon, two small pieces), core to legend mid; bramble and legend light the fight.",

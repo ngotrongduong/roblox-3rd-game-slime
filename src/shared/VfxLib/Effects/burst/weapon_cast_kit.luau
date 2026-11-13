@@ -103,8 +103,8 @@ local function mark(name, texture, color, size, over)
 	}, over)
 end
 
--- (each particle keeps one of the four signs of the sheet, still)
-local ONE_OF = { layout = "Grid2x2", mode = "Loop", fps = { 0, 0 }, random = true }
+-- (the signs and the flasks are ChatGPT clips: each particle plays its clip once over its life)
+local ONCE = { layout = "Grid4x4", mode = "OneShot" }
 
 return {
 	id = "burst.weapon_cast_kit",
@@ -187,14 +187,15 @@ return {
 					rotation = { 0, 0 },
 					zOffset = 0,
 				}),
-				-- (the four alchemy signs flung out of the kit, gold on the green)
-				burst("signs", "glyph_alchemy", { { 255, 230, 140 }, { 150, 245, 190 } }, 8, 0.85, {
-					life = { 0.6, 0.85 },
+				-- (alchemy sigils flung out of the kit, gold on the green: each draws itself, glints, bursts into bubbles)
+				burst("signs", "alchemy_flip", { { 255, 230, 140 }, { 150, 245, 190 } }, 6, 0.95, {
+					life = { 0.7, 0.9 },
+					size = { { 0, 0.95 }, { 1, 0.9 } },
 					speed = { 3, 6 },
 					spread = { 90, 90 },
 					rotation = { -20, 20 },
 					brightness = 1.4,
-					flipbook = ONE_OF,
+					flipbook = ONCE,
 				}),
 				acid(12),
 				burst("motes", "glow_dot_small", { { 190, 255, 215 }, { 80, 230, 160 } }, 14, 0.55, {
@@ -223,15 +224,16 @@ return {
 					1.4,
 					{ life = { 0.7, 1 }, speed = { 4, 8 }, spread = { 80, 80 } }
 				),
-				-- (golden flasks tumbling up out of the pack)
-				burst("flasks", "glyph_flask", { { 255, 225, 130 }, { 255, 185, 70 } }, 6, 1.3, {
-					life = { 0.7, 0.95 },
-					size = { { 0, 0.5 }, { 0.2, 1.3 }, { 1, 1 } },
+				-- (golden flasks thrown up out of the pack: each pops up, sloshes, pops its cork, bursts into bubbles)
+				burst("flasks", "flask_flip", { { 255, 225, 130 }, { 255, 185, 70 } }, 5, 1.3, {
+					life = { 0.8, 1 },
+					size = { { 0, 1.3 }, { 1, 1.25 } },
 					speed = { 5, 9 },
 					accel = { 0, -6, 0 },
-					rotation = { -25, 25 },
-					rotSpeed = { -120, 120 },
+					rotation = { -20, 20 },
+					rotSpeed = { -40, 40 },
 					brightness = 1.5,
+					flipbook = ONCE,
 				}),
 				acid(12),
 				-- (the floor under the slime: a ring of rays racing out, going round the rainbow)
@@ -259,7 +261,7 @@ return {
 	},
 	source = {
 		from = "the library, for Goo Lineage's held weapons (docs/vfx/plans/2026-11-12-weapons.md, redone 2026-11-13)",
-		art = "glyph_alchemy, glyph_flask (drawn in code for the library); the owner's acid drop (acidDrop: Goo Lineage's own, kept as drawn); the owner's spark star (sparkStar, tinted); free Creator Store pack textures (no scripts: star_glint_sharp, needle_glow, glow_dot_small, ring_line_b, ring_rays, rune_circle, star_flare, star_twinkle); dust_ring (EffectCraft); bubble_gloss, droplet_gloss (ChatGPT for the library)",
+		art = "alchemy_flip, flask_flip (ChatGPT clips drawn for the library: tools/chatgpt/clip_frames.py); the owner's acid drop (acidDrop: Goo Lineage's own, kept as drawn); the owner's spark star (sparkStar, tinted); free Creator Store pack textures (no scripts: star_glint_sharp, needle_glow, glow_dot_small, ring_line_b, ring_rays, rune_circle, star_flare, star_twinkle); dust_ring (EffectCraft); bubble_gloss, droplet_gloss (ChatGPT for the library)",
 		licence = "the owner's own art; Creator Store free assets (no scripts kept)",
 	},
 	notes = "VfxLib.play(id, kitHeadCFrame, { variant = rarity }) as the Acid Rain potion is thrown (the frame at the kit's handle end, up along it): the drops fly up, the game's rain falls after. Core, bramble and legend mark the floor straight under the head: pass opts.ground (the floor's height) when the game knows it, else the first floor below is found (characters left out; opts.ignore for more). Wood and iron are cheap, core to legend mid; bramble and legend flash a light.",

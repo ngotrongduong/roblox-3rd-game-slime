@@ -135,8 +135,11 @@ return {
 			pieces = {
 				crescent("cut", "crescent_moon", { 170, 105, 255 }, 3.2, { brightness = 1.4 }),
 				crescent("edge", "crescent_thin", { 245, 230, 255 }, 3.4, { life = { 0.2, 0.2 }, lightEmission = 1 }),
-				burst("runes", "glyph_rune", { { 235, 215, 255 }, { 170, 120, 255 } }, 8, 0.7, {
-					life = { 0.6, 0.8 },
+				-- (each rune unfolds, turns and shatters as it flies: the clip)
+				burst("runes", "rune_flip", { { 235, 215, 255 }, { 170, 120, 255 } }, 8, 0.95, {
+					life = { 0.65, 0.8 },
+					size = { { 0, 0.95 }, { 1, 0.9 } },
+					flipbook = { layout = "Grid4x4", mode = "OneShot" },
 					speed = { 3, 6 },
 					rotation = { -20, 20 },
 					brightness = 1.4,
@@ -198,9 +201,11 @@ return {
 					lightEmission = 1,
 				}),
 				-- (the floor under the slime: a golden sun stamped inside a ring of crimson fire rays)
-				mark("sun", "glyph_sun", { 255, 200, 70 }, 4.2, {
+				-- (the sun shoots out its rays, swells, cracks and sparkles away: the clip)
+				mark("sun", "sun_flip", { 255, 200, 70 }, 4.4, {
 					life = { 0.95, 0.95 },
-					size = { { 0, 1.5 }, { 0.15, 4.2 }, { 1, 4.6 } },
+					size = { { 0, 4.4 }, { 1, 4.6 } },
+					flipbook = { layout = "Grid4x4", mode = "OneShot" },
 					rotSpeed = { 30, 30 },
 					brightness = 1.5,
 				}),
@@ -216,7 +221,7 @@ return {
 	},
 	source = {
 		from = "the library, for Goo Lineage's held weapons (docs/vfx/plans/2026-11-12-weapons.md, redone 2026-11-13)",
-		art = "glyph_rune, glyph_sun (drawn in code for the library); free Creator Store pack textures (no scripts: crescent_moon, crescent_thin, shard_flat, star_glint_sharp, needle_glow, rune_circle_violet, ring_rays, ring_line_b, fire_curl_flip, fire_specks); dust_ring (EffectCraft); down_feather (ChatGPT for the library); the owner's spark star (sparkStar, tinted)",
+		art = "rune_flip, sun_flip (ChatGPT clips drawn for the library: tools/chatgpt/clip_frames.py); free Creator Store pack textures (no scripts: crescent_moon, crescent_thin, shard_flat, star_glint_sharp, needle_glow, rune_circle_violet, ring_rays, ring_line_b, fire_curl_flip, fire_specks); dust_ring (EffectCraft); down_feather (ChatGPT for the library); the owner's spark star (sparkStar, tinted)",
 		licence = "the owner's own art; Creator Store free assets (no scripts kept)",
 	},
 	notes = "VfxLib.play(id, swordHeadCFrame, { variant = rarity }) as the Dash Strike cuts (the frame's up along the blade). Core, bramble and legend mark the floor straight under the head: pass opts.ground (the floor's height) when the game knows it, else the first floor below is found (characters left out; opts.ignore for more). Wood and iron are cheap, core to legend mid; bramble and legend flash a light.",

@@ -131,26 +131,29 @@ return {
 		legend = {
 			pieces = {
 				gem({ 255, 195, 80 }, 3.2),
-				-- (a golden crown hanging over the shield: one always there, breathing as the next takes its place)
+				-- (a golden crown over the shield, forged again and again: it grows from a spark point by point, glints,
+				-- breaks into sparkles, and the next one is already growing)
 				{
 					name = "crown",
-					texture = "glyph_crown",
+					texture = "crown_flip",
 					color = { 255, 205, 80 },
 					at = "crown",
-					rate = 1 / 2.2,
+					rate = 1 / 2,
 					steady = true,
-					life = { 2.3, 2.3 },
-					size = { { 0, 1.1 }, { 0.15, 1.6 }, { 0.85, 1.6 }, { 1, 1.3 } },
-					transparency = { { 0, 1 }, { 0.12, 0.05 }, { 0.88, 0.05 }, { 1, 1 } },
+					life = { 1.8, 1.8 },
+					size = { { 0, 1.6 }, { 1, 1.6 } },
+					transparency = { { 0, 0 }, { 0.9, 0 }, { 1, 1 } },
+					flipbook = { layout = "Grid4x4", mode = "OneShot" },
 					rotation = { 0, 0 },
 					orientation = "FacingCameraWorldUp",
 					lightEmission = 0,
 					brightness = 1.6,
 				},
-				-- (the Bastion's arms rising off it: a fleur-de-lis, a banner, a castle, a crown, each its own)
-				wake("arms", "glyph_royal", { { 255, 228, 130 }, { 255, 190, 60 } }, 2, 0.75, {
+				-- (the Bastion's arms rising off it: each a fleur-de-lis growing from a spark, glinting, splitting)
+				wake("arms", "royal_flip", { { 255, 228, 130 }, { 255, 190, 60 } }, 1.6, 0.85, {
+					size = { { 0, 0.85 }, { 1, 0.8 } },
 					brightness = 1.5,
-					flipbook = ONE_OF,
+					flipbook = { layout = "Grid4x4", mode = "OneShot" },
 				}),
 				{
 					name = "glint",
@@ -181,7 +184,7 @@ return {
 	},
 	source = {
 		from = "the library, for Goo Lineage's held weapons (docs/vfx/plans/2026-11-12-weapons.md, redone 2026-11-13)",
-		art = "glyph_royal, glyph_crown (drawn in code for the library); free Creator Store pack textures (no scripts: glow_soft, shield_icon, star_glint_sharp, spec_star); leaves_solid (ChatGPT for the library); the owner's acid drop (acidDrop, kept as drawn)",
+		art = "royal_flip, crown_flip (ChatGPT clips drawn for the library: tools/chatgpt/clip_frames.py); free Creator Store pack textures (no scripts: glow_soft, shield_icon, star_glint_sharp, spec_star); leaves_solid (ChatGPT for the library); the owner's acid drop (acidDrop, kept as drawn)",
 		licence = "the owner's own art; Creator Store free assets (no scripts kept)",
 	},
 	notes = "VfxLib.attach(shieldMeshPart, id, { variant = rarity }) while a core, bramble or legend shield is held; VfxLib.detach(handle) when it is put away. Core is cheap (no light), bramble and legend mid with a small light.",

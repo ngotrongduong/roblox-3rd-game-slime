@@ -1,8 +1,9 @@
 -- Weapon Aura Sword: what Goo Lineage's finer swords give off while they are held (core Epic, bramble Mythic, legend
 -- Legendary; Common and Uncommon swords have none). The cheapest of the weapon's layers, for four slimes on a phone:
 -- a soft glow on the guard's gem and the rung's motif, drawn solid so it shows on snow. Core, the Runeblade: a violet
--- glow, lilac diamond runes rising off the blade. Bramble, the Dawnbreaker: a pink glow on the gem, a white-gold
--- feather circling the blade, a glint on the point, a warm light. Legend, Sunfire: glints on the gem, small flames
+-- glow, lilac diamond runes rising off the blade. Bramble, the Dawnbreaker: its whole aura in one ChatGPT clip (gold
+-- and pink light ribbons up the blade, the gem pulsing, a star on the tip, feathers spiralling), a warm light.
+-- Legend, Sunfire: glints on the gem, small flames
 -- licking up the blade, a golden sun turning over the point like a crown, embers, a fire light.
 local function with(base, over)
 	local out = table.clone(base)
@@ -65,44 +66,43 @@ return {
 	defaultVariant = "core",
 	pieces = {
 		gem({ 165, 105, 255 }, 1.8),
-		wake("runes", "glyph_rune", { { 235, 215, 255 }, { 170, 120, 255 } }, 3.5, 0.75, { brightness = 1.6 }),
+		-- (runes rising off the blade, each unfolding, turning and shattering as it goes: the clip)
+		wake("runes", "rune_flip", { { 235, 215, 255 }, { 170, 120, 255 } }, 2.5, 0.85, {
+			size = { { 0, 0.85 }, { 1, 0.8 } },
+			brightness = 1.6,
+			flipbook = { layout = "Grid4x4", mode = "OneShot" },
+		}),
 	},
 	variants = {
 		core = { tier = "cheap" },
 		bramble = {
 			pieces = {
-				gem({ 255, 150, 175 }, 2),
-				-- (a feather circling the blade, leaving a few behind as it goes round)
 				{
-					name = "feathers",
-					texture = "down_feather",
-					color = { { 255, 235, 175 }, { 255, 200, 110 } },
-					orbit = { radius = 0.75, period = 2.4, phase = 0, y = 2.4 },
-					rate = 7,
-					life = { 0.8, 1.1 },
-					size = { { 0, 0 }, { 0.2, 0.75 }, { 1, 0.45 } },
-					transparency = { { 0, 0.1 }, { 0.7, 0.25 }, { 1, 1 } },
-					speed = { 0.1, 0.3 },
-					spread = { 180, 180 },
-					accel = { 0, -0.6, 0 },
-					rotation = { 0, 359 },
-					rotSpeed = { -90, 90 },
+					-- (the whole aura in one picture drawn round the sword's empty shape, from ChatGPT's GIF of this very
+					-- sword: gold light ribbons rise up its left edge and pink ones up its right, the gem pulses, a star
+					-- flares on the tip at the peak, feathers spiral round; the clip once a life, 1.5 s, one always there,
+					-- the next taking over on the clip's dim first frame)
+					name = "aura",
+					texture = "dawn_aura_flip",
+					role = "keep",
+					at = "body",
+					rate = 1 / 1.5,
+					steady = true,
+					life = { 1.52, 1.52 },
+					-- (the sword's shape is 87% of the picture's height and a particle covers twice its Size: 3.5 / 0.87 / 2)
+					size = { { 0, 2 }, { 1, 2 } },
+					transparency = { { 0, 0 }, { 1, 0 } },
+					-- (stood along the blade by a crawl up it, so the picture leans as the sword leans; VelocityParallel lays
+					-- a picture's WIDTH along the flight, so the upright drawing is turned a quarter: lesson 255)
+					speed = { 0.05, 0.05 },
+					direction = "Top",
+					orientation = "VelocityParallel",
+					rotation = { -90, -90 },
+					flipbook = { layout = "Grid4x4", mode = "OneShot" },
 					lightEmission = 0,
-					brightness = 1.3,
-					locked = false,
-				},
-				{
-					name = "glint",
-					texture = "star_glint_sharp",
-					color = { { 255, 250, 230 }, { 255, 210, 110 } },
-					at = "head",
-					rate = 1.2,
-					life = { 0.35, 0.45 },
-					size = { { 0, 0 }, { 0.35, 1.5 }, { 1, 0 } },
-					rotation = { -20, 20 },
-					rotSpeed = { -60, 60 },
-					lightEmission = 1,
-					zOffset = 1,
+					-- (over the sword's faces: the gem's glow lies on the gem)
+					zOffset = 0.3,
+					locked = true,
 				},
 			},
 			light = { color = { 255, 210, 150 }, brightness = 1.3, range = 8 },
@@ -131,13 +131,15 @@ return {
 				-- (a golden sun turning over the point: one always there, breathing as the next takes its place)
 				{
 					name = "sun",
-					texture = "glyph_sun",
+					texture = "sun_flip",
 					color = { 255, 205, 80 },
 					at = "crown",
 					rate = 1 / 2.2,
 					steady = true,
 					life = { 2.3, 2.3 },
-					size = { { 0, 0.9 }, { 0.15, 1.3 }, { 0.85, 1.3 }, { 1, 1.1 } },
+					-- (each sun shoots out its rays, swells, cracks and sparkles away: the clip, slowed to its life)
+					size = { { 0, 1.4 }, { 1, 1.4 } },
+					flipbook = { layout = "Grid4x4", mode = "OneShot" },
 					transparency = { { 0, 1 }, { 0.12, 0.05 }, { 0.88, 0.05 }, { 1, 1 } },
 					rotation = { 0, 0 },
 					rotSpeed = { 25, 25 },
@@ -157,7 +159,7 @@ return {
 	},
 	source = {
 		from = "the library, for Goo Lineage's held weapons (docs/vfx/plans/2026-11-12-weapons.md, redone 2026-11-13)",
-		art = "glyph_rune, glyph_sun (drawn in code for the library); free Creator Store pack textures (no scripts: glow_soft, star_glint_sharp, fire_curl_flip, fire_specks); down_feather (ChatGPT for the library); the owner's spark star (sparkStar, tinted)",
+		art = "rune_flip, sun_flip (ChatGPT clips drawn for the library: tools/chatgpt/clip_frames.py); dawn_aura_flip (ChatGPT's GIF of the Dawnbreaker wearing it, rebuilt by ChatGPT as the effect alone: clip_frames.py --black); free Creator Store pack textures (no scripts: glow_soft, fire_curl_flip, fire_specks); the owner's spark star (sparkStar, tinted)",
 		licence = "the owner's own art; Creator Store free assets (no scripts kept)",
 	},
 	notes = "VfxLib.attach(swordMeshPart, id, { variant = rarity }) while a core, bramble or legend sword is held; VfxLib.detach(handle) when it is put away. Core is cheap (no light), bramble and legend mid with a small light.",

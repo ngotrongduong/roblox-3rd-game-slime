@@ -252,7 +252,7 @@ return {
 	},
 	source = {
 		from = "the library, for Goo Lineage's held weapons (docs/vfx/plans/2026-11-12-weapons.md, redone 2026-11-13)",
-		art = "ribbon_blade (drawn in code for the library); free Creator Store pack textures (no scripts: smoke_soft, star_twinkle, needle_glow, beam_ribbons, beam_edges, glow_dot_small, beam_wisp_b, star_flare, petals_small_flip, streak_slash, flower_bloom_flip); leaves_solid, blossom_five, daisy_colour (ChatGPT for the library); the owner's spark star (sparkStar, tinted)",
+		art = "ribbon_blade (ChatGPT for the library: tools/chatgpt/ribbon_cut.py); free Creator Store pack textures (no scripts: smoke_soft, star_twinkle, needle_glow, beam_ribbons, beam_edges, glow_dot_small, beam_wisp_b, star_flare, petals_small_flip, streak_slash, flower_bloom_flip); leaves_solid, blossom_five, daisy_colour (ChatGPT for the library); the owner's spark star (sparkStar, tinted)",
 		licence = "the owner's own art; Creator Store free assets (no scripts kept)",
 	},
 	notes = "Attach to the staff's MeshPart (its length up its Y, the head at the top) as a heal or an attack starts, variant = the rarity (wood, iron, core, bramble, legend); VfxLib.detach(handle) as the move ends lets the ribbon and what was shed fade. Wood and iron are cheap (one ribbon, two small pieces), core to legend mid; bramble and legend light the fight.",

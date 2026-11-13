@@ -225,16 +225,16 @@ return {
 				}),
 				flash("flash", "flare_bright", { 220, 230, 255 }, 3),
 				streaks({ { 210, 222, 255 }, { 110, 130, 230 } }, 12, 1.8),
-				-- (silver notes flung out with the arrow, each kept still on one of the sheet's four)
-				burst("notes", "glyph_notes", { { 215, 225, 255 }, { 150, 170, 255 } }, 10, 1, {
-					life = { 0.6, 0.85 },
-					size = { { 0, 0.5 }, { 0.2, 1.05 }, { 1, 0.7 } },
+				-- (silver notes flung out with the arrow, each popping out, bobbing to a beat and sparkling away: the clip)
+				burst("notes", "notes_flip", { { 215, 225, 255 }, { 150, 170, 255 } }, 10, 1.1, {
+					life = { 0.7, 0.9 },
+					size = { { 0, 1.1 }, { 1, 1.05 } },
 					speed = { 3, 7 },
 					spread = { 60, 60 },
 					accel = { 0, 3, 0 },
-					rotation = { -20, 20 },
+					rotation = { -15, 15 },
 					brightness = 1.5,
-					flipbook = { layout = "Grid2x2", mode = "Loop", fps = { 0, 0 }, random = true },
+					flipbook = { layout = "Grid4x4", mode = "OneShot" },
 				}),
 				-- (the floor under the slime: a split silver ring round a gold moon)
 				-- (a deep moon blue, drawn normal: a silver ring is lost on snow)
@@ -257,7 +257,7 @@ return {
 	},
 	source = {
 		from = "the library, for Goo Lineage's held weapons (docs/vfx/plans/2026-11-12-weapons.md, redone 2026-11-13)",
-		art = "glyph_notes (drawn in code for the library); free Creator Store pack textures (no scripts: star_flare, star_flare_big, flare_bright, star_glint_sharp, streak_vertical, shard_flat, ring_crisp, windspin_b, swirl_wind_ring, star_fat, star_twinkle, ring_thorned, crescent_moon, ring_split); down_feather, gust_curl (ChatGPT for the library)",
+		art = "notes_flip (a ChatGPT clip drawn for the library: tools/chatgpt/clip_frames.py); free Creator Store pack textures (no scripts: star_flare, star_flare_big, flare_bright, star_glint_sharp, streak_vertical, shard_flat, ring_crisp, windspin_b, swirl_wind_ring, star_fat, star_twinkle, ring_thorned, crescent_moon, ring_split); down_feather, gust_curl (ChatGPT for the library)",
 		licence = "the owner's own art; Creator Store free assets (no scripts kept)",
 	},
 	notes = "VfxLib.play(id, bowHeadCFrame, { variant = rarity }) as the Piercing Shot is loosed: the frame's up along the bow, its +x toward the shot (the owner's bows bulge that way, the string on -x); the shot's pieces sit 1.6 studs down the bow, at the string. Core, bramble and legend mark the floor straight under the head: pass opts.ground (the floor's height) when the game knows it, else the first floor below is found (characters left out; opts.ignore for more). Wood and iron are cheap, core to legend mid; bramble and legend flash a light.",

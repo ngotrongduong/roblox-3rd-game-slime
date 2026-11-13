@@ -98,8 +98,8 @@ local function bubbles(color, rate, size, over)
 	)
 end
 
--- (each particle keeps one of the four signs of the sheet, still)
-local ONE_OF = { layout = "Grid2x2", mode = "Loop", fps = { 0, 0 }, random = true }
+-- (the signs and the flasks are ChatGPT clips: each particle plays its clip once over its life)
+local ONCE = { layout = "Grid4x4", mode = "OneShot" }
 
 return {
 	id = "trail.weapon_kit",
@@ -192,15 +192,16 @@ return {
 			},
 			pieces = {
 				glint("star_flare", { { 255, 252, 230 }, { 255, 205, 110 } }, 6, 1.6),
-				-- (the four alchemy signs left hanging in the arc, rising a little, gold on the green)
-				shed("signs", "glyph_alchemy", { { 255, 230, 140 }, { 150, 245, 190 } }, 8, { 0.6, 0.85 }, 0.75, {
-					size = { { 0, 0.3 }, { 0.2, 0.8 }, { 1, 0.55 } },
+				-- (alchemy sigils left hanging in the arc, rising a little, gold on the green: each draws itself, glints,
+				-- bursts into bubbles)
+				shed("signs", "alchemy_flip", { { 255, 230, 140 }, { 150, 245, 190 } }, 6, { 0.75, 0.95 }, 0.85, {
+					size = { { 0, 0.85 }, { 1, 0.8 } },
 					speed = { 0.3, 1 },
 					accel = { 0, 1.2, 0 },
 					rotation = { -15, 15 },
-					rotSpeed = { -40, 40 },
+					rotSpeed = { -25, 25 },
 					brightness = 1.4,
-					flipbook = ONE_OF,
+					flipbook = ONCE,
 				}),
 				-- (the game's own acid dripping off the bag, kept as drawn)
 				shed("acid", "acidDrop", nil, 8, { 0.4, 0.6 }, 0.55, {
@@ -248,15 +249,16 @@ return {
 					1.3,
 					{ life = { 0.6, 0.9 } }
 				),
-				-- (golden flasks tumbling up out of the pack)
-				shed("flasks", "glyph_flask", { { 255, 225, 130 }, { 255, 185, 70 } }, 5, { 0.6, 0.8 }, 1.1, {
+				-- (golden flasks bobbing up out of the pack: each pops up, sloshes, pops its cork, bursts into bubbles)
+				shed("flasks", "flask_flip", { { 255, 225, 130 }, { 255, 185, 70 } }, 4, { 0.8, 1 }, 1.15, {
 					at = "chest",
-					size = { { 0, 0.4 }, { 0.2, 1.15 }, { 1, 0.8 } },
+					size = { { 0, 1.15 }, { 1, 1.1 } },
 					speed = { 1, 2 },
 					accel = { 0, 2, 0 },
-					rotation = { -25, 25 },
-					rotSpeed = { -60, 60 },
+					rotation = { -15, 15 },
+					rotSpeed = { -25, 25 },
 					brightness = 1.5,
+					flipbook = ONCE,
 				}),
 				shed("twinkles", "star_twinkle", { { 255, 250, 225 }, { 255, 205, 100 } }, 10, { 0.35, 0.55 }, 0.6, {
 					box = { 1, 0.8, 1 },
@@ -271,7 +273,7 @@ return {
 	},
 	source = {
 		from = "the library, for Goo Lineage's held weapons (docs/vfx/plans/2026-11-12-weapons.md, redone 2026-11-13)",
-		art = "ribbon_blade, glyph_alchemy, glyph_flask (drawn in code for the library); the owner's acid drop (acidDrop: Goo Lineage's own, kept as drawn); the owner's spark star (sparkStar, tinted); free Creator Store pack textures (no scripts: beam_edges, beam_ribbons, streak_slash, smoke_soft, star_glint_sharp, spark_dot, glow_dot_small, star_flare, star_twinkle); bubble_gloss, droplet_gloss (ChatGPT for the library)",
+		art = "ribbon_blade (ChatGPT for the library: tools/chatgpt/ribbon_cut.py), alchemy_flip, flask_flip (ChatGPT clips: tools/chatgpt/clip_frames.py); the owner's acid drop (acidDrop: Goo Lineage's own, kept as drawn); the owner's spark star (sparkStar, tinted); free Creator Store pack textures (no scripts: beam_edges, beam_ribbons, streak_slash, smoke_soft, star_glint_sharp, spark_dot, glow_dot_small, star_flare, star_twinkle); bubble_gloss, droplet_gloss (ChatGPT for the library)",
 		licence = "the owner's own art; Creator Store free assets (no scripts kept)",
 	},
 	notes = "Attach to the kit's MeshPart (its length up its Y, the handle at the top, though it is wider than tall; held by the handle, the bag swung below) as a throw or an attack starts, variant = the rarity (wood, iron, core, bramble, legend); VfxLib.detach(handle) as the move ends lets the smear and what was shed fade. Wood and iron are cheap (one smear, two small pieces), core to legend mid; bramble and legend light the fight.",

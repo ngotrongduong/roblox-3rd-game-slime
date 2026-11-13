@@ -164,9 +164,9 @@ while renewed, and takes it off when it runs out, when the fighter falls or when
 | guarded | Bark Wall and other guards | `buff.stat_set` "defence" | yes |
 | stunned | stuns (Bramble Burst, Shield Bash, bosses), as long as the stun really lasts | `buff.emote` "confused" over the head | placement only |
 | melted | Acid Rain, on every foe struck | `buff.acid_melt`: acid runs and popping bubbles on the body | yes, on the real slime mesh |
-| slowed | stings and the monsters' slowing specials (acid, roots, frost) | `buff.slowed`, variants `sting`, `acid`, `roots`, `frost` by skill | yes; `sting` and `frost` sent back |
+| slowed | stings and the monsters' slowing specials (acid, roots, frost) | `buff.slowed`, variants `sting`, `acid`, `roots`, `frost` by skill: round the foot | yes, on the real slime mesh |
 
-Both came from the library on 2026-11-13 (e2037cf). Seen on the game's slime mesh from its camera, 16 studs back (a row
-of five, one look each): the melt and the acid sludge sit right, the roots a little tall; the honey strands of `sting`
-make a cage taller than the slime and the `frost` crust a flat wall over it, both hiding the slime. Both were sent back
-to the library to hug the foot (low strands to a puddle; a crust up a third of the body); a re-import brings the fix.
+Both came from the library on 2026-11-13. The first cut (e2037cf) hid the slime under `sting`'s honey cage and
+`frost`'s flat wall: its ring was emitted round the slime's head. The library's 1da91f8 lays every slow on a flat ring
+on the ground just outside the body, all six pictures ChatGPT clips: honey strands to a puddle, a low crust of frost
+shards, sludge heaps, roots to 2.2 studs. Seen again on the game's slime mesh from close by: the slime stays clear.

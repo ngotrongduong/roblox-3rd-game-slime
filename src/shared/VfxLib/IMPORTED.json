@@ -1,6 +1,6 @@
 {
   "about": "Imported from the owner's VfxLib (C:\\roblox-vfx-library) by tools/import.luau: change the library, not these files.",
-  "commit": "e2037cf",
+  "commit": "1da91f8",
   "effects": [
     "aura.monster_signature",
     "aura.secret_signature",

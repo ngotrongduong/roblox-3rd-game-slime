@@ -21,8 +21,9 @@ fought by each fighter's place like the Dungeon; slimes there showed no weapon o
   only. Seen in an Arena replay: the rival team in its row, each with its weapon in hand.
 - **Library e2037cf imported**: the redone weapon effects (78 new designs, same ids) and the last two status looks,
   `buff.acid_melt` and `buff.slowed`, so every lasting effect now shows. Weapon casts that mark the floor skip their
-  own slime and weapon (`ignore`). Seen in an Arena replay (no error) and the status looks on the real slime mesh:
-  the slow's `sting` and `frost` hide the slime and went back to the library for a fix (`SKILL-VFX.md` §6).
+  own slime and weapon (`ignore`). The owner found the first cut ugly; the library redrew them as ChatGPT clips
+  (1da91f8, imported): the slows now sit round the foot and the slime stays clear. Seen in an Arena replay (no error)
+  and on the real slime mesh (`SKILL-VFX.md` §6).
 
 ## 2026-11-13 — longer ranged reach, skill power by rarity, single and area targets, effects that last show
 

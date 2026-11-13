@@ -24,8 +24,6 @@ local FLOOR_ART = "ChatGPT picture drawn for the owner's library (textures/floor
 local WING_ART = "ChatGPT picture drawn for the owner's library (textures/wings/)"
 local SKILL_ART = "ChatGPT picture drawn for the owner's library (textures/fx/, textures/wings/)"
 local EC_ART = "rendered for the owner's library by EffectCraft from a recipe (textures/fx/, tools/effectcraft/)"
-local CODE_ART =
-	"drawn in code for the owner's library (textures/fx/: tools/glyph_art.py, tools/ribbon_strip.py, tools/status_art.py)"
 local SLIME_WING_ART =
 	"ChatGPT picture drawn for the owner's library in the style of the owner's Goo Lineage slime art (textures/wings/)"
 
@@ -301,26 +299,32 @@ Textures.Images = {
 	-- (the same way: a Beam from the vanes (top row) to the head; drawn 1 : 4, stored square)
 	bolt_steel = { id = 137919394637748, from = EC_ART }, -- a crossbow bolt: dark wood, iron vanes, brass bands, broad head
 
-	-- Drawn in code (2026-11-13, Goo Lineage's held weapons): light grey with alpha, a dark rim, tinted and drawn NORMAL
-	-- so the colour holds on snow and on a dark floor. Symbols from Windows' Segoe UI Symbol (tools/glyph_art.py):
-	glyph_notes = { id = 70693391063748, from = CODE_ART }, -- music notes: one, two beamed, four beamed, a quarter (2 x 2)
-	glyph_alchemy = { id = 110540771620743, from = CODE_ART }, -- alchemy's air, fire, earth, water triangles (2 x 2)
-	glyph_royal = { id = 111221042362180, from = CODE_ART }, -- a fleur-de-lis, a banner, a castle, a crown (2 x 2)
-	glyph_crown = { id = 87519561218288, from = CODE_ART }, -- a crown of five ball-tipped points
-	glyph_sun = { id = 79526042047392, from = CODE_ART }, -- a sun disc and eight rays
-	glyph_rune = { id = 137946531612008, from = CODE_ART }, -- four diamonds round a point: a diamond rune
-	glyph_flask = { id = 77950118205666, from = CODE_ART }, -- an alembic: a round flask, its spout curling over, on a stand
-	-- (a Trail's strip, tools/ribbon_strip.py: a blade's cut, its top edge (Attachment0: the tip on a weapon band) a
-	-- dark rim over a hard bright line, its body thinning away toward the bottom edge)
-	ribbon_blade = { id = 105536149143355, from = CODE_ART },
-	-- Full colour, worn untinted (role "keep"; tools/status_art.py, 2026-11-13, Goo Lineage's slows and armour melt):
-	-- solid, a dark rim of their own colour, goo lit as a glossy dome. 2 x 2: four stills; 4 x 4: one OneShot.
-	acid_runs = { id = 93042924686318, from = CODE_ART }, -- green acid: a splotch, a stream, a drop at its end (2 x 2)
-	acid_fizz = { id = 135298862383821, from = CODE_ART }, -- acid bubbles swell and pop, a wisp curls up (4 x 4)
-	acid_sludge = { id = 136204762542753, from = CODE_ART }, -- a lumpy heap of green acid sludge, bubbles (2 x 2)
-	honey_strands = { id = 121405689216869, from = CODE_ART }, -- honey strands stretch and snap (4 x 4)
-	roots_coil = { id = 113009368431454, from = CODE_ART }, -- brown roots break out, coil up, two leaves (4 x 4)
-	rime_creep = { id = 74091273748347, from = CODE_ART }, -- an ice crust mound rising, shards growing (4 x 4)
+	-- (a Trail's strip drawn by ChatGPT for Goo Lineage's held weapons, 2026-11-13, cut by tools/chatgpt/ribbon_cut.py:
+	-- a blade's slash, its top edge (Attachment0: the tip on a weapon band) a dark rim over a hard white edge, its body
+	-- long painted speed streaks breaking into wisps toward the bottom edge; grey, tinted per rung and drawn NORMAL so
+	-- the colour holds on snow and on a dark floor)
+	ribbon_blade = { id = 111850810092618, from = SKILL_ART },
+	-- ChatGPT clips (2026-11-13, the owner's way: a 1-3 s clip drawn by ChatGPT as 16 frames, cut, keyed off magenta and
+	-- put back together by tools/chatgpt/clip_frames.py; one window for every frame, so the motion stays as drawn).
+	-- Full colour, worn untinted (role "keep"), solid with a dark rim, 4 x 4 OneShot:
+	acid_runs_flip = { id = 83050140248619, from = SKILL_ART }, -- a glob of acid swells, runs down in streams, foams, thins
+	acid_fizz_flip = { id = 135071260596271, from = SKILL_ART }, -- acid foam: bubbles swell and pop in turn, wisps curl up
+	honey_flip = { id = 91355511813437, from = SKILL_ART }, -- honey strands rise from a puddle, stretch, snap, drip back
+	sludge_flip = { id = 121442310210954, from = SKILL_ART }, -- an acid splat heaves into a clinging heap, pops, sinks
+	roots_flip = { id = 105250729328065, from = SKILL_ART }, -- clods burst, roots rise and coil, leaves open, they sink
+	rime_flip = { id = 121581220368299, from = SKILL_ART }, -- frost rises into a crystal mound, glints, cracks, crumbles
+	-- White and light grey with a dark rim, TINTED per rarity and drawn normal (the weapons' signs), 4 x 4 OneShot:
+	rune_flip = { id = 125074325509032, from = SKILL_ART }, -- a diamond rune unfolds, rings itself, turns, shatters
+	sun_flip = { id = 106693046227888, from = SKILL_ART }, -- a sun disc shoots out its rays, swells, cracks, sparkles away
+	notes_flip = { id = 135817671555668, from = SKILL_ART }, -- music notes pop out, bob to a beat, sparkle away
+	royal_flip = { id = 122042176023639, from = SKILL_ART }, -- a fleur-de-lis grows from a spark, glints, splits, drifts
+	crown_flip = { id = 111824848817011, from = SKILL_ART }, -- a crown rises from its band point by point, glints, breaks
+	alchemy_flip = { id = 121857226586912, from = SKILL_ART }, -- an alchemy sigil draws itself, glints, bursts into bubbles
+	flask_flip = { id = 102659339614661, from = SKILL_ART }, -- a flask pops up, sloshes, pops its cork, bursts into bubbles
+	-- A held weapon's whole aura, light drawn on black round the empty shape of the sword (the owner's way: ChatGPT made
+	-- a GIF of the sword itself wearing it, then rebuilt only the effect frame by frame; clip_frames.py --black), worn
+	-- normal over the sword, untinted, 4 x 4 OneShot, played as a loop:
+	dawn_aura_flip = { id = 92686934725704, from = SKILL_ART }, -- gold and pink light ribbons rise round a sword, its gem pulses, a star flares on the tip, feathers spiral
 }
 
 -- The pictures of the packs that the baker met (tools/bake.luau writes them here: `lune run tools/bake.luau`). Each is

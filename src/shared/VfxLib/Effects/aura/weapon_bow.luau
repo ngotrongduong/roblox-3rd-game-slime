@@ -113,14 +113,15 @@ return {
 					lightEmission = 0.6,
 					zOffset = 1,
 				}),
-				-- (silver notes rising off the strings, each kept still on one of the sheet's four)
-				wake("notes", "glyph_notes", { { 200, 212, 255 }, { 120, 140, 245 } }, 3, 0.9, {
+				-- (silver notes rising off the strings, each popping out, bobbing to a beat and sparkling away: the clip)
+				wake("notes", "notes_flip", { { 200, 212, 255 }, { 120, 140, 245 } }, 2.5, 0.95, {
+					size = { { 0, 0.95 }, { 1, 0.9 } },
 					speed = { 0.3, 0.6 },
 					spread = { 25, 25 },
 					direction = "Top",
-					rotation = { -15, 15 },
+					rotation = { -10, 10 },
 					brightness = 1.5,
-					flipbook = { layout = "Grid2x2", mode = "Loop", fps = { 0, 0 }, random = true },
+					flipbook = { layout = "Grid4x4", mode = "OneShot" },
 				}),
 				-- (a gold crescent moon hanging over the bow: one always there, breathing as the next takes its place)
 				{
@@ -151,7 +152,7 @@ return {
 	},
 	source = {
 		from = "the library, for Goo Lineage's held weapons (docs/vfx/plans/2026-11-12-weapons.md, redone 2026-11-13)",
-		art = "glyph_notes (drawn in code for the library); free Creator Store pack textures (no scripts: glow_soft, star_fat, star_glint_sharp, crescent_moon, star_twinkle); down_feather (ChatGPT for the library); the owner's spark star (sparkStar, tinted)",
+		art = "notes_flip (a ChatGPT clip drawn for the library: tools/chatgpt/clip_frames.py); free Creator Store pack textures (no scripts: glow_soft, star_fat, star_glint_sharp, crescent_moon, star_twinkle); down_feather (ChatGPT for the library); the owner's spark star (sparkStar, tinted)",
 		licence = "the owner's own art; Creator Store free assets (no scripts kept)",
 	},
 	notes = "VfxLib.attach(bowMeshPart, id, { variant = rarity }) while a core, bramble or legend bow is held; VfxLib.detach(handle) when it is put away. Core is cheap (no light), bramble and legend mid with a small light.",

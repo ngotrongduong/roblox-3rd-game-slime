@@ -214,15 +214,16 @@ return {
 		legend = {
 			pieces = {
 				ward("ward", "shield_icon", { 60, 100, 240 }, 3.6, { brightness = 1.6 }),
-				-- (a golden crown rising over the crest and hanging there)
+				-- (a golden crown rising over the crest: it grows from a spark point by point, glints, breaks into sparkles)
 				{
 					name = "crown",
-					texture = "glyph_crown",
+					texture = "crown_flip",
 					color = { 255, 205, 80 },
 					count = 1,
-					life = { 0.9, 0.9 },
-					size = { { 0, 1 }, { 0.15, 2.4 }, { 1, 2.6 } },
-					transparency = { { 0, 0 }, { 0.7, 0.05 }, { 1, 1 } },
+					life = { 0.95, 0.95 },
+					size = { { 0, 2.4 }, { 1, 2.6 } },
+					transparency = { { 0, 0 }, { 0.9, 0 }, { 1, 1 } },
+					flipbook = { layout = "Grid4x4", mode = "OneShot" },
 					speed = { 3, 3 },
 					direction = "Top",
 					spread = { 0, 0 },
@@ -233,13 +234,14 @@ return {
 					brightness = 1.6,
 					zOffset = 2,
 				},
-				-- (the Bastion's arms flung out: a fleur-de-lis, a banner, a castle, a crown, each its own)
-				burst("arms", "glyph_royal", { { 255, 228, 130 }, { 255, 190, 60 } }, 10, 1, {
-					life = { 0.6, 0.85 },
+				-- (the Bastion's arms flung out: each a fleur-de-lis growing from a spark, glinting, splitting)
+				burst("arms", "royal_flip", { { 255, 228, 130 }, { 255, 190, 60 } }, 7, 1.1, {
+					life = { 0.7, 0.9 },
+					size = { { 0, 1.1 }, { 1, 1.05 } },
 					speed = { 4, 8 },
 					rotation = { -15, 15 },
 					brightness = 1.5,
-					flipbook = ONE_OF,
+					flipbook = { layout = "Grid4x4", mode = "OneShot" },
 				}),
 				burst("specks", "spec_star", { { 255, 245, 200 }, { 255, 205, 80 } }, 16, 0.55, {
 					speed = { 5, 10 },
@@ -264,7 +266,7 @@ return {
 	},
 	source = {
 		from = "the library, for Goo Lineage's held weapons (docs/vfx/plans/2026-11-12-weapons.md, redone 2026-11-13)",
-		art = "glyph_royal, glyph_crown (drawn in code for the library); free Creator Store pack textures (no scripts: shield_icon, shard_flat, ring_crisp, needle_glow, ring_rays, spec_star, rune_ring_ornate); dust_ring (EffectCraft); leaves_solid (ChatGPT for the library); the owner's shield icon (icon_defence), acid splash (acidSplat), goo blob (gooBlob) and acid ring (ringAcid), all kept as drawn",
+		art = "royal_flip, crown_flip (ChatGPT clips drawn for the library: tools/chatgpt/clip_frames.py); free Creator Store pack textures (no scripts: shield_icon, shard_flat, ring_crisp, needle_glow, ring_rays, spec_star, rune_ring_ornate); dust_ring (EffectCraft); leaves_solid (ChatGPT for the library); the owner's shield icon (icon_defence), acid splash (acidSplat), goo blob (gooBlob) and acid ring (ringAcid), all kept as drawn",
 		licence = "the owner's own art; Creator Store free assets (no scripts kept)",
 	},
 	notes = "VfxLib.play(id, shieldHeadCFrame, { variant = rarity }) as the Taunt is called (the frame's up along the shield). Core, bramble and legend mark the floor straight under the head: pass opts.ground (the floor's height) when the game knows it, else the first floor below is found (characters left out; opts.ignore for more). Wood and iron are cheap, core to legend mid; bramble and legend flash a light.",

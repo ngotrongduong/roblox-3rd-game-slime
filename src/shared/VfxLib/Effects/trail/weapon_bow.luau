@@ -201,15 +201,15 @@ return {
 			},
 			pieces = {
 				glint("star_flare", { { 250, 250, 255 }, { 180, 200, 255 } }, 7, 2.2),
-				-- (silver notes rising off the strings, kept still on one of the sheet's four)
-				shed("notes", "glyph_notes", { { 215, 225, 255 }, { 150, 170, 255 } }, 10, { 0.7, 0.95 }, 0.9, {
-					size = { { 0, 0.4 }, { 0.2, 0.95 }, { 1, 0.7 } },
+				-- (silver notes rising off the strings, each popping out, bobbing to a beat and sparkling away: the clip)
+				shed("notes", "notes_flip", { { 215, 225, 255 }, { 150, 170, 255 } }, 8, { 0.8, 1 }, 1, {
+					size = { { 0, 1 }, { 1, 0.95 } },
 					speed = { 0.3, 1 },
 					accel = { 0, 1.4, 0 },
-					rotation = { -15, 15 },
-					rotSpeed = { -30, 30 },
+					rotation = { -10, 10 },
+					rotSpeed = { -20, 20 },
 					brightness = 1.5,
-					flipbook = { layout = "Grid2x2", mode = "Loop", fps = { 0, 0 }, random = true },
+					flipbook = { layout = "Grid4x4", mode = "OneShot" },
 				}),
 				shed("moons", "crescent_moon", { { 255, 235, 160 }, { 255, 200, 90 } }, 6, { 0.6, 0.8 }, 1.3, {
 					size = { { 0, 0.5 }, { 0.25, 1.3 }, { 1, 0.9 } },
@@ -232,7 +232,7 @@ return {
 	},
 	source = {
 		from = "the library, for Goo Lineage's held weapons (docs/vfx/plans/2026-11-12-weapons.md, redone 2026-11-13)",
-		art = "glyph_notes (drawn in code for the library); free Creator Store pack textures (no scripts: beam_edges, beam_wisp_b, beam_starlight, streak_slash, shard_flat, smoke_soft, star_glint_sharp, spark_dot, star_flare, star_fat, star_twinkle, crescent_moon); down_feather, gust_curl (ChatGPT for the library)",
+		art = "notes_flip (a ChatGPT clip drawn for the library: tools/chatgpt/clip_frames.py); free Creator Store pack textures (no scripts: beam_edges, beam_wisp_b, beam_starlight, streak_slash, shard_flat, smoke_soft, star_glint_sharp, spark_dot, star_flare, star_fat, star_twinkle, crescent_moon); down_feather, gust_curl (ChatGPT for the library)",
 		licence = "the owner's own art; Creator Store free assets (no scripts kept)",
 	},
 	notes = "Attach to the bow's MeshPart (its length up its Y, limb tip to limb tip) as a shot is drawn, variant = the rarity (wood, iron, core, bramble, legend); VfxLib.detach(handle) as the move ends lets the lines and what was shed fade. Wood and iron are cheap (one band, two small pieces), core to legend mid; bramble and legend light the fight.",

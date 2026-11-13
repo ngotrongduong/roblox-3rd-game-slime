@@ -11,27 +11,34 @@
 --          each; clods of earth kicked up
 --   frost  rime (the Ice map's Icicle Bite, Crystal Burst, Frost Breath, Frost Gale): a crust of ice creeping up its
 --          foot, shards growing out of it; a frosty mist at the ground
--- The strands, sludge, fizz, roots and rime are drawn in code (tools/status_art.py), the honey drop is the game's own:
--- all worn as drawn. At a 3-stud slime.
+-- The strands, sludge, fizz, roots and rime are ChatGPT clips (16 frames each, tools/chatgpt/clip_frames.py), each
+-- played once over a particle's life; the honey drop is the game's own: all worn as drawn. At a 3-stud slime.
 
--- (each picture of a 2 x 2 sheet kept still, one a particle; a 4 x 4 played once over each life)
-local ONE_OF = { layout = "Grid2x2", mode = "Loop", fps = { 0, 0 }, random = true }
+-- (a clip played once over each life)
 local ONCE = { layout = "Grid4x4", mode = "OneShot" }
+-- (the clods: each picture of a 2 x 2 sheet kept still, one a particle)
+local ONE_OF = { layout = "Grid2x2", mode = "Loop", fps = { 0, 0 }, random = true }
 
--- (a picture standing in a ring round the slime's foot as wide as the slime, its own foot on the ground: `lift` is the
--- picture's middle over the ground; about as tall as the slime's lower two thirds, so it reads from the dungeon camera:
--- seen in Studio 2026-11-13, at 1.4 studs on a ring inside the slime's own width it hid in its body; at five a second
--- the side facing the camera was often bare)
-local function clinging(name, texture, size, lift, rate, life, flipbook)
+-- (a picture standing in a ring round the slime's foot as wide as the slime, its own foot on the ground and `height`
+-- studs tall: a particle covers about twice its Size (lesson 117), so Size and the lift of its middle are both half the
+-- height. The clips fill their cell at their peak, so `height` is how high the look climbs. The game's slime body is
+-- SOLID and the ones in front cover it: honey and frost stay low round the foot and the slime stays clear (in the game
+-- 2026-11-13 strands 1.6 times its height caged it and a frost card hid it). The ring is a FLAT box a little wider
+-- than the body (3.6 studs on the game's 3.17): a Disc is born on its part's top face (lesson 212), so the old
+-- `radius = 1.5` (a cube 3 studs tall) put the ring round the slime's head, and on the solid body only what stood
+-- over the head or past its sides was seen; at five a second the near side was bare)
+local RING = { 1.14, 0.01, 1.14 }
+local function clinging(name, texture, height, rate, life, flipbook)
+	local size = height / 2
 	return {
 		name = name,
 		texture = texture,
 		role = "keep",
 		at = "ground",
-		radius = 1.5,
+		box = RING,
 		shape = "Disc",
 		shapeStyle = "Surface",
-		lift = lift,
+		lift = size,
 		rate = rate,
 		life = life,
 		size = { { 0, size }, { 1, size * 1.05 } },
@@ -39,8 +46,8 @@ local function clinging(name, texture, size, lift, rate, life, flipbook)
 		speed = { 0, 0 },
 		orientation = "FacingCameraWorldUp",
 		flipbook = flipbook,
-		-- (small: the ones behind the slime stay behind it)
-		zOffset = 0.15,
+		-- (a pull toward the camera that keeps the near ones over the body's curve; the ones behind stay behind it)
+		zOffset = 0.35,
 		locked = true,
 	}
 end
@@ -60,21 +67,22 @@ return {
 	-- (its preview: once what clings to the foot has built up)
 	markers = { peak = 1.4 },
 	pieces = {
-		-- (no taller than the slime's lower two thirds: the ones behind it are drawn over a see-through slime, their tops
-		-- would stand over it as a roof)
-		clinging("strands", "honey_strands", 2.1, 0.9, 8, { 0.9, 1.1 }, ONCE),
+		-- (strands from the slime's underside to a puddle, under half its height: the slime itself stays in sight)
+		clinging("strands", "honey_flip", 1.4, 8, { 1.3, 1.6 }, ONCE),
 		{
-			-- (honey dripping off the slime's lower body)
+			-- (honey dripping off the slime's lower body: born on its skin, a box a share wider than the body, since the
+			-- body is solid and a drop inside it is never seen)
 			name = "drips",
 			texture = "honey_drop",
 			role = "keep",
 			at = "waist",
-			box = { 0.8, 0.3, 0.8 },
+			box = { 1.05, 0.15, 1.05 },
 			shape = "Box",
 			shapeStyle = "Surface",
 			rate = 4,
 			life = { 0.5, 0.7 },
-			size = { { 0, 0.3 }, { 0.2, 0.6 }, { 1, 0.5 } },
+			-- (drops about half a stud across: a particle covers twice its Size)
+			size = { { 0, 0.15 }, { 0.2, 0.28 }, { 1, 0.24 } },
 			transparency = { { 0, 0 }, { 0.8, 0 }, { 1, 1 } },
 			speed = { 0, 0.2 },
 			accel = { 0, -10, 0 },
@@ -87,23 +95,23 @@ return {
 		sting = {},
 		acid = {
 			pieces = {
-				-- (heaps of sludge stuck round the foot: the heap is the lower half of each picture)
-				clinging("sludge", "acid_sludge", 2.2, 0.9, 6, { 1.3, 1.7 }, ONE_OF),
+				-- (sludge round the foot: a splat heaves up into a clinging heap, pops, slumps back; half the slime)
+				clinging("sludge", "sludge_flip", 1.5, 7, { 1.3, 1.6 }, ONCE),
 				-- (bubbles fizzing and popping on the sludge, wisps of acid smoke)
-				clinging("fizz", "acid_fizz", 1.5, 1.2, 5, { 0.9, 1.1 }, ONCE),
+				clinging("fizz", "acid_fizz_flip", 1.3, 4, { 1, 1.2 }, ONCE),
 			},
 		},
 		roots = {
 			pieces = {
-				-- (living long past their growing, so most stand grown)
-				clinging("roots", "roots_coil", 2.4, 1.1, 7, { 1.3, 1.6 }, ONCE),
+				-- (the clip once over each life: break out, coil, leaf, sink back)
+				clinging("roots", "roots_flip", 2.2, 6, { 1.4, 1.7 }, ONCE),
 				{
 					-- (clods of earth kicked up where the roots break out)
 					name = "clods",
 					texture = "rocks",
 					role = "keep",
 					at = "ground",
-					radius = 1.5,
+					box = RING,
 					shape = "Disc",
 					shapeStyle = "Surface",
 					rate = 5,
@@ -123,14 +131,16 @@ return {
 		},
 		frost = {
 			pieces = {
-				clinging("rime", "rime_creep", 2.4, 1.1, 7, { 1.1, 1.4 }, ONCE),
+				-- (a crust of small crystal mounds all round the foot, a third of the slime's height: many small ones hug
+				-- the round body, one big one is a card)
+				clinging("rime", "rime_flip", 1.1, 12, { 1.2, 1.5 }, ONCE),
 				{
 					-- (a frosty mist rising off the ground round the foot)
 					name = "mist",
 					texture = "smoke_frost",
 					role = "keep",
 					at = "ground",
-					radius = 1.6,
+					box = { 1.2, 0.01, 1.2 },
 					shape = "Disc",
 					shapeStyle = "Surface",
 					lift = 0.3,
@@ -149,7 +159,7 @@ return {
 	},
 	source = {
 		from = "the library, for Goo Lineage's status looks (Config.Zombies.View.Status.Looks, 2026-11-13)",
-		art = "honey_strands, acid_sludge, acid_fizz, roots_coil, rime_creep (drawn in code for the library: tools/status_art.py); the owner's honey drop (honey_drop: Goo Lineage's own, kept as drawn); free Creator Store pack textures (no scripts: rocks, smoke_frost)",
+		art = "honey_flip, sludge_flip, acid_fizz_flip, roots_flip, rime_flip (ChatGPT clips drawn for the library: tools/chatgpt/clip_frames.py); the owner's honey drop (honey_drop: Goo Lineage's own, kept as drawn); free Creator Store pack textures (no scripts: rocks, smoke_frost)",
 		licence = "the owner's own art; Creator Store free assets (no scripts kept)",
 	},
 	notes = 'VfxLib.attach(slimeModel, "buff.slowed", { variant = "sting" | "acid" | "roots" | "frost" }) as the slow starts; VfxLib.detach(handle) as it ends (1.5 to 3 s). Cheap: two emitters a variant, on up to four slimes at once.',

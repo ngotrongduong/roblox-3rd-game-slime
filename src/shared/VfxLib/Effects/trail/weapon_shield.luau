@@ -215,15 +215,15 @@ return {
 			},
 			pieces = {
 				glint("star_flare", { { 255, 250, 225 }, { 255, 200, 90 } }, 7, 2.2),
-				-- (the Bastion's arms rising where it passed: a fleur-de-lis, a banner, a castle, a crown, each its own)
-				shed("arms", "glyph_royal", { { 255, 228, 130 }, { 255, 190, 60 } }, 9, { 0.7, 0.95 }, 1, {
-					size = { { 0, 0.4 }, { 0.2, 1.05 }, { 1, 0.85 } },
+				-- (the Bastion's arms rising where it passed: each a fleur-de-lis growing from a spark, glinting, splitting)
+				shed("arms", "royal_flip", { { 255, 228, 130 }, { 255, 190, 60 } }, 6, { 0.8, 1 }, 1.05, {
+					size = { { 0, 1.05 }, { 1, 1 } },
 					speed = { 0.3, 1 },
 					accel = { 0, 1.2, 0 },
 					rotation = { -10, 10 },
-					rotSpeed = { -30, 30 },
+					rotSpeed = { -20, 20 },
 					brightness = 1.5,
-					flipbook = ONE_OF,
+					flipbook = { layout = "Grid4x4", mode = "OneShot" },
 				}),
 				shed("specks", "spec_star", { { 255, 245, 200 }, { 255, 205, 80 } }, 14, { 0.4, 0.6 }, 0.55, {
 					lightEmission = 1,
@@ -234,7 +234,7 @@ return {
 	},
 	source = {
 		from = "the library, for Goo Lineage's held weapons (docs/vfx/plans/2026-11-12-weapons.md, redone 2026-11-13)",
-		art = "ribbon_blade, glyph_royal (drawn in code for the library); free Creator Store pack textures (no scripts: shard_flat, smoke_soft, star_glint_sharp, needle_glow, beam_edges, shield_icon, spec_star, beam_lava, beam_twist, beam_light_shafts, star_flare); leaves_solid (ChatGPT for the library); the owner's acid drop (acidDrop, kept as drawn) and spark star (sparkStar, tinted)",
+		art = "ribbon_blade (ChatGPT for the library: tools/chatgpt/ribbon_cut.py), royal_flip (a ChatGPT clip: tools/chatgpt/clip_frames.py); free Creator Store pack textures (no scripts: shard_flat, smoke_soft, star_glint_sharp, needle_glow, beam_edges, shield_icon, spec_star, beam_lava, beam_twist, beam_light_shafts, star_flare); leaves_solid (ChatGPT for the library); the owner's acid drop (acidDrop, kept as drawn) and spark star (sparkStar, tinted)",
 		licence = "the owner's own art; Creator Store free assets (no scripts kept)",
 	},
 	notes = "Attach to the shield's MeshPart (its length up its Y) as a bash or a block starts, variant = the rarity (wood, iron, core, bramble, legend); VfxLib.detach(handle) as the move ends lets the wall and what was shed fade. Wood and iron are cheap (one ribbon, two small pieces), core to legend mid; bramble and legend light the fight.",
