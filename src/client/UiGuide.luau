@@ -376,6 +376,7 @@ local sides: { [string]: string } = {
 	slimes = "left",
 	market = "left",
 	home = "left",
+	rewards = "left",
 	food = "below",
 	skull = "right",
 }

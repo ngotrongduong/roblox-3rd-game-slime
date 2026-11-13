@@ -136,6 +136,10 @@ return function(T: any)
 		farm.lifetime.coinsEarned += 40
 		now += 60
 		Guide.update(farm, now, HOME)
+		-- the last step: the community rewards, passed by with Next
+		T.eq(stepOf(farm), "social")
+		T.eq(farm.tutorialDone, false)
+		T.ok(Guide.next(farm, "social", now))
 		T.eq(stepOf(farm), Guide.Done)
 		T.eq(farm.tutorialDone, true)
 		T.eq(farm.tutorialDoneAt, now)

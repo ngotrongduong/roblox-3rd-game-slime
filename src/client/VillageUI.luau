@@ -104,6 +104,7 @@ local reasons: { [string]: string } = {
 	INVALID_STAT_OR_SLOT = "Choose a valid stat.",
 	INVALID_RECIPE_OR_SLOT = "Not available.",
 	SERVER_ERROR = "Please try again.",
+	NOT_DONE = "Not done yet.",
 }
 
 local function failure(reason: any): string

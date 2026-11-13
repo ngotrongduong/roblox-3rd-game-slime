@@ -2754,7 +2754,8 @@ Config.Save = {
 	-- 13: what Robux sells (docs/MONETIZATION.md): `boosts` (Gold and Hatch Potion end times), `robux` (receipts granted,
 	--     the passes Roblox said the player owns, the Starter Pack flag, quest redraws and Streak Savers bought and not
 	--     used yet), and six teams in place of four.
-	SchemaVersion = 13,
+	-- 14: the community rewards taken (`rewards.social`: favorite, group).
+	SchemaVersion = 14,
 	-- A stored envelope without a version is this one.
 	FirstSchemaVersion = 1,
 
@@ -3379,6 +3380,7 @@ Config.Guide = {
 		"team",
 		"attack",
 		"win",
+		"social",
 	},
 	-- The intros of later features, most urgent first: each opens once, when its feature starts to matter.
 	Intros = {
@@ -3605,6 +3607,21 @@ Config.Rewards = {
 	IndexPicturesPerFrame = 2,
 	-- The red dot on the Rewards button while something waits.
 	BadgeSize = 18,
+}
+
+-- ===== Community rewards: favorite the game, join the owner's group (shared/Social; the tutorial's last step) =====
+-- Each is paid once per player, a reward of Config.Rewards' kind (coins are shares of the cheapest next upgrade).
+Config.Social = {
+	-- The owner's Roblox community (group) id. 0 = not set yet: the group's reward and button stay hidden.
+	GroupId = 0,
+	-- The place the favorite prompt names; 0 = the place being played (game.PlaceId).
+	PlaceId = 0,
+	Favorite = { coins = 3, luck = 30, spins = 3 } :: Reward,
+	Group = { coins = 5, luck = 60, spins = 5, items = { material("monster_core", 2) } } :: Reward,
+	-- A player may ask the server to check them again only this often (each check asks Roblox's web services).
+	CheckCooldownSeconds = 3,
+	-- The client waits at most this long for the player to answer Roblox's favorite prompt.
+	PromptWaitSeconds = 60,
 }
 
 -- ===== Goals: permanent milestones, each paid once (shared/Rewards, the Goals tab of the Rewards sheet) =====

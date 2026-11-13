@@ -1,5 +1,20 @@
 # Status
 
+## 2026-11-14 — favorite the game and join the group: a big gift each, the tutorial's last step
+
+The owner: every game asks players to favorite it and join its community, with a big reward; put it at the end of the
+tutorial. Done (`shared/Social`, `Config.Social`, save schema 14 `rewards.social`):
+- **Tutorial step `social`** (last of `Config.Guide.Steps`): "A big gift! Tap the trophy..." with Next and Skip; the
+  arrow points at the trophy, which shows on this step; the sheet opens on its new **Community** tab. Taking every gift
+  or Next ends the tutorial. Players past the tutorial find the same tab on the trophy (its badge counts what waits).
+- **Favorite** (3x the cheapest upgrade in coins, 30 min luck, 3 spins) and **Join our group** (5x, 60 min, 5 spins, 2
+  monster cores), each paid once. The group is checked on the server (`IsInGroupAsync`, then the player's group list);
+  a favorite cannot be seen by a server, so the client's word is taken once. `Config.Social.GroupId` is 0: **the group
+  row stays hidden until the owner sends his group id**.
+- Debug menu: Guide > "Last step". Seen in Studio on an iPhone 17 Pro frame: the card, the arrow at the trophy, the
+  Community tab with its row. Not verifiable in Studio: Roblox's favorite and join prompts (an unpublished place has no
+  favorite; no group id yet). The two icons (`favorite`, `community`) are stand-ins until drawn.
+
 ## 2026-11-13 — one fight everywhere: camps and the Arena by places, Piercing Shot pierces, weapons drawn
 
 The owner: Piercing Shot must fly through, every foe on the arrow's path takes the blow; the camps and the Arena must be

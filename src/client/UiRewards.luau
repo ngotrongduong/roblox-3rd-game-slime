@@ -4,8 +4,10 @@
 -- tab each. It draws what the server published on the village folder (Rewards, Wheel, WheelSpins, OnlineSince) and asks the server
 -- to claim or spin; a reward is its pictures and short numbers, never how it is worked out. Also keeps the trophy's badge and the
 -- luck chip on time.
+local AvatarEditorService = game:GetService("AvatarEditorService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Debris = game:GetService("Debris")
+local GroupService = game:GetService("GroupService")
 local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
 
@@ -44,6 +46,8 @@ type RowSpec = {
 	state: number,
 	onClaim: () -> (),
 	onReroll: (() -> ())?,
+	-- the Claim button's word, when it is not "Claim" (a community reward's "Favorite", "Join")
+	button: string?,
 }
 
 local UiRewards = {}
@@ -79,6 +83,7 @@ local TABS = {
 	{ id = "goals", icon = "goals" },
 	{ id = "online", icon = "online" },
 	{ id = "wheel", icon = "spin" },
+	{ id = "social", icon = "community" },
 }
 
 -- The picture of each kind of quest.
@@ -540,7 +545,7 @@ local function listRow(parent: Instance, spec: RowSpec): Frame
 	else
 		UiKit.button(side, {
 			Name = "Claim",
-			Text = "Claim",
+			Text = spec.button or "Claim",
 			Style = if spec.state == 1 then "good" else "secondary",
 			Enabled = spec.state == 1,
 			LayoutOrder = 3,
@@ -806,6 +811,95 @@ local function drawOnline(host: Frame, data: { [string]: any })
 	footLine(host, function()
 		return "Played today: " .. clock(playedSeconds())
 	end)
+end
+
+-- ===== the community rewards (shared/Social) =====
+
+-- Roblox's favorite prompt for this game. Returns whether the game is a favorite now (it may already be one).
+local function promptFavorite(): boolean
+	local placeId = if Config.Social.PlaceId > 0 then Config.Social.PlaceId else game.PlaceId
+	if placeId <= 0 then
+		-- (a place never published, as in a Studio test: there is nothing to favorite)
+		UiKit.toast("Favorites open in the live game.")
+		return false
+	end
+	local known, already = pcall(function(): boolean
+		return AvatarEditorService:GetFavoriteAsync(placeId, Enum.AvatarItemType.Asset)
+	end)
+	if known and already then
+		return true
+	end
+	local result: EnumItem? = nil
+	local connection = AvatarEditorService.PromptSetFavoriteCompleted:Once(function(answer: EnumItem)
+		result = answer
+	end)
+	local shown = pcall(function()
+		AvatarEditorService:PromptSetFavorite(placeId, Enum.AvatarItemType.Asset, true)
+	end)
+	if not shown then
+		UiKit.toast("Please try again.")
+	end
+	local waited = 0
+	while shown and result == nil and waited < Config.Social.PromptWaitSeconds do
+		waited += task.wait(0.2)
+	end
+	connection:Disconnect()
+	return result == Enum.AvatarPromptResult.Success
+end
+
+-- Roblox's prompt to join the owner's group. Returns whether the server should look (joined, already in, or the prompt
+-- could not say: the server asks Roblox itself).
+local function promptGroup(): boolean
+	local done, status = pcall(function(): any
+		return (GroupService :: any):PromptJoinAsync(Config.Social.GroupId)
+	end)
+	if not done then
+		return true
+	end
+	local name = if typeof(status) == "EnumItem" then status.Name else ""
+	if name == "JoinRequestPending" then
+		UiKit.toast("Request sent! Claim once you are in.")
+	end
+	return name == "Joined" or name == "AlreadyMember"
+end
+
+local SOCIAL_TEXT: { [string]: string } = { favorite = "Favorite the game", group = "Join our group" }
+local SOCIAL_BUTTON: { [string]: string } = { favorite = "Favorite", group = "Join" }
+local socialBusy = false
+
+-- One row a community reward: { kind, taken, coins, luck, spins, items }. Its button opens Roblox's prompt, then asks the
+-- server to pay.
+local function drawSocial(host: Frame, data: { [string]: any })
+	local list = scroller(host, 0)
+	UiKit.make("UIListLayout", { Padding = UDim.new(0, U.Gap), SortOrder = Enum.SortOrder.LayoutOrder }, list)
+	for index, row in data.social or {} do
+		local kind = tostring(row[1])
+		local reward = fromRow(row, 3, 4, 5, 6)
+		listRow(list, {
+			name = "Social" .. index,
+			order = index,
+			icon = if kind == "group" then "community" else "favorite",
+			text = SOCIAL_TEXT[kind] or kind,
+			have = 0,
+			need = 0,
+			reward = reward,
+			state = if row[2] == true then 2 else 1,
+			button = SOCIAL_BUTTON[kind],
+			onClaim = function()
+				if socialBusy then
+					return
+				end
+				socialBusy = true
+				task.spawn(function()
+					local go = if kind == "group" then promptGroup() else promptFavorite()
+					socialBusy = false
+					if go then
+						claim({ action = "ClaimSocial", kind = kind }, reward)
+					end
+				end)
+			end,
+		})
+	end
 end
 
 -- ===== the Lucky Wheel =====
@@ -1226,6 +1320,11 @@ local function readyTabs(data: { [string]: any }): { [string]: boolean }
 		end
 	end
 	ready.wheel = wheelSpins() > 0
+	for _, row in data.social or {} do
+		if row[2] ~= true then
+			ready.social = true
+		end
+	end
 	return ready
 end
 
@@ -1298,6 +1397,8 @@ render = function()
 		drawOnline(host, data)
 	elseif tab == "wheel" then
 		drawWheel(host)
+	elseif tab == "social" then
+		drawSocial(host, data)
 	else
 		drawDaily(host, data)
 	end
@@ -1319,6 +1420,11 @@ function UiRewards.open()
 			tab = item.id
 			break
 		end
+	end
+	-- (the tutorial's last step sent the player here for the community rewards)
+	local own = if ctx then ctx.own() else nil
+	if ready.social and own and own:GetAttribute("GuideId") == "social" then
+		tab = "social"
 	end
 	showOdds = false
 	narrowSheet = UiKit.units(UiKit.root()).X < R.SheetWidth + 2 * U.Edge

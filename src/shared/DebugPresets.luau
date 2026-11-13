@@ -543,6 +543,16 @@ function DebugPresets.resetGuide(farm: Farm): (boolean, string)
 	return true, "Tutorial reset"
 end
 
+-- Puts the tutorial on its last step, the community rewards, with neither taken (to see and try that step).
+function DebugPresets.socialStep(farm: Farm): (boolean, string)
+	farm.tutorialDone = false
+	farm.tutorialDoneAt = nil
+	farm.guide = FarmState.newGuide(false)
+	farm.guide.step = "social"
+	farm.rewards.social = { favorite = false, group = false }
+	return true, "Tutorial: community step"
+end
+
 -- ===== the menu =====
 -- What the Studio panel shows, in order: groups of items. `kind`: "farm" runs here (DebugPresets.run); "undo", "fresh" and
 -- "travel" are done by the server (OwnerDebug) because they need the stored copy, a new farm or the character; "arena" goes
@@ -590,6 +600,7 @@ DebugPresets.Menu = {
 		items = {
 			{ id = "guide_skip", text = "Skip tutorial", kind = "farm" },
 			{ id = "guide_reset", text = "Reset tutorial", kind = "farm" },
+			{ id = "guide_social", text = "Last step", kind = "farm" },
 		},
 	},
 	{
@@ -664,6 +675,8 @@ function DebugPresets.run(farm: Farm, id: any, now: number, args: any): (boolean
 		return DebugPresets.skipGuide(farm, now)
 	elseif id == "guide_reset" then
 		return DebugPresets.resetGuide(farm)
+	elseif id == "guide_social" then
+		return DebugPresets.socialStep(farm)
 	end
 	return false, "Unknown action"
 end

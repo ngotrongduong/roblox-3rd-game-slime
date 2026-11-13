@@ -11,6 +11,7 @@ local Guide = if script then require(script.Parent.Guide) else require("./Guide"
 local Products = if script then require(script.Parent.Products) else require("./Products")
 local Rewards = if script then require(script.Parent.Rewards) else require("./Rewards")
 local Shop = if script then require(script.Parent.Shop) else require("./Shop")
+local Social = if script then require(script.Parent.Social) else require("./Social")
 local Stations = if script then require(script.Parent.Stations) else require("./Stations")
 local Village = if script then require(script.Parent.Village) else require("./Village")
 local Wheel = if script then require(script.Parent.Wheel) else require("./Wheel")
@@ -32,6 +33,9 @@ export type Env = {
 	userId: number,
 	seed: () -> number,
 	isVip: () -> boolean,
+	-- A community reward's proof (shared/Social): the server asked Roblox whether the player is in the group, or the client
+	-- said the favorite was set. Missing = not done.
+	socialDone: ((kind: string) -> boolean)?,
 }
 
 local VillageRequests = {}
@@ -170,6 +174,8 @@ function VillageRequests.valid(data: any, hasPlot: boolean): boolean
 		return shortText(data.key)
 	elseif action == "ClaimOnline" then
 		return integer(data.step) and data.step >= 1 and data.step <= #Config.Rewards.Online
+	elseif action == "ClaimSocial" then
+		return type(data.kind) == "string" and table.find(Social.Kinds, data.kind) ~= nil
 	end
 	return false
 end
@@ -330,6 +336,9 @@ function VillageRequests.run(farm: any, data: any, now: number, env: Env): (bool
 		-- (the value answered is the slice's index on the wheel; the prize is already paid)
 		local ok, why, slice = Wheel.spin(farm, env.seed(), now, env.isVip())
 		return ok, why, slice
+	elseif action == "ClaimSocial" then
+		local proof = env.socialDone
+		return Social.claim(farm, data.kind, proof ~= nil and proof(data.kind), now)
 	elseif action == "IndexSeen" then
 		if farm.rewards.indexSeen then
 			return false, "TAKEN"

@@ -73,6 +73,9 @@ return {
 		luck = 76165751061122,
 		rewards = 92181600961063,
 		collection = 91176780566160,
+		-- The community rewards (shared/Social): the favorite star and the group's banner. NOT DRAWN YET (ChatGPT).
+		favorite = 0,
+		community = 0,
 		-- The Slime Dungeon's gate sheet header: a stone portal ring with a blue swirl (ChatGPT, 2026-11-04, art/icons/dg_dungeon.png).
 		dungeon = 136488942687177,
 		-- The lock over the Dungeon portal and the bag of the inventory (ChatGPT, 2026-11-04).

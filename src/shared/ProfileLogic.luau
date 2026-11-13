@@ -486,6 +486,18 @@ function ProfileLogic.migrateRobux(data: any, _now: number): any
 	return out
 end
 
+-- A farm saved before the community rewards (schema 13): neither taken yet.
+function ProfileLogic.migrateSocial(data: any, _now: number): any
+	if type(data) ~= "table" then
+		return data
+	end
+	local out = ProfileLogic.deepCopy(data)
+	if type(out.rewards) == "table" and type(out.rewards.social) ~= "table" then
+		out.rewards.social = { favorite = false, group = false }
+	end
+	return out
+end
+
 -- Runs the steps from `fromVersion` to `toVersion`, each found by its `from`, so the list may be in
 -- any order. Refuses data from a newer version instead of guessing at it.
 function ProfileLogic.migrate(

@@ -1,6 +1,7 @@
 --!strict
 -- One throttled, validated command surface; all profile mutations go through PlayerData.update.
 -- The rules themselves are in shared/VillageRequests, where the tests hold them.
+local GroupService = game:GetService("GroupService")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
@@ -42,9 +43,43 @@ local function rateAllowed(player: Player): boolean
 	return true
 end
 
--- What the rules need to know about this player that only the server can see.
-local function envOf(player: Player): VillageRequests.Env
+-- Whether the player is in the owner's group (Config.Social.GroupId). The server may keep the answer it had when the player
+-- came in, so a "no" is asked again from the player's list of groups (a join made a moment ago in Roblox's prompt shows
+-- there).
+local function inGroup(player: Player): boolean
+	local id = Config.Social.GroupId
+	if id <= 0 then
+		return false
+	end
+	local ok, member = pcall(function(): boolean
+		return player:IsInGroupAsync(id)
+	end)
+	if ok and member then
+		return true
+	end
+	local listed, groups = pcall(function(): any
+		return GroupService:GetGroupsAsync(player.UserId)
+	end)
+	if listed and type(groups) == "table" then
+		for _, group in groups do
+			if type(group) == "table" and group.Id == id then
+				return true
+			end
+		end
+	end
+	return false
+end
+
+-- A community reward's claim asks Roblox's web services: once every CheckCooldownSeconds a player.
+local socialAt: { [Player]: number } = {}
+
+-- What the rules need to know about this player that only the server can see. `social`: the proof of a community reward,
+-- found before the save is opened (asking Roblox yields).
+local function envOf(player: Player, social: boolean?): VillageRequests.Env
 	return {
+		socialDone = function(): boolean
+			return social == true
+		end,
 		isOut = function(slimeId: string): boolean
 			return Village.isOut(player, slimeId)
 		end,
@@ -109,6 +144,17 @@ local function request(player: Player, data: any): { ok: boolean, reason: string
 		end
 		return { ok = result.ok, reason = result.reason, value = nil }
 	end
+	-- A community reward: the group is checked with Roblox here; a favorite cannot be seen by a server, the client's word
+	-- is taken (shared/Social).
+	local social: boolean? = nil
+	if action == "ClaimSocial" then
+		local last = socialAt[player]
+		if last and os.clock() - last < Config.Social.CheckCooldownSeconds then
+			return { ok = false, reason = "RATE_LIMIT" }
+		end
+		socialAt[player] = os.clock()
+		social = if data.kind == "group" then inGroup(player) else true
+	end
 	local now = os.time()
 	local ok = false
 	local why: string? = "NOT_READY"
@@ -117,7 +163,7 @@ local function request(player: Player, data: any): { ok: boolean, reason: string
 
 	local success, err = pcall(function()
 		PlayerData.update(player, function(farm: any)
-			ok, why, value = VillageRequests.run(farm, data, now, envOf(player))
+			ok, why, value = VillageRequests.run(farm, data, now, envOf(player, social))
 			if ok and action == "UpgradeArea" then
 				upgradedLevel = (farm.areas :: any)[data.areaId].level
 			end
@@ -173,7 +219,7 @@ local function request(player: Player, data: any): { ok: boolean, reason: string
 			"rewards:",
 			player.Name,
 			action,
-			data.index or data.step or data.id or "",
+			data.index or data.step or data.id or data.kind or "",
 			"paid",
 			value or 0
 		)
@@ -243,6 +289,7 @@ function VillageRemotes.start()
 	areaChanged = changed
 	Players.PlayerRemoving:Connect(function(player: Player)
 		limits[player] = nil
+		socialAt[player] = nil
 	end)
 end
 

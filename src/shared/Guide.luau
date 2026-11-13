@@ -11,6 +11,7 @@ local Breeding = if script then require(script.Parent.Breeding) else require("./
 local Config = if script then require(script.Parent.Config) else require("./Config")
 local FarmState = if script then require(script.Parent.FarmState) else require("./FarmState")
 local Rewards = if script then require(script.Parent.Rewards) else require("./Rewards")
+local Social = if script then require(script.Parent.Social) else require("./Social")
 local Stations = if script then require(script.Parent.Stations) else require("./Stations")
 local VillageRules = if script then require(script.Parent.Village) else require("./Village")
 local Zombies = if script then require(script.Parent.Zombies) else require("./Zombies")
@@ -246,6 +247,18 @@ local steps: { [string]: Step } = {
 		end,
 		done = function(farm, _, mark)
 			return coinsEarned(farm) > mark
+		end,
+	},
+	-- The community rewards (shared/Social) on their tab of the rewards sheet; Next or Skip passes them by, and they wait
+	-- there for later.
+	social = {
+		line = if Social.offered("group")
+			then "Big gifts! Tap the trophy to favorite the game and join our group."
+			else "A big gift! Tap the trophy and favorite the game.",
+		target = "hud:rewards",
+		tip = true,
+		done = function(farm)
+			return Social.waiting(farm) == 0
 		end,
 	},
 }

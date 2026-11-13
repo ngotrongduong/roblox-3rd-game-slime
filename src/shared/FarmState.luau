@@ -124,7 +124,8 @@ export type Guide = { step: string, mark: number, intro: string?, introMark: num
 -- quests.rerolls/freeUsed: redraws of today's list (all, and the free ones among them); checkins: check-ins taken in all,
 -- milestones: the Config.Rewards.CheckinMilestones indexes taken; weekly: the UTC week (ArenaSeason.weekOf) the five weekly
 -- quests were made for, and whether the Weekly Chest was taken; goals: Config.Goals ids taken; wheel (shared/Wheel): the UTC
--- day of the free spins, how many were used that day, and the bank of spins that never expires.
+-- day of the free spins, how many were used that day, and the bank of spins that never expires. Schema 14: social: the
+-- community rewards taken (shared/Social), each paid once.
 export type Quest = { kind: string, need: number, mark: number, claimed: boolean }
 export type Rewards = {
 	daily: { streak: number, day: number },
@@ -136,6 +137,7 @@ export type Rewards = {
 	weekly: { week: number, list: { Quest }, chest: boolean },
 	goals: { [string]: boolean },
 	wheel: { day: number, used: number, bank: number },
+	social: { favorite: boolean, group: boolean },
 }
 -- The Slime Dungeon (shared/Dungeon): the highest dungeon level cleared, 0 for none (level best + 1 is the next to open).
 export type Dungeon = { best: number }
@@ -361,6 +363,7 @@ function FarmState.newRewards(): Rewards
 		weekly = { week = 0, list = {}, chest = false },
 		goals = {},
 		wheel = { day = 0, used = 0, bank = 0 },
+		social = { favorite = false, group = false },
 	}
 end
 
@@ -1467,6 +1470,9 @@ local function validateRewards(raw: any, warnings: { string }): Rewards
 		out.online = { day = nonNegInt(online.day, 0), secs = nonNegInt(online.secs, 0), claimed = claimed }
 	end
 	out.indexSeen = raw.indexSeen == true
+	if type(raw.social) == "table" then
+		out.social = { favorite = raw.social.favorite == true, group = raw.social.group == true }
+	end
 	return out
 end
 

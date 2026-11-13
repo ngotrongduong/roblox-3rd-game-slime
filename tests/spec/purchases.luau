@@ -595,7 +595,7 @@ return function(T)
 	-- ===== the schema-13 save =====
 
 	T.test("a schema 12 save migrates: no boosts, no receipts, six teams, nothing else touched", function()
-		T.eq(Config.Save.SchemaVersion, 13)
+		T.eq(Config.Save.SchemaVersion, 14)
 		local farm = FarmKit.farm(NOW, FarmKit.many(6))
 		farm.coins = 777
 		farm.teams[1].members = { "s1", "s2" }
