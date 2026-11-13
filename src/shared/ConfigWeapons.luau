@@ -73,6 +73,10 @@ return {
 		Cast = "burst.weapon_cast_",
 		Aura = "aura.weapon_",
 		AuraTiers = { core = true, bramble = true, legend = true },
+		-- A plain blow as it lands on a foe: the family's own impact at its tier, over the mark. Its numbers are made
+		-- for a body HitHeight studs tall: it is sized to the one struck.
+		Hit = "hit.weapon_",
+		HitHeight = 2.2,
 	},
 	Families = {
 		-- `grip`: the point held, in the piece's own box (-0.5..0.5 a side); `muzzle`: where its shots and casts leave

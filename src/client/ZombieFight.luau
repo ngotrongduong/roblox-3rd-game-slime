@@ -1161,6 +1161,17 @@ local function impact(event: { [string]: any }, style: FightFx.Style)
 	elseif not (s and looksOf(event).ownHit) or (looksOf(event).pierce and aims[event.from] ~= event.to) then
 		-- (a class skill the library draws brings its own hit; a piercing arrow's only where it is aimed)
 		FightFx.mark(style, skin, skin - dir * 3, heavy)
+		local family = if attacker and not s then SlimeWeapon.familyOf(attacker.model) else nil
+		if attacker and family then
+			-- (a plain blow of a held weapon: its family's own impact at its tier, along the blow, sized to the one
+			-- struck; the higher tiers' floor pieces lie at its feet)
+			local W = Config.Weapons.Fx
+			vfx(W.Hit .. family, CFrame.lookAt(skin, skin + dir), {
+				variant = SlimeWeapon.tierOf(attacker.model),
+				scale = height / W.HitHeight,
+				ground = to.Y,
+			})
+		end
 		local own = if crit then (F.CritLooks :: any)[wayOf(event.from)] else nil
 		if own then
 			-- (a weapon class's crit: its own library burst over the mark, facing along the blow, bigger by the tier)

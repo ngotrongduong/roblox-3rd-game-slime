@@ -66,6 +66,19 @@ return function(T)
 		for way in V.Skill.Power.Glow do
 			T.ok(V.Fx.Styles[way] ~= nil, `Power.Glow.{way} is a way of fighting`)
 		end
+		-- (a plain blow's impact: every weapon family has its own, with a design per tier)
+		local W = Config.Weapons
+		for family in W.Families do
+			local id = W.Fx.Hit .. family
+			T.ok(imported(id), id)
+			if imported(id) then
+				local effect = require(`../../src/shared/VfxLib/Effects/hit/weapon_{family}`)
+				T.eq(effect.refHeight, W.Fx.HitHeight, `{id} is made for a body of HitHeight`)
+				for tier in V.Skill.Levels :: any do
+					T.ok(effect.variants[tier] ~= nil, `{id} has the tier {tier}`)
+				end
+			end
+		end
 	end)
 
 	-- (the library refuses an effect with one bad piece whole, in Play: a negative `lift` on Frostmaw's drift took every

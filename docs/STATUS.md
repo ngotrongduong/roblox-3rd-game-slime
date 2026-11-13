@@ -28,9 +28,17 @@ camera distance; a real Dungeon run of 8 waves played `burst.shield_up`, `hit.bl
 with no warning or error. **Not verified:** each moment framed in a live fight (they last 0.3 s), the four darker
 maps, a real phone. White additive hits still read pale on the snow.
 
-**Next (wave 2, in the VFX library first):** a weapon's own impact per family and tier (30 designs, with colour and
-dark edges that hold on a bright map), the 14 class-skill pieces of `docs/weapons/SKILL-VFX.md` §3, a short charge per
-class that fits a 0.3 s aim; then the skills of Uncommon to Legendary.
+**Wave 2a, done the same day** (VfxLib 8984735, 99 effects): a plain blow of a held weapon lands in its family's own
+impact at its tier, `hit.weapon_<family>` (six families x wood, iron, core, bramble, legend = 30 designs), over the
+owner's mark, sized to the one struck, its floor pieces at the foe's feet (`Config.Weapons.Fx.Hit`, `HitHeight`;
+`client/ZombieFight` `impact`). Seen in MapWork Play on Frozen Ice: the six families at wood, core and legend on a
+test row from 26 studs, and a real run playing `hit.weapon_sword`, `_shield`, `_bow` and `_focus` with no warning.
+Coloured bodies hold on the snow (sword, shield, kit, staff at core); still pale there: legend bow, staff and focus,
+core shield and bow; the kit's burst reads as black ink. Sent back to the library session. Not seen: iron and
+bramble, the dark maps, a real phone.
+
+**Next (wave 2b, being made in the VFX library):** the 14 class-skill pieces of `docs/weapons/SKILL-VFX.md` §3 and a
+short charge per class that fits a 0.3 s aim; then the skills of Uncommon to Legendary.
 
 ## 2026-11-14 — favorite the game and join the group: a big gift each, the tutorial's last step
 
