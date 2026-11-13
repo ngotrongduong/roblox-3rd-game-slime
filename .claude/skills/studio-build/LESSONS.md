@@ -735,3 +735,32 @@ was left there (this game has none); read it there if a cave is ever wanted.
   not for one id.
 - On a phone-sized screen the wave plate and a centred drops row cover the band where monsters and their name bars stand; the
   drops belong on the bottom edge.
+
+## The big world (2026-11-14, tools/world/build_terrain.luau, build_scatter.luau, build_sites.luau, docs/WORLD.md)
+
+- A world this size (4,600 x 4,400 studs) is a HEIGHTFIELD written with `WriteVoxels`, not `Fill*` shapes: one function
+  `height(x, z)` of the plan, 32 x 32-column chunks with a `task.wait()` each: 1,260 chunks in 11 s. Moving a place is a
+  number in `WorldPlan` and one re-run.
+- Measured: with 4-stud voxels, full voxels below `b` and the voxel `[b, b+4]` at occupancy `f` show the surface at
+  `b + 2 + 4f`. For a surface at `h`: `b = floor((h - 2) / 4) * 4`, `f = (h - 2 - b) / 4`. Water's surface is the top of the
+  last full Water voxel.
+- Region borders: a nearest-seed map with a weak warp gives ruler-straight borders and the owner's "chessboard". Warp the
+  lookup point by noise at three scales (460, 130 and 24 studs here) and add every zone and village as a seed of its region.
+  A shore drawn at one `z` is a rectangle: curve it (`|x|^3`) and add noise.
+- A flattened pad with its own material shows as a stamped circle from above: flatten the height, keep the natural ground
+  (only arenas and the Market get a floor material).
+- A landmark that must be seen from far is terrain or taller than what hides it: a mesa 84 studs up read as a low hill at
+  900 studs (130 reads); a spire inside a crater is hidden by the rim from below until its top clears the sight line
+  (work the line out: eye height, rim height and distance).
+- Cliffs: turn steep columns to Rock by the height difference to their neighbours (4.6 studs a column here; 2.6 on the
+  hero mesa so it is all rock).
+- Scatter by reading the land back: a raycast's `Material` says which region a spot is in, so the scatter needs no copy of
+  the terrain's maths and follows any terrain change. Groves from a noise field with open ground between, nothing on road
+  or pad materials, flowers along the roads. About 8,700 placements, 88 meshes, 3 s.
+- Shots of a far place: `screen_capture` with a camera position shoots before terrain's detail has loaded (rivers and roads
+  missing, blurry). Set `CurrentCamera.CFrame` by `execute_luau`, `task.wait(9)`, then capture with no camera arguments.
+- `loadstring` works in the MCP execute context: pass a shared module as `PLAN=src/shared/WorldPlan.luau` and
+  `loadstring(PLAN)()`, so builders and the game read one plan.
+- Rings of kit pieces round an arena: find the ways in by where the sampled road curves cross the ring's circle, not from
+  the plan's neighbours (a Catmull-Rom road leaves a point along its tangent).
+- `save_place` once answered "Target is not reachable" and had saved all the same: check the file's time before retrying.

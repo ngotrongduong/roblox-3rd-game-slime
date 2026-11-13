@@ -1,5 +1,30 @@
 # Status
 
+## 2026-11-14 — the big world: the main map rebuilt ten times larger (in the work place; the game is not on it yet)
+
+The owner: keep the player village, rebuild the rest from the ground up, about 10x larger, natural (no chessboard),
+made to explore: 8 villages, 1 shopping hub, 10 mini-boss zones, 3 boss zones, 1 mega-boss zone; kit assets first.
+Everything about it is in **`docs/WORLD.md`** (audit, layout, zones, missing assets with ChatGPT and Meshy prompts,
+plan, validation).
+
+**Done.** `src/shared/WorldPlan.luau` (places, roads, river, the Heart; `tests/spec/world_plan.luau`, 9 tests) and
+three re-runnable builders in `tools/world/` (terrain heightfield, scatter, sites). Built and saved in
+`assets/raw/MapWork.rbxlx` as `workspace.World` + terrain, 6,000 studs north of the old valley, which is untouched:
+Home Vale (Market at the hub, 8 village pads with gates, lane, 4 bridges, quay and lighthouse), Wayfarers' Cross
+under a great oak, Mushroom Grove, Ember Terraces with the volcano, Frost Reach with peaks, and the Heart (rock mesa,
+crater lake, island, three causeways and gates, the Crown, Crownfall feeding the river to the sea); 13 arena rings.
+
+**Seen** (edit-mode shots, `docs/references/world/shots/`): the Cross view matches reference 2, the Heart from above
+matches reference 1, hub, a bridge, Gloomroot Throne, Molten Throne, Glacier Throne, the quay. Counts: scenery 10,994
+MeshParts from 88 meshes, sites 2,141 parts.
+**Not verified:** nothing was played or walked in the new world (no spawn there), the game's follow camera, a phone
+frame, triangles, FPS, streaming.
+
+**Next.** M4 in `docs/WORLD.md` §7: switch the game over (`Layout` plot frames from `WorldPlan.Villages`, Market
+anchors at the hub, spawn, the server `World` module loading this terrain and `workspace.World`, streaming), then the
+fights in the zones (M5), then own models for the interim pieces (gates, crown, stone bridge, altars: §5).
+The old valley shows on the far south horizon of the new world until M4 removes it.
+
 ## 2026-11-14 — fight effects audit; wave 1: the slimes' side raised to the monsters' level
 
 The owner: audit weapons, monsters, monster skills, slime skills and battle effects, and raise the visuals as far as
