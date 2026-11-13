@@ -24,8 +24,9 @@ fought by each fighter's place like the Dungeon; slimes there showed no weapon o
   own slime and weapon (`ignore`). The owner found the first cut ugly; the library redrew them as ChatGPT clips
   (1da91f8, imported): the slows now sit round the foot and the slime stays clear. Seen in an Arena replay (no error)
   and on the real slime mesh (`SKILL-VFX.md` §6).
-- **Library 8f58815 imported**: the 18 held weapon auras redrawn as one ChatGPT card each (a 4x4 flipbook, one
-  emitter a weapon). Seen in an Arena replay at the game's camera, no error; not tried on a phone.
+- **Library b25782a imported**: the 18 held weapon auras are ChatGPT clips fixed on the weapon in 3D (a card through
+  its middle that turns with it, motes round it); Sunfire is built in 3D (glowing gems, a flame winding up the blade).
+  Seen in an Arena fight and up close, no error; not tried on a phone.
 
 ## 2026-11-13 — longer ranged reach, skill power by rarity, single and area targets, effects that last show
 

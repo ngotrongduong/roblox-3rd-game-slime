@@ -135,9 +135,13 @@ What the owner saw: the trails, cast bursts and auras of step 3 (`trail.weapon_<
 - **Phone budget**: a squad of four Legendary weapons at once stays within the library's budgets; the idle aura is
   the cheapest layer (it is on all the time).
 
-The 18 held auras (6 families x Epic, Mythic, Legendary) are one ChatGPT card each since the library's 8f58815: a 4x4
-flipbook of the weapon's own motif on one emitter (`aura`), the move trails and hits on top only while it swings.
-Seen in an Arena replay at the game's camera: a soft glow at the weapon's head, the slime stays clear, no error.
+The 18 held auras (6 families x Epic, Mythic, Legendary) are ChatGPT clips fixed ON the weapon in 3D since the
+library's b25782a (7c09514 first): the clip is a SurfaceGui card on one thin part through the weapon's middle, so it
+turns and tilts with the weapon and never faces the camera, with two small mote emitters round it (and a small light
+at bramble and legend). The host is the weapon's MeshPart, its thin side on local Z (all six meshes are). Sunfire
+(`sword-legend`) has no card: its three gems glow, two flame strands wind up the blade (20 Beams), sparks hang in the
+air and faint rainbow rays sit behind it. Seen in Play: an Arena fight with the late team, and a Sunfire sword up close,
+whose gem glows sit on our mesh's gems (guard -0.37, pommel -1.34, blade 0.34 studs on the weapon's Y); no error.
 
 ## 5. The 30 weapons, their looks and a theme each
 

@@ -31,7 +31,23 @@
 --             { name, model (a key of Models.fish), length (studs snout to tail at refHeight), orbit = { radius, period,
 --             phase?, y, bob?, sway? } (as a piece's orbit: its path wanders), swim? = { degrees, period } (its tail's
 --             sweep), secondary? }: one skinned MeshPart in its own picture, its tail sweeping side to side
---   light     { role | color, brightness, range (studs at refHeight), keys = { { t, brightness } } (a one-shot's flare) }
+--   cards     (an aura, up to Budget's `cards`: a held weapon's) a clip FIXED through the host's middle, turning and
+--             tilting with it, never with the camera, each a CARD: { name, texture (a Grid4x4 atlas of 256-px cells,
+--             stored mirrored: tools/chatgpt/clip_frames.py --fit), size (studs: the picture's side at refHeight,
+--             centred on the host), period? (seconds a clip, 1.5), phase? (0..1), lift? (studs up the host),
+--             brightness? (0.5..3, 1.2) }: one thin see-through part through the host's middle, across its thin side
+--             (z, as a weapon's mesh is made), with a SurfaceGui each face, the front (-z) showing the clip as drawn
+--   spirals   (an aura, up to Budget's `spirals` beams in all: a held weapon's) ribbons wound round the host's long axis
+--             (its y), each a SPIRAL: { name, texture (a picture drawn along its length that repeats, the beam family:
+--             `repeats` (1 to 12) times a turn, 4), colors | color | role (from the low end to the high end), low,
+--             high (studs up the host from its middle, at refHeight), radius { low, high } (studs from the axis), width
+--             { low, high } (studs), turns (round the host from low to high; - the other way), phase? (0..1 of a turn:
+--             where it starts), flow? (pictures a second running up it, - down; 1), glow? (Brightness, 1), alpha?
+--             (0..1), fade? (0..0.5: the share of its length at each end that fades in and out, 0.15), additive?
+--             (LightEmission 1, true; false: drawn normal, its colour kept on a bright sky), zOffset?, secondary? }: one
+--             Beam a half turn, curved, turned to the camera.
+--             Its colours: `color` (one, or several from low to high) or a `role`
+--   light   { role | color, brightness, range (studs at refHeight), keys = { { t, brightness } } (a one-shot's flare) }
 --   highlight (one-shot) { fill = role, outline = role, fillTransparency, outlineTransparency, seconds, max }: an outline
 --             on the instances the caller names (`opts.adornees`), fading out
 --   projectile (one-shot) a PIECE that flies from `opts.from` to the spot first: { texture, size, seconds, arc, ... };
@@ -271,6 +287,93 @@ function Schema.swimmerProblem(fields, swimmer, what)
 	local swim = swimmer.swim
 	if swim ~= nil and (type(swim) ~= "table" or (swim.period ~= nil and swim.period <= 0)) then
 		return `{what}: swim \{ degrees?, period? (over 0) }`
+	end
+	return nil
+end
+
+-- The first thing wrong with a CARD (a clip fixed through a held weapon's middle), or nil.
+function Schema.cardProblem(fields, card, what)
+	if fields.kind ~= "aura" then
+		return `{what}: only an aura has cards`
+	end
+	if type(card.name) ~= "string" then
+		return `{what}: a name`
+	end
+	local problem = textureProblem(card.texture, `{what} texture`)
+	if problem then
+		return problem
+	end
+	local numbers = {
+		{ "size", 0.2, 12, true },
+		{ "period", 0.3, 10 },
+		{ "phase", 0, 1 },
+		{ "lift", -6, 6 },
+		{ "brightness", 0.5, 3 },
+	}
+	for _, rule in numbers do
+		local value = card[rule[1]]
+		if (value ~= nil or rule[4]) and (type(value) ~= "number" or value < rule[2] or value > rule[3]) then
+			return `{what}: {rule[1]} is {rule[2]} to {rule[3]}`
+		end
+	end
+	return nil
+end
+
+-- The first thing wrong with a SPIRAL (a ribbon wound round a held weapon), or nil.
+function Schema.spiralProblem(fields, spiral, what)
+	if fields.kind ~= "aura" then
+		return `{what}: only an aura has spirals`
+	end
+	if type(spiral.name) ~= "string" then
+		return `{what}: a name`
+	end
+	local problem = textureProblem(spiral.texture, `{what} texture`)
+	if problem then
+		return problem
+	end
+	for _, key in { "radius", "width" } do
+		local pair = spiral[key]
+		if
+			type(pair) ~= "table"
+			or type(pair[1]) ~= "number"
+			or type(pair[2]) ~= "number"
+			or pair[1] < 0
+			or pair[2] < 0
+			or pair[1] > 3
+			or pair[2] > 3
+		then
+			return `{what}: {key} \{ low, high } of 0 to 3 studs`
+		end
+	end
+	local numbers = {
+		{ "low", -6, 6, true },
+		{ "high", -6, 6, true },
+		{ "turns", -6, 6, true },
+		{ "phase", 0, 1 },
+		{ "flow", -5, 5 },
+		{ "glow", 0, 5 },
+		{ "alpha", 0, 1 },
+		{ "fade", 0, 0.5 },
+		{ "zOffset", -2, 2 },
+		{ "repeats", 1, 12 },
+	}
+	for _, rule in numbers do
+		local value = spiral[rule[1]]
+		if (value ~= nil or rule[4]) and (type(value) ~= "number" or value < rule[2] or value > rule[3]) then
+			return `{what}: {rule[1]} is {rule[2]} to {rule[3]}`
+		end
+	end
+	if spiral.high <= spiral.low then
+		return `{what}: high over low`
+	end
+	if math.abs(spiral.turns) < 0.25 then
+		return `{what}: a quarter turn at least`
+	end
+	if spiral.colors ~= nil then
+		return `{what}: color (one or several, low to high) or a role, not colors`
+	end
+	if spiral.color == nil and spiral.role == nil then
+		return `{what}: color or a role`
 	end
 	return nil
 end
@@ -1132,8 +1235,36 @@ function Schema.problem(effect, variantOf)
 			and #(fields.wings or {}) == 0
 			and #(fields.serpents or {}) == 0
 			and #(fields.swimmers or {}) == 0
+			and #(fields.cards or {}) == 0
+			and #(fields.spirals or {}) == 0
 		then
 			return `{label}: nothing to draw`
+		end
+		local cardNames = {}
+		for index, card in fields.cards or {} do
+			local problem = Schema.cardProblem(fields, card, `{label} card {index}`)
+			if problem then
+				return problem
+			end
+			if cardNames[card.name] then
+				return `{label}: two cards are called {card.name}`
+			end
+			cardNames[card.name] = true
+		end
+		local spiralNames = {}
+		for index, spiral in fields.spirals or {} do
+			local problem = Schema.spiralProblem(fields, spiral, `{label} spiral {index}`)
+			if problem then
+				return problem
+			end
+			if spiralNames[spiral.name] then
+				return `{label}: two spirals are called {spiral.name}`
+			end
+			spiralNames[spiral.name] = true
+		end
+		if fields.shell ~= nil then
+			-- (a glow of the host's own mesh, tried on the held weapons 2026-11-13: it hid their detail, lesson 292)
+			return `{label}: no shell (it hides the host's detail)`
 		end
 		for index, serpent in fields.serpents or {} do
 			local problem = Schema.serpentProblem(fields, serpent, `{label} serpent {index}`)

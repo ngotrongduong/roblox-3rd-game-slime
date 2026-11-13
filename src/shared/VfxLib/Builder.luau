@@ -2080,6 +2080,151 @@ local function makeSwimmer(handle, swimmer)
 	return entry
 end
 
+-- A CARD of an aura: a clip (a Grid4x4 atlas of CardCell cells, stored mirrored as tools/chatgpt/clip_frames.py --fit
+-- cuts it) through the host's middle, so it turns and tilts with the host and never with the camera (the owner,
+-- 2026-11-13, on a shield's aura seen from the side: a particle's picture turned to the view, and a
+-- VelocityPerpendicular one keeps the world's up). One thin see-through part across the host's thin side (z), a
+-- SurfaceGui on each face: the host hides the clip where it stands, and seen at a slant the clip stays round it, where
+-- a card on its faces floated off it (the owner, lesson 292). (A SurfaceGui is first drawn a moment after it turns to
+-- the camera: a still shot from a side not seen before shows that card blank; shoot it again. Lesson 291.)
+Builder.CardCell = 256
+Builder.CardShare = 0.75 -- a card paints at most this share of its kind's area (a giant's: the particles share the rest)
+local CELL = Builder.CardCell
+
+local function cardFrame(entry, frame)
+	local col, row = frame % 4, frame // 4
+	-- (the front shows the clip as drawn: the stored cell read right to left, a negative width; the back shows the
+	-- plain cell, the same picture seen through from behind)
+	entry.front.ImageRectOffset = Vector2.new((col + 1) * CELL, row * CELL)
+	entry.back.ImageRectOffset = Vector2.new(col * CELL, row * CELL)
+	entry.frame = frame
+end
+
+local function makeCard(handle, card)
+	local side = math.min(card.size * handle.scale, math.sqrt((handle.budget.area or 0) * Builder.CardShare))
+	local middle = handle.carrier.CFrame * CFrame.new(0, (card.lift or 0) * handle.scale, 0)
+	local part = newPart(card.name, Vector3.new(side, side, 0.02), middle, handle.folder)
+	weld(handle.carrier, part)
+	handle.parts[`card|{card.name}`] = part -- (anchored with the rest on a statue)
+	local entry = { card = card, period = card.period or 1.5, frame = -1, on = true, part = part }
+	local function face(normal, width)
+		local gui = Instance.new("SurfaceGui")
+		gui.Name = normal
+		gui.Face = Enum.NormalId[normal]
+		gui.LightInfluence = 0
+		gui.Brightness = card.brightness or 1.2
+		gui.SizingMode = Enum.SurfaceGuiSizingMode.FixedSize
+		gui.CanvasSize = Vector2.new(CELL, CELL)
+		local image = Instance.new("ImageLabel")
+		image.Name = "Clip"
+		image.Size = UDim2.fromScale(1, 1)
+		image.BackgroundTransparency = 1
+		image.Image = Textures.url(card.texture)
+		image.ImageRectSize = Vector2.new(width, CELL)
+		image.Parent = gui
+		gui.Parent = part
+		return gui, image
+	end
+	entry.frontGui, entry.front = face("Front", -CELL)
+	entry.backGui, entry.back = face("Back", CELL)
+	cardFrame(entry, 0)
+	return entry
+end
+
+-- A SPIRAL of an aura: a ribbon wound round the host's long axis (its y) from `low` to `high`, its picture running up
+-- it: flame wrapping a sword from the guard to the tip (the owner, 2026-11-13: "in 3D, not a flat picture"). One Beam a
+-- half turn (Budget.SpiralSteps), each a curve between two attachments turned along the path (a cubic curve holds a
+-- half circle to 2%, its middle exactly), turned to the camera; the host hides the ribbon where it passes behind it. The picture is
+-- stretched a whole number of times over each beam (`repeats` a turn), so a picture that repeats along its length
+-- meets itself at every joint, and all of them run at one speed. Nothing moves but the picture: no work a frame.
+Builder.SpiralSteps = Budget.SpiralSteps
+
+local function spiralAlpha(spiral, u)
+	local fade = spiral.fade or 0.15
+	local edge = if fade > 0 then math.clamp(math.min(u, 1 - u) / fade, 0, 1) else 1
+	local base = spiral.alpha or 0
+	return 1 - (1 - base) * edge * edge * (3 - 2 * edge)
+end
+
+local function makeSpiral(handle, spiral)
+	local scale = handle.scale
+	local count = math.max(1, math.ceil(math.abs(spiral.turns) * Builder.SpiralSteps - 1e-6))
+	local sweep = 2 * math.pi * spiral.turns
+	local start = 2 * math.pi * (spiral.phase or 0)
+	local r0, r1 = spiral.radius[1] * scale, spiral.radius[2] * scale
+	local y0, y1 = spiral.low * scale, spiral.high * scale
+	local w0, w1 = spiral.width[1] * scale, spiral.width[2] * scale
+	local colors = Palette.resolve(handle.effect, spiral, handle.opts.palette)
+	local additive = if spiral.additive ~= nil then spiral.additive else true
+	local entry = { spiral = spiral, beams = {}, on = true }
+	-- (the path at u (0..1), the way it goes there per unit of u, and how far a beam's control points stand off)
+	local function at(u)
+		local theta = start + sweep * u
+		local r = r0 + (r1 - r0) * u
+		local radial = Vector3.new(math.cos(theta), 0, math.sin(theta))
+		local around = Vector3.new(-math.sin(theta), 0, math.cos(theta))
+		local position = radial * r + Vector3.new(0, y0 + (y1 - y0) * u, 0)
+		local velocity = radial * (r1 - r0) + around * (r * sweep) + Vector3.new(0, y1 - y0, 0)
+		return position, velocity, radial
+	end
+	local attachments = {}
+	for index = 0, count do
+		local position, velocity, radial = at(index / count)
+		local tangent = velocity.Unit
+		local normal = (radial - tangent * radial:Dot(tangent)).Unit
+		local attachment = newAttachment(handle.carrier, `{spiral.name}{index}`, Vector3.zero)
+		attachment.CFrame = CFrame.fromMatrix(position, tangent, normal)
+		attachments[index] = attachment
+	end
+	local step = math.abs(sweep) / count
+	-- (whole pictures a beam, so each meets the next at a joint: `repeats` a turn, 4 by default)
+	local pictures = math.max(1, math.floor((spiral.repeats or 4) * math.abs(spiral.turns) / count + 0.5))
+	for index = 1, count do
+		local u0, u1 = (index - 1) / count, index / count
+		local _, velocity = at((u0 + u1) / 2)
+		-- (a cubic curve's arm for an arc of `step` radians: 4/3 tan(step / 4) of the radius, along the path)
+		-- (the second control point is the end MINUS its axis times CurveSize1: a positive size pulls it back, lesson 56)
+		local arm = velocity.Magnitude / count * 4 / (3 * step) * math.tan(step / 4)
+		local beam = Instance.new("Beam")
+		beam.Name = `{spiral.name}{index}`
+		beam.Attachment0 = attachments[index - 1]
+		beam.Attachment1 = attachments[index]
+		beam.CurveSize0 = arm
+		beam.CurveSize1 = arm
+		beam.Segments = 10
+		beam.FaceCamera = true
+		beam.Texture = Textures.url(spiral.texture)
+		beam.TextureMode = Enum.TextureMode.Stretch
+		beam.TextureLength = pictures
+		-- (a positive TextureSpeed slides the picture toward Attachment0, the low end: `flow` runs it up, so it is turned)
+		beam.TextureSpeed = -(spiral.flow or 1)
+		beam.LightInfluence = 0
+		beam.LightEmission = if additive then 1 else 0
+		beam.Brightness = spiral.glow or 1
+		beam.Color = Palette.span(colors, u0, u1) or ColorSequence.new(Color3.new(1, 1, 1))
+		beam.Transparency = NumberSequence.new({
+			NumberSequenceKeypoint.new(0, spiralAlpha(spiral, u0)),
+			NumberSequenceKeypoint.new(1, spiralAlpha(spiral, u1)),
+		})
+		beam.Width0 = w0 + (w1 - w0) * u0
+		beam.Width1 = w0 + (w1 - w0) * u1
+		beam.ZOffset = spiral.zOffset or 0
+		beam.Parent = handle.folder
+		table.insert(entry.beams, beam)
+	end
+	return entry
+end
+
+-- What a spiral paints: each beam's chord times its mean width (its curve is a few percent longer).
+function Builder.spiralArea(entry)
+	local area = 0
+	for _, beam in entry.beams do
+		local length = (beam.Attachment1.CFrame.Position - beam.Attachment0.CFrame.Position).Magnitude
+		area += length * (beam.Width0 + beam.Width1) / 2
+	end
+	return area
+end
+
 -- A SERPENT of an aura: one long picture (`texture`, head first, uncut) on a Trail whose two attachments fly the loop
 -- on the carrier: the Trail bends the picture smoothly along any curve, with no joint anywhere (the owner, on four
 -- beams end to end: "where they meet does not look good when it turns").
@@ -2191,6 +2336,8 @@ function Builder.attach(effect, host, opts)
 		wings = {},
 		serpents = {},
 		swimmers = {},
+		cards = {},
+		spirals = {},
 		wingTick = 0,
 		partsLeft = kindBudget.parts or 0,
 		items = {},
@@ -2245,6 +2392,25 @@ function Builder.attach(effect, host, opts)
 		end
 	end
 
+	for index, card in fields.cards or {} do
+		if index > (kindBudget.cards or 0) then
+			break
+		end
+		table.insert(handle.cards, makeCard(handle, card))
+	end
+
+	local beamsLeft = kindBudget.spirals or 0
+	for _, spiral in fields.spirals or {} do
+		local beams = math.ceil(math.abs(spiral.turns) * Builder.SpiralSteps - 1e-6)
+		if beams > beamsLeft then
+			break
+		end
+		if Quality.secondary() or not spiral.secondary then
+			beamsLeft -= beams
+			table.insert(handle.spirals, makeSpiral(handle, spiral))
+		end
+	end
+
 	local specs = {}
 	for _, piece in fields.pieces or {} do
 		if #specs >= kindBudget.emitters then
@@ -2264,7 +2430,18 @@ function Builder.attach(effect, host, opts)
 			end
 		end
 	end
-	Budget.limit(specs, kindBudget, if raw > 2 then raw / 2 else nil)
+	local row = kindBudget
+	if #handle.cards > 0 or #handle.spirals > 0 then
+		-- (the cards and the spirals paint first: the particles share what area is left)
+		row = table.clone(kindBudget)
+		for _, entry in handle.cards do
+			row.area = math.max(row.area - entry.part.Size.X ^ 2, 0)
+		end
+		for _, entry in handle.spirals do
+			row.area = math.max(row.area - Builder.spiralArea(entry), 0)
+		end
+	end
+	Budget.limit(specs, row, if raw > 2 then raw / 2 else nil)
 	for _, spec in specs do
 		if spec.piece.steady then
 			spec.rate = spec.piece.rate -- (a clock hand: one in the air, whatever the budget asks of the rest)
@@ -2372,7 +2549,7 @@ function Builder.release(handle, seconds)
 	end
 	handle.fading = seconds
 	for _, item in handle.folder:GetDescendants() do
-		if item:IsA("ParticleEmitter") or item:IsA("Trail") or item:IsA("Light") then
+		if item:IsA("ParticleEmitter") or item:IsA("Trail") or item:IsA("Light") or item:IsA("SurfaceGui") then
 			item.Enabled = false
 		end
 	end
@@ -2476,6 +2653,30 @@ function Builder.update(handle, info)
 		-- (a fish swims on every frame, near or far, or it would stutter round the host)
 		if clock and on and entry.part then
 			placeSwimmer(handle, entry, clock)
+		end
+	end
+	for _, entry in handle.cards do
+		local on = mode ~= "off"
+		if entry.on ~= on then
+			entry.on = on
+			entry.frontGui.Enabled = on
+			entry.backGui.Enabled = on
+		end
+		if clock and on then
+			-- (the clip once a period, a frame a sixteenth of it: one cell read off the atlas when it changes)
+			local frame = math.floor((clock / entry.period + (entry.card.phase or 0)) * 16) % 16
+			if frame ~= entry.frame then
+				cardFrame(entry, frame)
+			end
+		end
+	end
+	for _, entry in handle.spirals do
+		local on = mode ~= "off"
+		if entry.on ~= on then
+			entry.on = on
+			for _, beam in entry.beams do
+				beam.Enabled = on
+			end
 		end
 	end
 	if clock and (mode == "full" or mode == "half") then
@@ -3680,9 +3881,19 @@ function Builder.measure(handle)
 		bands = #handle.bands,
 		wings = #handle.wings,
 		parts = 0,
+		cards = #handle.cards,
+		spirals = 0,
 	}
 	for _, entry in handle.wings do
 		measured.parts += #entry.parts
+	end
+	for _, entry in handle.cards do
+		-- (a card: one face is seen at a time, its side squared, as a particle's area is counted)
+		measured.area += entry.part.Size.X ^ 2
+	end
+	for _, entry in handle.spirals do
+		measured.spirals += #entry.beams
+		measured.area += Builder.spiralArea(entry)
 	end
 	for _, item in handle.items do
 		local spec = item.spec

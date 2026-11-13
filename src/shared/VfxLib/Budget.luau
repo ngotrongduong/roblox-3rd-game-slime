@@ -16,12 +16,26 @@ local Budget = {}
 
 Budget.MinShrink = 0.5 -- sizes are cut by no more than this to meet an area; the rest is done with fewer particles
 Budget.SpreadRate = 3 -- a giant's particles a second may pass the rate this many times (they stay small)
+Budget.SpiralSteps = 2 -- beams a turn of a spiral (Builder's makeSpiral): a cubic curve holds a half circle to 2%
 
 -- The hard caps of a host, by kind of effect. `light` is the reach of a light in studs (0: none).
 Budget.Kinds = {
 	-- (an aura's side reaches 10: a Level 2 aura's own floor circle is 8-10 studs, cheap as it is few and flat; the area
-	-- still holds the whole, 2026-11-07; `swimmers`: small 3D fish going round it, one skinned MeshPart each)
-	aura = { emitters = 6, rate = 40, alive = 80, size = 10, area = 900, light = 32, lights = 1, swimmers = 6 },
+	-- still holds the whole, 2026-11-07; `swimmers`: small 3D fish going round it, one skinned MeshPart each; `cards`: a
+	-- clip through a held weapon's middle, one see-through part with a SurfaceGui each face; `spirals`: the beams of the
+	-- ribbons wound round a held weapon, a half turn each, cheap as a wing's quad)
+	aura = {
+		emitters = 6,
+		rate = 40,
+		alive = 80,
+		size = 10,
+		area = 900,
+		light = 32,
+		lights = 1,
+		swimmers = 6,
+		cards = 2,
+		spirals = 24,
+	},
 	trail = {
 		emitters = 7,
 		rate = 80,
@@ -75,6 +89,8 @@ Budget.Showcase = {
 		lights = 1,
 		serpents = 1,
 		swimmers = 6,
+		cards = 2,
+		spirals = 32,
 	},
 	-- (a showcase pair spreads as wide as two bodies and wears a second pair, a glow and riders off its feathers)
 	wings = {
@@ -103,9 +119,39 @@ Budget.Continuous = { aura = true, trail = true, buff = true, wings = true, worl
 -- The cost tiers an effect declares (`tier`) and the tests hold it to. Phone first: a cheap effect can be on every host.
 Budget.Tiers = {
 	continuous = {
-		cheap = { emitters = 2, rate = 20, lights = 0, area = 150, bands = 1, wings = 2, parts = 0 },
-		mid = { emitters = 8, rate = 80, lights = 1, area = 900, bands = 3, wings = 4, parts = 8 },
-		heavy = { emitters = 30, rate = 260, lights = 2, area = 6000, bands = 7, wings = 8, parts = 16 },
+		cheap = {
+			emitters = 2,
+			rate = 20,
+			lights = 0,
+			area = 150,
+			bands = 1,
+			wings = 2,
+			parts = 0,
+			cards = 1,
+			spirals = 0,
+		},
+		mid = {
+			emitters = 8,
+			rate = 80,
+			lights = 1,
+			area = 900,
+			bands = 3,
+			wings = 4,
+			parts = 8,
+			cards = 2,
+			spirals = 24,
+		},
+		heavy = {
+			emitters = 30,
+			rate = 260,
+			lights = 2,
+			area = 6000,
+			bands = 7,
+			wings = 8,
+			parts = 16,
+			cards = 2,
+			spirals = 32,
+		},
 	},
 	oneShot = {
 		cheap = { emitters = 3, count = 40, lights = 0, burstArea = 400, beams = 1 },
@@ -369,6 +415,8 @@ function Budget.measure(effect, variantOf)
 			beams = 0,
 			wings = 0,
 			parts = 0,
+			cards = 0,
+			spirals = 0,
 		}
 		local specs = {}
 		-- (a piece born where falling beams land: its count each time one lands)
@@ -473,6 +521,19 @@ function Budget.measure(effect, variantOf)
 			-- (a fish: one skinned MeshPart about half as tall as it is long)
 			total.parts += 1
 			total.area += swimmer.length * swimmer.length / 2
+		end
+		for _, card in fields.cards or {} do
+			-- (a card: one face is seen at a time, its side squared)
+			total.cards += 1
+			total.area += card.size * card.size
+		end
+		for _, spiral in fields.spirals or {} do
+			-- (a spiral: a beam a half turn; its path's length times its mean width)
+			local turns = math.abs(spiral.turns)
+			total.spirals += math.ceil(turns * Budget.SpiralSteps - 1e-6)
+			local round = 2 * math.pi * turns * (spiral.radius[1] + spiral.radius[2]) / 2
+			local length = math.sqrt(round * round + (spiral.high - spiral.low) ^ 2)
+			total.area += length * (spiral.width[1] + spiral.width[2]) / 2
 		end
 		total.bands = #(fields.bands or {})
 		total.lights = if fields.light then 1 else 0
