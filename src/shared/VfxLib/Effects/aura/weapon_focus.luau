@@ -1,57 +1,39 @@
 -- Weapon Aura Focus: what Goo Lineage's finer Arcane Focuses give off while they are held (core Epic, bramble Mythic,
--- legend Legendary; Common and Uncommon ones have none). The cheapest of the weapon's layers, for four slimes on a
--- phone: a glow on the gem and the rung's motif going round it, drawn solid so it shows on snow. Core, the Prism: the
--- gem's glow passing through the rainbow, rainbow crystal shards circling it. Bramble, the Mythic Focus: a violet glow,
--- the game's arcane motes going round one way and green leaves the other, a glint, a violet light. Legend, the Astral
--- Scepter: a night-blue glow, a pink galaxy turning over the gem like a halo, gold stars circling, twinkles, a
--- starlight glow.
-local GEM = 3.05 -- studs up the 3.5-stud focus to its gem (the owner's models, the gem in its head)
+-- legend Legendary; Common and Uncommon ones have none). Each rung's whole aura is one ChatGPT clip worn round the
+-- focus (the owner's way, lesson 284: a GIF of this very focus wearing it, rebuilt as the effect alone round its empty
+-- shape), one particle for four slimes on a phone. Core, the Prism: a rainbow glow breaking out of the gem ring, a
+-- rainbow ribbon swirling up round the focus, prism shards drifting. Bramble, the Mythic Focus: violet rings orbiting
+-- the head, the gem pulsing violet, glowing green leaves drifting, violet sparkles, a violet light. Legend, the Astral
+-- Scepter: a violet and blue nebula swirling round it, a little golden galaxy turning over its tip like a crown,
+-- twinkling gold stars, a starlight glow.
 
-local function with(base, over)
-	local out = table.clone(base)
-	for key, value in over or {} do
-		out[key] = value
-	end
-	return out
-end
-
--- (a soft glow of the rung's colour breathing round the gem)
-local function gem(color, size)
+-- (the whole aura in one picture drawn round the focus's empty shape; the clip once a life, 1.5 s, one always there,
+-- the next taking over on the clip's dim first frame. `size`: the focus's height over its share of the picture,
+-- halved, as clip_frames.py --fit prints it, the picture centred on the focus)
+local function card(texture, size)
 	return {
-		name = "gem",
-		texture = "glow_soft",
-		color = color,
-		at = "head",
-		offset = { 0, -0.4, 0 },
-		rate = 2,
-		life = { 1.4, 1.8 },
-		size = { { 0, size * 0.7 }, { 0.5, size }, { 1, size * 0.8 } },
-		transparency = { { 0, 1 }, { 0.5, 0.35 }, { 1, 1 } },
-		lightEmission = 0.6,
-		zOffset = -0.5,
+		name = "aura",
+		texture = texture,
+		role = "keep",
+		at = "body",
+		rate = 1 / 1.5,
+		steady = true,
+		life = { 1.52, 1.52 },
+		size = { { 0, size }, { 1, size } },
+		transparency = { { 0, 0 }, { 1, 0 } },
+		-- (stood along the focus by a crawl up it, so the picture leans as it leans; VelocityParallel lays a
+		-- picture's WIDTH along the flight, so the upright drawing is turned a quarter: lesson 255)
+		speed = { 0.05, 0.05 },
+		direction = "Top",
+		orientation = "VelocityParallel",
+		rotation = { -90, -90 },
+		flipbook = { layout = "Grid4x4", mode = "OneShot" },
+		lightEmission = 0,
+		-- (over the head's faces: the gem's glow lies on the gem)
+		zOffset = 0.4,
+		locked = true,
 	}
 end
-
--- (things going round the gem, left in the world as the focus moves: a faint ring drawn where it was carried)
-local function orbit(name, texture, color, period, phase, rate, size, over)
-	return with({
-		name = name,
-		texture = texture,
-		color = color,
-		orbit = { radius = 0.6, period = period, phase = phase, y = GEM },
-		rate = rate,
-		life = { 0.6, 0.8 },
-		size = { { 0, 0 }, { 0.2, size }, { 1, size * 0.5 } },
-		transparency = { { 0, 0.05 }, { 0.7, 0.2 }, { 1, 1 } },
-		rotation = { 0, 359 },
-		lightEmission = 0,
-		brightness = 1.4,
-		locked = false,
-	}, over)
-end
-
--- (a sheet of four pictures: each particle keeps one of them, still)
-local ONE_OF = { layout = "Grid2x2", mode = "Loop", fps = { 0, 0 }, random = true }
 
 return {
 	id = "aura.weapon_focus",
@@ -65,91 +47,22 @@ return {
 	palette = {},
 	tintable = false,
 	defaultVariant = "core",
-	pieces = {
-		-- (the Prism: the gem's glow passing through the colours)
-		gem("rainbow", 1.9),
-		orbit("shards", "shard_flat", "rainbow", 1.8, 0, 6, 0.6, { rotSpeed = { -200, 200 }, brightness = 1.5 }),
-	},
+	pieces = { card("prism_aura_flip", 2.12) },
 	variants = {
 		core = { tier = "cheap" },
 		bramble = {
-			pieces = {
-				gem({ 175, 110, 255 }, 2),
-				-- (the game's own arcane motes, kept as drawn, one way round; leaves the other)
-				orbit("motes", "moteArcane", nil, 1.6, 0, 6, 0.75, { role = "keep", lightEmission = 0.5 }),
-				orbit("leaves", "leaves_solid", { { 170, 230, 95 }, { 95, 175, 60 } }, -2.2, 0.5, 3, 0.7, {
-					life = { 0.8, 1.1 },
-					accel = { 0, -0.6, 0 },
-					rotSpeed = { -120, 120 },
-					brightness = 1.3,
-					flipbook = ONE_OF,
-				}),
-				{
-					name = "glint",
-					texture = "star_flare",
-					color = { { 255, 240, 255 }, { 200, 140, 255 } },
-					at = "head",
-					offset = { 0, -0.4, 0 },
-					rate = 1,
-					life = { 0.35, 0.45 },
-					size = { { 0, 0 }, { 0.35, 1.4 }, { 1, 0 } },
-					rotation = { -20, 20 },
-					rotSpeed = { -60, 60 },
-					lightEmission = 1,
-					zOffset = 1,
-				},
-			},
+			pieces = { card("mythic_aura_flip", 1.89) },
 			light = { color = { 195, 140, 255 }, brightness = 1.3, range = 8 },
 		},
 		legend = {
-			pieces = {
-				gem({ 95, 80, 230 }, 2),
-				-- (a pink galaxy turning over the gem like a halo: one always there, breathing as the next takes its place)
-				{
-					name = "galaxy",
-					texture = "galaxy_spiral",
-					color = { { 255, 180, 235 }, { 170, 130, 255 } },
-					at = "crown",
-					rate = 1 / 2.2,
-					steady = true,
-					life = { 2.3, 2.3 },
-					size = { { 0, 1.1 }, { 0.15, 1.6 }, { 0.85, 1.6 }, { 1, 1.3 } },
-					transparency = { { 0, 1 }, { 0.12, 0.05 }, { 0.88, 0.05 }, { 1, 1 } },
-					rotation = { 0, 0 },
-					rotSpeed = { 40, 40 },
-					orientation = "FacingCameraWorldUp",
-					lightEmission = 1, -- (the pack's galaxy is drawn on dark: added, or its square shows)
-					brightness = 2,
-				},
-				orbit("stars", "star_fat", { { 255, 240, 170 }, { 255, 195, 85 } }, 2, 0, 6, 0.6, {
-					rotSpeed = { -120, 120 },
-					lightEmission = 0.4,
-					brightness = 1.6,
-				}),
-				{
-					name = "twinkles",
-					texture = "star_twinkle",
-					color = { { 255, 250, 235 }, { 200, 180, 255 } },
-					at = "head",
-					box = { 0.9, 0.3, 0.9 },
-					rate = 3,
-					life = { 0.6, 0.9 },
-					size = { { 0, 0 }, { 0.3, 0.75 }, { 1, 0 } },
-					speed = { 0.1, 0.4 },
-					spread = { 180, 180 },
-					rotation = { 0, 359 },
-					lightEmission = 1,
-					locked = false,
-					secondary = true,
-				},
-			},
+			pieces = { card("astral_aura_flip", 2.21) },
 			light = { color = { 170, 140, 255 }, brightness = 1.3, range = 9 },
 		},
 	},
 	source = {
 		from = "the library, for Goo Lineage's held weapons (docs/vfx/plans/2026-11-12-weapons.md, redone 2026-11-13)",
-		art = "the owner's arcane motes (moteArcane: Goo Lineage's own, kept as drawn); free Creator Store pack textures (no scripts: glow_soft, shard_flat, star_flare, galaxy_spiral, star_fat, star_twinkle); leaves_solid (ChatGPT for the library)",
-		licence = "the owner's own art; Creator Store free assets (no scripts kept)",
+		art = "prism_aura_flip, mythic_aura_flip, astral_aura_flip (ChatGPT's GIF of each focus wearing it, rebuilt by ChatGPT as the effect alone: tools/chatgpt/clip_frames.py --black --fit)",
+		licence = "the owner's own art (drawn for the library by ChatGPT)",
 	},
 	notes = "VfxLib.attach(focusMeshPart, id, { variant = rarity }) while a core, bramble or legend focus is held; VfxLib.detach(handle) when it is put away. Core is cheap (no light), bramble and legend mid with a small light.",
 }

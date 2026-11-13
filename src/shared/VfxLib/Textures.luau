@@ -323,8 +323,26 @@ Textures.Images = {
 	flask_flip = { id = 102659339614661, from = SKILL_ART }, -- a flask pops up, sloshes, pops its cork, bursts into bubbles
 	-- A held weapon's whole aura, light drawn on black round the empty shape of the sword (the owner's way: ChatGPT made
 	-- a GIF of the sword itself wearing it, then rebuilt only the effect frame by frame; clip_frames.py --black), worn
-	-- normal over the sword, untinted, 4 x 4 OneShot, played as a loop:
-	dawn_aura_flip = { id = 92686934725704, from = SKILL_ART }, -- gold and pink light ribbons rise round a sword, its gem pulses, a star flares on the tip, feathers spiral
+	-- normal over the sword, untinted, 4 x 4 OneShot, played as a loop; the same way for every held weapon with an
+	-- aura, each cut centred on the weapon (clip_frames.py --fit) and stored mirrored (worn VelocityParallel):
+	dawn_aura_flip = { id = 80679906109602, from = SKILL_ART }, -- gold and pink light ribbons rise round a sword, its gem pulses, a star flares on the tip, feathers spiral
+	runeblade_aura_flip = { id = 78038446931823, from = SKILL_ART }, -- a violet glow traces a sword's edges, lilac diamond runes light up the blade, a ribbon circles
+	sunfire_aura_flip = { id = 122559580291777, from = SKILL_ART }, -- crimson flames lick up a sword's edges, embers rise, a golden sun turns over the tip
+	warden_aura_flip = { id = 132543006587991, from = SKILL_ART }, -- a royal-blue light runs round a shield's rim, a gold glint sweeps its crest, blue stars twinkle
+	goo_aegis_aura_flip = { id = 116954023561347, from = SKILL_ART }, -- lime goo oozes round a shield's rim and drips off its point, bubbles rise and pop, leaves glow
+	starfall_aura_flip = { id = 112376749259507, from = SKILL_ART }, -- violet starlight along a bow's limbs, its star gems flare, the string shimmers, gold stars fall
+	moonsong_aura_flip = { id = 124028686879554, from = SKILL_ART }, -- silver moonlight swirls round a bow, crescent moons orbit, notes drift, a moon halo over the tip
+	windwhisper_aura_flip = { id = 138216080740649, from = SKILL_ART }, -- teal wind arcs sweep round a bow's back, its string shimmers, white feathers drift
+	prism_aura_flip = { id = 116130738945610, from = SKILL_ART }, -- a rainbow glow breaks out of a focus's gem ring, a rainbow ribbon swirls up it, prism shards drift
+	mythic_aura_flip = { id = 93484442362719, from = SKILL_ART }, -- violet rings orbit a focus's head, its gem pulses violet, green leaves and violet sparkles drift
+	astral_aura_flip = { id = 79438965814770, from = SKILL_ART }, -- a violet and blue nebula swirls round a scepter, a golden galaxy turns over its tip, gold stars twinkle
+	bastion_aura_flip = { id = 113576792363952, from = SKILL_ART }, -- golden rays fan out behind a shield, gold light runs round its rim and towers, a crown of light, fleurs-de-lis rise
+	enchanted_aura_flip = { id = 92425122518346, from = SKILL_ART }, -- a violet ribbon of light spirals up a staff, its crystal pulses violet, white sparkles twinkle
+	lifebloom_aura_flip = { id = 79061085280710, from = SKILL_ART }, -- a staff's crystal pulses teal, teal and pink ribbons spiral up it, blossom petals drift away
+	everbloom_aura_flip = { id = 129776412602947, from = SKILL_ART }, -- a crown of golden lily petals opens over a staff, green light pulses, golden leaves spiral up it
+	satchel_aura_flip = { id = 113100218045348, from = SKILL_ART }, -- violet light swirls round a satchel, red and blue potion drops glow at its sides, bubbles rise
+	philosopher_aura_flip = { id = 97738691526775, from = SKILL_ART }, -- a golden alchemy circle turns round a kit, a teal star pulses in it, a flask and a sprout glow
+	elixir_aura_flip = { id = 135061578142484, from = SKILL_ART }, -- a golden halo over a kit, its gem pulses violet, violet wisps curl up its sides, rainbow bubbles drift
 }
 
 -- The pictures of the packs that the baker met (tools/bake.luau writes them here: `lune run tools/bake.luau`). Each is

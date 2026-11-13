@@ -1,79 +1,39 @@
 -- Weapon Aura Kit: what Goo Lineage's finer Alchemy Kits give off while they are held (core Epic, bramble Mythic, legend
--- Legendary; Common and Uncommon ones have none). The cheapest of the weapon's layers, for four slimes on a phone: a
--- soft glow of the rung's colour breathing in the bottles and the rung's motif, drawn solid so it shows on snow. Core,
--- the Alchemist's Satchel: a violet glow, purple bubbles fizzing up. Bramble, the Philosopher's Kit: a green glow, the
--- four alchemy signs going round the bag, the game's acid dripping now and then, a gold glint, a green light. Legend,
--- the Grand Elixir Pack: a gold glow, rainbow bubbles circling over the bag, a golden flask standing over it like a
--- crown, twinkles on the glass, a violet light.
-local function with(base, over)
-	local out = table.clone(base)
-	for key, value in over or {} do
-		out[key] = value
-	end
-	return out
-end
+-- Legendary; Common and Uncommon ones have none). Each rung's whole aura is one ChatGPT clip worn round the kit (the
+-- owner's way, lesson 284: a GIF of this very kit wearing it, rebuilt as the effect alone round its empty shape), one
+-- particle for four slimes on a phone. Core, the Alchemist's Satchel: violet light swirling round the bag, red and
+-- blue potion drops glowing at its sides, bubbles rising. Bramble, the Philosopher's Kit: a golden alchemy circle
+-- turning round it, a teal star pulsing in the bag, a little flask and a sprout glowing, a green light. Legend, the
+-- Grand Elixir Pack: a golden halo over the handle, the gem pulsing violet, violet wisps curling up its sides, rainbow
+-- bubbles drifting, a violet light.
 
--- (a soft glow of the rung's colour breathing in the bottles: high on the bag and wider than it, so its mesh does not
--- hide it)
-local function glow(color, size)
+-- (the whole aura in one picture drawn round the kit's empty shape; the clip once a life, 1.5 s, one always there,
+-- the next taking over on the clip's dim first frame. `size`: the kit's height over its share of the picture,
+-- halved, as clip_frames.py --fit --height 2.5 prints it, the picture centred on the kit)
+local function card(texture, size)
 	return {
-		name = "glow",
-		texture = "glow_soft",
-		color = color,
-		at = "chest",
-		box = { 0.6, 0.3, 0.6 },
-		rate = 2,
-		life = { 1.4, 1.8 },
-		size = { { 0, size * 0.7 }, { 0.5, size }, { 1, size * 0.8 } },
-		transparency = { { 0, 1 }, { 0.5, 0.4 }, { 1, 1 } },
-		lightEmission = 0.6,
-		zOffset = -0.5,
-	}
-end
-
--- (bubbles fizzing up out of the bottles, left where they rose)
-local function bubbles(color, rate, size, over)
-	return with({
-		name = "bubbles",
-		texture = "bubble_gloss",
-		color = color,
-		at = "chest",
-		box = { 0.8, 0.3, 0.7 },
-		rate = rate,
-		life = { 0.9, 1.3 },
-		size = { { 0, size * 0.35 }, { 0.3, size }, { 1, size * 0.7 } },
-		transparency = { { 0, 0 }, { 0.8, 0.2 }, { 1, 1 } },
-		speed = { 0.3, 0.7 },
-		spread = { 30, 30 },
-		direction = "Top",
-		accel = { 0, 1, 0 },
-		rotation = { 0, 359 },
-		lightEmission = 0,
-		brightness = 1.3,
-		locked = false,
-	}, over)
-end
-
--- (a glint winking on the glass)
-local function glint(texture, color, rate, size)
-	return {
-		name = "glint",
+		name = "aura",
 		texture = texture,
-		color = color,
+		role = "keep",
 		at = "body",
-		box = { 0.9, 0.7, 0.9 },
-		rate = rate,
-		life = { 0.3, 0.4 },
-		size = { { 0, 0 }, { 0.35, size }, { 1, 0 } },
-		rotation = { -20, 20 },
-		rotSpeed = { -60, 60 },
-		lightEmission = 1,
-		zOffset = 1,
+		rate = 1 / 1.5,
+		steady = true,
+		life = { 1.52, 1.52 },
+		size = { { 0, size }, { 1, size } },
+		transparency = { { 0, 0 }, { 1, 0 } },
+		-- (stood along the kit by a crawl up it, so the picture leans as it leans; VelocityParallel lays a
+		-- picture's WIDTH along the flight, so the upright drawing is turned a quarter: lesson 255)
+		speed = { 0.05, 0.05 },
+		direction = "Top",
+		orientation = "VelocityParallel",
+		rotation = { -90, -90 },
+		flipbook = { layout = "Grid4x4", mode = "OneShot" },
+		lightEmission = 0,
+		-- (out over the bag's thick front: the light round it is drawn on top of the pouches)
+		zOffset = 0.7,
+		locked = true,
 	}
 end
-
--- (the sign and the flask are ChatGPT clips: each particle plays its clip once over its life)
-local ONCE = { layout = "Grid4x4", mode = "OneShot" }
 
 return {
 	id = "aura.weapon_kit",
@@ -87,117 +47,22 @@ return {
 	palette = {},
 	tintable = false,
 	defaultVariant = "core",
-	pieces = {
-		glow({ 170, 110, 255 }, 2.6),
-		bubbles({ { 225, 175, 255 }, { 175, 110, 255 } }, 3.5, 0.65),
-	},
+	pieces = { card("satchel_aura_flip", 2.04) },
 	variants = {
 		core = { tier = "cheap" },
 		bramble = {
-			pieces = {
-				glow({ 90, 225, 170 }, 2.8),
-				-- (alchemy sigils going round the bag, left behind as they go: each draws itself, glints, bursts into
-				-- bubbles)
-				{
-					name = "signs",
-					texture = "alchemy_flip",
-					color = { { 255, 230, 140 }, { 150, 245, 190 } },
-					orbit = { radius = 0.9, period = 3, phase = 0, y = 1.6 },
-					rate = 2,
-					life = { 1, 1.2 },
-					size = { { 0, 0.75 }, { 1, 0.7 } },
-					transparency = { { 0, 0.05 }, { 0.85, 0.1 }, { 1, 1 } },
-					speed = { 0.1, 0.3 },
-					spread = { 180, 180 },
-					accel = { 0, 0.5, 0 },
-					rotation = { -15, 15 },
-					lightEmission = 0,
-					brightness = 1.4,
-					locked = false,
-					flipbook = ONCE,
-				},
-				{
-					-- a drop of the game's acid dripping from the bag now and then (kept as drawn)
-					name = "drip",
-					texture = "acidDrop",
-					role = "keep",
-					at = "feet",
-					box = { 0.6, 0.05, 0.5 },
-					rate = 0.9,
-					life = { 0.5, 0.6 },
-					size = { { 0, 0.5 }, { 1, 0.4 } },
-					transparency = { { 0, 0 }, { 0.8, 0.1 }, { 1, 1 } },
-					speed = { 0, 0 },
-					accel = { 0, -14, 0 },
-					rotation = { 0, 0 },
-					lightEmission = 0,
-					locked = false,
-				},
-				glint("star_glint_sharp", { { 255, 250, 225 }, { 255, 210, 110 } }, 1.2, 1.3),
-			},
+			pieces = { card("philosopher_aura_flip", 2.35) },
 			light = { color = { 150, 255, 190 }, brightness = 1.3, range = 8 },
 		},
 		legend = {
-			pieces = {
-				glow({ 255, 195, 90 }, 2.8),
-				-- (rainbow elixir bubbles circling over the bag, each going round the rainbow as it rises)
-				{
-					name = "bubbles",
-					texture = "bubble_gloss",
-					color = {
-						{ 255, 130, 130 },
-						{ 255, 220, 110 },
-						{ 120, 235, 160 },
-						{ 120, 175, 255 },
-						{ 210, 140, 255 },
-					},
-					orbit = { radius = 0.85, period = 2.6, phase = 0, y = 2.4 },
-					rate = 6,
-					life = { 1, 1.3 },
-					size = { { 0, 0.2 }, { 0.25, 0.75 }, { 1, 0.5 } },
-					transparency = { { 0, 0 }, { 0.8, 0.2 }, { 1, 1 } },
-					speed = { 0.2, 0.4 },
-					spread = { 180, 180 },
-					accel = { 0, 0.8, 0 },
-					rotation = { 0, 359 },
-					lightEmission = 0,
-					brightness = 1.3,
-					locked = false,
-				},
-				-- (a golden flask standing over the bag like a crown, brewed again and again: it pops up, sloshes, pops
-				-- its cork, glints, bursts into bubbles, and the next one is already popping up)
-				{
-					name = "flask",
-					texture = "flask_flip",
-					color = { 255, 210, 90 },
-					at = "crown",
-					rate = 1 / 2,
-					steady = true,
-					life = { 1.8, 1.8 },
-					size = { { 0, 1.25 }, { 1, 1.25 } },
-					transparency = { { 0, 0 }, { 0.9, 0 }, { 1, 1 } },
-					rotation = { -5, 5 },
-					flipbook = ONCE,
-					orientation = "FacingCameraWorldUp",
-					lightEmission = 0,
-					brightness = 1.6,
-				},
-				with(glint("star_twinkle", { { 255, 250, 225 }, { 255, 200, 90 } }, 2.5, 0.7), {
-					name = "twinkles",
-					life = { 0.6, 0.9 },
-					speed = { 0.1, 0.4 },
-					spread = { 180, 180 },
-					locked = false,
-					secondary = true,
-				}),
-			},
+			pieces = { card("elixir_aura_flip", 1.9) },
 			light = { color = { 215, 150, 255 }, brightness = 1.3, range = 9 },
 		},
 	},
 	source = {
 		from = "the library, for Goo Lineage's held weapons (docs/vfx/plans/2026-11-12-weapons.md, redone 2026-11-13)",
-		art = "alchemy_flip, flask_flip (ChatGPT clips drawn for the library: tools/chatgpt/clip_frames.py); the owner's acid drop (acidDrop: Goo Lineage's own, kept as drawn); free Creator Store pack textures (no scripts: glow_soft, star_glint_sharp, star_twinkle); bubble_gloss (ChatGPT for the library)",
-		licence = "the owner's own art; Creator Store free assets (no scripts kept)",
+		art = "satchel_aura_flip, philosopher_aura_flip, elixir_aura_flip (ChatGPT's GIF of each kit wearing it, rebuilt by ChatGPT as the effect alone: tools/chatgpt/clip_frames.py --black --fit --height 2.5)",
+		licence = "the owner's own art (drawn for the library by ChatGPT)",
 	},
 	notes = "VfxLib.attach(kitMeshPart, id, { variant = rarity }) while a core, bramble or legend kit is held; VfxLib.detach(handle) when it is put away. Core is cheap (no light), bramble and legend mid with a small light.",
 }

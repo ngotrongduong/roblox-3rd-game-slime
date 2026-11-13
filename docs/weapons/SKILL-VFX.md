@@ -135,6 +135,10 @@ What the owner saw: the trails, cast bursts and auras of step 3 (`trail.weapon_<
 - **Phone budget**: a squad of four Legendary weapons at once stays within the library's budgets; the idle aura is
   the cheapest layer (it is on all the time).
 
+The 18 held auras (6 families x Epic, Mythic, Legendary) are one ChatGPT card each since the library's 8f58815: a 4x4
+flipbook of the weapon's own motif on one emitter (`aura`), the move trails and hits on top only while it swings.
+Seen in an Arena replay at the game's camera: a soft glow at the weapon's head, the slime stays clear, no error.
+
 ## 5. The 30 weapons, their looks and a theme each
 
 | Family | Common (wood) | Uncommon (iron) | Epic | Mythic | Legendary |
