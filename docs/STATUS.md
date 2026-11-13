@@ -19,6 +19,10 @@ fought by each fighter's place like the Dungeon; slimes there showed no weapon o
 - **Arena bots hold weapons** (the owner's yes, the same day): four different classes a team at the tier of its level
   (`Config.Arena.BotTierLevels`, Common to Legendary), skills and all, power unchanged; `arena_sim` moved by noise
   only. Seen in an Arena replay: the rival team in its row, each with its weapon in hand.
+- **Library e2037cf imported**: the redone weapon effects (78 new designs, same ids) and the last two status looks,
+  `buff.acid_melt` and `buff.slowed`, so every lasting effect now shows. Weapon casts that mark the floor skip their
+  own slime and weapon (`ignore`). Seen in an Arena replay (no error) and the status looks on the real slime mesh:
+  the slow's `sting` and `frost` hide the slime and went back to the library for a fix (`SKILL-VFX.md` §6).
 
 ## 2026-11-13 — longer ranged reach, skill power by rarity, single and area targets, effects that last show
 

@@ -76,7 +76,8 @@
 --   life      { min, max } seconds            size      { { t, v, e? } } studs over a life
 --   transparency { { t, v, e? } }             speed     { min, max }       spread  { x, y } degrees
 --   accel     { x, y, z }                     drag      number             rotation, rotSpeed  { min, max } degrees
---   lightEmission, lightInfluence, brightness, zOffset, inherit (VelocityInheritance), squash { { t, v } }
+--   lightEmission, lightInfluence, brightness, zOffset (studs toward the camera, grown with the host like every
+--   length), inherit (VelocityInheritance), squash { { t, v } }
 --   orientation  FacingCamera | FacingCameraWorldUp | VelocityParallel | VelocityPerpendicular
 --   direction Top | Bottom | Front | Back | Left | Right       shape  Box | Sphere | Cylinder | Disc
 --   shapeStyle Volume | Surface               shapeInOut Outward | Inward | InAndOut      shapePartial 0..1
@@ -151,8 +152,9 @@
 --   wing
 -- A BAND (one Trail): texture, colors | role, width, life, glow, alpha, taper, y (its middle over the feet), length
 --   (studs between two repeats of the picture; none: stretched), shift (seconds round its colour loop), phase, span,
---   blade { base, tip } (a weapon's trail: shares of the host's longest side, from its negative end, -0.5 to 1.5: a
---   smear flung a little past the weapon's end, as a swung bag's goo; width unused),
+--   blade { base, tip } (a weapon's trail: shares of the host's longest side, from its negative end, -1 to 1.5: a
+--   smear flung past the weapon's end, as a swung bag's potion: a bag swung by its top hides the arc it sweeps, its
+--   smear must lie clear of it; width unused),
 --   axis (with blade: X | Y | Z, the host's side the weapon's length runs along, when it is not the longest: an
 --   alchemy kit wider than it is tall), face (false: a flat ribbon in the world, as a blade's arc; true by default: it
 --   faces the camera). A weapon's trail taken off (VfxLib.detach) fades: its ribbon and sparks end their lives.
@@ -197,6 +199,11 @@
 -- A PIECE's `offset` { x, y, z }: studs from its anchor (at refHeight); on an `along` piece, studs in the frame on
 -- the path (-z toward the spot). `upright = "in"`: the picture stands facing the play's middle (level) from where it
 -- is born, whatever the camera (portals round a target, each turned to it).
+-- A PIECE's `ground = true` (one-shot): born on the floor straight under the spot, level and turned as the play about
+-- the up axis (`offset` studs from there; a box or radius lies there too): the floor is `opts.ground` (a height or a
+-- point) when the game gives it, else the first anchored, collidable surface below that is not a character's (one with
+-- a Humanoid) nor one of `opts.ignore`, else the foot of the box. A cast played at a held weapon's head marks the
+-- ground under the slime, whatever the weapon's tilt. Not with at, along, caster or ride.
 local Anchors = require(if script then script.Parent.Anchors else "./Anchors")
 local Budget = require(if script then script.Parent.Budget else "./Budget")
 local Models = require(if script then script.Parent.Models else "./Models")
@@ -751,6 +758,19 @@ function Schema.pieceProblem(_effect, piece, what, oneShot)
 	if piece.cast ~= nil and (piece.cast ~= true or not oneShot) then
 		return `{what}: cast = true times a one-shot piece from the cast, not the impact`
 	end
+	if
+		piece.ground ~= nil
+		and (
+			piece.ground ~= true
+			or not oneShot
+			or piece.at ~= nil
+			or piece.along ~= nil
+			or caster ~= nil
+			or piece.ride ~= nil
+		)
+	then
+		return `{what}: ground = true lays a one-shot's piece on the floor under the spot (no at, along, caster or ride)`
+	end
 	return tintProblem(piece, what)
 end
 
@@ -1181,10 +1201,10 @@ function Schema.problem(effect, variantOf)
 				if
 					not isPair(blade)
 					or blade[2] == nil
-					or math.min(blade[1], blade[2]) < -0.5
+					or math.min(blade[1], blade[2]) < -1
 					or math.max(blade[1], blade[2]) > 1.5
 				then
-					return `{label} band {index}: blade is \{ base, tip \}, shares -0.5 to 1.5 of the weapon's length`
+					return `{label} band {index}: blade is \{ base, tip \}, shares -1 to 1.5 of the weapon's length`
 				end
 				if math.abs(blade[2] - blade[1]) < 0.1 then
 					return `{label} band {index}: a blade band spans at least a tenth of the weapon`

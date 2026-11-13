@@ -1,6 +1,6 @@
 {
   "about": "Imported from the owner's VfxLib (C:\\roblox-vfx-library) by tools/import.luau: change the library, not these files.",
-  "commit": "80de5f4",
+  "commit": "e2037cf",
   "effects": [
     "aura.monster_signature",
     "aura.secret_signature",
@@ -10,7 +10,9 @@
     "aura.weapon_shield",
     "aura.weapon_staff",
     "aura.weapon_sword",
+    "buff.acid_melt",
     "buff.emote",
+    "buff.slowed",
     "buff.stat_set",
     "burst.deer_mend",
     "burst.drake_mend",
@@ -94,7 +96,9 @@
     "Effects/aura/weapon_shield.luau",
     "Effects/aura/weapon_staff.luau",
     "Effects/aura/weapon_sword.luau",
+    "Effects/buff/acid_melt.luau",
     "Effects/buff/emote.luau",
+    "Effects/buff/slowed.luau",
     "Effects/buff/stat_set.luau",
     "Effects/burst/deer_mend.luau",
     "Effects/burst/drake_mend.luau",

@@ -286,7 +286,13 @@ function SlimeWeapon.cue(model: Model, cast: boolean, strikeIn: number)
 			-- handle end)
 			local part = h.part
 			if h.cue == cue and part and part.Parent then
-				pcall(VfxLib.play, castId, part.CFrame * CFrame.new(0, part.Size.Y / 2, 0), { variant = h.tier })
+				-- (a cast that marks the floor rays down for it: past its own slime and weapon)
+				pcall(
+					VfxLib.play,
+					castId,
+					part.CFrame * CFrame.new(0, part.Size.Y / 2, 0),
+					{ variant = h.tier, ignore = { model } }
+				)
 			end
 		end)
 	end

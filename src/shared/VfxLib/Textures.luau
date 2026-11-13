@@ -24,6 +24,8 @@ local FLOOR_ART = "ChatGPT picture drawn for the owner's library (textures/floor
 local WING_ART = "ChatGPT picture drawn for the owner's library (textures/wings/)"
 local SKILL_ART = "ChatGPT picture drawn for the owner's library (textures/fx/, textures/wings/)"
 local EC_ART = "rendered for the owner's library by EffectCraft from a recipe (textures/fx/, tools/effectcraft/)"
+local CODE_ART =
+	"drawn in code for the owner's library (textures/fx/: tools/glyph_art.py, tools/ribbon_strip.py, tools/status_art.py)"
 local SLIME_WING_ART =
 	"ChatGPT picture drawn for the owner's library in the style of the owner's Goo Lineage slime art (textures/wings/)"
 
@@ -298,6 +300,27 @@ Textures.Images = {
 	arrow_steel = { id = 137131755131773, from = EC_ART }, -- an arrow: white vanes with a red band, wood, steel head
 	-- (the same way: a Beam from the vanes (top row) to the head; drawn 1 : 4, stored square)
 	bolt_steel = { id = 137919394637748, from = EC_ART }, -- a crossbow bolt: dark wood, iron vanes, brass bands, broad head
+
+	-- Drawn in code (2026-11-13, Goo Lineage's held weapons): light grey with alpha, a dark rim, tinted and drawn NORMAL
+	-- so the colour holds on snow and on a dark floor. Symbols from Windows' Segoe UI Symbol (tools/glyph_art.py):
+	glyph_notes = { id = 70693391063748, from = CODE_ART }, -- music notes: one, two beamed, four beamed, a quarter (2 x 2)
+	glyph_alchemy = { id = 110540771620743, from = CODE_ART }, -- alchemy's air, fire, earth, water triangles (2 x 2)
+	glyph_royal = { id = 111221042362180, from = CODE_ART }, -- a fleur-de-lis, a banner, a castle, a crown (2 x 2)
+	glyph_crown = { id = 87519561218288, from = CODE_ART }, -- a crown of five ball-tipped points
+	glyph_sun = { id = 79526042047392, from = CODE_ART }, -- a sun disc and eight rays
+	glyph_rune = { id = 137946531612008, from = CODE_ART }, -- four diamonds round a point: a diamond rune
+	glyph_flask = { id = 77950118205666, from = CODE_ART }, -- an alembic: a round flask, its spout curling over, on a stand
+	-- (a Trail's strip, tools/ribbon_strip.py: a blade's cut, its top edge (Attachment0: the tip on a weapon band) a
+	-- dark rim over a hard bright line, its body thinning away toward the bottom edge)
+	ribbon_blade = { id = 105536149143355, from = CODE_ART },
+	-- Full colour, worn untinted (role "keep"; tools/status_art.py, 2026-11-13, Goo Lineage's slows and armour melt):
+	-- solid, a dark rim of their own colour, goo lit as a glossy dome. 2 x 2: four stills; 4 x 4: one OneShot.
+	acid_runs = { id = 93042924686318, from = CODE_ART }, -- green acid: a splotch, a stream, a drop at its end (2 x 2)
+	acid_fizz = { id = 135298862383821, from = CODE_ART }, -- acid bubbles swell and pop, a wisp curls up (4 x 4)
+	acid_sludge = { id = 136204762542753, from = CODE_ART }, -- a lumpy heap of green acid sludge, bubbles (2 x 2)
+	honey_strands = { id = 121405689216869, from = CODE_ART }, -- honey strands stretch and snap (4 x 4)
+	roots_coil = { id = 113009368431454, from = CODE_ART }, -- brown roots break out, coil up, two leaves (4 x 4)
+	rime_creep = { id = 74091273748347, from = CODE_ART }, -- an ice crust mound rising, shards growing (4 x 4)
 }
 
 -- The pictures of the packs that the baker met (tools/bake.luau writes them here: `lune run tools/bake.luau`). Each is

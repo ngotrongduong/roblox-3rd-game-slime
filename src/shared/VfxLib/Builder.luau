@@ -63,7 +63,41 @@ Builder.engine = {
 	meshPart = function(id)
 		return game:GetService("AssetService"):CreateMeshPartAsync(Content.fromUri(`rbxassetid://{id}`))
 	end,
+	-- the height of the floor straight under a spot (nil: none within `depth` studs): the first anchored, collidable
+	-- surface that is not part of a character (a model with a Humanoid: the slime holding the weapon, its squad) nor
+	-- one of `ignore` (an effect's own parts are never queried)
+	ground = function(position, depth, ignore)
+		local params = RaycastParams.new()
+		params.FilterType = Enum.RaycastFilterType.Exclude
+		local skip = table.clone(ignore or {})
+		for _ = 1, 8 do
+			params.FilterDescendantsInstances = skip
+			local hit = workspace:Raycast(position, Vector3.new(0, -depth, 0), params)
+			if not hit then
+				return nil
+			end
+			local part = hit.Instance
+			if part:IsA("Terrain") then
+				return hit.Position.Y
+			end
+			local body = nil
+			local parent = part.Parent
+			while parent and parent ~= workspace do
+				if parent:IsA("Model") and parent:FindFirstChildOfClass("Humanoid") then
+					body = parent
+					break
+				end
+				parent = parent.Parent
+			end
+			if part.Anchored and part.CanCollide and not body then
+				return hit.Position.Y
+			end
+			table.insert(skip, body or part)
+		end
+		return nil
+	end,
 }
+Builder.GroundDepth = 40 -- studs a `ground` piece looks down for the floor
 
 local function newPart(name, size, cframe, parent)
 	local part = Instance.new("Part")
@@ -277,8 +311,8 @@ local function specOf(piece, scale, grade)
 end
 
 -- Makes the emitter of a piece.
---   ctx = { effect, palette (the game's), height (studs, of the host), move (speed factor), angle (degrees, a blow's
---           direction on screen), grade, continuous }
+--   ctx = { effect, palette (the game's), height (studs, of the host), move (speed factor), scale (length factor),
+--           angle (degrees, a blow's direction on screen), grade, continuous }
 local function makeEmitter(piece, spec, ctx)
 	local emitter = Instance.new("ParticleEmitter")
 	emitter.Name = piece.name or "Piece"
@@ -307,7 +341,9 @@ local function makeEmitter(piece, spec, ctx)
 	emitter.LightInfluence = piece.lightInfluence or 0
 	emitter.Brightness = piece.brightness or 1
 	emitter.LightEmission = piece.lightEmission or 0
-	emitter.ZOffset = piece.zOffset or 0
+	-- (studs at refHeight like every length: on an 11-stud monster a picture born under its skin needs twice the pull of
+	-- one on a 5-stud one to show over it)
+	emitter.ZOffset = (piece.zOffset or 0) * (ctx.scale or 1)
 	emitter.LockedToPart = if piece.locked ~= nil then piece.locked else ctx.continuous == true
 	emitter.VelocityInheritance = piece.inherit or 0
 	emitter.TimeScale = Builder.timeScale
@@ -2239,6 +2275,7 @@ function Builder.attach(effect, host, opts)
 		palette = opts.palette,
 		height = height,
 		move = move,
+		scale = scale,
 		grade = grade,
 		continuous = true,
 	}
@@ -2981,6 +3018,28 @@ function Builder.play(effect, at, opts)
 	local function alongFrame(f)
 		return CFrame.new(pathFrom:Lerp(pathTo, f)) * casterLocal.Rotation
 	end
+	-- the floor under the spot (`ground` pieces), level and turned as the play about the up axis: at `opts.ground` (a
+	-- height or a point) when the game knows it, else the first floor straight below, else the foot of the box. A cast
+	-- played at a held weapon's head marks the ground under the slime, whatever the weapon's tilt.
+	local groundFrame = nil
+	local function groundAt()
+		if groundFrame then
+			return groundFrame
+		end
+		local position = cframe.Position
+		local given = opts.ground
+		local y = if typeof(given) == "Vector3" then given.Y elseif type(given) == "number" then given else nil
+		if y then
+			y += Anchors.Points.ground[3]
+		else
+			local ok, found = pcall(Builder.engine.ground, position, Builder.GroundDepth, opts.ignore)
+			y = if ok and type(found) == "number" then found + Anchors.Points.ground[3] else position.Y + groundY
+		end
+		local look = cframe.LookVector * Vector3.new(1, 0, 1)
+		local turn = if look.Magnitude > 1e-3 then CFrame.lookAt(Vector3.zero, look) else CFrame.new()
+		groundFrame = CFrame.new(position.X, y, position.Z) * turn
+		return groundFrame
+	end
 
 	local folder = Instance.new("Folder")
 	folder.Name = "VfxLib_" .. fields.id
@@ -3011,7 +3070,26 @@ function Builder.play(effect, at, opts)
 
 	-- (`shrink`: the budget's cut of the piece's pictures, which its `radius` takes too: at a boss's scale a spread kept
 	-- whole stood its pictures, cut to half, far behind the boss, up by the horizon; Goo Lineage, 2026-11-12)
+	local function boxSize(piece, shrink)
+		if piece.radius then
+			local across = piece.radius * 2 * scale * (shrink or 1)
+			return Vector3.new(across, across, across)
+		end
+		return Vector3.new(size.X * piece.box[1], size.Y * piece.box[2], size.Z * piece.box[3])
+	end
 	local function emitterParent(piece, shrink)
+		if piece.ground then
+			-- (on the floor under the spot, level; `offset` studs from there in the play's turn)
+			local spot = groundAt() * (if piece.offset then CFrame.new(vector(piece.offset, scale)) else CFrame.new())
+			if piece.box or piece.radius then
+				local part = newPart("Ground_" .. piece.name, boxSize(piece, shrink), spot, folder)
+				part.Anchored = true
+				return part
+			end
+			local attachment = newAttachment(anchor, "Ground_" .. piece.name, Vector3.zero)
+			attachment.CFrame = cframe:ToObjectSpace(spot)
+			return attachment
+		end
 		if piece.ride then
 			-- (born on a rolling beam's middle and going with it: moved each step, see `live.riding`; its box, when it has
 			-- one, lies along the beam)
@@ -3046,14 +3124,7 @@ function Builder.play(effect, at, opts)
 			offset += vector(piece.offset, scale)
 		end
 		if piece.box or piece.radius then
-			local partSize
-			if piece.radius then
-				local across = piece.radius * 2 * scale * (shrink or 1)
-				partSize = Vector3.new(across, across, across)
-			else
-				partSize = Vector3.new(size.X * piece.box[1], size.Y * piece.box[2], size.Z * piece.box[3])
-			end
-			local part = newPart("Box", partSize, cframe * CFrame.new(offset), folder)
+			local part = newPart("Box", boxSize(piece, shrink), cframe * CFrame.new(offset), folder)
 			part.Anchored = true
 			return part
 		end
@@ -3206,7 +3277,14 @@ function Builder.play(effect, at, opts)
 				live.flight.body =
 					{ beams = beams, back = back, length = body.length * scale, overlap = body.overlap or 0 }
 			end
-			local riderCtx = { effect = fields, palette = opts.palette, height = ref, move = scale, continuous = false }
+			local riderCtx = {
+				effect = fields,
+				palette = opts.palette,
+				height = ref,
+				move = scale,
+				scale = scale,
+				continuous = false,
+			}
 			for _, rider in projectile.riders or {} do
 				if Quality.secondary() or not rider.secondary then
 					local riderSpec = specOf(rider, scale, nil)
@@ -3281,6 +3359,7 @@ function Builder.play(effect, at, opts)
 		palette = opts.palette,
 		height = size.Y,
 		move = scale,
+		scale = scale,
 		angle = opts.angle,
 		grade = grade,
 		continuous = false,

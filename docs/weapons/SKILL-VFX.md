@@ -163,8 +163,10 @@ while renewed, and takes it off when it runs out, when the fighter falls or when
 | shielded | Taunt, on the Guardian | `buff.stat_set` "defence": shields circling it, finer with its shield's tier | yes |
 | guarded | Bark Wall and other guards | `buff.stat_set` "defence" | yes |
 | stunned | stuns (Bramble Burst, Shield Bash, bosses), as long as the stun really lasts | `buff.emote` "confused" over the head | placement only |
-| melted | Acid Rain, on every foe struck | `buff.acid_melt` | **not yet**: ordered from the library |
-| slowed | stings and the monsters' slowing specials (acid, roots, frost) | `buff.slowed`, variants `sting`, `acid`, `roots`, `frost` by skill | **not yet**: ordered from the library |
+| melted | Acid Rain, on every foe struck | `buff.acid_melt`: acid runs and popping bubbles on the body | yes, on the real slime mesh |
+| slowed | stings and the monsters' slowing specials (acid, roots, frost) | `buff.slowed`, variants `sting`, `acid`, `roots`, `frost` by skill | yes; `sting` and `frost` sent back |
 
-Until the library delivers `buff.acid_melt` and `buff.slowed`, those two statuses show nothing (the game checks the
-effect exists before it puts it on).
+Both came from the library on 2026-11-13 (e2037cf). Seen on the game's slime mesh from its camera, 16 studs back (a row
+of five, one look each): the melt and the acid sludge sit right, the roots a little tall; the honey strands of `sting`
+make a cage taller than the slime and the `frost` crust a flat wall over it, both hiding the slime. Both were sent back
+to the library to hug the foot (low strands to a puddle; a crust up a third of the body); a re-import brings the fix.
