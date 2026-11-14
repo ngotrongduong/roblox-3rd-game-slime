@@ -59,6 +59,12 @@ export type Unit = {
 	-- a timed barrier absorbs damage before health; its remaining value never stacks with a new one
 	barrier: number,
 	barrierUntil: number,
+	-- Legendary counters and a delayed Arcane Barrage echo (the original foes, not a fresh area)
+	lastStandUsed: number,
+	momentumAt: number,
+	plainArrows: number,
+	echo: { at: number, key: string, targets: { Unit }, weight: number }?,
+	stunnedUntil: number,
 	hopReady: number,
 	interceptReady: number,
 	-- positional mode only (Fight.moves): where it stands (flat, studs from the arena's middle), the place round its
@@ -84,9 +90,11 @@ export type Fight = {
 	moves: boolean?,
 	radius: number?,
 	fade: boolean?,
+	-- The last ultimate announcement on each side, independent of the other side.
+	ultimateAt: { [string]: number },
 }
 -- `skill` is the way of fighting whose skill struck (a key of Config.Combat.Skills); a new `cast` event starts each
--- Uncommon or Epic skill; `amount` on a hit is health damage, `absorbed` is barrier damage. `n` the blow's number in a
+-- Uncommon, Epic or Mythic skill; `amount` on a hit is health damage, `absorbed` is barrier damage. `n` the blow's number in a
 -- several-blow skill; `splash` a blow that struck beside the target; `guard` the guard that took a blow aimed elsewhere;
 -- `ranged` a blow from a fighter that keeps its distance; `slow` a sting that slowed its target; `melt` a blow that
 -- melted its target's armour. A "heal" event carries the health given back in `amount`. A "move" event (positional mode
@@ -116,6 +124,8 @@ export type Event = {
 	dash: boolean?,
 	hop: boolean?,
 	status: string?,
+	trait: string?,
+	echo: boolean?,
 }
 -- `maxHp` is the full health when the fighter starts wounded (hp below it); left out, hp is the full health.
 -- `role` is a slime's way of fighting (Combat.role), `kind` a zombie's kind; either sets whom it goes for.
@@ -198,8 +208,13 @@ local function kindOf(u: Unit): any
 	return if u.class then (Config.Classes.Kinds :: any)[u.class] else nil
 end
 
+-- Passive traits belong only to Legendary weapons, never to a lower-tier class or monster.
+local function traitOf(u: Unit): any
+	return if u.class and (u.tier or 1) >= 5 then (Config.Classes.Traits :: any)[u.class] else nil
+end
+
 -- (each fighter opens at its own moment: a team that strikes all at once reads as one body, not four slimes)
-local function unit(fighter: Fighter, side: string, rng: Rng): Unit
+local function unit(fighter: Fighter, side: string, rng: Rng, joinedAt: number?): Unit
 	local c = Config.Combat
 	local role = fighter.role or fighter.kind or ""
 	-- (each counts its blows from its own start, so fighters of one kind do not strike their skills all together)
@@ -216,7 +231,10 @@ local function unit(fighter: Fighter, side: string, rng: Rng): Unit
 	if kind then
 		for index = 1, math.min(fighter.tier or 1, #kind.skills) do
 			local key = kind.skills[index]
-			ready[key] = c.OpeningCooldown + (c.Skills :: any)[key].cooldown * Config.Classes.OpeningShare
+			local skill = (c.Skills :: any)[key]
+			ready[key] = if skill.ultimate
+				then (joinedAt or 0) + skill.first
+				else c.OpeningCooldown + skill.cooldown * Config.Classes.OpeningShare
 		end
 	end
 	return {
@@ -255,6 +273,11 @@ local function unit(fighter: Fighter, side: string, rng: Rng): Unit
 		skillReady = ready,
 		barrier = 0,
 		barrierUntil = 0,
+		lastStandUsed = 0,
+		momentumAt = -math.huge,
+		plainArrows = 0,
+		echo = nil,
+		stunnedUntil = 0,
 		hopReady = 0,
 		interceptReady = 0,
 		x = fighter.x or 0,
@@ -290,6 +313,7 @@ function Combat.new(
 		moves = if opts then opts.moves else nil,
 		radius = if opts then opts.radius else nil,
 		fade = if opts then opts.fade else nil,
+		ultimateAt = { squad = -math.huge, foe = -math.huge },
 	}
 end
 
@@ -299,7 +323,7 @@ function Combat.add(fight: Fight, fighter: Fighter, side: string): Unit?
 	if fight.winner then
 		return nil
 	end
-	local joined = unit(fighter, side, fight.rng)
+	local joined = unit(fighter, side, fight.rng, fight.seconds)
 	table.insert(fight.units, joined)
 	return joined
 end
@@ -375,9 +399,11 @@ function Combat.stun(fight: Fight, u: Unit, seconds: number, events: { Event }?,
 		if fight.seconds < u.stunFree then
 			return
 		end
-		u.cooldown += math.min(seconds, K.MiniStunCap)
+		local effective = math.min(seconds, K.MiniStunCap) * (1 - effectOf(fight, u, "steady"))
+		u.cooldown += effective
+		u.stunnedUntil = math.max(u.stunnedUntil, fight.seconds + effective)
 		u.stunFree = fight.seconds + K.MiniStunFree
-		status(events, from, u, "stunned", math.min(seconds, K.MiniStunCap), key)
+		status(events, from, u, "stunned", effective, key)
 		return
 	end
 	local kept: { number } = {}
@@ -388,9 +414,11 @@ function Combat.stun(fight: Fight, u: Unit, seconds: number, events: { Event }?,
 	end
 	local share = K.StunSteps[#kept + 1] or 0
 	if share > 0 then
-		u.cooldown += seconds * share
+		local effective = seconds * share * (1 - effectOf(fight, u, "steady"))
+		u.cooldown += effective
+		u.stunnedUntil = math.max(u.stunnedUntil, fight.seconds + effective)
 		table.insert(kept, fight.seconds)
-		status(events, from, u, "stunned", seconds * share, key)
+		status(events, from, u, "stunned", effective, key)
 	end
 	u.stuns = kept
 end
