@@ -188,4 +188,71 @@ return function(T: any)
 		T.ok(VillageRequests.run(farm, revive, NOW, watch))
 		T.eq(cleared, 1)
 	end)
+
+	T.test("team sheet request shapes need a plot, a team number and their fields", function()
+		local row = { action = "SetTeamRow", team = 1, slimeId = "s1", row = "back" }
+		local tactic = { action = "SetTeamTactic", team = 1, tactic = "focus" }
+		T.ok(VillageRequests.valid(row, true))
+		T.ok(VillageRequests.valid(tactic, true))
+		T.ok(not VillageRequests.valid(row, false))
+		T.ok(not VillageRequests.valid(tactic, false))
+		for _, bad in {
+			{ action = "SetTeamRow", team = 0, slimeId = "s1", row = "front" },
+			{ action = "SetTeamRow", team = 1.5, slimeId = "s1", row = "front" },
+			{ action = "SetTeamRow", team = 1, slimeId = 55, row = "front" },
+			{ action = "SetTeamRow", team = 1, slimeId = "s1", row = false },
+			{ action = "SetTeamTactic", team = Config.Zombies.Teams + 1, tactic = "focus" },
+			{ action = "SetTeamTactic", team = 1, tactic = 42 },
+		} do
+			T.ok(not VillageRequests.valid(bad, true), bad.action)
+		end
+	end)
+
+	T.test("SetTeamRow validates membership and availability, and default rows clear overrides", function()
+		local farm = FarmKit.farm(NOW, FarmKit.many(4))
+		farm.teams[1].members = { "s1", "s2" }
+		farm.slimes[1].gear.hand = "bow-wood"
+		local row = { action = "SetTeamRow", team = 1, slimeId = "s1", row = "back" }
+		T.eq(select(2, VillageRequests.run(farm, { action = "SetTeamRow", team = 0 }, NOW, env())), "BAD_TEAM")
+		local locked = { action = "SetTeamRow", team = 2, slimeId = "s1", row = "back" }
+		T.eq(select(2, VillageRequests.run(farm, locked, NOW, env())), "LOCKED")
+		T.eq(select(2, VillageRequests.run(farm, row, NOW, env({ teamOut = isOut }))), "TEAM_OUT")
+		T.eq(
+			select(2, VillageRequests.run(farm, { action = "SetTeamRow", team = 1, slimeId = "s3", row = "back" }, NOW, env())),
+			"NO_SLIME"
+		)
+		T.eq(
+			select(2, VillageRequests.run(farm, { action = "SetTeamRow", team = 1, slimeId = "s1", row = "side" }, NOW, env())),
+			"BAD_ROW"
+		)
+		T.eq(farm.teams[1].formation, nil, "refusals did not write a choice")
+		T.ok(VillageRequests.run(farm, row, NOW, env()))
+		T.same(farm.teams[1].formation, { s1 = "back" })
+		T.ok(VillageRequests.run(farm, { action = "SetTeamRow", team = 1, slimeId = "s1", row = "middle" }, NOW, env()))
+		T.eq(farm.teams[1].formation, nil, "the bow's middle default is represented by absence")
+	end)
+
+	T.test("SetTeamTactic refuses invalid or away teams, and Balanced drops the field", function()
+		local farm = FarmKit.farm(NOW, FarmKit.many(4))
+		farm.teams[1].members = { "s1" }
+		local focus = { action = "SetTeamTactic", team = 1, tactic = "focus" }
+		T.eq(select(2, VillageRequests.run(farm, { action = "SetTeamTactic", team = 0 }, NOW, env())), "BAD_TEAM")
+		T.eq(
+			select(2, VillageRequests.run(farm, { action = "SetTeamTactic", team = 2, tactic = "focus" }, NOW, env())),
+			"LOCKED"
+		)
+		T.eq(select(2, VillageRequests.run(farm, focus, NOW, env({ teamOut = isOut }))), "TEAM_OUT")
+		T.eq(
+			select(2, VillageRequests.run(farm, { action = "SetTeamTactic", team = 1, tactic = "rush" }, NOW, env())),
+			"BAD_TACTIC"
+		)
+		T.eq(farm.teams[1].tactic, nil)
+		T.ok(VillageRequests.run(farm, focus, NOW, env()))
+		T.eq(farm.teams[1].tactic, "focus")
+		T.ok(VillageRequests.run(farm, { action = "SetTeamTactic", team = 1, tactic = "protect" }, NOW, env()))
+		T.eq(farm.teams[1].tactic, "protect")
+		T.ok(VillageRequests.run(farm, { action = "SetTeamTactic", team = 1, tactic = "balanced" }, NOW, env()))
+		T.eq(farm.teams[1].tactic, nil)
+	end)
+
 end
