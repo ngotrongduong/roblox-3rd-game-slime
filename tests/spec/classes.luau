@@ -1755,6 +1755,209 @@ return function(T: any)
 		end
 	end)
 
+
+	T.test("Bulwark protects its whole team only when enough living members are threatened", function()
+		local function defence(threats: number): (any, { any })
+			local fight = Combat.new({
+				slime("g", "guardian", { tier = 4 }),
+				slime("a", nil, { hp = 80, maxHp = 100 }),
+				slime("b", nil, { hp = 70, maxHp = 100 }),
+			}, { foe("f"), foe("e") }, Rng.new(112))
+			arm(fight, "g", "bulwark")
+			freeze(unitOf(fight, "a"))
+			freeze(unitOf(fight, "b"))
+			freeze(unitOf(fight, "f"), unitOf(fight, "a"))
+			freeze(unitOf(fight, "e"), unitOf(fight, if threats == 2 then "b" else "a"))
+			return fight, run(fight, 3)
+		end
+		local fight, events = defence(2)
+		local cast = castOf(events, "bulwark")
+		T.ok(cast ~= nil and cast.to == "g")
+		local shown = 0
+		for _, e in events do
+			if e.kind == "status" and e.status == Skills.bulwark.status then
+				shown += 1
+				T.eq(e.seconds, Skills.bulwark.seconds)
+				T.eq(e.skill, "bulwark")
+			end
+		end
+		T.eq(shown, 3)
+		for _, id in { "g", "a", "b" } do
+			local u = unitOf(fight, id)
+			T.eq(u.effects.taken.value, Skills.bulwark.taken)
+			T.eq(u.effects.steady.value, Skills.bulwark.steady)
+		end
+		local no, quiet = defence(1)
+		T.eq(castOf(quiet, "bulwark"), nil)
+		T.eq(unitOf(no, "g").skillReady.bulwark, 0)
+		local solo = Combat.new({ slime("g", "guardian", { tier = 4 }) }, { foe("f") }, Rng.new(112))
+		arm(solo, "g", "bulwark")
+		freeze(unitOf(solo, "f"), unitOf(solo, "g"))
+		T.ok(castOf(run(solo, 3), "bulwark") ~= nil, "one threatened lone Guardian is enough")
+	end)
+
+	T.test("Sanctuary heals up to four lowest-health allies and sanctifies only those healed", function()
+		local fight = Combat.new({
+			slime("h", "healer", { tier = 4, x = 0 }),
+			slime("a", nil, { hp = 25, maxHp = 100, x = 2 }),
+			slime("b", nil, { hp = 45, maxHp = 100, x = 4 }),
+			slime("c", nil, { hp = 85, maxHp = 100, x = 6 }),
+			slime("d", nil, { hp = 90, maxHp = 100, x = 8 }),
+			slime("e", nil, { hp = 70, maxHp = 100, x = 10 }),
+		}, { foe("f", { x = 60 }) }, Rng.new(113), { moves = true })
+		arm(fight, "h", "sanctuary")
+		for _, id in { "a", "b", "c", "d", "e", "f" } do
+			freeze(unitOf(fight, id))
+		end
+		local events = run(fight, 3)
+		T.ok(castOf(events, "sanctuary") ~= nil)
+		local healed: { string } = {}
+		local blessed: { [string]: boolean } = {}
+		for _, e in events do
+			if e.kind == "heal" and e.skill == "sanctuary" then
+				table.insert(healed, e.to)
+				T.near(e.amount, Combat.healAmount(10, Skills.sanctuary.factor), 1e-9)
+			elseif e.status == "sanctified" then
+				blessed[e.to] = true
+				T.eq(e.skill, "sanctuary")
+				T.eq(e.seconds, Skills.sanctuary.seconds)
+			end
+		end
+		T.same(healed, { "a", "b", "e", "c" })
+		for _, id in healed do
+			T.ok(blessed[id])
+			T.eq(unitOf(fight, id).effects.steady.value, Skills.sanctuary.steady)
+		end
+		T.eq(blessed.d, nil, "fifth wounded ally is not selected")
+		local one = Combat.new({
+			slime("h", "healer", { tier = 4 }),
+			slime("a", nil, { hp = 50, maxHp = 100 }),
+		}, { foe("f") }, Rng.new(113))
+		arm(one, "h", "sanctuary")
+		freeze(unitOf(one, "a"))
+		freeze(unitOf(one, "f"))
+		T.eq(castOf(run(one, 3), "sanctuary"), nil, "one ordinary wound is not urgent")
+		local dire = Combat.new({
+			slime("h", "healer", { tier = 4 }),
+			slime("a", nil, { hp = 30, maxHp = 100 }),
+		}, { foe("f") }, Rng.new(113))
+		arm(dire, "h", "sanctuary")
+		freeze(unitOf(dire, "a"))
+		freeze(unitOf(dire, "f"))
+		T.ok(castOf(run(dire, 3), "sanctuary") ~= nil, "one dire wound is urgent")
+	end)
+
+	T.test("Catalyst Cloud melts every surviving target for four seconds", function()
+		local fight = Combat.new({ slime("a", "alchemist", { tier = 4 }) }, {
+			foe("f"), foe("g"), foe("h"),
+		}, Rng.new(114))
+		arm(fight, "a", "catalyst_cloud")
+		for _, id in { "f", "g", "h" } do
+			freeze(unitOf(fight, id))
+		end
+		local events = run(fight, 3)
+		T.ok(castOf(events, "catalyst_cloud") ~= nil)
+		local melted: { [string]: boolean } = {}
+		for _, e in events do
+			if e.kind == "status" and e.status == "melted" and e.skill == "catalyst_cloud" then
+				melted[e.to] = true
+				T.eq(e.seconds, Skills.catalyst_cloud.seconds)
+			end
+		end
+		for _, id in { "f", "g", "h" } do
+			T.ok(melted[id])
+			T.eq(unitOf(fight, id).effects.melt.value, Skills.catalyst_cloud.melt)
+		end
+	end)
+
+	T.test("steady cuts stun after its diminishing returns and mini-boss caps, never over fifty percent", function()
+		local fight = Combat.new({ slime("s") }, { foe("f") }, Rng.new(115))
+		local s = unitOf(fight, "s")
+		s.effects.steady = { value = Skills.bulwark.steady, untilAt = 20 }
+		local before = s.cooldown
+		Combat.stun(fight, s, 1)
+		T.near(s.cooldown - before, 1 - Skills.bulwark.steady, 1e-9)
+		local second = s.cooldown
+		Combat.stun(fight, s, 1)
+		T.near(s.cooldown - second, Config.Classes.StunSteps[2] * (1 - Skills.bulwark.steady), 1e-9)
+		local capped = Combat.new({ slime("s") }, { foe("f") }, Rng.new(115))
+		local c = unitOf(capped, "s")
+		c.effects.steady = { value = 0.9, untilAt = 20 }
+		local old = c.cooldown
+		Combat.stun(capped, c, 1)
+		T.near(c.cooldown - old, 1 - Config.Classes.Effects.steady, 1e-9)
+		local mini = Combat.new({ slime("s") }, { foe("f", { defRole = "miniboss" }) }, Rng.new(115))
+		local m = unitOf(mini, "f")
+		m.effects.steady = { value = Skills.sanctuary.steady, untilAt = 20 }
+		local base = m.cooldown
+		Combat.stun(mini, m, 1)
+		T.near(
+			m.cooldown - base,
+			Config.Classes.MiniStunCap * (1 - Skills.sanctuary.steady),
+			1e-9
+		)
+	end)
+
+	T.test("Last Stand prevents a lethal blow once and immediately taunts as an ordinary Taunt", function()
+		local fight = Combat.new({
+			slime("g", "guardian", { tier = 5, hp = 10, maxHp = 10 }),
+			slime("m", nil, { hp = 100, maxHp = 100 }),
+		}, {
+			foe("f", { attack = 100 }),
+			foe("q"),
+		}, Rng.new(116))
+		local g, m = unitOf(fight, "g"), unitOf(fight, "m")
+		freeze(g)
+		freeze(m)
+		local f = unitOf(fight, "f")
+		freeze(f, g)
+		f.aimed, f.cooldown = false, 0.4
+		local q = unitOf(fight, "q")
+		freeze(q, m)
+		local first = run(fight, 0.8)
+		T.eq(g.hp, Config.Classes.Traits.guardian.left)
+		T.eq(g.lastStandUsed, 1)
+		local trait = firstOf(first, function(e: any): boolean
+			return e.kind == "trait" and e.trait == "last_stand"
+		end)
+		T.ok(trait ~= nil and trait.from == "g" and trait.to == "g")
+		T.eq(q.tauntBy, g)
+		local taunt = firstOf(first, function(e: any): boolean
+			return e.kind == "taunt" and e.to == "q"
+		end)
+		T.ok(taunt ~= nil and taunt.skill == Config.Classes.Traits.guardian.taunt)
+		T.eq(g.effects.taken.value, Skills.taunt.taken)
+		f.aimed, f.cooldown, f.target = false, 0.4, g
+		local second = run(fight, 0.8)
+		T.eq(g.hp, 0, "the second lethal blow finishes the Guardian")
+		T.eq(firstOf(second, function(e: any): boolean
+			return e.kind == "trait" and e.trait == "last_stand"
+		end), nil, "Last Stand is once per fight")
+	end)
+
+	T.test("Momentum readies Dash Strike after kills and emits at most one event per step", function()
+		local fight = Combat.new({ slime("w", "warrior", { tier = 5 }) }, {
+			foe("a", { hp = 1, maxHp = 100 }),
+			foe("b", { hp = 1, maxHp = 100 }),
+		}, Rng.new(117))
+		local w = arm(fight, "w", "area_slash")
+		freeze(unitOf(fight, "a"))
+		freeze(unitOf(fight, "b"))
+		local events = run(fight, 3)
+		local count = 0
+		local at: number? = nil
+		for _, e in events do
+			if e.kind == "trait" and e.trait == "momentum" then
+				count += 1
+				at = w.momentumAt
+			end
+		end
+		T.eq(count, 1)
+		T.ok(at ~= nil)
+		T.eq(w.skillReady.dash_strike, at)
+		T.ok(w.skillReady.area_slash > 0, "the killing skill still starts its own cooldown")
+	end)
+
 	T.test("a mixed class fight is the same from the same seed", function()
 		local function play(): { any }
 			local fight = Combat.new({
