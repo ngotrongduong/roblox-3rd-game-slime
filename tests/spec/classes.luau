@@ -2248,6 +2248,24 @@ return function(T: any)
 		T.eq(m.barrierUntil, 100)
 	end)
 
+
+	T.test("a ready Whirlwind takes precedence over Dash Strike at the edge of melee reach", function()
+		local fight = Combat.new({ slime("w", "warrior", { tier = 4, x = 0, z = 0 }) }, {
+			foe("a", { x = 7.5, z = 0 }),
+			foe("b", { x = 8, z = 1 }),
+		}, Rng.new(128), { moves = true })
+		local w = arm(fight, "w", "whirlwind")
+		w.skillReady.dash_strike = 0
+		w.target = unitOf(fight, "a")
+		freeze(unitOf(fight, "a"))
+		freeze(unitOf(fight, "b"))
+		local events = run(fight, 5)
+		T.ok(castOf(events, "whirlwind") ~= nil)
+		T.eq(firstOf(events, function(e: any): boolean
+			return e.kind == "move" and e.from == "w" and e.dash
+		end), nil, "a ready ultimate is not pre-empted by a Common dash")
+	end)
+
 	T.test("a mixed class fight is the same from the same seed", function()
 		local function play(): { any }
 			local fight = Combat.new({
