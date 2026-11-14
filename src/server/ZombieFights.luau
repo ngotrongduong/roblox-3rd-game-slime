@@ -1,31 +1,31 @@
 --!strict
--- The zombie slimes outside the villages and the teams that fight them (docs/ECONOMY.md, the owner 2026-11-02).
--- The server owns everything: the camps, the groups, the marches, every roll, the fight and the coins of each death.
+-- The monster packs of the open world and the teams that fight them (docs/WORLD.md §7, the owner 2026-11-02 and 2026-11-14).
+-- The server owns everything: the packs, the marches, every roll, the fight and the coins of each death.
 -- Clients only read what is published and the Remotes.Fight event, and draw.
 --
--- The camps belong to the whole server (docs/MAP.md 1.4): every slice of the valley, the 8 plots' and the Market's, has its
--- own groups in front of its gate. A slice that has an owner holds zombies at that owner's level (Zombies.playerLevel), the
--- middle ring 3 above, the inner ring 5 above; a slice nobody holds rolls between the server's average level and its highest
--- (Zombies.sliceLevel). A new spawn reads the level of its moment; a fight is never touched; a waiting group nobody attacked
--- for Config.Zombies.IdleResetSeconds takes its slice's level again (Zombies.shouldRelevel); a player who joins at once sets
--- the waiting groups of their own slice to their level. Teams stay per player and march from that player's own gate; any
--- player may order an attack on any waiting group they stand near, the coins go to the one who sends the team.
+-- The packs belong to the whole server: one to a cell of the world (WorldPacks.cells), put where the ground is dry and
+-- flat, each with a fixed level by its distance from the nearest village (WorldPacks.level). A beaten pack comes back
+-- Config.Zombies.RespawnSeconds later as a new roll of monsters at the same level; a pack that beat a team stands again
+-- whole at once. Teams stay per player and set out from a muster spot on the line from the pack to that player's own gate
+-- (WorldPacks.musterSpot); any player may order an attack on any waiting pack they stand near, the coins go to the one
+-- who sends the team.
 --
---   workspace.ZombieCamps/<slice>/<groupId>   (slice 0 is the Market's, 1..8 the plots'; the id is "s<slice>c<camp>g<index>",
---                     unique across the server) Configuration: Slice, Camp, Index, Level, Position,
+--   workspace.ZombieCamps/<band>/<packId>   (band 1.. is WorldPacks.band of the pack's level; the id is "p<col>x<row>",
+--                     unique across the server) Configuration: Band, Map (a Config.Dungeon.Maps id), Level, Position,
 --                     State ("waiting" | "taken" | "fighting" | "gone"), RespawnAt (server unix seconds, 0 unless gone),
 --                     Team (the number of the team that ordered an attack on it, 0 when none), Attacker (the UserId of that
 --                     team's player, 0 when none)
---     <zombieId>      Configuration: Kind, Level, Hp, MaxHp
---   workspace.Villages.<id>   PlayerLevel (number: the level the player's slice is filled by; the clients colour the group
+--     <monsterId>     Configuration: Def (the Dungeon def id), Kind (its kind), Role (its role), Level, Hp, MaxHp
+--   workspace.Villages.<id>   PlayerLevel (number: the player's level, Zombies.playerLevel; the clients colour the pack
 --                     markers by it) and
 --     Teams/<n>       (n = 1..Config.Zombies.Teams, always there) Configuration:
---                     State ("home" | "going" | "fighting" | "returning"), Target (group id or ""), Repeat (boolean),
+--                     State ("home" | "going" | "fighting" | "returning"), Target (pack id or ""), Repeat (boolean),
 --                     Waiting (why a repeating team at home has not set out: "health" | "hungry" | "tired" | "group" | ""),
 --                     Members (the saved line-up, slime ids comma separated), Marching (who went on this trip, comma
 --                     separated, "" at home), and while State is not "home" the leg: FromX, FromZ, ToX, ToZ (flat studs),
---                     LegStart, LegEnd (workspace:GetServerTimeNow(); "going" walks gate to spot, "returning" spot to
---                     gate, "fighting" stands at the spot of the "going" leg; all 0 at home)
+--                     LegStart, LegEnd (workspace:GetServerTimeNow(); "going" walks muster spot to fight spot,
+--                     "returning" fight spot to muster spot, "fighting" stands at the spot of the "going" leg; all 0 at
+--                     home)
 --     <slimeId>       Configuration, only while fighting: Hp, MaxHp
 --   Slime models      HpShare (0 to 1): the share of health left, wounds included (written on the village's own models)
 --   Remotes.Fight     RemoteEvent to the owner: ({ team = n, events = { event } })
@@ -40,27 +40,26 @@ local Config = require(ReplicatedStorage.Shared.Config)
 local FarmState = require(ReplicatedStorage.Shared.FarmState)
 local Layout = require(ReplicatedStorage.Shared.Layout)
 local Rng = require(ReplicatedStorage.Shared.Rng)
+local WorldPacks = require(ReplicatedStorage.Shared.WorldPacks)
+local WorldPlan = require(ReplicatedStorage.Shared.WorldPlan)
 local Zombies = require(ReplicatedStorage.Shared.Zombies)
 local PlayerData = require(script.Parent.PlayerData)
 local Plots = require(script.Parent.Plots)
 local Village = require(script.Parent.Village)
 local WavingFlag = require(script.Parent.WavingFlag)
 
-type Zombie = typeof(Zombies.make("z", "rotten", 1, 1))
+type Monster = typeof(WorldPacks.monster({}, 1, "m"))
 type Fight = typeof(Combat.new({}, {}, Rng.new(0)))
+-- A pack: its level and map never change, its monsters are a new roll each time it comes back.
 type Group = {
 	id: string,
-	slice: number,
-	camp: number,
-	index: number,
-	-- the level the group was set at (before its camp's offset): what shouldRelevel compares with its slice's
-	baseLevel: number,
-	zombies: { Zombie },
-	byId: { [string]: Zombie },
+	band: number,
+	map: string,
+	level: number,
+	zombies: { Monster },
+	byId: { [string]: Monster },
 	state: string,
 	respawnAt: number,
-	-- since when nobody attacked it (server unix seconds)
-	quietSince: number,
 	position: Vector3,
 	folder: Configuration,
 	team: number,
@@ -81,6 +80,8 @@ type March = {
 	legEnd: number,
 	from: Vector3,
 	to: Vector3,
+	-- where the march starts and ends: the muster spot on the line from the group to the gate (flat)
+	origin: Vector3,
 	-- the spot beside the group where the fight is (the far end of the march)
 	spot: Vector3,
 	waiting: string,
@@ -98,7 +99,7 @@ type Session = {
 	gate: Vector3,
 	rng: typeof(Rng.new(0)),
 	accumulator: number,
-	-- the level this player's slice is filled by (Zombies.playerLevel), worked out again every PlayerLevelSeconds
+	-- the player's level (Zombies.playerLevel), worked out again every PlayerLevelSeconds; the clients colour pack markers by it
 	level: number,
 	levelAt: number,
 	publishAt: number,
@@ -109,13 +110,13 @@ local sessions: { [Player]: Session } = {}
 -- (a failing fight frame is warned once a player, not 60 times a second)
 local frameWarned: { [Player]: boolean } = {}
 local fightRemote: RemoteEvent? = nil
--- the camps of the whole server
+-- the packs of the whole server
 local groups: { [string]: Group } = {}
 local order: { Group } = {}
-local campRng = Rng.new(os.time())
-local campSerial = 0
-local campClock = 0
-local campsMade = false
+local packRng = Rng.new(os.time())
+local packSerial = 0
+local packClock = 0
+local packsMade = false
 
 -- Why a team at home waits, worst first: the screen shows the first one found among its members.
 local WAIT_RANK: { [string]: number } = { health = 1, hungry = 2, tired = 3 }
@@ -133,8 +134,9 @@ local function make(parent: Instance, name: string): Configuration
 	return made
 end
 
--- The ground under a point, by a ray from above (the map's ground height is the fallback).
-local function groundAt(x: number, z: number): number
+-- The ground where a pack may stand at this world point, by one ray straight down: nil when it is not the terrain, is
+-- water or is steeper than Config.World.Packs.MinNormalY.
+local function packGround(x: number, z: number): Vector3?
 	local zc = Config.Zombies
 	local ignore: { Instance } = {}
 	local villages = workspace:FindFirstChild("Villages")
@@ -149,10 +151,16 @@ local function groundAt(x: number, z: number): number
 	local params = RaycastParams.new()
 	params.FilterType = Enum.RaycastFilterType.Exclude
 	params.FilterDescendantsInstances = ignore
-	local top = Config.Map.GroundY + zc.GroundProbeUp
-	local hit =
-		workspace:Raycast(Vector3.new(x, top, z), Vector3.new(0, -(zc.GroundProbeUp + zc.GroundProbeDown), 0), params)
-	return if hit then hit.Position.Y else Config.Map.GroundY
+	local hit = workspace:Raycast(Vector3.new(x, zc.PackProbeTop, z), Vector3.new(0, -zc.PackProbeLength, 0), params)
+	if
+		not hit
+		or hit.Instance ~= workspace.Terrain
+		or hit.Material == Enum.Material.Water
+		or hit.Normal.Y < Config.World.Packs.MinNormalY
+	then
+		return nil
+	end
+	return hit.Position
 end
 
 local function near(player: Player, point: Vector3, range: number): boolean
@@ -165,10 +173,9 @@ end
 
 local function publishGroup(group: Group)
 	local folder = group.folder
-	set(folder, "Slice", group.slice)
-	set(folder, "Camp", group.camp)
-	set(folder, "Index", group.index)
-	set(folder, "Level", group.zombies[1].level)
+	set(folder, "Band", group.band)
+	set(folder, "Map", group.map)
+	set(folder, "Level", group.level)
 	set(folder, "Position", group.position)
 	set(folder, "State", group.state)
 	set(folder, "RespawnAt", if group.state == "gone" then group.respawnAt else 0)
@@ -176,152 +183,111 @@ local function publishGroup(group: Group)
 	set(folder, "Attacker", if group.attacker then group.attacker.UserId else 0)
 end
 
--- ===== The camps of the server =====
+-- ===== The packs of the server =====
 
--- The level of every slice that has an owner: the owner's, by plot.
-local function currentOwners(): { [number]: number }
-	local owners: { [number]: number } = {}
-	for player, session in sessions do
-		local plot = Plots.of(player)
-		if plot then
-			owners[plot] = session.level
-		end
-	end
-	return owners
-end
-
--- A fresh group of the camp at this base level, whole, waiting. A new spawn is a new set of zombies with new ids.
-local function spawnGroup(group: Group, baseLevel: number, now: number)
-	campSerial += 1
-	group.baseLevel = baseLevel
-	group.zombies = Zombies.group(group.id .. "-" .. campSerial, baseLevel, group.camp, campRng)
+-- A fresh roll of the pack, whole, waiting: new monsters with new ids at the pack's own level.
+local function spawnGroup(group: Group)
+	packSerial += 1
+	group.zombies = WorldPacks.pack(group.id .. "-" .. packSerial, group.map, group.level, packRng)
 	group.byId = {}
 	group.folder:ClearAllChildren()
-	for _, zombie in group.zombies do
-		group.byId[zombie.id] = zombie
-		local node = make(group.folder, zombie.id)
-		set(node, "Kind", zombie.kind)
-		set(node, "Level", zombie.level)
-		set(node, "MaxHp", zombie.hp)
-		set(node, "Hp", zombie.hp)
+	for _, monster in group.zombies do
+		group.byId[monster.id] = monster
+		local node = make(group.folder, monster.id)
+		set(node, "Def", monster.defId)
+		set(node, "Kind", monster.kind)
+		set(node, "Role", monster.defRole)
+		set(node, "Level", monster.level)
+		set(node, "MaxHp", monster.hp)
+		set(node, "Hp", monster.hp)
 	end
 	group.state = "waiting"
 	group.team = 0
 	group.attacker = nil
 	group.respawnAt = 0
-	group.quietSince = now
 	publishGroup(group)
 end
 
--- The base level a new spawn in this group's slice reads now.
-local function levelFor(group: Group, owners: { [number]: number }): number
-	return Zombies.sliceLevel(group.slice, owners, campRng)
-end
-
--- All the groups of every slice, made when the first player's camps open (the server is never asked to run them before).
-local function makeCamps(now: number)
-	campsMade = true
-	local root = Instance.new("Folder")
-	root.Name = "ZombieCamps"
-	local owners = currentOwners()
-	for slice = 0, Config.Map.PlotCount do
-		local sliceFolder = Instance.new("Folder")
-		sliceFolder.Name = tostring(slice)
-		sliceFolder.Parent = root
-		local gate = Layout.campFrame(slice)
-		for camp = 1, #Config.Zombies.LevelOffsets do
-			for index = 1, #Config.Zombies.Homes[camp] do
-				local across, forward = Zombies.homeOffset(slice, camp, index)
-				-- the gate looks out: local -Z is the way out
-				local flat = (gate * CFrame.new(across, 0, -forward)).Position
-				local id = Zombies.groupId(slice, camp, index)
-				local group: Group = {
-					id = id,
-					slice = slice,
-					camp = camp,
-					index = index,
-					baseLevel = 0,
-					zombies = {},
-					byId = {},
-					state = "waiting",
-					respawnAt = 0,
-					quietSince = now,
-					position = Vector3.new(flat.X, groundAt(flat.X, flat.Z), flat.Z),
-					folder = make(sliceFolder, id),
-					team = 0,
-					attacker = nil,
-				}
-				groups[id] = group
-				table.insert(order, group)
-				spawnGroup(group, Zombies.sliceLevel(slice, owners, campRng), now)
+-- All the packs of the world, made when the first player's teams open (the server is never asked to run them before):
+-- a spot for every cell that has one, each pack's level by how far its spot is from the nearest village.
+local function makePacks()
+	packsMade = true
+	local P = Config.World.Packs
+	local spots: { { id: string, plan: { number }, ground: Vector3 } } = {}
+	for _, cell in WorldPacks.cells() do
+		for try = 1, P.Tries do
+			local x, z = WorldPacks.candidate(cell, try)
+			if WorldPacks.clear(x, z) then
+				local wx, wz = WorldPlan.world(x, z)
+				local ground = packGround(wx, wz)
+				if ground then
+					table.insert(spots, { id = cell.id, plan = { x, z }, ground = ground })
+					break
+				end
 			end
 		end
+	end
+	local root = Instance.new("Folder")
+	root.Name = "ZombieCamps"
+	local bandFolders: { [number]: Folder } = {}
+	local perBand: { [number]: number } = {}
+	local farthest = 0
+	for _, spot in spots do
+		farthest = math.max(farthest, WorldPacks.villageDistance(spot.plan[1], spot.plan[2]))
+		local level = WorldPacks.levelAt(spot.plan[1], spot.plan[2])
+		local band = WorldPacks.band(level)
+		local bandFolder = bandFolders[band]
+		if not bandFolder then
+			local made = Instance.new("Folder")
+			made.Name = tostring(band)
+			made.Parent = root
+			bandFolders[band] = made
+			bandFolder = made
+		end
+		perBand[band] = (perBand[band] or 0) + 1
+		local group: Group = {
+			id = spot.id,
+			band = band,
+			map = WorldPacks.mapOf(spot.plan[1], spot.plan[2]),
+			level = level,
+			zombies = {},
+			byId = {},
+			state = "waiting",
+			respawnAt = 0,
+			position = spot.ground,
+			folder = make(bandFolder, spot.id),
+			team = 0,
+			attacker = nil,
+		}
+		groups[spot.id] = group
+		table.insert(order, group)
+		spawnGroup(group)
 	end
 	root.Parent = workspace
 	print(
 		Config.LogPrefix,
 		"zombies:",
 		#order,
-		"groups out in",
-		Config.Map.PlotCount + 1,
-		"slices of",
-		#Config.Zombies.LevelOffsets,
-		"camps"
+		"packs out in",
+		WorldPacks.bands(),
+		"bands, the farthest",
+		math.floor(farthest),
+		"studs from a village (Config.World.Packs.FarStuds",
+		P.FarStuds .. ")"
 	)
-end
-
--- The camps look at their groups once in a while: a beaten group comes back, a group left alone takes its slice's level.
-local function campsStep(now: number)
-	local owners = currentOwners()
-	for _, group in order do
-		if group.state == "gone" then
-			if now >= group.respawnAt then
-				spawnGroup(group, levelFor(group, owners), now)
-				print(Config.LogPrefix, "zombies:", group.id, "is back at level", group.zombies[1].level)
-			end
-		elseif group.state == "waiting" then
-			-- (only waiting groups: a group that is taken or fighting is never touched)
-			if Zombies.shouldRelevel(group.baseLevel, group.slice, owners, group.quietSince, now) then
-				local before = group.zombies[1].level
-				spawnGroup(group, levelFor(group, owners), now)
-				print(
-					Config.LogPrefix,
-					"zombies:",
-					group.id,
-					"was left alone, level",
-					before,
-					"->",
-					group.zombies[1].level
-				)
-			end
-		end
+	for band = 1, WorldPacks.bands() do
+		print(Config.LogPrefix, "zombies: band", band, WorldPacks.bandName(band), perBand[band] or 0, "packs")
 	end
 end
 
--- A player's slice takes their level at once for the groups that wait (a group in a fight finishes it first, and its next
--- spawn reads the new level).
-local function releveSlice(session: Session, plot: number, now: number)
-	local owners = currentOwners()
-	local changed = 0
+-- A beaten pack comes back once in a while, at the level it always had.
+local function packsStep(now: number)
 	for _, group in order do
-		-- (a beaten group that is gone comes back by itself at the level its slice holds then)
-		if group.slice == plot and group.state == "waiting" then
-			spawnGroup(group, levelFor(group, owners), now)
-			changed += 1
+		if group.state == "gone" and now >= group.respawnAt then
+			spawnGroup(group)
+			print(Config.LogPrefix, "zombies:", group.id, "is back at level", group.level)
 		end
 	end
-	print(
-		Config.LogPrefix,
-		"zombies:",
-		session.player.Name,
-		"holds slice",
-		plot,
-		"at level",
-		session.level,
-		",",
-		changed,
-		"waiting groups set to it"
-	)
 end
 
 local function fire(session: Session, teamIndex: number, events: { any })
@@ -348,8 +314,7 @@ local function publishTeam(team: March, farmTeam: any)
 	set(folder, "LegEnd", if marching then team.legEnd else 0)
 end
 
--- Opens the player's teams. A saved target that does not fit this plot (the old camps' id, a group of another slice, from
--- the plot the player held before) is cleared.
+-- Opens the player's teams (a saved target that is no pack of this server is cleared by repeatTeam).
 local function openSession(player: Player, root: Folder, farm: any, plot: number, now: number): Session
 	local gate = Layout.plotGate(plot)
 	local level = Zombies.playerLevel(farm, now)
@@ -369,22 +334,6 @@ local function openSession(player: Player, root: Folder, farm: any, plot: number
 	set(root, "PlayerLevel", level)
 	session.teamsFolder.Name = "Teams"
 	session.teamsFolder.Parent = root
-	local stale = 0
-	for _, line in farm.teams do
-		if line.target ~= nil and not Zombies.targetFits(line.target, plot) then
-			stale += 1
-		end
-	end
-	if stale > 0 then
-		PlayerData.update(player, function(live: any)
-			for _, line in live.teams do
-				if line.target ~= nil and not Zombies.targetFits(line.target, plot) then
-					line.target = nil
-				end
-			end
-		end)
-		print(Config.LogPrefix, "zombies:", stale, "saved team targets of another plot or the old camps cleared")
-	end
 	for index = 1, Config.Zombies.Teams do
 		local team: March = {
 			index = index,
@@ -399,6 +348,7 @@ local function openSession(player: Player, root: Folder, farm: any, plot: number
 			legEnd = 0,
 			from = session.gate,
 			to = session.gate,
+			origin = session.gate,
 			spot = session.gate,
 			waiting = "",
 			folder = make(session.teamsFolder, tostring(index)),
@@ -410,8 +360,8 @@ local function openSession(player: Player, root: Folder, farm: any, plot: number
 end
 
 -- The spot beside a group where a team fights: MarchStandOffStuds short of it, on the village's side.
-local function spotBeside(session: Session, group: Group): Vector3
-	local away = Vector3.new(session.gate.X - group.position.X, 0, session.gate.Z - group.position.Z)
+local function spotBeside(origin: Vector3, group: Group): Vector3
+	local away = Vector3.new(origin.X - group.position.X, 0, origin.Z - group.position.Z)
 	local flat = Vector3.new(group.position.X, 0, group.position.Z)
 	if away.Magnitude < 1e-3 then
 		return flat
@@ -438,7 +388,7 @@ local function startLeg(team: March, farm: any, from: Vector3, to: Vector3)
 	team.legEnd = team.legStart + seconds
 end
 
--- The team is back at the gate (or lost every slime that went): the survivors rejoin the village from the gate.
+-- The team is back (or lost every slime that went): the survivors rejoin the village from the gate.
 local function arriveHome(session: Session, team: March)
 	for _, id in team.members do
 		Village.setOut(session.player, id, false, true)
@@ -459,12 +409,12 @@ local function arriveHome(session: Session, team: March)
 	team.state = "home"
 end
 
--- The survivors march back from their spot to the gate (or are home at once when the save is gone).
+-- The survivors march back from their spot to the muster spot (or are home at once when the save is gone).
 local function goHome(session: Session, team: March)
 	local farm = PlayerData.get(session.player)
 	if farm and #team.members > 0 then
 		team.state = "returning"
-		startLeg(team, farm, team.spot, session.gate)
+		startLeg(team, farm, team.spot, team.origin)
 	else
 		arriveHome(session, team)
 	end
@@ -512,9 +462,8 @@ local function endFight(session: Session, team: March, winner: string, now: numb
 		group.respawnAt = now + Config.Zombies.RespawnSeconds
 		publishGroup(group)
 	else
-		-- the zombies beat the team (or neither won in time): the group stands again, whole, a new spawn that reads the
-		-- level its slice holds now
-		spawnGroup(group, levelFor(group, currentOwners()), now)
+		-- the monsters beat the team (or neither won in time): the pack stands again, whole, a new roll at its level
+		spawnGroup(group)
 	end
 	for _, node in team.nodes do
 		if node.Parent == team.folder then
@@ -571,9 +520,9 @@ local function stepFight(session: Session, team: March, now: number)
 		-- Every slime that falls, on either side, pays at once (to the player who sent the team).
 		PlayerData.update(session.player, function(farm: any)
 			for _, entry in fallen do
-				local zombie = group.byId[entry.to]
-				if zombie then
-					local reward = Zombies.killReward(zombie.kind, zombie.level)
+				local monster = group.byId[entry.to]
+				if monster then
+					local reward = WorldPacks.killReward(monster.defRole, monster.level)
 					entry.coins = Zombies.pay(farm, reward, now)
 					farm.lifetime.mobsKilled += 1
 				else
@@ -604,7 +553,7 @@ local function beginFight(session: Session, team: March, farm: any, now: number)
 	-- (positional, as in the Slime Dungeon: everyone starts where its body stands, flat from the group's position, and
 	-- walks into reach; the team in its formation at the end of its march, the zombies on their ring)
 	local centre = group.position
-	local way = Vector3.new(team.spot.X - session.gate.X, 0, team.spot.Z - session.gate.Z)
+	local way = Vector3.new(team.spot.X - team.origin.X, 0, team.spot.Z - team.origin.Z)
 	local dir = if way.Magnitude > 0.01 then way.Unit else Vector3.zAxis
 	local endX, endZ = team.spot.X - centre.X, team.spot.Z - centre.Z
 	local spots: { [string]: { number } } = {}
@@ -629,7 +578,6 @@ local function beginFight(session: Session, team: March, farm: any, now: number)
 		group.state = "waiting"
 		group.team = 0
 		group.attacker = nil
-		group.quietSince = now
 		publishGroup(group)
 		team.group = nil
 		arriveHome(session, team)
@@ -665,7 +613,6 @@ local function beginFight(session: Session, team: March, farm: any, now: number)
 	end
 	team.state = "fighting"
 	group.state = "fighting"
-	group.quietSince = now
 	publishGroup(group)
 	-- (`centre` and `spots`: where the fight's places are in the world, so each body goes to its own)
 	fire(session, team.index, {
@@ -678,10 +625,10 @@ local function beginFight(session: Session, team: March, farm: any, now: number)
 			spots = spots,
 		},
 	})
-	print(Config.LogPrefix, "zombies: team", team.index, "met", group.id, "level", group.zombies[1].level)
+	print(Config.LogPrefix, "zombies: team", team.index, "met", group.id, "level", group.level)
 end
 
--- Sends a team from the gate at a waiting group (the player's order, or a repeating team setting out again). The team's
+-- Sends a team from its muster spot at a waiting pack (the player's order, or a repeating team setting out again). The team's
 -- members that cannot go now (asleep, tired, dead, away) stay home. Returns whether it went, else why not; nothing
 -- changes on a refusal.
 local function launch(session: Session, team: March, group: Group, farm: any, now: number): (boolean, string?)
@@ -702,13 +649,14 @@ local function launch(session: Session, team: March, group: Group, farm: any, no
 	team.members = going
 	team.coins, team.dead = 0, 0
 	team.group = group
-	team.spot = spotBeside(session, group)
+	local musterX, musterZ = WorldPacks.musterSpot(group.position.X, group.position.Z, session.gate.X, session.gate.Z)
+	team.origin = Vector3.new(musterX, 0, musterZ)
+	team.spot = spotBeside(team.origin, group)
 	team.state = "going"
-	startLeg(team, farm, session.gate, team.spot)
+	startLeg(team, farm, team.origin, team.spot)
 	group.state = "taken"
 	group.team = team.index
 	group.attacker = session.player
-	group.quietSince = now
 	publishGroup(group)
 	for _, id in going do
 		Village.setOut(session.player, id, true)
@@ -726,7 +674,7 @@ local function launch(session: Session, team: March, group: Group, farm: any, no
 		"slimes at",
 		group.id,
 		"level",
-		group.zombies[1].level,
+		group.level,
 		"march",
 		string.format("%.1f", team.legEnd - team.legStart),
 		"s"
@@ -735,8 +683,8 @@ local function launch(session: Session, team: March, group: Group, farm: any, no
 end
 
 -- A team at home with the repeat option on sets out again by itself once every living member is fit; else it says
--- why it waits. It stops by itself when no member is alive. Its saved target is a group of this server; one that is not
--- (a target of the old camps) is cleared and the team waits.
+-- why it waits. It stops by itself when no member is alive. Its saved target is a pack of this server; one that is not
+-- (a target of the old camps or of nothing known) is cleared and the team waits.
 local function repeatTeam(session: Session, team: March, farm: any, now: number)
 	local line = farm.teams[team.index]
 	team.waiting = ""
@@ -876,7 +824,7 @@ local function frame(session: Session, dt: number)
 	end
 end
 
--- Orders a team at a waiting group, in any slice, when the player stands near it. Called inside the PlayerData.update of
+-- Orders a team at a waiting pack, anywhere in the world, when the player stands near it. Called inside the PlayerData.update of
 -- the AttackGroup request, with that farm. The order is kept as the team's target for its repeat option. Returns whether
 -- it went, else why not; nothing changes on a refusal.
 function ZombieFights.attack(
@@ -984,11 +932,8 @@ function ZombieFights.start()
 					local now = os.time()
 					local session = openSession(player, root, farm, plot, now)
 					sessions[player] = session
-					if campsMade then
-						releveSlice(session, plot, now)
-					else
-						-- (the first player: the groups are made at the levels of the server as it is now)
-						makeCamps(now)
+					if not packsMade then
+						makePacks()
 					end
 				end
 			end
@@ -1001,17 +946,17 @@ function ZombieFights.start()
 				warn(Config.LogPrefix, "zombies: fight frame failed for", player.Name, err)
 			end
 		end
-		-- (with nobody in the server the camps do not run)
+		-- (with nobody in the server the packs do not run)
 		if next(sessions) ~= nil then
-			campClock += dt
-			if campClock >= Config.Zombies.CampTickSeconds then
-				campClock = 0
-				campsStep(os.time())
+			packClock += dt
+			if packClock >= Config.Zombies.CampTickSeconds then
+				packClock = 0
+				packsStep(os.time())
 			end
 		end
 	end)
 	-- A player who leaves ends the marches and fights: nobody dies in them, the wounds are gone and nothing is lost (coins
-	-- already paid stay, dead slimes stay dead with their time, the teams and their repeat option stay saved). The groups
+	-- already paid stay, dead slimes stay dead with their time, the teams and their repeat option stay saved). The packs
 	-- their teams held stand free again, whole.
 	PlayerData.onLeaving(function(player: Player, _data: any)
 		frameWarned[player] = nil
@@ -1024,11 +969,10 @@ function ZombieFights.start()
 					away += 1
 				end
 			end
-			local now = os.time()
 			local freed = 0
 			for _, group in order do
 				if group.attacker == player then
-					spawnGroup(group, group.baseLevel, now)
+					spawnGroup(group)
 					freed += 1
 				end
 			end

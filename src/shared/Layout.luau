@@ -117,13 +117,6 @@ function Layout.sliceGate(slice: number): CFrame
 	return Layout.slotFrame(slice) * CFrame.new(0, 0, -M.PlotSize / 2)
 end
 
--- Where the groups of zombies of a slice stand out from (Zombies.homeOffset): its gate, turned by the village's
--- `camps` degrees where the land straight ahead is not free (WorldPlan.Villages).
-function Layout.campFrame(slice: number): CFrame
-	local village = WorldPlan.Villages[slice] :: { camps: number? }?
-	return Layout.sliceGate(slice) * CFrame.Angles(0, math.rad(if village then village.camps or 0 else 0), 0)
-end
-
 -- The gate of a plot: on its front edge, facing the hub.
 function Layout.plotGate(plot: number): CFrame
 	assert(plot >= 1 and plot <= M.PlotCount, "plot out of range")

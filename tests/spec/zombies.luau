@@ -7,6 +7,7 @@ local Rng = require("../../src/shared/Rng")
 local Shop = require("../../src/shared/Shop")
 local Stations = require("../../src/shared/Stations")
 local VillageSim = require("../../src/shared/VillageSim")
+local WorldPacks = require("../../src/shared/WorldPacks")
 local Zombies = require("../../src/shared/Zombies")
 local FarmKit = require("../lib/FarmKit")
 
@@ -34,11 +35,11 @@ local function openTeams(farm: any)
 	assert(Zombies.teamsOpen(FarmState.villageLevel(farm.areas)) == #Config.Zombies.TeamOpensAt, "every team open")
 end
 
-local function winRate(playerLevel: number, camp: number): number
+local function winRate(playerLevel: number, packLevel: number): number
 	local wins = 0
 	for seed = 1, 200 do
 		local rng = Rng.new(seed)
-		local fight = Combat.new(squadOf(playerLevel), Zombies.group("z", playerLevel, camp, rng), rng)
+		local fight = Combat.new(squadOf(playerLevel), WorldPacks.pack("z", "meadow", packLevel, rng), rng)
 		while not fight.winner do
 			Combat.step(fight, 0.1)
 		end
@@ -59,7 +60,7 @@ return function(T: any)
 	T.test("a fight is seeded and ends with one side standing", function()
 		local function play(): (string?, number)
 			local rng = Rng.new(5)
-			local fight = Combat.new(squadOf(8), Zombies.group("z", 8, 1, rng), rng)
+			local fight = Combat.new(squadOf(8), WorldPacks.pack("z", "meadow", 8, rng), rng)
 			while not fight.winner do
 				Combat.step(fight, 0.1)
 			end
@@ -73,7 +74,12 @@ return function(T: any)
 	end)
 	T.test("fighters open apart, and every blow is announced before it lands", function()
 		local rng = Rng.new(9)
-		local fight = Combat.new(squadOf(8), Zombies.group("z", 8, 1, rng), rng)
+		-- (plain blows only: a monster's skill lands its own hits)
+		local pack = WorldPacks.pack("z", "meadow", 8, rng)
+		for _, monster in pack do
+			monster.skills = {}
+		end
+		local fight = Combat.new(squadOf(8), pack, rng)
 		local firstBlow: { [string]: number } = {}
 		local aimed: { [string]: boolean } = {}
 		while not fight.winner and fight.seconds < 60 do
@@ -223,11 +229,11 @@ return function(T: any)
 			end
 		end
 	)
-	T.test("a group of the player's own level is usually beaten, harder groups less often", function()
+	T.test("a pack of the squad's own level is beaten more often than not, a stronger one less often", function()
 		for _, level in { 4, 12, 30 } do
-			local same, three, five = winRate(level, 1), winRate(level, 2), winRate(level, 3)
-			T.ok(same > 0.7, "same level at " .. level .. ": " .. same)
-			T.ok(same >= three and three >= five, "harder is harder at " .. level)
+			local same, stronger = winRate(level, level), winRate(level, level * 2)
+			T.ok(same > 0.5, "same level at " .. level .. ": " .. same)
+			T.ok(same > stronger, "stronger is harder at " .. level)
 		end
 	end)
 	T.test("the player's level is the average of the strongest slimes a trip can send", function()
@@ -239,23 +245,6 @@ return function(T: any)
 		T.eq(Zombies.playerLevel(farm, NOW), 20, "weak slimes kept at home change nothing")
 		farm.slimes[1].ghostUntil = NOW + 100
 		T.eq(Zombies.playerLevel(farm, NOW), 19, "a ghost does not count")
-	end)
-	T.test("rarer zombies and higher levels pay more; kinds roll by weight", function()
-		T.ok(Zombies.killReward("toxic", 10) > Zombies.killReward("rotten", 10))
-		T.ok(Zombies.killReward("plague", 10) > Zombies.killReward("toxic", 10))
-		T.ok(Zombies.killReward("rotten", 20) > Zombies.killReward("rotten", 10))
-		local rng = Rng.new(3)
-		local plagues = {}
-		for camp = 1, #Config.Zombies.LevelOffsets do
-			local seen = { rotten = 0, toxic = 0, plague = 0 }
-			for _ = 1, 2000 do
-				local kind = Zombies.rollKind(camp, rng)
-				seen[kind] += 1
-			end
-			T.ok(seen.rotten > seen.toxic and seen.toxic > seen.plague and seen.plague > 0)
-			plagues[camp] = seen.plague
-		end
-		T.ok(plagues[3] > plagues[2] and plagues[2] > plagues[1], "harder camps hold more rare zombies")
 	end)
 	T.test("a dead slime has 15 minutes: food brings it back, else it is lost for good", function()
 		local farm = FarmKit.farm(NOW, FarmKit.many(6))
@@ -446,17 +435,6 @@ return function(T: any)
 		T.ok(Zombies.marchSeconds(200, { 1 }) > near)
 		T.eq(Zombies.marchSeconds(100, {}), 0)
 	end)
-	T.test("the rings hold 4, 3 and 2 homes, further in each, and no two slices lay them out alike", function()
-		T.same({ #Config.Zombies.Homes[1], #Config.Zombies.Homes[2], #Config.Zombies.Homes[3] }, { 4, 3, 2 })
-		local _, near = Zombies.homeOffset(1, 1, 2)
-		local _, far = Zombies.homeOffset(1, 3, 2)
-		T.ok(far > near, "the hard ring is further from the gate")
-		local a, b = Zombies.homeOffset(1, 1, 1)
-		local c, d = Zombies.homeOffset(2, 1, 1)
-		T.ok(a ~= c or b ~= d)
-		T.ok(a * c < 0, "odd and even slices are mirrored")
-		T.eq(select(1, Zombies.homeOffset(3, 2, 1)), select(1, Zombies.homeOffset(3, 2, 1)), "a home never moves")
-	end)
 	T.test("a hungry slime fights at half strength, a dish buff adds on", function()
 		local slime = FarmKit.slime("a", { stats = { attack = 10, defence = 1, speed = 1, hp = 10 } })
 		T.eq(Zombies.fighter(slime, NOW, 1).attack, 10)
@@ -472,83 +450,10 @@ return function(T: any)
 		T.eq(hurt.hp, 10)
 		T.eq(hurt.maxHp, 40)
 		local rng = Rng.new(1)
-		local fight = Combat.new({ hurt }, Zombies.group("z", 4, 1, rng), rng)
+		local fight = Combat.new({ hurt }, WorldPacks.pack("z", "meadow", 4, rng), rng)
 		T.eq(fight.units[1].hp, 10)
 		T.eq(fight.units[1].maxHp, 40)
 		T.eq(Zombies.fighter(slime, NOW, 1).hp, 40)
-	end)
-	T.test("a slice holds its owner's level; an empty slice rolls within the server's range", function()
-		local owners = { [2] = 10, [5] = 30 }
-		T.eq(Zombies.sliceLevel(5, owners, Rng.new(1)), 30)
-		T.same({ Zombies.serverRange(owners) }, { 20, 30 })
-		local rng = Rng.new(2)
-		local seen = {}
-		for _ = 1, 200 do
-			local level = Zombies.sliceLevel(7, owners, rng)
-			T.ok(level >= 20 and level <= 30, "inside the range: " .. level)
-			seen[level] = true
-		end
-		T.ok(seen[20] and seen[30], "both ends come up")
-		T.same({ Zombies.serverRange({}) }, { 4, 4 }, "nobody in: the starter level")
-	end)
-	T.test("a group left alone for five minutes goes back to what its slice should hold", function()
-		local wait = Config.Zombies.IdleResetSeconds
-		-- a strong owner left and a new one of level 5 moved in
-		T.ok(not Zombies.shouldRelevel(30, 5, { [5] = 5 }, NOW, NOW + wait - 1), "not before its time")
-		T.ok(Zombies.shouldRelevel(30, 5, { [5] = 5 }, NOW, NOW + wait))
-		T.ok(not Zombies.shouldRelevel(5, 5, { [5] = 5 }, NOW, NOW + wait), "already right")
-		-- an empty slice keeps its roll while it fits the server, and changes when it no longer does
-		T.ok(not Zombies.shouldRelevel(25, 7, { [2] = 10, [5] = 30 }, NOW, NOW + wait))
-		T.ok(Zombies.shouldRelevel(25, 7, { [2] = 10 }, NOW, NOW + wait))
-	end)
-	T.test("group ids are unique across the server and fit a saved target", function()
-		local seen: { [string]: boolean } = {}
-		local count = 0
-		for slice = 0, Config.Map.PlotCount do
-			for camp = 1, #Config.Zombies.LevelOffsets do
-				for index = 1, #Config.Zombies.Homes[camp] do
-					local id = Zombies.groupId(slice, camp, index)
-					T.ok(not seen[id], "unique: " .. id)
-					seen[id] = true
-					count += 1
-					T.ok(#id <= Config.Zombies.TargetIdMaxLength, "short enough: " .. id)
-					local s, c, i = Zombies.parseGroupId(id)
-					T.same({ s, c, i }, { slice, camp, index })
-				end
-			end
-		end
-		T.eq(count, (Config.Map.PlotCount + 1) * (4 + 3 + 2))
-		T.eq(Zombies.parseGroupId("s1c3g3"), nil, "the hardest ring has only two groups")
-		T.eq(Zombies.parseGroupId("c1g1"), nil, "an id of the old camps is not a group")
-		T.eq(Zombies.parseGroupId("s9c1g1"), nil, "no such slice")
-		T.eq(Zombies.parseGroupId("s1c4g1"), nil, "no such camp")
-		T.eq(Zombies.parseGroupId("s1c1g5"), nil, "no such group")
-		T.eq(Zombies.parseGroupId(nil), nil)
-		T.eq(Zombies.parseGroupId(12), nil)
-	end)
-	T.test(
-		"a saved target from another plot or the old camps is dropped, one of the player's own slice stays",
-		function()
-			T.ok(Zombies.targetFits("s5c2g3", 5))
-			T.ok(not Zombies.targetFits("s5c2g3", 6), "the player now holds another plot")
-			T.ok(not Zombies.targetFits("s0c1g1", 5), "the Market's slice is not a plot's")
-			T.ok(not Zombies.targetFits("c2g3", 5), "the old camps")
-			T.ok(not Zombies.targetFits("", 5))
-			T.ok(not Zombies.targetFits(nil, 5))
-			T.ok(not Zombies.targetFits("s5c2g3; drop", 5))
-		end
-	)
-	T.test("a new spawn reads the owner's level of its moment; a fight in progress is never asked about", function()
-		local owners = { [3] = 12 }
-		T.eq(Zombies.sliceLevel(3, owners, Rng.new(1)), 12)
-		owners[3] = 40
-		T.eq(Zombies.sliceLevel(3, owners, Rng.new(1)), 40, "the next spawn takes the new level")
-		owners[3] = nil
-		owners[6] = 20
-		T.eq(Zombies.sliceLevel(3, owners, Rng.new(1)), 20, "the owner left: the server's range, here one player")
-		-- the camps ask shouldRelevel only of waiting groups after IdleResetSeconds; a group just attacked is not due
-		T.ok(not Zombies.shouldRelevel(12, 3, { [3] = 40 }, NOW, NOW + Config.Zombies.IdleResetSeconds - 1))
-		T.ok(Zombies.shouldRelevel(12, 3, { [3] = 40 }, NOW, NOW + Config.Zombies.IdleResetSeconds))
 	end)
 	T.test("a slime's death pays by its level and rarity", function()
 		local plain = FarmKit.slime("a")

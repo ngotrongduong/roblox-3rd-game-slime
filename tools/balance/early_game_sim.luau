@@ -1,13 +1,13 @@
 --!nocheck
 -- The first hours of a new player, on the real rules: the starting farm (FarmState.newFarm, 8 starter slimes), one team of
--- four on Repeat against one group of a camp, two slimes fishing and gardening, a pair breeding whose babies are sold the
+-- four on Repeat against one pack of the Sunny Meadow, two slimes fishing and gardening, a pair breeding whose babies are sold the
 -- moment they hatch, the online gifts and the daily quests claimed as soon as they are ready, and every coin spent at once
 -- on the cheapest area upgrade (the lowest-level area; all areas cost the same). Records how long the team spends marching,
 -- fighting and waiting (why), where the coins come from and when the village reaches level 5, 10 and 20.
 -- Assumed: the tutorial leaves the player with workers and a pair at minute 1 and the first team out at minute 4; a revive
 -- is paid at once if the food is there; the player never trains (levels stay 4); one team only (the second opens at
 -- village level 10 but the starters have no more free slimes); the farm runs at productive 0.55 as kitchen_sim does.
--- lune run tools/balance/early_game_sim.luau [hours] [camp] [firstFightSeconds] [seed] [quiet|full] [cook]
+-- lune run tools/balance/early_game_sim.luau [hours] [packLevelOffset] [firstFightSeconds] [seed] [quiet|full] [cook]
 -- ("cook": the pair becomes a cook at the kitchen and its dishes are sold, instead of breeding babies for sale)
 local process = require("@lune/process")
 local Combat = require("../../src/shared/Combat")
@@ -20,11 +20,12 @@ local Shop = require("../../src/shared/Shop")
 local Stations = require("../../src/shared/Stations")
 local VillageRules = require("../../src/shared/Village")
 local VillageSim = require("../../src/shared/VillageSim")
+local WorldPacks = require("../../src/shared/WorldPacks")
 local Zombies = require("../../src/shared/Zombies")
 local Kitchen = require("./kitchen_lib")
 
 local HOURS = tonumber(process.args[1]) or 30
-local CAMP = tonumber(process.args[2]) or 1
+local CAMP = tonumber(process.args[2]) or 0 -- levels the pack stands above the squad
 local FIRST_FIGHT = tonumber(process.args[3]) or 240
 local SEED = tonumber(process.args[4]) or 1
 local SETUP = 60
@@ -76,13 +77,12 @@ local groupBase = 0
 local campGroup: { any } = {}
 local groupGoneUntil = 0
 
--- One way, studs: gate to the stand-off spot of the first group of the camp (straight line; the real path winds a little).
-local across, forward = Zombies.homeOffset(1, CAMP, 1)
-local distance = math.sqrt(across * across + forward * forward) - Config.Zombies.MarchStandOffStuds
+-- One way, studs: a team sets out at most MarchMostStuds from its pack and stops the stand-off short of it.
+local distance = Config.World.Packs.MarchMostStuds - Config.Zombies.MarchStandOffStuds
 
 local function spawn()
-	groupBase = Zombies.playerLevel(farm, now)
-	campGroup = Zombies.group("z", groupBase, CAMP, campRng)
+	groupBase = Zombies.playerLevel(farm, now) + CAMP
+	campGroup = WorldPacks.pack("z", "meadow", groupBase, campRng)
 	groupGoneUntil = 0
 end
 spawn()
@@ -182,7 +182,7 @@ local function beginFight()
 			if event.kind == "fallen" then
 				local zombie = byId[event.to]
 				if zombie then
-					coins += Zombies.killReward(zombie.kind, zombie.level)
+					coins += WorldPacks.killReward(zombie.defRole, zombie.level)
 				else
 					table.insert(fallen, event.to)
 				end
@@ -425,7 +425,7 @@ local function minutes(value: number?): string
 end
 print(
 	string.format(
-		"camp %d, seed %d, first fight at %d s, one-way march %.0f studs = %.1f s, group level %d, run %.1f h",
+		"pack level offset %d, seed %d, first fight at %d s, one-way march %.0f studs = %.1f s, group level %d, run %.1f h",
 		CAMP,
 		SEED,
 		FIRST_FIGHT,

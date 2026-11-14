@@ -33,12 +33,10 @@ WorldPlan.Villages = {
 	{ id = "v2", name = "Westmeadow", kind = "village", x = -760, z = 930, radius = 176 },
 	{ id = "v3", name = "Orchard End", kind = "village", x = -620, z = 1300, radius = 176 },
 	{ id = "v4", name = "Reedbank", kind = "village", x = -270, z = 1500, radius = 176 },
-	-- (`camps`: the river runs between Baywatch and the hub, so its zombie camps lie turned this many degrees off the
-	-- gate's line, up the east bank: Layout.campFrame)
-	{ id = "v5", name = "Baywatch", kind = "village", x = 300, z = 1520, radius = 176, camps = -28 },
+	{ id = "v5", name = "Baywatch", kind = "village", x = 300, z = 1520, radius = 176 },
 	{ id = "v6", name = "Sunny Rise", kind = "village", x = 640, z = 1290, radius = 176 },
 	{ id = "v7", name = "Eastfield", kind = "village", x = 770, z = 920, radius = 176 },
-	{ id = "v8", name = "Millbrook", kind = "village", x = 510, z = 590, radius = 176, camps = 20 },
+	{ id = "v8", name = "Millbrook", kind = "village", x = 510, z = 590, radius = 176 },
 }
 
 -- The regions. `at` are the seeds the builder grows each region's ground from (nearest seed wins, frayed by noise);

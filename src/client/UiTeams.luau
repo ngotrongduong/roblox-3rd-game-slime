@@ -13,7 +13,6 @@ local Zombies = require(ReplicatedStorage.Shared.Zombies)
 local UiKit = require(script.Parent.UiKit)
 local UiSlimeList = require(script.Parent.UiSlimeList)
 local UiSlimes = require(script.Parent.UiSlimes)
-local ZombieLook = require(script.Parent.ZombieLook)
 local ZombieTeams = require(script.Parent.ZombieTeams)
 local ZombieWorld = require(script.Parent.ZombieWorld)
 
@@ -538,29 +537,28 @@ local function openAttack(groupId: string)
 		tick()
 	end, group.position, Z.SendRangeStuds * 1.25)
 
-	-- the group: its kinds' pictures and level
-	local head = UiKit.make("Frame", { BackgroundTransparency = 1, Size = UDim2.fromScale(1, 1) }, modal.header)
-	UiKit.make("UIListLayout", {
-		FillDirection = Enum.FillDirection.Horizontal,
-		VerticalAlignment = Enum.VerticalAlignment.Center,
-		Padding = UDim.new(0, U.Gap),
-		SortOrder = Enum.SortOrder.LayoutOrder,
-	}, head)
-	local kinds: { Configuration } = {}
-	for config in group.entries do
-		table.insert(kinds, config)
+	-- the pack: its level and its monsters by name ("Lv 37   2 Leaf Sprout, Honey Bee")
+	local counts: { [string]: number } = {}
+	local names: { string } = {}
+	for _, entry in group.entries do
+		if entry.name ~= "" then
+			if not counts[entry.name] then
+				table.insert(names, entry.name)
+			end
+			counts[entry.name] = (counts[entry.name] or 0) + 1
+		end
 	end
-	table.sort(kinds, function(a, b)
-		return a.Name < b.Name
-	end)
-	for index, config in kinds do
-		ZombieLook.icon(head, group.entries[config].kind, U.Touch - 12, { LayoutOrder = index })
+	table.sort(names)
+	for index, name in names do
+		names[index] = if counts[name] > 1 then counts[name] .. " " .. name else name
 	end
-	UiKit.label(head, "Lv " .. tostring(group.level), U.TextNormal, "Brown", {
-		LayoutOrder = 10,
-		Size = UDim2.fromOffset(58, U.Touch),
-		TextXAlignment = Enum.TextXAlignment.Center,
-	})
+	UiKit.label(
+		modal.header,
+		"Lv " .. tostring(group.level) .. "   " .. table.concat(names, ", "),
+		U.TextNormal,
+		"Brown",
+		{ Size = UDim2.fromScale(1, 1), TextXAlignment = Enum.TextXAlignment.Left, TextScaled = true }
+	)
 
 	local scroller = UiKit.make("ScrollingFrame", {
 		Name = "Teams",

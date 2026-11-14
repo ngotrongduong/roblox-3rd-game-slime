@@ -274,6 +274,13 @@ function MonsterLook.prepare(defIds: { string })
 	end
 end
 
+-- Whether a monster's own look can be built now: false only while a monster slime's mesh still loads (the packs of the
+-- open world wait for it; the Dungeon prepares its map before the first wave).
+function MonsterLook.ready(defId: string): boolean
+	local spec = (D.Looks :: any)[defId]
+	return not (spec and spec.clips) or ClipRig.settled(spec)
+end
+
 -- The monster's body at the origin (not parented), its emotion for SlimeActor, its size against a plain one, and its
 -- pieces when its model is in the kit (DungeonFight dresses the actor with them).
 function MonsterLook.build(monster: Monster): Look

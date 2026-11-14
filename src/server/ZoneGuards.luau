@@ -14,6 +14,7 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Config = require(ReplicatedStorage.Shared.Config)
+local Layout = require(ReplicatedStorage.Shared.Layout)
 local WorldPlan = require(ReplicatedStorage.Shared.WorldPlan)
 local ZoneFights = require(ReplicatedStorage.Shared.ZoneFights)
 local PlayerData = require(script.Parent.PlayerData)
@@ -70,6 +71,14 @@ function ZoneGuards.spot(id: string): CFrame
 	local y = ground(at.X, at.Z) or frame.Position.Y
 	local toward = frame.Position - at
 	return CFrame.new(at.X, y + D.PlayerLift, at.Z) * CFrame.Angles(0, math.atan2(-toward.X, -toward.Z), 0)
+end
+
+-- Where quick travel puts a character at a zone's waystone: on the ground, `lift` studs up, facing the pad.
+function ZoneGuards.landing(id: string, lift: number): CFrame
+	local x, z = ZoneFights.landing(id)
+	local middleX, middleZ = ZoneFights.middle(id)
+	local at = Vector3.new(x, (ground(x, z) or ZoneGuards.frame(id).Position.Y) + lift, z)
+	return CFrame.lookAt(at, Vector3.new(middleX, at.Y, middleZ))
 end
 
 -- A player's wins, for their own client: the prompts, the rests and the gates read them.
@@ -132,12 +141,95 @@ function ZoneGuards.start()
 		end
 	end
 
+	-- The rim: an unseen wall along the crest between the gates, and over each seal, so the gates are the only way in.
+	local R = WorldPlan.Heart.RimRadius
+	local wall = W.RimWall
+	local seals: { BasePart } = {}
+	local angles: { number } = {}
+	local floor = math.huge
+	for _, seal in gates:GetChildren() do
+		if seal:IsA("BasePart") then
+			table.insert(seals, seal)
+			table.insert(angles, math.atan2(seal.Position.Z - heartZ, seal.Position.X - heartX))
+			floor = math.min(floor, seal.Position.Y - seal.Size.Y / 2)
+		end
+	end
+	table.sort(angles)
+	local pieces = 0
+	local rim = folder(wall.Folder)
+	local function solid(name: string, size: Vector3, cf: CFrame)
+		unseen(name, size, cf, rim).CanCollide = true
+		pieces += 1
+	end
+	if #angles > 0 then
+		local middleY = floor - wall.Sink + wall.Height / 2
+		for _, seal in seals do
+			local over = floor - wall.Sink + wall.Height - (seal.Position.Y + seal.Size.Y / 2)
+			solid(
+				"Over_" .. seal.Name,
+				Vector3.new(seal.Size.X, over, wall.Depth),
+				seal.CFrame + Vector3.new(0, (seal.Size.Y + over) / 2, 0)
+			)
+		end
+		-- (the wall runs a little into each seal's width, so no slit is left beside it)
+		local half = (W.Seal.Width / 2 - wall.Depth) / R
+		for index, from in angles do
+			local to = angles[index % #angles + 1]
+			if to <= from then
+				to += 2 * math.pi
+			end
+			local span = (to - half) - (from + half)
+			local count = math.max(1, math.ceil(span * R / wall.SegmentStuds))
+			for step = 1, count do
+				local angle = from + half + span * (step - 0.5) / count
+				local at = Vector3.new(heartX + R * math.cos(angle), middleY, heartZ + R * math.sin(angle))
+				solid(
+					"Rim",
+					Vector3.new(span * R / count + wall.Depth, wall.Height, wall.Depth),
+					CFrame.lookAt(at, Vector3.new(heartX, middleY, heartZ))
+				)
+			end
+		end
+	end
+
+	-- The waystones: one beside every zone's pad, one inside every village's gate. The clients draw them and answer
+	-- their prompts (the map); travel itself is server/QuickTravel's.
+	local stones = folder(W.Waystones.Folder)
+	local function stone(name: string, x: number, z: number, title: string): Part
+		local anchor = unseen(name, Vector3.one, CFrame.new(x, (ground(x, z) or 0) + W.Waystones.Lift, z), stones)
+		local prompt = Instance.new("ProximityPrompt")
+		prompt.Name = "WaystonePrompt"
+		prompt.ActionText = "Travel"
+		prompt.ObjectText = title
+		prompt.MaxActivationDistance = W.Waystones.PromptRangeStuds
+		prompt.RequiresLineOfSight = false
+		prompt.Parent = anchor
+		return anchor
+	end
+	for _, place in WorldPlan.Zones do
+		local x, z = ZoneFights.waystone(place.id)
+		stone(place.id, x, z, place.name):SetAttribute("Zone", place.id)
+	end
+	for plot = 1, Config.Map.PlotCount do
+		local at = (Layout.plotGate(plot) * CFrame.new(W.Waystones.HomeAcross, 0, W.Waystones.HomeIn)).Position
+		stone("home" .. plot, at.X, at.Z, "Home"):SetAttribute("Plot", plot)
+	end
+
 	PlayerData.onReady(function(player: Player, data: any)
 		if player.Parent == Players then
 			ZoneGuards.publish(player, data)
 		end
 	end)
-	print(Config.LogPrefix, "zones of the big world ready:", #WorldPlan.Zones, "fights, 3 gates sealed")
+	print(
+		Config.LogPrefix,
+		"zones of the big world ready:",
+		#WorldPlan.Zones,
+		"fights, 3 gates sealed, the rim walled in",
+		pieces,
+		"pieces,",
+		#stones:GetChildren(),
+		"waystones"
+	)
 end
 
 return ZoneGuards

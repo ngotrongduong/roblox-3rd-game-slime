@@ -16,7 +16,10 @@ local ServerStorage = game:GetService("ServerStorage")
 
 local Config = require(ReplicatedStorage.Shared.Config)
 local Layout = require(ReplicatedStorage.Shared.Layout)
-assert(Layout.campFrame, "ReplicatedStorage.Shared.Layout is the old valley's: sync the code first")
+assert(
+	ReplicatedStorage.Shared:FindFirstChild("WorldPlan"),
+	"ReplicatedStorage.Shared is the old valley's: sync the code first"
+)
 
 -- The old valley: nine slots (the Market and eight plots) on a rim round the origin, each facing the middle.
 local OLD_RADIUS = 500

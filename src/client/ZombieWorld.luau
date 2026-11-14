@@ -1,22 +1,23 @@
 --!strict
--- The zombie groups outside the villages, drawn from what the server publishes under workspace.ZombieCamps/<slice>/<id>
--- (src/server/ZombieFights.luau; the camps of the whole server, every slice of the valley has its own): each waiting or
--- fighting zombie as a real slime body with SlimeActor, a level marker over each group (coloured by the viewer's own level,
--- PlayerLevel on their village folder) and a prompt to order an attack. Only the groups nearest the camera, in any slice,
--- are drawn (Config.Zombies.DrawDistance, at most View.MaxDrawnZombies bodies), and only the groups near the camera have a
--- marker and a prompt. A waiting group's zombies live: each moves freely round the group's place, pauses, shows a feeling or
--- talks to a neighbour (client only, seeded per zombie, staggered, with a budget); a group that is taken or fighting turns to
--- face the team that attacks it (any player's). It decides nothing: the fight (ZombieFight) and the sheets (UiTeams) use its
--- small API.
+-- The packs of the open world, drawn from what the server publishes under workspace.ZombieCamps/<band>/<id>
+-- (src/server/ZombieFights.luau; rules in shared/WorldPacks; a "zombie" in this file is one monster of a pack): each
+-- waiting or fighting monster in its Slime Dungeon look (MonsterLook) on a SlimeActor, a level marker over each pack
+-- (coloured by the viewer's own level, PlayerLevel on their village folder) and a prompt to order an attack. Only the packs
+-- nearest the camera are drawn (Config.Zombies.DrawDistance, at most View.MaxDrawnZombies bodies), and only those near the
+-- camera have a marker and a prompt. A waiting pack's monsters live: each moves freely round the pack's place, pauses, shows
+-- a feeling or talks to a neighbour (client only, seeded per monster, staggered, with a budget); a pack that is taken or
+-- fighting turns to face the team that attacks it (any player's). It decides nothing: the fight (ZombieFight) and the
+-- sheets (UiTeams) use its small API.
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Config = require(ReplicatedStorage.Shared.Config)
+local Dungeon = require(ReplicatedStorage.Shared.Dungeon)
 local Layout = require(ReplicatedStorage.Shared.Layout)
 local VillagePath = require(ReplicatedStorage.Shared.VillagePath)
 local Zombies = require(ReplicatedStorage.Shared.Zombies)
+local MonsterLook = require(script.Parent.MonsterLook)
 local SlimeActor = require(script.Parent.SlimeActor)
-local ZombieLook = require(script.Parent.ZombieLook)
 local ZombieTeams = require(script.Parent.ZombieTeams)
 
 local Z = Config.Zombies
@@ -35,13 +36,21 @@ type Roam = {
 }
 export type Entry = {
 	config: Configuration,
+	-- its Config.Dungeon monster (the def's id), how it fights (the def's kind) and its role
+	def: string,
+	name: string,
 	kind: string,
+	role: string,
 	level: number,
-	-- the slice of the valley its group stands in (its gate is the village it looks at)
-	slice: number,
+	-- for the fight, as the Dungeon gives its monsters: the way its blows look, its own effects, its size against a plain
+	-- one; and the face of its look
+	way: string,
+	fx: any?,
+	size: number,
+	face: string,
 	model: Model?,
 	actor: SlimeActor.Slime?,
-	-- where it stands in its group, and the way it faces (towards the village)
+	-- where it stands in its group, and the way it faces (towards the villages)
 	spot: Vector3,
 	facing: Vector3,
 	roam: Roam,
@@ -58,8 +67,6 @@ type Marker = {
 export type Group = {
 	id: string,
 	folder: Configuration,
-	slice: number,
-	camp: number,
 	level: number,
 	state: string,
 	-- the team that ordered the attack on it (0 when none) and the UserId of its player (0 when none)
@@ -96,14 +103,14 @@ local function stringAttr(inst: Instance, name: string, default: string): string
 	return if type(value) == "string" then value else default
 end
 
--- The gate of a slice of the valley (0 is the Market's): the village its groups look at.
-local function gatePosition(slice: number): Vector3
-	return Layout.sliceGate(math.clamp(slice, 0, Config.Map.PlotCount)).Position
+-- Where the monsters look while nothing happens: the Market, the middle of the villages.
+local function home(): Vector3
+	return Layout.sliceGate(0).Position
 end
 
--- The flat way from a point towards a slice's gate.
-function ZombieWorld.towardVillage(from: Vector3, slice: number): Vector3
-	local flat = gatePosition(slice) - from
+-- The flat way from a point towards the villages.
+local function towardHome(from: Vector3): Vector3
+	local flat = home() - from
 	flat = Vector3.new(flat.X, 0, flat.Z)
 	return if flat.Magnitude > 0.01 then flat.Unit else Vector3.zAxis
 end
@@ -136,8 +143,8 @@ end
 -- The ground under a point (the map's own surface), for the fight to stand its fighters on.
 ZombieWorld.groundAt = groundAt
 
--- The ground under a flat spot of the valley whose height is not known (the march's legs are published flat): the same
--- ray the server used to place the groups, from Zombies.GroundProbeUp above the map's ground height.
+-- The ground under a flat spot of the world whose height is not known (the march's legs are published flat): a ray
+-- from Zombies.GroundProbeUp above the Vale's ground height.
 function ZombieWorld.groundOnMap(x: number, z: number): Vector3
 	local base = Config.Map.GroundY
 	return probe(Vector3.new(x, base + Z.GroundProbeUp, z), Z.GroundProbeUp + Z.GroundProbeDown)
@@ -156,11 +163,13 @@ local function undraw(entry: Entry)
 end
 
 local function draw(entry: Entry)
-	if entry.model or dead[entry.config.Name] then
+	-- (a monster slime waits for its mesh: it is tried again while its pack is near, see `check`)
+	if entry.model or dead[entry.config.Name] or not MonsterLook.ready(entry.def) then
 		return
 	end
-	local look = ZombieLook.look(entry.kind)
-	local model = ZombieLook.build(entry.kind)
+	local look = MonsterLook.build({ defId = entry.def, kind = entry.kind, role = entry.role })
+	local model = look.model
+	entry.face, entry.size = look.face, look.size
 	model.Name = entry.config.Name
 	local foot = groundAt(entry.spot)
 	entry.spot = foot
@@ -168,9 +177,12 @@ local function draw(entry: Entry)
 	model.Parent = actorsFolder
 	local actor = SlimeActor.new(model, look.face)
 	if actor then
-		-- (the body collides by default; a zombie is only to be looked at)
+		-- (the body collides by default; a monster is only to be looked at)
 		actor.body.CanCollide = false
-		SlimeActor.lookAt(actor, gatePosition(entry.slice))
+		if look.creature then
+			SlimeActor.dress(actor, look.creature)
+		end
+		SlimeActor.lookAt(actor, home())
 		-- (it stands on its own feet from the start: a standing leg keeps it on the ground and lets it turn on the spot)
 		SlimeActor.setTravel(actor, foot, foot, 0, 0, false, "stroll")
 		local roam = entry.roam
@@ -196,7 +208,7 @@ local function layout(group: Group)
 	table.sort(list, function(a, b)
 		return a.config.Name < b.config.Name
 	end)
-	local facing = ZombieWorld.towardVillage(group.position, group.slice)
+	local facing = towardHome(group.position)
 	for index, entry in list do
 		local x, z = Zombies.ringSpot(index, #list)
 		entry.spot = group.position + Vector3.new(x, 0, z)
@@ -350,21 +362,21 @@ local function standStill(actor: SlimeActor.Slime, at: Vector3)
 	SlimeActor.setTravel(actor, at, at, 0, 0, false, "stroll")
 end
 
--- The face of its own kind and the eyes towards the village again, after a feeling or a chat.
+-- The face of its own look and the eyes towards the villages again, after a feeling or a chat.
 local function ownFace(entry: Entry, actor: SlimeActor.Slime)
-	SlimeActor.setEmotion(actor, ZombieLook.look(entry.kind).face)
-	SlimeActor.lookAt(actor, gatePosition(entry.slice))
+	SlimeActor.setEmotion(actor, entry.face)
+	SlimeActor.lookAt(actor, home())
 	SlimeActor.face(actor, nil)
 end
 
--- Where a taken group looks: at the team that attacks it (any player's), else at its slice's village.
+-- Where a taken group looks: at the team that attacks it (any player's), else towards the villages.
 local function lookPoint(group: Group): Vector3
 	local village = if group.attacker > 0 then ZombieTeams.rootOf(group.attacker) else nil
 	local team = if group.team > 0 and village then ZombieTeams.get(group.team, village) else nil
 	if team then
 		return Vector3.new(team.to.X, group.position.Y, team.to.Z)
 	end
-	return gatePosition(group.slice)
+	return home()
 end
 
 local function nearestNeighbour(group: Group, entry: Entry, actor: SlimeActor.Slime): Entry?
@@ -555,8 +567,6 @@ end
 
 local function readGroup(group: Group)
 	local folder = group.folder
-	group.slice = math.floor(number(folder, "Slice", group.slice))
-	group.camp = math.floor(number(folder, "Camp", group.camp))
 	group.level = math.floor(number(folder, "Level", group.level))
 	group.state = stringAttr(folder, "State", "waiting")
 	group.team = math.floor(number(folder, "Team", 0))
@@ -585,9 +595,15 @@ local function addEntry(group: Group, child: Instance)
 	end
 	local entry: Entry = {
 		config = child,
-		kind = stringAttr(child, "Kind", "rotten"),
+		def = "",
+		name = "",
+		kind = "melee",
+		role = "swarmer",
 		level = math.floor(number(child, "Level", group.level)),
-		slice = group.slice,
+		way = "rotten",
+		fx = nil,
+		size = 1,
+		face = "",
 		model = nil,
 		actor = nil,
 		spot = group.position,
@@ -595,19 +611,31 @@ local function addEntry(group: Group, child: Instance)
 		roam = newRoam(child.Name),
 		connections = {},
 	}
+	local function describe()
+		entry.def = stringAttr(child, "Def", "")
+		local def = if entry.def ~= "" then Dungeon.defOf(stringAttr(group.folder, "Map", "meadow"), entry.def) else nil
+		entry.name = if def then def.name else ""
+		entry.kind = stringAttr(child, "Kind", "melee")
+		entry.role = stringAttr(child, "Role", "swarmer")
+		entry.way = (Config.Dungeon.View.Ways :: { [string]: string })[entry.kind] or "rotten"
+		entry.fx = (Config.Dungeon.Fx.Monsters :: any)[entry.def]
+	end
+	describe()
 	group.entries[child] = entry
 	group.byId[child.Name] = entry
-	-- (its attributes may arrive just after it: a Kind that changes redraws it)
-	table.insert(
-		entry.connections,
-		child:GetAttributeChangedSignal("Kind"):Connect(function()
-			entry.kind = stringAttr(child, "Kind", "rotten")
-			undraw(entry)
-			if group.drawn then
-				draw(entry)
-			end
-		end)
-	)
+	-- (its attributes may arrive just after it: one that changes redraws it)
+	for _, name in { "Def", "Kind", "Role" } do
+		table.insert(
+			entry.connections,
+			child:GetAttributeChangedSignal(name):Connect(function()
+				describe()
+				undraw(entry)
+				if group.drawn then
+					draw(entry)
+				end
+			end)
+		)
+	end
 	layout(group)
 	if group.drawn then
 		draw(entry)
@@ -636,8 +664,6 @@ local function addGroup(child: Instance)
 	local group: Group = {
 		id = child.Name,
 		folder = child,
-		slice = 0,
-		camp = 1,
 		level = 1,
 		state = "waiting",
 		team = 0,
@@ -651,7 +677,7 @@ local function addGroup(child: Instance)
 	}
 	groups[child] = group
 	byGroupId[group.id] = group
-	for _, name in { "Slice", "Camp", "Level", "Position", "State", "Team", "Attacker" } do
+	for _, name in { "Level", "Position", "State", "Team", "Attacker" } do
 		table.insert(
 			group.connections,
 			child:GetAttributeChangedSignal(name):Connect(function()
@@ -733,9 +759,15 @@ local function check()
 		local want = item.distance <= limit and count <= budget
 		if want then
 			budget -= count
-		end
-		if want ~= group.drawn then
-			setDrawn(group, want)
+			-- (again while it is drawn: a monster whose mesh was still loading gets its body now)
+			setDrawn(group, true)
+		elseif group.drawn then
+			setDrawn(group, false)
+		elseif item.distance <= limit * 2 then
+			-- its monsters' meshes start loading before it comes into sight
+			for _, entry in group.entries do
+				MonsterLook.ready(entry.def)
+			end
 		end
 	end
 end
@@ -749,22 +781,26 @@ function ZombieWorld.group(id: string): Group?
 	return byGroupId[id]
 end
 
--- (a zombie's id starts with its group's: "s3c2g4-17-2")
+-- (a monster's id starts with its pack's: "p3x4-17-2")
 function ZombieWorld.zombie(id: string): Entry?
 	local group = byGroupId[string.match(id, "^[^-]+") or ""]
 	return if group then group.byId[id] else nil
 end
 
--- A zombie the fight saw fall: it bursts away (the caller adds the coins and the particles) and is not drawn again.
-function ZombieWorld.kill(id: string)
+-- A monster the fight saw fall: it bursts away (the caller adds the coins and the particles) and is not drawn again.
+-- Returns the seconds until its body is gone (a monster slime dies its own way first).
+function ZombieWorld.kill(id: string): number
 	dead[id] = true
 	local entry = ZombieWorld.zombie(id)
+	local seconds = V.DeathDelay
 	if entry and entry.actor then
 		SlimeActor.kick(entry.actor, "squash", V.DeathSquash)
-		task.delay(V.DeathDelay, function()
+		seconds = math.max(seconds, SlimeActor.act(entry.actor, "Die"))
+		task.delay(seconds, function()
 			undraw(entry)
 		end)
 	end
+	return seconds
 end
 
 function ZombieWorld.isDead(id: string): boolean
@@ -777,7 +813,7 @@ function ZombieWorld.start()
 	end
 	started = true
 	task.spawn(function()
-		-- The camps of the whole server: workspace.ZombieCamps/<slice>/<group> (made by the server when the first player's
+		-- The packs of the whole server: workspace.ZombieCamps/<band>/<pack> (made by the server when the first player's
 		-- village is up).
 		local camps = workspace:FindFirstChild("ZombieCamps")
 		while not camps do

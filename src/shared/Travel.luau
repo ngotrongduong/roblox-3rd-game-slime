@@ -6,7 +6,8 @@ local Layout = if script then require(script.Parent.Layout) else require("./Layo
 
 local Travel = {}
 
-Travel.Places = { "Market", "Home" }
+-- ("Zone": a zone's waystone; the request names the zone, and where it lands is ZoneFights.landing)
+Travel.Places = { "Market", "Home", "Zone" }
 
 function Travel.isPlace(place: any): boolean
 	return type(place) == "string" and table.find(Travel.Places, place) ~= nil

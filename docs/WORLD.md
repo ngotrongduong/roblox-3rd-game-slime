@@ -260,6 +260,30 @@ A finished model replaces its interim by one line in `tools/world/build_sites.lu
     2/2 Lv 16"); the end card shows Leave only after a win, Replay and Leave after a defeat (b3 lost); gate_w's wall
     and lock went when b1 was won. Known limits: the fight is drawn only for its owner (others see nobody there);
     the sheet was entered by script, not by hand; no phone view seen.
+- **M5b Packs, waystones and the map** (the owner, 2026-11-14: "monsters from Lv 4 near the villages to Lv 150 at the
+  farthest place, in areas Lv 1-20, 20-40 ..., groups of 3 to 5, the Dungeon's monsters; a minimap; teleport points at
+  the boss areas and at home, unlocked by killing that area's boss; nobody climbs into the Heart"). Decisions:
+  - **The Heart's rim is walled** (`Config.World.RimWall`, `server/ZoneGuards`): an unseen wall along the crest
+    (radius 372, measured: the crest stands at 175-180, the gates are notches down to 131, Crownfall leaves through a
+    gap in the south), open only where the three seals stand.
+  - **Packs replace the camps in front of the gates** (`Config.World.Packs`, rules `shared/WorldPacks`, the server is
+    still `server/ZombieFights`, the folder still `workspace.ZombieCamps/<band>/<id>`). One pack to a 280-stud cell of
+    the whole world (the same every time), dropped where the spot is water, a slope, something built or too near a
+    place. A pack's level never changes: 4 within 300 studs of a village's middle, 150 at the pack farthest from every
+    village, by `(share of the way) ^ 1.6` between (so the first twenty levels lie within about 900 studs of home).
+    Bands of 20 levels are the areas ("Lv 1-20" ... "Lv 140-150"), each with its colour on the map. A pack is 3 to 5
+    common monsters of its region's Dungeon map (Vale and Meadow: Sunny Meadow's; Grove: Mushroom Grove's; Ember:
+    Ember Lava's; Frost: Frozen Ice's), drawn with their own looks and skills; every stat is the same share of the
+    level, x `StatFactor`. A fallen monster pays coins by its role and level. The player stands by a pack to send a team
+    (as before); the team sets out at most 150 studs from the pack, on the village's side, and comes back there.
+    A team's level no longer changes the world: a player picks their risk by where they hunt.
+  - **Waystones** (`Config.World.Waystones`; `ZoneFights.waystone / landing / travelBlock`): one beside every zone's
+    pad and one inside every village's gate. Quick travel (`server/QuickTravel`, `{ action = "Zone", zone = id }`)
+    takes a player from anywhere to the waystone of a zone whose guard they have beaten; Home and the Market stay as
+    they were. Nothing new is saved (`farm.world.beaten` already holds the wins).
+  - **The map** (`client/UiMap`): a small map in the HUD that follows the player, and the whole world on a sheet:
+    the bands in their colours with a legend, the packs, the zones, the villages, the waystones (open ones travel on
+    a press). The picture is drawn from `WorldPlan` by script (`tools/world/map_picture.py`).
 - **M6 Own models** for section 5, swapped in; region light and sound (client-side Atmosphere by region, no ambient
   particle layers).
 - **M7 Phone pass** and the owner's walk through every road.

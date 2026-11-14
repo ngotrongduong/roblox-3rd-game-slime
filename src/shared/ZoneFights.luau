@@ -153,4 +153,35 @@ function ZoneFights.gateOpen(beaten: Beaten, gateId: string): boolean
 	return zone ~= nil and (beaten[zone] or 0) > 0
 end
 
+-- ===== the waystones (Config.World.Waystones) =====
+
+-- Where a zone's waystone stands, flat, in world studs: beside the pad, towards the hub.
+function ZoneFights.waystone(id: string): (number, number)
+	local x, z = ZoneFights.middle(id)
+	local hubX, hubZ = WorldPlan.world(WorldPlan.Hub.x, WorldPlan.Hub.z)
+	local dx, dz = hubX - x, hubZ - z
+	local d = math.sqrt(dx * dx + dz * dz)
+	return x + dx / d * W.Waystones.OutStuds, z + dz / d * W.Waystones.OutStuds
+end
+
+-- Where a traveller lands at a zone's waystone, flat: ArriveStuds from it, towards the pad.
+function ZoneFights.landing(id: string): (number, number)
+	local x, z = ZoneFights.middle(id)
+	local stoneX, stoneZ = ZoneFights.waystone(id)
+	local dx, dz = x - stoneX, z - stoneZ
+	local d = math.sqrt(dx * dx + dz * dz)
+	return stoneX + dx / d * W.Waystones.ArriveStuds, stoneZ + dz / d * W.Waystones.ArriveStuds
+end
+
+-- Why a player may not travel to a zone's waystone: "ZONE_UNKNOWN", or "ZONE_LOCKED" (its guard is not beaten yet); nil
+-- when they may.
+function ZoneFights.travelBlock(beaten: Beaten, id: any): string?
+	if not ZoneFights.zone(id) then
+		return "ZONE_UNKNOWN"
+	elseif (beaten[id] or 0) <= 0 then
+		return "ZONE_LOCKED"
+	end
+	return nil
+end
+
 return ZoneFights

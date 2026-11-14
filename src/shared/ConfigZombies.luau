@@ -13,34 +13,22 @@ return {
 	MinSlimes = 2,
 	-- Food to revive: ceil(1 + level / this) items (the original's 20 food x ceil(1 + level / 5); an item is about 20).
 	ReviveLevelsPerFood = 5,
-	LevelOffsets = { 0, 3, 5 },
-	-- A beaten group comes back RespawnSeconds later at the level of that moment.
+	-- A beaten pack comes back RespawnSeconds later as a new roll of monsters at the same level.
 	RespawnSeconds = 30,
-	-- Where (docs/MAP.md, 1.4): every plot owns the slice of the valley in front of its gate. From the gate straight
-	-- towards the centre, the first camp is CampFirstDistance out, each next one CampSpacing further; a camp's groups
-	-- lie about there, either side of its trail. 9 places on the rim make a slice 40 degrees wide.
-	CampFirstDistance = 90,
-	CampSpacing = 70,
-	-- Where the groups of a camp live (the owner, 2026-11-02: 4 in the easy ring, 3 in the next, 2 in the hardest), loose
-	-- as in nature: degrees off the slice's middle, studs further out or in. Odd slices are mirrored and every home shifts a
-	-- little by slice (HomeJitterDegrees), so no two slices read alike.
-	Homes = {
-		{ { -14, 10 }, { -4, -12 }, { 5, 14 }, { 14, -8 } },
-		{ { -12, -8 }, { 2, 10 }, { 12, -6 } },
-		{ { -10, 6 }, { 9, -8 } },
-	},
-	HomeJitterDegrees = 2.5,
-	-- A group nobody attacked for this long takes its slice's level again (the owner, 2026-11-02).
-	IdleResetSeconds = 5 * 60,
-	-- The camps of the whole server (src/server/ZombieFights.luau) look at their groups this often (respawn, idle reset),
-	-- and each player's level (the one the slices are filled by, published as PlayerLevel) is worked out this often.
+	-- The packs of the whole server (src/server/ZombieFights.luau) look at their respawns this often, and each player's
+	-- level (published as PlayerLevel, which colours the pack markers) is worked out this often.
 	CampTickSeconds = 1,
 	PlayerLevelSeconds = 2,
 	-- How often the teams and the slimes' health shares are published to the clients.
 	PublishSeconds = 0.25,
-	-- The ground under a group is found by a ray from GroundProbeUp above the map's ground height down GroundProbeDown more.
-	GroundProbeUp = 80,
+	-- The ground under a marching team (the march is published flat) is found by a ray from GroundProbeUp above the Vale's
+	-- ground height down GroundProbeDown more: the big world's land stands up to a few hundred studs over the Vale.
+	GroundProbeUp = 700,
 	GroundProbeDown = 200,
+	-- A pack's spot is found once, when the packs are made, by a ray straight down from this high over the plan point
+	-- and this long (the world's ground is hills up to a few hundred studs over the plan's zero).
+	PackProbeTop = 2000,
+	PackProbeLength = 4000,
 	-- A fight runs in steps of this many seconds (at most MaxStepsPerFrame in one frame), and is called a draw after
 	-- FightMaxSeconds.
 	FightStepSeconds = 0.1,
@@ -58,14 +46,14 @@ return {
 	-- Team n can be set and sent from village level TeamOpensAt[n] (the owner, 2026-11-03: more teams as the village
 	-- grows, 4 at most); team 5 and 6 come from the Extra Team passes only.
 	TeamOpensAt = { 1, 10, 20, 30 },
-	-- The longest group id a saved team may name as its target (ids look like "c3g4").
+	-- The longest pack id a saved team may name as its target (ids look like "p12x9", WorldPacks.cells).
 	TargetIdMaxLength = 16,
 	ShopRangeStuds = 40,
 	-- Most slimes one "SellMany" request may name (the shop ticks several slimes and sells them with one press; the server
 	-- refuses a longer list outright, so one request cannot be made to loop over a huge table).
 	SellManyMax = 12,
-	-- A team marches from the gate to a spot MarchStandOffStuds short of its group (towards the village), in MarchGait,
-	-- and back the same way; the slowest member sets the pace.
+	-- A team marches from its muster spot (WorldPacks.musterSpot) to a spot MarchStandOffStuds short of its pack (towards
+	-- the village), in MarchGait, and back the same way; the slowest member sets the pace.
 	MarchStandOffStuds = 11,
 	MarchGait = "walk",
 	-- A camp fight is fought by places, as the Slime Dungeon's (the owner, 2026-11-13): nobody hops farther than this from
@@ -86,19 +74,6 @@ return {
 	FightFullness = 2,
 	-- HpShare on a slime's model is rounded to this step, so a healing wound does not rewrite it every frame.
 	HpShareStep = 0.01,
-	-- A zombie's stats against an even slime of the player's level, per camp. Five levels mean far more at level 4 than
-	-- at level 60, so a camp's risk comes from this and stays the same all game; its level sets the reward.
-	-- (camp 1 was 0.75: three slimes in four fell every fight there, each one a ghost to feed back to life; the owner,
-	-- 2026-11-04, wants new players to keep playing)
-	StatFactors = { 0.62, 0.9, 1.03 },
-	-- base = coins at level 0, as Config.Economy.SellBase for slimes; weights = its chance in each camp: rarer zombies
-	-- gather where it is more dangerous, which is what makes the harder camps worth the risk.
-	Kinds = {
-		rotten = { name = "Rotten Slime", base = 100, weights = { 90, 70, 50 } },
-		toxic = { name = "Toxic Slime", base = 500, weights = { 9, 25, 35 } },
-		plague = { name = "Plague Slime", base = 2500, weights = { 1, 5, 15 } },
-	},
-	KindOrder = { "rotten", "toxic", "plague" },
 	-- ===== The client (src/client/ZombieWorld, ZombieFight, ZombieLook, UiSquad) =====
 	-- Zombies are drawn only within DrawDistance of the camera (and at most View.MaxDrawnZombies at once).
 	DrawDistance = 250,

@@ -24,6 +24,71 @@ return {
 	-- A gate's seal: an unseen wall across the arch until its boss is won. Studs; Lift = its foot above the gate's ground.
 	-- The lock picture hangs LockHeight above the ground, LockPixels wide, seen from LockShowStuds.
 	Seal = { Width = 52, Height = 60, Depth = 8, Lift = -4, LockHeight = 14, LockPixels = 96, LockShowStuds = 260 },
+	-- The Heart's rim is closed to climbers (the owner, 2026-11-14: he walked in over the mountain): an unseen wall along
+	-- the crest (WorldPlan.Heart.RimRadius), Height studs tall from Sink below the gates' ground, in pieces no longer than
+	-- SegmentStuds, open only where the three seals stand (and closed again above each seal).
+	RimWall = { Folder = "HeartRim", Height = 600, Sink = 30, Depth = 8, SegmentStuds = 40 },
+	-- ===== The packs: the monsters of the open world (docs/WORLD.md §8; rules in shared/WorldPacks) =====
+	-- Packs of SizeMin..SizeMax monsters stand all over the world, each at a level of its own that never changes: LevelMin
+	-- within NearStuds of a village's middle, LevelMax from FarStuds on, rising between by (share of the way) ^ Curve.
+	-- FarStuds is how far the farthest pack that really stands is from every village (the server's line "zombies: N packs
+	-- out ... the farthest F studs" says it; farther spots are the rim's slopes, where none stands): set it again after
+	-- the plan or the ground changes, then run tools/world/map_picture.ps1. A pack's monsters are the common ones of its
+	-- region's Dungeon map (Maps, by WorldPlan region). The world is read in bands of BandLevels levels ("Lv 1-20",
+	-- "Lv 20-40" ...), each with its colour on the map.
+	Packs = {
+		LevelMin = 4,
+		LevelMax = 150,
+		NearStuds = 300,
+		FarStuds = 2420,
+		Curve = 1.6,
+		BandLevels = 20,
+		BandColours = { "#7ee06a", "#c9e04c", "#ffd23c", "#ffa63c", "#ff7a4a", "#f2507a", "#c05cf0", "#7a6cff" },
+		-- Where: one pack to a cell of GridStuds, moved up to JitterStuds off the cell's middle (the same every time); a
+		-- spot is tried again up to Tries times when it lands in water, on a slope (the ground's normal under MinNormalY),
+		-- on something built, or too near a place. Clear studs kept from: the world's rim, a village's edge, the hub's
+		-- edge, a zone's edge, the foot of the Heart, any other site's edge (a place's edge is its WorldPlan radius).
+		GridStuds = 280,
+		JitterStuds = 90,
+		Tries = 4,
+		MinNormalY = 0.92,
+		RimClear = 150,
+		VillageClear = 50,
+		HubClear = 60,
+		ZoneClear = 40,
+		HeartClear = 40,
+		SiteClear = 30,
+		SizeMin = 3,
+		SizeMax = 5,
+		-- A monster's stats against an even slime of the pack's level (every stat the same share, as a slime's level is
+		-- counted), and the coins it pays at level 0 by its role (raised by its level as a slime's sale is). At 0.85 four
+		-- even slimes of a pack's level beat four monsters about 87 times in 100 (tools/balance/fight_sim.luau).
+		StatFactor = 0.85,
+		CoinBase = { swarmer = 100, raider = 150, spitter = 150, shaman = 200, armoured = 300 },
+		Maps = { vale = "meadow", meadow = "meadow", mushroom = "mushroom", ember = "lava", frost = "ice" },
+		-- A team sets out at most this far from its pack, on the pack's side towards the player's village (a march from
+		-- the gate itself would take minutes across the world), and comes back to the same spot.
+		MarchMostStuds = 60,
+	},
+	-- ===== The waystones: teleport points (docs/WORLD.md §8) =====
+	-- One stands beside every zone's pad (OutStuds from the fight's middle, towards the hub) and one inside every
+	-- village's gate (the team banner's place, mirrored: HomeAcross, HomeIn from the gate). A zone's waystone opens for a
+	-- player who has won that zone. A player travels from anywhere to an open waystone by quick travel's rules
+	-- (server/QuickTravel: Home and the Market are always open) and lands ArriveStuds from it, towards the pad. The stone's
+	-- anchor hangs Lift over the ground; its prompt answers from PromptRangeStuds.
+	Waystones = {
+		Folder = "Waystones",
+		OutStuds = 58,
+		ArriveStuds = 7,
+		HomeAcross = -8,
+		HomeIn = 10,
+		Lift = 3,
+		PromptRangeStuds = 14,
+	},
+	-- ===== The map (client/UiMap) =====
+	-- Its picture is drawn from WorldPlan by tools/world/map_picture.ps1 (art/map/world_map.png): a square of Size studs
+	-- whose north-west corner is (MinX, MinZ) in the plan's coordinates. Run the tool again after the plan changes.
+	Map = { Image = "", MinX = -2300, MinZ = -2500, Size = 4600 },
 	-- What a zone's guard pays when it falls, by the zone's kind, in place of its own drops (the Dungeon's bosses pay
 	-- trophies that a short fight may not hand out every few minutes). Lines as a monster's drops (item, chance, min..max).
 	-- "trophy" is the region's own (Trophy below; a region without one pays none). Coins are multiplied by

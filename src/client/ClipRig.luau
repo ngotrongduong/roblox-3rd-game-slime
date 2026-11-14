@@ -27,6 +27,7 @@ export type Rig = {
 -- a monster's mesh once loaded, and the monsters whose loading has started (once, even when it failed)
 local templates: { [string]: MeshPart } = {}
 local started: { [string]: boolean } = {}
+local settled: { [string]: boolean } = {}
 
 -- The data of the monster `name`, or nil.
 function ClipRig.data(name: string): MonsterClip.Data?
@@ -62,7 +63,15 @@ function ClipRig.prepare(look: any)
 		else
 			warn(Config.LogPrefix, "monster", name, "mesh did not load:", part)
 		end
+		settled[name] = true
 	end)
+end
+
+-- Whether the look's mesh has finished loading, well or not (the loading is started): a body built before that is the
+-- stand-in.
+function ClipRig.settled(look: any): boolean
+	ClipRig.prepare(look)
+	return settled[look.clips] == true
 end
 
 -- A copy of the look's mesh, or nil while it is not loaded (the loading is started).

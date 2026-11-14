@@ -1,5 +1,6 @@
 --!strict
--- Quick travel: the HUD's Home and Market buttons. The client asks (Remotes.Travel, { action = "Market" | "Home" }); the
+-- Quick travel: the HUD's Home and Market buttons and the map's waystones. The client asks (Remotes.Travel, { action =
+-- "Market" | "Home" }, or { action = "Zone", zone = id } for the waystone of a zone the player has won); the
 -- server checks who asks, that their farm is loaded, that they are alive and that their last move was Travel's cooldown ago,
 -- then moves the character (Travel.destination). It touches no player data, carried items or marching teams: they follow the
 -- character or do not depend on where it stands. Answers { ok, reason }.
@@ -11,6 +12,8 @@ local Travel = require(ReplicatedStorage.Shared.Travel)
 local Dungeon = require(script.Parent.Dungeon)
 local PlayerData = require(script.Parent.PlayerData)
 local Plots = require(script.Parent.Plots)
+local ZoneFights = require(ReplicatedStorage.Shared.ZoneFights)
+local ZoneGuards = require(script.Parent.ZoneGuards)
 
 local QuickTravel = {}
 -- server time of each player's last move
@@ -38,7 +41,24 @@ local function request(player: Player, data: any): { ok: boolean, reason: string
 	if not character or not humanoid or humanoid.Health <= 0 or not root or not root:IsA("BasePart") then
 		return { ok = false, reason = "DEAD" }
 	end
-	local destination, why = Travel.destination(action, Plots.of(player))
+	local destination: CFrame?, why: string? = nil, nil
+	if action == "Zone" then
+		-- a zone's waystone, open once its guard is beaten
+		local farm = PlayerData.get(player)
+		why = if farm then ZoneFights.travelBlock(farm.world.beaten, data.zone) else "NOT_READY"
+		if not why then
+			destination = ZoneGuards.landing(data.zone, Config.Travel.LiftStuds)
+			-- (the land there may not be with this player yet; the wait counts as the move, so a second press finds the
+			-- cooldown)
+			lastAt[player] = now
+			pcall(player.RequestStreamAroundAsync, player, (destination :: CFrame).Position)
+			if character.Parent == nil or humanoid.Health <= 0 then
+				return { ok = false, reason = "DEAD" }
+			end
+		end
+	else
+		destination, why = Travel.destination(action, Plots.of(player))
+	end
 	if not destination then
 		return { ok = false, reason = why or "BAD_REQUEST" }
 	end

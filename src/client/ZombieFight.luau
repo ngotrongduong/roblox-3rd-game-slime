@@ -20,7 +20,6 @@ local SlimeWeapon = require(script.Parent.SlimeWeapon)
 local UiKit = require(script.Parent.UiKit)
 local UiTeams = require(script.Parent.UiTeams)
 local VfxLib = require(ReplicatedStorage.Shared.VfxLib)
-local ZombieLook = require(script.Parent.ZombieLook)
 local ZombieMarch = require(script.Parent.ZombieMarch)
 local ZombieTeams = require(script.Parent.ZombieTeams)
 local ZombieWorld = require(script.Parent.ZombieWorld)
@@ -393,7 +392,7 @@ local function wayOf(id: string): string
 		return fight.roles[id] or "attack"
 	end
 	local zombie = ZombieWorld.zombie(id)
-	return if zombie then zombie.kind else "rotten"
+	return if zombie then zombie.way else "rotten"
 end
 
 -- How a fighter's blows look.
@@ -401,13 +400,28 @@ local function styleOf(id: string): FightFx.Style
 	return FightFx.style(wayOf(id))
 end
 
--- A Dungeon monster's own fight effects (Config.Dungeon.Fx.Monsters), or nil: everyone else keeps its way's art.
+-- A Dungeon monster's own fight effects (Config.Dungeon.Fx.Monsters), in the arena or in a pack of the open world, or
+-- nil: everyone else keeps its way's art.
 local DFx = Config.Dungeon.Fx
 local charges: { [string]: any } = {}
 
 local function fxOf(id: string?): any
 	local extra = if id then extras[id] else nil
-	return if extra then extra.fx else nil
+	if extra then
+		return extra.fx
+	end
+	local zombie = if id then ZombieWorld.zombie(id) else nil
+	return if zombie then zombie.fx else nil
+end
+
+-- A monster's size against a plain one (1 for anybody else).
+local function sizeOf(id: string?): number
+	local extra = if id then extras[id] else nil
+	if extra then
+		return extra.size
+	end
+	local zombie = if id then ZombieWorld.zombie(id) else nil
+	return if zombie then zombie.size else 1
 end
 
 -- The art of the special an event struck: the monster's `skills[key]` (a mini-boss or boss has several, a regular one),
@@ -420,8 +434,7 @@ local function specialOf(fx: any, event: { [string]: any }): any
 end
 
 local function fxScale(id: string?): number
-	local extra = if id then extras[id] else nil
-	return math.clamp((if extra then extra.size else 1) * DFx.Scale, 1, DFx.MaxScale)
+	return math.clamp(sizeOf(id) * DFx.Scale, 1, DFx.MaxScale)
 end
 
 -- Plays one library effect, never letting a broken one stop the fight.
@@ -1216,7 +1229,7 @@ local function impact(event: { [string]: any }, style: FightFx.Style)
 		elseif hard then V.Hard.HitStopSeconds
 		else V.HitStopSeconds
 	-- (a big body is heavy: a boss hardly moves)
-	local weight = math.max(1, if extras[event.to] then extras[event.to].size else 1) ^ V.KnockWeight
+	local weight = math.max(1, sizeOf(event.to)) ^ V.KnockWeight
 	play(target, to, dir * V.KnockStuds * (if heavy then V.CritKnock else 1) / weight, V.KnockSeconds, 0.2, stop)
 	if burst or pop or hard then
 		local flash = if burst then DFx.Burst.HitFlash elseif pop then DFx.Pop.HitFlash else V.Hard.HitFlash
@@ -1973,21 +1986,28 @@ local function fall(event: { [string]: any })
 		return
 	end
 	if foe then
+		-- a monster of a pack: it bursts as a Dungeon monster does (its own fall, else its way's), and its coins fly
 		local zombie = ZombieWorld.zombie(id)
-		local kind = if zombie then zombie.kind else nil
-		local style = FightFx.style(kind)
-		local look = if kind then ZombieLook.look(kind) else nil
-		local bigness = if look then look.size else 1
+		local style = FightFx.style(if zombie then zombie.way else nil)
+		local own = if zombie then zombie.fx else nil
+		local bigness = if zombie then zombie.size else 1
 		size = size * bigness
-		ZombieWorld.kill(id)
+		endCharge(id)
+		local dying = ZombieWorld.kill(id)
 		dropBar(id)
 		if actor and spot then
 			local body = actor.body
 			local centre = spot + Vector3.new(0, body.Size.Y * 0.5, 0)
-			task.delay(V.DeathDelay, function()
+			task.delay(dying, function()
 				safe("burst", function()
-					FightFx.burst(style.death or "burstShock", centre, F.DeathBurst * bigness, style.bits)
-					FightFx.ring(style.ring or "ringShock", spot, F.DeathRing * bigness)
+					if own and own.fall then
+						local scale = bigness * DFx.Scale
+						local up = DFx.FallBox * scale * 0.5
+						vfx(own.fall, spot + Vector3.new(0, up, 0), { scale = scale, variant = DFx.FallVariant })
+					else
+						FightFx.burst(style.death or "burstShock", centre, F.DeathBurst * bigness, style.bits)
+						FightFx.ring(style.ring or "ringShock", spot, F.DeathRing * bigness)
+					end
 					FightFx.goo(body, centre, body.CFrame.LookVector, F.DeathGoo)
 					coinShower(centre, bigness ^ 2)
 				end)

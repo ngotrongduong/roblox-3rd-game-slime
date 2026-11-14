@@ -1,6 +1,6 @@
 --!strict
--- The zombie slimes outside the village (the owner, 2026-11-02): groups a little around the player's own level, rarer
--- kinds worth more, and coins for every slime killed on either side, by its level and rarity.
+-- The teams that fight the packs of the open world (the owner, 2026-11-02; the packs are WorldPacks): the squad's line-up,
+-- its march, its wounds, and coins for every slime killed on its side.
 local Boosts = if script then require(script.Parent.Boosts) else require("./Boosts")
 local Classes = if script then require(script.Parent.Classes) else require("./Classes")
 local Combat = if script then require(script.Parent.Combat) else require("./Combat")
@@ -12,25 +12,13 @@ local Gear = if script then require(script.Parent.Gear) else require("./Gear")
 local Growth = if script then require(script.Parent.Growth) else require("./Growth")
 local Mutations = if script then require(script.Parent.Mutations) else require("./Mutations")
 local Needs = if script then require(script.Parent.Needs) else require("./Needs")
-local Rng = if script then require(script.Parent.Rng) else require("./Rng")
 local Stations = if script then require(script.Parent.Stations) else require("./Stations")
 local Stats = if script then require(script.Parent.Stats) else require("./Stats")
 local VillagePath = if script then require(script.Parent.VillagePath) else require("./VillagePath")
 local VillageRules = if script then require(script.Parent.Village) else require("./Village")
 
 type Farm = typeof(FarmState.newFarm(0))
-type Rng = typeof(Rng.new(0))
 type Slime = typeof(FarmState.newFarm(0).slimes[1])
-export type Zombie = {
-	id: string,
-	kind: string,
-	level: number,
-	attack: number,
-	defence: number,
-	speed: number,
-	hp: number,
-}
-
 local Zombies = {}
 
 local function isBaby(farm: Farm, slime: Slime, now: number): boolean
@@ -70,136 +58,6 @@ function Zombies.playerLevel(farm: Farm, now: number): number
 		sum += levels[index]
 	end
 	return math.floor(sum / count)
-end
-
--- The base level of a slice of the valley (docs/MAP.md 1.4): its owner's level. A slice with no owner rolls between the
--- average and the highest level of the players in the server; `owners` maps a plot to its owner's level.
-function Zombies.sliceLevel(plot: number, owners: { [number]: number }, rng: Rng): number
-	local own = owners[plot]
-	if own then
-		return own
-	end
-	local low, high = Zombies.serverRange(owners)
-	return low + math.floor(rng:next() * (high - low + 1))
-end
-
--- The average (rounded down) and the highest level of the players in the server; the starter level when nobody is in.
-function Zombies.serverRange(owners: { [number]: number }): (number, number)
-	local sum, count, high = 0, 0, 0
-	for _, level in owners do
-		sum += level
-		count += 1
-		high = math.max(high, level)
-	end
-	if count == 0 then
-		local starter = Stats.level(Stats.starter())
-		return starter, starter
-	end
-	return math.floor(sum / count), high
-end
-
--- Whether a group waiting since `quietSince` should take its slice's level now. A fight is never touched (the caller
--- only asks of waiting groups), a new spawn always reads the level of its moment, and a group nobody attacked for
--- IdleResetSeconds goes back to what its slice should hold: a low player who moved in behind a strong one that left
--- gets zombies to fit. A group in an ownerless slice that is still inside the server's range stays as it rolled.
-function Zombies.shouldRelevel(
-	base: number,
-	plot: number,
-	owners: { [number]: number },
-	quietSince: number,
-	now: number
-): boolean
-	if now - quietSince < Config.Zombies.IdleResetSeconds then
-		return false
-	end
-	local own = owners[plot]
-	if own then
-		return base ~= own
-	end
-	local low, high = Zombies.serverRange(owners)
-	return base < low or base > high
-end
-
--- A group's id is unique across the server and short (a saved team target names one): "s<slice>c<camp>g<index>", the slice
--- 0 for the Market's and 1..8 for the plots'.
-function Zombies.groupId(slice: number, camp: number, index: number): string
-	return "s" .. slice .. "c" .. camp .. "g" .. index
-end
-
--- The slice, camp and index an id names, all nil when it is not a group of this server (an id of the old single-village
--- camps, "c1g1", or any other text).
-function Zombies.parseGroupId(id: any): (number?, number?, number?)
-	if type(id) ~= "string" then
-		return nil, nil, nil
-	end
-	local slice, camp, index = string.match(id, "^s(%d+)c(%d+)g(%d+)$")
-	if not slice then
-		return nil, nil, nil
-	end
-	local s, c, i = tonumber(slice) :: number, tonumber(camp) :: number, tonumber(index) :: number
-	if
-		s > Config.Map.PlotCount
-		or c < 1
-		or c > #Config.Zombies.LevelOffsets
-		or i < 1
-		or i > #Config.Zombies.Homes[c]
-	then
-		return nil, nil, nil
-	end
-	return s, c, i
-end
-
--- Whether a team's saved target still fits a player in this plot: it names a group of that plot's own slice. A target of an
--- old plot, of the old camps or of nothing known is dropped when the player's camps open.
-function Zombies.targetFits(target: any, plot: number): boolean
-	local slice = Zombies.parseGroupId(target)
-	return slice == plot
-end
-
-function Zombies.rollKind(camp: number, rng: Rng): string
-	local z = Config.Zombies
-	local sum = 0
-	for _, id in z.KindOrder do
-		sum += (z.Kinds :: any)[id].weights[camp]
-	end
-	local at = rng:next() * sum
-	for _, id in z.KindOrder do
-		at -= (z.Kinds :: any)[id].weights[camp]
-		if at < 0 then
-			return id
-		end
-	end
-	return z.KindOrder[1]
-end
-
--- Stats share a level the way a slime's do (level = attack + defence + speed + hp / 10), scaled by the camp so a squad of
--- the same level usually wins and the top camp is a real risk at any level.
-function Zombies.make(id: string, kind: string, playerLevel: number, camp: number): Zombie
-	local share = playerLevel / #Stats.Keys * Config.Zombies.StatFactors[camp]
-	return {
-		id = id,
-		kind = kind,
-		level = playerLevel + Config.Zombies.LevelOffsets[camp],
-		attack = share,
-		defence = share,
-		speed = share,
-		hp = math.max(1, share * Config.Stats.HpPerLevel),
-	}
-end
-
--- A group of the camp (1..#LevelOffsets) for a player of this level.
-function Zombies.group(prefix: string, playerLevel: number, camp: number, rng: Rng): { Zombie }
-	local out: { Zombie } = {}
-	for index = 1, Config.Zombies.TeamSize do
-		table.insert(out, Zombies.make(prefix .. "-" .. index, Zombies.rollKind(camp, rng), playerLevel, camp))
-	end
-	return out
-end
-
--- Coins for a dead slime on either side follow one rule: its rarity's base, raised by its level (Mutations.sellValue).
-function Zombies.killReward(kind: string, level: number): number
-	local factor = 1 + math.max(0, level) * Config.Economy.SellLevelStep
-	return math.floor((Config.Zombies.Kinds :: any)[kind].base * factor)
 end
 
 function Zombies.deathReward(slime: Slime): number
@@ -330,19 +188,7 @@ function Zombies.marchSeconds(distance: number, speeds: { number }): number
 	return VillagePath.duration(distance, slowest, Config.Zombies.MarchGait)
 end
 
--- Where a group lives, as (across, forward) studs from its slice's gate towards the valley centre: Config.Zombies.Homes,
--- mirrored on odd slices and shifted a little by slice, always the same for the same group.
-function Zombies.homeOffset(slice: number, camp: number, index: number): (number, number)
-	local z = Config.Zombies
-	local home = z.Homes[camp][index]
-	local wobble = math.sin(slice * 12.9898 + camp * 78.233 + index * 37.719) * z.HomeJitterDegrees
-	local angle = math.rad((home[1] + wobble) * (if slice % 2 == 1 then -1 else 1))
-	local gateRadius = Config.Map.RimRadius - Config.Map.PlotSize / 2
-	local radius = gateRadius - z.CampFirstDistance - (camp - 1) * z.CampSpacing + home[2]
-	return radius * math.sin(angle), gateRadius - radius * math.cos(angle)
-end
-
--- Where a camp fight's fighters stand as it begins, flat from the group's position; the server places the fight by these
+-- Where a pack fight's fighters stand as it begins, flat from the group's position; the server places the fight by these
 -- and the client its bodies, so both agree. A team member: at the far end of its march (`endX, endZ`, come the way
 -- `dirX, dirZ`), side by side across that way, every other one a step behind.
 function Zombies.formation(
