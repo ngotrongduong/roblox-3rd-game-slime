@@ -367,6 +367,38 @@ local function addEffect(fight: Fight, u: Unit, kind: string, value: number, sec
 	return true
 end
 
+-- All barriers use the same strongest-only rule, including Overflow and Ward.
+local function giveBarrier(
+	fight: Fight,
+	from: Unit,
+	mate: Unit,
+	amount: number,
+	seconds: number,
+	events: { Event },
+	key: string
+)
+	if amount > 0 and (mate.barrierUntil <= fight.seconds or amount >= mate.barrier) then
+		mate.barrier, mate.barrierUntil = amount, fight.seconds + seconds
+		status(events, from, mate, "warded", seconds, key)
+	end
+end
+
+-- All health damage, including redirected blows, must pass through this one Legendary last-stand check.
+local function takeHealth(fight: Fight, u: Unit, amount: number): boolean
+	local trait = traitOf(u)
+	if trait and trait.key == "last_stand" and u.lastStandUsed == 0 and amount >= u.hp and u.hp > 0 then
+		u.hp = trait.left
+		u.lastStandUsed += 1
+		return true
+	end
+	u.hp = math.max(0, u.hp - amount)
+	return false
+end
+
+-- The Taunt action is declared after its target selector, but Last Stand can trigger inside blow().
+local afterLastStand: ((Fight, Unit, { Event }) -> ())? = nil
+local hawkeyeFollowup: ((Fight, Unit, Unit, number, { Event }) -> ())? = nil
+
 -- Class slows share one cap and never replace a stronger live slow; monster stings still use their original rules.
 local function classSlow(
 	fight: Fight,
@@ -561,6 +593,12 @@ local function blow(
 	local c = Config.Combat
 	local K = Config.Classes
 	local plain = extra == nil
+	local trait = traitOf(attacker)
+	local arrow = plain and trait ~= nil and trait.key == "hawkeye"
+	if arrow then
+		attacker.plainArrows += 1
+	end
+	local followup = arrow and attacker.plainArrows % trait.every == 0
 	local guard = guardOf(fight, target)
 	local struck = guard or target
 	-- (only a direct blow is intercepted, once: a plain one or the first of a single-target skill, never an area)
@@ -592,6 +630,9 @@ local function blow(
 	end
 	if plain and fight.rng:next() < math.min(c.DodgeCap, struck.speed * c.DodgePerSpeed) then
 		table.insert(events, event("dodge", struck, if guard then guard.id else nil))
+		if followup and hawkeyeFollowup then
+			hawkeyeFollowup(fight, attacker, target, factor, events)
+		end
 		return
 	end
 	local function hurt(u: Unit): number
@@ -632,7 +673,8 @@ local function blow(
 			absorbed = math.min(amount, u.barrier)
 			u.barrier -= absorbed
 		end
-		u.hp = math.max(0, u.hp - (amount - absorbed))
+		local fell = u.hp > 0 and amount - absorbed >= u.hp
+		local survived = takeHealth(fight, u, amount - absorbed)
 		local hit = event("hit", u, part.guard)
 		hit.amount, hit.crit = amount - absorbed, crit
 		if absorbed > 0 then
@@ -684,9 +726,20 @@ local function blow(
 				table.insert(events, { kind = "status", to = u.id, status = "warded", seconds = 0 })
 			end
 		end
+		if survived and afterLastStand then
+			afterLastStand(fight, u, events)
+		end
 		if u.hp <= 0 then
 			table.insert(events, event("fallen", u))
+			if fell and trait and trait.key == "momentum" and attacker.momentumAt < fight.seconds then
+				attacker.momentumAt = fight.seconds
+				attacker.skillReady[trait.reset] = fight.seconds
+				table.insert(events, { kind = "trait", from = attacker.id, to = u.id, trait = trait.key })
+			end
 		end
+	end
+	if followup and hawkeyeFollowup then
+		hawkeyeFollowup(fight, attacker, target, factor, events)
 	end
 end
 
@@ -699,6 +752,38 @@ local function foesOf(fight: Fight, attacker: Unit): { Unit }
 		end
 	end
 	return out
+end
+
+-- A Hawkeye follow-up is a second arrow on the flight *behind* the original target, never another crit or dodge.
+-- Its shape comes from Piercing Shot so there is only one definition of an arrow's line.
+hawkeyeFollowup = function(fight: Fight, attacker: Unit, target: Unit, weight: number, events: { Event })
+	local trait = traitOf(attacker)
+	local flight = (Config.Combat.Skills :: any)[trait.flight]
+	local chosen: Unit? = nil
+	local nearest = math.huge
+	local d = distance(attacker, target)
+	for _, foe in foesOf(fight, attacker) do
+		if foe ~= target then
+			if not fight.moves then
+				chosen = foe
+				break
+			elseif d > 0 then
+				local dx, dz = (target.x - attacker.x) / d, (target.z - attacker.z) / d
+				local ox, oz = foe.x - attacker.x, foe.z - attacker.z
+				local along = ox * dx + oz * dz
+				if along > d and along <= flight.length and math.abs(ox * dz - oz * dx) <= flight.width then
+					if along < nearest then
+						chosen, nearest = foe, along
+					end
+				end
+			end
+		end
+	end
+	if chosen then
+		blow(fight, attacker, chosen, weight * trait.share, events, { trait = trait.key, splash = true }, nil, {
+			magic = kindOf(attacker).magic,
+		})
+	end
 end
 
 -- The fighter's skill (Config.Combat.Skills, by its way of fighting) instead of a plain blow.
@@ -878,12 +963,15 @@ local function healShare(fight: Fight): number
 end
 
 local function classHeal(fight: Fight, healer: Unit, mate: Unit, factor: number, events: { Event }, key: string?)
-	local amount = math.min(
-		mate.maxHp - mate.hp,
-		Combat.healAmount(healer.attack, factor) * healShare(fight) * (1 - effectOf(fight, mate, "curse"))
-	)
+	local raw = Combat.healAmount(healer.attack, factor) * healShare(fight) * (1 - effectOf(fight, mate, "curse"))
+	local amount = math.min(mate.maxHp - mate.hp, raw)
 	mate.hp += amount
 	table.insert(events, { kind = "heal", from = healer.id, to = mate.id, amount = amount, skill = key })
+	local trait = traitOf(healer)
+	if key == nil and trait and trait.key == "overflow" then
+		local barrier = math.min(raw - amount, mate.maxHp * trait.share)
+		giveBarrier(fight, healer, mate, barrier, trait.seconds, events, trait.key)
+	end
 end
 
 -- The foes a Guardian's Taunt would take now (within its range, going for a team-mate, free to be taunted), nearest
@@ -917,6 +1005,30 @@ local function tauntable(fight: Fight, g: Unit): ({ Unit }, boolean)
 	return out, alone or #out >= s.minimum
 end
 
+-- A Guardian's ordinary Taunt and Last Stand use exactly the same taunt, protection and status events.
+local function applyTaunt(fight: Fight, g: Unit, events: { Event }, key: string)
+	local s = (Config.Combat.Skills :: any)[key]
+	local enemies = tauntable(fight, g)
+	for index = 1, math.min(s.count, #enemies) do
+		local enemy = enemies[index]
+		enemy.tauntBy, enemy.tauntUntil, enemy.target = g, fight.seconds + s.seconds, g
+		table.insert(events, { kind = "taunt", from = g.id, to = enemy.id, skill = key, seconds = s.seconds })
+		status(events, g, enemy, "taunted", s.seconds, key)
+	end
+	if addEffect(fight, g, "taken", s.taken, s.seconds) then
+		status(events, g, g, "shielded", s.seconds, key)
+	end
+end
+
+afterLastStand = function(fight: Fight, g: Unit, events: { Event })
+	local trait = traitOf(g)
+	table.insert(events, { kind = "trait", from = g.id, to = g.id, trait = trait.key })
+	local enemies = tauntable(fight, g)
+	if #enemies > 0 then
+		applyTaunt(fight, g, events, trait.taunt)
+	end
+end
+
 -- The foe with the most other foes within `radius` of it (ties to the higher DEF) among those it can strike now.
 local function densest(fight: Fight, u: Unit, radius: number, canHit: (Unit) -> boolean): Unit?
 	local foes = foesOf(fight, u)
@@ -946,7 +1058,15 @@ end
 
 -- An area skill: the target and every other foe within `radius` of it (nearest first; a fight with no places strikes
 -- `cap` foes in all), each at `weight`; `melt` on every one it strikes when the skill has one.
-local function area(fight: Fight, u: Unit, target: Unit, key: string, weight: number, events: { Event }, how: How)
+local function area(
+	fight: Fight,
+	u: Unit,
+	target: Unit,
+	key: string,
+	weight: number,
+	events: { Event },
+	how: How
+): { Unit }
 	local s = (Config.Combat.Skills :: any)[key]
 	local others: { Unit } = {}
 	for _, other in foesOf(fight, u) do
@@ -978,12 +1098,15 @@ local function area(fight: Fight, u: Unit, target: Unit, key: string, weight: nu
 		)
 	end
 	if s.melt then
+		local trait = traitOf(u)
+		local seconds = s.seconds + (if trait and trait.key == "lingering_brew" then trait.seconds else 0)
 		for _, each in struck do
-			if each.hp > 0 and addEffect(fight, each, "melt", s.melt, s.seconds) then
-				status(events, u, each, "melted", s.seconds, key)
+			if each.hp > 0 and addEffect(fight, each, "melt", s.melt, seconds) then
+				status(events, u, each, "melted", seconds, key)
 			end
 		end
 	end
+	return struck
 end
 
 -- Piercing Shot: the arrow flies from the bow through its target and on to `length` studs from the bow, and strikes
