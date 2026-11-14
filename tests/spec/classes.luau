@@ -2325,7 +2325,7 @@ return function(T: any)
 		T.same(play(false), play(true))
 	end)
 
-	T.test("Focus Fire follows the living Warrior, then Guardian, then highest attack without retargeting skills", function()
+	T.test("Focus Fire leader priority: Warrior, Guardian, highest attack", function()
 		local function choice(squad: { any }, leaderId: string, followerId: string): any
 			local fight = Combat.new(squad, { foe("a"), foe("b") }, Rng.new(138), {
 				tactics = { squad = "focus" },
