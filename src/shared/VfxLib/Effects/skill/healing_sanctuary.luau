@@ -4,9 +4,11 @@
 -- of soft light rises from it, a flower of light blooms in the middle, the owner's heal crosses float up through it,
 -- glowing leaves turn round it in the air, and motes, petals and twinkles drift up all over it while it lasts, about
 -- 3 s, before it fades. Its wind-up is skill.sanctuary_charge on the caster.
-local LIFE = { { 0, { 240, 255, 200 } }, { 0.5, { 150, 240, 140 } }, { 1, { 70, 200, 110 } } }
-local GOLD = { { 0, { 255, 250, 220 } }, { 1, { 255, 215, 120 } } }
-local LEAF = { { 0, { 200, 255, 170 } }, { 1, { 90, 220, 120 } } }
+-- (coloured normal bodies, deep enough to hold on white snow and bright grass: added light on them was a white dome of
+-- glare that hid the squad in a Goo Lineage play test, 2026-11-14)
+local LIFE = { { 0, { 120, 215, 100 } }, { 0.5, { 60, 175, 80 } }, { 1, { 30, 130, 70 } } }
+local GOLD = { { 0, { 245, 200, 70 } }, { 1, { 205, 145, 25 } } }
+local LEAF = { { 0, { 110, 215, 80 } }, { 1, { 40, 150, 70 } } }
 -- (the sanctuary is open from OPEN to CLOSE, then fades)
 local OPEN = 0.25
 local CLOSE = 2.8
@@ -20,7 +22,7 @@ return {
 	host = "character",
 	refHeight = 5,
 	tags = { "heal", "nature", "leaf", "flower", "holy", "aoe", "skill", "green", "gold", "support", "ultimate" },
-	blend = "additive",
+	blend = "normal+bloom",
 	tintable = false,
 	markers = { open = 0, heal = OPEN, peak = 1.2 },
 	beams = {
@@ -28,19 +30,19 @@ return {
 			-- a column of soft light rising from it
 			name = "column",
 			texture = "beam_light_shafts",
-			colors = { { 0, { 250, 255, 220 } }, { 1, { 140, 240, 150 } } },
+			colors = { { 0, { 160, 235, 130 } }, { 1, { 60, 180, 90 } } },
 			from = { 0, -2.46, 0 },
 			to = { 0, 9, 0 },
-			width = { 7, 3.5 },
+			width = { 2.6, 1.4 },
 			face = true,
 			delay = OPEN,
 			life = CLOSE - OPEN + 0.3,
 			emerge = 0.35,
-			transparency = { { 0, 0.3 }, { 0.15, 0.25 }, { 0.8, 0.35 }, { 1, 1 } },
+			transparency = { { 0, 0.5 }, { 0.15, 0.45 }, { 0.8, 0.55 }, { 1, 1 } },
 			grow = { { 0, 0.5 }, { 0.15, 1 }, { 1, 1.1 } },
 			edge = { 0, 0.6 },
 			speed = 1,
-			glow = 1.2,
+			glow = 0.3,
 		},
 	},
 	pieces = {
@@ -54,9 +56,9 @@ return {
 			count = 1,
 			life = { 0.45, 0.45 },
 			size = { { 0, 2 }, { 1, 13 } },
-			transparency = { { 0, 0 }, { 0.6, 0.3 }, { 1, 1 } },
-			lightEmission = 1,
-			brightness = 2,
+			transparency = { { 0, 0.1 }, { 0.6, 0.4 }, { 1, 1 } },
+			lightEmission = 0.2,
+			brightness = 1,
 			zOffset = 0.4,
 		},
 		{
@@ -70,11 +72,11 @@ return {
 			delay = 0.05,
 			life = { LIFE_S, LIFE_S },
 			size = { { 0, 3 }, { 0.1, 11 }, { 1, 11.5 } },
-			transparency = { { 0, 1 }, { 0.08, 0.15 }, { 0.85, 0.25 }, { 1, 1 } },
+			transparency = { { 0, 1 }, { 0.08, 0.2 }, { 0.85, 0.3 }, { 1, 1 } },
 			rotation = { 0, 0 },
 			rotSpeed = { 12, 12 },
-			lightEmission = 1,
-			brightness = 1.15,
+			lightEmission = 0.15,
+			brightness = 1,
 			zOffset = 0.3,
 		},
 		{
@@ -88,11 +90,11 @@ return {
 			delay = 0.1,
 			life = { LIFE_S - 0.1, LIFE_S - 0.1 },
 			size = { { 0, 6 }, { 0.1, 13.5 }, { 1, 13.5 } },
-			transparency = { { 0, 1 }, { 0.1, 0.35 }, { 0.85, 0.4 }, { 1, 1 } },
+			transparency = { { 0, 1 }, { 0.1, 0.3 }, { 0.85, 0.35 }, { 1, 1 } },
 			rotation = { 0, 0 },
 			rotSpeed = { -18, -18 },
-			lightEmission = 1,
-			brightness = 1.5,
+			lightEmission = 0.15,
+			brightness = 1,
 			zOffset = 0.35,
 		},
 		{
@@ -105,9 +107,9 @@ return {
 			count = 1,
 			life = { LIFE_S, LIFE_S },
 			size = { { 0, 4 }, { 0.1, 13 }, { 1, 13 } },
-			transparency = { { 0, 1 }, { 0.1, 0.6 }, { 0.85, 0.65 }, { 1, 1 } },
-			lightEmission = 1,
-			brightness = 0.7,
+			transparency = { { 0, 1 }, { 0.1, 0.8 }, { 0.85, 0.82 }, { 1, 1 } },
+			lightEmission = 0.1,
+			brightness = 1,
 			zOffset = 0.1,
 		},
 		{
@@ -125,8 +127,8 @@ return {
 			rotation = { 0, 0 },
 			rotSpeed = { 15, 15 },
 			flipbook = { layout = "Grid4x4", mode = "OneShot" },
-			lightEmission = 1,
-			brightness = 1.8,
+			lightEmission = 0.2,
+			brightness = 1,
 			zOffset = 0.5,
 		},
 		{
@@ -166,8 +168,8 @@ return {
 			rotation = { -180, 180 },
 			rotSpeed = { -140, 140 },
 			flipbook = { layout = "Grid2x2", mode = "OneShot", fps = { 0, 0 }, random = true },
-			lightEmission = 1,
-			brightness = 1.5,
+			lightEmission = 0.3,
+			brightness = 1,
 			stream = { from = OPEN, to = CLOSE - 0.3, rate = { 12, 12 } },
 		},
 		{

@@ -6,7 +6,8 @@
 -- drift down. At lv3 he drives his sword into the ground ahead: a holy blast and a shockwave push the foes back. Then
 -- he fades up into motes of light. Played at the caster's own CFrame. Its level is the variant: lv1 the guardian, lv2
 -- the wall, lv3 (the default) the sword.
-local GOLD = { { 0, { 255, 248, 220 } }, { 1, { 255, 205, 100 } } }
+-- (coloured normal bodies: added light on him was a yellow-white blaze on bright grass, 2026-11-14)
+local GOLD = { { 0, { 245, 205, 80 } }, { 1, { 205, 145, 25 } } }
 local GROUND = -2.5 -- (the ground under the caster's root)
 -- (where the guardian stands: behind the caster's left shoulder, off the line from the player's camera to the caster;
 -- straight behind them he stood between the camera and the caster, a blaze filling the picture)
@@ -21,7 +22,7 @@ local END = 4
 local GUARDIAN = {
 	name = "guardian",
 	texture = "summon_guardian",
-	colors = { { 255, 255, 255 }, { 255, 255, 255 } },
+	colors = { { 190, 135, 40 }, { 150, 95, 20 } },
 	-- (from his feet under the ground to the top of his crest: the picture is stored that way)
 	from = { SIDE, GROUND - 0.3, BEHIND },
 	to = { SIDE, GROUND + 9, BEHIND },
@@ -29,10 +30,10 @@ local GUARDIAN = {
 	delay = RISE,
 	life = END - RISE,
 	-- (see-through: the caster shows through him from the player's camera)
-	transparency = { { 0, 0.35 }, { 0.85, 0.4 }, { 1, 1 } },
+	transparency = { { 0, 0.2 }, { 0.85, 0.25 }, { 1, 1 } },
 	face = true,
-	-- (dim: added over a bright sky at more it was a white blaze)
-	glow = 0.7,
+	-- (his own colours as drawn, barely lit: his shield, sword and cape must read on grass and snow)
+	glow = 0,
 	zOffset = -1,
 	emerge = OUT,
 }
@@ -53,8 +54,8 @@ local function pieces(n)
 			transparency = { { 0, 1 }, { 0.06, 0.3 }, { 0.85, 0.5 }, { 1, 1 } },
 			rotation = { 0, 0 },
 			rotSpeed = { 20, 20 },
-			lightEmission = 1,
-			brightness = 1.4,
+			lightEmission = 0.2,
+			brightness = 1,
 		},
 		{
 			-- a column of light welling up behind the caster as he rises
@@ -66,8 +67,8 @@ local function pieces(n)
 			count = 1,
 			life = { 1.2, 1.2 },
 			size = { { 0, 3 }, { 0.3, 11 }, { 1, 12 } },
-			transparency = { { 0, 1 }, { 0.3, 0.6 }, { 1, 1 } },
-			lightEmission = 1,
+			transparency = { { 0, 1 }, { 0.3, 0.88 }, { 1, 1 } },
+			lightEmission = 0.1,
 			brightness = 1,
 			zOffset = -2,
 		},
@@ -183,8 +184,8 @@ local function pieces(n)
 			size = { { 0, 5 }, { 1, 9 } },
 			transparency = { { 0, 0 }, { 0.5, 0.35 }, { 1, 1 } },
 			rotation = { -10, 10 },
-			lightEmission = 1,
-			brightness = 1.2,
+			lightEmission = 0.3,
+			brightness = 1,
 			zOffset = 2,
 		})
 		table.insert(out, {
@@ -199,9 +200,9 @@ local function pieces(n)
 			delay = SMITE,
 			life = { 0.5, 0.5 },
 			size = { { 0, 2 }, { 1, 16 } },
-			transparency = { { 0, 0 }, { 0.6, 0.5 }, { 1, 1 } },
-			lightEmission = 1,
-			brightness = 2,
+			transparency = { { 0, 0.1 }, { 0.6, 0.5 }, { 1, 1 } },
+			lightEmission = 0.2,
+			brightness = 1,
 		})
 	end
 	return out
@@ -242,7 +243,7 @@ return {
 		"shield",
 		"skill",
 	},
-	blend = "additive",
+	blend = "normal+bloom",
 	tintable = false,
 	markers = LV3.markers,
 	beams = { GUARDIAN },

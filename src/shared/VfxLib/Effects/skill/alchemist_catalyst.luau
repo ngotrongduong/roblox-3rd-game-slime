@@ -1,9 +1,10 @@
 -- Alchemist Catalyst Cloud: a gold-rune alchemy circle draws itself on the floor, then a big green-purple gas cloud
 -- boils up out of it with bubbles and sparks, and the foes drip and fizz inside it. Played on the spot (the middle of the
 -- foes), radius about 5 studs; the cloud lasts about 4 s. Coloured green and violet bodies, gold runes.
-local GAS = { { 0, { 90, 200, 70 } }, { 1, { 100, 50, 170 } } }
-local GOLD = { { 0, { 255, 240, 170 } }, { 1, { 235, 175, 50 } } }
-local GREEN = { { 0, { 150, 230, 90 } }, { 1, { 40, 150, 50 } } }
+-- (a darker toxic cloud, coloured normal bodies: pale gas on bright grass and snow was a faint stain, 2026-11-14)
+local GAS = { { 0, { 105, 55, 150 } }, { 1, { 65, 25, 105 } } }
+local GOLD = { { 0, { 235, 185, 55 } }, { 1, { 185, 120, 15 } } }
+local GREEN = { { 0, { 90, 190, 50 } }, { 1, { 25, 110, 35 } } }
 
 return {
 	id = "skill.alchemist_catalyst",
@@ -27,10 +28,10 @@ return {
 			count = 1,
 			life = { 1.2, 1.2 },
 			size = { { 0, 9 }, { 1, 10 } },
-			transparency = { { 0, 0.2 }, { 0.8, 0.1 }, { 1, 1 } },
+			transparency = { { 0, 0.15 }, { 0.8, 0.05 }, { 1, 1 } },
 			flipbook = { layout = "Grid4x4", mode = "OneShot" },
-			lightEmission = 0.5,
-			brightness = 1.5,
+			lightEmission = 0.2,
+			brightness = 1,
 		},
 		{
 			-- the gas boiling up
@@ -44,13 +45,13 @@ return {
 			direction = "Top",
 			life = { 1.6, 2.4 },
 			size = { { 0, 3 }, { 0.4, 6 }, { 1, 8 } },
-			transparency = { { 0, 0.4 }, { 0.3, 0.15 }, { 1, 1 } },
+			transparency = { { 0, 0.4 }, { 0.3, 0.25 }, { 0.75, 0.35 }, { 1, 1 } },
 			speed = { 0.3, 1.2 },
 			rotation = { -180, 180 },
 			rotSpeed = { -20, 20 },
-			lightEmission = 0.1,
+			lightEmission = 0,
 			lightInfluence = 0,
-			stream = { from = 0.8, to = 3.6, rate = { 10, 7 } },
+			stream = { from = 0.8, to = 3.6, rate = { 14, 10 } },
 		},
 		{
 			name = "bubbles",

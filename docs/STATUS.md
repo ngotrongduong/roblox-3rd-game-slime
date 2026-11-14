@@ -181,11 +181,11 @@ brief `docs/briefs/class-skills-5.md`; VfxLib 1a3ee47, 130 effects). Every weapo
   studs behind the squad, pictures taken in the engine): all six ultimates and both trait flourishes played; the log
   has no warning or error from the fight drawing. Meteor, Whirlwind and Arrow Rain are strong; Bulwark's seal, circle
   and the shields on the squad read.
-- **Not good yet (library, asked for 2026-11-14):** on bright ground three effects wash out: Sanctuary is a white dome
-  of glare on the snow that hides the fighters, Bulwark's spirit knight is a yellow-white blaze on the meadow, Catalyst
-  Cloud's gas hardly shows on the meadow. When the library ships them: move the clean import worktree
-  `C:\roblox-vfx-library\.claude\worktrees\game-import` to `origin/main` and run its `tools\import.ps1 "<game>" --update`,
-  then look at the three in a Dungeon run (levels 6 and 9, the `late` debug preset with Legendary weapons).
+- **Bright maps, fixed in the library the same day (VfxLib 172d1da) and seen again in Dungeon runs:** Sanctuary on the
+  snow was a white dome of glare that hid the fighters: now a gold ornamented ring on the ground, everyone in it
+  visible (thin and pale on snow, but it reads). Bulwark's spirit knight on the meadow was a yellow-white blaze: now
+  his crown, pale body, cape and raised blue-gold shield can be told. Catalyst Cloud's gas hardly showed on the meadow:
+  now dark violet smoke over the foes, who stay visible.
 - **Balance after steps 4-5** (`docs/WEAPONS.md` §13): at the same Arena power a higher tier now beats Common 75-100%
   (target about 63%): the skills are worth more than the Arena's power counts. Kept for the full sweep after step 6.
 - **Not verified:** Last Stand in a picture (it played twice, not framed), Sanctuary on a dark map, Hawkeye / Echo /
