@@ -4,7 +4,7 @@
 -- one equipment system, the same fight everywhere), where fighters walk into reach before they aim; without it (the
 -- tools' and tests' quick fights) a hit lands when its cooldown ends, wherever the fighters are.
 -- A slime with a weapon fights by its class (docs/WEAPONS.md, Config.Classes): its own beat, reach, plain blow and one
--- skill on a cooldown in seconds; a slime without one is a Brawler and fights by its role, as before.
+-- skills on independent cooldowns in seconds; a slime without one is a Brawler and fights by its role, as before.
 local Config = if script then require(script.Parent.Config) else require("./Config")
 local Rng = if script then require(script.Parent.Rng) else require("./Rng")
 
@@ -54,8 +54,11 @@ export type Unit = {
 	tauntBy: Unit?,
 	tauntUntil: number,
 	tauntFree: number,
-	-- a class's skill is ready from this many seconds into the fight; its hop and its intercept likewise
-	skillReady: number,
+	-- a class skill's next ready second, keyed by skill (separate clocks even for one class)
+	skillReady: { [string]: number },
+	-- a timed barrier absorbs damage before health; its remaining value never stacks with a new one
+	barrier: number,
+	barrierUntil: number,
 	hopReady: number,
 	interceptReady: number,
 	-- positional mode only (Fight.moves): where it stands (flat, studs from the arena's middle), the place round its
@@ -95,6 +98,7 @@ export type Event = {
 	from: string?,
 	to: string,
 	amount: number?,
+	absorbed: number?,
 	crit: boolean?,
 	skill: string?,
 	n: number?,
@@ -207,7 +211,13 @@ local function unit(fighter: Fighter, side: string, rng: Rng): Unit
 	local isMend = s ~= nil and s.kind == "mend"
 	-- (a class skill's first use comes part of its cooldown in, so a fight does not open with six skills at once)
 	local kind = if fighter.class then (Config.Classes.Kinds :: any)[fighter.class] else nil
-	local own = if kind then (c.Skills :: any)[kind.skill] else nil
+	local ready: { [string]: number } = {}
+	if kind then
+		for index = 1, math.min(fighter.tier or 1, #kind.skills) do
+			local key = kind.skills[index]
+			ready[key] = c.OpeningCooldown + (c.Skills :: any)[key].cooldown * Config.Classes.OpeningShare
+		end
+	end
 	return {
 		id = fighter.id,
 		side = side,
@@ -241,7 +251,9 @@ local function unit(fighter: Fighter, side: string, rng: Rng): Unit
 		tauntBy = nil,
 		tauntUntil = 0,
 		tauntFree = 0,
-		skillReady = if own then c.OpeningCooldown + own.cooldown * Config.Classes.OpeningShare else 0,
+		skillReady = ready,
+		barrier = 0,
+		barrierUntil = 0,
 		hopReady = 0,
 		interceptReady = 0,
 		x = fighter.x or 0,
@@ -327,6 +339,26 @@ local function addEffect(fight: Fight, u: Unit, kind: string, value: number, sec
 		return false
 	end
 	u.effects[kind] = { value = value, untilAt = fight.seconds + seconds }
+	return true
+end
+
+-- Class slows share one cap and never replace a stronger live slow; monster stings still use their original rules.
+local function classSlow(
+	fight: Fight,
+	u: Unit,
+	share: number,
+	seconds: number,
+	events: { Event },
+	from: Unit,
+	key: string
+): boolean
+	local K = Config.Classes
+	local capped = math.min(share, if u.rank == "boss" then K.SlowCapBoss else K.SlowCap)
+	if u.slowUntil > fight.seconds and u.slowBy > capped then
+		return false
+	end
+	u.slowUntil, u.slowBy = fight.seconds + seconds, capped
+	status(events, from, u, "slowed", seconds, key)
 	return true
 end
 
@@ -544,7 +576,10 @@ local function blow(
 			effectOf(fight, u, "taken"),
 			math.min(if own and own.taken then own.taken else 0, Config.Classes.Effects.taken)
 		)
-		return Combat.damage(attacker.attack, defence, how and how.magic) * factor * (1 - taken)
+		return Combat.damage(attacker.attack, defence, how and how.magic)
+			* factor
+			* (1 - taken)
+			* (1 + effectOf(fight, attacker, "dealt"))
 	end
 	local crit = plain
 		and (attacker.side == "squad" or fight.fair == true)
@@ -562,9 +597,19 @@ local function blow(
 	for index, part in parts do
 		local u = part.u
 		local amount = hurt(u) * part.share * (if crit then c.CritFactor else 1)
-		u.hp = math.max(0, u.hp - amount)
+		-- (an expired barrier cannot block the next blow; the hit shows health damage separately from absorption)
+		local absorbed = 0
+		if u.barrierUntil > fight.seconds and u.barrier > 0 then
+			absorbed = math.min(amount, u.barrier)
+			u.barrier -= absorbed
+		end
+		u.hp = math.max(0, u.hp - (amount - absorbed))
 		local hit = event("hit", u, part.guard)
-		hit.amount, hit.crit = amount, crit
+		hit.amount, hit.crit = amount - absorbed, crit
+		if absorbed > 0 then
+			hit.absorbed = absorbed
+		end
+		local endedWard = absorbed > 0 and u.barrier <= 0 and u.barrierUntil > fight.seconds
 		-- (the riders land on the one aimed at, not on a Guardian that caught part of it)
 		if index == 1 then
 			-- (only a plain blow stings: a skill has its own weight)
@@ -584,18 +629,29 @@ local function blow(
 					Combat.stun(fight, u, special.stun, riders, attacker, key)
 				end
 				if special.slow then
-					u.slowUntil = fight.seconds + special.slowSeconds
-					u.slowBy = special.slow
-					hit.slow = true
-					status(riders, attacker, u, "slowed", special.slowSeconds, key)
+					if attacker.class then
+						local seconds = if u.rank == "boss" then special.bossSeconds or special.seconds else special.seconds
+						hit.slow = classSlow(fight, u, special.slow, seconds, riders, attacker, key)
+					else
+						u.slowUntil = fight.seconds + special.slowSeconds
+						u.slowBy = special.slow
+						hit.slow = true
+						status(riders, attacker, u, "slowed", special.slowSeconds, key)
+					end
 				end
 			end
 			table.insert(events, hit)
+			if endedWard then
+				table.insert(events, { kind = "status", to = u.id, status = "warded", seconds = 0 })
+			end
 			for _, rider in riders do
 				table.insert(events, rider)
 			end
 		else
 			table.insert(events, hit)
+			if endedWard then
+				table.insert(events, { kind = "status", to = u.id, status = "warded", seconds = 0 })
+			end
 		end
 		if u.hp <= 0 then
 			table.insert(events, event("fallen", u))
@@ -738,14 +794,14 @@ local function heal(fight: Fight, healer: Unit, events: { Event }): boolean
 		local s = (Config.Combat.Skills :: any)[key]
 		healer.specials += 1
 		for _, other in wounded do
-			local given = math.min(other.maxHp - other.hp, healer.attack * s.share)
+			local given = math.min(other.maxHp - other.hp, healer.attack * s.share * (1 - effectOf(fight, other, "curse")))
 			other.hp += given
 			table.insert(events, { kind = "heal", from = healer.id, to = other.id, amount = given, skill = key })
 		end
 		healer.cooldown += h.extraCooldown
 		return true
 	end
-	local amount = math.min(worst.maxHp - worst.hp, healer.attack * h.share)
+	local amount = math.min(worst.maxHp - worst.hp, healer.attack * h.share * (1 - effectOf(fight, worst, "curse")))
 	worst.hp += amount
 	healer.cooldown += h.extraCooldown
 	table.insert(events, { kind = "heal", from = healer.id, to = worst.id, amount = amount })
@@ -790,7 +846,10 @@ local function healShare(fight: Fight): number
 end
 
 local function classHeal(fight: Fight, healer: Unit, mate: Unit, factor: number, events: { Event }, key: string?)
-	local amount = math.min(mate.maxHp - mate.hp, Combat.healAmount(healer.attack, factor) * healShare(fight))
+	local amount = math.min(
+		mate.maxHp - mate.hp,
+		Combat.healAmount(healer.attack, factor) * healShare(fight) * (1 - effectOf(fight, mate, "curse"))
+	)
 	mate.hp += amount
 	table.insert(events, { kind = "heal", from = healer.id, to = mate.id, amount = amount, skill = key })
 end
@@ -848,9 +907,9 @@ local function densest(fight: Fight, u: Unit, radius: number, canHit: (Unit) -> 
 end
 
 -- What a class's attack skill weighs against a plain blow: its plain factor times SkillPower at its weapon's tier.
-local function skillWeight(u: Unit): number
+local function skillWeight(u: Unit, s: any): number
 	local power = Config.Classes.SkillPower
-	return kindOf(u).factor * power[math.clamp(u.tier or 1, 1, #power)]
+	return kindOf(u).factor * power[math.clamp(u.tier or 1, 1, #power)] * (s.power or 1)
 end
 
 -- An area skill: the target and every other foe within `radius` of it (nearest first; a fight with no places strikes
