@@ -373,7 +373,8 @@ function Zombies.rowOf(farm: Farm, slimeId: string): string
 	if chosen and table.find(Config.Classes.Rows.Order, chosen) then
 		return chosen
 	end
-	return Zombies.defaultRow(FarmState.findSlime(farm, slimeId))
+	local slime = FarmState.findSlime(farm, slimeId)
+	return Zombies.defaultRow(slime)
 end
 
 -- A missing tactic deliberately has the same combat behavior as the original rules.
