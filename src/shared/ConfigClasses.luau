@@ -1,5 +1,5 @@
 --!strict
--- Each class learns Common, Uncommon, then Epic skills as its weapon tier rises; tiers four and five use all three until ultimates join.
+-- Each class learns Common, Uncommon, Epic and Mythic skills as its weapon tier rises.
 return {
 	Families = {
 		sword = "warrior",
@@ -19,7 +19,7 @@ return {
 			magic = false,
 			reach = 6,
 			pull = 3,
-			skills = { "taunt", "shield_bash", "shield_wall" },
+			skills = { "taunt", "shield_bash", "shield_wall", "bulwark" },
 			taken = 0.2,
 		},
 		warrior = {
@@ -28,7 +28,7 @@ return {
 			magic = false,
 			reach = 6,
 			pull = 1,
-			skills = { "dash_strike", "area_slash", "breaker_strike" },
+			skills = { "dash_strike", "area_slash", "breaker_strike", "whirlwind" },
 		},
 		ranger = {
 			beat = 1,
@@ -36,7 +36,7 @@ return {
 			magic = false,
 			reach = 24,
 			pull = 1,
-			skills = { "piercing_shot", "arrow_volley", "snare_arrow" },
+			skills = { "piercing_shot", "arrow_volley", "snare_arrow", "arrow_rain" },
 		},
 		mage = {
 			beat = 1,
@@ -44,7 +44,7 @@ return {
 			magic = true,
 			reach = 24,
 			pull = 1,
-			skills = { "arcane_barrage", "frost_burst", "arcane_lance" },
+			skills = { "arcane_barrage", "frost_burst", "arcane_lance", "meteor" },
 		},
 		healer = {
 			beat = 1.15,
@@ -52,7 +52,7 @@ return {
 			magic = true,
 			reach = 22.5,
 			pull = 1,
-			skills = { "mend", "healing_ring", "ward" },
+			skills = { "mend", "healing_ring", "ward", "sanctuary" },
 		},
 		alchemist = {
 			beat = 1,
@@ -60,7 +60,7 @@ return {
 			magic = true,
 			reach = 21,
 			pull = 1,
-			skills = { "acid_rain", "squad_tonic", "cursed_flask" },
+			skills = { "acid_rain", "squad_tonic", "cursed_flask", "catalyst_cloud" },
 		},
 	},
 	-- An attack skill weighs this many of its class's plain blows, by the weapon's tier (the owner, 2026-11-13: Common
@@ -213,6 +213,94 @@ return {
 			below = 0.8,
 		},
 		cursed_flask = { name = "Cursed Flask", kind = "single", every = 1, cooldown = 12, curse = 0.35, seconds = 5 },
+		-- Fourth skills are ready twelve seconds after entry, then cool down independently from the other skills.
+		bulwark = {
+			name = "Bulwark",
+			kind = "team",
+			ultimate = true,
+			first = 12,
+			cooldown = 24,
+			every = 1,
+			taken = 0.18,
+			steady = 0.25,
+			seconds = 4,
+			minimum = 2,
+			soloMinimum = 1,
+			status = "bulwarked",
+		},
+		whirlwind = {
+			name = "Whirlwind",
+			kind = "splash",
+			ultimate = true,
+			first = 12,
+			cooldown = 24,
+			every = 1,
+			windup = 0.8,
+			radius = 9,
+			cap = 4,
+			power = 1.15,
+			minimum = 2,
+		},
+		arrow_rain = {
+			name = "Arrow Rain",
+			kind = "splash",
+			ultimate = true,
+			first = 12,
+			cooldown = 24,
+			every = 1,
+			windup = 1.2,
+			radius = 9,
+			cap = 5,
+			power = 1,
+			minimum = 2,
+			group = true,
+		},
+		meteor = {
+			name = "Meteor",
+			kind = "splash",
+			ultimate = true,
+			first = 12,
+			cooldown = 24,
+			every = 1,
+			windup = 1.5,
+			radius = 9,
+			cap = 4,
+			power = 1.25,
+			minimum = 2,
+			group = true,
+		},
+		sanctuary = {
+			name = "Sanctuary",
+			kind = "heal",
+			ultimate = true,
+			first = 12,
+			cooldown = 24,
+			every = 1,
+			factor = 1.1,
+			count = 4,
+			range = 22.5,
+			steady = 0.25,
+			seconds = 3,
+			minimum = 2,
+			below = 0.6,
+			dire = 0.35,
+			status = "sanctified",
+		},
+		catalyst_cloud = {
+			name = "Catalyst Cloud",
+			kind = "splash",
+			ultimate = true,
+			first = 12,
+			cooldown = 24,
+			every = 1,
+			radius = 10,
+			cap = 4,
+			power = 0.8,
+			minimum = 2,
+			melt = 0.25,
+			seconds = 4,
+			group = true,
+		},
 	},
 	-- Magic bypasses part of armour. A heal of factor 1 gives back what the healer's own blow would take off a slime as
 	-- strong as itself (Combat.healAmount).
@@ -223,6 +311,7 @@ return {
 	HealFade = { { 30, 1 }, { 45, 0.8 }, { 60, 0.6 }, { 75, 0.4 } },
 	-- Stagger the first signatures rather than opening the fight with all six at once.
 	OpeningShare = 0.5,
+	UltimateGap = 1.5,
 	StunWindow = 10,
 	StunSteps = { 1, 0.5, 0.25, 0 },
 	MiniStunCap = 0.3,
@@ -233,7 +322,16 @@ return {
 	SlowCapBoss = 0.15,
 	-- Effects on a unit, the strongest of a kind only (never added up), each capped here: a new kind is one line.
 	--   melt: DEF lost; taken: damage blocked; dealt: bonus damage; curse: healing suppressed.
-	Effects = { melt = 0.75, taken = 0.4, dealt = 0.25, curse = 0.5 },
+	Effects = { melt = 0.75, taken = 0.4, dealt = 0.25, curse = 0.5, steady = 0.5 },
+	-- Passive Legendary traits; all tunable values live here, even when the effect makes no separate event.
+	Traits = {
+		guardian = { key = "last_stand", left = 1, taunt = "taunt" },
+		warrior = { key = "momentum", reset = "dash_strike" },
+		ranger = { key = "hawkeye", every = 4, share = 0.55, flight = "piercing_shot" },
+		mage = { key = "echo", skill = "arcane_barrage", delay = 0.6, share = 0.5 },
+		healer = { key = "overflow", share = 0.1, seconds = 4 },
+		alchemist = { key = "lingering_brew", seconds = 2 },
+	},
 	TauntFree = 2,
 	-- A lone foe of these kinds going for a team-mate is worth a taunt by itself (a raider hunting the back row).
 	TauntAlone = { hunter = true },
