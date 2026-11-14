@@ -25,10 +25,15 @@ waystones"), the Heart's fight anchor stood at 136 (terrain 132 + lift) over a f
 arena and a spout's running water were seen at the game's camera (`docs/references/heart/shots/play_*.jpg`).
 `build_sites.luau` re-run after it learnt to keep the Heart: "sites: 433 kit pieces, 4274 instances; missing:" and the
 Heart still held its 31 beams and 4 spouts.
+The Heart's own fight was run on the new floor (MapWork play test, the zone's lock lifted in the work place only and
+put back by a sync, the debug menu's "late" farm): waves 1 to 3 of 4 were seen, the squad's slimes stood with their
+bodies' bottoms at 132.0 and a monster (Calderos) at 131.9 over a floor top of 132.1
+(`docs/references/heart/shots/play_fight_*.jpg`).
 
-**Not verified:** the Heart's fight was not run on the new floor (it needs the three bosses won; its ground is read
-from the terrain, which did not change); nothing was seen in a phone view; FPS on a phone not measured (about 91,000 new triangles across the crater). StudioTest.rbxl has
-not been rebuilt from the new MapWork (`lune run tools/build_publish.luau studio`, with StudioTest closed).
+**Not verified:** the fight's last wave and its win were not waited for; skill marks drawn flat on the ground were not
+looked at one by one over the floor; nothing was seen in a phone view; FPS on a phone not measured (about 91,000 new
+triangles across the crater). StudioTest.rbxl has not been rebuilt from the new MapWork
+(`lune run tools/build_publish.luau studio`, with StudioTest closed).
 
 **Needs the owner:** nothing. The models live in MapWork (saved) and as GLB files in the repo.
 

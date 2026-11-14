@@ -55,4 +55,13 @@ shadows. FPS on a phone: not measured.
 The world loaded with no new error ("zones of the big world ready: 14 fights, 3 gates sealed, the rim walled in 60
 pieces, 22 waystones"); the Heart's fight anchor stands at y 136 (terrain 132 + its lift) over a floor whose top is
 132.1; the character walked the west causeway and the arena (`shots/play_causeway.jpg`, `shots/play_arena.jpg`); a spout's
-water was seen running in play. **Not run:** the Heart's fight itself (it needs the three bosses won); the phone view.
+water was seen running in play.
+
+The Heart's fight on the new floor (a second play test): waves 1 to 3 of 4 ran (Bramblehorn, Hollowheart, Calderos, all
+Lv 150) against the debug menu's "late" farm; the squad's slimes stood with their bodies' bottoms at y 132.0 and
+Calderos at 131.9, the floor's top being 132.1 (`shots/play_fight_wave1.jpg`, `shots/play_fight_wave3.jpg`). A monster
+the camera did not face (Hollowheart) read with its mesh at its pivot, half in the ground by the numbers: most likely
+the client not posing what is off screen (not proved, it was not looked at); its height comes from the terrain either
+way, not from the floor.
+
+**Not run:** the fight's last wave and win; the skill marks drawn flat on the ground, one by one; the phone view.

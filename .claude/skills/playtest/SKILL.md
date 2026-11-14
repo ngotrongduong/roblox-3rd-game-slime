@@ -84,6 +84,18 @@ not.
   `prompt:InputHoldEnd()`, with the character inside its `MaxActivationDistance`. A zone's prompt is answered on the
   client and a locked zone only shows a toast (`UiDungeon.watchZones`): read the player's `Zone_<id>` attributes first;
   the Heart needs b1, b2 and b3 won.
+- **To run a locked zone's fight anyway** (the Heart, proved 2026-11-14): in Edit, in the work place only, replace
+  `needs = { "b1", "b2", "b3" }` by `needs = {}` in `ReplicatedStorage.Shared.ConfigWorld.Source`; start Play; give the
+  empty test farm a squad with the Studio debug menu's remote from the Client:
+  `ReplicatedStorage:FindFirstChild("Debug", true):InvokeServer({ action = "late" })` (40 slimes of level 80, teams set);
+  press the prompt, click `...Modal_dungeon.Panel.Body.Content.Bar.Enter` by its path. Afterwards stop Play, run
+  `sync_all.ps1` (it puts the repo's `ConfigWorld` back), check the `needs` line is there again, THEN save. A command
+  cannot reach the live farm by `require`: it gets its own copy of every module, so the remote is the way in.
+- **Fighters are measured, not guessed**: on the Client, each model of `workspace.ZombieClientActors` (`Dungeon_*` the
+  squad, `Monster_*`): the visible MeshPart's centre minus half its height against the floor's top. Their parts have
+  `CanQuery` off, so `GetPartBoundsInBox` finds none. A monster the camera did not face read with its mesh at
+  its pivot, half buried by the numbers (probably not posed while off screen; not proved): turn the camera to it before
+  believing the number.
 - **A button is clicked by its path**, not by pixels: `user_mouse_input` with the GuiObject's `instance_path`
   (`search_game_tree` or a short Client script finds it). Pixels move with the window's size.
 - **`tools\read_log.ps1` reads the newest log file, which may belong to another Studio window** when several are open:
