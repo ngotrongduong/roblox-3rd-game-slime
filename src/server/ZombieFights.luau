@@ -400,13 +400,10 @@ local function speedsOf(farm: any, ids: { string }): { number }
 	return speeds
 end
 
--- Starts a leg of the march: the team walks from `from` to `to`, at the pace of the slowest of its members (a roaming
--- team hurries: Config.Zombies.ExplorePace).
+-- Starts a leg of the march: the team walks from `from` to `to`, at the pace of the slowest of its members. A roaming
+-- team walks no faster: slimes keep their own speed everywhere (the owner, 2026-11-15; only players walk faster).
 local function startLeg(team: March, farm: any, from: Vector3, to: Vector3)
 	local seconds = Zombies.marchSeconds((to - from).Magnitude, speedsOf(farm, team.members))
-	if team.roam then
-		seconds /= Config.Zombies.ExplorePace
-	end
 	team.from, team.to = from, to
 	team.legStart = workspace:GetServerTimeNow()
 	team.legEnd = team.legStart + seconds

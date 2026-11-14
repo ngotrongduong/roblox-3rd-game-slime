@@ -45,8 +45,9 @@ triangles across the crater). StudioTest.rbxl has not been rebuilt from the new 
   `farm.teams[n].explore` (optional, schema unchanged); request `SetTeamExplore { team, band }` (band 0 = call back, from
   anywhere; starting needs the player at the home team banner, the team home and not empty). Server: `ZombieFights`
   (`roamOn`, `recall`, the `Explore` attribute on `Teams/<n>`), rules in `shared/VillageRequests`.
-- An exploring team's fights cost no energy or fullness, its wounds heal on the walk between packs, and it walks
-  `Config.Zombies.ExplorePace` (3) times as fast between packs and on its way home from the field. Its coins and losses are
+- An exploring team's fights cost no energy or fullness and its wounds heal on the walk between packs. It walks at the
+  slimes' own pace: `Config.Zombies.ExplorePace` (3 times as fast) was taken out on 2026-11-15, the owner wants slimes at
+  their original speed everywhere (only players walk twice as fast). Its coins and losses are
   added up over the whole outing for the "home" notice.
 - One job a team: the Dungeon refuses a team set to explore ("TEAM_OUT"); the Arena refuses an attack while one of its
   fighters is in an exploring team ("EXPLORING"; the Arena keeps its own line-up, so the rule is by slime).
@@ -68,7 +69,7 @@ triangles across the crater). StudioTest.rbxl has not been rebuilt from the new 
 - The minimap covering other HUD parts on a flattened window: the owner said no fix is needed (full screen is fine).
 
 **Proved in a StudioTest play** (mid preset, band 1): the team went pack to pack without coming home (legs 19-32 s, 57-95 s
-before `ExplorePace`); called back while walking it was home in 6 s, called back in a fight it finished the fight and came
+before `ExplorePace`, which is the pace again since 2026-11-15); called back while walking it was home in 6 s (with `ExplorePace`), called back in a fight it finished the fight and came
 home; a team sent at band 8 died and its exploring ended; the Dungeon answered "TEAM_OUT", the Arena "EXPLORING", and
 starting away from the banner "TOO_FAR". Seen on screen in the same play (a 1920 x 928 window): the home sheet with the new
 tiles, the band dropdown, "Exploring Lv 1-20" with Call back, the members sheet with all four members and their dish
