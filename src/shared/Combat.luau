@@ -59,6 +59,12 @@ export type Unit = {
 	-- a timed barrier absorbs damage before health; its remaining value never stacks with a new one
 	barrier: number,
 	barrierUntil: number,
+	-- Legendary counters and a delayed Arcane Barrage echo (the original foes, not a fresh area)
+	lastStandUsed: number,
+	momentumAt: number,
+	plainArrows: number,
+	echo: { at: number, key: string, targets: { Unit }, weight: number }?,
+	stunnedUntil: number,
 	hopReady: number,
 	interceptReady: number,
 	-- positional mode only (Fight.moves): where it stands (flat, studs from the arena's middle), the place round its
@@ -84,9 +90,12 @@ export type Fight = {
 	moves: boolean?,
 	radius: number?,
 	fade: boolean?,
+	-- The last ultimate announcement on each side, independent of the other side.
+	ultimateAt: { [string]: number },
 }
 -- `skill` is the way of fighting whose skill struck (a key of Config.Combat.Skills); a new `cast` event starts each
--- Uncommon or Epic skill; `amount` on a hit is health damage, `absorbed` is barrier damage. `n` the blow's number in a
+-- Uncommon, Epic or Mythic skill; `amount` on a hit is health damage, and `absorbed` is barrier damage.
+-- `n` the blow's number in a
 -- several-blow skill; `splash` a blow that struck beside the target; `guard` the guard that took a blow aimed elsewhere;
 -- `ranged` a blow from a fighter that keeps its distance; `slow` a sting that slowed its target; `melt` a blow that
 -- melted its target's armour. A "heal" event carries the health given back in `amount`. A "move" event (positional mode
@@ -116,6 +125,8 @@ export type Event = {
 	dash: boolean?,
 	hop: boolean?,
 	status: string?,
+	trait: string?,
+	echo: boolean?,
 }
 -- `maxHp` is the full health when the fighter starts wounded (hp below it); left out, hp is the full health.
 -- `role` is a slime's way of fighting (Combat.role), `kind` a zombie's kind; either sets whom it goes for.
@@ -198,8 +209,13 @@ local function kindOf(u: Unit): any
 	return if u.class then (Config.Classes.Kinds :: any)[u.class] else nil
 end
 
+-- Passive traits belong only to Legendary weapons, never to a lower-tier class or monster.
+local function traitOf(u: Unit): any
+	return if u.class and (u.tier or 1) >= 5 then (Config.Classes.Traits :: any)[u.class] else nil
+end
+
 -- (each fighter opens at its own moment: a team that strikes all at once reads as one body, not four slimes)
-local function unit(fighter: Fighter, side: string, rng: Rng): Unit
+local function unit(fighter: Fighter, side: string, rng: Rng, joinedAt: number?): Unit
 	local c = Config.Combat
 	local role = fighter.role or fighter.kind or ""
 	-- (each counts its blows from its own start, so fighters of one kind do not strike their skills all together)
@@ -216,7 +232,10 @@ local function unit(fighter: Fighter, side: string, rng: Rng): Unit
 	if kind then
 		for index = 1, math.min(fighter.tier or 1, #kind.skills) do
 			local key = kind.skills[index]
-			ready[key] = c.OpeningCooldown + (c.Skills :: any)[key].cooldown * Config.Classes.OpeningShare
+			local skill = (c.Skills :: any)[key]
+			ready[key] = if skill.ultimate
+				then (joinedAt or 0) + skill.first
+				else c.OpeningCooldown + skill.cooldown * Config.Classes.OpeningShare
 		end
 	end
 	return {
@@ -255,6 +274,11 @@ local function unit(fighter: Fighter, side: string, rng: Rng): Unit
 		skillReady = ready,
 		barrier = 0,
 		barrierUntil = 0,
+		lastStandUsed = 0,
+		momentumAt = -math.huge,
+		plainArrows = 0,
+		echo = nil,
+		stunnedUntil = 0,
 		hopReady = 0,
 		interceptReady = 0,
 		x = fighter.x or 0,
@@ -290,6 +314,7 @@ function Combat.new(
 		moves = if opts then opts.moves else nil,
 		radius = if opts then opts.radius else nil,
 		fade = if opts then opts.fade else nil,
+		ultimateAt = { squad = -math.huge, foe = -math.huge },
 	}
 end
 
@@ -299,7 +324,7 @@ function Combat.add(fight: Fight, fighter: Fighter, side: string): Unit?
 	if fight.winner then
 		return nil
 	end
-	local joined = unit(fighter, side, fight.rng)
+	local joined = unit(fighter, side, fight.rng, fight.seconds)
 	table.insert(fight.units, joined)
 	return joined
 end
@@ -343,6 +368,38 @@ local function addEffect(fight: Fight, u: Unit, kind: string, value: number, sec
 	return true
 end
 
+-- All barriers use the same strongest-only rule, including Overflow and Ward.
+local function giveBarrier(
+	fight: Fight,
+	from: Unit,
+	mate: Unit,
+	amount: number,
+	seconds: number,
+	events: { Event },
+	key: string
+)
+	if amount > 0 and (mate.barrierUntil <= fight.seconds or amount >= mate.barrier) then
+		mate.barrier, mate.barrierUntil = amount, fight.seconds + seconds
+		status(events, from, mate, "warded", seconds, key)
+	end
+end
+
+-- All health damage, including redirected blows, must pass through this one Legendary last-stand check.
+local function takeHealth(_fight: Fight, u: Unit, amount: number): boolean
+	local trait = traitOf(u)
+	if trait and trait.key == "last_stand" and u.lastStandUsed < trait.uses and amount >= u.hp and u.hp > 0 then
+		u.hp = trait.left
+		u.lastStandUsed += 1
+		return true
+	end
+	u.hp = math.max(0, u.hp - amount)
+	return false
+end
+
+-- The Taunt action is declared after its target selector, but Last Stand can trigger inside blow().
+local afterLastStand: ((Fight, Unit, { Event }) -> ())? = nil
+local hawkeyeFollowup: ((Fight, Unit, Unit, number, { Event }) -> ())? = nil
+
 -- Class slows share one cap and never replace a stronger live slow; monster stings still use their original rules.
 local function classSlow(
 	fight: Fight,
@@ -375,9 +432,11 @@ function Combat.stun(fight: Fight, u: Unit, seconds: number, events: { Event }?,
 		if fight.seconds < u.stunFree then
 			return
 		end
-		u.cooldown += math.min(seconds, K.MiniStunCap)
+		local effective = math.min(seconds, K.MiniStunCap) * (1 - effectOf(fight, u, "steady"))
+		u.cooldown += effective
+		u.stunnedUntil = math.max(u.stunnedUntil, fight.seconds + effective)
 		u.stunFree = fight.seconds + K.MiniStunFree
-		status(events, from, u, "stunned", math.min(seconds, K.MiniStunCap), key)
+		status(events, from, u, "stunned", effective, key)
 		return
 	end
 	local kept: { number } = {}
@@ -388,9 +447,11 @@ function Combat.stun(fight: Fight, u: Unit, seconds: number, events: { Event }?,
 	end
 	local share = K.StunSteps[#kept + 1] or 0
 	if share > 0 then
-		u.cooldown += seconds * share
+		local effective = seconds * share * (1 - effectOf(fight, u, "steady"))
+		u.cooldown += effective
+		u.stunnedUntil = math.max(u.stunnedUntil, fight.seconds + effective)
 		table.insert(kept, fight.seconds)
-		status(events, from, u, "stunned", seconds * share, key)
+		status(events, from, u, "stunned", effective, key)
 	end
 	u.stuns = kept
 end
@@ -533,6 +594,12 @@ local function blow(
 	local c = Config.Combat
 	local K = Config.Classes
 	local plain = extra == nil
+	local trait = traitOf(attacker)
+	local arrow = plain and trait ~= nil and trait.key == "hawkeye"
+	if arrow then
+		attacker.plainArrows += 1
+	end
+	local followup = arrow and attacker.plainArrows % trait.every == 0
 	local guard = guardOf(fight, target)
 	local struck = guard or target
 	-- (only a direct blow is intercepted, once: a plain one or the first of a single-target skill, never an area)
@@ -564,6 +631,9 @@ local function blow(
 	end
 	if plain and fight.rng:next() < math.min(c.DodgeCap, struck.speed * c.DodgePerSpeed) then
 		table.insert(events, event("dodge", struck, if guard then guard.id else nil))
+		if followup and hawkeyeFollowup then
+			hawkeyeFollowup(fight, attacker, target, factor, events)
+		end
 		return
 	end
 	local function hurt(u: Unit): number
@@ -604,7 +674,8 @@ local function blow(
 			absorbed = math.min(amount, u.barrier)
 			u.barrier -= absorbed
 		end
-		u.hp = math.max(0, u.hp - (amount - absorbed))
+		local fell = u.hp > 0 and amount - absorbed >= u.hp
+		local survived = takeHealth(fight, u, amount - absorbed)
 		local hit = event("hit", u, part.guard)
 		hit.amount, hit.crit = amount - absorbed, crit
 		if absorbed > 0 then
@@ -656,9 +727,21 @@ local function blow(
 				table.insert(events, { kind = "status", to = u.id, status = "warded", seconds = 0 })
 			end
 		end
+		if survived and afterLastStand then
+			afterLastStand(fight, u, events)
+		end
 		if u.hp <= 0 then
 			table.insert(events, event("fallen", u))
+			if fell and trait and trait.key == "momentum" and attacker.momentumAt < fight.seconds then
+				attacker.momentumAt = fight.seconds
+				attacker.skillReady[trait.reset] = fight.seconds
+				local gained: Event = { kind = "trait", from = attacker.id, to = u.id, trait = "momentum" }
+				table.insert(events, gained)
+			end
 		end
+	end
+	if followup and hawkeyeFollowup then
+		hawkeyeFollowup(fight, attacker, target, factor, events)
 	end
 end
 
@@ -671,6 +754,38 @@ local function foesOf(fight: Fight, attacker: Unit): { Unit }
 		end
 	end
 	return out
+end
+
+-- A Hawkeye follow-up is a second arrow on the flight *behind* the original target, never another crit or dodge.
+-- Its shape comes from Piercing Shot so there is only one definition of an arrow's line.
+hawkeyeFollowup = function(fight: Fight, attacker: Unit, target: Unit, weight: number, events: { Event })
+	local trait = traitOf(attacker)
+	local flight = (Config.Combat.Skills :: any)[trait.flight]
+	local chosen: Unit? = nil
+	local nearest = math.huge
+	local d = distance(attacker, target)
+	for _, foe in foesOf(fight, attacker) do
+		if foe ~= target then
+			if not fight.moves then
+				chosen = foe
+				break
+			elseif d > 0 then
+				local dx, dz = (target.x - attacker.x) / d, (target.z - attacker.z) / d
+				local ox, oz = foe.x - attacker.x, foe.z - attacker.z
+				local along = ox * dx + oz * dz
+				if along > d and along <= flight.length and math.abs(ox * dz - oz * dx) <= flight.width then
+					if along < nearest then
+						chosen, nearest = foe, along
+					end
+				end
+			end
+		end
+	end
+	if chosen then
+		blow(fight, attacker, chosen, weight * trait.share, events, { trait = trait.key, splash = true }, nil, {
+			magic = kindOf(attacker).magic,
+		})
+	end
 end
 
 -- The fighter's skill (Config.Combat.Skills, by its way of fighting) instead of a plain blow.
@@ -850,12 +965,15 @@ local function healShare(fight: Fight): number
 end
 
 local function classHeal(fight: Fight, healer: Unit, mate: Unit, factor: number, events: { Event }, key: string?)
-	local amount = math.min(
-		mate.maxHp - mate.hp,
-		Combat.healAmount(healer.attack, factor) * healShare(fight) * (1 - effectOf(fight, mate, "curse"))
-	)
+	local raw = Combat.healAmount(healer.attack, factor) * healShare(fight) * (1 - effectOf(fight, mate, "curse"))
+	local amount = math.min(mate.maxHp - mate.hp, raw)
 	mate.hp += amount
 	table.insert(events, { kind = "heal", from = healer.id, to = mate.id, amount = amount, skill = key })
+	local trait = traitOf(healer)
+	if key == nil and trait and trait.key == "overflow" then
+		local barrier = math.min(raw - amount, mate.maxHp * trait.share)
+		giveBarrier(fight, healer, mate, barrier, trait.seconds, events, trait.key)
+	end
 end
 
 -- The foes a Guardian's Taunt would take now (within its range, going for a team-mate, free to be taunted), nearest
@@ -889,6 +1007,30 @@ local function tauntable(fight: Fight, g: Unit): ({ Unit }, boolean)
 	return out, alone or #out >= s.minimum
 end
 
+-- A Guardian's ordinary Taunt and Last Stand use exactly the same taunt, protection and status events.
+local function applyTaunt(fight: Fight, g: Unit, events: { Event }, key: string)
+	local s = (Config.Combat.Skills :: any)[key]
+	local enemies = tauntable(fight, g)
+	for index = 1, math.min(s.count, #enemies) do
+		local enemy = enemies[index]
+		enemy.tauntBy, enemy.tauntUntil, enemy.target = g, fight.seconds + s.seconds, g
+		table.insert(events, { kind = "taunt", from = g.id, to = enemy.id, skill = key, seconds = s.seconds })
+		status(events, g, enemy, "taunted", s.seconds, key)
+	end
+	if addEffect(fight, g, "taken", s.taken, s.seconds) then
+		status(events, g, g, "shielded", s.seconds, key)
+	end
+end
+
+afterLastStand = function(fight: Fight, g: Unit, events: { Event })
+	local trait = traitOf(g)
+	table.insert(events, { kind = "trait", from = g.id, to = g.id, trait = trait.key })
+	local enemies = tauntable(fight, g)
+	if #enemies > 0 then
+		applyTaunt(fight, g, events, trait.taunt)
+	end
+end
+
 -- The foe with the most other foes within `radius` of it (ties to the higher DEF) among those it can strike now.
 local function densest(fight: Fight, u: Unit, radius: number, canHit: (Unit) -> boolean): Unit?
 	local foes = foesOf(fight, u)
@@ -918,7 +1060,15 @@ end
 
 -- An area skill: the target and every other foe within `radius` of it (nearest first; a fight with no places strikes
 -- `cap` foes in all), each at `weight`; `melt` on every one it strikes when the skill has one.
-local function area(fight: Fight, u: Unit, target: Unit, key: string, weight: number, events: { Event }, how: How)
+local function area(
+	fight: Fight,
+	u: Unit,
+	target: Unit,
+	key: string,
+	weight: number,
+	events: { Event },
+	how: How
+): { Unit }
 	local s = (Config.Combat.Skills :: any)[key]
 	local others: { Unit } = {}
 	for _, other in foesOf(fight, u) do
@@ -950,12 +1100,15 @@ local function area(fight: Fight, u: Unit, target: Unit, key: string, weight: nu
 		)
 	end
 	if s.melt then
+		local trait = traitOf(u)
+		local seconds = s.seconds + (if trait and trait.key == "lingering_brew" then trait.seconds else 0)
 		for _, each in struck do
-			if each.hp > 0 and addEffect(fight, each, "melt", s.melt, s.seconds) then
-				status(events, u, each, "melted", s.seconds, key)
+			if each.hp > 0 and addEffect(fight, each, "melt", s.melt, seconds) then
+				status(events, u, each, "melted", seconds, key)
 			end
 		end
 	end
+	return struck
 end
 
 -- Piercing Shot: the arrow flies from the bow through its target and on to `length` studs from the bow, and strikes
@@ -990,6 +1143,10 @@ end
 
 -- These five skills act on a team or curse a foe; their caster need not walk into attack range to use them.
 local function noReachNeeded(key: string): boolean
+	local s = (Config.Combat.Skills :: any)[key]
+	if s and s.ultimate and (s.kind == "team" or s.kind == "heal") then
+		return true
+	end
 	return key == "healing_ring"
 		or key == "squad_tonic"
 		or key == "shield_wall"
@@ -1097,6 +1254,37 @@ local function threatenedMates(fight: Fight, u: Unit, range: number, below: numb
 	return mates, living
 end
 
+-- Sanctuary checks its own nearby wounded allies, including its caster, in lowest-health order.
+local function sanctuaryMates(fight: Fight, u: Unit, s: any): ({ Unit }, boolean)
+	local mates: { Unit } = {}
+	for _, mate in fight.units do
+		if mate.side == u.side and mate.hp > 0 and mate.hp < mate.maxHp and within(fight, u, mate, s.range) then
+			table.insert(mates, mate)
+		end
+	end
+	table.sort(mates, function(a, b)
+		local left, right = a.hp / a.maxHp, b.hp / b.maxHp
+		return if left == right then a.id < b.id else left < right
+	end)
+	local needed = 0
+	local dire = false
+	for index = 1, math.min(s.count, #mates) do
+		local share = mates[index].hp / mates[index].maxHp
+		if share < s.below then
+			needed += 1
+		end
+		if share < s.dire then
+			dire = true
+		end
+	end
+	return mates, needed >= s.minimum or dire
+end
+
+-- A side shares one ultimate announcement clock; the opposite side has an independent clock.
+local function ultimateAllowed(fight: Fight, u: Unit, s: any): boolean
+	return not s.ultimate or fight.seconds - (fight.ultimateAt[u.side] or -math.huge) >= Config.Classes.UltimateGap
+end
+
 -- Snare a reachable melee pursuer first; the foe already aimed at is the fallback.
 local function snareTarget(fight: Fight, u: Unit, target: Unit, canHit: (Unit) -> boolean): Unit?
 	local nearest: Unit? = nil
@@ -1147,6 +1335,37 @@ end
 -- impact so a group that scattered or a team already healed does not waste the cooldown.
 local function classWorth(fight: Fight, u: Unit, target: Unit, key: string, canHit: (Unit) -> boolean): (boolean, Unit?)
 	local s = (Config.Combat.Skills :: any)[key]
+	if s.ultimate then
+		if s.kind == "team" and s.taken and s.steady then
+			local threatened = 0
+			local living = 0
+			local enemies = foesOf(fight, u)
+			for _, mate in fight.units do
+				if mate.side == u.side and mate.hp > 0 then
+					living += 1
+					for _, enemy in enemies do
+						if enemy.target == mate then
+							threatened += 1
+							break
+						end
+					end
+				end
+			end
+			return threatened >= (if living == 1 then s.soloMinimum else s.minimum), nil
+		elseif s.kind == "heal" and s.steady then
+			local _, worth = sanctuaryMates(fight, u, s)
+			return worth, nil
+		else
+			local chosen = if s.group
+				then densest(fight, u, s.radius, canHit)
+				else (if canHit(target) then target else nil)
+			if not chosen then
+				return false, nil
+			end
+			local enough = areaCount(fight, u, chosen, s) >= s.minimum
+			return enough or chosen.rank == "boss" or chosen.rank == "miniboss", chosen
+		end
+	end
 	if key == "taunt" then
 		local _, worth = tauntable(fight, u)
 		return worth, nil
@@ -1181,13 +1400,42 @@ local function classWorth(fight: Fight, u: Unit, target: Unit, key: string, canH
 	return canHit(target), nil
 end
 
+-- A class wind-up is only considered when the ultimate can actually be announced now. Its normal beat can be
+-- shorter than its wind-up; the aim resets the pending blow to the whole wind-up duration.
+local function ultimateLead(fight: Fight, u: Unit): number
+	local kind = kindOf(u)
+	if not kind or (u.tier or 1) < #kind.skills then
+		return 0
+	end
+	local key = kind.skills[#kind.skills]
+	local s = (Config.Combat.Skills :: any)[key]
+	if not s or not s.windup or (u.skillReady[key] or math.huge) > fight.seconds then
+		return 0
+	end
+	if not ultimateAllowed(fight, u, s) then
+		return 0
+	end
+	local target = targetOf(fight, u)
+	if not target then
+		return 0
+	end
+	local worth = classWorth(fight, u, target, key, function(foe: Unit): boolean
+		return not fight.moves or distance(u, foe) <= kind.reach + Config.Dungeon.Move.BlowSlack
+	end)
+	return if worth then s.windup else 0
+end
+
 -- A ready support skill can replace an attack even when its foe is too far away for the plain blow. Common skills
 -- retain their old reach and aim timing, preserving tier-one fights.
 local function supportReady(fight: Fight, u: Unit, target: Unit): boolean
 	local kind = kindOf(u)
 	for index = math.min(u.tier or 1, #kind.skills), 2, -1 do
 		local key = kind.skills[index]
-		if noReachNeeded(key) and (u.skillReady[key] or math.huge) <= fight.seconds then
+		if
+			noReachNeeded(key)
+			and (u.skillReady[key] or math.huge) <= fight.seconds
+			and ultimateAllowed(fight, u, (Config.Combat.Skills :: any)[key])
+		then
 			local worth = classWorth(fight, u, target, key, function(_foe: Unit): boolean
 				return false
 			end)
@@ -1204,11 +1452,15 @@ local function classAim(fight: Fight, u: Unit, target: Unit, canHit: (Unit) -> b
 	local kind = kindOf(u)
 	for index = math.min(u.tier or 1, #kind.skills), 1, -1 do
 		local key = kind.skills[index]
-		if (u.skillReady[key] or math.huge) <= fight.seconds then
+		local s = (Config.Combat.Skills :: any)[key]
+		if (u.skillReady[key] or math.huge) <= fight.seconds and ultimateAllowed(fight, u, s) then
 			local worth, chosen = classWorth(fight, u, target, key, canHit)
 			if worth then
 				if chosen then
 					u.target = chosen
+				end
+				if s.ultimate then
+					fight.ultimateAt[u.side] = fight.seconds
 				end
 				return key
 			end
@@ -1256,17 +1508,7 @@ local function classAct(fight: Fight, u: Unit, target: Unit, events: { Event })
 				})
 			end
 			if key == "taunt" then
-				local foes = tauntable(fight, u)
-				for index = 1, math.min(s.count, #foes) do
-					local foe = foes[index]
-					foe.tauntBy, foe.tauntUntil, foe.target = u, fight.seconds + s.seconds, u
-					local taunt: any = { kind = "taunt", from = u.id, to = foe.id, skill = key, seconds = s.seconds }
-					table.insert(events, taunt)
-					status(events, u, foe, "taunted", s.seconds, key)
-				end
-				if addEffect(fight, u, "taken", s.taken, s.seconds) then
-					status(events, u, u, "shielded", s.seconds, key)
-				end
+				applyTaunt(fight, u, events, key)
 				return
 			elseif key == "mend" then
 				local mate = lowestMate(fight, u, s.range, 1)
@@ -1274,6 +1516,25 @@ local function classAct(fight: Fight, u: Unit, target: Unit, events: { Event })
 					classHeal(fight, u, mate, s.factor, events, key)
 					return
 				end
+			elseif s.ultimate and s.kind == "team" and s.taken and s.steady then
+				for _, mate in fight.units do
+					if mate.side == u.side and mate.hp > 0 then
+						addEffect(fight, mate, "taken", s.taken, s.seconds)
+						addEffect(fight, mate, "steady", s.steady, s.seconds)
+						status(events, u, mate, s.status, s.seconds, key)
+					end
+				end
+				return
+			elseif s.ultimate and s.kind == "heal" and s.steady then
+				local mates = sanctuaryMates(fight, u, s)
+				for index = 1, math.min(s.count, #mates) do
+					local mate = mates[index]
+					classHeal(fight, u, mate, s.factor, events, key)
+					if addEffect(fight, mate, "steady", s.steady, s.seconds) then
+						status(events, u, mate, s.status, s.seconds, key)
+					end
+				end
+				return
 			elseif key == "healing_ring" then
 				local mates = ringMates(fight, u, s)
 				for index = 1, math.min(s.count, #mates) do
@@ -1302,10 +1563,7 @@ local function classAct(fight: Fight, u: Unit, target: Unit, events: { Event })
 				if mate then
 					local amount =
 						math.min(Combat.healAmount(u.attack, s.factor) * healShare(fight), mate.maxHp * s.share)
-					if mate.barrierUntil <= fight.seconds or amount >= mate.barrier then
-						mate.barrier, mate.barrierUntil = amount, fight.seconds + s.seconds
-						status(events, u, mate, "warded", s.seconds, key)
-					end
+					giveBarrier(fight, u, mate, amount, s.seconds, events, key)
 				end
 				return
 			elseif key == "cursed_flask" then
@@ -1327,7 +1585,17 @@ local function classAct(fight: Fight, u: Unit, target: Unit, events: { Event })
 				blow(fight, u, target, weight, events, { skill = key }, s, { magic = kind.magic, ignore = s.ignore })
 				return
 			else
-				area(fight, u, target, key, skillWeight(u, s), events, { magic = kind.magic })
+				local weight = skillWeight(u, s)
+				local targets = area(fight, u, target, key, weight, events, { magic = kind.magic })
+				local trait = traitOf(u)
+				if trait and trait.key == "echo" and key == trait.skill then
+					u.echo = {
+						at = fight.seconds + trait.delay,
+						key = key,
+						targets = targets,
+						weight = weight * trait.share,
+					}
+				end
 				return
 			end
 		end
@@ -1456,6 +1724,20 @@ local function dash(fight: Fight, u: Unit, target: Unit, events: { Event }): boo
 	if d < s.minStuds or d > s.maxStuds then
 		return false
 	end
+	-- A ready Mythic Whirlwind takes precedence at the edge of melee range. Lower tiers keep their old dash.
+	local kind = kindOf(u)
+	if kind and (u.tier or 1) >= #kind.skills then
+		local key = kind.skills[#kind.skills]
+		local ultimate = (Config.Combat.Skills :: any)[key]
+		if (u.skillReady[key] or math.huge) <= fight.seconds and ultimateAllowed(fight, u, ultimate) then
+			local worth = classWorth(fight, u, target, key, function(foe: Unit): boolean
+				return not fight.moves or distance(u, foe) <= kind.reach + Config.Dungeon.Move.BlowSlack
+			end)
+			if worth then
+				return false
+			end
+		end
+	end
 	local reach = reachOf(u)
 	local bearing = math.atan2(u.z - target.z, u.x - target.x)
 	local tx, tz = target.x + math.cos(bearing) * reach, target.z + math.sin(bearing) * reach
@@ -1542,11 +1824,29 @@ function Combat.step(fight: Fight, dt: number): { Event }
 	fight.seconds += dt
 	for _, attacker in fight.units do
 		if attacker.hp > 0 then
+			-- Echo uses neither a fresh aim nor a beat; stun at its scheduled moment cancels it.
+			local echo = attacker.echo
+			if echo and fight.seconds + 1e-6 >= echo.at then
+				attacker.echo = nil
+				if attacker.stunnedUntil <= echo.at then
+					local special = (Config.Combat.Skills :: any)[echo.key]
+					for index, enemy in echo.targets do
+						if enemy.hp > 0 then
+							blow(fight, attacker, enemy, echo.weight, events, {
+								skill = echo.key,
+								echo = true,
+								splash = if index > 1 then true else nil,
+							}, special, { magic = kindOf(attacker).magic })
+						end
+					end
+				end
+			end
 			if attacker.barrierUntil <= fight.seconds then
 				attacker.barrier = 0
 			end
 			local kind = kindOf(attacker)
-			if fight.moves and kind then
+			local aimed = if kind and attacker.aimed then (Config.Combat.Skills :: any)[attacker.skillKey] else nil
+			if fight.moves and kind and not (aimed and aimed.ultimate and aimed.windup) then
 				hop(fight, attacker, events)
 			end
 			-- (positional mode: a fighter that has announced its blow stands still; any other walks toward its target, and
@@ -1564,6 +1864,9 @@ function Combat.step(fight: Fight, dt: number): { Event }
 			end
 			local before = attacker.cooldown
 			local lead = leadOf(fight, attacker)
+			if kind and not attacker.aimed then
+				lead = math.max(lead, ultimateLead(fight, attacker))
+			end
 			-- (a stung fighter's beat runs slow)
 			attacker.cooldown -= dt * (if attacker.slowUntil > fight.seconds then 1 - attacker.slowBy else 1)
 			if not inReach then
@@ -1590,6 +1893,13 @@ function Combat.step(fight: Fight, dt: number): { Event }
 						target = attacker.target or target
 						attacker.skillNext = own ~= nil
 						key = own
+						if own then
+							local selected = (c.Skills :: any)[own]
+							if selected.ultimate and selected.windup then
+								-- An ultimate keeps its whole telegraph even if its plain beat was almost finished.
+								attacker.cooldown = math.max(attacker.cooldown, selected.windup)
+							end
+						end
 					elseif s and s.kind == "mend" then
 						-- (a mend special is announced on the heal turn; a healer with nobody wounded strikes a plain blow)
 						attacker.skillNext = false
