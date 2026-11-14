@@ -387,7 +387,7 @@ end
 -- All health damage, including redirected blows, must pass through this one Legendary last-stand check.
 local function takeHealth(fight: Fight, u: Unit, amount: number): boolean
 	local trait = traitOf(u)
-	if trait and trait.key == "last_stand" and u.lastStandUsed == 0 and amount >= u.hp and u.hp > 0 then
+	if trait and trait.key == "last_stand" and u.lastStandUsed < trait.uses and amount >= u.hp and u.hp > 0 then
 		u.hp = trait.left
 		u.lastStandUsed += 1
 		return true
