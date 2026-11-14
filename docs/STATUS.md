@@ -258,7 +258,8 @@ brief `docs/briefs/class-skills-5.md`; VfxLib 1a3ee47, 130 effects). Every weapo
   his crown, pale body, cape and raised blue-gold shield can be told. Catalyst Cloud's gas hardly showed on the meadow:
   now dark violet smoke over the foes, who stay visible.
 - **Balance after steps 4-5** (`docs/WEAPONS.md` §13): at the same Arena power a higher tier now beats Common 75-100%
-  (target about 63%): the skills are worth more than the Arena's power counts. Kept for the full sweep after step 6.
+  (target about 63%): the skills are worth more than the Arena's power counts. **The owner decided 2026-11-14 to keep
+  it** (rarer weapons are meant to win in the Arena): no rebalance.
 - **Not verified:** Last Stand in a picture (it played twice, not framed), Sanctuary on a dark map, Hawkeye / Echo /
   Overflow / Lingering Brew by eye (tests only), a real phone.
 

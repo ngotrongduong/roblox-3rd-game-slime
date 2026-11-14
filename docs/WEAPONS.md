@@ -511,7 +511,11 @@ The same table after steps 4-5, every tier with its own skills (2026-11-14, `cla
 
 The skills widened the gap the first known miss below names (target about 63% at the same Arena power): the Arena's
 power does not count what a tier's skills are worth. Common GWRH against four of one class in Mythic or Legendary:
-0-10%, HHHH still loses at the limit every time; GWRH against BBBB 70%. Left for the full sweep after step 6.
+0-10%, HHHH still loses at the limit every time; GWRH against BBBB 70%.
+
+**The owner's decision (2026-11-14): keep it.** Asked whether to pull the higher tiers back towards 63% or to keep
+them dominant in the Arena, he chose to keep them as they are ("Giữ nguyên"). The 63% of §9 is no longer a target: a
+rarer weapon is meant to win. No sweep changes weapon points or the Arena's power for this unless he asks.
 
 Dungeon (meadow, level 60, 30 runs a probe): every team of four clears level 2 or 3, GWRH with Mythic weapons clears 4;
 Rangers and Mages stand out of danger 54-63% of the time; one Healer heals about 430 a run.
@@ -521,6 +525,7 @@ Known misses, kept for the sweep after steps 4-6:
   one whatever its classes, and at the same Arena power the higher tier still wins 75-90% (target about 63%): a weapon's
   points, all in a few stats, are worth more than the same points spread over levels. The levers: smaller weapon points,
   or an Arena power that counts a weapon's points more. The owner's numbers are kept until he says otherwise.
+  **Closed 2026-11-14: the owner keeps it, see his decision above.**
 - At level 20 GMAH has little way against GWRH (88%); at 120 a class adds little over a Brawler and AAAA beats GWRH 55%:
   the late game rests on the skills of steps 4-5.
 - Fights run 42-66 s, not the 25 s §10 hoped for (the Guardian's Shield and the heal weight); only four Healers reach
