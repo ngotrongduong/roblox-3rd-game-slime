@@ -94,7 +94,8 @@ export type Fight = {
 	ultimateAt: { [string]: number },
 }
 -- `skill` is the way of fighting whose skill struck (a key of Config.Combat.Skills); a new `cast` event starts each
--- Uncommon, Epic or Mythic skill; `amount` on a hit is health damage, `absorbed` is barrier damage. `n` the blow's number in a
+-- Uncommon, Epic or Mythic skill; `amount` on a hit is health damage, and `absorbed` is barrier damage.
+-- `n` the blow's number in a
 -- several-blow skill; `splash` a blow that struck beside the target; `guard` the guard that took a blow aimed elsewhere;
 -- `ranged` a blow from a fighter that keeps its distance; `slow` a sting that slowed its target; `melt` a blow that
 -- melted its target's armour. A "heal" event carries the health given back in `amount`. A "move" event (positional mode
@@ -1400,10 +1401,10 @@ end
 -- shorter than its wind-up; the aim resets the pending blow to the whole wind-up duration.
 local function ultimateLead(fight: Fight, u: Unit): number
 	local kind = kindOf(u)
-	if not kind or (u.tier or 1) < 4 then
+	if not kind or (u.tier or 1) < #kind.skills then
 		return 0
 	end
-	local key = kind.skills[4]
+	local key = kind.skills[#kind.skills]
 	local s = (Config.Combat.Skills :: any)[key]
 	if not s or not s.windup or (u.skillReady[key] or math.huge) > fight.seconds then
 		return 0
