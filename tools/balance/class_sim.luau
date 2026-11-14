@@ -68,11 +68,17 @@ end
 -- `extras` are each slime's extra level points.
 local function team(letters: string, tier: string, prefix: string, seed: number, flip: boolean, extras: { number }?): { any }
 	local out = {}
+	local rows: { string } = {}
 	for index = 1, #letters do
 		local f = slime(prefix .. index, letters:sub(index, index), tier, seed + index, extras and extras[index])
-		local x, z = Dungeon.squadSpot(index, #letters)
-		f.x, f.z = if flip then -x else x, if flip then -z else z
+		f.row = if f.class then K.Rows.Default[f.class] else K.Rows.Brawler
 		table.insert(out, f)
+		table.insert(rows, f.row)
+	end
+	local spots = Dungeon.squadSpots(rows)
+	for index, f in out do
+		local point = spots[index]
+		f.x, f.z = if flip then -point.x else point.x, if flip then -point.z else point.z
 	end
 	return out
 end
