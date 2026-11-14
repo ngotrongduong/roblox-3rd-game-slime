@@ -3,8 +3,8 @@
 -- game (the Slime Dungeon, the camps, the Arena) runs in the positional mode (Combat.new's `moves`, the owner, 2026-11-13:
 -- one equipment system, the same fight everywhere), where fighters walk into reach before they aim; without it (the
 -- tools' and tests' quick fights) a hit lands when its cooldown ends, wherever the fighters are.
--- A slime with a weapon fights by its class (docs/WEAPONS.md, Config.Classes): its own beat, reach, plain blow and one
--- skill on a cooldown in seconds; a slime without one is a Brawler and fights by its role, as before.
+-- A slime with a weapon fights by its class (docs/WEAPONS.md, Config.Classes): its own beat, reach, plain blow and
+-- skills on independent cooldowns in seconds; a slime without one is a Brawler and fights by its role, as before.
 local Config = if script then require(script.Parent.Config) else require("./Config")
 local Rng = if script then require(script.Parent.Rng) else require("./Rng")
 
@@ -54,8 +54,11 @@ export type Unit = {
 	tauntBy: Unit?,
 	tauntUntil: number,
 	tauntFree: number,
-	-- a class's skill is ready from this many seconds into the fight; its hop and its intercept likewise
-	skillReady: number,
+	-- a class skill's next ready second, keyed by skill (separate clocks even for one class)
+	skillReady: { [string]: number },
+	-- a timed barrier absorbs damage before health; its remaining value never stacks with a new one
+	barrier: number,
+	barrierUntil: number,
 	hopReady: number,
 	interceptReady: number,
 	-- positional mode only (Fight.moves): where it stands (flat, studs from the arena's middle), the place round its
@@ -82,7 +85,8 @@ export type Fight = {
 	radius: number?,
 	fade: boolean?,
 }
--- `skill` is the way of fighting whose skill struck (a key of Config.Combat.Skills); `n` the blow's number in a
+-- `skill` is the way of fighting whose skill struck (a key of Config.Combat.Skills); a new `cast` event starts each
+-- Uncommon or Epic skill; `amount` on a hit is health damage, `absorbed` is barrier damage. `n` the blow's number in a
 -- several-blow skill; `splash` a blow that struck beside the target; `guard` the guard that took a blow aimed elsewhere;
 -- `ranged` a blow from a fighter that keeps its distance; `slow` a sting that slowed its target; `melt` a blow that
 -- melted its target's armour. A "heal" event carries the health given back in `amount`. A "move" event (positional mode
@@ -95,6 +99,7 @@ export type Event = {
 	from: string?,
 	to: string,
 	amount: number?,
+	absorbed: number?,
 	crit: boolean?,
 	skill: string?,
 	n: number?,
@@ -207,7 +212,13 @@ local function unit(fighter: Fighter, side: string, rng: Rng): Unit
 	local isMend = s ~= nil and s.kind == "mend"
 	-- (a class skill's first use comes part of its cooldown in, so a fight does not open with six skills at once)
 	local kind = if fighter.class then (Config.Classes.Kinds :: any)[fighter.class] else nil
-	local own = if kind then (c.Skills :: any)[kind.skill] else nil
+	local ready: { [string]: number } = {}
+	if kind then
+		for index = 1, math.min(fighter.tier or 1, #kind.skills) do
+			local key = kind.skills[index]
+			ready[key] = c.OpeningCooldown + (c.Skills :: any)[key].cooldown * Config.Classes.OpeningShare
+		end
+	end
 	return {
 		id = fighter.id,
 		side = side,
@@ -241,7 +252,9 @@ local function unit(fighter: Fighter, side: string, rng: Rng): Unit
 		tauntBy = nil,
 		tauntUntil = 0,
 		tauntFree = 0,
-		skillReady = if own then c.OpeningCooldown + own.cooldown * Config.Classes.OpeningShare else 0,
+		skillReady = ready,
+		barrier = 0,
+		barrierUntil = 0,
 		hopReady = 0,
 		interceptReady = 0,
 		x = fighter.x or 0,
@@ -327,6 +340,26 @@ local function addEffect(fight: Fight, u: Unit, kind: string, value: number, sec
 		return false
 	end
 	u.effects[kind] = { value = value, untilAt = fight.seconds + seconds }
+	return true
+end
+
+-- Class slows share one cap and never replace a stronger live slow; monster stings still use their original rules.
+local function classSlow(
+	fight: Fight,
+	u: Unit,
+	share: number,
+	seconds: number,
+	events: { Event },
+	from: Unit,
+	key: string
+): boolean
+	local K = Config.Classes
+	local capped = math.min(share, if u.rank == "boss" then K.SlowCapBoss else K.SlowCap)
+	if u.slowUntil > fight.seconds and u.slowBy > capped then
+		return false
+	end
+	u.slowUntil, u.slowBy = fight.seconds + seconds, capped
+	status(events, from, u, "slowed", seconds, key)
 	return true
 end
 
@@ -544,7 +577,10 @@ local function blow(
 			effectOf(fight, u, "taken"),
 			math.min(if own and own.taken then own.taken else 0, Config.Classes.Effects.taken)
 		)
-		return Combat.damage(attacker.attack, defence, how and how.magic) * factor * (1 - taken)
+		return Combat.damage(attacker.attack, defence, how and how.magic)
+			* factor
+			* (1 - taken)
+			* (1 + effectOf(fight, attacker, "dealt"))
 	end
 	local crit = plain
 		and (attacker.side == "squad" or fight.fair == true)
@@ -562,9 +598,19 @@ local function blow(
 	for index, part in parts do
 		local u = part.u
 		local amount = hurt(u) * part.share * (if crit then c.CritFactor else 1)
-		u.hp = math.max(0, u.hp - amount)
+		-- (an expired barrier cannot block the next blow; the hit shows health damage separately from absorption)
+		local absorbed = 0
+		if u.barrierUntil > fight.seconds and u.barrier > 0 then
+			absorbed = math.min(amount, u.barrier)
+			u.barrier -= absorbed
+		end
+		u.hp = math.max(0, u.hp - (amount - absorbed))
 		local hit = event("hit", u, part.guard)
-		hit.amount, hit.crit = amount, crit
+		hit.amount, hit.crit = amount - absorbed, crit
+		if absorbed > 0 then
+			hit.absorbed = absorbed
+		end
+		local endedWard = absorbed > 0 and u.barrier <= 0 and u.barrierUntil > fight.seconds
 		-- (the riders land on the one aimed at, not on a Guardian that caught part of it)
 		if index == 1 then
 			-- (only a plain blow stings: a skill has its own weight)
@@ -584,18 +630,31 @@ local function blow(
 					Combat.stun(fight, u, special.stun, riders, attacker, key)
 				end
 				if special.slow then
-					u.slowUntil = fight.seconds + special.slowSeconds
-					u.slowBy = special.slow
-					hit.slow = true
-					status(riders, attacker, u, "slowed", special.slowSeconds, key)
+					if attacker.class then
+						local seconds = if u.rank == "boss"
+							then special.bossSeconds or special.seconds
+							else special.seconds
+						hit.slow = classSlow(fight, u, special.slow, seconds, riders, attacker, key)
+					else
+						u.slowUntil = fight.seconds + special.slowSeconds
+						u.slowBy = special.slow
+						hit.slow = true
+						status(riders, attacker, u, "slowed", special.slowSeconds, key)
+					end
 				end
 			end
 			table.insert(events, hit)
+			if endedWard then
+				table.insert(events, { kind = "status", to = u.id, status = "warded", seconds = 0 })
+			end
 			for _, rider in riders do
 				table.insert(events, rider)
 			end
 		else
 			table.insert(events, hit)
+			if endedWard then
+				table.insert(events, { kind = "status", to = u.id, status = "warded", seconds = 0 })
+			end
 		end
 		if u.hp <= 0 then
 			table.insert(events, event("fallen", u))
@@ -738,14 +797,15 @@ local function heal(fight: Fight, healer: Unit, events: { Event }): boolean
 		local s = (Config.Combat.Skills :: any)[key]
 		healer.specials += 1
 		for _, other in wounded do
-			local given = math.min(other.maxHp - other.hp, healer.attack * s.share)
+			local given =
+				math.min(other.maxHp - other.hp, healer.attack * s.share * (1 - effectOf(fight, other, "curse")))
 			other.hp += given
 			table.insert(events, { kind = "heal", from = healer.id, to = other.id, amount = given, skill = key })
 		end
 		healer.cooldown += h.extraCooldown
 		return true
 	end
-	local amount = math.min(worst.maxHp - worst.hp, healer.attack * h.share)
+	local amount = math.min(worst.maxHp - worst.hp, healer.attack * h.share * (1 - effectOf(fight, worst, "curse")))
 	worst.hp += amount
 	healer.cooldown += h.extraCooldown
 	table.insert(events, { kind = "heal", from = healer.id, to = worst.id, amount = amount })
@@ -790,7 +850,10 @@ local function healShare(fight: Fight): number
 end
 
 local function classHeal(fight: Fight, healer: Unit, mate: Unit, factor: number, events: { Event }, key: string?)
-	local amount = math.min(mate.maxHp - mate.hp, Combat.healAmount(healer.attack, factor) * healShare(fight))
+	local amount = math.min(
+		mate.maxHp - mate.hp,
+		Combat.healAmount(healer.attack, factor) * healShare(fight) * (1 - effectOf(fight, mate, "curse"))
+	)
 	mate.hp += amount
 	table.insert(events, { kind = "heal", from = healer.id, to = mate.id, amount = amount, skill = key })
 end
@@ -848,9 +911,9 @@ local function densest(fight: Fight, u: Unit, radius: number, canHit: (Unit) -> 
 end
 
 -- What a class's attack skill weighs against a plain blow: its plain factor times SkillPower at its weapon's tier.
-local function skillWeight(u: Unit): number
+local function skillWeight(u: Unit, s: any): number
 	local power = Config.Classes.SkillPower
-	return kindOf(u).factor * power[math.clamp(u.tier or 1, 1, #power)]
+	return kindOf(u).factor * power[math.clamp(u.tier or 1, 1, #power)] * (s.power or 1)
 end
 
 -- An area skill: the target and every other foe within `radius` of it (nearest first; a fight with no places strikes
@@ -925,66 +988,348 @@ local function pierce(fight: Fight, u: Unit, target: Unit, key: string, weight: 
 	end
 end
 
--- The class skill a unit announces with this blow (its key), or nil: only when it is ready and worth it. Acid Rain turns
--- the unit to the densest group it can reach.
-local function classAim(fight: Fight, u: Unit, target: Unit, canHit: (Unit) -> boolean): string?
-	local kind = kindOf(u)
-	local key: string = kind.skill
-	local s = (Config.Combat.Skills :: any)[key]
-	if u.skillReady > fight.seconds then
-		return nil
-	end
-	if key == "dash_strike" then
-		-- (in the positional mode it is struck by the dash itself, from 7-18 studs away)
-		return if fight.moves then nil else key
-	elseif key == "taunt" then
-		local _, worth = tauntable(fight, u)
-		return if worth then key else nil
-	elseif key == "mend" then
-		return if lowestMate(fight, u, s.range, s.threshold) then key else nil
-	elseif key == "acid_rain" then
-		u.target = densest(fight, u, s.radius, canHit) or target
-	end
-	return key
+-- These five skills act on a team or curse a foe; their caster need not walk into attack range to use them.
+local function noReachNeeded(key: string): boolean
+	return key == "healing_ring"
+		or key == "squad_tonic"
+		or key == "shield_wall"
+		or key == "ward"
+		or key == "cursed_flask"
 end
 
--- A classed unit's blow: its skill when it announced one, else its plain action (a Healer heals the most hurt below
--- HealThreshold within reach instead of striking).
+-- Count the foes an area would touch. In the tools' non-positional quick fights, only its cap are struck.
+local function areaCount(fight: Fight, u: Unit, target: Unit, s: any): number
+	local count = 1
+	for _, other in foesOf(fight, u) do
+		if other ~= target and within(fight, target, other, s.radius) then
+			count += 1
+		end
+	end
+	return if fight.moves then count else math.min(count, s.cap)
+end
+
+-- The Ring centres on the most hurt reachable team member (the caster may be that member), then heals the most
+-- hurt wounded members near the centre. At least two must be below the normal heal threshold before it is worth it.
+local function ringMates(fight: Fight, u: Unit, s: any): { Unit }
+	local centre: Unit? = nil
+	local share = 1
+	for _, other in fight.units do
+		if other.side == u.side and other.hp > 0 and other.hp < other.maxHp and within(fight, u, other, s.range) then
+			local current = other.hp / other.maxHp
+			if current < share then
+				centre, share = other, current
+			end
+		end
+	end
+	if not centre then
+		return {}
+	end
+	local mates: { Unit } = {}
+	local needy = 0
+	for _, other in fight.units do
+		if
+			other.side == u.side
+			and other.hp > 0
+			and other.hp < other.maxHp
+			and within(fight, centre, other, s.radius)
+		then
+			table.insert(mates, other)
+			if other.hp / other.maxHp < Config.Classes.HealThreshold then
+				needy += 1
+			end
+		end
+	end
+	if needy < s.minimum then
+		return {}
+	end
+	table.sort(mates, function(a, b)
+		local first, second = a.hp / a.maxHp, b.hp / b.maxHp
+		return if first == second then a.id < b.id else first < second
+	end)
+	return mates
+end
+
+-- A team buff is worthwhile only when at least two living members can attack a living foe now, including the caster.
+local function attackersReady(fight: Fight, u: Unit): number
+	local count = 0
+	local foes = foesOf(fight, u)
+	for _, mate in fight.units do
+		if mate.side == u.side and mate.hp > 0 then
+			local kind = kindOf(mate)
+			local m = Config.Dungeon.Move
+			local reach = if kind
+				then kind.reach
+				elseif (Config.Combat.Ranged :: any)[mate.role] then m.RangedStuds
+				else m.MeleeStuds
+			for _, enemy in foes do
+				if not fight.moves or distance(mate, enemy) <= reach + m.BlowSlack then
+					count += 1
+					break
+				end
+			end
+		end
+	end
+	return count
+end
+
+-- Find threatened team-mates in range, weakest health share first; the Guardian cannot wall itself and a Ward cannot
+-- protect its caster. A foe must already be going for that team-mate.
+local function threatenedMates(fight: Fight, u: Unit, range: number, below: number): ({ Unit }, number)
+	local mates: { Unit } = {}
+	local living = 0
+	for _, mate in fight.units do
+		if mate ~= u and mate.side == u.side and mate.hp > 0 then
+			living += 1
+			if mate.hp / mate.maxHp < below and within(fight, u, mate, range) then
+				for _, enemy in foesOf(fight, u) do
+					if enemy.target == mate then
+						table.insert(mates, mate)
+						break
+					end
+				end
+			end
+		end
+	end
+	table.sort(mates, function(a, b)
+		local first, second = a.hp / a.maxHp, b.hp / b.maxHp
+		return if first == second then a.id < b.id else first < second
+	end)
+	return mates, living
+end
+
+-- Snare a reachable melee pursuer first; the foe already aimed at is the fallback.
+local function snareTarget(fight: Fight, u: Unit, target: Unit, canHit: (Unit) -> boolean): Unit?
+	local nearest: Unit? = nil
+	local best = math.huge
+	for _, enemy in foesOf(fight, u) do
+		local enemyKind = kindOf(enemy)
+		local melee = if enemyKind
+			then enemyKind.reach <= Config.Dungeon.Move.MeleeStuds
+			else not (Config.Combat.Ranged :: any)[enemy.role]
+		if melee and enemy.target == u and canHit(enemy) then
+			local d = if fight.moves then distance(u, enemy) else 0
+			if d < best then
+				nearest, best = enemy, d
+			end
+		end
+	end
+	return nearest or (if canHit(target) then target else nil)
+end
+
+-- An enemy healer makes a curse useful. The lowest-health uncursed foe is the preferred target, even when beyond the
+-- Alchemist's normal reach (this is a debuff rather than a flask damage blow).
+local function curseTarget(fight: Fight, u: Unit): Unit?
+	local enemies = foesOf(fight, u)
+	local healer = false
+	for _, enemy in enemies do
+		if enemy.class == "healer" or (Config.Combat.Heals :: any)[enemy.role] then
+			healer = true
+			break
+		end
+	end
+	if not healer then
+		return nil
+	end
+	local best: Unit? = nil
+	local share = math.huge
+	for _, enemy in enemies do
+		if effectOf(fight, enemy, "curse") == 0 then
+			local current = enemy.hp / enemy.maxHp
+			if current < share then
+				best, share = enemy, current
+			end
+		end
+	end
+	return best
+end
+
+-- Decide both whether a skill is worth its cooldown and which foe (if any) it should turn toward. Re-run this at
+-- impact so a group that scattered or a team already healed does not waste the cooldown.
+local function classWorth(fight: Fight, u: Unit, target: Unit, key: string, canHit: (Unit) -> boolean): (boolean, Unit?)
+	local s = (Config.Combat.Skills :: any)[key]
+	if key == "taunt" then
+		local _, worth = tauntable(fight, u)
+		return worth, nil
+	elseif key == "mend" then
+		return lowestMate(fight, u, s.range, s.threshold) ~= nil, nil
+	elseif key == "dash_strike" then
+		return not fight.moves and canHit(target), nil
+	elseif key == "healing_ring" then
+		return #ringMates(fight, u, s) > 0, nil
+	elseif key == "squad_tonic" then
+		return attackersReady(fight, u) >= s.minimum, nil
+	elseif key == "shield_wall" then
+		local mates, living = threatenedMates(fight, u, s.range, 1)
+		return #mates >= (if living == 1 then s.soloMinimum else s.minimum), nil
+	elseif key == "ward" then
+		local mates = threatenedMates(fight, u, s.range, s.below)
+		return mates[1] ~= nil, nil
+	elseif key == "cursed_flask" then
+		local chosen = curseTarget(fight, u)
+		return chosen ~= nil, chosen
+	elseif key == "snare_arrow" then
+		local chosen = snareTarget(fight, u, target, canHit)
+		return chosen ~= nil, chosen
+	elseif key == "acid_rain" then
+		return canHit(target), densest(fight, u, s.radius, canHit) or target
+	elseif key == "arrow_volley" or key == "frost_burst" then
+		local chosen = densest(fight, u, s.radius, canHit)
+		return chosen ~= nil and areaCount(fight, u, chosen :: Unit, s) >= s.minimum, chosen
+	elseif key == "area_slash" then
+		return canHit(target) and areaCount(fight, u, target, s) >= s.minimum, nil
+	end
+	return canHit(target), nil
+end
+
+-- A ready support skill can replace an attack even when its foe is too far away for the plain blow. Common skills
+-- retain their old reach and aim timing, preserving tier-one fights.
+local function supportReady(fight: Fight, u: Unit, target: Unit): boolean
+	local kind = kindOf(u)
+	for index = math.min(u.tier or 1, #kind.skills), 2, -1 do
+		local key = kind.skills[index]
+		if noReachNeeded(key) and (u.skillReady[key] or math.huge) <= fight.seconds then
+			local worth = classWorth(fight, u, target, key, function(_foe: Unit): boolean
+				return false
+			end)
+			if worth then
+				return true
+			end
+		end
+	end
+	return false
+end
+
+-- A class attempts its highest unlocked, ready and worthwhile skill first; each one has its own clock.
+local function classAim(fight: Fight, u: Unit, target: Unit, canHit: (Unit) -> boolean): string?
+	local kind = kindOf(u)
+	for index = math.min(u.tier or 1, #kind.skills), 1, -1 do
+		local key = kind.skills[index]
+		if (u.skillReady[key] or math.huge) <= fight.seconds then
+			local worth, chosen = classWorth(fight, u, target, key, canHit)
+			if worth then
+				if chosen then
+					u.target = chosen
+				end
+				return key
+			end
+		end
+	end
+	return nil
+end
+
+-- A classed unit's blow: its selected skill or plain action. The five non-damaging skills each issue cast before
+-- their first status or heal; Common skills keep their earlier event sequence.
 local function classAct(fight: Fight, u: Unit, target: Unit, events: { Event })
 	local K = Config.Classes
 	local kind = kindOf(u)
 	if u.skillNext then
 		local key = u.skillKey
 		local s = (Config.Combat.Skills :: any)[key]
-		u.skillReady = fight.seconds + s.cooldown
-		if key == "taunt" then
-			local foes = tauntable(fight, u)
-			for index = 1, math.min(s.count, #foes) do
-				local foe = foes[index]
-				foe.tauntBy, foe.tauntUntil, foe.target = u, fight.seconds + s.seconds, u
-				local taunt: any = { kind = "taunt", from = u.id, to = foe.id, skill = key, seconds = s.seconds }
-				table.insert(events, taunt)
-				status(events, u, foe, "taunted", s.seconds, key)
-			end
-			if addEffect(fight, u, "taken", s.taken, s.seconds) then
-				status(events, u, u, "shielded", s.seconds, key)
-			end
+		-- Do not retarget or re-evaluate Common skills on impact: their previous event stream must stay identical.
+		local worth, chosen = true, nil :: Unit?
+		if key ~= kind.skills[1] then
+			worth, chosen = classWorth(fight, u, target, key, function(foe: Unit): boolean
+				return not fight.moves or distance(u, foe) <= kind.reach + Config.Dungeon.Move.BlowSlack
+			end)
+		end
+		-- A support cast can aim from across the field, but its failed cast cannot turn into a ranged plain hit.
+		if
+			not worth
+			and noReachNeeded(key)
+			and fight.moves
+			and distance(u, target) > kind.reach + Config.Dungeon.Move.BlowSlack
+		then
 			return
-		elseif key == "mend" then
-			local mate = lowestMate(fight, u, s.range, 1)
-			if mate then
-				classHeal(fight, u, mate, s.factor, events, key)
+		end
+		if worth then
+			target = chosen or target
+			if chosen then
+				u.target = chosen
+			end
+			u.skillReady[key] = fight.seconds + s.cooldown
+			if key ~= kind.skills[1] then
+				table.insert(events, {
+					kind = "cast",
+					from = u.id,
+					to = if noReachNeeded(key) and key ~= "cursed_flask" then u.id else target.id,
+					skill = key,
+				})
+			end
+			if key == "taunt" then
+				local foes = tauntable(fight, u)
+				for index = 1, math.min(s.count, #foes) do
+					local foe = foes[index]
+					foe.tauntBy, foe.tauntUntil, foe.target = u, fight.seconds + s.seconds, u
+					local taunt: any = { kind = "taunt", from = u.id, to = foe.id, skill = key, seconds = s.seconds }
+					table.insert(events, taunt)
+					status(events, u, foe, "taunted", s.seconds, key)
+				end
+				if addEffect(fight, u, "taken", s.taken, s.seconds) then
+					status(events, u, u, "shielded", s.seconds, key)
+				end
+				return
+			elseif key == "mend" then
+				local mate = lowestMate(fight, u, s.range, 1)
+				if mate then
+					classHeal(fight, u, mate, s.factor, events, key)
+					return
+				end
+			elseif key == "healing_ring" then
+				local mates = ringMates(fight, u, s)
+				for index = 1, math.min(s.count, #mates) do
+					classHeal(fight, u, mates[index], s.factor, events, key)
+				end
+				return
+			elseif key == "squad_tonic" then
+				for _, mate in fight.units do
+					if mate.side == u.side and mate.hp > 0 and addEffect(fight, mate, "dealt", s.dealt, s.seconds) then
+						status(events, u, mate, "empowered", s.seconds, key)
+					end
+				end
+				return
+			elseif key == "shield_wall" then
+				local mates = threatenedMates(fight, u, s.range, 1)
+				for index = 1, math.min(s.count, #mates) do
+					local mate = mates[index]
+					if addEffect(fight, mate, "taken", s.taken, s.seconds) then
+						status(events, u, mate, "walled", s.seconds, key)
+					end
+				end
+				return
+			elseif key == "ward" then
+				local mates = threatenedMates(fight, u, s.range, s.below)
+				local mate = mates[1]
+				if mate then
+					local amount =
+						math.min(Combat.healAmount(u.attack, s.factor) * healShare(fight), mate.maxHp * s.share)
+					if mate.barrierUntil <= fight.seconds or amount >= mate.barrier then
+						mate.barrier, mate.barrierUntil = amount, fight.seconds + s.seconds
+						status(events, u, mate, "warded", s.seconds, key)
+					end
+				end
+				return
+			elseif key == "cursed_flask" then
+				if addEffect(fight, target, "curse", s.curse, s.seconds) then
+					status(events, u, target, "cursed", s.seconds, key)
+				end
+				return
+			elseif key == "dash_strike" then
+				blow(fight, u, target, skillWeight(u, s), events, { skill = key }, s)
+				return
+			elseif key == "piercing_shot" then
+				pierce(fight, u, target, key, skillWeight(u, s), events)
+				return
+			elseif s.kind == "single" then
+				local weight = skillWeight(u, s)
+				if s.barrier and target.barrierUntil > fight.seconds and target.barrier > 0 then
+					weight *= s.barrier
+				end
+				blow(fight, u, target, weight, events, { skill = key }, s, { magic = kind.magic, ignore = s.ignore })
+				return
+			else
+				area(fight, u, target, key, skillWeight(u, s), events, { magic = kind.magic })
 				return
 			end
-		elseif key == "dash_strike" then
-			blow(fight, u, target, skillWeight(u), events, { skill = key }, s)
-			return
-		elseif key == "piercing_shot" then
-			pierce(fight, u, target, key, skillWeight(u), events)
-			return
-		else
-			area(fight, u, target, key, skillWeight(u), events, { magic = kind.magic })
-			return
 		end
 	end
 	if u.class == "healer" then
@@ -1104,7 +1449,7 @@ end
 -- and its coming blow is the Dash Strike. True when it dashed.
 local function dash(fight: Fight, u: Unit, target: Unit, events: { Event }): boolean
 	local s = (Config.Combat.Skills :: any).dash_strike
-	if u.class ~= "warrior" or u.skillReady > fight.seconds then
+	if u.class ~= "warrior" or (u.skillReady.dash_strike or math.huge) > fight.seconds then
 		return false
 	end
 	local d = distance(u, target)
@@ -1197,6 +1542,9 @@ function Combat.step(fight: Fight, dt: number): { Event }
 	fight.seconds += dt
 	for _, attacker in fight.units do
 		if attacker.hp > 0 then
+			if attacker.barrierUntil <= fight.seconds then
+				attacker.barrier = 0
+			end
 			local kind = kindOf(attacker)
 			if fight.moves and kind then
 				hop(fight, attacker, events)
@@ -1207,7 +1555,9 @@ function Combat.step(fight: Fight, dt: number): { Event }
 			if fight.moves and not attacker.aimed then
 				local target = targetOf(fight, attacker)
 				if target then
-					inReach = dash(fight, attacker, target, events) or walk(fight, attacker, target, dt, events)
+					inReach = if kind and supportReady(fight, attacker, target)
+						then true
+						else dash(fight, attacker, target, events) or walk(fight, attacker, target, dt, events)
 				else
 					attacker.walking = false
 				end
@@ -1222,7 +1572,11 @@ function Combat.step(fight: Fight, dt: number): { Event }
 			-- the blow is announced a moment before it lands, so the client can show the wind-up (and the skill's name)
 			if not attacker.aimed and attacker.cooldown <= lead then
 				local target = targetOf(fight, attacker)
-				if target and not canStrike(fight, attacker, target) then
+				if
+					target
+					and not canStrike(fight, attacker, target)
+					and not (kind and supportReady(fight, attacker, target))
+				then
 					-- (positional mode: a target picked just now is out of reach; it walks there first)
 					attacker.cooldown = lead + 0.001
 				elseif target then
@@ -1292,7 +1646,11 @@ function Combat.step(fight: Fight, dt: number): { Event }
 					-- (no foe in the arena yet: it waits for the next one and opens at its own moment, as at the start)
 					attacker.cooldown = c.OpeningCooldown + fight.rng:next() * c.OpeningSpread
 				end
-				if target and not canStrike(fight, attacker, target) then
+				if
+					target
+					and not canStrike(fight, attacker, target)
+					and not (kind and attacker.skillNext and noReachNeeded(attacker.skillKey))
+				then
 					-- (positional mode: its target fell or went out of reach during the wind-up; it walks to it and aims again)
 					attacker.cooldown = leadOf(fight, attacker) + 0.001
 					attacker.skillNext = false
