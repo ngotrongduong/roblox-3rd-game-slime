@@ -52,6 +52,18 @@ picks: look at every group's sheet before picking. `tools/skins/map_secret_skins
 picture to its recipe by NAME (the original art's file pairs differ from the recipe colours for 7 recipes), merges the
 upload ids into `asset_ids.json` and prints the `SkinIds.Secrets` rows.
 
+## World scenery through Meshy Smart Topology (2026-11-14)
+
+One picture each (`art/turnaround/<subject>/source.png`, cut from `docs/references/world/world_ref_3.webp`), Smart
+Topology tab, poly count 3000, Texture on (Meshy N1, 2K), 15 credits each (718 -> 673). Files:
+`art/models/world/gates/<subject>.glb`.
+
+| Subject | Meshy model (owner's workspace) | Credits | Triangles | File | Roblox id |
+|---|---|---|---|---|---|
+| root_gate | Enchanted Mushroom Arch (2026-11-13) | 15 | 3,930 | root_gate.glb (4.6 MB) | not uploaded: asset scope not granted |
+| ember_gate | Molten Crystal Gate (2026-11-13) | 15 | 3,110 | ember_gate.glb (3.8 MB) | not uploaded |
+| frost_gate | Frostcrystal Gateway (2026-11-14) | 15 | 3,167 | frost_gate.glb (3.7 MB) | not uploaded |
+
 ## Earlier: turnaround -> Meshy (stopped)
 
 The owner's request (2026-11-08): every Secret ("special") slime made into a 3D model this way: ChatGPT draws the

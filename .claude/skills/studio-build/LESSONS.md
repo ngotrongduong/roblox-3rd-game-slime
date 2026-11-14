@@ -764,3 +764,27 @@ was left there (this game has none); read it there if a cave is ever wanted.
 - Rings of kit pieces round an arena: find the ways in by where the sampled road curves cross the ring's circle, not from
   the plan's neighbours (a Catmull-Rom road leaves a point along its tangent).
 - `save_place` once answered "Target is not reachable" and had saved all the same: check the file's time before retrying.
+
+## Scenery models through Meshy Smart Topology (2026-11-14, the three Heart gates)
+
+- Smart Topology (Image to 3D, middle tab) takes ONE picture and a typed poly count and gives a textured triangle mesh
+  at about that count for 15 credits in under a minute (3000 asked: 3,110 / 3,167 / 3,930 triangles). No Multi-view, no
+  Remesh, no text prompt. A square crop of the subject from a concept sheet (padded with the sheet's background) is
+  enough of a source.
+- Carrying the picture in: after `carry.html?site=meshy...`, on `meshy.ai/robots.txt` store the hash's `review` part in
+  `sessionStorage.reviewFiles` and navigate to `https://www.meshy.ai/workspace` yourself; the skill's redirect snippet
+  reads `to` as "/workspace&prompt=" and lands on a missing page.
+- The Texture switch keeps its state across a reload: read `button[role=switch]`'s `aria-checked` before clicking (a
+  blind click turned it OFF; the price then reads 5 instead of 15).
+- Every generation lists TWO entries: the grey mesh ("_generate") and the textured model ("_texture"). Open the
+  textured one before downloading.
+- The Download panel's format list is a Radix combobox that ignores clicks on its items here: focus the
+  `button[role=combobox]` by javascript and type `g` (typeahead picks glb). The choice is kept for the next model.
+- The download is an `<a download>` on a signed `assets.meshy.ai` address: catch it by wrapping
+  `HTMLAnchorElement.prototype.click` (keep the full `href`), then fetch the three addresses with one scratchpad
+  `.ps1` (`Invoke-WebRequest -OutFile`) into `art/models/...` (the folder Studio may upload from) and check the
+  first four bytes read `glTF`. The task API (`/meshyd-api/...`) does not answer a plain page fetch: do not go that way.
+- Before uploading, read the GLB's JSON chunk (accessor min/max) for size, axis and triangles: the gates are one mesh,
+  one 2K texture, 1 unit wide, passage along Z (the kit's through-axis).
+- `open_cloud_invoke` can lose its grant between sittings: "Scope 'asset:read' has not been granted" in every open
+  Studio. That is the owner's switch (Assistant Settings > MCP Permissions): stop, tell him, do not look for a way round.

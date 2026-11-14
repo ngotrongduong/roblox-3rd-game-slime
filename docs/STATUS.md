@@ -25,13 +25,19 @@ anchors at the hub, spawn, the server `World` module loading this terrain and `w
 fights in the zones (M5), then own models for the interim pieces (gates, crown, stone bridge, altars: §5).
 The old valley shows on the far south horizon of the new world until M4 removes it.
 
-**Gates through Meshy (started, stopped at the usage limit).** Meshy's Image to 3D has a **Smart Topology** tab
-(Meshy T2.5: ONE picture, a poly count typed in, Texture on with Meshy N1 2K = 15 credits, about 40 s, no Remesh
-needed; no multi-view there). Sources cut from `world_ref_3`: `art/turnaround/<root|ember|frost>_gate/source.png`.
-Generated and textured in the owner's Meshy workspace (top of the list): **Ember Gate** 3,110 triangles, **Root
-Gate** 3,939 triangles; credits 718 -> 688. **Left:** generate the Frost Gate the same way (poly count 3000), take
-the three GLB files, upload them to Roblox, and swap them for the RuinArch in `tools/world/build_sites.luau`.
-The Texture switch may already be on after a reload: read `aria-checked` before clicking it.
+**Gates through Meshy (three made, files here; the Roblox upload waits for the owner's permission click).** Meshy's
+Image to 3D has a **Smart Topology** tab (Meshy T2.5: ONE picture, a poly count typed in, Texture on with Meshy N1
+2K = 15 credits, about 40 s, no Remesh needed; no multi-view there). Sources cut from `world_ref_3`:
+`art/turnaround/<root|ember|frost>_gate/source.png`. Generated and textured in the owner's Meshy workspace (top of
+the list), credits 718 -> 673; the textured GLB of each is in `art/models/world/gates/` (one mesh, one 2K texture,
+about 1 unit wide, the passage along Z): **Root Gate** 3,930 triangles, **Ember Gate** 3,110, **Frost Gate** 3,167.
+**Blocked (2026-11-14):** Studio's `open_cloud_invoke` answers "Scope 'asset:read' has not been granted" in both open
+Studios, so nothing is uploaded and the map still shows the interim RuinArch gates. The owner grants asset read and
+write in Studio: Assistant (Ctrl+J) > ... > Settings > MCP Permissions. **Then:** POST `/assets/v1/assets` for the
+three files (Model, creator user 2366260872), poll the operations, `InsertService:LoadAsset` each into a new
+`ServerStorage.WorldKit` (RootGate, EmberGate, FrostGate), swap them for the RuinArch in section 4 of
+`tools/world/build_sites.luau` (42 tall, facing the causeway; check the passage is walkable: collision), rerun,
+shoot the three gates, save the place.
 
 ## 2026-11-14 — fight effects audit; wave 1: the slimes' side raised to the monsters' level
 
