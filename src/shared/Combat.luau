@@ -25,6 +25,7 @@ export type Unit = {
 	role: string,
 	class: string?,
 	tier: number?,
+	row: string,
 	-- a monster's rank in the dungeon (`boss`, `miniboss`, ...): bosses shrug off stuns, mini-bosses mostly
 	rank: string,
 	-- blows struck so far (every Skills[role].every-th is its skill), and whether the coming one is
@@ -92,6 +93,8 @@ export type Fight = {
 	fade: boolean?,
 	-- The last ultimate announcement on each side, independent of the other side.
 	ultimateAt: { [string]: number },
+	-- Tactics only change free target selection; the foe side remains Balanced.
+	tactics: { [string]: string },
 }
 -- `skill` is the way of fighting whose skill struck (a key of Config.Combat.Skills); a new `cast` event starts each
 -- Uncommon, Epic or Mythic skill; `amount` on a hit is health damage, and `absorbed` is barrier damage.
@@ -141,6 +144,7 @@ export type Fighter = {
 	class: string?,
 	tier: number?,
 	kind: string?,
+	row: string?,
 	-- its specials (keys of Config.Combat.Skills), taken in turn; left out, { role } when the role has a skill
 	skills: { string }?,
 	-- where it starts in the positional mode (flat, from the arena's middle)
@@ -251,6 +255,10 @@ local function unit(fighter: Fighter, side: string, rng: Rng, joinedAt: number?)
 		role = role,
 		class = fighter.class,
 		tier = fighter.tier,
+		row = if fighter.row and table.find(Config.Classes.Rows.Order, fighter.row)
+			then fighter.row
+			else (if fighter.class then (Config.Classes.Rows.Default :: any)[fighter.class] else nil)
+				or Config.Classes.Rows.Brawler,
 		-- (a dungeon monster's `defRole`, Dungeon.monster; read loosely so the fighter types elsewhere need not carry it)
 		rank = (fighter :: any).defRole or "",
 		blows = if isMend then 0 else start,
@@ -297,7 +305,7 @@ function Combat.new(
 	squad: { Fighter },
 	foes: { Fighter },
 	rng: Rng,
-	opts: { fair: boolean?, moves: boolean?, radius: number?, fade: boolean? }?
+	opts: { fair: boolean?, moves: boolean?, radius: number?, fade: boolean?, tactics: { [string]: string }? }?
 ): Fight
 	local units: { Unit } = {}
 	for _, fighter in squad do
@@ -315,6 +323,12 @@ function Combat.new(
 		radius = if opts then opts.radius else nil,
 		fade = if opts then opts.fade else nil,
 		ultimateAt = { squad = -math.huge, foe = -math.huge },
+		tactics = {
+			squad = if opts and opts.tactics and opts.tactics.squad
+				and table.find(Config.Classes.Tactics.Order, opts.tactics.squad)
+				then opts.tactics.squad else "balanced",
+			foe = "balanced",
+		},
 	}
 end
 
@@ -463,6 +477,57 @@ local function pullOf(u: Unit): number
 	return (Config.Combat.Pull :: any)[u.role] or (if kind then kind.pull else nil) or 1
 end
 
+-- Focus followers ask the leader through targetOf, which is defined after pick; the leader itself never recurses.
+local targetOf: (Fight, Unit) -> Unit?
+
+-- The first live Warrior leads, else the first Guardian, else highest attack (first in team order wins ties).
+local function leaderOf(fight: Fight, side: string): Unit?
+	local warrior: Unit? = nil
+	local guardian: Unit? = nil
+	local strongest: Unit? = nil
+	for _, mate in fight.units do
+		if mate.side == side and mate.hp > 0 then
+			if not strongest or mate.attack > strongest.attack then
+				strongest = mate
+			end
+			if not warrior and mate.class == "warrior" then
+				warrior = mate
+			elseif not guardian and mate.class == "guardian" then
+				guardian = mate
+			end
+		end
+	end
+	return warrior or guardian or strongest
+end
+
+-- A threatening foe has committed to someone currently in a middle or back row.
+local function backlineThreat(fight: Fight, fighter: Unit): Unit?
+	if fight.tactics[fighter.side] ~= "protect" then
+		return nil
+	end
+	if fighter.class ~= "warrior" and fighter.class ~= "guardian" then
+		return nil
+	end
+	local nearest: Unit? = nil
+	local best = math.huge
+	for _, foe in fight.units do
+		local prey = foe.target
+		if
+			foe.side ~= fighter.side
+			and foe.hp > 0
+			and prey and prey.hp > 0
+			and prey.side == fighter.side
+			and (prey.row == "middle" or prey.row == "back")
+		then
+			local d = if fight.moves then distance(fighter, foe) else 0
+			if d < best then
+				nearest, best = foe, d
+			end
+		end
+	end
+	return nearest
+end
+
 -- Whom a fighter goes for, by its way of fighting (Config.Combat.Aims): the one with the least health left, the one that
 -- hits hardest, or anyone, though a guard draws more of the blows (Config.Combat.Pull). A Guardian goes first for the
 -- nearest foe that is after a squishy team-mate.
@@ -476,6 +541,10 @@ local function pick(fight: Fight, attacker: Unit): Unit?
 	end
 	if #alive == 0 then
 		return nil
+	end
+	local threatened = backlineThreat(fight, attacker)
+	if threatened then
+		return threatened
 	end
 	if attacker.class == "guardian" then
 		local best: Unit? = nil
@@ -493,6 +562,15 @@ local function pick(fight: Fight, attacker: Unit): Unit?
 		end
 		if best then
 			return best
+		end
+	end
+	if fight.tactics[attacker.side] == "focus" then
+		local leader = leaderOf(fight, attacker.side)
+		if leader and leader ~= attacker then
+			local goal = targetOf(fight, leader)
+			if goal and goal.hp > 0 then
+				return goal
+			end
 		end
 	end
 	local aim = (c.Aims :: any)[attacker.role]
@@ -521,7 +599,7 @@ end
 
 -- Its target now: a taunted one goes for its taunter; one freed from a taunt cannot be taunted again for TauntFree and
 -- picks again by its own rule; any other keeps its target until it falls.
-local function targetOf(fight: Fight, a: Unit): Unit?
+targetOf = function(fight: Fight, a: Unit): Unit?
 	local by = a.tauntBy
 	if by then
 		if by.hp > 0 and a.tauntUntil > fight.seconds then
@@ -532,6 +610,11 @@ local function targetOf(fight: Fight, a: Unit): Unit?
 		a.tauntFree = fight.seconds + Config.Classes.TauntFree
 		a.target = pick(fight, a)
 		return a.target
+	end
+	local urgent = backlineThreat(fight, a)
+	if urgent then
+		a.target = urgent
+		return urgent
 	end
 	local target = a.target
 	if not target or target.hp <= 0 then
@@ -1770,6 +1853,9 @@ local function hop(fight: Fight, u: Unit, events: { Event })
 	end
 	local danger: Unit? = nil
 	local nearest = K.DangerStuds
+	if fight.tactics[u.side] == "protect" and (u.row == "middle" or u.row == "back") then
+		nearest *= Config.Classes.Tactics.protect.danger
+	end
 	for _, foe in foesOf(fight, u) do
 		local d = distance(u, foe)
 		if foe.target == u and d <= nearest then
