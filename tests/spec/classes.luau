@@ -1279,6 +1279,69 @@ return function(T: any)
 	end)
 
 
+
+	T.test("single-target Epic and Bash skills do not cast beyond reach; Volley needs a group", function()
+		for _, entry in {
+			{ class = "guardian", key = "shield_bash", tier = 2 },
+			{ class = "warrior", key = "breaker_strike", tier = 3 },
+			{ class = "ranger", key = "snare_arrow", tier = 3 },
+			{ class = "mage", key = "arcane_lance", tier = 3 },
+		} do
+			local fight = Combat.new({ slime("s", entry.class, { tier = entry.tier, x = 0 }) }, {
+				foe("f", { x = 100 }),
+			}, Rng.new(96), { moves = true })
+			arm(fight, "s", entry.key)
+			freeze(unitOf(fight, "f"))
+			local events = run(fight, 4)
+			T.eq(castOf(events, entry.key), nil, entry.key .. " is not worth casting from far away")
+			T.eq(unitOf(fight, "s").skillReady[entry.key], 0)
+		end
+		local volley = Combat.new({ slime("r", "ranger", { tier = 2 }) }, { foe("f") }, Rng.new(97))
+		arm(volley, "r", "arrow_volley")
+		freeze(unitOf(volley, "f"))
+		T.eq(castOf(run(volley, 3), "arrow_volley"), nil)
+		T.eq(unitOf(volley, "r").skillReady.arrow_volley, 0)
+		local ward = Combat.new({ slime("h", "healer", { tier = 3 }), slime("m") }, { foe("f") }, Rng.new(97))
+		arm(ward, "h", "ward")
+		freeze(unitOf(ward, "m"))
+		freeze(unitOf(ward, "f"), unitOf(ward, "m"))
+		T.eq(castOf(run(ward, 3), "ward"), nil, "a healthy ally is not warded")
+		T.eq(unitOf(ward, "h").skillReady.ward, 0)
+	end)
+
+	T.test("a Ring whose mates recover during its wind-up becomes a plain blow without a cooldown", function()
+		local fight = Combat.new({
+			slime("h", "healer", { tier = 2 }),
+			slime("a", nil, { hp = 30, maxHp = 100 }),
+			slime("b", nil, { hp = 40, maxHp = 100 }),
+		}, { foe("f") }, Rng.new(98))
+		local h = arm(fight, "h", "healing_ring")
+		for _, id in { "a", "b", "f" } do
+			freeze(unitOf(fight, id))
+		end
+		local aim: any = nil
+		for _ = 1, 25 do
+			for _, event in Combat.step(fight, DT) do
+				if event.kind == "aim" and event.from == "h" and event.skill == "healing_ring" then
+					aim = event
+				end
+			end
+			if aim then
+				break
+			end
+		end
+		T.ok(aim ~= nil, "Ring was announced")
+		unitOf(fight, "a").hp = 100
+		unitOf(fight, "b").hp = 100
+		local events = run(fight, 1)
+		T.eq(castOf(events, "healing_ring"), nil)
+		T.eq(h.skillReady.healing_ring, 0)
+		local plain = firstOf(events, function(event: any): boolean
+			return event.kind == "hit" and event.from == "h" and event.skill == nil
+		end)
+		T.ok(plain ~= nil, "the announced skill becomes a plain action")
+	end)
+
 	T.test("a mixed class fight is the same from the same seed", function()
 		local function play(): { any }
 			local fight = Combat.new({
