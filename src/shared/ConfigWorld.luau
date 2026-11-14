@@ -107,29 +107,31 @@ return {
 	Map = { Image = 110309697818054, MinX = -2300, MinZ = -2500, Size = 4600 },
 	-- What a zone's guard pays when it falls, by the zone's kind, in place of its own drops (the Dungeon's bosses pay
 	-- trophies that a short fight may not hand out every few minutes). Lines as a monster's drops (item, chance, min..max).
-	-- "trophy" is the region's own (Trophy below; a region without one pays none). Coins are multiplied by
-	-- 1 + CoinsPerTier x (tier - 1). Every other monster of a zone drops what its def says, at luck 1.
+	-- "trophy" is the region's own (Trophy below; a region without one pays none). Coins are what the guard pays at
+	-- level 0, raised by the zone's level as a pack monster's are (x 1 + level x Config.Economy.SellLevelStep): a mini
+	-- guard pays about what two or three packs round it do, a boss three times that (the owner, 2026-11-14: the guards'
+	-- coins match their new levels; they were 10-120 before). Every other monster of a zone drops what its def says,
+	-- at luck 1.
 	Reward = {
 		mini = {
-			{ item = "coins", chance = 1, min = 10, max = 16 },
+			{ item = "coins", chance = 1, min = 1000, max = 1600 },
 			{ item = "ore", chance = 1, min = 1, max = 2 },
 			{ item = "rare_part", chance = 0.5, min = 1, max = 1 },
 			{ item = "monster_core", chance = 0.15, min = 1, max = 1 },
 		},
 		boss = {
-			{ item = "coins", chance = 1, min = 30, max = 45 },
+			{ item = "coins", chance = 1, min = 3000, max = 4500 },
 			{ item = "rare_part", chance = 1, min = 2, max = 3 },
 			{ item = "monster_core", chance = 1, min = 1, max = 1 },
 			{ item = "boss_essence", chance = 0.5, min = 1, max = 1 },
 			{ item = "trophy", chance = 1, min = 2, max = 2 },
 		},
 		mega = {
-			{ item = "coins", chance = 1, min = 80, max = 120 },
+			{ item = "coins", chance = 1, min = 8000, max = 12000 },
 			{ item = "monster_core", chance = 1, min = 2, max = 3 },
 			{ item = "boss_essence", chance = 1, min = 2, max = 2 },
 		},
 	},
-	CoinsPerTier = 0.25,
 	Trophy = { meadow = "boar_tusk", mushroom = "glow_spore", ember = "ember_core", frost = "frost_fang" },
 	-- The zones, by their WorldPlan id.
 	--   map     the Config.Dungeon.Maps id its crowds are drawn from

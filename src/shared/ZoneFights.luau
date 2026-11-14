@@ -77,11 +77,11 @@ function ZoneFights.plan(id: string, wave: number, seed: number): { Monster }
 	return monsters
 end
 
--- What the zone's guard pays: Config.World.Reward of the zone's kind, the coins grown with the tier and "trophy" turned
--- into the region's own (dropped where the region has none).
+-- What the zone's guard pays: Config.World.Reward of the zone's kind, the coins raised by the zone's level as a pack
+-- monster's are (WorldPacks.killReward) and "trophy" turned into the region's own (dropped where the region has none).
 function ZoneFights.reward(id: string): { any }
 	local _, place = ZoneFights.zone(id)
-	local grow = 1 + W.CoinsPerTier * (place.tier - 1)
+	local grow = 1 + ZoneFights.level(id) * Config.Economy.SellLevelStep
 	local out: { any } = {}
 	for _, line in (W.Reward :: any)[place.kind] do
 		local item = if line.item == "trophy" then (W.Trophy :: any)[place.region] else line.item

@@ -21,8 +21,8 @@ a locked zone read "Beat its guard to open"; Travel took the player Home, and to
 error or warning of the map, packs or waystones in the log. Shots: `docs/references/world/shots/m5b_*.jpg`.
 A pack pays: with room in the vault a Lv 4 pack of five paid 120 a swarmer and 180 a spitter, "earned 660".
 A play test that logs "paid 0" has a full vault, not a fault: every Debug preset holds more coins than the vault
-(early 2000 of 2000, mid 50000 of 7200, late 1000000 of 246000) and fight income stops at the vault. Raise the pantry
-first (upgrades are free in Studio) to see coins paid.
+(early 2000 of 2000, mid 50000 of 7200, late 1000000 of 246000) and fight income stops at the vault. Spend the
+coins first (area upgrades cost them) until the wallet is under the vault to see coins paid.
 
 **Not verified.** A phone frame (the small map against the team chips at 360 x 640; the sheet's legend under the map
 on a narrow screen). The
@@ -41,8 +41,13 @@ team 61-86 % wins; StudioTest play: the 14 anchors carry those levels, m1 fought
 reading "Lv 6", no script error. Not verified: a far zone fought in play (only the sim), the zone's prompt card read by
 eye.
 
-**Open.** A guard pays 10-120 coins (`Config.World.Reward`, set when zones were for teams of 6-60) while one monster
-of a Lv 100 pack pays 600: the guards' coins want raising, the owner's call. Packs pay coins only. The waystone
+**Guards' coins match their levels (the owner said yes, 2026-11-14).** `Config.World.Reward` coins are now mini
+1000-1600, boss 3000-4500, mega 8000-12000 at level 0, raised by the zone's level as a pack monster's are (x 1 +
+level x 0.05; `CoinsPerTier` is gone): m1 1300-2080, m9 8400-13440, b3 20550-30825, the Heart 68000-102000. Fight
+income still stops at the vault. Proved: CHECK OK (795 passed), TYPES OK; StudioTest play: m1 won, the log "paid coins
+1925", the Victory card shows 1925, the wallet rose by it. Not verified: a boss or the Heart's payout in play.
+
+**Open.** Packs pay coins only. The waystone
 is the same lit stone for everyone (the map says which are open). King Goo's own model. Studio said once "No asset
 content representation" for `rbxassetid://135413526793030` (the Dungeon's green dandelion texture, not M5b's).
 

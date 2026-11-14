@@ -243,8 +243,10 @@ A finished model replaces its interim by one line in `tools/world/build_sites.lu
     m5 lava_bull, m6 lava_tortoise, b2 lava_bull then lava_golem, m7 dark_totem, m8 lava_phoenix, m9 ice_golem,
     m10 ice_mammoth, b3 ice_mammoth then ice_yeti. **The Heart (interim)**: the four region bosses in turn, until
     King Goo has a model.
-  - Pay: only the last guard pays the zone's reward (`Config.World.Reward` by kind, coins x `1 + 0.25 x (tier - 1)`,
-    a boss zone adds two of its region's trophy) in place of its own drops; every other monster pays its own drops.
+  - Pay: only the last guard pays the zone's reward (`Config.World.Reward` by kind; its coins, mini 1000-1600, boss 3000-4500,
+    mega 8000-12000 at level 0, are raised by the zone's level as a pack monster's are, x `1 + level x 0.05`: m1 pays
+    1300-2080, m9 8400-13440, b3 20550-30825, the Heart 68000-102000 (the owner, 2026-11-14; they were 10-120 x a
+    tier factor before); a boss zone adds two of its region's trophy) in place of its own drops; every other monster pays its own drops.
   - A won zone **rests** for the player who won it: mini 300 s, boss 900 s, mega 1800 s (the prompt reads
     "Resting m:ss"). No Next Level; Replay only after a defeat.
   - Wins are saved: `farm.world.beaten[zoneId]` = the time of the last win (**save schema 15**; a publish must shut

@@ -99,7 +99,7 @@ return function(T: any)
 		for _, line in ZoneFights.reward("heart") do
 			T.ok((Config.Dungeon.Materials :: any)[line.item], line.item .. " is a material")
 		end
-		-- coins grow with the tier
+		-- coins rise with the zone's level, as a pack monster's do
 		local function coins(id: string): number
 			for _, line in ZoneFights.reward(id) do
 				if line.item == "coins" then
@@ -108,8 +108,10 @@ return function(T: any)
 			end
 			return 0
 		end
-		T.eq(coins("m1"), W.Reward.mini[1].min)
+		local step = Config.Economy.SellLevelStep
+		T.eq(coins("m1"), math.floor(W.Reward.mini[1].min * (1 + ZoneFights.level("m1") * step) + 0.5))
 		T.ok(coins("m10") > coins("m1"))
+		T.ok(coins("heart") > coins("b3"))
 		-- the list a screen shows: every def has drop lines, the last is the guard's reward, and no boss's own trophy in a
 		-- mini zone
 		for id in W.Zones :: { [string]: any } do
