@@ -19,9 +19,13 @@ store): 108 packs in bands 1-8 (42 / 15 / 13 / 8 / 8 / 10 / 6 / 6), Lv 4-150; a 
 waystone seen standing right with the rune lit; the sheet opened from the small map and from a waystone's prompt;
 a locked zone read "Beat its guard to open"; Travel took the player Home, and to m1's waystone after m1 was won; no
 error or warning of the map, packs or waystones in the log. Shots: `docs/references/world/shots/m5b_*.jpg`.
+A pack pays: with room in the vault a Lv 4 pack of five paid 120 a swarmer and 180 a spitter, "earned 660".
+A play test that logs "paid 0" has a full vault, not a fault: every Debug preset holds more coins than the vault
+(early 2000 of 2000, mid 50000 of 7200, late 1000000 of 246000) and fight income stops at the vault. Raise the pantry
+first (upgrades are free in Studio) to see coins paid.
 
 **Not verified.** A phone frame (the small map against the team chips at 360 x 640; the sheet's legend under the map
-on a narrow screen). A pack's coin payout (the "mid" preset's wallet was over its cap, the log said "paid 0"). The
+on a narrow screen). The
 last numbers (`OutStuds` 54, set after measuring every zone's spot in the place) were not seen again in play. Two
 players at once. MapWork has not been given this code (StudioTest has).
 
