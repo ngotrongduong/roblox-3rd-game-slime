@@ -181,24 +181,8 @@ function Dungeon.spawnPoint(
 	return bestX, bestZ
 end
 
--- Where squad member `index` of `count` starts, flat from the arena's middle: a row across the middle, SquadBack studs
--- toward the player (the side PlayerSpot is on), every other slime a little further in. The server places the fighters
--- here and the client stands the bodies here, so both agree.
-function Dungeon.squadSpot(index: number, count: number): (number, number)
-	local spot = D.PlayerSpot
-	local length = math.sqrt(spot.x * spot.x + spot.z * spot.z)
-	local toX, toZ = 0, 1
-	if length > 1e-3 then
-		toX, toZ = spot.x / length, spot.z / length
-	end
-	local view = Config.Zombies.View
-	local along = (index - (count + 1) / 2) * view.FormationSpacing
-	local back = D.View.SquadBack - (index % 2) * view.FormationStagger
-	return -toZ * along + toX * back, toX * along + toZ * back
-end
-
--- The team sheet's rows face the monsters: the middle and back rows stand further towards the player.
--- Keep squadSpot above for the old client and balance runner until they adopt the new list.
+-- The rows share the same centred positions as camp fights. The back rows face away from the monsters,
+-- towards the player's spot, and the front row stays at the old SquadBack distance from the middle.
 function Dungeon.squadSpots(rows: { string }): { { x: number, z: number } }
 	local spot = D.PlayerSpot
 	local length = math.sqrt(spot.x * spot.x + spot.z * spot.z)
@@ -212,6 +196,13 @@ function Dungeon.squadSpots(rows: { string }): { { x: number, z: number } }
 		spots[index] = { x = -toZ * row.across + toX * back, z = toX * row.across + toZ * back }
 	end
 	return spots
+end
+
+-- An old client still asks for one member's place. It receives the new front-row layout, without odd-slot staggering.
+function Dungeon.squadSpot(index: number, count: number): (number, number)
+	local rows = table.create(count, Config.Classes.Rows.Brawler)
+	local place = Dungeon.squadSpots(rows)[index]
+	return place.x, place.z
 end
 
 -- The def of a monster by its id (the plan's monsters carry the id only): looked for on this map first, then on the others
