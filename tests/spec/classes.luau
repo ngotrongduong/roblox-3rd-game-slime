@@ -1494,9 +1494,10 @@ return function(T: any)
 		run(fight, 6)
 		local added = Combat.add(fight, slime("new", "mage", { tier = 5 }), "squad")
 		T.ok(added ~= nil)
-		T.near(added.skillReady.meteor, fight.seconds + Skills.meteor.first, 1e-9)
+		local joined = added :: any
+		T.near(joined.skillReady.meteor, fight.seconds + Skills.meteor.first, 1e-9)
 		T.near(
-			added.skillReady.arcane_lance,
+			joined.skillReady.arcane_lance,
 			Config.Combat.OpeningCooldown + Skills.arcane_lance.cooldown * Config.Classes.OpeningShare,
 			1e-9
 		)
@@ -1549,7 +1550,10 @@ return function(T: any)
 		for _ = 1, 100 do
 			for _, event in Combat.step(fight, DT) do
 				if event.kind == "aim" and event.skill == "meteor" then
-					table.insert(aimed[event.from], fight.seconds)
+					local from = event.from
+					if from and aimed[from] then
+						table.insert(aimed[from], fight.seconds)
+					end
 				end
 			end
 			if #aimed.a + #aimed.b >= 2 and #aimed.x >= 1 then
