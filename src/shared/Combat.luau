@@ -1721,6 +1721,20 @@ local function dash(fight: Fight, u: Unit, target: Unit, events: { Event }): boo
 	if d < s.minStuds or d > s.maxStuds then
 		return false
 	end
+	-- A ready Mythic Whirlwind takes precedence at the edge of melee range. Lower tiers keep their old dash.
+	local kind = kindOf(u)
+	if kind and (u.tier or 1) >= #kind.skills then
+		local key = kind.skills[#kind.skills]
+		local ultimate = (Config.Combat.Skills :: any)[key]
+		if (u.skillReady[key] or math.huge) <= fight.seconds and ultimateAllowed(fight, u, ultimate) then
+			local worth = classWorth(fight, u, target, key, function(foe: Unit): boolean
+				return not fight.moves or distance(u, foe) <= kind.reach + Config.Dungeon.Move.BlowSlack
+			end)
+			if worth then
+				return false
+			end
+		end
+	end
 	local reach = reachOf(u)
 	local bearing = math.atan2(u.z - target.z, u.x - target.x)
 	local tx, tz = target.x + math.cos(bearing) * reach, target.z + math.sin(bearing) * reach
