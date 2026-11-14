@@ -1,6 +1,6 @@
 # Status
 
-## 2026-11-14 — the team sheet: rows and three tactics (WEAPONS step 6; built, NOT yet seen in play)
+## 2026-11-14 — the team sheet: rows and three tactics (WEAPONS step 6; built and seen in play)
 
 **What it is.** On the Teams sheet every slime of a team has a row pill (Front / Mid / Back, tap to cycle) and the team
 one tactic button (Balanced / Focus Fire / Protect, pictures from ChatGPT in the owner's style, `Config.Ui.Icons.tactic*`).
@@ -14,10 +14,22 @@ start of a camp / pack fight and a Dungeon run and gives the tactic to `Combat.n
 row hops). `tools\types.ps1`: TYPES OK for `src/shared`, `src/server`, `UiTeams`, `ZombieTeams`, `DungeonFight`.
 `class_sim.luau 20 tactics`: no tactic dominates (table in WEAPONS §13).
 
-**Not verified.** Everything a play test shows: the pills and the tactic button on the sheet (and on a phone frame),
-rows at the start of a fight, a tactic changing whom the squad hits. Studio was held by the world session's play test.
+**Seen in play** (MapWork at f462001, the emulated phone frame 750 x 381, `Debug late`): the sheet shows the row pill
+under each slot and the tactic button with its picture, all inside the frame; a tap on a pill went Mid -> Back, a tap
+on the button Balanced -> Focus Fire. `SetTeamRow` / `SetTeamTactic` change `Rows` / `Tactic` on `Teams/<n>` and
+refuse a wrong row, tactic or slime. A Dungeon run (level 6) started in three rows: front +5 studs, middle 0, back -5
+along the squad's facing. A pack fight (p4x7, team 2 = back, back, front, front) started with the fronts about 11
+studs from the centre and the backs about 21, and was won. No error or warning from the sheet or the fights in the
+client or server log.
 
-**Also today.** VfxLib 60b30ec: Bulwark's spirit knight redrawn solid for bright ground (not yet looked at in a run).
+**Not verified.** A tactic visibly changing whom the squad hits in a live fight (level-80 slimes end a fight in
+seconds; the rules are proved by tests and `class_sim` only). A real phone. The slots do not show the weapon's
+picture (§6 mentions it; not built).
+
+**Also today.** VfxLib 60b30ec: Bulwark's spirit knight redrawn solid for bright ground: seen in play on the meadow
+grass at the game camera, gold and navy, clear against the bright ground (Studio warned once "No asset content
+representation" for its picture `summon_guardian_bright`, and for `rime_flip`, `acid_fizz_flip` and the dark totem's;
+the knight drew all the same).
 Ember Lava seen in a run with both Legendary debug teams: Meteor is strong and Catalyst Cloud reads on the dark ground;
 Bulwark, Whirlwind, Arrow Rain, Momentum and Last Stand played there but were not framed.
 
