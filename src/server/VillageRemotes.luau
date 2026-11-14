@@ -186,6 +186,10 @@ local function request(player: Player, data: any): { ok: boolean, reason: string
 		print(Config.LogPrefix, "zombies: team", data.team, "line-up", table.concat(data.slimeIds, ","))
 	elseif action == "SetTeamRepeat" then
 		print(Config.LogPrefix, "zombies: team", data.team, "repeat", if data.on then "on" else "off")
+	elseif action == "SetTeamRow" then
+		print(Config.LogPrefix, "zombies: team", data.team, "slime", data.slimeId, "row", data.row)
+	elseif action == "SetTeamTactic" then
+		print(Config.LogPrefix, "zombies: team", data.team, "tactic", data.tactic)
 	elseif action == "Revive" then
 		print(Config.LogPrefix, "zombies: revived", data.slimeId)
 	elseif action == "SmithyCraft" then
