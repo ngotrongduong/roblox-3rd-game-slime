@@ -248,6 +248,12 @@ return function(T: any)
 		local fourth = spots[4].x * acrossX + spots[4].z * acrossZ
 		T.near(first + fourth, 0, 1e-9, "the two front slimes are centred")
 		T.near(fourth - first, Config.Zombies.View.FormationSpacing, 1e-9)
+		local fronts = Dungeon.squadSpots({ "front", "front", "front", "front" })
+		for index, position in fronts do
+			local oldX, oldZ = Dungeon.squadSpot(index, #fronts)
+			T.near(oldX, position.x, 1e-9)
+			T.near(oldZ, position.z, 1e-9)
+		end
 	end)
 
 end
