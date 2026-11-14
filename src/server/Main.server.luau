@@ -2,6 +2,7 @@
 -- Starts the server services. The server decides everything; clients draw and ask.
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
+local StarterPlayer = game:GetService("StarterPlayer")
 
 local Config = require(ReplicatedStorage.Shared.Config)
 local FarmSave = require(ReplicatedStorage.Shared.FarmSave)
@@ -22,6 +23,9 @@ local VillageRemotes = require(script.Parent.VillageRemotes)
 local WavingFlag = require(script.Parent.WavingFlag)
 local ZombieFights = require(script.Parent.ZombieFights)
 local ZoneGuards = require(script.Parent.ZoneGuards)
+
+-- Every character spawns walking at the world's speed.
+StarterPlayer.CharacterWalkSpeed = Config.World.WalkSpeed
 
 -- The flag's and the library props' meshes start loading before any plot needs one.
 WavingFlag.start()

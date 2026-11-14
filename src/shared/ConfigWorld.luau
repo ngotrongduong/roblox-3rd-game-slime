@@ -4,6 +4,8 @@
 -- wave is the Dungeon's crowd of that wave number on the zone's map, or one named monster alone. The last wave is always
 -- one monster: the zone's guard. The rules are shared/ZoneFights. Read as Config.World.
 return {
+	-- How fast a player walks, studs a second (the owner, 2026-11-14: twice Roblox's own 16; the world is big).
+	WalkSpeed = 32,
 	-- The workspace folders the server makes: the prompt anchor of every zone, the seal of every gate of the Heart.
 	Folder = "ZoneGuards",
 	GateFolder = "ZoneGates",
