@@ -1,0 +1,208 @@
+-- Renewal Rain: the heal for many, played at a spot where the allies stand. A canopy of soft mint clouds gathers over
+-- a wide area (about 20 studs across) and a wave of light runs out over the ground beneath it; then a rain of light
+-- falls from the clouds over the whole area, and where each drop lands a little splash of rings or a flower of
+-- light opens on the ground. The owner's heal crosses and motes of light rise all over it, stars twinkle in the air,
+-- and after about 3 s the clouds thin away. A rain from the sky over a crowd, not the sanctuary's circle opening round
+-- one caster. Its wind-up is skill.renewal_charge on the caster.
+local RAIN = { { 0, { 235, 255, 250 } }, { 0.5, { 150, 245, 210 } }, { 1, { 90, 220, 170 } } }
+local MINT = { { 0, { 230, 255, 235 } }, { 1, { 130, 235, 180 } } }
+local GOLD = { { 0, { 255, 250, 225 } }, { 1, { 255, 220, 140 } } }
+-- (the rain falls from START to STOP; the clouds are gone by FADE)
+local START = 0.35
+local STOP = 2.6
+local FADE = 3.3
+-- (the clouds' height over the ground, and the area it rains on)
+local SKY = 9.5
+local AREA = 10
+
+return {
+	id = "skill.renewal_rain",
+	name = "Renewal Rain",
+	kind = "skill",
+	tier = "heavy",
+	host = "character",
+	refHeight = 5,
+	tags = { "heal", "rain", "water", "nature", "flower", "aoe", "skill", "green", "aqua", "support", "ultimate" },
+	blend = "additive",
+	tintable = false,
+	markers = { rain = START, heal = START + 0.3, peak = 1.5 },
+	pieces = {
+		{
+			-- the canopy of soft mint clouds over the area
+			name = "clouds",
+			texture = "smoke_cloud_soft",
+			color = MINT,
+			at = "ground",
+			offset = { 0, SKY + 0.5, 0 },
+			box = { 3.6, 0.1, 3.6 },
+			shape = "Box",
+			count = 7,
+			life = { FADE - 0.2, FADE },
+			size = { { 0, 3 }, { 0.12, 8 }, { 1, 9 } },
+			transparency = { { 0, 1 }, { 0.12, 0.72 }, { 0.75, 0.75 }, { 1, 1 } },
+			speed = { 0.2, 0.4 },
+			rotation = { -180, 180 },
+			rotSpeed = { -8, 8 },
+			lightEmission = 1,
+			brightness = 0.45,
+		},
+		{
+			-- the rain of light falling from them over the whole area
+			name = "rain",
+			texture = "needle_glow",
+			color = RAIN,
+			at = "ground",
+			offset = { 0, SKY, 0 },
+			radius = AREA,
+			shape = "Disc",
+			direction = "Bottom",
+			orientation = "VelocityParallel",
+			-- (VelocityParallel lays a picture's width along the flight: the needle turned a quarter falls point down,
+			-- lesson 112)
+			rotation = { 90, 90 },
+			life = { 0.3, 0.32 },
+			size = { { 0, 2.1 }, { 1, 1.8 } },
+			transparency = { { 0, 0.5 }, { 0.2, 0.1 }, { 1, 0.2 } },
+			speed = { 30, 30 },
+			lightEmission = 1,
+			brightness = 3,
+			stream = { from = START, to = STOP, rate = { 36, 48 } },
+		},
+		{
+			-- a wave of light running out over the ground beneath it
+			name = "wave",
+			texture = "ring_wave",
+			color = RAIN,
+			at = "ground",
+			flat = true,
+			count = 1,
+			delay = 0.2,
+			life = { 0.8, 0.8 },
+			size = { { 0, 2 }, { 1, 24 } },
+			transparency = { { 0, 0 }, { 0.6, 0.35 }, { 1, 1 } },
+			lightEmission = 1,
+			brightness = 2,
+			zOffset = 0.3,
+		},
+		{
+			-- a faint glow over the wet ground while it rains
+			name = "glow",
+			texture = "glow_soft",
+			color = MINT,
+			at = "ground",
+			flat = true,
+			count = 1,
+			delay = 0.2,
+			life = { FADE - 0.3, FADE - 0.3 },
+			size = { { 0, 8 }, { 0.15, 21 }, { 1, 22 } },
+			transparency = { { 0, 1 }, { 0.15, 0.7 }, { 0.8, 0.72 }, { 1, 1 } },
+			lightEmission = 1,
+			brightness = 0.8,
+			zOffset = 0.1,
+		},
+		{
+			-- where drops land: flowers of light opening on the ground
+			name = "blooms",
+			texture = "flower_burst_flip",
+			color = MINT,
+			at = "ground",
+			radius = AREA,
+			shape = "Disc",
+			flat = true,
+			life = { 0.5, 0.6 },
+			size = { { 0, 0.8 }, { 0.4, 2.3 }, { 1, 2.6 } },
+			transparency = { { 0, 0 }, { 0.7, 0.2 }, { 1, 1 } },
+			rotation = { -180, 180 },
+			flipbook = { layout = "Grid4x4", mode = "OneShot" },
+			lightEmission = 1,
+			brightness = 2,
+			zOffset = 0.4,
+			stream = { from = START + 0.3, to = STOP + 0.3, rate = { 14, 14 } },
+		},
+		{
+			-- ... and splashes of rings
+			name = "splashes",
+			texture = "splash_rings_flip",
+			color = RAIN,
+			at = "ground",
+			radius = AREA,
+			shape = "Disc",
+			flat = true,
+			life = { 0.45, 0.5 },
+			size = { { 0, 1.6 }, { 1, 2.4 } },
+			transparency = { { 0, 0 }, { 0.7, 0.3 }, { 1, 1 } },
+			flipbook = { layout = "Grid4x4", mode = "OneShot" },
+			lightEmission = 1,
+			brightness = 2,
+			zOffset = 0.35,
+			stream = { from = START + 0.3, to = STOP + 0.3, rate = { 12, 12 } },
+		},
+		{
+			-- the owner's heal crosses rising all over it (never recoloured)
+			name = "crosses",
+			texture = "healCross",
+			at = "ground",
+			radius = AREA - 1,
+			shape = "Disc",
+			direction = "Top",
+			life = { 1, 1.3 },
+			size = { { 0, 0 }, { 0.15, 1.3 }, { 1, 1 } },
+			transparency = { { 0, 0 }, { 0.75, 0.1 }, { 1, 1 } },
+			speed = { 2.5, 3.5 },
+			drag = 0.5,
+			rotation = { 0, 0 },
+			lightEmission = 0.4,
+			brightness = 1.4,
+			stream = { from = START + 0.3, to = STOP - 0.3, rate = { 6, 6 } },
+		},
+		{
+			-- motes of light rising off the ground
+			name = "motes",
+			texture = "glow_dot",
+			color = GOLD,
+			at = "ground",
+			radius = AREA,
+			shape = "Disc",
+			direction = "Top",
+			life = { 1, 1.4 },
+			size = { { 0, 0 }, { 0.2, 0.3 }, { 1, 0.1 } },
+			transparency = { { 0, 0.2 }, { 0.8, 0.3 }, { 1, 1 } },
+			speed = { 1.5, 3 },
+			lightEmission = 1,
+			brightness = 3,
+			secondary = true,
+			stream = { from = START + 0.3, to = STOP, rate = { 10, 10 } },
+		},
+		{
+			-- stars twinkling in the rain
+			name = "twinkles",
+			texture = "star_twinkle",
+			color = GOLD,
+			at = "ground",
+			offset = { 0, 3, 0 },
+			box = { 3.6, 1, 3.6 },
+			shape = "Box",
+			life = { 0.3, 0.5 },
+			size = { { 0, 0 }, { 0.4, 0.9 }, { 1, 0 } },
+			transparency = { { 0, 0 }, { 1, 0.2 } },
+			speed = { 0.5, 1 },
+			direction = "Bottom",
+			rotation = { -45, 45 },
+			lightEmission = 1,
+			brightness = 3,
+			secondary = true,
+			stream = { from = START, to = STOP, rate = { 8, 8 } },
+		},
+	},
+	light = {
+		color = { 160, 255, 210 },
+		range = 22,
+		keys = { { 0, 0 }, { START, 1.5 }, { START + 0.3, 2.6 }, { STOP, 2 }, { FADE, 0 } },
+	},
+	source = {
+		from = "the library (healing set, 2026-11-09)",
+		art = "the owner's heal cross (healCross, never recoloured); free Creator Store pack textures (no scripts: smoke_cloud_soft, needle_glow, ring_wave, glow_soft, flower_burst_flip, splash_rings_flip, glow_dot, star_twinkle)",
+		licence = "the owner's own art; Creator Store free assets (no scripts kept)",
+	},
+	notes = "Play at the middle of the area (the caster's feet, or a spot the player picked): it rains on about 10 studs round it from 0.35 s (markers.rain), heals from 0.65 s (markers.heal) and is over by 3.3 s. skill.renewal_charge on the caster is its wind-up; skill.blessing_light is the heal for one.",
+}

@@ -51,11 +51,30 @@ return function(T)
 	T.test("every library effect of the slimes' fight is imported", function()
 		local V = Config.Zombies.View
 		for name, look in V.Skill.Looks :: any do
-			for _, field in { "vfx", "hitVfx", "lib" } do
+			for _, field in { "vfx", "hitVfx", "lib", "charge" } do
 				if look[field] then
 					T.ok(imported(look[field]), `Skill.Looks.{name}.{field} {look[field]}`)
 				end
 			end
+			-- (a skill drawn from its "cast" event lands its blows on a marker its effect really has)
+			if look.cast and imported(look.vfx) then
+				local kind, file = string.match(look.vfx, "^(%w+)%.([%w_]+)$")
+				local effect = require(`../../src/shared/VfxLib/Effects/{kind}/{file}`)
+				T.ok(effect.markers[look.impact] ~= nil, `Skill.Looks.{name}: {look.vfx} has the marker {look.impact}`)
+			end
+		end
+		-- (the server sends a "cast" for every class skill above the Common one: without a look of that kind nothing shows)
+		for class, kind in Config.Classes.Kinds :: any do
+			for index, key in kind.skills do
+				local look = (V.Skill.Looks :: any)[key]
+				T.ok(look ~= nil, `{class}'s {key} has a look`)
+				if index > 1 then
+					T.ok(look and look.cast ~= nil, `{class}'s {key} is drawn from its cast`)
+				end
+			end
+		end
+		for name, look in V.Status.Looks :: any do
+			T.ok(imported(look.vfx), `Status.Looks.{name} {look.vfx}`)
 		end
 		for way, look in V.Fx.CritLooks :: any do
 			T.ok(imported(look.vfx), `CritLooks.{way} {look.vfx}`)

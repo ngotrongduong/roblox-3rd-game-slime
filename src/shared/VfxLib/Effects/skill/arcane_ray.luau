@@ -1,0 +1,246 @@
+-- Arcane Ray: a beam skill (skills wave 2, the owner's "Tia Thần Quang"). A magic circle of its own (ChatGPT: a pink
+-- hexagram, moons, a ring of runes) stands up before the caster's hands, facing the target, a ring of light turning
+-- the other way inside it; then a BIG ENERGY BEAM fires straight from the hands to the target and holds about a
+-- second, its body flowing (ChatGPT: pink and violet ribbons wound round a white core, tiling along it), a white-hot
+-- core inside and two strands twisting round it; where it strikes, sparks spray out over the target, a star of light
+-- turns and glitter flies. Then the beam narrows to a thread and ends with a last flash, and the circle closes. One
+-- tone: pink and violet with white. Played at the target with opts.from = the caster's hands. Its wind-up is
+-- skill.arcane_charge on the caster.
+local PINK = { { 0, { 255, 215, 250 } }, { 1, { 220, 90, 255 } } }
+local OPEN = 0.25 -- (the circle is open)
+local FIRE = 0.3
+local HOLD = 1.15
+local END = FIRE + HOLD
+-- (the circle before the hands, in the caster's frame: -z toward the target)
+local CIRCLE = { 0, 0, -1.2 }
+-- (the beam: it bursts out wide, settles, holds, then narrows to nothing)
+local GROW = { { 0, 0.15 }, { 0.05, 1.3 }, { 0.14, 1 }, { 0.82, 1 }, { 0.95, 0.15 }, { 1, 0 } }
+
+return {
+	id = "skill.arcane_ray",
+	name = "Arcane Ray",
+	kind = "skill",
+	tier = "heavy",
+	host = "character",
+	refHeight = 5,
+	tags = { "arcane", "magic", "beam", "ray", "circle", "ranged", "skill", "pink", "violet" },
+	blend = "additive",
+	tintable = false,
+	markers = { fire = FIRE, peak = FIRE + 0.1, ending = END },
+	pieces = {
+		{
+			-- the magic circle standing before the hands, facing the target, slowly turning
+			name = "circle",
+			texture = "floor_arcane",
+			color = { { 255, 255, 255 } },
+			caster = CIRCLE,
+			upright = true,
+			count = 1,
+			life = { END + 0.2, END + 0.2 },
+			size = { { 0, 0 }, { OPEN / (END + 0.2), 4.6 }, { 0.88, 4.6 }, { 1, 0 } },
+			transparency = { { 0, 0.4 }, { OPEN / (END + 0.2), 0 }, { 0.88, 0.05 }, { 1, 1 } },
+			rotation = { 0, 0 },
+			rotSpeed = { 35, 35 },
+			lightEmission = 1,
+			brightness = 1.4,
+		},
+		{
+			-- ... a ring of light inside it turning the other way
+			name = "inner",
+			texture = "ring_magic_a",
+			color = PINK,
+			caster = { CIRCLE[1], CIRCLE[2], CIRCLE[3] - 0.1 },
+			upright = true,
+			count = 1,
+			life = { END + 0.2, END + 0.2 },
+			size = { { 0, 0 }, { OPEN / (END + 0.2), 2.6 }, { 0.88, 2.6 }, { 1, 0 } },
+			transparency = { { 0, 0.5 }, { OPEN / (END + 0.2), 0.1 }, { 0.88, 0.15 }, { 1, 1 } },
+			rotation = { 0, 0 },
+			rotSpeed = { -80, -80 },
+			lightEmission = 1,
+			brightness = 2,
+			zOffset = 0.5,
+		},
+		{
+			-- ... a glow behind it
+			name = "halo",
+			texture = "glow_soft",
+			color = PINK,
+			caster = CIRCLE,
+			count = 1,
+			life = { END + 0.2, END + 0.2 },
+			size = { { 0, 0 }, { 0.2, 5.5 }, { 0.88, 5.5 }, { 1, 0 } },
+			transparency = { { 0, 0.9 }, { 0.2, 0.55 }, { 0.88, 0.6 }, { 1, 1 } },
+			lightEmission = 1,
+			brightness = 1,
+			zOffset = -1,
+		},
+		{
+			-- where the beam strikes: sparks spraying out over the target ...
+			name = "spray",
+			texture = "needle_soft",
+			color = PINK,
+			at = "body",
+			orientation = "VelocityParallel",
+			life = { 0.25, 0.45 },
+			size = { { 0, 0.6 }, { 1, 0 } },
+			transparency = { { 0, 0 }, { 1, 0.3 } },
+			speed = { 14, 26 },
+			spread = { 180, 180 },
+			drag = 3,
+			squash = { { 0, -1.2 }, { 1, -0.6 } },
+			lightEmission = 1,
+			brightness = 4,
+			stream = { from = FIRE + 0.02, to = END - 0.15, rate = { 70, 50 } },
+		},
+		{
+			-- ... a glow on it ...
+			name = "burn",
+			texture = "glow_soft",
+			color = PINK,
+			at = "body",
+			count = 1,
+			delay = FIRE,
+			life = { HOLD, HOLD },
+			size = { { 0, 0 }, { 0.06, 6 }, { 0.82, 5 }, { 1, 0 } },
+			transparency = { { 0, 0.3 }, { 0.82, 0.45 }, { 1, 1 } },
+			lightEmission = 1,
+			brightness = 1.2,
+			zOffset = 1,
+		},
+		{
+			-- ... a star of light turning on it ...
+			name = "star",
+			texture = "star_flare_big",
+			color = PINK,
+			at = "body",
+			count = 1,
+			delay = FIRE,
+			life = { HOLD, HOLD },
+			size = { { 0, 2 }, { 0.06, 7 }, { 0.82, 5 }, { 1, 0 } },
+			transparency = { { 0, 0 }, { 0.82, 0.2 }, { 1, 1 } },
+			rotation = { 0, 0 },
+			rotSpeed = { 90, 90 },
+			lightEmission = 1,
+			brightness = 1.6,
+			zOffset = 2,
+		},
+		{
+			-- ... glitter flying off it ...
+			name = "glitter",
+			texture = "sparkle_cross_flip",
+			color = PINK,
+			at = "body",
+			life = { 0.4, 0.7 },
+			size = { { 0, 0.5 }, { 1, 0 } },
+			transparency = { { 0, 0 }, { 1, 0.2 } },
+			speed = { 5, 11 },
+			spread = { 180, 180 },
+			drag = 3,
+			rotation = { -180, 180 },
+			flipbook = { layout = "Grid4x4", mode = "OneShot" },
+			lightEmission = 1,
+			brightness = 2.5,
+			secondary = true,
+			stream = { from = FIRE + 0.05, to = END - 0.1, rate = { 24, 24 } },
+		},
+		{
+			-- ... a ring rolling out over the ground as it first strikes ...
+			name = "ring",
+			texture = "ring_rays",
+			color = PINK,
+			at = "ground",
+			flat = true,
+			count = 1,
+			delay = FIRE,
+			life = { 0.5, 0.5 },
+			size = { { 0, 3 }, { 1, 14 } },
+			transparency = { { 0, 0.05 }, { 0.6, 0.5 }, { 1, 1 } },
+			lightEmission = 1,
+			brightness = 2,
+		},
+		{
+			-- ... and a last flash as it ends
+			name = "flash",
+			texture = "burst_star_c",
+			color = PINK,
+			at = "body",
+			count = 1,
+			delay = END - 0.08,
+			life = { 0.3, 0.3 },
+			size = { { 0, 3 }, { 1, 8 } },
+			transparency = { { 0, 0 }, { 0.5, 0.3 }, { 1, 1 } },
+			rotation = { -180, 180 },
+			lightEmission = 1,
+			brightness = 1.5,
+			zOffset = 2,
+		},
+	},
+	beams = {
+		{
+			-- the beam: ribbons of pink and violet round a white core, flowing toward the target
+			name = "ray",
+			start = "from",
+			texture = "arcane_band",
+			colors = { { 255, 255, 255 } },
+			from = { 0, 0, 0 },
+			to = { 0, 0, 0 },
+			width = { 3, 3.6 },
+			delay = FIRE,
+			life = HOLD,
+			grow = GROW,
+			transparency = { { 0, 0 }, { 0.9, 0 }, { 1, 1 } },
+			length = 7,
+			speed = 3,
+			face = true,
+			glow = 1.6,
+			zOffset = 1,
+		},
+		{
+			-- ... a white-hot core inside it
+			name = "core",
+			start = "from",
+			texture = "band_white",
+			colors = { { 255, 250, 255 }, { 255, 200, 245 } },
+			from = { 0, 0, 0 },
+			to = { 0, 0, 0 },
+			width = { 0.7, 0.9 },
+			delay = FIRE,
+			life = HOLD,
+			grow = GROW,
+			transparency = { { 0, 0 }, { 0.9, 0 }, { 1, 1 } },
+			face = true,
+			glow = 2,
+			zOffset = 2,
+		},
+		{
+			-- ... and two strands twisting round it the other way
+			name = "twist",
+			start = "from",
+			texture = "beam_twist",
+			colors = { { 255, 150, 235 }, { 170, 95, 255 } },
+			from = { 0, 0, 0 },
+			to = { 0, 0, 0 },
+			width = { 4.2, 5 },
+			delay = FIRE,
+			life = HOLD,
+			grow = GROW,
+			transparency = { { 0, 0.3 }, { 0.9, 0.3 }, { 1, 1 } },
+			length = 5,
+			speed = -4,
+			face = true,
+			glow = 1.2,
+		},
+	},
+	light = {
+		color = { 235, 120, 255 },
+		range = 20,
+		keys = { { 0, 0.5 }, { FIRE, 1.5 }, { FIRE + 0.05, 6 }, { END - 0.2, 4 }, { END, 1 }, { END + 0.4, 0 } },
+	},
+	source = {
+		from = "the library (skills wave 2, 2026-11-08)",
+		art = "ChatGPT pictures drawn for the library (floor_arcane, arcane_band); free Creator Store pack textures (no scripts: ring_magic_a, glow_soft, needle_soft, star_flare_big, sparkle_cross_flip, ring_rays, burst_star_c, band_white, beam_twist)",
+		licence = "ChatGPT output owned by the owner; Creator Store free assets (no scripts kept)",
+	},
+	notes = "Play at the target with opts.from = the caster's hands: the circle opens before them and the beam holds from markers.fire to markers.ending (a game may deal damage a few times a second in between). skill.arcane_charge on the caster is its wind-up.",
+}

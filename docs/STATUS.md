@@ -119,9 +119,27 @@ bramble, the dark maps, a real phone.
   Barrage keeps the owner's orbs with `burst.ether_burst` (the library's `skill.mage_barrage` is heavy and still pale
   on snow).
 
-**Next:** the skills of Uncommon to Legendary are not built in the game yet; their library pieces wait on library main
-(Shield Bash, Shield Wall, Bulwark, Frost Burst, Meteor wind-up, Ward, Healing Ring wind-up, Squad Tonic, Cursed
-Flask, Catalyst Cloud, Arrow Rain warning) and are imported when each skill is built.
+**Wave 3, done the same day: the twelve Uncommon and Epic class skills** (`docs/WEAPONS.md` §11 step 4; brief
+`docs/briefs/class-skills-4.md`; VfxLib 3373918, 119 effects):
+- **Rules** (`Combat`, `ConfigClasses`, written by ChatGPT, 16 tests): a class knows one skill a weapon tier
+  (`Kinds.<class>.skills`), each on its own clock; the highest one that is ready and worth it is cast. Guardian Shield
+  Bash, Shield Wall; Warrior Area Slash, Breaker Strike; Ranger Arrow Volley, Snare Arrow; Mage Frost Burst, Arcane
+  Lance; Healer Healing Ring, Ward (a barrier); Alchemist Squad Tonic, Cursed Flask. Each sends a "cast" event first.
+- **Drawing** (`View.Skill.Looks` rows with `cast`, `client/ZombieFight` `onCast`): each skill is one library effect
+  played once from its "cast", and its blows, heals and statuses land on the effect's marker: `skill.guardian_bash`,
+  `guardian_wall`, `great_cleave`, `cross_cut` (+ `hit.shield_shatter`), `fan_shot`, `arrow_ring`, `mage_frost_burst`,
+  `arcane_ray`, `renewal_rain`, `healer_ward` (then `buff.warded` while the barrier holds), `alchemist_tonic`,
+  `alchemist_cursed`. Squad Tonic and Shield Wall leave the attack / defence icons of `buff.stat_set` on those they cover.
+- **Seen** in MapWork Play, real Dungeon runs (levels 3 and 6, both debug teams in Mythic weapons, the camera 22 studs
+  behind the squad, pictures taken in the engine at each effect's beats): all twelve were cast with no warning or
+  error; looked at: Shield Bash, Breaker Strike, Arrow Volley, Frost Burst, Arcane Lance, Shield Wall, Squad Tonic,
+  Cursed Flask, Healing Ring, Ward. **Not verified:** Area Slash and Snare Arrow framed (they played, not looked at),
+  Ward's lasting bubble alone (only in a crowded melee), a real phone. Healing Ring is faint on the bright meadow.
+
+**Next:** the six Mythic ultimates and the six Legendary traits (step 5; brief `docs/briefs/class-skills-5.md`, sent to
+ChatGPT); their library pieces are on library main (`skill.guardian_bulwark`, `spirit_guardian`, `summon_call`,
+`whirlwind_slash`, `arrow_volley`, `ranger_rain_warning`, `meteor_fall`, `mage_meteor_windup`, `healing_sanctuary`,
+`sanctuary_charge`, `alchemist_catalyst`).
 
 ## 2026-11-14 — favorite the game and join the group: a big gift each, the tutorial's last step
 

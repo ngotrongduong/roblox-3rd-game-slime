@@ -388,6 +388,11 @@ family a time on its Weapon tab; icons cut from the owner's `equip-*.png`), test
 Studio dungeon run with both debug teams: every class casts its skill, no errors. Every tier uses the Common skill until
 steps 4-5.
 
+**Step 4 (2026-11-14):** the twelve Uncommon and Epic skills are built (`Kinds.<class>.skills`, one a tier, each on its
+own clock; numbers in `Config.Classes.Skills`; the contract in `docs/briefs/class-skills-4.md`; effects in
+`docs/STATUS.md`). The numbers follow the owner's skill-power rule (§3's table is the design, Config is what runs).
+Mythic and Legendary weapons cast the Epic skill until step 5.
+
 Simpler than §2-§3 for now (each is a later fix, none changes a rule the owner sees):
 - No threat table: a monster's target is still today's pick by its kind; a Guardian draws foes by Taunt and Pull (Pull 3).
 - Ranged slimes do not shoot while walking (80%) and the Healer and Alchemist do not back away; Rangers and Mages hop.

@@ -316,7 +316,42 @@ return {
 					ownHit = true,
 				},
 				mend = { vfx = "skill.blessing_light", impact = "heal" },
+				-- The Uncommon and Epic skills (docs/WEAPONS.md §3), each the library's own, drawn once from its "cast"
+				-- event (`cast`, client/ZombieFight onCast) and landing every blow, heal and status on its marker
+				-- (`impact`): "caster" at the caster facing its foe (a melee one lunges first and the effect opens as it
+				-- arrives; a fan of arrows is stretched to the foe, `range` its own length in studs), "target" on the foe,
+				-- thrown from the weapon, "middle" on the floor in the middle of everyone it strikes or heals, "each" on
+				-- everyone its status comes to (riding them). `wide` times its size; `ref`: an effect made for a body that
+				-- tall is sized to the foe it is thrown at; `charge`: its own wind-up in place of the class's; `hitVfx` on
+				-- the foe as the blow lands (Breaker Strike breaks the armour).
+				shield_bash = { vfx = "skill.guardian_bash", cast = "caster", impact = "impact", ownHit = true },
+				area_slash = {
+					vfx = "skill.great_cleave",
+					cast = "caster",
+					impact = "impact",
+					ownHit = true,
+					charge = "skill.battle_focus",
+				},
+				arrow_volley = { vfx = "skill.fan_shot", cast = "caster", impact = "impact", range = 16 },
+				frost_burst = { vfx = "skill.mage_frost_burst", cast = "middle", impact = "burst", wide = 1.5 },
+				healing_ring = { vfx = "skill.renewal_rain", cast = "middle", impact = "heal" },
+				squad_tonic = { vfx = "skill.alchemist_tonic", cast = "each", impact = "pop" },
+				shield_wall = { vfx = "skill.guardian_wall", cast = "caster", impact = "up" },
+				breaker_strike = {
+					vfx = "skill.cross_cut",
+					cast = "caster",
+					impact = "impact",
+					ownHit = true,
+					charge = "skill.battle_focus",
+					hitVfx = "hit.shield_shatter",
+				},
+				snare_arrow = { vfx = "skill.arrow_ring", cast = "target", impact = "impact", ownHit = true },
+				arcane_lance = { vfx = "skill.arcane_ray", cast = "target", impact = "fire", ownHit = true },
+				ward = { vfx = "skill.healer_ward", cast = "each", impact = "closed" },
+				cursed_flask = { vfx = "skill.alchemist_cursed", cast = "target", impact = "impact", ref = 3 },
 			},
+			-- a fan of arrows is never stretched further than this many times its size
+			FanMost = 1.6,
 			PierceEarliest = 0.3,
 			-- A library skill's level by the caster's weapon tier (a slime with no weapon in hand plays Common's), and how
 			-- much bigger it is drawn: the higher the tier, the grander.
@@ -350,8 +385,15 @@ return {
 						crystal_burst = "frost",
 						frost_breath = "frost",
 						frost_gale = "frost",
+						frost_burst = "frost",
 					},
 				},
+				-- Squad Tonic: the swords of the attack buff rise from everyone it makes stronger
+				empowered = { vfx = "buff.stat_set", variant = "attack", graded = true, minHeight = 4 },
+				-- Shield Wall: the shields breathe on the team-mates it covers
+				walled = { vfx = "buff.stat_set", variant = "defence", graded = true, minHeight = 4 },
+				-- Ward (and a Legendary Healer's Overflow): the bubble stays round the slime while its barrier holds
+				warded = { vfx = "buff.warded" },
 				stunned = { vfx = "buff.emote", variant = "confused", minHeight = 6 },
 				-- Jelly Guard and the monsters' walls, while they cover their team-mates
 				guarded = { vfx = "buff.stat_set", variant = "defence", minHeight = 4, atOnce = true },

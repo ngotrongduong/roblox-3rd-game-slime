@@ -1076,7 +1076,11 @@ local function onAim(event: { [string]: any })
 			FillTransparency = V.Skill.Power.GlowMost,
 		}):Play()
 		-- (its class's own charge rides it through the aim)
-		charges[event.from] = vfx((V.Skill.Power.Charge :: any)[wayOf(event.from)], attacker.model, { follow = true })
+		charges[event.from] = vfx(
+			looksOf(event).charge or (V.Skill.Power.Charge :: any)[wayOf(event.from)],
+			attacker.model,
+			{ follow = true }
+		)
 		task.delay(windup + 1, function()
 			if glows[event.from] == glow then
 				endCharge(event.from)
@@ -1285,6 +1289,11 @@ local function libraryStrike(
 		task.delay(contactSeconds(style), land)
 		return
 	end
+	if look.cast then
+		-- (drawn once from its "cast" event, which moved the caster: every blow lands on the effect's marker)
+		task.delay(math.max((leads[event.from] or 0) - os.clock(), 0), land)
+		return
+	end
 	if look.aim then
 		if first then
 			strike(event, style, function() end)
@@ -1435,7 +1444,7 @@ local function deliver(event: { [string]: any }, style: FightFx.Style, first: bo
 	local s = skillOf(event)
 	local K = V.Skill
 	local drawn = if s then libraryLook(event) else nil
-	if drawn and s.kind ~= "multi" and s.kind ~= "all" and s.kind ~= "splash" then
+	if drawn and (drawn.cast or (s.kind ~= "multi" and s.kind ~= "all" and s.kind ~= "splash")) then
 		libraryStrike(event, style, drawn, first, land)
 	elseif not s or (s.kind ~= "multi" and s.kind ~= "all" and s.kind ~= "splash") then
 		if s and first and specialOf(fxOf(event.from), event) then
@@ -1507,6 +1516,86 @@ local function deliver(event: { [string]: any }, style: FightFx.Style, first: bo
 		else
 			task.delay(K.CastSeconds + (if event.splash then K.MultiGap else 0), land)
 		end
+	end
+end
+
+-- An Uncommon or Epic class skill goes off (its "cast" event, the first of its batch; View.Skill.Looks `cast`): its
+-- library effect plays once, and `leads` says when its marker lands: every blow, heal and status of the batch waits
+-- for that.
+local function onCast(event: { [string]: any })
+	local look = libraryLook(event)
+	local caster, from = find(event.from)
+	if not look or not look.cast or not caster or not from then
+		return
+	end
+	letGo(event.from)
+	local K = V.Skill
+	local target, to = find(event.to)
+	local style = styleOf(event.from)
+	local level, scale = levelOf(caster)
+	scale *= look.wide or 1
+	local landing = landingOf(look, level)
+	-- (a skill for its own team is cast at the caster itself: it keeps facing the way it did)
+	local foeAt = if target and to and event.to ~= event.from then to else nil
+	local dir = along((foeAt or from) - from, caster.root.LookVector)
+	local tall = caster.body.Size.Y
+	local wait = 0
+	if look.cast == "caster" then
+		if foeAt and not style.shot then
+			-- (a melee skill: the caster lunges at its foe and the effect opens so that its marker lands with the lunge)
+			strike(event, style, function() end)
+			wait = math.max(0, contactSeconds(style) - landing)
+		else
+			SlimeActor.kick(caster, "puff", V.WindupPuff * K.Windup)
+		end
+		if look.range and foeAt then
+			scale = math.max(scale, math.min(flat(foeAt - from).Magnitude / look.range, K.FanMost))
+		end
+		task.delay(wait, function()
+			safe("cast", function()
+				if caster.destroyed then
+					return
+				end
+				local middle = caster.body.Position
+				local wide = 5 * scale
+				vfx(look.vfx, CFrame.lookAt(middle, middle + dir), {
+					variant = level,
+					scale = scale,
+					size = Vector3.new(wide, tall, wide),
+					ground = from.Y,
+				})
+			end)
+		end)
+	elseif look.cast == "target" then
+		if target and to then
+			SlimeActor.kick(caster, "lean", 1.5)
+			if look.ref then
+				scale *= target.body.Size.Y / look.ref
+			end
+			playOn(look, level, scale, target, to, muzzle(caster, from, dir))
+		end
+	else
+		SlimeActor.kick(caster, "puff", V.WindupPuff * K.Windup)
+		if look.cast == "middle" then
+			local sum, count = Vector3.zero, 0
+			local touched: { string } = lines[event.from] or {}
+			for _, id in touched do
+				local _, at = find(id)
+				if at then
+					sum += at
+					count += 1
+				end
+			end
+			onFloor(look.vfx, if count > 0 then sum / count else (to or from), tall, scale, level)
+		end
+	end
+	leads[event.from] = os.clock() + wait + landing
+	if look.hitVfx and target and to then
+		task.delay(wait + landing, function()
+			safe("cast", function()
+				vfx(look.hitVfx, to + Vector3.new(0, target.body.Size.Y * 0.5, 0), { scale = scale })
+			end)
+		end)
 	end
 end
 
@@ -1595,6 +1684,11 @@ local function onHeal(event: { [string]: any })
 			)
 		end
 		local look = if event.skill then libraryLook(event) else nil
+		if look and look.cast then
+			-- (Healing Ring: its rain was drawn once from its "cast"; the number shows as the rain heals)
+			task.delay(math.max((leads[event.from] or 0) - os.clock(), 0), healNumber)
+			return
+		end
 		if look then
 			-- (a Healer's Mend: the library's light falls from the sky on the one it mends, its number as the light
 			-- reaches it)
@@ -1648,6 +1742,10 @@ end
 local function blowLanding(event: { [string]: any }): number
 	local style = if type(event.from) == "string" then styleOf(event.from) else FightFx.style(nil)
 	local s = skillOf(event)
+	if s and looksOf(event).cast then
+		-- (a skill drawn from its "cast" event lands on its effect's marker)
+		return math.max((leads[event.from] or 0) - os.clock(), 0)
+	end
 	local landing = contactSeconds(style)
 	if s and s.kind == "multi" then
 		landing += ((if type(event.n) == "number" then event.n else 1) - 1) * V.Skill.MultiGap
@@ -1740,7 +1838,24 @@ end
 local function onStatus(event: { [string]: any })
 	local name = event.status
 	local look = if type(name) == "string" then (V.Status.Looks :: any)[name] else nil
-	if type(event.to) ~= "string" or type(event.seconds) ~= "number" or not look or not VfxLib.get(look.vfx) then
+	if type(event.to) ~= "string" or type(event.seconds) ~= "number" then
+		return
+	end
+	if event.seconds <= 0 then
+		-- (ended before its time: a Ward's barrier used up)
+		takeOff(event.to, name)
+		return
+	end
+	local drawn = if type(event.from) == "string" then libraryLook(event) else nil
+	if drawn and drawn.cast == "each" then
+		-- (Squad Tonic, Ward: the skill's own effect on everyone it comes to, riding them)
+		local body = find(event.to)
+		if body and not body.destroyed then
+			local _, scale = levelOf((find(event.from)))
+			vfx(drawn.vfx, body.body, { follow = true, scale = scale * (drawn.wide or 1) })
+		end
+	end
+	if not look or not VfxLib.get(look.vfx) then
 		return
 	end
 	local wait = if look.atOnce then 0 else blowLanding(event)
@@ -2008,10 +2123,10 @@ local function onEvents(payload: any)
 	for _, event in payload.events do
 		if
 			type(event) == "table"
-			and (event.kind == "hit" or event.kind == "dodge")
+			and (event.kind == "hit" or event.kind == "dodge" or event.kind == "heal")
 			and type(event.from) == "string"
 			and type(event.to) == "string"
-			and looksOf(event).pierce
+			and (looksOf(event).pierce or looksOf(event).cast == "middle")
 		then
 			if not gathered[event.from] then
 				gathered[event.from] = true
@@ -2034,6 +2149,8 @@ local function onEvents(payload: any)
 				onAim(event)
 			elseif kind == "guard" then
 				onGuard(event)
+			elseif kind == "cast" then
+				onCast(event)
 			elseif kind == "hit" then
 				onHit(event, first)
 			elseif kind == "dodge" then
