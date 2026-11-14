@@ -1088,6 +1088,15 @@ return function(T: any)
 			T.eq(unitOf(fight, id).effects.taken.value, Skills.shield_wall.taken)
 		end
 		T.eq(unitOf(fight, "g").effects.taken, nil)
+		local walled = 0
+		for _, event in events do
+			if event.kind == "status" and event.status == "walled" then
+				walled += 1
+				T.eq(event.skill, "shield_wall")
+				T.eq(event.seconds, Skills.shield_wall.seconds)
+			end
+		end
+		T.eq(walled, 2)
 		local one, alone = wall(true)
 		T.ok(castOf(one, "shield_wall") ~= nil)
 		T.eq(unitOf(alone, "a").effects.taken.value, Skills.shield_wall.taken)
@@ -1252,6 +1261,23 @@ return function(T: any)
 		end)
 		T.ok(healed ~= nil)
 		T.near(healed.amount, h.attack * Config.Combat.Heals.healer.share * (1 - Skills.cursed_flask.curse), 1e-9)
+		-- A shaman's every-third Mend is a different code path from its ordinary heal.
+		local special = Combat.new({ slime("a", "alchemist", { tier = 3 }) }, {
+			foe("healer", { kind = "healer", skills = { "bloom_mend" }, attack = 10 }),
+			foe("low", { hp = 50, maxHp = 100 }),
+		}, Rng.new(95))
+		arm(special, "a", "cursed_flask")
+		freeze(unitOf(special, "healer"))
+		freeze(unitOf(special, "low"))
+		run(special, 3)
+		local shaman = unitOf(special, "healer")
+		shaman.mends = Skills.bloom_mend.every - 1
+		shaman.aimed, shaman.cooldown = false, 0.4
+		local burst = firstOf(run(special, 2), function(e: any): boolean
+			return e.kind == "heal" and e.from == "healer" and e.to == "low" and e.skill == "bloom_mend"
+		end)
+		T.ok(burst ~= nil)
+		T.near(burst.amount, shaman.attack * Skills.bloom_mend.share * (1 - Skills.cursed_flask.curse), 1e-9)
 		local classFight = Combat.new({ slime("a", "alchemist", { tier = 3 }) }, {
 			foe("h", { class = "healer", role = "healer", attack = 10 }),
 			foe("m", { hp = 50, maxHp = 100 }),
@@ -1340,6 +1366,40 @@ return function(T: any)
 			return event.kind == "hit" and event.from == "h" and event.skill == nil
 		end)
 		T.ok(plain ~= nil, "the announced skill becomes a plain action")
+	end)
+
+
+	T.test("Healing Ring can heal its caster and a Ward never replaces a stronger live barrier", function()
+		local ring = Combat.new({
+			slime("h", "healer", { tier = 2, hp = 45, maxHp = 100 }),
+			slime("m", nil, { hp = 35, maxHp = 100 }),
+		}, { foe("f") }, Rng.new(99))
+		arm(ring, "h", "healing_ring")
+		freeze(unitOf(ring, "m"))
+		freeze(unitOf(ring, "f"))
+		local healed: { [string]: boolean } = {}
+		for _, event in run(ring, 3) do
+			if event.kind == "heal" and event.skill == "healing_ring" then
+				healed[event.to] = true
+			end
+		end
+		T.ok(healed.h and healed.m, "the caster is a valid Ring recipient")
+		local ward = Combat.new({
+			slime("h", "healer", { tier = 3, attack = 300 }),
+			slime("m", nil, { hp = 50, maxHp = 100 }),
+		}, { foe("f") }, Rng.new(99))
+		arm(ward, "h", "ward")
+		local mate = unitOf(ward, "m")
+		mate.barrier, mate.barrierUntil = 25, 100
+		freeze(mate)
+		freeze(unitOf(ward, "f"), mate)
+		local events = run(ward, 3)
+		T.ok(castOf(events, "ward") ~= nil)
+		T.eq(mate.barrier, 25, "a weaker Ward cannot overwrite a stronger barrier")
+		T.eq(mate.barrierUntil, 100)
+		T.eq(firstOf(events, function(e: any): boolean
+			return e.status == "warded" and e.seconds > 0
+		end), nil)
 	end)
 
 	T.test("a mixed class fight is the same from the same seed", function()
