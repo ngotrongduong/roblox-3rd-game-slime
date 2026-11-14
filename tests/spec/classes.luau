@@ -1551,8 +1551,9 @@ return function(T: any)
 			for _, event in Combat.step(fight, DT) do
 				if event.kind == "aim" and event.skill == "meteor" then
 					local from = event.from
-					if from and aimed[from] then
-						table.insert(aimed[from], fight.seconds)
+					local list = if from then aimed[from] else nil
+					if list then
+						table.insert(list, fight.seconds)
 					end
 				end
 			end
