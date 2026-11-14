@@ -1467,6 +1467,294 @@ return function(T: any)
 		)
 	end)
 
+
+	-- ===== Step 5: Mythic ultimates, one side-wide announcement clock, and Legendary traits =====
+
+	T.test("Mythic skill gates, first-ready clock and a late entrant's own twelve seconds", function()
+		for _, entry in {
+			{ class = "guardian", key = "bulwark" },
+			{ class = "warrior", key = "whirlwind" },
+			{ class = "ranger", key = "arrow_rain" },
+			{ class = "mage", key = "meteor" },
+			{ class = "healer", key = "sanctuary" },
+			{ class = "alchemist", key = "catalyst_cloud" },
+		} do
+			for tier = 1, 5 do
+				local fight = Combat.new({ slime("s", entry.class, { tier = tier }) }, { foe("f") }, Rng.new(101))
+				local u = unitOf(fight, "s")
+				T.eq(u.skillReady[entry.key] ~= nil, tier >= 4)
+				if tier >= 4 then
+					T.eq(u.skillReady[entry.key], Skills[entry.key].first)
+				end
+			end
+		end
+		local fight = Combat.new({ slime("s") }, { foe("f") }, Rng.new(102))
+		freeze(unitOf(fight, "s"))
+		freeze(unitOf(fight, "f"))
+		run(fight, 6)
+		local added = Combat.add(fight, slime("new", "mage", { tier = 5 }), "squad")
+		T.ok(added ~= nil)
+		T.near(added.skillReady.meteor, fight.seconds + Skills.meteor.first, 1e-9)
+		T.near(
+			added.skillReady.arcane_lance,
+			Config.Combat.OpeningCooldown + Skills.arcane_lance.cooldown * Config.Classes.OpeningShare,
+			1e-9
+		)
+	end)
+
+	T.test("Mythic ultimates start their twenty-four second cooldown at cast, not aim", function()
+		local fight = Combat.new({ slime("m", "mage", { tier = 4 }) }, {
+			foe("a"), foe("b"),
+		}, Rng.new(103))
+		local m = arm(fight, "m", "meteor")
+		m.cooldown = 0.4
+		freeze(unitOf(fight, "a"))
+		freeze(unitOf(fight, "b"))
+		local aimAt: number? = nil
+		local castAt: number? = nil
+		for _ = 1, 40 do
+			for _, event in Combat.step(fight, DT) do
+				if event.kind == "aim" and event.skill == "meteor" then
+					aimAt = fight.seconds
+					T.eq(m.skillReady.meteor, 0, "aim does not spend the clock")
+				elseif event.kind == "cast" and event.skill == "meteor" then
+					castAt = fight.seconds
+				end
+			end
+			if castAt then
+				break
+			end
+		end
+		T.ok(aimAt ~= nil and castAt ~= nil)
+		T.near((castAt :: number) - (aimAt :: number), Skills.meteor.windup, DT + 1e-6)
+		T.near(m.skillReady.meteor, (castAt :: number) + Skills.meteor.cooldown, 1e-9)
+		T.eq(fight.ultimateAt.squad, aimAt)
+		T.eq(m.skillReady.arcane_lance, 1e9, "other cooldowns did not change")
+	end)
+
+	T.test("ultimate announcements are staggered on one side but independent between sides", function()
+		local fight = Combat.new({
+			slime("a", "mage", { tier = 4 }),
+			slime("b", "mage", { tier = 4 }),
+		}, {
+			slime("x", "mage", { tier = 4 }),
+			foe("y"),
+		}, Rng.new(104))
+		for _, id in { "a", "b", "x" } do
+			local u = arm(fight, id, "meteor")
+			u.cooldown = 0.4
+		end
+		freeze(unitOf(fight, "y"))
+		local aimed: { [string]: { number } } = { a = {}, b = {}, x = {} }
+		for _ = 1, 100 do
+			for _, event in Combat.step(fight, DT) do
+				if event.kind == "aim" and event.skill == "meteor" then
+					table.insert(aimed[event.from], fight.seconds)
+				end
+			end
+			if #aimed.a + #aimed.b >= 2 and #aimed.x >= 1 then
+				break
+			end
+		end
+		T.eq(#aimed.a, 1)
+		T.eq(#aimed.b, 1)
+		T.ok(#aimed.x >= 1, "other side announces its own ultimate")
+		T.ok(
+			math.abs(aimed.a[1] - aimed.b[1]) >= Config.Classes.UltimateGap - 1e-6,
+			"same-side announcements have the whole gap"
+		)
+		T.near(aimed.x[1], math.min(aimed.a[1], aimed.b[1]), DT + 1e-6)
+	end)
+
+	T.test("Whirlwind, Arrow Rain and Meteor wind up fully; ordinary aims keep the old lead", function()
+		for _, entry in {
+			{ class = "warrior", key = "whirlwind" },
+			{ class = "ranger", key = "arrow_rain" },
+			{ class = "mage", key = "meteor" },
+		} do
+			local fight = Combat.new({ slime("s", entry.class, { tier = 4 }) }, {
+				foe("a"), foe("b"),
+			}, Rng.new(105))
+			local u = arm(fight, "s", entry.key)
+			u.cooldown = 0.4
+			freeze(unitOf(fight, "a"))
+			freeze(unitOf(fight, "b"))
+			local aimAt: number? = nil
+			local castAt: number? = nil
+			for _ = 1, 40 do
+				for _, event in Combat.step(fight, DT) do
+					if event.kind == "aim" and event.skill == entry.key then
+						aimAt = fight.seconds
+					elseif event.kind == "cast" and event.skill == entry.key then
+						castAt = fight.seconds
+					end
+				end
+				if castAt then
+					break
+				end
+			end
+			T.ok(aimAt ~= nil and castAt ~= nil, entry.key .. " fires")
+			T.near((castAt :: number) - (aimAt :: number), Skills[entry.key].windup, DT + 1e-6)
+		end
+		local plain = Combat.new({ slime("m", "mage", { tier = 3 }) }, { foe("f") }, Rng.new(105))
+		local u = unitOf(plain, "m")
+		for key in u.skillReady do
+			u.skillReady[key] = 1e9
+		end
+		u.cooldown = 0.4
+		freeze(unitOf(plain, "f"))
+		local aimAt: number? = nil
+		local hitAt: number? = nil
+		for _ = 1, 20 do
+			for _, event in Combat.step(plain, DT) do
+				if event.kind == "aim" and event.from == "m" then
+					aimAt = plain.seconds
+					T.eq(event.skill, nil)
+				elseif event.kind == "hit" and event.from == "m" and not hitAt then
+					hitAt = plain.seconds
+				end
+			end
+			if hitAt then
+				break
+			end
+		end
+		T.near((hitAt :: number) - (aimAt :: number), Config.Combat.WindupSeconds, DT + 1e-6)
+	end)
+
+	T.test("stuns during an ultimate wind-up delay its cast and cancellation keeps the cooldown", function()
+		local fight = Combat.new({ slime("m", "mage", { tier = 4 }) }, {
+			foe("a"), foe("b"),
+		}, Rng.new(106))
+		local m = arm(fight, "m", "meteor")
+		m.cooldown = 0.4
+		freeze(unitOf(fight, "a"))
+		freeze(unitOf(fight, "b"))
+		local aimAt: number? = nil
+		for _ = 1, 10 do
+			for _, e in Combat.step(fight, DT) do
+				if e.kind == "aim" and e.skill == "meteor" then
+					aimAt = fight.seconds
+				end
+			end
+			if aimAt then
+				break
+			end
+		end
+		T.ok(aimAt ~= nil)
+		Combat.stun(fight, m, 1)
+		local castAt: number? = nil
+		for _ = 1, 40 do
+			for _, e in Combat.step(fight, DT) do
+				if e.kind == "cast" and e.skill == "meteor" then
+					castAt = fight.seconds
+				end
+			end
+			if castAt then
+				break
+			end
+		end
+		T.ok(castAt ~= nil)
+		T.near((castAt :: number) - (aimAt :: number), Skills.meteor.windup + 1, DT + 1e-6)
+		local lost = Combat.new({ slime("m", "mage", { tier = 4 }) }, {
+			foe("a"), foe("b"),
+		}, Rng.new(107))
+		local caster = arm(lost, "m", "meteor")
+		caster.cooldown = 0.4
+		freeze(unitOf(lost, "a"))
+		freeze(unitOf(lost, "b"))
+		local announced = false
+		for _ = 1, 10 do
+			for _, e in Combat.step(lost, DT) do
+				if e.kind == "aim" and e.skill == "meteor" then
+					announced = true
+				end
+			end
+			if announced then
+				break
+			end
+		end
+		T.ok(announced)
+		unitOf(lost, "b").hp = 0
+		local events = run(lost, 2)
+		T.eq(castOf(events, "meteor"), nil)
+		T.eq(caster.skillReady.meteor, 0)
+		T.ok(firstOf(events, function(e: any): boolean
+			return e.kind == "hit" and e.from == "m" and e.skill == nil
+		end) ~= nil)
+	end)
+
+	T.test("four attack ultimates use one weight on all foes, need two or a boss, and cast first", function()
+		for _, entry in {
+			{ class = "warrior", key = "whirlwind" },
+			{ class = "ranger", key = "arrow_rain" },
+			{ class = "mage", key = "meteor" },
+			{ class = "alchemist", key = "catalyst_cloud" },
+		} do
+			local s = Skills[entry.key]
+			local enemies = {}
+			for index = 1, s.cap + 1 do
+				table.insert(enemies, foe("f" .. index, { defence = 20 }))
+			end
+			local fight = Combat.new({ slime("s", entry.class, { tier = 4 }) }, enemies, Rng.new(108))
+			arm(fight, "s", entry.key)
+			for _, enemy in enemies do
+				freeze(unitOf(fight, enemy.id))
+			end
+			local events = run(fight, 4)
+			T.ok(castOf(events, entry.key) ~= nil, entry.key .. " cast")
+			local count = 0
+			local started = false
+			for _, e in events do
+				if e.kind == "cast" and e.skill == entry.key then
+					started = true
+				elseif e.kind == "hit" and e.skill == entry.key then
+					T.ok(started, "cast precedes damage")
+					count += 1
+					local magic = Config.Classes.Kinds[entry.class].magic
+					local want = Combat.damage(10, 20, magic) * Config.Classes.Kinds[entry.class].factor
+						* Config.Classes.SkillPower[4] * s.power
+					T.near(e.amount, want, 1e-9)
+				end
+			end
+			T.eq(count, s.cap)
+			local ordinary = Combat.new({ slime("s", entry.class, { tier = 4 }) }, {
+				foe("one"),
+			}, Rng.new(109))
+			arm(ordinary, "s", entry.key)
+			freeze(unitOf(ordinary, "one"))
+			T.eq(castOf(run(ordinary, 4), entry.key), nil, "one ordinary foe is not worthwhile")
+			T.eq(unitOf(ordinary, "s").skillReady[entry.key], 0)
+			local boss = Combat.new({ slime("s", entry.class, { tier = 4 }) }, {
+				foe("boss", { defRole = "boss" }),
+			}, Rng.new(110))
+			arm(boss, "s", entry.key)
+			freeze(unitOf(boss, "boss"))
+			T.ok(castOf(run(boss, 4), entry.key) ~= nil, "one boss warrants the ultimate")
+		end
+	end)
+
+	T.test("Arrow Rain, Meteor and Catalyst Cloud aim at the densest reachable group", function()
+		for _, entry in {
+			{ class = "ranger", key = "arrow_rain" },
+			{ class = "mage", key = "meteor" },
+			{ class = "alchemist", key = "catalyst_cloud" },
+		} do
+			local fight = Combat.new({ slime("s", entry.class, { tier = 4, x = 0, z = 0 }) }, {
+				foe("lone", { x = -12, z = 0, defence = 40 }),
+				foe("a", { x = 10, z = 0, defence = 10 }),
+				foe("b", { x = 12, z = 0, defence = 30 }),
+				foe("c", { x = 11, z = 2, defence = 10 }),
+			}, Rng.new(111), { moves = true })
+			local u = arm(fight, "s", entry.key)
+			u.target = unitOf(fight, "lone")
+			for _, id in { "lone", "a", "b", "c" } do
+				freeze(unitOf(fight, id))
+			end
+			local cast = castOf(run(fight, 4), entry.key)
+			T.ok(cast ~= nil and cast.to == "b", "ties pick the higher DEF group centre")
+		end
+	end)
+
 	T.test("a mixed class fight is the same from the same seed", function()
 		local function play(): { any }
 			local fight = Combat.new({
