@@ -633,8 +633,9 @@ local function beginFight(session: Session, team: March, farm: any, now: number)
 	end
 	team.members = here
 	-- The march remains staggered; combat uses three independently centred rows.
+	local rowSpots = Zombies.rowSpots(rows)
 	for index, fighter in fighters do
-		local row = Zombies.rowSpots(rows)[index]
+		local row = rowSpots[index]
 		fighter.x = endX - dir.Z * row.across - dir.X * row.back
 		fighter.z = endZ + dir.X * row.across - dir.Z * row.back
 		spots[fighter.id] = { fighter.x, fighter.z }
