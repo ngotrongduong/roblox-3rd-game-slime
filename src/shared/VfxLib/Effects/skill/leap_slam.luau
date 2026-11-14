@@ -14,7 +14,7 @@ local GROUND = -2.45
 
 -- straight fissures running out of the crater along the ground
 local function fissures(count, reach)
-	local out = {}
+	local out: { any } = {}
 	for i = 1, count do
 		local a = math.rad(i * 360 / count + 17 * (i % 2))
 		local r = reach * (if i % 2 == 0 then 1 else 0.75)

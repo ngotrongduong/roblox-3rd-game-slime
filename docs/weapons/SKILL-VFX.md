@@ -58,6 +58,13 @@ Mammoth), `skill.meteor_charge` (Lavastomp Bull), `skill.renewal_charge` (Blooms
 Class skills wind up for only 0.3 s today (the server's aim); the library's wind-ups hold about 1.1 s, so they wait for
 the skills of steps 4-5 that have long wind-ups (Whirlwind 0.8 s, Arrow Rain 1.2 s, Meteor 1.5 s).
 
+**As built (2026-11-14):** the table above is the plan of 2026-11-12; what each skill plays now is
+`Config.Zombies.View.Skill.Looks` (and `Traits`), listed in `docs/STATUS.md` waves 3 and 4. The Mythic row of each
+class: Bulwark `skill.guardian_bulwark` then `skill.spirit_guardian`; Whirlwind `skill.whirlwind_slash`; Arrow Rain
+`skill.ranger_rain_warning` then `skill.arrow_volley`; Meteor `skill.mage_meteor_windup` then `skill.meteor_fall`;
+Sanctuary `skill.healing_sanctuary`; Catalyst Cloud `skill.alchemist_catalyst`. Legendary: `burst.last_stand`,
+`burst.momentum`.
+
 ## 3. Missing: what to build, and how it should look
 
 Fourteen pieces. Each is its own design (no recolour of another), from art (ChatGPT or EffectCraft pictures, the

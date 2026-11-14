@@ -1,5 +1,30 @@
 # Status
 
+## 2026-11-14 — M5, fights in the big world: written and play-tested, NOT committed yet
+
+**What it is.** Every zone of `WorldPlan.Zones` is a short Dungeon run fought in the open on the zone's pad
+(`Config.World` = `shared/ConfigWorld`, rules `shared/ZoneFights`, server `ZoneGuards` + `server/Dungeon`, client
+`UiDungeon.watchZones`, `DungeonFight`). The last wave is the zone's guard, which pays the zone's reward; a won zone
+rests (mini 300 s, boss 900 s, mega 1800 s); the three boss zones open the gates of the Heart; the Heart needs all
+three and is held by the four region bosses until King Goo has a model (M6). Wins are saved as
+`farm.world.beaten` (**schema 15**: a publish must shut down all old servers). Zombie camps stay at the village gates.
+
+**Proved.** `lune run tests/run.luau zone_fights`: 8 passed. `tools/balance/zone_sim.luau 60`: every zone 72-85 % for
+its target team. Play test in StudioTest (in-memory store): 14 prompts and 3 seals made, far / locked / unknown /
+resting entries refused, zone m1 fought on its pad and won, end card shows Leave only, `Zone_m1` set, prompt reads
+"Resting 4:30", locks hang on the sealed gates.
+
+**Not verified.** A gate opening after its boss is won (seen only locked); Replay after a defeat; the zone sheet opened
+from the prompt by hand (entry was sent by script); a phone view; what other players see of a zone fight.
+`tools\check.ps1` ends CHECK FAILED on one test that is not M5's: `debug_presets:194` (the Late preset in
+`DebugPresets.luau` was changed to `dungeonBest = 27` by the effects session). `types.ps1`: 1 finding, also theirs
+(`VfxLib/Effects/skill/arrow_ring.luau:60`).
+
+**Next.** Finish the checks above, write M5 into `docs/WORLD.md` §7 (and a §5 row for King Goo's model), then commit
+only M5's paths (new: `ConfigWorld`, `ZoneFights`, `ZoneGuards`, `tests/spec/zone_fights`, `tools/balance/zone_sim`;
+edited: `Config`, `Dungeon`, `FarmSave`, `FarmState`, `Layout`, `ProfileLogic`, `VillageRequests`, `server/Dungeon`,
+`Main.server`, `client/DungeonFight`, `UiDungeon`, `UiSquad`, tests `farm_save`, `purchases`, `rewards`).
+
 ## 2026-11-14 — the big world: the main map rebuilt ten times larger, and the game now runs in it (M4)
 
 **M4, the switch (done).** `Layout` takes the Market's frame and the eight plot frames from `WorldPlan` (plot n =
@@ -136,10 +161,31 @@ bramble, the dark maps, a real phone.
   Cursed Flask, Healing Ring, Ward. **Not verified:** Area Slash and Snare Arrow framed (they played, not looked at),
   Ward's lasting bubble alone (only in a crowded melee), a real phone. Healing Ring is faint on the bright meadow.
 
-**Next:** the six Mythic ultimates and the six Legendary traits (step 5; brief `docs/briefs/class-skills-5.md`, sent to
-ChatGPT); their library pieces are on library main (`skill.guardian_bulwark`, `spirit_guardian`, `summon_call`,
-`whirlwind_slash`, `arrow_volley`, `ranger_rain_warning`, `meteor_fall`, `mage_meteor_windup`, `healing_sanctuary`,
-`sanctuary_charge`, `alchemist_catalyst`).
+**Wave 4, done the same day: the six Mythic ultimates and the six Legendary traits** (`docs/WEAPONS.md` §11 step 5;
+brief `docs/briefs/class-skills-5.md`; VfxLib 1a3ee47, 130 effects). Every weapon tier now has its own skill.
+- **Rules** (`Combat`, `ConfigClasses`, written by ChatGPT, 57 tests in `classes`): the fourth skill of a class is its
+  ultimate, known from a Mythic weapon (first cast after 12 s, then every 24 s, two ultimates of a team at least 1.5 s
+  apart): Guardian Bulwark (the team takes less and is steadier), Warrior Whirlwind (0.8 s wind-up), Ranger Arrow Rain
+  (1.2 s), Mage Meteor (1.5 s), Healer Sanctuary (four heals over 3 s), Alchemist Catalyst Cloud (the foes melt). A
+  Legendary weapon adds its trait: Last Stand (Guardian), Momentum (Warrior), Hawkeye (Ranger), Echo (Mage), Overflow
+  (Healer), Lingering Brew (Alchemist); Last Stand and Momentum send a "trait" event.
+- **Drawing** (`View.Skill.Looks`, `View.Skill.Traits`, `client/ZombieFight`): Bulwark `skill.guardian_bulwark` (the
+  seal) then `skill.spirit_guardian`, and `buff.stat_set` defence on those it covers; Whirlwind
+  `skill.whirlwind_slash` after `skill.battle_focus`, the Warrior stays where it is; Arrow Rain
+  `skill.ranger_rain_warning` on the ground through the wind-up, then `skill.arrow_volley`; Meteor
+  `skill.mage_meteor_windup`, then `skill.meteor_fall`; Sanctuary `skill.healing_sanctuary`; Catalyst Cloud
+  `skill.alchemist_catalyst` (+ `buff.acid_melt` on the foes); Last Stand `burst.last_stand` and Momentum
+  `burst.momentum` on the slime with the trait's name. Hawkeye, Echo, Overflow and Lingering Brew change blows, heals
+  and times that are already drawn.
+- **Seen** in MapWork Play, real Dungeon runs (levels 3, 6 and 9, both debug teams in Legendary weapons, the camera 22
+  studs behind the squad, pictures taken in the engine): all six ultimates and both trait flourishes played; the log
+  has no warning or error from the fight drawing. Meteor, Whirlwind and Arrow Rain are strong; Bulwark's seal, circle
+  and the shields on the squad read.
+- **Not good yet (library, asked for 2026-11-14):** on bright ground three effects wash out: Sanctuary is a white dome
+  of glare on the snow that hides the fighters, Bulwark's spirit knight is a yellow-white blaze on the meadow, Catalyst
+  Cloud's gas hardly shows on the meadow. When the library ships them: `import.ps1 --update`.
+- **Not verified:** Last Stand in a picture (it played twice, not framed), Sanctuary on a dark map, Hawkeye / Echo /
+  Overflow / Lingering Brew by eye (tests only), a real phone.
 
 ## 2026-11-14 — favorite the game and join the group: a big gift each, the tutorial's last step
 

@@ -391,7 +391,11 @@ steps 4-5.
 **Step 4 (2026-11-14):** the twelve Uncommon and Epic skills are built (`Kinds.<class>.skills`, one a tier, each on its
 own clock; numbers in `Config.Classes.Skills`; the contract in `docs/briefs/class-skills-4.md`; effects in
 `docs/STATUS.md`). The numbers follow the owner's skill-power rule (§3's table is the design, Config is what runs).
-Mythic and Legendary weapons cast the Epic skill until step 5.
+
+**Step 5 (2026-11-14):** the six ultimates (`Kinds.<class>.skills[4]`, known from a Mythic weapon: `first = 12`,
+`cooldown = 24`, `Config.Classes.UltimateGap = 1.5` between two of a team; Whirlwind, Arrow Rain and Meteor wind up
+0.8, 1.2 and 1.5 s) and the six Legendary traits (`Config.Classes.Traits`) are built; the contract is in
+`docs/briefs/class-skills-5.md`, the effects in `docs/STATUS.md`. Every tier now casts its own skill.
 
 Simpler than §2-§3 for now (each is a later fix, none changes a rule the owner sees):
 - No threat table: a monster's target is still today's pick by its kind; a Guardian draws foes by Taunt and Pull (Pull 3).

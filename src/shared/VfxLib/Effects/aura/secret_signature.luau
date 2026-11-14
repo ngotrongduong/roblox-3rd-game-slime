@@ -446,7 +446,7 @@ end
 -- an effect library: take from it the effects that can be used").
 local LIB = 0.6
 local function libSize(keys)
-	local out = {}
+	local out: { any } = {}
 	for index, key in keys do
 		out[index] = { key[1], key[2] * LIB / GROW }
 	end

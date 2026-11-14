@@ -13,7 +13,7 @@ local GROUND = -2.5
 -- the ring of ice spikes: `count` spikes `radius` studs round the target, each from under the ground out and up to
 -- `height`, leaning out; one after another round the ring
 local function spikes(prefix, count, radius, height, width, delay, turn)
-	local out = {}
+	local out: { any } = {}
 	for i = 1, count do
 		local angle = math.rad(turn + (i - 1) * 360 / count)
 		local x, z = math.cos(angle), math.sin(angle)

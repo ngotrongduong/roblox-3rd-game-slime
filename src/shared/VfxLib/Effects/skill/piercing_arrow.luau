@@ -29,7 +29,7 @@ local EXIT = {
 }
 
 local function speedLines()
-	local out = {}
+	local out: { any } = {}
 	for index, spot in { { -0.5, CHEST + 0.5 }, { 0.6, CHEST - 0.4 } } do
 		table.insert(out, {
 			name = "speed" .. index,
@@ -168,7 +168,7 @@ local function pieces(n)
 end
 
 local function level(n)
-	local beams = {}
+	local beams: { any } = {}
 	if n >= 2 then
 		table.insert(beams, EXIT)
 	end

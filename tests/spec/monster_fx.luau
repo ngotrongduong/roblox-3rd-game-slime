@@ -51,7 +51,7 @@ return function(T)
 	T.test("every library effect of the slimes' fight is imported", function()
 		local V = Config.Zombies.View
 		for name, look in V.Skill.Looks :: any do
-			for _, field in { "vfx", "hitVfx", "lib", "charge" } do
+			for _, field in { "vfx", "hitVfx", "lib", "charge", "lead", "warn" } do
 				if look[field] then
 					T.ok(imported(look[field]), `Skill.Looks.{name}.{field} {look[field]}`)
 				end
@@ -72,6 +72,10 @@ return function(T)
 					T.ok(look and look.cast ~= nil, `{class}'s {key} is drawn from its cast`)
 				end
 			end
+		end
+		-- (a Legendary trait that sends a "trait" event shows its flourish)
+		for key, look in V.Skill.Traits :: any do
+			T.ok(imported(look.vfx), `Skill.Traits.{key} {look.vfx}`)
 		end
 		for name, look in V.Status.Looks :: any do
 			T.ok(imported(look.vfx), `Status.Looks.{name} {look.vfx}`)

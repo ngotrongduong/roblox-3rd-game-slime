@@ -19,7 +19,7 @@ local function snapAt(count)
 end
 
 local function arrows(count, radius)
-	local out = {}
+	local out: { any } = {}
 	local snap = snapAt(count)
 	for i = 1, count do
 		-- (round the ring every other arrow across, so it closes from both sides)

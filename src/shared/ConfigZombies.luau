@@ -349,6 +349,50 @@ return {
 				arcane_lance = { vfx = "skill.arcane_ray", cast = "target", impact = "fire", ownHit = true },
 				ward = { vfx = "skill.healer_ward", cast = "each", impact = "closed" },
 				cursed_flask = { vfx = "skill.alchemist_cursed", cast = "target", impact = "impact", ref = 3 },
+				-- The Mythic ultimates (docs/WEAPONS.md §3.6), drawn the same way, each the grandest of its class.
+				-- Bulwark: a seal draws itself under the Guardian (`lead`, riding it; the skill's own effect opens
+				-- `leadSeconds` later) and the spirit knight rises over it, shield up. Whirlwind spins where the Warrior
+				-- stands (`still`: no lunge) and its ring cut lands the blows. Arrow Rain marks the ground through the
+				-- aim (`warn`, filled as the first arrow lands) and falls from the bow. Meteor's stars gather on the
+				-- Mage, then it falls on the thickest of the foes. Sanctuary opens in the middle of everyone it heals.
+				-- Catalyst Cloud's circle draws itself among the foes and the gas rises out of it.
+				bulwark = {
+					vfx = "skill.spirit_guardian",
+					cast = "caster",
+					impact = "guard",
+					lead = "skill.guardian_bulwark",
+					leadSeconds = 0.4,
+				},
+				whirlwind = {
+					vfx = "skill.whirlwind_slash",
+					cast = "caster",
+					impact = "impact",
+					ownHit = true,
+					still = true,
+					charge = "skill.battle_focus",
+				},
+				arrow_rain = {
+					vfx = "skill.arrow_volley",
+					cast = "target",
+					impact = "impact",
+					wide = 1.5,
+					warn = "skill.ranger_rain_warning",
+				},
+				meteor = {
+					vfx = "skill.meteor_fall",
+					cast = "target",
+					impact = "peak",
+					wide = 1.5,
+					ownHit = true,
+					charge = "skill.mage_meteor_windup",
+				},
+				sanctuary = { vfx = "skill.healing_sanctuary", cast = "middle", impact = "heal", wide = 1.6 },
+				catalyst_cloud = { vfx = "skill.alchemist_catalyst", cast = "middle", impact = "cloud", wide = 1.5 },
+			},
+			-- A Legendary weapon's trait going off (a "trait" event of Combat): its flourish on the slime, and its name.
+			Traits = {
+				last_stand = { vfx = "burst.last_stand", name = "Last Stand" },
+				momentum = { vfx = "burst.momentum", name = "Momentum" },
 			},
 			-- a fan of arrows is never stretched further than this many times its size
 			FanMost = 1.6,
@@ -394,6 +438,8 @@ return {
 				walled = { vfx = "buff.stat_set", variant = "defence", graded = true, minHeight = 4 },
 				-- Ward (and a Legendary Healer's Overflow): the bubble stays round the slime while its barrier holds
 				warded = { vfx = "buff.warded" },
+				-- Bulwark: the shields breathe on the whole squad under the spirit knight
+				bulwarked = { vfx = "buff.stat_set", variant = "defence", graded = true, minHeight = 4 },
 				stunned = { vfx = "buff.emote", variant = "confused", minHeight = 6 },
 				-- Jelly Guard and the monsters' walls, while they cover their team-mates
 				guarded = { vfx = "buff.stat_set", variant = "defence", minHeight = 4, atOnce = true },

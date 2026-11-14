@@ -15,7 +15,7 @@ local CHEST = 3 -- (studs over the ground of the path's frame)
 
 -- the lines of speed left hanging along the path, from the kick-off to the foe
 local function speedLines()
-	local out = {}
+	local out: { any } = {}
 	for index, spot in { { -0.6, CHEST + 0.4 }, { 0.5, CHEST - 0.3 }, { 0, CHEST + 1.1 } } do
 		table.insert(out, {
 			name = "speed" .. index,

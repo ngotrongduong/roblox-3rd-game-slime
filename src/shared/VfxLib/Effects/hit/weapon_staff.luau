@@ -96,7 +96,7 @@ local KEEP = { glint = true, glints = true, twinkles = true, spark = true, spark
 
 local function deepen(c)
 	local mean = (c[1] + c[2] + c[3]) / 3
-	local out = {}
+	local out: { any } = {}
 	for i = 1, 3 do
 		out[i] = math.floor(math.clamp((mean + (c[i] - mean) * 1.5) * 0.8, 20, 235))
 	end
@@ -107,7 +107,7 @@ local function deepenColor(color)
 	if type(color[1]) == "number" then
 		return deepen(color)
 	end
-	local out = {}
+	local out: { any } = {}
 	for i, entry in color do
 		out[i] = deepen(entry)
 	end

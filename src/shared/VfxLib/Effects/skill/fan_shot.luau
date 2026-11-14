@@ -11,7 +11,7 @@ local FLIGHT = 0.3
 local BOW = { 0.5, 0.8, -1 }
 
 local function arrows(count, span)
-	local out = {}
+	local out: { any } = {}
 	for i = 1, count do
 		local share = (i - 1) / (count - 1) - 0.5
 		local a = math.rad(share * span)

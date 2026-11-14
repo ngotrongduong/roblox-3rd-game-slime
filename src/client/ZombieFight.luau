@@ -1027,6 +1027,20 @@ local function onAim(event: { [string]: any })
 		playOn(drawn, level, scale, target, to, from + Vector3.new(0, attacker.body.Size.Y * 0.5, 0))
 		leads[event.from] = os.clock() + landingOf(drawn, level)
 	end
+	if drawn and drawn.warn then
+		-- (Arrow Rain: the ground is marked where the arrows will fall, its last mark filled as the first of them lands)
+		local level, scale = levelOf(attacker)
+		local warning = VfxLib.get(drawn.warn)
+		local full = (warning and warning.markers and warning.markers.full) or 0
+		task.delay(math.max(0, windup + landingOf(drawn, level) - full), function()
+			safe("warn", function()
+				local body, at = find(event.to)
+				if body and at and not attacker.destroyed then
+					onFloor(drawn.warn, at, body.body.Size.Y, scale * (drawn.wide or 1))
+				end
+			end)
+		end)
+	end
 	if s and special then
 		-- (an effect without that variant plays as it is: one variant name serves the wind-up and the release; the
 		-- wind-up is drawn as big as the release, or a big monster's body hides it)
@@ -1541,12 +1555,17 @@ local function onCast(event: { [string]: any })
 	local tall = caster.body.Size.Y
 	local wait = 0
 	if look.cast == "caster" then
-		if foeAt and not style.shot then
+		if foeAt and not style.shot and not look.still then
 			-- (a melee skill: the caster lunges at its foe and the effect opens so that its marker lands with the lunge)
 			strike(event, style, function() end)
 			wait = math.max(0, contactSeconds(style) - landing)
 		else
 			SlimeActor.kick(caster, "puff", V.WindupPuff * K.Windup)
+		end
+		if look.lead then
+			-- (Bulwark: its seal draws itself under the caster first, riding it)
+			vfx(look.lead, caster.model, { follow = true })
+			wait = look.leadSeconds or 0
 		end
 		if look.range and foeAt then
 			scale = math.max(scale, math.min(flat(foeAt - from).Magnitude / look.range, K.FanMost))
@@ -1597,6 +1616,23 @@ local function onCast(event: { [string]: any })
 			end)
 		end)
 	end
+end
+
+-- A Legendary weapon's trait goes off (View.Skill.Traits): its flourish rides the slime, under its name.
+local function onTrait(event: { [string]: any })
+	local look = (V.Skill.Traits :: any)[event.trait]
+	local actor, at = find(event.from)
+	if not look or not actor or not at then
+		return
+	end
+	local _, scale = levelOf(actor)
+	vfx(look.vfx, actor.body, { follow = true, scale = scale })
+	floatText(
+		at + Vector3.new(0, actor.body.Size.Y + 1.5, 0),
+		look.name,
+		Color3.fromHex(V.Skill.Colour),
+		V.Skill.TextSize
+	)
 end
 
 -- After its blow, once back from the lunge, the attacker takes its place again (a fast one circles to a new flank).
@@ -2151,6 +2187,8 @@ local function onEvents(payload: any)
 				onGuard(event)
 			elseif kind == "cast" then
 				onCast(event)
+			elseif kind == "trait" then
+				onTrait(event)
 			elseif kind == "hit" then
 				onHit(event, first)
 			elseif kind == "dodge" then

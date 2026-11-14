@@ -44,7 +44,7 @@ end
 
 -- the sweep, right to left in two halves (a Beam bends no more than about 180 degrees)
 local function sweep(prefix, span, radius, y, delay, wide, steel)
-	local out = {}
+	local out: { any } = {}
 	local half = span / 2
 	for index, range in { { half, 0 }, { 0, -half } } do
 		local at = delay + (index - 1) * 0.05
@@ -77,7 +77,7 @@ end
 
 -- the gash: straight dark cracks lying on the ground along the arc
 local function gash(span, radius, count)
-	local out = {}
+	local out: { any } = {}
 	for i = 1, count do
 		local a1 = span / 2 - (i - 1) * span / count
 		local a2 = a1 - span / count
