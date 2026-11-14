@@ -327,12 +327,21 @@ local GATES: { [string]: { Piece } } = {
 	gate_e = { { "WildKit", "OwnMagmaCrystalCluster", 20, 20 }, { "WildKit", "OwnStackedBasalt", 13, 13 } },
 	gate_n = { { "WildKit", "OwnIceCrystalSpire", 24, 24 }, { "WildKit", "OwnIceCrystalCluster", 10, 10 } },
 }
+local OWN_GATE = { gate_w = "RootGate", gate_e = "EmberGate", gate_n = "FrostGate" }
 for _, site in Plan.Sites do
 	if site.kind == "gate" then
 		local dx, dz = Heart.x - site.x, Heart.z - site.z
 		local l = math.sqrt(dx * dx + dz * dz)
 		dx, dz = dx / l, dz / l
-		put(heart, "PropKit", "RuinArch", site.x, site.z, 42, { dx, dz }, { name = site.name, sink = 1.5 })
+		-- The gate's own model (tools/world/take_gates.luau); its front, the lantern side, looks down the causeway.
+		-- The mesh does not collide: its automatic hulls left a passage one character wide (measured). Two unseen
+		-- pillars stand in the legs instead and leave the middle 14 studs free.
+		put(heart, "WorldKit", OWN_GATE[site.id], site.x, site.z, 42, { dx, dz }, { name = site.name, sink = 1.5, soft = true })
+		for side = -1, 1, 2 do
+			local x, z = site.x - dz * side * 14.5, site.z + dx * side * 14.5
+			local at = Vector3.new(O.x + x, groundAt(site.x, site.z) + 15, O.z + z)
+			block(heart, "GateLeg", Vector3.new(15, 30, 16), CFrame.lookAt(at, at + Vector3.new(dx, 0, dz)), rgb(120, 120, 120)).Transparency = 1
+		end
 		for side = -1, 1, 2 do
 			for i, piece in GATES[site.id] do
 				local out, across = 26 + i * 14, side * (13 + i * 3)

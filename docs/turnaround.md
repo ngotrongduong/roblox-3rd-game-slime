@@ -60,9 +60,9 @@ Topology tab, poly count 3000, Texture on (Meshy N1, 2K), 15 credits each (718 -
 
 | Subject | Meshy model (owner's workspace) | Credits | Triangles | File | Roblox id |
 |---|---|---|---|---|---|
-| root_gate | Enchanted Mushroom Arch (2026-11-13) | 15 | 3,930 | root_gate.glb (4.6 MB) | not uploaded: asset scope not granted |
-| ember_gate | Molten Crystal Gate (2026-11-13) | 15 | 3,110 | ember_gate.glb (3.8 MB) | not uploaded |
-| frost_gate | Frostcrystal Gateway (2026-11-14) | 15 | 3,167 | frost_gate.glb (3.7 MB) | not uploaded |
+| root_gate | Enchanted Mushroom Arch (2026-11-13) | 15 | 3,930 | root_gate.glb (4.6 MB) | 110858843893866 |
+| ember_gate | Molten Crystal Gate (2026-11-13) | 15 | 3,110 | ember_gate.glb (3.8 MB) | 131059782610116 |
+| frost_gate | Frostcrystal Gateway (2026-11-14) | 15 | 3,167 | frost_gate.glb (3.7 MB) | 83305165757925 |
 
 ## Earlier: turnaround -> Meshy (stopped)
 

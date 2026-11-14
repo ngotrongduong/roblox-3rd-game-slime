@@ -786,5 +786,14 @@ was left there (this game has none); read it there if a cave is ever wanted.
   first four bytes read `glTF`. The task API (`/meshyd-api/...`) does not answer a plain page fetch: do not go that way.
 - Before uploading, read the GLB's JSON chunk (accessor min/max) for size, axis and triangles: the gates are one mesh,
   one 2K texture, 1 unit wide, passage along Z (the kit's through-axis).
-- `open_cloud_invoke` can lose its grant between sittings: "Scope 'asset:read' has not been granted" in every open
-  Studio. That is the owner's switch (Assistant Settings > MCP Permissions): stop, tell him, do not look for a way round.
+- `open_cloud_invoke` "Scope 'asset:read' has not been granted": first the owner's switch (Assistant Settings > MCP
+  Permissions): stop and tell him. With the switch on, a Studio open on a LOCAL file (MapWork.rbxlx) is still refused:
+  send the upload through a Studio whose place is saved to Roblox (`list_roblox_studios`: `persistedToCloud: true`).
+  The asset belongs to the account, so `InsertService:LoadAsset` then works in MapWork.
+- A Meshy model arrives as one MeshPart about 1 stud wide with a TextureID (no SurfaceAppearance): scale it in the
+  builder (`put`, by height). Its passage is along Z and its front (+Z) faces away from `lookAt`'s direction.
+- An arch or gate from one mesh: the automatic collision hulls close most of the opening (Blockcast with a 4 x 6 x 2
+  box: free only on the centre line), and CollisionFidelity set by script did not stick. Make the mesh non-colliding
+  and stand two unseen blocks in its legs; prove the passage with Blockcast (`RespectCanCollide = true`).
+- The owner may press Play while a job runs ("Edit datamodel is not available in Play mode", captures fail "Target is
+  not reachable"): read `get_studio_state` first; do the work that needs no Studio, then take Edit for the rest.

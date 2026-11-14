@@ -25,19 +25,25 @@ anchors at the hub, spawn, the server `World` module loading this terrain and `w
 fights in the zones (M5), then own models for the interim pieces (gates, crown, stone bridge, altars: §5).
 The old valley shows on the far south horizon of the new world until M4 removes it.
 
-**Gates through Meshy (three made, files here; the Roblox upload waits for the owner's permission click).** Meshy's
+**Gates through Meshy (done: the three gates stand in the world).** Meshy's
 Image to 3D has a **Smart Topology** tab (Meshy T2.5: ONE picture, a poly count typed in, Texture on with Meshy N1
 2K = 15 credits, about 40 s, no Remesh needed; no multi-view there). Sources cut from `world_ref_3`:
 `art/turnaround/<root|ember|frost>_gate/source.png`. Generated and textured in the owner's Meshy workspace (top of
 the list), credits 718 -> 673; the textured GLB of each is in `art/models/world/gates/` (one mesh, one 2K texture,
 about 1 unit wide, the passage along Z): **Root Gate** 3,930 triangles, **Ember Gate** 3,110, **Frost Gate** 3,167.
-**Blocked (2026-11-14):** Studio's `open_cloud_invoke` answers "Scope 'asset:read' has not been granted" in both open
-Studios, so nothing is uploaded and the map still shows the interim RuinArch gates. The owner grants asset read and
-write in Studio: Assistant (Ctrl+J) > ... > Settings > MCP Permissions. **Then:** POST `/assets/v1/assets` for the
-three files (Model, creator user 2366260872), poll the operations, `InsertService:LoadAsset` each into a new
-`ServerStorage.WorldKit` (RootGate, EmberGate, FrostGate), swap them for the RuinArch in section 4 of
-`tools/world/build_sites.luau` (42 tall, facing the causeway; check the passage is walkable: collision), rerun,
-shoot the three gates, save the place.
+Uploaded as Models on the owner's account (Root 110858843893866, Ember 131059782610116, Frost 83305165757925)
+through `open_cloud_invoke` on the Studio that has a place saved to Roblox ("Showroom skills"): a Studio on a local
+file (MapWork) gets no asset token ("Scope 'asset:read' has not been granted") even after the owner grants it.
+`tools/world/take_gates.luau` loads them into `ServerStorage.WorldKit`; section 4 of `tools/world/build_sites.luau`
+stands them in place of the RuinArch, 42 studs tall, lantern side down the causeway. The mesh does not collide (its
+automatic hulls left a passage one character wide, measured by Blockcast); two unseen `GateLeg` blocks stand in the
+legs and leave the middle 14 studs free (Blockcast: a character box passes at the middle, is stopped from 5 studs
+off-centre). Seen in edit-mode shots from the causeway side: `docs/references/world/shots/root_gate.jpg`,
+`ember_gate.jpg`, `frost_gate.jpg`. **MapWork was NOT saved after the gates** (the effects-audit session was
+play-testing in the same Studio, `save_place` is busy in Play): the edit DataModel holds them; if the place is
+reopened without them, run `tools/world/take_gates.luau` then `tools/world/build_sites.luau` (PLAN=WorldPlan) and
+save. **Not verified:** a walk through each gate in a play test (the game still sends a character placed in the new
+world back, until M4), the game's own camera, a phone, the Frost Gate from the Heart side.
 
 ## 2026-11-14 — fight effects audit; wave 1: the slimes' side raised to the monsters' level
 

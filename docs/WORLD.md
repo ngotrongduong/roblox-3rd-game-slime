@@ -124,7 +124,7 @@ credits, no Remesh needed); import into Roblox as one MeshPart.
 
 | # | Asset | Use | Size in game | Triangles | Now (interim) |
 |---|---|---|---|---|---|
-| 1 | Root Gate, Ember Gate, Frost Gate | the three ways into the Heart | 42 tall, opening 16+ wide | 3,000 each | PropKit RuinArch + region pieces; **models made** (`art/models/world/gates/*.glb`, 3,930 / 3,110 / 3,167 triangles), not in Roblox yet (section 9) |
+| 1 | Root Gate, Ember Gate, Frost Gate | the three ways into the Heart | 42 tall, opening 16+ wide | 3,000 each | **done 2026-11-14**: own models (`art/models/world/gates/*.glb`, 3,930 / 3,110 / 3,167 triangles) in `ServerStorage.WorldKit`, region pieces kept as dressing |
 | 2 | The Crown of the Heart | the mega-boss island's spire, seen across the world | 240 tall | 4,000 | CrystalCluster, stretched |
 | 3 | Stone arch bridge | 4 river crossings (and more later) | 68 long, 14-18 wide | 1,500 | built of parts (plank arch) |
 | 4 | Arena altar, 4 kinds | the mark of a fight: meadow, grove, ember, frost | 12-16 tall | 800 each | torches only |
@@ -177,7 +177,8 @@ the whole object in frame, centred, on a flat pure white background."*
 The way through the tools (proved on the three gates, 2026-11-14): cut the subject out of its reference picture into
 a square `source.png`, carry it into Meshy with skill `meshy-multiview`'s `carry.html`, Smart Topology tab, poly
 count, Texture on, Generate; open the TEXTURED entry in the model list (each generation lists a grey mesh and a
-textured model), Download as glb into `art/models/world/`, upload through Studio's Open Cloud (lessons in
+textured model), Download as glb into `art/models/world/`, upload through Studio's Open Cloud, load into
+`ServerStorage.WorldKit` (`tools/world/take_gates.luau` is the pattern; lessons in
 `.claude/skills/studio-build/LESSONS.md`). The text prompts above are only a hint: Smart Topology takes no text.
 A finished model replaces its interim by one line in `tools/world/build_sites.luau` (the kit and name it clones).
 
@@ -222,7 +223,7 @@ pieces -> scatter recipe -> shots from the fixed cameras -> rounds (skill `studi
 | Density gradient | 1 | groves and open ground alternate; the vale is thin, the references' region edges are denser |
 | Path readability | 2 | orange dirt and cobble causeways read from far on grass, mud, basalt and snow |
 | Haze and depth | 1 | one Atmosphere for all; no region mood yet |
-| Shape language | 1 | kit pieces fit; gates, bridges, crown and fall are interim |
+| Shape language | 1 | kit pieces fit; the gates are their own models (2026-11-14); bridges, crown and fall are interim |
 | Value structure, scale against a player | - | not checked: no play test stands in the new world yet (M4) |
 
 Fixed during the build: straight region borders and a rectangular bay (warp raised to 460 / 130 / 24 studs, cubic
@@ -238,7 +239,7 @@ only 2 studs under its banks; Turtle Pond has no pond yet; village pads are empt
 
 - A walk through the world in Studio (MapWork, `workspace.World`): is the layout the world he wants, before M4 moves
   the game onto it.
-- **Now:** asset read and write for the Assistant in Studio (Assistant, Ctrl+J > ... > Settings > MCP Permissions).
-  Without it the three finished gates cannot be uploaded ("Scope 'asset:read' has not been granted", 2026-11-14).
+- Model uploads need asset read and write granted to the Assistant (Settings > MCP Permissions; granted 2026-11-14)
+  AND a Studio open on a place saved to Roblox: the token comes through that Studio, not through MapWork.
 - Meshy credits for section 5 (each generation spends 15; 673 left on 2026-11-14).
 - Publishing stays his.
