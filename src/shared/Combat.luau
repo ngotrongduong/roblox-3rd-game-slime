@@ -1225,6 +1225,10 @@ local function classAct(fight: Fight, u: Unit, target: Unit, events: { Event })
 				return not fight.moves or distance(u, foe) <= kind.reach + Config.Dungeon.Move.BlowSlack
 			end)
 		end
+		-- A support cast can aim from across the field, but its failed cast cannot turn into a ranged plain hit.
+		if not worth and noReachNeeded(key) and fight.moves and distance(u, target) > kind.reach + Config.Dungeon.Move.BlowSlack then
+			return
+		end
 		if worth then
 			target = chosen or target
 			if chosen then
