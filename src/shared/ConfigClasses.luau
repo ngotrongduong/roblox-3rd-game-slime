@@ -1,6 +1,5 @@
 --!strict
--- Weapons give a complete job at Common; higher-tier skills will join here in later steps.
--- Every tier currently uses only its Common skill, so rarity never gates the class's job.
+-- Each class learns Common, Uncommon, then Epic skills as its weapon tier rises; tiers four and five use all three until ultimates join.
 return {
 	Families = {
 		sword = "warrior",
@@ -14,12 +13,12 @@ return {
 	Kinds = {
 		-- (`taken`: the Guardian always takes that share less, behind its shield; its Taunt raises it while it lasts)
 		-- (the ranged reaches are 1.5 times the first ones, the owner, 2026-11-13: 16, 16, 15, 14)
-		guardian = { beat = 1.1, factor = 0.8, magic = false, reach = 6, pull = 3, skill = "taunt", taken = 0.2 },
-		warrior = { beat = 1, factor = 1.05, magic = false, reach = 6, pull = 1, skill = "dash_strike" },
-		ranger = { beat = 1, factor = 1.05, magic = false, reach = 24, pull = 1, skill = "piercing_shot" },
-		mage = { beat = 1, factor = 0.9, magic = true, reach = 24, pull = 1, skill = "arcane_barrage" },
-		healer = { beat = 1.15, factor = 0.65, magic = true, reach = 22.5, pull = 1, skill = "mend" },
-		alchemist = { beat = 1, factor = 0.9, magic = true, reach = 21, pull = 1, skill = "acid_rain" },
+		guardian = { beat = 1.1, factor = 0.8, magic = false, reach = 6, pull = 3, skills = { "taunt", "shield_bash", "shield_wall" }, taken = 0.2 },
+		warrior = { beat = 1, factor = 1.05, magic = false, reach = 6, pull = 1, skills = { "dash_strike", "area_slash", "breaker_strike" } },
+		ranger = { beat = 1, factor = 1.05, magic = false, reach = 24, pull = 1, skills = { "piercing_shot", "arrow_volley", "snare_arrow" } },
+		mage = { beat = 1, factor = 0.9, magic = true, reach = 24, pull = 1, skills = { "arcane_barrage", "frost_burst", "arcane_lance" } },
+		healer = { beat = 1.15, factor = 0.65, magic = true, reach = 22.5, pull = 1, skills = { "mend", "healing_ring", "ward" } },
+		alchemist = { beat = 1, factor = 0.9, magic = true, reach = 21, pull = 1, skills = { "acid_rain", "squad_tonic", "cursed_flask" } },
 	},
 	-- An attack skill weighs this many of its class's plain blows, by the weapon's tier (the owner, 2026-11-13: Common
 	-- 1.1, Uncommon 1.2, ...), on every foe it strikes, so a better weapon's skill counts at every level; its own effect
@@ -73,6 +72,71 @@ return {
 			melt = 0.2,
 			seconds = 4,
 		},
+		-- Uncommon skills; a weapon's tier unlocks them alongside its Common skill.
+		shield_bash = { name = "Shield Bash", kind = "single", every = 1, cooldown = 11, power = 1.2, stun = 0.5 },
+		area_slash = { name = "Area Slash", kind = "splash", every = 1, cooldown = 8, radius = 7, cap = 3, power = 0.85, minimum = 2 },
+		arrow_volley = { name = "Arrow Volley", kind = "splash", every = 1, cooldown = 12, radius = 9, cap = 5, power = 0.7, minimum = 2 },
+		frost_burst = {
+			name = "Frost Burst",
+			kind = "splash",
+			every = 1,
+			cooldown = 13,
+			radius = 8,
+			cap = 4,
+			power = 0.7,
+			minimum = 2,
+			slow = 0.25,
+			seconds = 2.5,
+		},
+		healing_ring = {
+			name = "Healing Ring",
+			kind = "heal",
+			every = 1,
+			cooldown = 16,
+			factor = 0.7,
+			count = 4,
+			radius = 11,
+			range = 22.5,
+			minimum = 2,
+		},
+		squad_tonic = { name = "Squad Tonic", kind = "team", every = 1, cooldown = 18, dealt = 0.2, seconds = 4, minimum = 2 },
+		-- Epic skills: one effect or one focused strike, independently cooled down.
+		shield_wall = {
+			name = "Shield Wall",
+			kind = "team",
+			every = 1,
+			cooldown = 17,
+			count = 2,
+			range = 16,
+			taken = 0.15,
+			seconds = 3.5,
+			minimum = 2,
+			soloMinimum = 1,
+		},
+		breaker_strike = { name = "Breaker Strike", kind = "single", every = 1, cooldown = 12, power = 1.1, ignore = 0.2 },
+		snare_arrow = {
+			name = "Snare Arrow",
+			kind = "single",
+			every = 1,
+			cooldown = 13,
+			power = 0.7,
+			slow = 0.25,
+			seconds = 2.5,
+			bossSeconds = 1.5,
+		},
+		arcane_lance = { name = "Arcane Lance", kind = "single", every = 1, cooldown = 12, power = 1.3, barrier = 1.35 },
+		ward = {
+			name = "Ward",
+			kind = "team",
+			every = 1,
+			cooldown = 14,
+			factor = 2.5,
+			share = 0.2,
+			seconds = 5,
+			range = 15,
+			below = 0.8,
+		},
+		cursed_flask = { name = "Cursed Flask", kind = "single", every = 1, cooldown = 12, curse = 0.35, seconds = 5 },
 	},
 	-- Magic bypasses part of armour. A heal of factor 1 gives back what the healer's own blow would take off a slime as
 	-- strong as itself (Combat.healAmount).
@@ -89,9 +153,11 @@ return {
 	MiniStunFree = 6,
 	SpecialGap = 8,
 	TakenCap = 0.4,
+	SlowCap = 0.35,
+	SlowCapBoss = 0.15,
 	-- Effects on a unit, the strongest of a kind only (never added up), each capped here: a new kind is one line.
-	--   melt: its DEF counts that share less;   taken: damage it takes is that share less (all sources, TakenCap).
-	Effects = { melt = 0.75, taken = 0.4 },
+	--   melt: DEF lost; taken: damage blocked; dealt: bonus damage; curse: healing suppressed.
+	Effects = { melt = 0.75, taken = 0.4, dealt = 0.25, curse = 0.5 },
 	TauntFree = 2,
 	-- A lone foe of these kinds going for a team-mate is worth a taunt by itself (a raider hunting the back row).
 	TauntAlone = { hunter = true },
