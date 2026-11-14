@@ -2127,15 +2127,16 @@ return function(T: any)
 			for _, enemy in foes do
 				freeze(unitOf(fight, enemy.id))
 			end
-			local events = run(fight, 3)
 			local duration = Skills[entry.key].seconds
 				+ (if entry.tier == 5 then Config.Classes.Traits.alchemist.seconds else 0)
 			local count = 0
-			for _, e in events do
-				if e.kind == "status" and e.status == "melted" and e.skill == entry.key then
-					count += 1
-					T.eq(e.seconds, duration)
-					T.near(unitOf(fight, e.to).effects.melt.untilAt - e.seconds, fight.seconds - duration, 5)
+			for _ = 1, 30 do
+				for _, e in Combat.step(fight, DT) do
+					if e.kind == "status" and e.status == "melted" and e.skill == entry.key then
+						count += 1
+						T.eq(e.seconds, duration)
+						T.near(unitOf(fight, e.to).effects.melt.untilAt, fight.seconds + duration, 1e-9)
+					end
 				end
 			end
 			T.eq(count, entry.enemies)
@@ -2168,6 +2169,78 @@ return function(T: any)
 			end
 			T.same(play(), play(), "tier " .. tier .. " is deterministic")
 		end
+	end)
+
+
+	T.test("a ready-at-twelve ultimate cannot be announced earlier despite repeated plain beats", function()
+		local fight = Combat.new({ slime("m", "mage", { tier = 4 }) }, {
+			foe("a"), foe("b"),
+		}, Rng.new(125))
+		local m = unitOf(fight, "m")
+		for key in m.skillReady do
+			if key ~= "meteor" then
+				m.skillReady[key] = 1e9
+			end
+		end
+		freeze(unitOf(fight, "a"))
+		freeze(unitOf(fight, "b"))
+		T.eq(castOf(run(fight, Skills.meteor.first - DT), "meteor"), nil)
+		T.eq(m.skillReady.meteor, Skills.meteor.first)
+		local aimAt: number? = nil
+		local castAt: number? = nil
+		for _ = 1, 50 do
+			for _, e in Combat.step(fight, DT) do
+				if e.kind == "aim" and e.skill == "meteor" then
+					aimAt = fight.seconds
+				elseif e.kind == "cast" and e.skill == "meteor" then
+					castAt = fight.seconds
+				end
+			end
+			if castAt then
+				break
+			end
+		end
+		T.ok(aimAt ~= nil and castAt ~= nil)
+		T.ok((aimAt :: number) >= Skills.meteor.first - 1e-6)
+	end)
+
+	T.test("Last Stand also catches an intercepted lethal blow, not just a direct hit", function()
+		local fight = Combat.new({
+			slime("g", "guardian", { tier = 5, hp = 5, maxHp = 5 }),
+			slime("m", nil, { hp = 100, maxHp = 100 }),
+		}, { foe("f", { attack = 100 }) }, Rng.new(126))
+		local g, m = unitOf(fight, "g"), unitOf(fight, "m")
+		freeze(g)
+		freeze(m)
+		local f = unitOf(fight, "f")
+		freeze(f, m)
+		f.aimed, f.cooldown = false, 0.4
+		local events = run(fight, 0.8)
+		T.eq(g.hp, Config.Classes.Traits.guardian.left)
+		T.eq(g.lastStandUsed, 1)
+		T.ok(firstOf(events, function(e: any): boolean
+			return e.kind == "hit" and e.to == "g" and e.guard == "g"
+		end) ~= nil)
+		T.ok(firstOf(events, function(e: any): boolean
+			return e.kind == "trait" and e.trait == "last_stand" and e.to == "g"
+		end) ~= nil)
+	end)
+
+	T.test("Overflow cannot replace an active, stronger Ward barrier", function()
+		local fight = Combat.new({
+			slime("h", "healer", { tier = 5, attack = 300 }),
+			slime("m", nil, { hp = 89, maxHp = 100 }),
+		}, { foe("f") }, Rng.new(127))
+		local h, m = unitOf(fight, "h"), unitOf(fight, "m")
+		for key in h.skillReady do
+			h.skillReady[key] = 1e9
+		end
+		m.barrier, m.barrierUntil = m.maxHp * Skills.ward.share, 100
+		freeze(m)
+		freeze(unitOf(fight, "f"))
+		run(fight, 2)
+		T.near(m.barrier, m.maxHp * Skills.ward.share, 1e-9)
+		T.eq(m.barrierUntil, 100)
 	end)
 
 	T.test("a mixed class fight is the same from the same seed", function()
