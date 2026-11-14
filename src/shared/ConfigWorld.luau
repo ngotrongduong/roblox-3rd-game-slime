@@ -72,23 +72,39 @@ return {
 	},
 	-- ===== The waystones: teleport points (docs/WORLD.md §8) =====
 	-- One stands beside every zone's pad (OutStuds from the fight's middle, towards the hub) and one inside every
-	-- village's gate (the team banner's place, mirrored: HomeAcross, HomeIn from the gate). A zone's waystone opens for a
+	-- village's gate (across the path from the team banner, HomeAcross and HomeIn from the gate: a spot clear of the
+	-- village's bushes and lamps at every village level looked at, 1 and 16). A zone's waystone opens for a
 	-- player who has won that zone. A player travels from anywhere to an open waystone by quick travel's rules
 	-- (server/QuickTravel: Home and the Market are always open) and lands ArriveStuds from it, towards the pad. The stone's
 	-- anchor hangs Lift over the ground; its prompt answers from PromptRangeStuds.
 	Waystones = {
 		Folder = "Waystones",
-		OutStuds = 58,
+		LookFolder = "WaystoneLooks",
+		-- (at 54 every stone stands 5 studs or more clear of its pad's rim rocks; at 58 three touched one)
+		OutStuds = 54,
 		ArriveStuds = 7,
-		HomeAcross = -8,
-		HomeIn = 10,
+		HomeAcross = -11,
+		HomeIn = 14,
 		Lift = 3,
 		PromptRangeStuds = 14,
+		-- Its look (server/Waystone): the Dungeon Portal's side pillar at Scale of the portal's full size (the pillar and
+		-- its crystal stand about 15 studs at 1), one glyph of the portal's rune sheet (Runes, RuneStuds wide) RuneHeight
+		-- over the foot and RuneOut in front of the pillar's middle, the crystal's light and its motes a second.
+		Look = {
+			Scale = 0.7,
+			Runes = 81706490345447,
+			RuneStuds = 3,
+			RuneHeight = 5.6,
+			RuneOut = 2.4,
+			LightRange = 10,
+			LightBrightness = 0.8,
+			MotesRate = 3,
+		},
 	},
 	-- ===== The map (client/UiMap) =====
 	-- Its picture is drawn from WorldPlan by tools/world/map_picture.ps1 (art/map/world_map.png): a square of Size studs
 	-- whose north-west corner is (MinX, MinZ) in the plan's coordinates. Run the tool again after the plan changes.
-	Map = { Image = "", MinX = -2300, MinZ = -2500, Size = 4600 },
+	Map = { Image = 110309697818054, MinX = -2300, MinZ = -2500, Size = 4600 },
 	-- What a zone's guard pays when it falls, by the zone's kind, in place of its own drops (the Dungeon's bosses pay
 	-- trophies that a short fight may not hand out every few minutes). Lines as a monster's drops (item, chance, min..max).
 	-- "trophy" is the region's own (Trophy below; a region without one pays none). Coins are multiplied by

@@ -269,21 +269,41 @@ A finished model replaces its interim by one line in `tools/world/build_sites.lu
   - **Packs replace the camps in front of the gates** (`Config.World.Packs`, rules `shared/WorldPacks`, the server is
     still `server/ZombieFights`, the folder still `workspace.ZombieCamps/<band>/<id>`). One pack to a 280-stud cell of
     the whole world (the same every time), dropped where the spot is water, a slope, something built or too near a
-    place. A pack's level never changes: 4 within 300 studs of a village's middle, 150 at the pack farthest from every
-    village, by `(share of the way) ^ 1.6` between (so the first twenty levels lie within about 900 studs of home).
+    place. A pack's level never changes: 4 within 300 studs of a village's middle, 150 from `FarStuds` (2420: how far
+    the farthest pack that really stands is from every village; the server's start line says it, set it again when
+    the plan or the ground changes), by `(share of the way) ^ 1.6` between (so the first twenty levels lie within
+    about 900 studs of home).
     Bands of 20 levels are the areas ("Lv 1-20" ... "Lv 140-150"), each with its colour on the map. A pack is 3 to 5
     common monsters of its region's Dungeon map (Vale and Meadow: Sunny Meadow's; Grove: Mushroom Grove's; Ember:
     Ember Lava's; Frost: Frozen Ice's), drawn with their own looks and skills; every stat is the same share of the
     level, x `StatFactor`. A fallen monster pays coins by its role and level. The player stands by a pack to send a team
-    (as before); the team sets out at most 150 studs from the pack, on the village's side, and comes back there.
+    (as before); the team sets out at most 60 studs from the pack, on the village's side, and comes back there.
     A team's level no longer changes the world: a player picks their risk by where they hunt.
   - **Waystones** (`Config.World.Waystones`; `ZoneFights.waystone / landing / travelBlock`): one beside every zone's
     pad and one inside every village's gate. Quick travel (`server/QuickTravel`, `{ action = "Zone", zone = id }`)
     takes a player from anywhere to the waystone of a zone whose guard they have beaten; Home and the Market stay as
-    they were. Nothing new is saved (`farm.world.beaten` already holds the wins).
-  - **The map** (`client/UiMap`): a small map in the HUD that follows the player, and the whole world on a sheet:
-    the bands in their colours with a legend, the packs, the zones, the villages, the waystones (open ones travel on
-    a press). The picture is drawn from `WorldPlan` by script (`tools/world/map_picture.py`).
+    they were. Nothing new is saved (`farm.world.beaten` already holds the wins). Its look (`server/Waystone`,
+    `Waystones.Look`) is the Dungeon Portal's own side pillar at 0.7: slab, carved pillar, glowing crystal with a few
+    motes, and one glyph of the portal's rune sheet on its face (towards the pad; at home towards the gate's path,
+    standing on the lawn at `HomeAcross` -11, `HomeIn` 14: clear of the village's bushes and lamps at village levels
+    1 and 16). The same for everyone and always lit: whether a player may use one is the map's to say.
+  - **The map** (`client/UiMap`, pure maths `shared/MapView`, sizes `Config.Ui.Map`): a small map at the top left of
+    the HUD that follows the player (700 studs across, north up, the player's arrow, the packs as dots in their
+    band's colour, zones, the own village, the band's name under it), and the whole world on a sheet (a press on the
+    small map, or a waystone's prompt): the bands with a legend, the packs, every zone by its kind with its waystone
+    (blue = open, lock = not yet), the own village and the Market. A press on a place names it in the footer; Travel
+    is lit for Home, the Market and an open zone, greyed with "Beat its guard to open" otherwise. The picture is
+    drawn from `WorldPlan` by script (`tools/world/map_picture.py`); the eight icons are ChatGPT's (`art/icons/map`,
+    `waystone`, `waystone_locked`, `zone_mini`, `zone_boss`, `zone_heart`, `map_player`, `map_pack`).
+  - Proved in the StudioTest play test (in-memory store, 2026-11-14): 108 packs stand, bands 1-8 hold 42 / 15 / 13 /
+    8 / 8 / 10 / 6 / 6, Lv 4-150; a Lv 5 pack was fought, went and came back after 30 s; the rim's wall held a
+    walking, jumping character at 8 points; 22 waystones stand (`shots/m5b_waystone_zone.jpg`,
+    `m5b_waystone_home.jpg`); the sheet opened from the small map and from a waystone's prompt, a locked zone read
+    "Beat its guard to open", Travel took the player Home and, after m1 was won, to m1's waystone (7 studs from it)
+    (`shots/m5b_map_sheet.jpg`); no error or warning of the map or the waystones in the log. Not seen: a phone frame
+    (the small map against the team chips at 360 x 640), a pack's coin payout (the test wallet was over its cap),
+    the other 19 waystones one by one (measured in the place instead: every zone's spot is flat and 5 studs or more
+    clear of any scenery at `OutStuds` 54).
 - **M6 Own models** for section 5, swapped in; region light and sound (client-side Atmosphere by region, no ambient
   particle layers).
 - **M7 Phone pass** and the owner's walk through every road.

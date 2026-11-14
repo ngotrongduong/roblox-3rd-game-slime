@@ -18,6 +18,7 @@ local Layout = require(ReplicatedStorage.Shared.Layout)
 local WorldPlan = require(ReplicatedStorage.Shared.WorldPlan)
 local ZoneFights = require(ReplicatedStorage.Shared.ZoneFights)
 local PlayerData = require(script.Parent.PlayerData)
+local Waystone = require(script.Parent.Waystone)
 
 local W = Config.World
 
@@ -192,11 +193,27 @@ function ZoneGuards.start()
 		end
 	end
 
-	-- The waystones: one beside every zone's pad, one inside every village's gate. The clients draw them and answer
-	-- their prompts (the map); travel itself is server/QuickTravel's.
+	-- The waystones: one beside every zone's pad (its rune towards the pad), one inside every village's gate (towards the
+	-- gate's path). The clients answer their prompts (the map); travel itself is server/QuickTravel's.
 	local stones = folder(W.Waystones.Folder)
-	local function stone(name: string, x: number, z: number, title: string): Part
-		local anchor = unseen(name, Vector3.one, CFrame.new(x, (ground(x, z) or 0) + W.Waystones.Lift, z), stones)
+	local feet: { CFrame } = {}
+	local function stone(
+		name: string,
+		x: number,
+		z: number,
+		title: string,
+		towardX: number,
+		towardZ: number,
+		lawn: boolean?
+	): Part
+		local y = ground(x, z) or 0
+		if lawn then
+			-- (a village's lawn lies over the land: the stone stands on what is walked on)
+			local top = workspace:Raycast(Vector3.new(x, y + 40, z), Vector3.new(0, -80, 0))
+			y = if top then top.Position.Y else y
+		end
+		table.insert(feet, CFrame.lookAt(Vector3.new(x, y, z), Vector3.new(towardX, y, towardZ)))
+		local anchor = unseen(name, Vector3.one, CFrame.new(x, y + W.Waystones.Lift, z), stones)
 		local prompt = Instance.new("ProximityPrompt")
 		prompt.Name = "WaystonePrompt"
 		prompt.ActionText = "Travel"
@@ -208,12 +225,26 @@ function ZoneGuards.start()
 	end
 	for _, place in WorldPlan.Zones do
 		local x, z = ZoneFights.waystone(place.id)
-		stone(place.id, x, z, place.name):SetAttribute("Zone", place.id)
+		local middleX, middleZ = ZoneFights.middle(place.id)
+		stone(place.id, x, z, place.name, middleX, middleZ):SetAttribute("Zone", place.id)
 	end
 	for plot = 1, Config.Map.PlotCount do
-		local at = (Layout.plotGate(plot) * CFrame.new(W.Waystones.HomeAcross, 0, W.Waystones.HomeIn)).Position
-		stone("home" .. plot, at.X, at.Z, "Home"):SetAttribute("Plot", plot)
+		local gate = Layout.plotGate(plot)
+		local at = (gate * CFrame.new(W.Waystones.HomeAcross, 0, W.Waystones.HomeIn)).Position
+		local path = (gate * CFrame.new(0, 0, W.Waystones.HomeIn)).Position
+		stone("home" .. plot, at.X, at.Z, "Home", path.X, path.Z, true):SetAttribute("Plot", plot)
 	end
+	-- their looks, once the kit meshes have come (the anchors and prompts do not wait for them)
+	task.spawn(function()
+		if not Waystone.load() then
+			return
+		end
+		local looks = folder(W.Waystones.LookFolder)
+		for _, foot in feet do
+			Waystone.build(foot).Parent = looks
+		end
+		print(Config.LogPrefix, "waystones:", #feet, "stand in the world")
+	end)
 
 	PlayerData.onReady(function(player: Player, data: any)
 		if player.Parent == Players then

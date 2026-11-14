@@ -100,6 +100,16 @@ return {
 		slotWeapon = 72608277069089,
 		slotHead = 87341761427328,
 		slotCharm = 129687119015421,
+		-- The map (UiMap), drawn by ChatGPT 2026-11-14 (art/icons). map_player is a white arrow pointing up, map_pack a
+		-- small white monster head; both are tinted by code.
+		map = 111178071211374,
+		waystone = 139707615352746,
+		waystone_locked = 80302175896662,
+		zone_mini = 119774594976594,
+		zone_boss = 129992543467584,
+		zone_heart = 81038888187455,
+		map_player = 124427272471970,
+		map_pack = 83728428397346,
 		-- (drawn from the 3D items instead: docs/GAMEPLAY.md, the food chip)
 		fish = 0,
 		carrot = 0,
@@ -419,6 +429,39 @@ return {
 	PressScale = 0.94,
 	BackdropTransparency = 0.55,
 	DisabledTransparency = 0.5,
+	-- The map (UiMap). Picture: the pixels of the map picture's side. The minimap is MiniSize square (MiniTall on a screen at
+	-- least TallHeight points high; the team chips below it leave room for this much only) and shows MiniStuds across; it
+	-- and the sheet are looked at again every RefreshSeconds. Mini / Sheet: the pixels of each marker. The sheet is Width x
+	-- Height at most; Hit is a marker's press area; Legend the width of one band entry (a column beside a map on a screen
+	-- WideRatio times wider than tall, rows under it otherwise); InnerPad what the sheet's frame takes from its width.
+	Map = {
+		Picture = 1024,
+		RefreshSeconds = 0.25,
+		MiniStuds = 700,
+		MiniSize = 72,
+		MiniTall = 104,
+		TallHeight = 680,
+		LabelHeight = 19,
+		Mini = { Player = 14, Pack = 6, Zone = 14, Home = 16 },
+		Sheet = {
+			Width = 820,
+			Height = 720,
+			Footer = 56,
+			Legend = 104,
+			LegendRow = 22,
+			LegendChip = 14,
+			InnerPad = 44,
+			WideRatio = 1.2,
+			Player = 20,
+			Pack = 8,
+			Zone = 26,
+			Home = 26,
+			Stone = 14,
+			Hit = 44,
+			Icon = 28,
+		},
+		ZoneIcons = { mini = "zone_mini", boss = "zone_boss", mega = "zone_heart" },
+	},
 	-- The food panel (UiFood): row height, the model icon size, how wide the count column is.
 	FoodWidth = 420,
 	FoodHeight = 480,

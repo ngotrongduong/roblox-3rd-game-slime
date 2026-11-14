@@ -1,5 +1,39 @@
 # Status
 
+## 2026-11-14 — M5b: packs Lv 4-150, the Heart's rim closed, waystones, the map (done)
+
+**What it is** (the owner's request of 2026-11-14; every decision in `docs/WORLD.md` §7 "M5b").
+- The Heart can only be entered through its three gates: an unseen wall runs along the crater's crest (`Config.World.RimWall`).
+- Monsters stand all over the world in packs of 3-5 Dungeon monsters of their region, each pack at a fixed level by its
+  distance from the nearest village: Lv 4 beside a village to Lv 150 at the farthest, read in 8 bands of 20 levels
+  (`Config.World.Packs`, `shared/WorldPacks`, server `ZombieFights`). The camps at the gates are gone.
+- 22 waystones (`server/Waystone`, `ZoneGuards`): one beside every zone's pad, one inside every village's gate. A zone's
+  waystone opens for a player who has beaten that zone's guard; travel is `Remotes.Travel { action = "Zone" }`.
+- The map (`client/UiMap`, `shared/MapView`): a small map at the top left of the HUD and the whole world on a sheet with
+  the bands' legend, packs, zones, waystones and a Travel button. Eight icons by ChatGPT (`Config.Ui.Icons.map` ...).
+- No save shape change (wins were already saved by M5, schema 15).
+
+**Proved.** `tools\check.ps1`: CHECK OK, 795 passed. `tools\types.ps1`: TYPES OK. StudioTest play test (in-memory
+store): 108 packs in bands 1-8 (42 / 15 / 13 / 8 / 8 / 10 / 6 / 6), Lv 4-150; a Lv 5 pack fought, gone, back after
+30 s; the rim held a walking, jumping character at 8 points; "waystones: 22 stand in the world"; a zone's and a home's
+waystone seen standing right with the rune lit; the sheet opened from the small map and from a waystone's prompt;
+a locked zone read "Beat its guard to open"; Travel took the player Home, and to m1's waystone after m1 was won; no
+error or warning of the map, packs or waystones in the log. Shots: `docs/references/world/shots/m5b_*.jpg`.
+
+**Not verified.** A phone frame (the small map against the team chips at 360 x 640; the sheet's legend under the map
+on a narrow screen). A pack's coin payout (the "mid" preset's wallet was over its cap, the log said "paid 0"). The
+last numbers (`OutStuds` 54, set after measuring every zone's spot in the place) were not seen again in play. Two
+players at once. MapWork has not been given this code (StudioTest has).
+
+**Owner's numbers** (`Config.World`): `Packs.StatFactor` 0.85 (how strong a pack is against slimes of its level),
+`Packs.Curve` 1.6, `Packs.GridStuds` 280 (how many packs), `Packs.CoinBase`, `Packs.MarchMostStuds` 60,
+`Waystones.Look.Scale` 0.7; `Config.Ui.Map.MiniStuds` 700 (how much the small map shows).
+
+**Open.** Zone guards are built for teams of level 6-60 while the packs round them go far higher (the Frost zones stand
+in the Lv 100+ bands): the zones' `level` wants raising to match, the owner's call. Packs pay coins only. The waystone
+is the same lit stone for everyone (the map says which are open). King Goo's own model. Studio said once "No asset
+content representation" for `rbxassetid://135413526793030` (the Dungeon's green dandelion texture, not M5b's).
+
 ## 2026-11-14 — the team sheet: rows and three tactics (WEAPONS step 6; built and seen in play)
 
 **What it is.** On the Teams sheet every slime of a team has a row pill (Front / Mid / Back, tap to cycle) and the team
