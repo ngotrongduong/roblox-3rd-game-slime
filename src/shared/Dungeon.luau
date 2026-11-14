@@ -197,6 +197,23 @@ function Dungeon.squadSpot(index: number, count: number): (number, number)
 	return -toZ * along + toX * back, toX * along + toZ * back
 end
 
+-- The team sheet's rows face the monsters: the middle and back rows stand further towards the player.
+-- Keep squadSpot above for the old client and balance runner until they adopt the new list.
+function Dungeon.squadSpots(rows: { string }): { { x: number, z: number } }
+	local spot = D.PlayerSpot
+	local length = math.sqrt(spot.x * spot.x + spot.z * spot.z)
+	local toX, toZ = 0, 1
+	if length > 1e-3 then
+		toX, toZ = spot.x / length, spot.z / length
+	end
+	local spots: { { x: number, z: number } } = {}
+	for index, row in Zombies.rowSpots(rows) do
+		local back = D.View.SquadBack + row.back
+		spots[index] = { x = -toZ * row.across + toX * back, z = toX * row.across + toZ * back }
+	end
+	return spots
+end
+
 -- The def of a monster by its id (the plan's monsters carry the id only): looked for on this map first, then on the others
 -- (the Heart's guards come from every map); nil when there is none.
 function Dungeon.defOf(mapId: string, defId: string): any
