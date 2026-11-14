@@ -3,7 +3,7 @@
 -- game (the Slime Dungeon, the camps, the Arena) runs in the positional mode (Combat.new's `moves`, the owner, 2026-11-13:
 -- one equipment system, the same fight everywhere), where fighters walk into reach before they aim; without it (the
 -- tools' and tests' quick fights) a hit lands when its cooldown ends, wherever the fighters are.
--- A slime with a weapon fights by its class (docs/WEAPONS.md, Config.Classes): its own beat, reach, plain blow and one
+-- A slime with a weapon fights by its class (docs/WEAPONS.md, Config.Classes): its own beat, reach, plain blow and
 -- skills on independent cooldowns in seconds; a slime without one is a Brawler and fights by its role, as before.
 local Config = if script then require(script.Parent.Config) else require("./Config")
 local Rng = if script then require(script.Parent.Rng) else require("./Rng")
@@ -85,7 +85,8 @@ export type Fight = {
 	radius: number?,
 	fade: boolean?,
 }
--- `skill` is the way of fighting whose skill struck (a key of Config.Combat.Skills); `n` the blow's number in a
+-- `skill` is the way of fighting whose skill struck (a key of Config.Combat.Skills); a new `cast` event starts each
+-- Uncommon or Epic skill; `amount` on a hit is health damage, `absorbed` is barrier damage. `n` the blow's number in a
 -- several-blow skill; `splash` a blow that struck beside the target; `guard` the guard that took a blow aimed elsewhere;
 -- `ranged` a blow from a fighter that keeps its distance; `slow` a sting that slowed its target; `melt` a blow that
 -- melted its target's armour. A "heal" event carries the health given back in `amount`. A "move" event (positional mode
@@ -1217,11 +1218,14 @@ local function classAct(fight: Fight, u: Unit, target: Unit, events: { Event })
 	if u.skillNext then
 		local key = u.skillKey
 		local s = (Config.Combat.Skills :: any)[key]
-		local worth, chosen = classWorth(fight, u, target, key, function(foe: Unit): boolean
-			return not fight.moves or distance(u, foe) <= kind.reach + Config.Dungeon.Move.BlowSlack
-		end)
-		-- Common skills keep the existing cast semantics; new ones abandon an obsolete aim without spending cooldown.
-		if key == kind.skills[1] or worth then
+		-- Do not retarget or re-evaluate Common skills on impact: their previous event stream must stay identical.
+		local worth, chosen = true, nil :: Unit?
+		if key ~= kind.skills[1] then
+			worth, chosen = classWorth(fight, u, target, key, function(foe: Unit): boolean
+				return not fight.moves or distance(u, foe) <= kind.reach + Config.Dungeon.Move.BlowSlack
+			end)
+		end
+		if worth then
 			target = chosen or target
 			if chosen then
 				u.target = chosen
