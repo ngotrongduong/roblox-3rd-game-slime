@@ -5,7 +5,8 @@
 --   lune run tools/balance/zone_sim.luau [seeds]            every zone as Config.World has it, against its target team
 --   lune run tools/balance/zone_sim.luau [seeds] fit [win]  the `level` of every zone at which the target team wins `win`
 --                                                           (0.75) of its fights, to copy into Config.World.Zones
--- The target team of a zone is four even slimes of the level below (docs/WORLD.md §7).
+-- The target team of a zone is four even slimes of the level the zone shows (ZoneFights.level: the level of the packs
+-- standing round it; docs/WORLD.md §7).
 local process = require("@lune/process")
 local Combat = require("../../src/shared/Combat")
 local Config = require("../../src/shared/Config")
@@ -19,8 +20,6 @@ local FIT = process.args[2] == "fit"
 local WIN = tonumber(process.args[3]) or 0.75
 local D = Config.Dungeon
 local STEP = Config.Zombies.FightStepSeconds
--- the slime level a zone is meant for, by its tier
-local TEAM = { 6, 10, 14, 18, 22, 26, 30, 34, 38, 42, 46, 50, 54, 60 }
 
 local function team(slimeLevel: number): { any }
 	local out = {}
@@ -86,13 +85,13 @@ local function rate(zone: string, slimeLevel: number): (number, number)
 end
 
 print(string.format("Zones of the big world, %d seeds a row%s", SEEDS, if FIT then ", fitted to win " .. WIN else ""))
-print("zone   tier team  level  shown  win%  seconds   weaker team win%   stronger team win%")
+print("zone   tier team  level  win%  seconds   weaker team win%   stronger team win%")
 for _, place in WorldPlan.Zones do
 	local numbers = Config.World.Zones[place.id]
-	local target = TEAM[place.tier]
+	local target = ZoneFights.level(place.id)
 	if FIT then
 		-- the win rate falls as the level rises: halve the bracket
-		local lo, hi = -6, 16
+		local lo, hi = -6, 40
 		for _ = 1, 12 do
 			numbers.level = (lo + hi) / 2
 			if rate(place.id, target) >= WIN then
@@ -108,12 +107,11 @@ for _, place in WorldPlan.Zones do
 	local strong = rate(place.id, target + 4)
 	print(
 		string.format(
-			"%-6s %4d %4d %6.2f %6d %5.0f %8.0f %18.0f %20.0f",
+			"%-6s %4d %4d %6.2f %5.0f %8.0f %18.0f %20.0f",
 			place.id,
 			place.tier,
 			target,
 			numbers.level,
-			ZoneFights.level(place.id),
 			win * 100,
 			seconds,
 			weak * 100,

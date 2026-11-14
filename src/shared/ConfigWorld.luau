@@ -134,8 +134,10 @@ return {
 	-- The zones, by their WorldPlan id.
 	--   map     the Config.Dungeon.Maps id its crowds are drawn from
 	--   level   the dungeon level its monsters are scaled to (HP and attack x LevelPower ^ (level - 1); it need not be whole).
-	--           Set with tools/balance/zone_sim.luau so that four even slimes of the level in the comment win about three
-	--           fights in four.
+	--           Set with tools/balance/zone_sim.luau (`fit`) so that four even slimes of the level in the comment win about
+	--           three fights in four. That level is the level of the packs standing round the zone (the owner, 2026-11-14:
+	--           a guard matches the monsters about it), the Heart's the packs' highest: fit again after Packs or the plan
+	--           changes.
 	--   waves   in order. { wave = n }: the Dungeon's crowd of wave n (never the Dungeon's own boss waves, 5 and 10).
 	--           { wave = n, guard = id }: that monster alone, as strong as in wave n; `power` multiplies its HP and attack
 	--           once more (a common monster standing guard). Wave numbers rise within a zone (monster ids are made of them).
@@ -144,40 +146,40 @@ return {
 	Zones = {
 		-- the Meadow
 		m1 = { map = "meadow", level = 0.55, waves = { { wave = 2 }, { wave = 3, guard = "green_boar" } } }, -- team 6
-		m2 = { map = "meadow", level = 2.55, waves = { { wave = 2 }, { wave = 3, guard = "green_turtle" } } }, -- team 10
+		m2 = { map = "meadow", level = 1, waves = { { wave = 2 }, { wave = 3, guard = "green_turtle" } } }, -- team 5
 		-- the Mushroom Grove
-		m3 = { map = "mushroom", level = 3.2, waves = { { wave = 2 }, { wave = 3, guard = "dark_wyrm" } } }, -- team 14
-		m4 = { map = "mushroom", level = 4.45, waves = { { wave = 2 }, { wave = 3, guard = "dark_deer", power = 4 } } }, -- team 18
+		m3 = { map = "mushroom", level = 4.5, waves = { { wave = 2 }, { wave = 3, guard = "dark_wyrm" } } }, -- team 24
+		m4 = { map = "mushroom", level = 7.75, waves = { { wave = 2 }, { wave = 3, guard = "dark_deer", power = 4 } } }, -- team 63
 		b1 = {
 			map = "mushroom",
-			level = 2.2,
+			level = 4.6,
 			waves = { { wave = 4 }, { wave = 6, guard = "dark_wyrm" }, { wave = 7, guard = "dark_bear" } },
-		}, -- team 22
+		}, -- team 55
 		-- the Ember Wastes
-		m5 = { map = "lava", level = 3.75, waves = { { wave = 3 }, { wave = 4, guard = "lava_bull" } } }, -- team 26
-		m6 = { map = "lava", level = 3.85, waves = { { wave = 3 }, { wave = 4, guard = "lava_tortoise", power = 4 } } }, -- team 30
+		m5 = { map = "lava", level = 3.8, waves = { { wave = 3 }, { wave = 4, guard = "lava_bull" } } }, -- team 26
+		m6 = { map = "lava", level = 6.9, waves = { { wave = 3 }, { wave = 4, guard = "lava_tortoise", power = 4 } } }, -- team 89
 		b2 = {
 			map = "lava",
-			level = 2.95,
+			level = 4.65,
 			waves = { { wave = 4 }, { wave = 6, guard = "lava_bull" }, { wave = 7, guard = "lava_golem" } },
-		}, -- team 34
+		}, -- team 63
 		-- the far corners
-		m7 = { map = "mushroom", level = 4.2, waves = { { wave = 4 }, { wave = 6, guard = "dark_totem", power = 4 } } }, -- team 38
-		m8 = { map = "lava", level = 4.6, waves = { { wave = 4 }, { wave = 6, guard = "lava_phoenix", power = 4 } } }, -- team 42
+		m7 = { map = "mushroom", level = 7.05, waves = { { wave = 4 }, { wave = 6, guard = "dark_totem", power = 4 } } }, -- team 103
+		m8 = { map = "lava", level = 7.6, waves = { { wave = 4 }, { wave = 6, guard = "lava_phoenix", power = 4 } } }, -- team 114
 		-- the Frost Peaks
-		m9 = { map = "ice", level = 3.85, waves = { { wave = 4 }, { wave = 6, guard = "ice_golem", power = 4 } } }, -- team 46
-		m10 = { map = "ice", level = 4.35, waves = { { wave = 4 }, { wave = 6, guard = "ice_mammoth" } } }, -- team 50
+		m9 = { map = "ice", level = 7.4, waves = { { wave = 4 }, { wave = 6, guard = "ice_golem", power = 4 } } }, -- team 148
+		m10 = { map = "ice", level = 7.2, waves = { { wave = 4 }, { wave = 6, guard = "ice_mammoth" } } }, -- team 127
 		b3 = {
 			map = "ice",
-			level = 3.7,
+			level = 6,
 			waves = { { wave = 4 }, { wave = 6, guard = "ice_mammoth" }, { wave = 7, guard = "ice_yeti" } },
 			-- (a mound fills the pad's south-west)
 			offset = { x = 0, z = -30 },
-		}, -- team 54
+		}, -- team 117
 		-- The Heart. King Goo has no model yet (docs/WORLD.md §5): until he does, the four region bosses hold it in turn.
 		heart = {
 			map = "ice",
-			level = 3.8,
+			level = 6.65,
 			waves = {
 				{ wave = 3, guard = "green_boar" },
 				{ wave = 4, guard = "dark_bear" },
@@ -185,6 +187,6 @@ return {
 				{ wave = 7, guard = "ice_yeti" },
 			},
 			needs = { "b1", "b2", "b3" },
-		}, -- team 60
+		}, -- team 150
 	},
 }

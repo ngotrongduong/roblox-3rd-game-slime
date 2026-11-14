@@ -33,8 +33,16 @@ players at once. MapWork has not been given this code (StudioTest has).
 `Packs.Curve` 1.6, `Packs.GridStuds` 280 (how many packs), `Packs.CoinBase`, `Packs.MarchMostStuds` 60,
 `Waystones.Look.Scale` 0.7; `Config.Ui.Map.MiniStuds` 700 (how much the small map shows).
 
-**Open.** Zone guards are built for teams of level 6-60 while the packs round them go far higher (the Frost zones stand
-in the Lv 100+ bands): the zones' `level` wants raising to match, the owner's call. Packs pay coins only. The waystone
+**Zone guards match their packs (the owner said yes, 2026-11-14).** A zone is now made for a team of the level of the
+packs round it and shows that level everywhere (`ZoneFights.level`; sign, HUD, monster tags): m1 6, m2 5, m3 24, m4 63,
+b1 55, m5 26, m6 89, b2 63, m7 103, m8 114, m9 148, m10 127, b3 117, heart 150 (`Config.World.Zones` `level`, fitted
+by `tools/balance/zone_sim.luau 40 fit`). Proved: CHECK OK (795 passed), TYPES OK; the sim at 80 seeds gives the target
+team 61-86 % wins; StudioTest play: the 14 anchors carry those levels, m1 fought and won with the HUD and both tags
+reading "Lv 6", no script error. Not verified: a far zone fought in play (only the sim), the zone's prompt card read by
+eye.
+
+**Open.** A guard pays 10-120 coins (`Config.World.Reward`, set when zones were for teams of 6-60) while one monster
+of a Lv 100 pack pays 600: the guards' coins want raising, the owner's call. Packs pay coins only. The waystone
 is the same lit stone for everyone (the map says which are open). King Goo's own model. Studio said once "No asset
 content representation" for `rbxassetid://135413526793030` (the Dungeon's green dandelion texture, not M5b's).
 

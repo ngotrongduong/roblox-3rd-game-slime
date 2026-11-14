@@ -252,9 +252,14 @@ A finished model replaces its interim by one line in `tools/world/build_sites.lu
   - Gates: an unseen wall stands in each gate of the Heart (`workspace.ZoneGates`) with a lock picture; each client
     drops its own wall once its boss zone is won (gate_w = b1, gate_e = b2, gate_n = b3). The server's real check is
     the Heart's own: it needs all three bosses (`ZONE_LOCKED`).
-  - Balance, by `lune run tools/balance/zone_sim.luau 60` (`... fit` finds the levels again): four even slimes of the
-    target level win 72-85 % of fights, four levels lower almost never. Target team level by tier 1..14: 6, 10, 14,
-    18, 22, 26, 30, 34, 38, 42, 46, 50, 54, 60. The owner tunes by playing: one `level` a zone.
+  - Balance, by `lune run tools/balance/zone_sim.luau 80` (`... fit` finds the levels again): four even slimes of the
+    target level win about three fights in four (61-86 % at 80 seeds). **The target level is the level of the packs
+    standing round the zone** (the owner, 2026-11-14: a guard matches the monsters about it; the Heart's is the packs'
+    highest), `ZoneFights.level`: m1 6, m2 5, m3 24, m4 63, b1 55, m5 26, m6 89, b2 63, m7 103, m8 114, m9 148, m10
+    127, b3 117, heart 150. It is also the level the zone shows, on its sign, in the fight's HUD and over every
+    monster of the fight (a guard's own stats read as a slime's would say Lv 423 in a Lv 140-150 band). Before this
+    the targets were 6-60 by tier. Fit again after `Config.World.Packs` or the plan changes. The owner tunes by
+    playing: one `level` a zone.
   - Proved in the StudioTest play test (in-memory store): 14 prompts and 3 seals made; far, unknown, locked and
     resting entries refused; m1 and b1 fought on their pads and won (monsters and slimes on the ground, HUD "Wave
     2/2 Lv 16"); the end card shows Leave only after a win, Replay and Leave after a defeat (b3 lost); gate_w's wall

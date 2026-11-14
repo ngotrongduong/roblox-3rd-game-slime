@@ -5,6 +5,7 @@
 local Config = if script then require(script.Parent.Config) else require("./Config")
 local Dungeon = if script then require(script.Parent.Dungeon) else require("./Dungeon")
 local FarmState = if script then require(script.Parent.FarmState) else require("./FarmState")
+local WorldPacks = if script then require(script.Parent.WorldPacks) else require("./WorldPacks")
 local WorldPlan = if script then require(script.Parent.WorldPlan) else require("./WorldPlan")
 
 type Farm = typeof(FarmState.newFarm(0))
@@ -46,20 +47,34 @@ function ZoneFights.waveKind(id: string, wave: number): string
 	return if wave == #waves then "boss" else "miniboss"
 end
 
+-- The level a zone shows, on its sign and over every monster of its fight: the level of the packs standing round it
+-- (the owner, 2026-11-14: a guard matches the monsters about it); the Heart's, the packs' highest. Its monsters are made
+-- for a team of that level (Config.World.Zones `level`).
+function ZoneFights.level(id: string): number
+	local _, place = ZoneFights.zone(id)
+	if place.kind == "mega" then
+		return W.Packs.LevelMax
+	end
+	return WorldPacks.levelAt(place.x, place.z)
+end
+
 -- The monsters of wave `wave` of a zone, in the order they come. The same seed makes the same wave.
 function ZoneFights.plan(id: string, wave: number, seed: number): { Monster }
 	local numbers = (W.Zones :: any)[id]
 	local entry = numbers.waves[wave]
-	if not entry.guard then
-		return Dungeon.plan(numbers.map, numbers.level, entry.wave, seed)
+	local monsters: { Monster }
+	if entry.guard then
+		local def = assert(Dungeon.defOf(numbers.map, entry.guard), "unknown guard " .. tostring(entry.guard))
+		monsters = { Dungeon.monster(def, numbers.level, entry.wave, "m" .. entry.wave .. "-1", entry.power) }
+	else
+		monsters = Dungeon.plan(numbers.map, numbers.level, entry.wave, seed)
 	end
-	local def = assert(Dungeon.defOf(numbers.map, entry.guard), "unknown guard " .. tostring(entry.guard))
-	return { Dungeon.monster(def, numbers.level, entry.wave, "m" .. entry.wave .. "-1", entry.power) }
-end
-
--- The level a zone shows: its guard's.
-function ZoneFights.level(id: string): number
-	return ZoneFights.plan(id, ZoneFights.waves(id), 0)[1].level
+	-- (a monster's level is only what it shows: every one of a zone shows the zone's)
+	local level = ZoneFights.level(id)
+	for _, monster in monsters do
+		monster.level = level
+	end
+	return monsters
 end
 
 -- What the zone's guard pays: Config.World.Reward of the zone's kind, the coins grown with the tier and "trophy" turned

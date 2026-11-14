@@ -53,11 +53,19 @@ return function(T: any)
 			end
 			T.ok(numbers.waves[#numbers.waves].guard, id .. " ends with its guard")
 			T.eq(ZoneFights.waveKind(id, #numbers.waves), "boss")
-			T.ok(ZoneFights.level(id) >= 1)
+			-- (a zone shows the level of the packs round it, and so does every monster of its fight)
+			local level = ZoneFights.level(id)
+			T.ok(level >= W.Packs.LevelMin and level <= W.Packs.LevelMax, id .. " shows a pack's level")
+			for index in numbers.waves do
+				for _, monster in ZoneFights.plan(id, index, 77) do
+					T.eq(monster.level, level, id .. " monsters show the zone's level")
+				end
+			end
 			for _, need in numbers.needs or {} do
 				T.ok((W.Zones :: any)[need], id .. " needs a real zone")
 			end
 		end
+		T.eq(ZoneFights.level("heart"), W.Packs.LevelMax)
 		T.eq(ZoneFights.waveKind("m1", 1), "normal")
 		T.eq(ZoneFights.waveKind("b1", 2), "miniboss")
 	end)
