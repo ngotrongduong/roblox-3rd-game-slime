@@ -7,8 +7,8 @@ natural state, not divided into cells like a chessboard".
 
 Where it lives: the plan is data (`src/shared/WorldPlan.luau`, checked by `tests/spec/world_plan.luau`); three
 re-runnable builders turn it into the world in the work place `assets/raw/MapWork.rbxlx` (`tools/world/`). It stands
-at an offset (`WorldPlan.Origin`, 6,000 studs north of the old valley), so the old valley keeps running until the
-game is switched over (section 7, milestone M4). References: `docs/references/world/world_ref_1..3.webp`; shots of
+at an offset (`WorldPlan.Origin`, 6,000 studs north of where the old valley was). **The game runs in it since
+2026-11-14** (section 7, milestone M4); the old valley is gone from the work place. References: `docs/references/world/world_ref_1..3.webp`; shots of
 the result: `docs/references/world/shots/`.
 
 ## 1. Audit (what there was)
@@ -186,10 +186,15 @@ A finished model replaces its interim by one line in `tools/world/build_sites.lu
 
 - Scenery: 10,994 MeshParts from **88 unique meshes**, 814 collide (big rocks only), 3,766 cast shadows (18 studs
   and taller); the densest 512-stud cell holds 530 parts. Sites: 2,141 parts, 1,370 of them the Market as it was.
-- The far view is terrain (mesa, volcano, peaks, bay): it draws at any distance with terrain's own level of detail,
-  so the landmarks stay when instances stream out.
-- For the game: `StreamingEnabled`, target radius about 700, minimum 250; the Crown and the great oak persistent;
-  plants under 6 studs can drop at a low graphics level (they are separate entries in the scatter recipes).
+- Streaming (set by `tools/build_publish.luau`, the only place it can be set): on, target radius 700, minimum 64
+  (the minimum that was proved with `MinimumRadiusPause`; 250 would hold a phone on the loading pause longer).
+  Measured in the test build at a village: the client holds 3,454 of the 18,603 scenery instances and 368 of the
+  2,042 site instances; Home and Market travel (about 600 studs) lands with no pause.
+- **Terrain streams too**: land farther than the target radius is not on the client, so the far mesa, volcano and
+  peaks do NOT show from inside a village (seen: only the trees round the pad and sky). The target radius is the
+  one number that trades far views against memory; making the Crown and the great oak persistent was left out,
+  because a model without its ground would float. To judge on a phone (M7).
+- Plants under 6 studs can drop at a low graphics level (they are separate entries in the scatter recipes).
 - **Not measured:** triangles in view, draw calls, memory and FPS on a real phone (the owner's F9 / MicroProfiler
   pass before any publish).
 
@@ -200,10 +205,27 @@ A finished model replaces its interim by one line in `tools/world/build_sites.lu
 - **M2 Terrain** (done): one heightfield pass; everything is a function of the plan, so moving a place and running
   `rows 0 34` again moves the land.
 - **M3 Dressing and places** (done): scatter, Market, bridges, arenas, gates, landmarks, wayfinding.
-- **M4 Switch the game over** (next; code, not done): `Layout` takes plot frames from `WorldPlan.Villages`
-  (`villageFacing`), the Market's anchors from the hub, spawn at the hub; the server `World` module loads this
-  terrain and `World.Scenery / Sites` instead of the old valley; streaming on; then the old `workspace.Map` terrain
-  and the old builders retire. Saves do not change shape (plots are slots, not positions).
+- **M4 Switch the game over** (done 2026-11-14): `Layout` takes the plot frames from `WorldPlan.Villages` (plot n =
+  village n, its gate towards the hub) and the Market's frame from `WorldPlan.Market` (the middle of its square at
+  the hub, front to the north); everything else in the game already placed itself through `Layout`, so nothing
+  else changed and saves keep their shape (plots are slots, not positions). How it was decided:
+  - Players still spawn in their own village (`Plots`' per-plot spawn), not at the hub: a new player's first minutes
+    are the farm.
+  - No server `World` module: the world is part of the place (`workspace.World` + terrain), carried into the
+    game by `tools/build_publish.luau`, which now keeps `World`, drops `ServerStorage.OldValley` and fails when the
+    village template is not in the world.
+  - One move in the work place, `tools/world/switch_over.luau` (re-runnable): the hand-built village `Map.Plot5`
+    to village 5's frame (with its tagged positions and `DevSpawn`), `Map.WildGarden` and `Map.RimTrees` parked
+    in `ServerStorage.OldValley`, the old valley's terrain cleared. `build_sites.luau` moves `Map.Market` itself to
+    the hub (one Market, no copy in `World.Sites`); `tools/map/prepare_plots.luau` lays the sunken floor and the
+    pond basin under all eight plots. The file as it was before: `C:\tmp\MapWork.before-M4.rbxlx` (not in the repo).
+  - The zombie groups keep their old fan (`Zombies.homeOffset`), now standing out from each village's gate and the
+    Market's north side (`Layout.campFrame`; villages 5 and 8 turn theirs by `camps` degrees to stay off the
+    river). Interim until M5 moves the fights into the zones. A test keeps all 81 groups off the river, off every
+    pad and apart; in the work place all 81 stand on land (none on water, none on a slope).
+  - Retired with the valley: `tools/map/build_terrain.luau`, `build_greybox.luau`, `build_wild_slices.luau`,
+    `check_wild_slices.luau`, `replace_greybox_trees.luau` (deleted; git has them); `build_market.luau` and
+    `check_market.luau` stay as the record of how the Market is made but build on the old rim.
 - **M5 Fights in the world**: each zone gets its encounter (camp spawn ring = the arena pad; tier from
   `WorldPlan.Zones`), boss kills open the three gates, King Goo on the island. Design with `game-designer` first.
 - **M6 Own models** for section 5, swapped in; region light and sound (client-side Atmosphere by region, no ambient
@@ -224,7 +246,7 @@ pieces -> scatter recipe -> shots from the fixed cameras -> rounds (skill `studi
 | Path readability | 2 | orange dirt and cobble causeways read from far on grass, mud, basalt and snow |
 | Haze and depth | 1 | one Atmosphere for all; no region mood yet |
 | Shape language | 1 | kit pieces fit; the gates are their own models (2026-11-14); bridges, crown and fall are interim |
-| Value structure, scale against a player | - | not checked: no play test stands in the new world yet (M4) |
+| Value structure, scale against a player | 1 | play test in the world (`shots/play_village.jpg`, `play_market.jpg`): the village and the Market read at the game's camera, hills and peaks behind without streaming; a phone frame was not looked at |
 
 Fixed during the build: straight region borders and a rectangular bay (warp raised to 460 / 130 / 24 studs, cubic
 shore); the Heart read as a low hill (top 84 -> 130, rim rise 34 -> 46, rock by a lower steepness inside the Heart);
@@ -232,13 +254,13 @@ village pads showed as stamped circles (pads keep the natural grass); the quay s
 Market's back wall on Quay Road (the road now starts at South Gate); too many ember dirt blotches (threshold 0.25
 -> 0.4); the Crown hidden behind the rim from the Cross (stretched to 240 studs).
 
-Known and left: the old valley shows as a floating slab on the south horizon until M4 removes it; the river lies
-only 2 studs under its banks; Turtle Pond has no pond yet; village pads are empty (the game builds the plots).
+Known and left: the river lies only 2 studs under its banks; Turtle Pond has no pond yet; an empty plot is one flat
+bright stud lawn on its pad (as it was in the valley), which shows from far as a square.
 
 ## 9. Needs the owner
 
-- A walk through the world in Studio (MapWork, `workspace.World`): is the layout the world he wants, before M4 moves
-  the game onto it.
+- A walk through the world in a play test (MapWork): is the layout the world he wants; and on a real phone, whether
+  the far views lost to streaming matter (section 6).
 - Model uploads need asset read and write granted to the Assistant (Settings > MCP Permissions; granted 2026-11-14)
   AND a Studio open on a place saved to Roblox: the token comes through that Studio, not through MapWork.
 - Meshy credits for section 5 (each generation spends 15; 673 left on 2026-11-14).

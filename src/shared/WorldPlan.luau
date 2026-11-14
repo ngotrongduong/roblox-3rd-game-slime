@@ -22,6 +22,9 @@ export type Place = { id: string, name: string, kind: string, x: number, z: numb
 
 -- The shopping hub, in the middle of the Home Vale, on the river.
 WorldPlan.Hub = { id = "hub", name = "Goo Market", kind = "hub", x = 0, z = 980, radius = 120 }
+-- The middle of the Market's square (Layout.marketFrame; Config.Market's spots are measured from it). The builder
+-- centred the Market's whole model on the hub, which leaves its square here (measured in the work place).
+WorldPlan.Market = { x = -0.87, z = 1002.78 }
 
 -- The 8 villages: a loose ring round the hub, open to the north where the King's Road leaves and to the south where
 -- the river runs to the bay. Not on a clock face: each sits in its own fold of the land.
@@ -30,10 +33,12 @@ WorldPlan.Villages = {
 	{ id = "v2", name = "Westmeadow", kind = "village", x = -760, z = 930, radius = 176 },
 	{ id = "v3", name = "Orchard End", kind = "village", x = -620, z = 1300, radius = 176 },
 	{ id = "v4", name = "Reedbank", kind = "village", x = -270, z = 1500, radius = 176 },
-	{ id = "v5", name = "Baywatch", kind = "village", x = 300, z = 1520, radius = 176 },
+	-- (`camps`: the river runs between Baywatch and the hub, so its zombie camps lie turned this many degrees off the
+	-- gate's line, up the east bank: Layout.campFrame)
+	{ id = "v5", name = "Baywatch", kind = "village", x = 300, z = 1520, radius = 176, camps = -28 },
 	{ id = "v6", name = "Sunny Rise", kind = "village", x = 640, z = 1290, radius = 176 },
 	{ id = "v7", name = "Eastfield", kind = "village", x = 770, z = 920, radius = 176 },
-	{ id = "v8", name = "Millbrook", kind = "village", x = 510, z = 590, radius = 176 },
+	{ id = "v8", name = "Millbrook", kind = "village", x = 510, z = 590, radius = 176, camps = 20 },
 }
 
 -- The regions. `at` are the seeds the builder grows each region's ground from (nearest seed wins, frayed by noise);
@@ -402,7 +407,7 @@ WorldPlan.Roads = {
 		width = 12,
 		path = { "b3", { -40, -1210 }, "gate_n", "heart" },
 	},
-}
+} :: { { id: string, name: string, kind: string, width: number, path: { any } } }
 
 -- Every place with a pad, in one list.
 function WorldPlan.places(): { Place }

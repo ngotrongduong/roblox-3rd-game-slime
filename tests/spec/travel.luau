@@ -51,14 +51,14 @@ return function(T)
 		)
 	end)
 
-	T.test("the Market frame: the front is towards the valley centre, the back towards the valley edge", function()
+	T.test("the Market frame: the front is north (the King's Road), the back south", function()
+		local middle = Layout.marketFrame().Position
 		local landing = Layout.marketPoint(K.Landing)
 		local board = Layout.marketPoint(K.Board)
-		T.ok(landing.Magnitude < board.Magnitude, "the landing is nearer the valley centre than the board")
-		T.ok(landing.Magnitude < M.RimRadius and board.Magnitude > M.RimRadius, "front inside the rim, back outside it")
+		T.ok(landing.Z < middle.Z and board.Z > middle.Z, "the landing north of the middle, the board south of it")
 		T.near(landing.Y, M.GroundY, 1e-9, "on the ground")
-		-- the buyer (+x) is on the left of someone walking in from the valley (facing north)
-		T.ok(Layout.marketPoint(K.Buyer).X < 0, "+x is world west, a visitor's left when they face north")
+		-- the buyer (+x) is on the left of someone walking in from the north (facing south)
+		T.ok(Layout.marketPoint(K.Buyer).X > middle.X, "+x is world east, a visitor's left when they face south")
 	end)
 
 	T.test("the Market landing stands at the landing spot, lifted, facing the board", function()
@@ -82,11 +82,12 @@ return function(T)
 			T.near(flat.Magnitude, T3.HomeInsideStuds, 1e-3, "plot " .. plot .. " distance from the gate")
 			-- in the gate's opening (on its middle line)
 			T.near(math.abs(gate.RightVector:Dot(flat)), 0, 1e-3, "plot " .. plot .. " on the middle line")
-			-- inside the plot: farther from the valley centre than the gate, and within its square
-			T.ok(landing.Position.Magnitude > gate.Position.Magnitude, "plot " .. plot .. " is inside")
+			-- inside the plot: nearer its middle than the gate, and within its square
+			local toMiddle = (Layout.plotFrame(plot).Position - landing.Position) * Vector3.new(1, 0, 1)
+			T.ok(toMiddle.Magnitude < M.PlotSize / 2, "plot " .. plot .. " is inside")
 			T.ok(T3.HomeInsideStuds < M.PlotSize / 2)
-			-- facing in, away from the valley centre
-			T.ok(landing.LookVector:Dot(landing.Position.Unit) > 0.99, "plot " .. plot .. " faces in")
+			-- facing in, at the plot's middle
+			T.ok(landing.LookVector:Dot(toMiddle.Unit) > 0.99, "plot " .. plot .. " faces in")
 			T.near(landing.Position.Y, M.GroundY + T3.LiftStuds, 1e-3)
 		end
 	end)

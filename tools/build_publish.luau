@@ -17,9 +17,11 @@ local CODE = "GooLineage.rbxlx"
 local STUDIO_TEST = process.args[1] == "studio"
 local OUT = if STUDIO_TEST then "assets/raw/StudioTest.rbxl" else "assets/raw/Publish.rbxl"
 
--- All that stays of the work place's Workspace. (Map holds the village template Plots.start needs; the rest are stages.)
-local KEEP_IN_WORKSPACE = { Camera = true, Terrain = true, Map = true }
-local DROP_FROM_SERVER_STORAGE = { "AssetTest" }
+-- All that stays of the work place's Workspace. (Map holds the village template Plots.start needs and the Market, World
+-- the big world's scenery and places, docs/WORLD.md; the rest are stages.)
+local KEEP_IN_WORKSPACE = { Camera = true, Terrain = true, Map = true, World = true }
+-- (OldValley: the first valley's scenery, parked by tools/world/switch_over.luau)
+local DROP_FROM_SERVER_STORAGE = { "AssetTest", "OldValley" }
 
 local problems: { string } = {}
 local function problem(text: string)
@@ -100,8 +102,10 @@ end
 
 -- Phones hold only what is near; the owner's rule. MinRadius and TargetRadius: .claude/skills/studio-build/RESEARCH.md.
 workspace.StreamingEnabled = true
+-- (the target is the most a strong device holds: a village pad and the land to the next landmark, docs/WORLD.md 6;
+-- a weak one keeps less)
 workspace.StreamingMinRadius = 64
-workspace.StreamingTargetRadius = 400
+workspace.StreamingTargetRadius = 700
 workspace.StreamOutBehavior = Enum.StreamOutBehavior.Opportunistic
 workspace.ModelStreamingBehavior = Enum.ModelStreamingBehavior.Improved
 -- (PauseOutsideLoadedArea froze the character whenever it ran past what had streamed in; this pauses only when the
@@ -145,6 +149,14 @@ if parts == 0 then
 end
 if not (map and map:FindFirstChild("Market")) then
 	problem("no Workspace.Map.Market")
+end
+local world = workspace:FindFirstChild("World")
+if not (world and world:FindFirstChild("Scenery") and world:FindFirstChild("Sites")) then
+	problem("no Workspace.World (Scenery and Sites): the big world is missing")
+end
+-- The village template and the Market must stand in the big world, not in the first valley (tools/world/switch_over.luau).
+if template and not template:GetAttribute("InWorld") then
+	problem("the village template is still in the old valley: run tools/world/switch_over.luau in the work place")
 end
 if not place:GetService("ReplicatedStorage"):FindFirstChild("ClientKit") then
 	problem("no ReplicatedStorage.ClientKit")

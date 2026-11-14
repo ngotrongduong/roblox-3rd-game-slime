@@ -764,6 +764,19 @@ was left there (this game has none); read it there if a cave is ever wanted.
 - Rings of kit pieces round an arena: find the ways in by where the sampled road curves cross the ring's circle, not from
   the plan's neighbours (a Catmull-Rom road leaves a point along its tangent).
 - `save_place` once answered "Target is not reachable" and had saved all the same: check the file's time before retrying.
+- Moving the game onto a new map (M4, 2026-11-14) was frames only, because every system already took its place from
+  `Layout`: change the frames, then ONE re-runnable script in the work place moves the hand-built pieces by
+  `new frame * old frame:Inverse()` (a `Model:PivotTo` carries 6,170 instances at once; positions kept in attributes
+  need the same move) and marks each with an attribute so a second run leaves it alone.
+- `tools/build_publish.luau` keeps only the Workspace children it names: a new top folder (`workspace.World`) is
+  silently left out of the game until it is added there. Build the test place and count what the client holds.
+- Terrain streams like instances: with streaming on, land beyond the target radius is not on the client, so far
+  mountains seen in the work place (streaming off) do not show in the game. Judge far views in the streaming build.
+- A play-test shot from a free camera: the game's camera script wins over `CurrentCamera.CFrame`; bind a render step
+  after it (`RunService:BindToRenderStep(name, Enum.RenderPriority.Last.Value + 5, ...)`) that sets the CFrame,
+  capture, then unbind.
+- Clearing old terrain block by block: probe each block on a 20-stud grid from edge to edge; a 40-stud grid inset
+  from the edges left slivers on the block lines.
 
 ## Scenery models through Meshy Smart Topology (2026-11-14, the three Heart gates)
 

@@ -1,11 +1,11 @@
 --!strict
--- Where everything in the Goo Valley is (docs/MAP.md, approved by the owner 2026-10-27). Pure
--- geometry in studs, shared by the map builder, the server (plot ownership, monster areas) and the
--- client (quick travel). The valley centre is the world origin, the ground is y = 0, north is -Z.
--- Positions on the rim are numbered clockwise seen from above: slot 0 (north) is the Market,
--- slots 1..8 are the home plots.
+-- Where the game's own places stand in the big world (docs/WORLD.md; the plan is WorldPlan). Pure geometry in
+-- studs, shared by the builders, the server (plot ownership, camps) and the client (quick travel). North is -Z;
+-- frames lie at y = 0 and the ground of every pad is Config.Map.GroundY above it. Slot 0 is the Market at the hub,
+-- slots 1..8 are the home plots: WorldPlan.Villages in their order.
 
 local Config = if script then require(script.Parent.Config) else require("./Config")
+local WorldPlan = if script then require(script.Parent.WorldPlan) else require("./WorldPlan")
 
 -- In Lune (tests) the Roblox datatypes come from its roblox library instead of globals.
 local LuneRoblox = if script then nil else (require :: any)("@lune/roblox")
@@ -16,26 +16,8 @@ local M = Config.Map
 
 local Layout = {}
 
-export type Quarter = {
-	id: string,
-	name: string,
-	-- Centre direction in degrees, clockwise from north seen from above.
-	angle: number,
-	-- The enemy family of the original game that lives there.
-	family: string,
-}
-
--- The four moods of the Wild Garden, by quarter (north-east first, clockwise).
-local quarters: { Quarter } = {
-	{ id = "meadow", name = "Sunny Meadow", angle = 45, family = "greenfield" },
-	{ id = "mushroom", name = "Mushroom Grove", angle = 135, family = "darkforest" },
-	{ id = "ember", name = "Ember Garden", angle = 225, family = "volcano" },
-	{ id = "frost", name = "Frost Glade", angle = 315, family = "ice" },
-}
-Layout.Quarters = quarters
-
 -- The areas of a home plot on its 3x3 grid. col: -1 left .. 1 right, row: -1 front (the gate,
--- toward the valley centre) .. 1 back (the valley edge), as seen standing at the gate facing in.
+-- toward the hub) .. 1 back, as seen standing at the gate facing in.
 Layout.PlotAreas = {
 	{ id = "fishing", col = -1, row = 1 },
 	{ id = "pantry", col = 0, row = 1 },
@@ -48,24 +30,23 @@ Layout.PlotAreas = {
 	{ id = "hatchery", col = 1, row = -1 },
 }
 
--- Point on the ground at a compass angle (degrees clockwise from north) and a radius.
-function Layout.polar(angleDeg: number, radius: number): Vector3
-	local a = math.rad(angleDeg)
-	return Vector3.new(math.sin(a) * radius, 0, -math.cos(a) * radius)
+-- A frame at a plan position (x east, z south) whose -Z (LookVector) points along (dx, dz).
+local function facing(x: number, z: number, dx: number, dz: number): CFrame
+	-- Yaw by hand rather than CFrame.lookAt (Lune's lookAt points the other way): a yaw's LookVector is
+	-- (-sin, 0, -cos).
+	local wx, wz = WorldPlan.world(x, z)
+	return CFrame.new(wx, 0, wz) * CFrame.Angles(0, math.atan2(-dx, -dz), 0)
 end
 
--- Compass angle of rim slot i (0 = Market, 1..8 = plots).
-function Layout.slotAngle(slot: number): number
-	return slot * 360 / (M.PlotCount + 1)
-end
-
--- The frame of a rim slot: at its centre on the ground, looking toward the valley centre, so its
--- -Z (LookVector) points at the middle and its gate side is the front.
+-- The frame of a slot: at its middle, its -Z (LookVector) the front. The Market's way in looks north, up the
+-- King's Road; a village's gate looks at the hub.
 function Layout.slotFrame(slot: number): CFrame
-	local angle = Layout.slotAngle(slot)
-	-- Yaw by hand rather than CFrame.lookAt (Lune's lookAt points the other way): a yaw of
-	-- pi - angle turns the LookVector (-sin, 0, -cos) of the yaw toward the centre.
-	return CFrame.new(Layout.polar(angle, M.RimRadius)) * CFrame.Angles(0, math.pi - math.rad(angle), 0)
+	if slot == 0 then
+		return facing(WorldPlan.Market.x, WorldPlan.Market.z, 0, -1)
+	end
+	local village = WorldPlan.Villages[slot]
+	local dx, dz = WorldPlan.villageFacing(village)
+	return facing(village.x, village.z, dx, dz)
 end
 
 function Layout.plotFrame(plot: number): CFrame
@@ -84,14 +65,14 @@ function Layout.marketPoint(spot: { x: number, z: number }): Vector3
 end
 
 -- Where quick travel puts a character at the Market: at the landing spot, `lift` studs up, facing the back of the square
--- (the leaderboard). The Market's frame looks at the valley centre, so a half turn faces the other way.
+-- (the leaderboard). The Market's frame looks out of its way in, so a half turn faces the other way.
 function Layout.marketLanding(lift: number): CFrame
 	local spot = Config.Market.Landing
 	return Layout.marketFrame() * CFrame.new(spot.x, M.GroundY + lift, spot.z) * CFrame.Angles(0, math.pi, 0)
 end
 
 -- Where quick travel puts a character at home: in the plot's gate opening, `inside` studs in from its front edge, `lift`
--- studs up, facing in. The gate looks at the valley centre, so a half turn faces into the plot.
+-- studs up, facing in. The gate looks out at the hub, so a half turn faces into the plot.
 function Layout.homeLanding(plot: number, lift: number, inside: number): CFrame
 	return Layout.plotGate(plot) * CFrame.Angles(0, math.pi, 0) * CFrame.new(0, M.GroundY + lift, -inside)
 end
@@ -101,10 +82,10 @@ function Layout.cellSize(): number
 	return M.PlotSize / 3
 end
 
--- Centre of an area of a plot, in world space. A plot's row 1 lies away from the valley centre.
+-- Centre of an area of a plot, in world space. A plot's row 1 lies away from the hub.
 function Layout.plotAreaFrame(plot: number, col: number, row: number): CFrame
 	local step = Layout.cellSize()
-	-- The plot frame faces the centre, so the front (row -1) is local -Z and the back is +Z. Someone
+	-- The plot frame faces the hub, so the front (row -1) is local -Z and the back is +Z. Someone
 	-- at the gate looking in faces +Z, so their right (col 1) is local -X.
 	return Layout.plotFrame(plot) * CFrame.new(-col * step, 0, row * step)
 end
@@ -123,21 +104,27 @@ function Layout.plotAreaFacing(plot: number, col: number, row: number): CFrame
 	return CFrame.new(frame.Position) * CFrame.Angles(0, math.atan2(-d.X, -d.Z), 0)
 end
 
--- The turn about the valley centre that carries everything of plot `from` onto plot `plot` (a clone of the hand-built village
--- is turned by it): `turn * Layout.plotFrame(from)` is `Layout.plotFrame(plot)`, and the same for every frame of the plot.
+-- The move that carries everything of plot `from` onto plot `plot` (a clone of the hand-built village is moved by it):
+-- `turn * Layout.plotFrame(from)` is `Layout.plotFrame(plot)`, and the same for every frame of the plot.
 function Layout.plotTurn(plot: number, from: number): CFrame
 	assert(plot >= 1 and plot <= M.PlotCount and from >= 1 and from <= M.PlotCount, "plot out of range")
-	return CFrame.Angles(0, math.rad(Layout.slotAngle(from) - Layout.slotAngle(plot)), 0)
+	return Layout.plotFrame(plot) * Layout.plotFrame(from):Inverse()
 end
 
--- The gate of a rim slice (0 is the Market's, 1..8 the plots'): on its front edge, facing the valley centre. The groups of
--- zombies of the slice stand out from it (docs/MAP.md 1.4).
+-- The gate of a slice (0 is the Market's, 1..8 the plots'): on its front edge, facing out.
 function Layout.sliceGate(slice: number): CFrame
 	assert(slice >= 0 and slice <= M.PlotCount, "slice out of range")
 	return Layout.slotFrame(slice) * CFrame.new(0, 0, -M.PlotSize / 2)
 end
 
--- The gate of a plot: on its front edge, facing the valley centre.
+-- Where the groups of zombies of a slice stand out from (Zombies.homeOffset): its gate, turned by the village's
+-- `camps` degrees where the land straight ahead is not free (WorldPlan.Villages).
+function Layout.campFrame(slice: number): CFrame
+	local village = WorldPlan.Villages[slice] :: { camps: number? }?
+	return Layout.sliceGate(slice) * CFrame.Angles(0, math.rad(if village then village.camps or 0 else 0), 0)
+end
+
+-- The gate of a plot: on its front edge, facing the hub.
 function Layout.plotGate(plot: number): CFrame
 	assert(plot >= 1 and plot <= M.PlotCount, "plot out of range")
 	return Layout.sliceGate(plot)
@@ -184,25 +171,6 @@ function Layout.arenaPlayerSpot(plot: number): CFrame
 	local at = (frame * CFrame.new(D.PlayerSpot.x, D.PlayerLift, D.PlayerSpot.z)).Position
 	local toward = frame.Position - at
 	return CFrame.new(at) * CFrame.Angles(0, math.atan2(-toward.X, -toward.Z), 0)
-end
-
--- Which Wild Garden quarter a point is in, or nil outside the Wild Garden.
-function Layout.quarterAt(pos: Vector3): Quarter?
-	local flat = Vector3.new(pos.X, 0, pos.Z)
-	local r = flat.Magnitude
-	if r > M.WildRadius or r < M.HeartRadius then
-		return nil
-	end
-	-- Compass angle clockwise from north (-Z).
-	local angle = math.deg(math.atan2(flat.X, -flat.Z)) % 360
-	return Layout.Quarters[math.floor(angle / 90) + 1]
-end
-
--- How deep into the Wild Garden a point is: 0 at its rim, 1 at the Heart. Monsters get stronger
--- with it.
-function Layout.depthAt(pos: Vector3): number
-	local r = Vector3.new(pos.X, 0, pos.Z).Magnitude
-	return math.clamp((M.WildRadius - r) / (M.WildRadius - M.HeartRadius), 0, 1)
 end
 
 return Layout

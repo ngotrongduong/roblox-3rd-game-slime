@@ -1,18 +1,17 @@
--- Gets the seven other home plots ready to receive a copy of the hand-built village (the owner, 2026-11-02: up to 8 players,
--- a plot each; src/server/Plots.luau copies workspace.Map.Plot5 into a player's plot when they join). Run once in the work
--- place, in Edit mode, through Studio's MCP, after the hand-built plot's terrain exists (stud_floor and pond_water_l1 on plot 5):
+-- Gets the ground of the eight home plots ready to receive a copy of the hand-built village (the owner, 2026-11-02: up to 8
+-- players, a plot each; src/server/Plots.luau copies workspace.Map.Plot<Config.Plots.TemplatePlot> into a player's plot when
+-- they join). Run once in the work place, in Edit mode, through Studio's MCP, after the code is synced (it reads Layout):
 --   node tools/studio_mcp.js run tools/map/prepare_plots.luau <studio_id> Edit
--- Then save the place (Ctrl+S, by the owner). Rerunnable: it gives the same result each time.
+-- Then save the place. Rerunnable: it gives the same result each time.
 --
--- What it does, for every plot except Config.Plots.TemplatePlot (the hand-built one is left as it is):
---   1. the greybox in workspace.Map.Plot<n> goes (its children are destroyed; the empty Model stays, as the container the
---      server fills); everything that is not a plot (Market, WildGarden, RimTrees, the other plots) is kept;
---   2. its terrain gets what plot 5 has: the same ground as tools/map/stud_floor.luau (flat under the plot, sunk to y = -2
---      under the floor tiles, a ring of grass raised to the floor's height round it) and the same pond as
---      tools/map/pond_water_l1.luau (the three lobes of the fishing pond, sand at the bottom, real water), placed by the
---      plot's own frames, so the copy of the village (turned about the valley centre by Layout.plotTurn) sits on a
---      pond basin exactly where its fishing pond is.
--- The stud floor itself is part of the village (Plot5.StudLawn) and comes with every copy. An empty plot shows one flat
+-- What it does, for every plot (in the big world every plot stands on a flat pad of plain land, the hand-built one too):
+--   1. the plots other than the hand-built one become empty containers (workspace.Map.Plot<n>, the Model the server fills);
+--   2. the terrain gets what the hand-built village was made on: the ground of tools/map/stud_floor.luau (flat under the
+--      plot, sunk to y = -2 under the floor tiles, a ring of the land's own ground raised to the floor's height round it) and
+--      the pond of tools/map/pond_water_l1.luau (the three lobes of the fishing pond, sand at the bottom, real water),
+--      placed by the plot's own frames, so the copy of the village (moved by Layout.plotTurn) sits on a pond basin exactly
+--      where its fishing pond is.
+-- The stud floor itself is part of the village (StudLawn) and comes with every copy. An empty plot shows one flat
 -- stud-lawn part over the sunken ground (made by the server in play, never saved here), so it looks like plain ground; the
 -- pond lobes that open at fishing levels 21 and 41 are carved at run time by PondStages.grow, as they always were.
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -53,10 +52,18 @@ local function emptyContainer(plot: number): number
 end
 
 -- ===== 2. the ground, as stud_floor.luau lays it =====
+local onlyTerrain = RaycastParams.new()
+onlyTerrain.FilterType = Enum.RaycastFilterType.Include
+onlyTerrain.FilterDescendantsInstances = { terrain }
+
 local function flatten(plot: number)
 	local plotFrame = Layout.plotFrame(plot)
 	local flat = plotFrame - Vector3.new(0, plotFrame.Position.Y, 0)
-	-- Only the plot itself is cut down; a ring of grass round it is raised to the floor's height, so the ground outside the
+	-- the ring keeps the ground the land has there (read just outside it, behind the plot: a road comes to its front)
+	local outside = (flat * CFrame.new(0, 0, half + RING + 8)).Position
+	local hit = workspace:Raycast(outside + Vector3.new(0, 60, 0), Vector3.new(0, -120, 0), onlyTerrain)
+	local ground = if hit and hit.Material ~= Enum.Material.Water then hit.Material else Enum.Material.Grass
+	-- Only the plot itself is cut down; a ring of ground round it is raised to the floor's height, so the land outside the
 	-- fence meets the stud floor with no step. Whole 4-stud voxels only: air from y = -2 up, ground below.
 	for _, side in { -1, 1 } do
 		terrain:FillBlock(
@@ -72,16 +79,12 @@ local function flatten(plot: number)
 		terrain:FillBlock(
 			flat * CFrame.new(side * (half + RING / 2), -3.7, 0),
 			Vector3.new(RING, 8.6, half * 2 + RING * 2),
-			Enum.Material.Grass
+			ground
 		)
-		terrain:FillBlock(
-			flat * CFrame.new(0, -3.7, side * (half + RING / 2)),
-			Vector3.new(half * 2, 8.6, RING),
-			Enum.Material.Grass
-		)
+		terrain:FillBlock(flat * CFrame.new(0, -3.7, side * (half + RING / 2)), Vector3.new(half * 2, 8.6, RING), ground)
 	end
 	terrain:FillBlock(flat + Vector3.new(0, 4, 0), Vector3.new(half * 2, 12, half * 2), Enum.Material.Air)
-	terrain:FillBlock(flat + Vector3.new(0, -6, 0), Vector3.new(half * 2, 8, half * 2), Enum.Material.Grass)
+	terrain:FillBlock(flat + Vector3.new(0, -6, 0), Vector3.new(half * 2, 8, half * 2), ground)
 end
 
 -- ===== 3. the pond, as pond_water_l1.luau fills it =====
@@ -102,14 +105,11 @@ end
 
 local summary = {}
 for plot = 1, Config.Map.PlotCount do
-	if plot ~= TEMPLATE then
-		local removed = emptyContainer(plot)
-		flatten(plot)
-		task.wait()
-		pond(plot)
-		task.wait()
-		table.insert(summary, plot .. ":" .. removed)
-	end
+	local removed = if plot == TEMPLATE then 0 else emptyContainer(plot)
+	flatten(plot)
+	task.wait()
+	pond(plot)
+	task.wait()
+	table.insert(summary, plot .. ":" .. removed)
 end
--- (the hand-built plot keeps its terrain and its model; the server moves the model out of the world when a game starts)
-return "plots prepared (plot:greybox pieces removed) " .. table.concat(summary, " ") .. "; plot " .. TEMPLATE .. " untouched"
+return "plots prepared (plot:greybox pieces removed) " .. table.concat(summary, " ") .. "; the village of plot " .. TEMPLATE .. " untouched"

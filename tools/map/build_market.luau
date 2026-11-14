@@ -1,3 +1,6 @@
+-- RETIRED with the first valley (2026-11-14, docs/WORLD.md M4): the Market it built now stands at the hub of the big world
+-- (moved there by tools/world/build_sites.luau) and the valley this script builds on is gone. Kept as the record of how
+-- the Market is made; to build it again it must first take its frame from Layout.marketFrame().
 -- Builds the Market square of the valley (workspace.Map.Market) and dresses what stands round it, from the reference art/concept/market-1.jpg
 -- and the owner's stall art (reference/goo-lineage-web/assets/map/other/shop-*.png, shape and colour only).
 -- The plan (the owner, 2026-11-05: "rearrange the shopping area so it is tidy and more beautiful"): a round paved plaza on the fountain,

@@ -1,6 +1,28 @@
 # Status
 
-## 2026-11-14 — the big world: the main map rebuilt ten times larger (in the work place; the game is not on it yet)
+## 2026-11-14 — the big world: the main map rebuilt ten times larger, and the game now runs in it (M4)
+
+**M4, the switch (done).** `Layout` takes the Market's frame and the eight plot frames from `WorldPlan` (plot n =
+village n, gate towards the hub; the Market at the hub, front to the north); nothing else in the game changed, saves
+keep their shape. In MapWork (saved): the hand-built village `Map.Plot5` and `Map.Market` stand in the world, the
+ground and pond basin lie under all eight plots, the old valley's scenery is parked in `ServerStorage.OldValley` and
+its terrain is cleared (`tools/world/switch_over.luau`, `build_sites.luau`, `tools/map/prepare_plots.luau`; the file
+before the move is `C:\tmp\MapWork.before-M4.rbxlx`). `tools/build_publish.luau` keeps `workspace.World`, drops
+`OldValley`, streams with target 700 / minimum 64. Zombie groups stand out from each village's gate
+(`Layout.campFrame`), an interim until M5. Detail and decisions: `docs/WORLD.md` §7.
+**Proved:** `tools\check.ps1`: 745 passed, `CHECK OK`; play test in MapWork: plot 1 built in 0.28 s on its pad, Home and
+Market travel through the real remote, portal and leaderboard in the Market, 81 zombie groups on land (server probe:
+none on water or a slope), shots `docs/references/world/shots/play_village.jpg`, `play_market.jpg`; play test of the
+streaming build (`StudioTest.rbxl`): same start, the client holds 3,454 of 18,603 scenery instances, travel without a
+pause.
+**Not verified:** a phone frame and FPS, a second player in another village, a zombie fight and a dungeon run in the
+new world (the code paths did not change, they were not played), far views under streaming (the mountains do not
+show from a village: `docs/WORLD.md` §6). `tools\types.ps1` ends with 1 finding, in the effects session's
+`VfxLib/Effects/skill/arrow_ring.luau:60` (not this work's file; `WorldPlan.Roads` got its type here).
+**Next.** M5: the fights move into the zones (design with `game-designer` first), then own models (M6), the phone
+pass (M7).
+
+### How the world was built (before M4)
 
 The owner: keep the player village, rebuild the rest from the ground up, about 10x larger, natural (no chessboard),
 made to explore: 8 villages, 1 shopping hub, 10 mini-boss zones, 3 boss zones, 1 mega-boss zone; kit assets first.
@@ -17,13 +39,7 @@ crater lake, island, three causeways and gates, the Crown, Crownfall feeding the
 **Seen** (edit-mode shots, `docs/references/world/shots/`): the Cross view matches reference 2, the Heart from above
 matches reference 1, hub, a bridge, Gloomroot Throne, Molten Throne, Glacier Throne, the quay. Counts: scenery 10,994
 MeshParts from 88 meshes, sites 2,141 parts.
-**Not verified:** nothing was played or walked in the new world (no spawn there), the game's follow camera, a phone
-frame, triangles, FPS, streaming.
-
-**Next.** M4 in `docs/WORLD.md` §7: switch the game over (`Layout` plot frames from `WorldPlan.Villages`, Market
-anchors at the hub, spawn, the server `World` module loading this terrain and `workspace.World`, streaming), then the
-fights in the zones (M5), then own models for the interim pieces (gates, crown, stone bridge, altars: §5).
-The old valley shows on the far south horizon of the new world until M4 removes it.
+**Not verified:** a phone frame, triangles in view, FPS.
 
 **Gates through Meshy (done: the three gates stand in the world).** Meshy's
 Image to 3D has a **Smart Topology** tab (Meshy T2.5: ONE picture, a poly count typed in, Texture on with Meshy N1

@@ -1,5 +1,5 @@
 -- Builds what stands at the big world's named places (docs/WORLD.md) from the kits already in the work place: the
--- Market moved to the hub, the four bridges, a ring of its region's own pieces round each of the 13 fights, the three
+-- Market moved to the hub (it stays workspace.Map.Market), the four bridges, a ring of its region's own pieces round each of the 13 fights, the three
 -- gates of the Heart, the Heart's crown, the landmarks (Wayfarers' Cross, South Quay, Crownfall and its lookout, the
 -- mill), and the signs and lamps that lead a player along the roads. Everything goes into workspace.World.Sites and a
 -- run rebuilds it whole. Places and roads come from src/shared/WorldPlan.luau; heights are read off the terrain.
@@ -176,18 +176,17 @@ local function roadAt(x: number, z: number): (number, number, number)
 end
 
 ---------------------------------------------------------------------------------------------------------------------
--- 1. The Market, moved to the hub and turned to face north: the King's Road, the Cross and the Heart.
+-- 1. The Market, moved to the hub and turned to face north: the King's Road, the Cross and the Heart. It is the
+-- game's own workspace.Map.Market, moved once from its place in the old valley (WorldPlan.Market is where the middle
+-- of its square then lies); a run after that leaves it alone.
 do
-	local market = workspace.Map.Market:Clone()
-	local box = market:GetBoundingBox()
-	local move = CFrame.new(O.x + Plan.Hub.x, 0, O.z + Plan.Hub.z) * CFrame.Angles(0, math.pi, 0) * CFrame.new(-box.Position.X, 0, -box.Position.Z)
-	market:PivotTo(move * market:GetPivot())
-	for _, d in market:GetDescendants() do
-		if d:IsA("SpawnLocation") then
-			d:Destroy()
-		end
+	local market = workspace.Map.Market
+	if not market:GetAttribute("AtHub") then
+		local box = market:GetBoundingBox()
+		local move = CFrame.new(O.x + Plan.Hub.x, 0, O.z + Plan.Hub.z) * CFrame.Angles(0, math.pi, 0) * CFrame.new(-box.Position.X, 0, -box.Position.Z)
+		market:PivotTo(move * market:GetPivot())
+		market:SetAttribute("AtHub", true)
 	end
-	market.Parent = sites
 	task.wait()
 end
 
