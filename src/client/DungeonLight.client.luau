@@ -15,13 +15,7 @@ local player = Players.LocalPlayer
 
 -- the place's own look, taken once, the first time a map changes it
 type Baseline = {
-	brightness: number,
-	clock: number,
-	ambient: Color3,
-	outdoor: Color3,
 	atmosphere: Atmosphere?,
-	atmColour: Color3,
-	atmDecay: Color3,
 	atmDensity: number,
 	atmOffset: number,
 	atmHaze: number,
@@ -65,13 +59,7 @@ local function ensure()
 		sky = sky,
 		stars = if sky then sky.StarCount else 0,
 		exposure = Lighting.ExposureCompensation,
-		brightness = Lighting.Brightness,
-		clock = Lighting.ClockTime,
-		ambient = Lighting.Ambient,
-		outdoor = Lighting.OutdoorAmbient,
 		atmosphere = own,
-		atmColour = if own then own.Color else Color3.new(1, 1, 1),
-		atmDecay = if own then own.Decay else Color3.new(1, 1, 1),
 		atmDensity = if own then own.Density else 0,
 		atmOffset = if own then own.Offset else 0,
 		atmHaze = if own then own.Haze else 0,
@@ -157,16 +145,9 @@ local function apply(mapId: string)
 		if base.sky then
 			base.sky.StarCount = base.stars
 		end
-		ease(seconds, Lighting, {
-			Brightness = base.brightness,
-			ExposureCompensation = base.exposure,
-			ClockTime = base.clock,
-			Ambient = base.ambient,
-			OutdoorAmbient = base.outdoor,
-		})
+		-- (the clock, brightness, ambients and the air's colour are client/DayNight's: it eases them back itself)
+		ease(seconds, Lighting, { ExposureCompensation = base.exposure })
 		ease(seconds, atm, {
-			Color = base.atmColour,
-			Decay = base.atmDecay,
 			Density = base.atmDensity,
 			Offset = base.atmOffset,
 			Haze = base.atmHaze,

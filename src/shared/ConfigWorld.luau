@@ -6,6 +6,47 @@
 return {
 	-- How fast a player walks, studs a second (the owner, 2026-11-14: twice Roblox's own 16; the world is big).
 	WalkSpeed = 32,
+	-- Day and night (the owner, 2026-11-15; client/DayNight). The clock runs from the server's time, so every player and
+	-- server sees the same hour: 06:00 to 18:00 takes DayMinutes, 18:00 to 06:00 NightMinutes. Night falls between
+	-- DuskFrom and DuskTo and lifts between DawnFrom and DawnTo (hours); at full night the place's own light eases to Night
+	-- (hex colours; Brightness and the Atmosphere's Color and Decay). Back from a Dungeon map with a light of its own, the
+	-- clock eases in over BlendSeconds.
+	DayNight = {
+		DayMinutes = 10,
+		NightMinutes = 4,
+		DuskFrom = 17.6,
+		DuskTo = 19.2,
+		DawnFrom = 4.8,
+		DawnTo = 6.6,
+		BlendSeconds = 3,
+		Night = {
+			Brightness = 1.2,
+			Ambient = "3c4878",
+			OutdoorAmbient = "4a5a96",
+			AtmosphereColour = "28304e",
+			AtmosphereDecay = "1c2440",
+		},
+	},
+	-- The world's fires and lamps (client/WorldLights). Torches burn by day and night with the VFX library's Fire, on an
+	-- unseen anchor FireHeight studs tall whose foot stands FireAt of the torch's height up (the flame sets its size by the
+	-- anchor). Lamps light up when the night is at least LampsOnAt (0 day, 1 full night): their lights switch on and their
+	-- head glows (Glow, on an unseen anchor `size` studs wide `at` of the lamp's height up from its foot, in the lamp's
+	-- `colour`: their glass is part of the mesh and cannot light up itself); a lamp with no light of its own gets one
+	-- there, LampLight. By day their lights are off and the glow goes.
+	Lights = {
+		Torches = { "TorchSconce" },
+		Fire = "aura.cghow_toon_campfire",
+		FireAt = 0.74,
+		FireHeight = 1.8,
+		LampsOnAt = 0.35,
+		Glow = "aura.lamp_glow",
+		Lamps = {
+			VillageLamp = { at = 0.85, size = 1, colour = "ffc878" },
+			CrystalLantern = { at = 0.72, size = 1.6, colour = "6ef0e1" },
+			WoodLantern = { at = 0.5, size = 0.9, colour = "ffc878" },
+		},
+		LampLight = { Brightness = 1.2, Range = 10 },
+	},
 	-- The workspace folders the server makes: the prompt anchor of every zone, the seal of every gate of the Heart.
 	Folder = "ZoneGuards",
 	GateFolder = "ZoneGates",

@@ -2,6 +2,7 @@
   "about": "Imported from the owner's VfxLib (C:\\roblox-vfx-library) by tools/import.luau: change the library, not these files.",
   "commit": "d5bfc24",
   "effects": [
+    "aura.cghow_toon_campfire",
     "aura.monster_signature",
     "aura.secret_signature",
     "aura.weapon_bow",
@@ -137,6 +138,7 @@
     "Anchors.luau",
     "Budget.luau",
     "Builder.luau",
+    "Effects/aura/cghow_toon_campfire.luau",
     "Effects/aura/monster_signature.luau",
     "Effects/aura/secret_signature.luau",
     "Effects/aura/weapon_bow.luau",

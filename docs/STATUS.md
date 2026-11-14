@@ -1,5 +1,25 @@
 # Status
 
+## 2026-11-15 — day and night, real fire on torches, lamps that glow, Crownfall falls down
+
+The owner: the waterfall's streaks climbed, flames should be real fire, glowing lamps should glow, and a day/night
+cycle. **Crownfall** (`tools/world/build_heart.luau`, and live in MapWork): a beam's texture runs from Attachment0 to
+Attachment1, so each sheet now starts at its upstream end; all 15 beams read "falls" in play. **Day and night**
+(`client/DayNight`, `shared/DayClock`, `Config.World.DayNight`): one clock for everyone from server time, 06-18 in 10
+min, 18-06 in 4 min; the place's light eases to a moonlit night (brightness, ambients, air colour) and back; held
+while a Dungeon map with its own light is on (`client/DungeonLight` no longer puts the clock and ambients back
+itself). **Fire** (`client/WorldLights`, `Config.World.Lights`): all 60 `TorchSconce` torches burn with
+`aura.cghow_toon_campfire` (imported from the library) on their bowls, day and night. **Lamps**: VillageLamp,
+CrystalLantern and WoodLantern light up at night: their own lights on, the head wears a new `aura.lamp_glow` (in the
+game's VfxLib copy, to go into the library) with a light of ours where the lamp has none; by day both go.
+**Proved:** CHECK OK (799 passed, `tests/spec/day_clock.luau`), TYPES OK (`src/client`, `DayClock`); MapWork play with a
+1-minute day and night: 60 fire anchors, 82 lamp glows at night and 0 by day, no WorldLights/DayNight error. **Seen:**
+torches in Sporelight Glade burning at night; the fishing pond lamp and the lamps along the village path glowing warm;
+the village by day unchanged. **Not verified:** a real phone (60 fires and 80 glows are cut to the nearest by VfxLib's
+LOD, not measured on a weak phone), the blend back from a Dungeon map, crystal lanterns on the Heart's causeways at
+night (not looked at). A client error `CreatureRig is not a valid member of SlimeFaceStage` showed in the log: MapWork's
+slime-face test stage (`tools/slime/*`, not shipped) lacks a copy of `CreatureRig`; not this change.
+
 ## 2026-11-15 — VfxLib d5bfc24: Bulwark's spirit knight is the owner's 3D knight as a hologram
 
 The game's VfxLib copy taken up to the library's main (`import.ps1 --update`, same 130 effects): the runtime learnt

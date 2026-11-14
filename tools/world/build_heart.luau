@@ -589,11 +589,13 @@ do
 		sheet.Transparency = 0.2
 		sheet.CanCollide = false
 		sheet.CastShadow = false
+		-- (a beam's texture runs from Attachment0 to Attachment1: a0 at the sheet's upstream end, so the streaks fall;
+		-- the other way round they climbed the cliff, the owner, 2026-11-15)
 		local a0 = Instance.new("Attachment")
-		a0.CFrame = CFrame.new(0, 0.62, -length / 2) * CFrame.Angles(0, math.pi / 2, 0) -- its axis down the sheet
+		a0.CFrame = CFrame.new(0, 0.62, length / 2) * CFrame.Angles(0, math.pi / 2, 0) -- its axis down the sheet
 		a0.Parent = sheet
 		local a1 = Instance.new("Attachment")
-		a1.CFrame = CFrame.new(0, 0.62, length / 2) * CFrame.Angles(0, math.pi / 2, 0)
+		a1.CFrame = CFrame.new(0, 0.62, -length / 2) * CFrame.Angles(0, math.pi / 2, 0)
 		a1.Parent = sheet
 		local beam = Instance.new("Beam")
 		beam.Name = "Streaks"
