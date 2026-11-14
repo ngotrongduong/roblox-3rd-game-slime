@@ -19,6 +19,7 @@ for _, name in W.Torches do
 end
 type Lamp = { at: number, size: number, colour: string }
 local LAMPS: { [string]: Lamp } = W.Lamps :: any
+local WORN: { [string]: string } = W.Worn :: any
 
 -- (plain tables: a weak one lost lamps still in the world, their Luau handles collected; streamed-out ones are pruned)
 local lights: { [Light]: boolean } = {}
@@ -110,6 +111,11 @@ local function take(inst: Instance)
 		return
 	end
 	if not inst:IsA("BasePart") or inst.Name == "FireAnchor" or inst.Name == "GlowAnchor" then
+		return
+	end
+	local worn = WORN[inst.Name]
+	if worn then
+		VfxLib.attach(inst, worn)
 		return
 	end
 	local kit = kitOf(inst)

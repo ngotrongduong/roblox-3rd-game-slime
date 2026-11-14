@@ -1,5 +1,23 @@
 # Status
 
+## 2026-11-15 — Crownfall ends at its foot in foam and mist; the Hidden Grotto behind it
+
+The owner: the falling water need not run on over the pool; make the foam at its foot more real (cloud and smoke
+effects are fine); a secret passage behind the waterfall and a cave behind it. **The fall** (`tools/world/build_heart.luau`
+section 8) now stops where it lands. **The foam**: a new `aura.waterfall_foam` (the game's VfxLib copy, to go into the
+library): soft engine smoke billowing up, a low cloud rolling out over the pool, white splash and fine droplets, worn
+by an unseen `FallFoot` anchor through `Config.World.Lights.Worn` (`client/WorldLights` attaches any part named
+there). **The Hidden Grotto** (section 9, references `docs/references/heart/grotto_ref_*.webp`, rounds in
+`docs/references/heart/rounds.md`): a mossy rock ledge with stepping stones from the pool's east shore along the
+gorge wall, behind the curtain into a tunnel (a crystal's glow peeks past the water's edge), then a round chamber
+carved in the hill: rock walls, a sand floor, a turquoise pool lit from under the water, a shaft of daylight, blue and
+purple crystals, glow mushrooms, mossy boulders, a mossy log, two wall lanterns. MapWork saved.
+**Proved:** CHECK OK (799 passed), TYPES OK (`WorldLights`, `waterfall_foam`); in MapWork Play the character walked
+from the shore along the ledge, through the curtain and the tunnel and round the pool without sticking. **Seen** in
+Play at high graphics quality: the foam by day and at night; the chamber at the player's camera; the ledge and the
+crystal's glint from the shore. **Not verified:** a phone; the mist at low graphics quality (Studio's automatic
+quality thins rate-based smoke heavily); the cave at night.
+
 ## 2026-11-15 — day and night, real fire on torches, lamps that glow, Crownfall falls down
 
 The owner: the waterfall's streaks climbed, flames should be real fire, glowing lamps should glow, and a day/night

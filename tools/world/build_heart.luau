@@ -574,11 +574,15 @@ end
 do
 	local fall = Instance.new("Model")
 	fall.Name = "Crownfall"
+	-- (the sheet ends at the foot, where the cliff meets the pool: no run on along the water, the owner, 2026-11-15)
 	local points = {}
 	for z = Heart.Fall.z - 4, Heart.Pool.z - 8, 4 do
 		local y = math.min(groundAt(Heart.Fall.x, z), LAKE)
-		if #points == 0 or y < points[#points].Y - 0.5 or z >= Heart.Pool.z - 30 then
+		if #points == 0 or y < points[#points].Y - 0.5 then
 			table.insert(points, Vector3.new(O.x + Heart.Fall.x, math.max(y, 0) + 1.4, O.z + z + 1.5))
+			if y <= 0 then
+				break
+			end
 		end
 	end
 	for i = 1, #points - 1 do
@@ -616,14 +620,259 @@ do
 		beam.LightInfluence = 0.8
 		beam.Parent = sheet
 	end
+	-- the white water at the foot is an effect (client/WorldLights wears Config.World.Lights.Worn on this unseen part):
+	-- the foam balls that stood here looked like plastic, the owner, 2026-11-15; it stands out in front of the sheet's
+	-- foot, so the mist rises before the falling water rather than behind it
 	local foot = points[#points]
-	for i = 1, 6 do
-		local foam = block(fall, "Foam", Vector3.one * rng:NextNumber(6, 10), CFrame.new(foot.X + (i - 3.5) * 4.4, 0.4, foot.Z + rng:NextNumber(-3, 5)), FOAM, Enum.Material.SmoothPlastic)
-		foam.Shape = Enum.PartType.Ball
-		foam.CanCollide = false
-		foam.CastShadow = false
-	end
+	local landing = block(fall, "FallFoot", Vector3.new(18, 4, 8), CFrame.new(foot.X, 2, foot.Z + 4.5), FOAM, Enum.Material.SmoothPlastic)
+	landing.Transparency = 1
+	landing.CanCollide = false
+	landing.CanQuery = false
+	landing.CastShadow = false
 	fall.Parent = heart
+end
+
+---------------------------------------------------------------------------------------------------------------------
+-- 9. The Hidden Grotto behind Crownfall (the owner, 2026-11-15: "a secret passage behind the waterfall and a cave area
+-- behind it"; references docs/references/heart/grotto_ref_entrance.webp and grotto_ref_inside.webp). A mossy stone ledge
+-- leaves the pool's east shore, hugs the gorge wall and slips behind the falling water; a tunnel behind the curtain opens
+-- into a round chamber with a turquoise pool, glowing mushrooms and crystals, two lanterns and a shaft of daylight. The
+-- terrain is a height field (build_terrain.luau) that cannot hold a roof: the cave is carved here, after it, and a run
+-- carves the same again.
+do
+	local grotto = Instance.new("Model")
+	grotto.Name = "HiddenGrotto"
+	local M = Enum.Material
+	-- (terrain is cells of 4 studs from y 0: a fill that ends mid-cell leaves a surface somewhere in that cell, so every
+	-- floor here fills whole cells up to y 4, and the props stand on the surface a ray finds)
+	local FLOOR_Y = 4 -- the cave's sand, the tunnel's and the ledge's top
+	local function at(x: number, y: number, z: number): Vector3
+		return Vector3.new(O.x + x, y, O.z + z)
+	end
+	local function ground(x: number, z: number): number
+		local hit = workspace:Raycast(at(x, FLOOR_Y + 6, z), Vector3.new(0, -16, 0), rp)
+		return if hit then hit.Position.Y else FLOOR_Y
+	end
+
+	-- the ledge: rock from under the water to the floor's height, along the gorge wall from the east shore to the curtain
+	local LEDGE = { { 47, -180 }, { 44, -191 }, { 39, -201 }, { 30, -209 }, { 18, -214 }, { 8, -218 }, { 1, -220 } }
+	for i = 1, #LEDGE - 1 do
+		local a, b = LEDGE[i], LEDGE[i + 1]
+		local pa, pb = at(a[1], 0, a[2]), at(b[1], 0, b[2])
+		local mid = (pa + pb) / 2
+		local length = (pb - pa).Magnitude + 3
+		terrain:FillBlock(CFrame.lookAt(mid, pb), Vector3.new(7, 8, length), M.Rock)
+		terrain:FillBlock(CFrame.lookAt(mid, pb) + Vector3.new(0, FLOOR_Y + 4, 0), Vector3.new(7, 8, length), M.Air)
+		if i % 2 == 0 then
+			terrain:FillBlock(CFrame.lookAt(mid, pb) + Vector3.new(0, FLOOR_Y - 2, 0), Vector3.new(4, 4, length * 0.6), M.LeafyGrass)
+		end
+	end
+
+	-- the tunnel behind the curtain, bending a little west, and the chamber: overlapping balls of air, a flat floor (the
+	-- mouth sits a little east of the falling sheet's middle, so a dark sliver and a crystal's glow peek out past the
+	-- water's edge, as in the reference)
+	local TUNNEL = { { 8, -221 }, { 5, -226 }, { 1, -231 }, { -3, -238 }, { -4, -245 }, { -5, -251 } }
+	for _, p in TUNNEL do
+		terrain:FillBall(at(p[1], FLOOR_Y + 5, p[2]), 6.5, M.Air)
+	end
+	local CAVE = { x = -4, z = -270 }
+	local ROOMS = { { -4, 15, -270, 20 }, { 7, 13, -263, 13 }, { -16, 13, -277, 13 }, { -2, 16, -284, 12 } }
+	for _, r in ROOMS do
+		terrain:FillBall(at(r[1], r[2], r[3]), r[4], M.Air)
+	end
+	terrain:FillCylinder(CFrame.new(at(CAVE.x, FLOOR_Y - 8, CAVE.z)), 16, 30, M.Sand)
+	for _, p in TUNNEL do
+		terrain:FillBlock(CFrame.new(at(p[1], FLOOR_Y - 8, p[2])), Vector3.new(12, 16, 8), M.Rock)
+	end
+	-- the hill inside is the height field's own grass, which carved open reads as hedges: the walls round the chamber
+	-- and the tunnel (past the curtain, so the ledge keeps its moss) are turned to rock, cell by cell near the carved
+	-- balls (the walls show grass from cells a good way behind them: 4 studs was not enough, 10 is)
+	do
+		local balls = {}
+		for _, r in ROOMS do
+			table.insert(balls, { at(r[1], r[2], r[3]), r[4] + 10 })
+		end
+		for i = 2, #TUNNEL do
+			table.insert(balls, { at(TUNNEL[i][1], FLOOR_Y + 5, TUNNEL[i][2]), 9 })
+		end
+		local GRASS = { [M.LeafyGrass] = true, [M.Grass] = true, [M.Ground] = true, [M.Mud] = true }
+		local region = Region3.new(at(-40, 0, -306), at(36, 48, -220)):ExpandToGrid(4)
+		local corner = region.CFrame.Position - region.Size / 2
+		local mats, occ = terrain:ReadVoxels(region, 4)
+		for ix = 1, mats.Size.X do
+			for iy = 1, mats.Size.Y do
+				for iz = 1, mats.Size.Z do
+					if GRASS[mats[ix][iy][iz]] then
+						local p = corner + Vector3.new(ix - 0.5, iy - 0.5, iz - 0.5) * 4
+						for _, b in balls do
+							if (p - b[1]).Magnitude <= b[2] then
+								mats[ix][iy][iz] = M.Rock
+								break
+							end
+						end
+					end
+				end
+			end
+		end
+		terrain:WriteVoxels(region, 4, mats, occ)
+	end
+	-- the pool, most of the chamber as in the reference: two cells of water just under the sand's top, flush with the
+	-- floor, over sand (one cell read as plain sand at high graphics quality, where water is clear; water does not
+	-- take the place of solid ground: the sand is cleared first)
+	local POOL = { x = -3, z = -277, r = 11 }
+	terrain:FillCylinder(CFrame.new(at(POOL.x, FLOOR_Y - 4, POOL.z)), 8, POOL.r, M.Air)
+	terrain:FillCylinder(CFrame.new(at(POOL.x, FLOOR_Y - 4, POOL.z)), 8, POOL.r, M.Water)
+	terrain:FillCylinder(CFrame.new(at(POOL.x, FLOOR_Y - 10, POOL.z)), 4, POOL.r, M.Slate)
+
+	-- where the wall is, out from the chamber's middle along a heading (degrees, 0 = east, 90 = south)
+	local function wall(heading: number, up: number): (number, number, Vector3)
+		local d = Vector3.new(math.cos(math.rad(heading)), 0, math.sin(math.rad(heading)))
+		local from = at(CAVE.x, FLOOR_Y + up, CAVE.z)
+		local hit = workspace:Raycast(from, d * 40, rp)
+		local p = if hit then hit.Position else from + d * 18
+		return p.X - O.x, p.Z - O.z, d
+	end
+	local function glow(model: Model?, colour: Color3, range: number, brightness: number)
+		if not model then
+			return
+		end
+		local box, size = model:GetBoundingBox()
+		local holder = block(model, "Glow", Vector3.one * 0.2, box * CFrame.new(0, size.Y * 0.2, 0), colour)
+		holder.Transparency = 1
+		holder.CanCollide = false
+		holder.CanQuery = false
+		local l = Instance.new("PointLight")
+		l.Color = colour
+		l.Range = range
+		l.Brightness = brightness
+		l.Shadows = false
+		l.Parent = holder
+	end
+	local ICE, AMETHYST, WARM = rgb(170, 225, 255), rgb(190, 120, 255), rgb(255, 196, 120)
+	-- options for a prop standing on the ground at (x, z)
+	local function on(x: number, z: number, extra: { [string]: any }): Options
+		local o: { [string]: any } = { y = ground(x, z), sink = 0.3 }
+		for k, v in extra do
+			o[k] = v
+		end
+		return o :: any
+	end
+
+	-- round the walls (headings: 0 east, 90 south where the tunnel comes in): crystals, mushrooms, mossy boulders,
+	-- ferns, each kind in its own place as in the reference
+	local RING = {
+		{ 200, "WildKit", "OwnCrystalPaleBlue", 9, ICE, 2.5 },
+		{ 235, "PropKit", "GlowMushrooms", 5, MUSHROOM, 3 },
+		{ 255, "NatureKit", "MossyBoulder", 6 },
+		{ 285, "PropKit", "AmethystRocks", 8, AMETHYST, 3.5 },
+		{ 310, "WildKit", "OwnMushBlue", 4, MUSHROOM },
+		{ 335, "PropKit", "AmethystRocks", 10, AMETHYST, 2.5 },
+		{ 45, "WildKit", "OwnMushBlue", 5, MUSHROOM, 3 },
+		{ 160, "NatureKit", "MossyBoulder", 7 },
+		{ 175, "PropKit", "GlowMushrooms", 4, MUSHROOM },
+	}
+	for i, r in RING do
+		local x, z = wall(r[1], 4)
+		local back = Vector3.new(CAVE.x - x, 0, CAVE.z - z).Unit * 2.5
+		local px, pz = x + back.X, z + back.Z
+		local m = put(grotto, r[2], r[3], px, pz, r[4], nil, on(px, pz, {
+			soft = r[5] ~= nil,
+			-- (the glow mushrooms' own texture is orange, which a tint cannot turn: painted, as the crystals are)
+			paint = if r[3] == "OwnCrystalPaleBlue" then ICE elseif r[3] == "GlowMushrooms" then MUSHROOM else nil,
+		}))
+		if r[6] then
+			glow(m, r[5], 14, r[6] * 0.4)
+		end
+		if i % 3 == 0 then
+			local fx, fz = x + back.X * 1.8 + 1.5, z + back.Z * 1.8
+			put(grotto, "NatureKit", "Fern", fx, fz, 3.5, nil, on(fx, fz, { soft = true }))
+		end
+	end
+	-- the fallen mossy log on the east side, boulders on the pool's rim, stepping stones from the tunnel to the water
+	local lx, lz, ld = wall(15, 4)
+	lx, lz = lx - ld.X * 4, lz - ld.Z * 4
+	put(grotto, "PropKit", "MossyLog", lx, lz, 9, { -ld.Z, ld.X }, on(lx, lz, { wide = true }))
+	for i, a in { 10, 130, 230 } do
+		local r = POOL.r + 1.5
+		local bx, bz = POOL.x + math.cos(math.rad(a)) * r, POOL.z + math.sin(math.rad(a)) * r
+		put(grotto, "NatureKit", "MossyBoulder", bx, bz, 3 + i % 2, nil, on(bx, bz, { sink = 0.6 }))
+	end
+	for i, s in { { -4, -252 }, { -3, -256 }, { -5, -260 }, { -3, -264 } } do
+		put(grotto, "NatureKit", "MediumRock", s[1], s[2], 4.5 + (i % 2) * 0.8, nil, on(s[1], s[2], { wide = true, tall = 0.25, sink = 0.2, soft = true, name = "Step" }))
+	end
+	-- two warm lanterns on the walls either side of where the tunnel comes in
+	for _, h in { 55, 125 } do
+		local x, z, d = wall(h, 7)
+		local lantern = put(grotto, "PropKit", "WallLantern", x - d.X * 0.6, z - d.Z * 0.6, 4, { -d.X, -d.Z }, { y = FLOOR_Y + 5, sink = 0, soft = true })
+		glow(lantern, WARM, 18, 1.2)
+	end
+	-- glowing crystals in the tunnel, half seen from outside through the falling water
+	for i, p in { { 8.5, -227, 5 }, { -4, -236, 6 }, { 1, -243, 4 } } do
+		local m = put(grotto, "WildKit", "OwnCrystalPaleBlue", p[1], p[2], p[3], nil, on(p[1], p[2], { soft = true, paint = TURQUOISE }))
+		if i == 1 then
+			glow(m, TURQUOISE, 12, 1)
+		end
+	end
+	-- the ledge's stepping stones and a few ferns on it
+	for i = 2, #LEDGE - 1, 1 do
+		local p = LEDGE[i]
+		put(grotto, "NatureKit", "MediumRock", p[1], p[2], 4.5, nil, on(p[1], p[2], { wide = true, tall = 0.25, sink = 0.2, soft = true, name = "LedgeStep" }))
+		if i % 2 == 1 then
+			put(grotto, "NatureKit", "Fern", p[1] + 2, p[2] - 2, 3, nil, on(p[1] + 2, p[2] - 2, { soft = true }))
+		end
+	end
+
+	-- the shaft of daylight from a crack in the roof onto the pool: a beam of light rays and a spot light
+	local roof = workspace:Raycast(at(POOL.x, FLOOR_Y + 2, POOL.z), Vector3.new(0, 60, 0), rp)
+	local top = if roof then roof.Position.Y - 1 else FLOOR_Y + 30
+	local sky = block(grotto, "DaylightShaft", Vector3.one * 0.5, CFrame.new(at(POOL.x + 3, top, POOL.z - 2)), FOAM)
+	sky.Transparency = 1
+	sky.CanCollide = false
+	sky.CanQuery = false
+	local a0 = Instance.new("Attachment")
+	a0.Parent = sky
+	local water = block(grotto, "ShaftFoot", Vector3.one * 0.5, CFrame.new(at(POOL.x, FLOOR_Y, POOL.z)), FOAM)
+	water.Transparency = 1
+	water.CanCollide = false
+	water.CanQuery = false
+	local a1 = Instance.new("Attachment")
+	a1.Parent = water
+	-- a turquoise light under the water: at high graphics quality water is clear and the pool read as plain sand, lit
+	-- from below it reads turquoise as in the reference
+	local under = block(grotto, "PoolGlow", Vector3.one * 0.3, CFrame.new(at(POOL.x, FLOOR_Y - 5, POOL.z)), FOAM)
+	under.Transparency = 1
+	under.CanCollide = false
+	under.CanQuery = false
+	local bounce = Instance.new("PointLight")
+	bounce.Color = rgb(40, 220, 230)
+	bounce.Range = 13
+	bounce.Brightness = 3
+	bounce.Shadows = false
+	bounce.Parent = under
+	local shaft = Instance.new("Beam")
+	shaft.Name = "Daylight"
+	shaft.Attachment0 = a0
+	shaft.Attachment1 = a1
+	shaft.FaceCamera = true
+	shaft.Width0 = 6
+	shaft.Width1 = 11
+	shaft.Texture = "rbxassetid://18837316844" -- the library's beam_light_shafts
+	shaft.TextureMode = Enum.TextureMode.Stretch
+	shaft.Color = ColorSequence.new(rgb(255, 246, 215))
+	shaft.Transparency = NumberSequence.new({ NumberSequenceKeypoint.new(0, 0.35), NumberSequenceKeypoint.new(0.8, 0.6), NumberSequenceKeypoint.new(1, 1) })
+	shaft.LightEmission = 1
+	shaft.LightInfluence = 0
+	shaft.Parent = sky
+	local spot = Instance.new("SpotLight")
+	spot.Face = Enum.NormalId.Bottom
+	spot.Angle = 45
+	spot.Range = 40
+	spot.Brightness = 2
+	spot.Color = rgb(255, 240, 210)
+	spot.Shadows = false
+	spot.Parent = sky
+
+	grotto.Parent = heart
 end
 
 heart.Parent = sites

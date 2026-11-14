@@ -868,3 +868,33 @@ What went wrong
   guardians 28; lily pads the other way (10-15 wide looked like rafts: 8-12).
 - **Bright particles on the owner's avatar** (ghosts, notes) look like creatures standing in the scene in a play
   shot: check `workspace` for parts there before hunting a bug in the scene.
+
+## The Hidden Grotto behind Crownfall (2026-11-15, build_heart.luau section 9, docs/references/heart/rounds.md)
+
+The owner: "a secret passage behind the waterfall and a cave area behind it". Two ChatGPT references, five rounds.
+
+What worked
+- **A cave in a height-field world is carved after the height field**, by the area's own re-runnable builder:
+  overlapping `FillBall` air for the tunnel and the chamber, then the floor filled in WHOLE cells up to y 4 (a fill
+  ending mid-cell leaves the surface anywhere in that cell; a full cell to 4 gives a surface at 5-6). Every prop
+  stands on the surface a ray finds there, never on a guessed height.
+- **Carved walls show the hill's own grass, which reads as hedges.** `ReadVoxels` over the cave's box, every grass,
+  leafy grass, ground or mud cell within the carved ball's radius + 10 turned to Rock, `WriteVoxels` back (+4 still
+  left grass on show; `Terrain:ReplaceMaterialInBall` does not exist).
+- **A pool in a cave**: Air first, then Water (water does not take the place of solid ground), two cells deep over a
+  slate bottom, and a turquoise PointLight under the water (range 13, brightness 3). At high graphics quality water is
+  clear: one cell of it over sand read as plain sand. Edit captures draw water opaque, so judge water in Play at
+  `QualityLevel.Level21`.
+- **A secret mouth peeks out**: the tunnel's mouth sits a little to one side of the falling sheet, so a glowing kit
+  crystal shows past the water's edge, as in the reference. Wholly behind the sheet, nothing at all showed.
+- **Stepping stones are a kit rock flattened with `tall = 0.25`** (NatureKit MediumRock). OwnerKit FlatBoulder is a
+  long thin slab (2.7 x 1.3 x 8.2) that read as sticks; WildKit QtRockPath_Round_Small_1 is a patch of gravel.
+- **Walkability proved by MoveTo legs from the Server**, the root's position sampled every 0.25 s: shore, ledge,
+  through the curtain, tunnel, chamber, round the pool.
+
+What went wrong
+- **Rays cast 2 studs over a sand floor graze its bumps** (hits at 2-8 studs): the wall-finding rays go 4 up.
+- **PropKit GlowMushrooms' texture is orange**: a tint cannot turn it; paint it, as the crystals.
+- **`beam_fade` as a soft light shaft drew a hard-edged box**; the ray streaks of `beam_light_shafts` were kept.
+- **A re-run does not undo an earlier carve**: moving the tunnel left the first try's air behind (harmless here,
+  hidden behind the curtain). Move carved things only where the old hole stays hidden, or rebuild the terrain.

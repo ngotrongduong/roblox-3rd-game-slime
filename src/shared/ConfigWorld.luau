@@ -46,6 +46,8 @@ return {
 			WoodLantern = { at = 0.5, size = 0.9, colour = "ffc878" },
 		},
 		LampLight = { Brightness = 1.2, Range = 10 },
+		-- An effect worn day and night by every unseen part of this name the world puts down (Crownfall's foot).
+		Worn = { FallFoot = "aura.waterfall_foam" },
 	},
 	-- The workspace folders the server makes: the prompt anchor of every zone, the seal of every gate of the Heart.
 	Folder = "ZoneGuards",

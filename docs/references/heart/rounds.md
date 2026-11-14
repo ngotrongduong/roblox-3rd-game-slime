@@ -65,3 +65,27 @@ the client not posing what is off screen (not proved, it was not looked at); its
 way, not from the floor.
 
 **Not run:** the fight's last wave and win; the skill marks drawn flat on the ground, one by one; the phone view.
+
+## The Hidden Grotto behind Crownfall (2026-11-15)
+
+References (ChatGPT, from the owner's request): `grotto_ref_entrance.webp` (a mossy ledge with paving stones along the
+gorge wall to a cave mouth at the curtain's edge, a crystal glowing inside) and `grotto_ref_inside.webp` (a round
+chamber, a turquoise pool in the middle, a shaft of daylight, cyan glow mushrooms, blue and purple crystals, mossy
+boulders, a mossy log, two wall lanterns, stepping stones on sand).
+
+Cameras: inside from the tunnel's end, (-5, 14, -6249) at (-3, 4..8, -6280); outside from the east shore,
+(30, 18, -6168) at (4, 8, -6218); in Play the same with the character placed and the camera held.
+
+- **r1** carved and dressed. Not met: the log stood end-on in the middle as a red disc (its wall ray grazed the sand),
+  the glow mushrooms were orange, the pool a thin line, the walls read as hedges, steps buried.
+- **r2** whole-cell floors, props on the found surface, the pool as Air then Water. Not met: the north wall still
+  grass, the pool small, the steps sticks.
+- **r3** walls turned to rock round the carve (+10), pool r 11 over sand, the log along the east wall, mushrooms
+  painted, steps flattened kit rocks. Inside met (Edit). Outside: the mouth wholly hidden behind the sheet.
+- **r4** the mouth moved east: a turquoise crystal glints past the curtain's right edge.
+- **r5** (Play, Level21) the pool read as sand: two cells deep, a slate bottom and a turquoise light under the water.
+
+In Play: the character walked from the east shore along the ledge, through the curtain, down the tunnel and round the
+pool, never stuck. Seen at the player's camera inside (turquoise pool, light shaft, crystals, glow mushrooms, log,
+lanterns) and from the shore (the ledge's stones and ferns, the crystal's glint at the curtain's edge, the foam).
+**Not run:** a phone, low graphics quality inside the cave, night inside the cave.
