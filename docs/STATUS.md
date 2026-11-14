@@ -39,11 +39,13 @@ stands them in place of the RuinArch, 42 studs tall, lantern side down the cause
 automatic hulls left a passage one character wide, measured by Blockcast); two unseen `GateLeg` blocks stand in the
 legs and leave the middle 14 studs free (Blockcast: a character box passes at the middle, is stopped from 5 studs
 off-centre). Seen in edit-mode shots from the causeway side: `docs/references/world/shots/root_gate.jpg`,
-`ember_gate.jpg`, `frost_gate.jpg`. **MapWork was NOT saved after the gates** (the effects-audit session was
-play-testing in the same Studio, `save_place` is busy in Play): the edit DataModel holds them; if the place is
-reopened without them, run `tools/world/take_gates.luau` then `tools/world/build_sites.luau` (PLAN=WorldPlan) and
-save. **Not verified:** a walk through each gate in a play test (the game still sends a character placed in the new
-world back, until M4), the game's own camera, a phone, the Frost Gate from the Heart side.
+`ember_gate.jpg`, `frost_gate.jpg`. A shot from INSIDE the Heart then showed the Root and Frost Gates stood back to
+front (lanterns, mushrooms and flowers looking into the Heart; only the Ember Gate was right): their files face the
+other way, so `build_sites.luau` turns those two; the three shots above are the corrected ones, all with the lantern
+side to the causeway. **MapWork is saved with the gates** (2026-11-14 12:12, `ServerStorage.WorldKit` and the rebuilt
+Sites); to rebuild from nothing: `tools/world/take_gates.luau`, then `tools/world/build_sites.luau` (PLAN=WorldPlan).
+**Not verified:** a walk through each gate in a play test (the game still sends a character placed in the new world
+back, until M4), the game's own camera, a phone.
 
 ## 2026-11-14 — fight effects audit; wave 1: the slimes' side raised to the monsters' level
 

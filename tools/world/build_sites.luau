@@ -336,7 +336,10 @@ for _, site in Plan.Sites do
 		-- The gate's own model (tools/world/take_gates.luau); its front, the lantern side, looks down the causeway.
 		-- The mesh does not collide: its automatic hulls left a passage one character wide (measured). Two unseen
 		-- pillars stand in the legs instead and leave the middle 14 studs free.
-		put(heart, "WorldKit", OWN_GATE[site.id], site.x, site.z, 42, { dx, dz }, { name = site.name, sink = 1.5, soft = true })
+		-- The Root and Frost Gates' files face the other way round from the Ember Gate's (seen in Studio: their
+		-- lanterns looked into the Heart).
+		local f = if site.id == "gate_e" then 1 else -1
+		put(heart, "WorldKit", OWN_GATE[site.id], site.x, site.z, 42, { dx * f, dz * f }, { name = site.name, sink = 1.5, soft = true })
 		for side = -1, 1, 2 do
 			local x, z = site.x - dz * side * 14.5, site.z + dx * side * 14.5
 			local at = Vector3.new(O.x + x, groundAt(site.x, site.z) + 15, O.z + z)

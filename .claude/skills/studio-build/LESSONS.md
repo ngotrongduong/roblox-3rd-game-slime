@@ -791,7 +791,12 @@ was left there (this game has none); read it there if a cave is ever wanted.
   send the upload through a Studio whose place is saved to Roblox (`list_roblox_studios`: `persistedToCloud: true`).
   The asset belongs to the account, so `InsertService:LoadAsset` then works in MapWork.
 - A Meshy model arrives as one MeshPart about 1 stud wide with a TextureID (no SurfaceAppearance): scale it in the
-  builder (`put`, by height). Its passage is along Z and its front (+Z) faces away from `lookAt`'s direction.
+  builder (`put`, by height). Its passage is along Z. Which way its FRONT looks differs from file to file: the
+  Ember Gate's front faced away from `lookAt`'s direction, the Root and Frost Gates' the other way. Counting
+  lantern-coloured vertices in the GLB said all three were alike and was wrong: shoot every such piece from BOTH
+  sides in Studio before calling its facing done (two gates stood back to front for a commit).
+- `save_place` "Failed ... auto save is in progress" (the Output window says so): call it again a few seconds later
+  and check the file's write time.
 - An arch or gate from one mesh: the automatic collision hulls close most of the opening (Blockcast with a 4 x 6 x 2
   box: free only on the centre line), and CollisionFidelity set by script did not stick. Make the mesh non-colliding
   and stand two unseen blocks in its legs; prove the passage with Blockcast (`RespectCanCollide = true`).
