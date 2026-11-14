@@ -1208,9 +1208,11 @@ return function(T: any)
 		run(consumed, 3)
 		local cm = unitOf(consumed, "m")
 		local f = unitOf(consumed, "f")
+		-- Bring the frozen foe into range only after the Ward exists, so its one blow exhausts the barrier.
+		f.x, f.z = cm.x + 4, cm.z
 		f.aimed, f.cooldown = false, 0.4
 		local earlier = cm.hp
-		local hits = run(consumed, 2)
+		local hits = run(consumed, 0.6)
 		local hit = firstOf(hits, function(e: any): boolean
 			return e.kind == "hit" and e.from == "f" and e.to == "m"
 		end)
