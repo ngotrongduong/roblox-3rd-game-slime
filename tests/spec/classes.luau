@@ -2335,9 +2335,14 @@ return function(T: any)
 			end
 			local leader = unitOf(fight, leaderId)
 			freeze(leader, unitOf(fight, "b"))
+			for _, member in fight.units do
+				if member.side == "squad" and member ~= leader then
+					member.cooldown, member.aimed, member.target = 0.4, false, nil
+				end
+			end
 			local follower = unitOf(fight, followerId)
-			follower.cooldown, follower.aimed, follower.target = 0.4, false, nil
 			run(fight, 1)
+			T.ok(follower.target ~= nil)
 			return fight
 		end
 		local warrior = choice({
