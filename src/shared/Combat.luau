@@ -1806,11 +1806,29 @@ function Combat.step(fight: Fight, dt: number): { Event }
 	fight.seconds += dt
 	for _, attacker in fight.units do
 		if attacker.hp > 0 then
+			-- Echo uses neither a fresh aim nor a beat; stun at its scheduled moment cancels it.
+			local echo = attacker.echo
+			if echo and fight.seconds + 1e-6 >= echo.at then
+				attacker.echo = nil
+				if attacker.stunnedUntil <= echo.at then
+					local special = (Config.Combat.Skills :: any)[echo.key]
+					for index, enemy in echo.targets do
+						if enemy.hp > 0 then
+							blow(fight, attacker, enemy, echo.weight, events, {
+								skill = echo.key,
+								echo = true,
+								splash = if index > 1 then true else nil,
+							}, special, { magic = kindOf(attacker).magic })
+						end
+					end
+				end
+			end
 			if attacker.barrierUntil <= fight.seconds then
 				attacker.barrier = 0
 			end
 			local kind = kindOf(attacker)
-			if fight.moves and kind then
+			local aimed = if kind and attacker.aimed then (Config.Combat.Skills :: any)[attacker.skillKey] else nil
+			if fight.moves and kind and not (aimed and aimed.ultimate and aimed.windup) then
 				hop(fight, attacker, events)
 			end
 			-- (positional mode: a fighter that has announced its blow stands still; any other walks toward its target, and
@@ -1828,6 +1846,9 @@ function Combat.step(fight: Fight, dt: number): { Event }
 			end
 			local before = attacker.cooldown
 			local lead = leadOf(fight, attacker)
+			if kind and not attacker.aimed then
+				lead = math.max(lead, ultimateLead(fight, attacker))
+			end
 			-- (a stung fighter's beat runs slow)
 			attacker.cooldown -= dt * (if attacker.slowUntil > fight.seconds then 1 - attacker.slowBy else 1)
 			if not inReach then
@@ -1854,6 +1875,13 @@ function Combat.step(fight: Fight, dt: number): { Event }
 						target = attacker.target or target
 						attacker.skillNext = own ~= nil
 						key = own
+						if own then
+							local selected = (c.Skills :: any)[own]
+							if selected.ultimate and selected.windup then
+								-- An ultimate keeps its whole telegraph even if its plain beat was almost finished.
+								attacker.cooldown = math.max(attacker.cooldown, selected.windup)
+							end
+						end
 					elseif s and s.kind == "mend" then
 						-- (a mend special is announced on the heal turn; a healer with nobody wounded strikes a plain blow)
 						attacker.skillNext = false
