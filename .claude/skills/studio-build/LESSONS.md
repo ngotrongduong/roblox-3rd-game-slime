@@ -815,3 +815,56 @@ was left there (this game has none); read it there if a cave is ever wanted.
   and stand two unseen blocks in its legs; prove the passage with Blockcast (`RespectCanCollide = true`).
 - The owner may press Play while a job runs ("Edit datamodel is not available in Play mode", captures fail "Target is
   not reachable"): read `get_studio_state` first; do the work that needs no Studio, then take Edit for the rest.
+
+## The Heart, redesigned (2026-11-14, tools/world/build_heart.luau, docs/references/heart/rounds.md)
+
+The owner: "the central area is too poorly designed". Three reference pictures, six Meshy models, four rounds.
+
+What worked
+- **One ChatGPT message gave the whole brief**: a wide concept, a close view and a sheet of the new assets side by
+  side (a second sheet asked in the same chat for the pieces the first lacked). Each asset was cropped square from the
+  sheet (padded with the sheet's background) and went to Meshy Smart Topology as it was: six models, all usable
+  first time, every front facing -Z.
+- **An area that has its own builder gets its own file and its own folder.** `build_sites.luau` rebuilt `Sites` whole and
+  would have wiped the Heart: it now takes `Sites.Heart` out before destroying the old folder and puts it back. A
+  builder that owns a sub-folder says so in both headers.
+- **A big floor's centrepiece is ONE picture**: ChatGPT draws the round paved disc with the crest on flat magenta,
+  `tools/chatgpt/prepare_floor.py` keys and squares it (1024), `upload_image`, and it goes on as a Top Decal of an
+  unseen 0.1-thick part over a plain stone disc (which shows until the picture loads). The stud slabs ring it.
+  A Top decal's "up" pointed south here: turn the part by `math.pi` and look.
+- **Kit crystals are painted, not tinted**, to match another model's colour: their texture is blue, so a tint only
+  multiplies blue. `TextureID = ""`, SmoothPlastic, Reflectance 0.1, the colour wanted: facets then come from the
+  game's light, as the owner likes it.
+- **Moving water is two Beams on the same attachments**: a plain sheet (transparency 0.25) and a streak texture
+  running over it (`rbxassetid://1610017834`, Wrap, TextureLength 7, TextureSpeed 1.3, ZOffset 0.3), `FaceCamera`
+  off, LightEmission 0.4. CurveSize0 pushes along attachment 0's axis, CurveSize1 pulls back along attachment 1's:
+  axis 1 pointing down makes the water end falling.
+- **Read a model's side profile before aiming anything at it.** A small script cut the spout's GLB by its middle plane
+  and printed the section in text (`python tools/world/glb_section.py <file.glb> <height in studs> [x offset]`:
+  triangles crossing the plane, drawn two columns a stud at the height it stands in the game). It showed the mouth's floor 16-18 up, the back wall 3 in front of the middle and the
+  lip 17 in front, and the water was placed right at the first try. Raycasts cannot do this: collision hulls close
+  a cavity.
+- **Water out of a mouth is two pours**: over the tongue (straight, fading in from clear at the throat so no hard
+  edge shows in the dark), then off the lip (curved, down into the lake), sharing the lip's attachment.
+- **Plants that must read from the sky are beds, not single flowers**: one bush with six flowers of one kind round it,
+  a ring of beds near the arena and a looser one outside; trees 34-56 tall in two rows on the far shore.
+- **A floor laid where a fight stands is a tenth of a stud over the land.** The zone fight reads its ground from the
+  TERRAIN only (`ZoneGuards.ground`): a thicker floor swallows the fighters' feet and what the fight draws on the
+  ground. 0.1 showed no z-fight against flat terrain in a shot from 640 studs up.
+
+What went wrong
+- **An Attachment's `WorldPosition` / `WorldAxis` set before it has a parent are taken as local values**: the spouts'
+  water ended at twice the coordinates and could not be seen. Parent first, then the World* values.
+- **A spout that stood 17 studs back from the water poured onto grass.** Place it from the water's edge: its middle at
+  `LakeOuter + 17`, its foot on the ground at the waterline, the fall landing 12 studs inside the lake.
+- **The first water started inside the lower lip** (a point guessed from the picture), so it seemed to come from under
+  the chin; the owner asked for it to come from inside the mouth. Guessing a point on a model costs a round.
+- **Do not crown a model with more of what it already has.** A giant kit crystal on the shrine's roof (three tries to
+  seat it) was the one thing the owner vetoed: "the roof already has its crystals". When a landmark feels small, make
+  the model bigger or dress the ground round it; do not stack kit pieces on a finished model.
+- **A white-ish stone floor reads as a white disc from the sky.** Warm sandstone, alternate slabs a shade apart, a
+  gold rim.
+- **Sizes chosen at eye level are too small from the game's wide views**: lanterns ended at 11 tall, rune stones 22,
+  guardians 28; lily pads the other way (10-15 wide looked like rafts: 8-12).
+- **Bright particles on the owner's avatar** (ghosts, notes) look like creatures standing in the scene in a play
+  shot: check `workspace` for parts there before hunting a bug in the scene.

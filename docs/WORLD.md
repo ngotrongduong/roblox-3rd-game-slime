@@ -105,7 +105,8 @@ Crownfall Lookout, Grove Fork, Ember Fork, the three gates, the four bridges (Ma
 |---|---|---|---|
 | `tools/world/build_terrain.luau` | the heightfield, 4-stud voxels: regions, river, bay and sea, rim, volcano, peaks, the Heart (rim, lake, island, gate cuts, causeway ramps), pads, roads | `ARGS`: `rows 0 34`, `sea`, `probe X Z` | 1,260 chunks in 10.9 s |
 | `tools/world/build_scatter.luau` | trees, plants and rocks by region (read off the ground material), groves by noise, bare roads and pads, flowers along roads | `ARGS`: `rows 0 8`, `count` | about 8,700 placements, 10,994 parts, 88 meshes |
-| `tools/world/build_sites.luau` | the Market at the hub, 4 bridges, 13 arena rings with torches, signs and boss thrones, 3 gates, the Heart's crown, Crownfall, the Cross, quay, lookout, mill, village gates, lamps | no args | 468 kit pieces, 2,141 parts |
+| `tools/world/build_sites.luau` | the Market at the hub, 4 bridges, 13 arena rings with torches, signs and boss thrones, the Cross, quay, lookout, mill, village gates, lamps; it keeps `Sites.Heart` as it finds it | no args | 433 kit pieces, 4,274 instances |
+| `tools/world/build_heart.luau` | the whole Heart (2026-11-14, the owner's redesign; rounds in `docs/references/heart/rounds.md`): the 3 gates, kerbs, lanterns and guardians along the causeways, the Crown Shrine, the paved arena with its crest and rune stones, flower beds and trees on the island, crystal islets and lily pads, 4 slime spouts and 6 ruins on the far shore, Crownfall's moving water. Needs the six models of `tools/world/take_heart.luau` in `ServerStorage.WorldKit` | no args | 512 kit pieces, 961 parts, 25 lights, 31 beams |
 
 ```
 node tools/studio_mcp.js run tools/world/build_terrain.luau <studio_id> Edit PLAN=src/shared/WorldPlan.luau ARGS=<file>
@@ -125,14 +126,14 @@ credits, no Remesh needed); import into Roblox as one MeshPart.
 | # | Asset | Use | Size in game | Triangles | Now (interim) |
 |---|---|---|---|---|---|
 | 1 | Root Gate, Ember Gate, Frost Gate | the three ways into the Heart | 42 tall, opening 16+ wide | 3,000 each | **done 2026-11-14**: own models (`art/models/world/gates/*.glb`, 3,930 / 3,110 / 3,167 triangles) in `ServerStorage.WorldKit`, region pieces kept as dressing |
-| 2 | The Crown of the Heart | the mega-boss island's spire, seen across the world | 240 tall | 4,000 | CrystalCluster, stretched |
+| 2 | The Crown of the Heart | the mega-boss island's landmark | 104 tall | 4,000 | **done 2026-11-14** as the Crown Shrine with five more models (guardian, rune stone, lantern, slime spout, ruin colonnade: `art/models/world/heart/*.glb`, ledger in `docs/turnaround.md`). No spire: the owner wants no giant crystal over a roof that has its own |
 | 3 | Stone arch bridge | 4 river crossings (and more later) | 68 long, 14-18 wide | 1,500 | built of parts (plank arch) |
 | 4 | Arena altar, 4 kinds | the mark of a fight: meadow, grove, ember, frost | 12-16 tall | 800 each | torches only |
 | 5 | Waystone | junction and zone-entrance marker | 6 tall | 300 | PropKit Signpost |
 | 6 | Boss thrones, 3 | Elder Cap, Molten Seat, Glacier Seat behind each boss ring | 60-80 tall | 2,000 each | scaled-up kit pieces |
 | 7 | Ruin set (broken column, fallen arch, wall end) | Sunken Ruins | 8-20 | 600 each | RuinArch, DryStoneWall |
 | 8 | Hub town houses | a small town round the Market | - | - | Quaternius / Kenney packs first (`art/library/`), no generation |
-| 9 | Crownfall's moving water and mist | the waterfall | - | - | parts; the effect comes from the VFX library, not a model |
+| 9 | Crownfall's moving water and mist | the waterfall | - | - | water sheets with moving streak Beams (2026-11-14, `build_heart.luau`); mist still to come from the VFX library |
 | 10 | King Goo | the Heart's own boss (M5 left him out) | about 3 x a region boss | 8,000 | the four region bosses in turn (`Config.World.Zones.heart`); from the owner's `reference/goo-lineage-web/assets/enemy-goo-king.png` through skill `meshy-multiview`, then a def in `Config.Dungeon` and one wave in `heart` |
 
 ### ChatGPT image prompts (one message each, image generator, highest thinking; attach `world_ref_2.webp` as the style lock)

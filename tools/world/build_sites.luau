@@ -1,17 +1,17 @@
 -- Builds what stands at the big world's named places (docs/WORLD.md) from the kits already in the work place: the
--- Market moved to the hub (it stays workspace.Map.Market), the four bridges, a ring of its region's own pieces round each of the 13 fights, the three
--- gates of the Heart, the Heart's crown, the landmarks (Wayfarers' Cross, South Quay, Crownfall and its lookout, the
--- mill), and the signs and lamps that lead a player along the roads. Everything goes into workspace.World.Sites and a
--- run rebuilds it whole. Places and roads come from src/shared/WorldPlan.luau; heights are read off the terrain.
+-- Market moved to the hub (it stays workspace.Map.Market), the four bridges, a ring of its region's own pieces round each of the 13 fights, the
+-- landmarks (Wayfarers' Cross, South Quay, Crownfall's lookout, the mill), and the signs and lamps that lead a player
+-- along the roads. Everything goes into workspace.World.Sites and a run rebuilds it whole, except the Heart (its
+-- gates, crown, arena and Crownfall): that is tools/world/build_heart.luau's folder, kept as it is here. Places and
+-- roads come from src/shared/WorldPlan.luau; heights are read off the terrain.
 --
 --   node tools/studio_mcp.js run tools/world/build_sites.luau <studio_id> Edit PLAN=src/shared/WorldPlan.luau
 --
--- Interim pieces, until their own models exist (docs/WORLD.md "Missing assets"): the bridges (parts), the gates
--- (RuinArch), the Heart's crown (CrystalCluster) and Crownfall's water (parts).
+-- Interim pieces, until their own models exist (docs/WORLD.md "Missing assets"): the bridges (parts).
 local ServerStorage = game:GetService("ServerStorage")
 local Plan = loadstring(PLAN)()
 local terrain = workspace.Terrain
-local O, Heart = Plan.Origin, Plan.Heart
+local O = Plan.Origin
 local TAU = math.pi * 2
 local rng = Random.new(20261114)
 
@@ -19,6 +19,10 @@ local world = workspace:FindFirstChild("World") or Instance.new("Folder")
 world.Name = "World"
 world.Parent = workspace
 local old = world:FindFirstChild("Sites")
+local keptHeart = old and old:FindFirstChild("Heart") -- build_heart.luau's work, carried into the new folder
+if keptHeart then
+	keptHeart.Parent = nil
+end
 if old then
 	old:Destroy()
 end
@@ -44,7 +48,6 @@ local function rgb(r: number, g: number, b: number): Color3
 	return Color3.fromRGB(r, g, b)
 end
 local MUSHROOM = rgb(140, 255, 215)
-local TURQUOISE = rgb(120, 255, 230)
 
 local missing: { [string]: boolean } = {}
 local count = 0
@@ -319,106 +322,7 @@ for _, zone in Plan.Zones do
 end
 
 ---------------------------------------------------------------------------------------------------------------------
--- 4. The Heart: a gate where each causeway cuts the rim, dressed in the land it comes from, and the crown inside.
-local heart = folder("Heart")
-local GATES: { [string]: { Piece } } = {
-	gate_w = { { "PropKit", "GiantMushroom", 26, 26, MUSHROOM }, { "PropKit", "GlowMushrooms", 12, 12, MUSHROOM } },
-	gate_e = { { "WildKit", "OwnMagmaCrystalCluster", 20, 20 }, { "WildKit", "OwnStackedBasalt", 13, 13 } },
-	gate_n = { { "WildKit", "OwnIceCrystalSpire", 24, 24 }, { "WildKit", "OwnIceCrystalCluster", 10, 10 } },
-}
-local OWN_GATE = { gate_w = "RootGate", gate_e = "EmberGate", gate_n = "FrostGate" }
-for _, site in Plan.Sites do
-	if site.kind == "gate" then
-		local dx, dz = Heart.x - site.x, Heart.z - site.z
-		local l = math.sqrt(dx * dx + dz * dz)
-		dx, dz = dx / l, dz / l
-		-- The gate's own model (tools/world/take_gates.luau); its front, the lantern side, looks down the causeway.
-		-- The mesh does not collide: its automatic hulls left a passage one character wide (measured). Two unseen
-		-- pillars stand in the legs instead and leave the middle 14 studs free.
-		-- The Root and Frost Gates' files face the other way round from the Ember Gate's (seen in Studio: their
-		-- lanterns looked into the Heart).
-		local f = if site.id == "gate_e" then 1 else -1
-		put(heart, "WorldKit", OWN_GATE[site.id], site.x, site.z, 42, { dx * f, dz * f }, { name = site.name, sink = 1.5, soft = true })
-		for side = -1, 1, 2 do
-			local x, z = site.x - dz * side * 14.5, site.z + dx * side * 14.5
-			local at = Vector3.new(O.x + x, groundAt(site.x, site.z) + 15, O.z + z)
-			block(heart, "GateLeg", Vector3.new(15, 30, 16), CFrame.lookAt(at, at + Vector3.new(dx, 0, dz)), rgb(120, 120, 120)).Transparency = 1
-		end
-		for side = -1, 1, 2 do
-			for i, piece in GATES[site.id] do
-				local out, across = 26 + i * 14, side * (13 + i * 3)
-				put(heart, piece[1], piece[2], site.x - dx * out - dz * across, site.z - dz * out + dx * across, piece[3], { dx, dz }, { tint = piece[5], sink = 0.8 })
-			end
-			put(heart, "PropKit", "TorchSconce", site.x - dx * 20 - dz * side * 9, site.z - dz * 20 + dx * side * 9, 13, { dx, dz })
-		end
-	end
-end
-do
-	-- The crown: tall crystals round the island's edge, open at the three bridges and at Crownfall; the tallest, at
-	-- the island's north end, stands over the rim so the whole world sees where the Heart is.
-	local gaps = { math.atan2(Heart.Fall.z - Heart.z, Heart.Fall.x - Heart.x) }
-	for _, site in Plan.Sites do
-		if site.kind == "gate" then
-			table.insert(gaps, math.atan2(site.z - Heart.z, site.x - Heart.x))
-		end
-	end
-	local radius = Heart.LakeInner - 22
-	for i = 1, 14 do
-		local angle = i / 14 * TAU + 0.11
-		local free = true
-		for _, gap in gaps do
-			if math.abs((angle - gap + math.pi) % TAU - math.pi) < 0.3 then
-				free = false
-			end
-		end
-		if free then
-			put(heart, "PropKit", "CrystalCluster", Heart.x + math.cos(angle) * radius, Heart.z + math.sin(angle) * radius, rng:NextNumber(26, 40), nil, { tint = TURQUOISE, sink = 1.5, name = "CrownCrystal" })
-		end
-	end
-	put(heart, "PropKit", "CrystalCluster", Heart.x, Heart.z - 110, 122, nil, { tint = TURQUOISE, sink = 3, name = "CrownSpire", tall = 2 }) -- (twice as tall as wide: seen from the Cross)
-	for _, gap in gaps do
-		put(heart, "PropKit", "SlimeGuardian", Heart.x + math.cos(gap) * (radius - 6), Heart.z + math.sin(gap) * (radius - 6), 15, { math.cos(gap), math.sin(gap) })
-	end
-end
-
----------------------------------------------------------------------------------------------------------------------
--- 5. Crownfall: the lake's water down the south cliff into the river's first pool. (Interim: sheets of parts laid on
--- the cliff's own profile; its moving water and mist come from the effects library.)
-do
-	local fall = Instance.new("Model")
-	fall.Name = "Crownfall"
-	local WATER, FOAM = rgb(140, 214, 244), rgb(245, 252, 255)
-	local points = {}
-	local top = 2 + Heart.Top - 2 -- the lake's level
-	for z = Heart.Fall.z - 4, Heart.Pool.z - 8, 4 do
-		local y = math.min(groundAt(Heart.Fall.x, z), top)
-		if #points == 0 or y < points[#points].Y - 0.5 or z >= Heart.Pool.z - 30 then
-			table.insert(points, Vector3.new(O.x + Heart.Fall.x, math.max(y, 0) + 1.4, O.z + z + 1.5))
-		end
-	end
-	for i = 1, #points - 1 do
-		local a, b = points[i], points[i + 1]
-		local cf = CFrame.lookAt((a + b) / 2, b)
-		local length = (b - a).Magnitude + 1.2
-		local sheet = block(fall, "Water", Vector3.new(18, 1, length), cf, WATER, Enum.Material.SmoothPlastic)
-		sheet.Transparency = 0.2
-		sheet.CanCollide = false
-		sheet.CastShadow = false
-		for _, offset in { -5.5, 0.6, 5.2 } do
-			local streak = block(fall, "Streak", Vector3.new(2.2, 0.6, length), cf * CFrame.new(offset, 0.5, 0), FOAM, Enum.Material.SmoothPlastic)
-			streak.CanCollide = false
-			streak.CastShadow = false
-		end
-	end
-	local foot = points[#points]
-	for i = 1, 6 do
-		local foam = block(fall, "Foam", Vector3.new(1, 1, 1) * rng:NextNumber(6, 10), CFrame.new(foot.X + (i - 3.5) * 4.4, 0.4, foot.Z + rng:NextNumber(-3, 5)), FOAM, Enum.Material.SmoothPlastic)
-		foam.Shape = Enum.PartType.Ball
-		foam.CanCollide = false
-		foam.CastShadow = false
-	end
-	fall.Parent = heart
-end
+-- 4, 5. The Heart and Crownfall: tools/world/build_heart.luau.
 
 ---------------------------------------------------------------------------------------------------------------------
 -- 6. Landmarks.
@@ -502,6 +406,9 @@ for _, line in lines do
 	end
 end
 
+if keptHeart then
+	keptHeart.Parent = sites
+end
 sites.Parent = world
 local names = {}
 for name in missing do

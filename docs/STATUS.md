@@ -1,5 +1,37 @@
 # Status
 
+## 2026-11-14 — the Heart redesigned (the central area)
+
+**What it is** (the owner: "the central area is designed too poorly, redesign it"; then two notes while it was built:
+no giant crystal on the shrine's roof, and the spouts' water must come from inside the statues' mouths).
+- The whole Heart is built by `tools/world/build_heart.luau` (re-runnable; `build_sites.luau` now keeps `Sites.Heart`):
+  the Crown Shrine at the north of the island with two big guardians, a paved arena (stud slabs, a gold rim, the
+  crowned-slime crest as one picture, `rbxassetid://139392512230048`) ringed by 10 rune stones, flower beds and trees,
+  kerbs with 24 crystal lanterns and 6 guardians along the three causeways, crystal islets and lily pads in the lake,
+  4 slime-head spouts whose water wells up in the throat and falls from the lip, 6 ruined colonnades and two rows of
+  trees on the far shore, Crownfall with moving streaks.
+- Six new models (ChatGPT asset sheet -> Meshy Smart Topology, 90 credits, 673 -> 583): `art/models/world/heart/*.glb`,
+  ledger in `docs/turnaround.md`, loader `tools/world/take_heart.luau`. The crest: `art/world/heart_medallion.png`
+  (`tools/chatgpt/prepare_floor.py`). No game code changed.
+- References, cameras, the four rounds' scores and the count: `docs/references/heart/rounds.md` (shots beside it).
+- Lessons: `.claude/skills/studio-build/LESSONS.md` ("The Heart, redesigned"), `.claude/skills/playtest/SKILL.md`
+  ("Driving a test without the mouse"), and the owner-level skills `chatgpt-art` and `meshy-multiview`. New tool:
+  `tools/world/glb_section.py` (a model's side profile in text).
+
+**Proved:** the builder's last run: "heart: 512 kit pieces, 961 parts, 25 lights, 31 beams; floor 132.0 lake 128.0;
+missing:" (nothing missing); MapWork saved with it. In a MapWork play test (the repo's code synced in) the world came
+up with no new error ("zones of the big world ready: 14 fights, 3 gates sealed, the rim walled in 60 pieces, 22
+waystones"), the Heart's fight anchor stood at 136 (terrain 132 + lift) over a floor top of 132.1, and the causeway, the
+arena and a spout's running water were seen at the game's camera (`docs/references/heart/shots/play_*.jpg`).
+`build_sites.luau` re-run after it learnt to keep the Heart: "sites: 433 kit pieces, 4274 instances; missing:" and the
+Heart still held its 31 beams and 4 spouts.
+
+**Not verified:** the Heart's fight was not run on the new floor (it needs the three bosses won; its ground is read
+from the terrain, which did not change); nothing was seen in a phone view; FPS on a phone not measured (about 91,000 new triangles across the crater). StudioTest.rbxl has
+not been rebuilt from the new MapWork (`lune run tools/build_publish.luau studio`, with StudioTest closed).
+
+**Needs the owner:** nothing. The models live in MapWork (saved) and as GLB files in the repo.
+
 ## 2026-11-14 — exploration teams, one job a team, richer slime lists
 
 **What it is** (the owner's request of 2026-11-14).

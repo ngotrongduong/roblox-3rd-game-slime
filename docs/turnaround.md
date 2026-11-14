@@ -64,6 +64,20 @@ Topology tab, poly count 3000, Texture on (Meshy N1, 2K), 15 credits each (718 -
 | ember_gate | Molten Crystal Gate (2026-11-13) | 15 | 3,110 | ember_gate.glb (3.8 MB) | 131059782610116 |
 | frost_gate | Frostcrystal Gateway (2026-11-14) | 15 | 3,167 | frost_gate.glb (3.7 MB) | 83305165757925 |
 
+The Heart's own scenery (2026-11-14, the owner's redesign of the central area): six sources cut from
+`docs/references/heart/heart_ref_assets.webp` and `heart_ref_assets2.webp`, the same settings, 15 credits each
+(673 -> 583). Files: `art/models/world/heart/<name>.glb`; taken into `ServerStorage.WorldKit` by
+`tools/world/take_heart.luau`; every front faces -Z.
+
+| Name | Triangles | Roblox id | Used as |
+|---|---|---|---|
+| CrownShrine | 4,738 | 129882405246422 | the shrine at the north of the island, 104 tall |
+| HeartGuardian | 2,564 | 104753794485071 | crowned slime statues: 6 at the causeways (28), 2 by the shrine (40) |
+| RuinColonnade | 3,028 | 74984591414162 | 6 ruins on the far shore, 24 tall |
+| SlimeSpout | 3,097 | 127775916474282 | 4 slime heads pouring into the lake, 38 tall |
+| RuneStone | 1,176 | 111689925366023 | 10 stones round the arena, 22 tall |
+| CrystalLantern | 986 | 98344425380349 | 24 lanterns on the causeways' kerb posts, 11 tall |
+
 ## Earlier: turnaround -> Meshy (stopped)
 
 The owner's request (2026-11-08): every Secret ("special") slime made into a 3D model this way: ChatGPT draws the

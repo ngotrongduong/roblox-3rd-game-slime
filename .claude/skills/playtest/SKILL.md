@@ -69,3 +69,29 @@ not.
 - Studio dialogs (Asset Manager import, File > Publish As) are invisible to computer use: the owner clicks them.
 - The command bar runs a multi-line command with Ctrl+Enter; a command that touches `CurrentCamera` or destroys things
   in Edit mode asks "Dangerous Command Detected".
+
+## Driving a test without the mouse (2026-11-14, the exploration teams and the Heart)
+
+- **A world change is played in MapWork itself**: `& "C:\Roblox 3rd game\tools\map\sync_all.ps1" -StudioId <MapWork id>`
+  (the repo's code into the work place), `start_stop_play` `is_start: true`, look, `is_start: false`, `save_place`. No
+  rebuild of StudioTest, and no window has to be closed.
+- **Put the character where the thing is**, from the Server datamodel:
+  `player.Character:PivotTo(CFrame.lookAt(spot, target))`, then on the Client `task.wait(2)` and set
+  `workspace.CurrentCamera.CFrame` behind the character: the game's camera keeps that side long enough for a
+  `screen_capture` at the real distance. (A free camera far from the character needs the render-step trick in
+  `studio-build/LESSONS.md`.)
+- **A ProximityPrompt is pressed from the Client datamodel**: `prompt:InputHoldBegin()`, `task.wait(0.3)`,
+  `prompt:InputHoldEnd()`, with the character inside its `MaxActivationDistance`. A zone's prompt is answered on the
+  client and a locked zone only shows a toast (`UiDungeon.watchZones`): read the player's `Zone_<id>` attributes first;
+  the Heart needs b1, b2 and b3 won.
+- **A button is clicked by its path**, not by pixels: `user_mouse_input` with the GuiObject's `instance_path`
+  (`search_game_tree` or a short Client script finds it). Pixels move with the window's size.
+- **`tools\read_log.ps1` reads the newest log file, which may belong to another Studio window** when several are open:
+  `get_console_output` with the window's id reads that window's own Output.
+- **What the test save lacks hides what you came to see**: the test vault was full, so every kill paid 0 and the
+  payout of an exploring team could not be looked at; the save has no cooked dish, so the dish list showed empty. Say
+  such things under "Not verified", or set the save up first through `PlayerData.update` in the same play.
+- **The owner's avatar carries its own particles** (ghosts, music notes): in a play shot they look like creatures in
+  the scene. Before chasing one, ask the client which parts stand there.
+- **Other windows' oddities are not yours**: MapWork's client prints `CreatureRig is not a valid member of ...
+  SlimeFaceStage` (the movement lab kept in the work place); it was there before and does not ship.
