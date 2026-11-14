@@ -106,6 +106,13 @@ end
 function VillageRequests.valid(data: any, hasPlot: boolean): boolean
 	local action = data.action
 	if action == "DungeonEnter" then
+		-- (a zone of the big world is fought as a Dungeon run: `zone` names it and no level is asked)
+		if data.zone ~= nil then
+			return type(data.zone) == "string"
+				and (Config.World.Zones :: any)[data.zone] ~= nil
+				and teamList(data.teams)
+				and hasPlot
+		end
 		return integer(data.level) and data.level >= Config.Dungeon.FirstLevel and teamList(data.teams) and hasPlot
 	elseif action == "DungeonNext" or action == "DungeonReplay" or action == "DungeonLeave" then
 		return hasPlot

@@ -1,6 +1,6 @@
 # Status
 
-## 2026-11-14 — M5, fights in the big world: written and play-tested, NOT committed yet
+## 2026-11-14 — M5, fights in the big world (done, except King Goo's own model)
 
 **What it is.** Every zone of `WorldPlan.Zones` is a short Dungeon run fought in the open on the zone's pad
 (`Config.World` = `shared/ConfigWorld`, rules `shared/ZoneFights`, server `ZoneGuards` + `server/Dungeon`, client
@@ -11,19 +11,19 @@ three and is held by the four region bosses until King Goo has a model (M6). Win
 
 **Proved.** `lune run tests/run.luau zone_fights`: 8 passed. `tools/balance/zone_sim.luau 60`: every zone 72-85 % for
 its target team. Play test in StudioTest (in-memory store): 14 prompts and 3 seals made, far / locked / unknown /
-resting entries refused, zone m1 fought on its pad and won, end card shows Leave only, `Zone_m1` set, prompt reads
-"Resting 4:30", locks hang on the sealed gates.
+resting entries refused, zones m1 and b1 fought on their pads and won, end card shows Leave only after a win and
+Replay + Leave after a defeat (b3 lost), `Zone_m1` set, prompt reads "Resting 4:30", locks hang on the sealed gates,
+gate_w's wall and lock went when b1 was won. Detail and every decision: `docs/WORLD.md` §7.
 
-**Not verified.** A gate opening after its boss is won (seen only locked); Replay after a defeat; the zone sheet opened
-from the prompt by hand (entry was sent by script); a phone view; what other players see of a zone fight.
-`tools\check.ps1` ends CHECK FAILED on one test that is not M5's: `debug_presets:194` (the Late preset in
-`DebugPresets.luau` was changed to `dungeonBest = 27` by the effects session). `types.ps1`: 1 finding, also theirs
+**Not verified.** The zone sheet opened from the prompt by hand (entry was sent by script); a phone view; what other
+players see of a zone fight (it is drawn only for its owner); the Heart's own fight (only its lock was tried); MapWork
+has not been given this code (StudioTest has). `tools\check.ps1` ends CHECK FAILED on one test that is not M5's:
+`debug_presets:194` (the Late preset in `DebugPresets.luau` stands changed to `dungeonBest = 27`, uncommitted, by the
+effects session); every other test passes (774). `types.ps1`: 1 finding, also theirs
 (`VfxLib/Effects/skill/arrow_ring.luau:60`).
 
-**Next.** Finish the checks above, write M5 into `docs/WORLD.md` §7 (and a §5 row for King Goo's model), then commit
-only M5's paths (new: `ConfigWorld`, `ZoneFights`, `ZoneGuards`, `tests/spec/zone_fights`, `tools/balance/zone_sim`;
-edited: `Config`, `Dungeon`, `FarmSave`, `FarmState`, `Layout`, `ProfileLogic`, `VillageRequests`, `server/Dungeon`,
-`Main.server`, `client/DungeonFight`, `UiDungeon`, `UiSquad`, tests `farm_save`, `purchases`, `rewards`).
+**Next.** King Goo's own model (`docs/WORLD.md` §5 row 10) and M6; the owner plays the zones and names the numbers
+(`Config.World.Zones`, one `level` a zone). Publishing is the owner's, and this version changes the save shape.
 
 ## 2026-11-14 — the big world: the main map rebuilt ten times larger, and the game now runs in it (M4)
 

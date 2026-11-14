@@ -141,6 +141,9 @@ export type Rewards = {
 }
 -- The Slime Dungeon (shared/Dungeon): the highest dungeon level cleared, 0 for none (level best + 1 is the next to open).
 export type Dungeon = { best: number }
+-- The zones of the big world (schema 15; shared/ZoneFights): beaten[zone id] = the server time (os.time) of the player's
+-- last win there. A zone that is not in it was never won.
+export type World = { beaten: { [string]: number } }
 
 -- What Robux sells (schema 13; shared/Boosts, shared/Products, server/Purchases). boosts: when the Gold and the Hatch Potion
 -- run out (the luck potion's end is farm.luckPotionUntil, which the rewards also pay), 0 for never. robux: receipts = the
@@ -282,6 +285,7 @@ export type Farm = {
 	guide: Guide,
 	rewards: Rewards,
 	dungeon: Dungeon,
+	world: World,
 	arena: Arena,
 	boosts: Boosts,
 	robux: Robux,
@@ -369,6 +373,10 @@ end
 
 function FarmState.newDungeon(): Dungeon
 	return { best = 0 }
+end
+
+function FarmState.newWorld(): World
+	return { beaten = {} }
 end
 
 function FarmState.newBoosts(): Boosts
@@ -703,6 +711,7 @@ function FarmState.newFarm(now: number): Farm
 		guide = FarmState.newGuide(false),
 		rewards = FarmState.newRewards(),
 		dungeon = FarmState.newDungeon(),
+		world = FarmState.newWorld(),
 		arena = FarmState.newArena(now),
 		boosts = FarmState.newBoosts(),
 		robux = FarmState.newRobux(),
@@ -1490,6 +1499,25 @@ local function validateDungeon(raw: any, warnings: { string }): Dungeon
 	return { best = nonNegInt(raw.best, 0) }
 end
 
+-- The zones won: a known zone id and the whole, positive time of the win; anything else is dropped.
+local function validateWorld(raw: any, warnings: { string }): World
+	local out = FarmState.newWorld()
+	if type(raw) ~= "table" or type(raw.beaten) ~= "table" then
+		if raw ~= nil then
+			table.insert(warnings, "world: damaged, reset")
+		end
+		return out
+	end
+	for id, at in raw.beaten do
+		if type(id) == "string" and (Config.World.Zones :: any)[id] and isNum(at) and at > 0 and at % 1 == 0 then
+			out.beaten[id] = at
+		else
+			table.insert(warnings, "world: a damaged win dropped")
+		end
+	end
+	return out
+end
+
 -- The Gold and Hatch Potion end times: a time or 0 each.
 local function validateBoosts(raw: any): Boosts
 	local out = FarmState.newBoosts()
@@ -1984,6 +2012,7 @@ function FarmState.repair(data: any, now: number): (Farm, { string }, boolean)
 		guide = guide,
 		rewards = validateRewards(data.rewards, warnings),
 		dungeon = validateDungeon(data.dungeon, warnings),
+		world = validateWorld(data.world, warnings),
 		arena = validateArena(data.arena, slimeIds, now, warnings),
 		boosts = validateBoosts(data.boosts),
 		robux = validateRobux(data.robux),

@@ -21,6 +21,7 @@ local Village = require(script.Parent.Village)
 local VillageRemotes = require(script.Parent.VillageRemotes)
 local WavingFlag = require(script.Parent.WavingFlag)
 local ZombieFights = require(script.Parent.ZombieFights)
+local ZoneGuards = require(script.Parent.ZoneGuards)
 
 -- The flag's and the library props' meshes start loading before any plot needs one.
 WavingFlag.start()
@@ -37,6 +38,7 @@ QuickTravel.start()
 Guide.start()
 Rewards.start()
 DungeonPortal.start()
+ZoneGuards.start()
 Dungeon.start()
 
 -- Player profiles: load, save, session lock. The farm rules give the data its shape.

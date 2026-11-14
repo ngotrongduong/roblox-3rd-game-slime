@@ -40,6 +40,13 @@
 --                     the stand-ins are where it came in),
 --                     "clear" ({ wave, coins, food, lost, materials }), "end" ({ winner = "squad" | "foe" | "left",
 --                     level, wave, best }), "leave"
+--
+-- A zone of the big world (docs/WORLD.md §7, M5; shared/ZoneFights, server/ZoneGuards) is fought as a run too, asked with
+-- DungeonEnter { zone = id }: in the open, on the zone's own pad (no arena is built: the run's Model only carries what is
+-- published, and the stand-ins are unseen), with the zone's own few waves; the player is not moved away when it ends, and
+-- a win is written as the zone's (it rests, and a boss's opens its gate). Such a run publishes DungeonZone (the zone's id,
+-- "" otherwise) and DungeonMap = "", shows its guard's level as its Level, and its "start" also carries zone, at (the
+-- middle), spot (where the player stands) and radius.
 local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -53,13 +60,16 @@ local FarmState = require(ReplicatedStorage.Shared.FarmState)
 local Layout = require(ReplicatedStorage.Shared.Layout)
 local Rng = require(ReplicatedStorage.Shared.Rng)
 local Zombies = require(ReplicatedStorage.Shared.Zombies)
+local ZoneFights = require(ReplicatedStorage.Shared.ZoneFights)
 local PlayerData = require(script.Parent.PlayerData)
 local DungeonArena = require(script.Parent.DungeonArena)
 local Plots = require(script.Parent.Plots)
 local Village = require(script.Parent.Village)
 local ZombieFights = require(script.Parent.ZombieFights)
+local ZoneGuards = require(script.Parent.ZoneGuards)
 
 local D = Config.Dungeon
+local W = Config.World
 
 type Fight = typeof(Combat.new({}, {}, Rng.new(0)))
 type Ledger = typeof(DungeonRules.newLedger())
@@ -77,6 +87,12 @@ type Run = {
 	plot: number,
 	mapId: string,
 	level: number,
+	-- the zone of the big world this run fights for, nil in the Dungeon itself; how many waves the run has, where its
+	-- player stands and how far from the middle the fight may go
+	zone: string?,
+	waves: number,
+	spot: CFrame,
+	radius: number,
 	teams: { number },
 	-- the squad of this run (slime ids) and which of them are out of the village now
 	members: { string },
@@ -194,21 +210,27 @@ local function greybox(frame: CFrame): Model
 end
 
 -- The arena of one map for one plot, with its Monsters and Squad folders. (A hand-built template in ServerStorage stands for
--- the first map only.)
-local function buildArena(plot: number, mapId: string): (Model, Folder, Folder)
-	local frame = Layout.arenaFrame(plot)
-	local template = ServerStorage:FindFirstChild(D.ArenaTemplate)
-	local built = if template
-			and template:IsA("Model")
-			and mapId == D.MapOrder[1]
-		then template
-		else DungeonArena.template(mapId)
+-- the first map only.) A zone of the big world is fought on the land itself: nothing is built, the Model only carries what
+-- the run publishes.
+local function buildArena(plot: number, mapId: string, zone: string?): (Model, Folder, Folder)
 	local arena: Model
-	if built then
-		arena = built:Clone()
-		arena:PivotTo(frame)
+	if zone then
+		arena = Instance.new("Model")
+		arena.WorldPivot = ZoneGuards.frame(zone)
 	else
-		arena = greybox(frame)
+		local frame = Layout.arenaFrame(plot)
+		local template = ServerStorage:FindFirstChild(D.ArenaTemplate)
+		local built = if template
+				and template:IsA("Model")
+				and mapId == D.MapOrder[1]
+			then template
+			else DungeonArena.template(mapId)
+		if built then
+			arena = built:Clone()
+			arena:PivotTo(frame)
+		else
+			arena = greybox(frame)
+		end
 	end
 	serial += 1
 	arena.Name = "Arena" .. plot .. "_" .. serial
@@ -235,6 +257,8 @@ local function standIn(run: Run, foe: Foe)
 	part.CastShadow = false
 	part.Material = Enum.Material.SmoothPlastic
 	part.Color = Color3.fromHex((D.StandIn.Colours :: any)[def.kind] or D.StandIn.Colours.melee)
+	-- (in the open the other players would see the balls: the owner's client draws the real bodies)
+	part.Transparency = if run.zone then 1 else 0
 	part.Position = (run.frame * CFrame.new(foe.lx, size / 2, foe.lz)).Position
 	part:SetAttribute("MonsterId", def.id)
 	part:SetAttribute("MonsterName", def.name)
@@ -280,19 +304,25 @@ local function foesLeft(run: Run): number
 	return (#run.plan - run.queued) + run.alive
 end
 
+-- The level a run shows: the dungeon level, or for a zone its guard's level.
+local function shownLevel(run: Run): number
+	return if run.zone then ZoneFights.level(run.zone) else run.level
+end
+
 local function publish(run: Run)
 	local farm = PlayerData.get(run.player)
 	local best = if farm then farm.dungeon.best else 0
 	local left = foesLeft(run)
 	local ledger = ledgerText(run)
+	local level = shownLevel(run)
 	local arena = run.arena
 	set(arena, "Owner", run.player.UserId)
 	set(arena, "Plot", run.plot)
 	set(arena, "MapId", run.mapId)
 	set(arena, "Phase", run.phase)
 	set(arena, "Wave", run.wave)
-	set(arena, "Waves", D.Waves)
-	set(arena, "Level", run.level)
+	set(arena, "Waves", run.waves)
+	set(arena, "Level", level)
 	set(arena, "Left", left)
 	set(arena, "Best", best)
 	set(arena, "Ledger", ledger)
@@ -300,15 +330,16 @@ local function publish(run: Run)
 	set(arena, "Teams", table.concat(run.teams :: any, ","))
 	set(arena, "Members", table.concat(run.members, ","))
 	set(arena, "Centre", run.frame.Position)
-	set(arena, "Radius", D.ArenaRadius)
-	set(arena, "PlayerSpot", Layout.arenaPlayerSpot(run.plot))
+	set(arena, "Radius", run.radius)
+	set(arena, "PlayerSpot", run.spot)
 	local player = run.player
 	set(player, "DungeonPhase", run.phase)
 	set(player, "DungeonWave", run.wave)
-	set(player, "DungeonWaves", D.Waves)
-	set(player, "DungeonLevel", run.level)
-	-- (the map of this run: client/DungeonLight eases the lighting to it)
-	set(player, "DungeonMap", run.mapId)
+	set(player, "DungeonWaves", run.waves)
+	set(player, "DungeonLevel", level)
+	-- (the map of this run: client/DungeonLight eases the lighting to it; a zone keeps the world's own light)
+	set(player, "DungeonMap", if run.zone then "" else run.mapId)
+	set(player, "DungeonZone", run.zone or "")
 	set(player, "DungeonLeft", left)
 	set(player, "DungeonLedger", ledger)
 	set(player, "DungeonBest", best)
@@ -336,6 +367,7 @@ local function clearPlayerAttributes(player: Player)
 	set(player, "DungeonWaves", 0)
 	set(player, "DungeonLevel", 0)
 	set(player, "DungeonMap", "")
+	set(player, "DungeonZone", "")
 	set(player, "DungeonLeft", 0)
 	set(player, "DungeonLedger", "{}")
 end
@@ -370,8 +402,8 @@ local function keepIn(run: Run)
 		return
 	end
 	local flat = Vector3.new(root.Position.X - run.frame.Position.X, 0, root.Position.Z - run.frame.Position.Z)
-	if flat.Magnitude > D.ArenaRadius + D.StrayStuds or root.Position.Y < run.frame.Position.Y - D.StrayStuds then
-		moveCharacter(run.player, Layout.arenaPlayerSpot(run.plot))
+	if flat.Magnitude > run.radius + D.StrayStuds or root.Position.Y < run.frame.Position.Y - D.StrayStuds then
+		moveCharacter(run.player, run.spot)
 		print(Config.LogPrefix, "dungeon:", run.player.Name, "strayed from the arena, put back")
 	end
 end
@@ -502,16 +534,19 @@ end
 -- The next wave is announced: its monsters are drawn and the countdown runs.
 local function beginWave(run: Run)
 	run.wave += 1
-	run.plan = DungeonRules.plan(run.mapId, run.level, run.wave, run.seed)
+	local zone = run.zone
+	run.plan = if zone
+		then ZoneFights.plan(zone, run.wave, run.seed)
+		else DungeonRules.plan(run.mapId, run.level, run.wave, run.seed)
 	run.queued, run.alive = 0, 0
 	endPhase(run, COUNTDOWN, D.CountdownSeconds)
 	fire(run, {
 		{
 			kind = "wave",
 			wave = run.wave,
-			waves = D.Waves,
+			waves = run.waves,
 			count = #run.plan,
-			waveKind = DungeonRules.waveKind(run.wave),
+			waveKind = if zone then ZoneFights.waveKind(zone, run.wave) else DungeonRules.waveKind(run.wave),
 		},
 	})
 	publish(run)
@@ -524,7 +559,7 @@ local function beginWave(run: Run)
 		"wave",
 		run.wave,
 		"of",
-		D.Waves,
+		run.waves,
 		"announced,",
 		#run.plan,
 		"monsters"
@@ -560,7 +595,7 @@ local function startRun(run: Run, farm: any, level: number, ids: { string }, now
 		end
 	end
 	-- (positional: the fighters walk into reach, at their own speed)
-	local fight = Combat.new(fighters, {}, run.rng, { moves = true, radius = D.ArenaRadius })
+	local fight = Combat.new(fighters, {}, run.rng, { moves = true, radius = run.radius })
 	-- (the queue brings monsters in one by one: the fight does not end when the monsters in it are down)
 	fight.open = true
 	run.fight = fight
@@ -570,9 +605,13 @@ local function startRun(run: Run, farm: any, level: number, ids: { string }, now
 			group = "dungeon",
 			members = table.clone(ids),
 			roles = roles,
-			level = level,
-			waves = D.Waves,
+			level = shownLevel(run),
+			waves = run.waves,
 			best = farm.dungeon.best,
+			zone = run.zone,
+			at = run.frame.Position,
+			spot = run.spot.Position,
+			radius = run.radius,
 		},
 	})
 	print(
@@ -599,7 +638,13 @@ local function spawnFoe(run: Run, fight: Fight)
 			table.insert(taken, { x = other.lx, z = other.lz })
 		end
 	end
-	local lx, lz = DungeonRules.spawnPoint(run.rng, taken)
+	-- (a zone's monsters come in on the flat middle of its pad)
+	local lx, lz = DungeonRules.spawnPoint(
+		run.rng,
+		taken,
+		if run.zone then W.SpawnInner else nil,
+		if run.zone then W.SpawnOuter else nil
+	)
 	local fighter: any = table.clone(monster)
 	fighter.x, fighter.z = lx, lz
 	local joined = Combat.add(fight, fighter, "foe")
@@ -647,7 +692,10 @@ end
 local function dropsOf(run: Run, foe: Foe): { any }
 	local drops: { any } = {}
 	local id = foe.monster.id
-	for _, roll in DungeonRules.rollDrops(foe.def, run.level, id, run.seed) do
+	-- (a zone: its guard pays the zone's reward, and nothing is luckier than the first dungeon level)
+	local zone = run.zone
+	local def = if zone then ZoneFights.dropDef(zone, run.wave, foe.def) else foe.def
+	for _, roll in DungeonRules.rollDrops(def, if zone then D.FirstLevel else run.level, id, run.seed) do
 		if DungeonRules.addDrop(run.ledger, run.wave, roll) then
 			table.insert(drops, { item = roll.item, amount = roll.amount })
 		end
@@ -668,7 +716,7 @@ local function endRun(run: Run, phase: string, winner: string)
 		{
 			kind = "end",
 			winner = winner,
-			level = run.level,
+			level = shownLevel(run),
 			wave = run.wave,
 			best = if farm then farm.dungeon.best else 0,
 		},
@@ -702,15 +750,23 @@ end
 -- The wave is cleared: its drops reach the farm, once; wave 10 ends the run in victory.
 local function clearWave(run: Run, fight: Fight)
 	local wave = run.wave
-	local last = wave >= D.Waves
+	local last = wave >= run.waves
+	local zone = run.zone
 	local paid: any = nil
 	local newBest = false
 	local done = PlayerData.update(run.player, function(farm: any)
 		paid = DungeonRules.commitWave(farm, run.ledger, wave, os.time())
-		if last then
+		if last and zone then
+			ZoneFights.recordClear(farm, zone, os.time())
+		elseif last then
 			newBest = DungeonRules.recordClear(farm, run.level)
 		end
 	end)
+	if last and zone then
+		-- (the win shows at once: the zone rests and a boss's gate opens)
+		ZoneGuards.publish(run.player, PlayerData.get(run.player))
+		print(Config.LogPrefix, "dungeon:", run.player.Name, "won the zone", zone)
+	end
 	PlayerData.markKeyMoment(run.player, "dungeon wave")
 	if not done then
 		warn(Config.LogPrefix, "dungeon:", run.player.Name, "wave", wave, "cleared but the save is not loaded")
@@ -875,8 +931,11 @@ local function leave(run: Run, why: string, quiet: boolean)
 	settle(run)
 	sendHome(run)
 	if not quiet then
-		fire(run, { { kind = "end", winner = "left", level = run.level, wave = run.wave }, { kind = "leave" } })
-		moveCharacter(run.player, Layout.portalLanding())
+		fire(run, { { kind = "end", winner = "left", level = shownLevel(run), wave = run.wave }, { kind = "leave" } })
+		-- (a zone's fight was in the open: the player stays where they stand)
+		if not run.zone then
+			moveCharacter(run.player, Layout.portalLanding())
+		end
 		clearPlayerAttributes(run.player)
 	end
 	run.arena:Destroy()
@@ -890,34 +949,42 @@ local function enter(player: Player, data: any, farm: any): { ok: boolean, reaso
 		return fail("IN_RUN")
 	end
 	local plot = Plots.of(player)
-	local blocked = DungeonRules.entryBlock(farm)
+	-- (a zone of the big world: fought where it lies, by anyone with a team, when it is open and rested)
+	local zone: string? = data.zone
+	local now = os.time()
+	local blocked = if zone then ZoneFights.block(farm.world.beaten, zone, now) else DungeonRules.entryBlock(farm)
+	local door = if zone then ZoneGuards.frame(zone).Position else Layout.marketPortal().Position
+	local reach = if zone then W.PromptRangeStuds else D.Portal.PromptRangeStuds
 	if not plot then
 		return fail("NO_PLOT")
 	elseif blocked then
 		return fail(blocked)
-	elseif not DungeonRules.canEnter(farm, data.level) then
+	elseif not zone and not DungeonRules.canEnter(farm, data.level) then
 		return fail("LEVEL_LOCKED")
 	elseif not characterAlive(player) then
 		return fail("DEAD")
-	elseif
-		not ZombieFights.near(player, Layout.marketPortal().Position, D.Portal.PromptRangeStuds + D.EnterSlackStuds)
-	then
+	elseif not ZombieFights.near(player, door, reach + D.EnterSlackStuds) then
 		return fail("TOO_FAR")
 	end
 	local teams: { number } = table.clone(data.teams)
-	local now = os.time()
 	local ids, why = squadFor(player, farm, teams, now, {})
 	if not ids then
 		return fail(why or "NO_FIT")
 	end
-	-- (the map follows the level: a pure function of the player and the level)
-	local mapId = DungeonRules.mapForLevel(player.UserId, data.level)
-	local arena, monsters, squad = buildArena(plot, mapId)
+	-- (the map follows the level: a pure function of the player and the level; a zone names its own map and level)
+	local numbers: any = if zone then ZoneFights.zone(zone) else nil
+	local mapId: string = if numbers then numbers.map else DungeonRules.mapForLevel(player.UserId, data.level)
+	local level: number = if numbers then numbers.level else data.level
+	local arena, monsters, squad = buildArena(plot, mapId, zone)
 	local run: Run = {
 		player = player,
 		plot = plot,
 		mapId = mapId,
-		level = data.level,
+		level = level,
+		zone = zone,
+		waves = if zone then ZoneFights.waves(zone) else D.Waves,
+		spot = if zone then ZoneGuards.spot(zone) else Layout.arenaPlayerSpot(plot),
+		radius = if zone then W.FightRadius else D.ArenaRadius,
 		teams = teams,
 		members = {},
 		out = {},
@@ -925,7 +992,7 @@ local function enter(player: Player, data: any, farm: any): { ok: boolean, reaso
 		monsters = monsters,
 		squad = squad,
 		nodes = {},
-		frame = Layout.arenaFrame(plot),
+		frame = if zone then ZoneGuards.frame(zone) else Layout.arenaFrame(plot),
 		ready = false,
 		phase = COUNTDOWN,
 		clock = 0,
@@ -947,7 +1014,7 @@ local function enter(player: Player, data: any, farm: any): { ok: boolean, reaso
 		publishAt = 0,
 	}
 	runs[player] = run
-	local started, err = pcall(startRun :: any, run, farm, data.level, ids, now)
+	local started, err = pcall(startRun :: any, run, farm, level, ids, now)
 	if not started then
 		-- (nothing may stay out of the village or in a half-made arena)
 		warn(Config.LogPrefix, "dungeon: the run of", player.Name, "did not start:", err)
@@ -958,8 +1025,8 @@ local function enter(player: Player, data: any, farm: any): { ok: boolean, reaso
 		Config.LogPrefix,
 		"dungeon:",
 		player.Name,
-		"enters level",
-		data.level,
+		if zone then "fights the zone " .. zone .. ", level" else "enters level",
+		level,
 		"from plot",
 		plot,
 		"with",
@@ -968,7 +1035,7 @@ local function enter(player: Player, data: any, farm: any): { ok: boolean, reaso
 	)
 	-- the arena is streamed to the player before they are put in it
 	task.spawn(function()
-		local spot = Layout.arenaPlayerSpot(plot)
+		local spot = run.spot
 		pcall(function()
 			(player :: any):RequestStreamAroundAsync(spot.Position, D.StreamSeconds)
 		end)
@@ -988,17 +1055,24 @@ end
 -- Another try on the same arena (Next level or Replay): the saved teams are looked at again, so a slime that went tired
 -- or was fed stays home or comes along; the survivors' wounds are kept.
 local function again(run: Run, level: number, farm: any): { ok: boolean, reason: string? }
-	if not DungeonRules.canEnter(farm, level) then
+	local now = os.time()
+	local zone = run.zone
+	if zone then
+		-- (a zone that was just won rests: only a lost fight is tried again at once)
+		local blocked = ZoneFights.block(farm.world.beaten, zone, now)
+		if blocked then
+			return fail(blocked)
+		end
+	elseif not DungeonRules.canEnter(farm, level) then
 		return fail("LEVEL_LOCKED")
 	end
-	local now = os.time()
 	local ids, why = squadFor(run.player, farm, run.teams, now, run.out)
 	if not ids then
 		return fail(why or "NO_FIT")
 	end
 	-- The next level may lie on another map: its arena is built on the same ground and the old one goes (the player stands
 	-- on the same spot, so nothing moves; the squad's and monsters' folders are the new arena's, startRun fills them).
-	local mapId = DungeonRules.mapForLevel(run.player.UserId, level)
+	local mapId = if zone then run.mapId else DungeonRules.mapForLevel(run.player.UserId, level)
 	if mapId ~= run.mapId then
 		local old = run.arena
 		run.arena, run.monsters, run.squad = buildArena(run.plot, mapId)
@@ -1048,7 +1122,8 @@ function Dungeon.request(player: Player, data: any): { ok: boolean, reason: stri
 		return fail("NO_RUN")
 	end
 	if action == "DungeonNext" then
-		if run.phase ~= VICTORY then
+		-- (a zone has no next level)
+		if run.phase ~= VICTORY or run.zone then
 			return fail("BAD_PHASE")
 		end
 		return again(run, run.level + 1, farm)

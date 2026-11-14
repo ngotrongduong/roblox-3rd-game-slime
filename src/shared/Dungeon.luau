@@ -75,8 +75,14 @@ function Dungeon.monsterLevel(def: any, level: number, wave: number): number
 	return Stats.level(Dungeon.scale(def, level, wave))
 end
 
-local function monster(def: any, level: number, wave: number, id: string): Monster
+-- One monster of a wave. `power` multiplies its HP and attack once more (a common monster standing guard over a zone:
+-- shared/ZoneFights).
+function Dungeon.monster(def: any, level: number, wave: number, id: string, power: number?): Monster
 	local stats = Dungeon.scale(def, level, wave)
+	if power then
+		stats.attack *= power
+		stats.hp *= power
+	end
 	return {
 		id = id,
 		defId = def.id,
@@ -102,7 +108,7 @@ function Dungeon.plan(mapId: string, level: number, wave: number, seed: number):
 	if kind ~= "normal" then
 		for _, def in defs do
 			if def.role == kind then
-				table.insert(out, monster(def, level, wave, "m" .. wave .. "-1"))
+				table.insert(out, Dungeon.monster(def, level, wave, "m" .. wave .. "-1"))
 				break
 			end
 		end
@@ -122,7 +128,7 @@ function Dungeon.plan(mapId: string, level: number, wave: number, seed: number):
 			break
 		end
 		left -= def.cost
-		table.insert(out, monster(def, level, wave, "m" .. wave .. "-" .. (#out + 1)))
+		table.insert(out, Dungeon.monster(def, level, wave, "m" .. wave .. "-" .. (#out + 1)))
 	end
 	return out
 end
@@ -146,13 +152,20 @@ end
 
 -- Where the next monster comes in, flat from the arena's middle: a random point of the edge band (SpawnMinFromCentre to
 -- ArenaRadius - SpawnInset from the middle) at least SpawnMinApart from every point in `taken`. When SpawnTries tries find
--- no such point, the one that stood farthest from the others is taken.
-function Dungeon.spawnPoint(rng: Rng, taken: { { x: number, z: number } }): (number, number)
-	local outer = D.ArenaRadius - D.SpawnInset
+-- no such point, the one that stood farthest from the others is taken. `inner` and `outer` give another band (a zone's
+-- fight in the open keeps to the flat middle of its pad).
+function Dungeon.spawnPoint(
+	rng: Rng,
+	taken: { { x: number, z: number } },
+	inner: number?,
+	outer: number?
+): (number, number)
+	local from = inner or D.SpawnMinFromCentre
+	local to = outer or (D.ArenaRadius - D.SpawnInset)
 	local bestX, bestZ, bestGap = 0, 0, -1
 	for _ = 1, D.SpawnTries do
 		local angle = rng:next() * math.pi * 2
-		local radius = D.SpawnMinFromCentre + rng:next() * (outer - D.SpawnMinFromCentre)
+		local radius = from + rng:next() * (to - from)
 		local x, z = math.sin(angle) * radius, -math.cos(angle) * radius
 		local gap = math.huge
 		for _, other in taken do
@@ -184,12 +197,19 @@ function Dungeon.squadSpot(index: number, count: number): (number, number)
 	return -toZ * along + toX * back, toX * along + toZ * back
 end
 
--- The def of a monster by its id on a map (the plan's monsters carry the id only), nil when there is none.
+-- The def of a monster by its id (the plan's monsters carry the id only): looked for on this map first, then on the others
+-- (the Heart's guards come from every map); nil when there is none.
 function Dungeon.defOf(mapId: string, defId: string): any
-	local defs: { any } = map(mapId).monsters
-	for _, def in defs do
+	for _, def in map(mapId).monsters :: { any } do
 		if def.id == defId then
 			return def
+		end
+	end
+	for _, other in D.Maps :: { [string]: any } do
+		for _, def in other.monsters :: { any } do
+			if def.id == defId then
+				return def
+			end
 		end
 	end
 	return nil

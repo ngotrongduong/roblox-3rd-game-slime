@@ -13,6 +13,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Config = require(ReplicatedStorage.Shared.Config)
 local DungeonRules = require(ReplicatedStorage.Shared.Dungeon)
 local ZombieRules = require(ReplicatedStorage.Shared.Zombies)
+local ZoneFights = require(ReplicatedStorage.Shared.ZoneFights)
 local UiHud = require(script.Parent.UiHud)
 local UiKit = require(script.Parent.UiKit)
 local UiSlimes = require(script.Parent.UiSlimes)
@@ -20,6 +21,7 @@ local UiTeams = require(script.Parent.UiTeams)
 local ZombieTeams = require(script.Parent.ZombieTeams)
 
 local D = Config.Dungeon
+local W = Config.World
 local P = D.View
 local U = Config.Ui
 local Z = Config.Zombies
@@ -272,7 +274,8 @@ local function teamRow(scroll: Instance, index: number, onTap: () -> ()): Row
 	return { root = root, portraits = portraits, key = "", body = body, mark = mark, away = nil, awayState = "" }
 end
 
-local function openGate(point: Vector3)
+-- `zone`: the sheet of a zone of the big world (docs/WORLD.md §7): its own name, level and drops, and no level to choose.
+local function openGate(point: Vector3, zone: string?)
 	local c = context()
 	if phase() ~= "" then
 		return
@@ -286,7 +289,7 @@ local function openGate(point: Vector3)
 	local tick: () -> () = function() end
 	local modal = c.open("dungeon", P.GateSheetHeight, function()
 		tick()
-	end, point, D.Portal.PromptRangeStuds * 1.3)
+	end, point, (if zone then W.PromptRangeStuds else D.Portal.PromptRangeStuds) * 1.3)
 
 	-- the map turns with the level (shared/Dungeon.mapForLevel: the same one the server builds), so the title and the list of
 	-- what drops follow the stepper
@@ -331,6 +334,10 @@ local function openGate(point: Vector3)
 	local function showMap(mapId: string)
 		shownMap = mapId
 		local map: any = (D.Maps :: any)[mapId]
+		if zone then
+			local _, place = ZoneFights.zone(zone)
+			map = { name = place.name, monsters = ZoneFights.dropDefs(zone) }
+		end
 		title.Text = map.name
 		UiKit.clear(drops)
 		local ranges = dropRanges(map)
@@ -431,6 +438,8 @@ local function openGate(point: Vector3)
 	if turned and turned:IsA("GuiObject") then
 		turned.Rotation = 180
 	end
+	lower.Visible = zone == nil
+	higher.Visible = zone == nil
 	local enter: TextButton
 	enter = UiKit.button(bar, {
 		Name = "Enter",
@@ -455,7 +464,11 @@ local function openGate(point: Vector3)
 			busyEnter = true
 			UiKit.setEnabled(enter, false)
 			task.spawn(function()
-				local ok, why = c.ask({ action = "DungeonEnter", level = level, teams = teams })
+				local ok, why = c.ask(
+					if zone
+						then { action = "DungeonEnter", zone = zone, teams = teams }
+						else { action = "DungeonEnter", level = level, teams = teams }
+				)
 				busyEnter = false
 				if ok then
 					if UiKit.modalId() == "dungeon" then
@@ -550,11 +563,11 @@ local function openGate(point: Vector3)
 		end
 		top = numberAttribute("DungeonBest", 0) + D.FirstLevel
 		level = math.clamp(level, D.FirstLevel, top)
-		local mapId = DungeonRules.mapForLevel(player.UserId, level)
+		local mapId = if zone then (W.Zones :: any)[zone].map else DungeonRules.mapForLevel(player.UserId, level)
 		if mapId ~= shownMap then
 			showMap(mapId)
 		end
-		levelLabel.Text = "Lv " .. level
+		levelLabel.Text = "Lv " .. (if zone then ZoneFights.level(zone) else level)
 		UiKit.setEnabled(lower, level > D.FirstLevel)
 		UiKit.setEnabled(higher, level < top)
 		UiKit.setEnabled(enter, next(selected) ~= nil and not busyEnter)
@@ -623,6 +636,77 @@ local function watchPortals()
 	end
 end
 
+-- ===== The zones of the big world =====
+
+-- The zones this player has won and when (server time), read from the attributes the server publishes.
+local function zonesWon(): { [string]: number }
+	local won = {}
+	for id in W.Zones :: { [string]: any } do
+		local at = player:GetAttribute(W.Attribute .. id)
+		if type(at) == "number" and at > 0 then
+			won[id] = at
+		end
+	end
+	return won
+end
+
+-- Every zone's prompt opens its sheet, or says in one line why not (resting, locked); the seal of a gate of the Heart lets
+-- this player through once its boss is won (the server's real check is the Heart's own), and wears a lock until then.
+-- Called every GateWatchSeconds: anchors and seals stream in with the map.
+local function watchZones()
+	local free = phase() == ""
+	local won = zonesWon()
+	local now = math.floor(workspace:GetServerTimeNow())
+	local folder = workspace:FindFirstChild(W.Folder)
+	for _, anchor in if folder then folder:GetChildren() else {} do
+		local zone = anchor:GetAttribute("Zone")
+		local prompt = anchor:FindFirstChild("ZonePrompt")
+		if anchor:IsA("BasePart") and type(zone) == "string" and prompt and prompt:IsA("ProximityPrompt") then
+			if not bound[prompt] then
+				bound[prompt] = true
+				prompt.Triggered:Connect(function()
+					local why = ZoneFights.block(zonesWon(), zone, math.floor(workspace:GetServerTimeNow()))
+					if why then
+						UiKit.toast(context().reason(why))
+					else
+						openGate(anchor.Position, zone)
+					end
+				end)
+			end
+			prompt.Enabled = free
+			local why = ZoneFights.block(won, zone, now)
+			if why == "ZONE_RESTING" then
+				local left = ZoneFights.restLeft(zone, won[zone], now)
+				prompt.ActionText = string.format("Resting %d:%02d", left // 60, left % 60)
+			else
+				prompt.ActionText = if why then "Locked" else "Fight"
+			end
+		end
+	end
+	local gates = workspace:FindFirstChild(W.GateFolder)
+	for _, seal in if gates then gates:GetChildren() else {} do
+		local zone = seal:GetAttribute("Zone")
+		if seal:IsA("BasePart") and type(zone) == "string" then
+			local open = won[zone] ~= nil
+			seal.CanCollide = not open
+			local lock = seal:FindFirstChild("ZoneLock")
+			if not open and not lock then
+				local board = Instance.new("BillboardGui")
+				board.Name = "ZoneLock"
+				board.Size = UDim2.fromOffset(W.Seal.LockPixels, W.Seal.LockPixels)
+				board.StudsOffsetWorldSpace = Vector3.new(0, W.Seal.LockHeight - W.Seal.Lift - W.Seal.Height / 2, 0)
+				board.AlwaysOnTop = false
+				board.LightInfluence = 0
+				board.MaxDistance = W.Seal.LockShowStuds
+				UiKit.icon(board, "lock", W.Seal.LockPixels, { Size = FULL })
+				board.Parent = seal
+			elseif lock and open then
+				lock:Destroy()
+			end
+		end
+	end
+end
+
 -- ===== The arena screen =====
 
 local function setLabel(button: GuiButton, text: string)
@@ -681,7 +765,10 @@ local function drawEnd(current: string)
 		title.Text = if victory then "Victory!" else "Defeated"
 		title.TextColor3 = UiKit.colour(if victory then "Green" else "Red")
 		UiKit.clear(buttons)
-		local count = if victory then 3 else 2
+		-- (a zone of the big world has no next level, and rests once won: only a lost fight is tried again)
+		local zone = player:GetAttribute("DungeonZone")
+		local inZone = type(zone) == "string" and zone ~= ""
+		local count = if inZone then (if victory then 1 else 2) elseif victory then 3 else 2
 		local order = 0
 		local function add(name: string, text: string, icon: string?, style: string, action: string)
 			order += 1
@@ -690,10 +777,12 @@ local function drawEnd(current: string)
 			end)
 			button.Size = UDim2.new(1 / count, -U.Gap * (count - 1) / count, 1, 0)
 		end
-		if victory then
+		if victory and not inZone then
 			add("Next", "Next Level", nil, "primary", "DungeonNext")
 		end
-		add("Replay", "Replay", "again", if victory then "secondary" else "primary", "DungeonReplay")
+		if not (victory and inZone) then
+			add("Replay", "Replay", "again", if victory then "secondary" else "primary", "DungeonReplay")
+		end
 		add("Leave", "Leave", "back", "secondary", "DungeonLeave")
 		dropsText = ""
 	end
@@ -947,6 +1036,7 @@ function UiDungeon.start(context_: Context)
 		while true do
 			local ok, err = pcall(function(): any
 				watchPortals()
+				watchZones()
 				return nil
 			end)
 			if not ok and not warned then

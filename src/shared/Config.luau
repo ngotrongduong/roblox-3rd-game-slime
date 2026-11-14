@@ -915,6 +915,9 @@ for key, skill in Config.Dungeon.Skills do
 	(Config.Combat.Skills :: any)[key] = skill
 end
 
+-- The fights of the big world's zones (docs/WORLD.md §7, M5): short Dungeon runs in the open; the rules are shared/ZoneFights.
+Config.World = if script then require(script.Parent.ConfigWorld) else require("./ConfigWorld")
+
 -- (one Legendary recipe for all six weapon families; each recipe gets its own copy below)
 local LEGEND_COINS = 1000
 local LEGEND_RECIPE = { ember_core = 4, frost_fang = 4, monster_core = 3, boss_essence = 2 }
@@ -2755,7 +2758,8 @@ Config.Save = {
 	--     the passes Roblox said the player owns, the Starter Pack flag, quest redraws and Streak Savers bought and not
 	--     used yet), and six teams in place of four.
 	-- 14: the community rewards taken (`rewards.social`: favorite, group).
-	SchemaVersion = 14,
+	-- 15: the zones of the big world won (`world.beaten`: zone id -> the time of the last win).
+	SchemaVersion = 15,
 	-- A stored envelope without a version is this one.
 	FirstSchemaVersion = 1,
 

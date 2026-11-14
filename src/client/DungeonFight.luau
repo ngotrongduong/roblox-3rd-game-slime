@@ -393,11 +393,13 @@ local function onStart(event: { [string]: any })
 	if not plot or type(event.members) ~= "table" then
 		return
 	end
-	local middle = Layout.arenaFrame(plot).Position
+	-- (a zone of the big world is fought on its own pad: the server says where, how wide and where the player stands)
+	local middle: Vector3 = if typeof(event.at) == "Vector3" then event.at else Layout.arenaFrame(plot).Position
+	local spot: Vector3 = if typeof(event.spot) == "Vector3" then event.spot else Layout.arenaPlayerSpot(plot).Position
 	centre = middle
 	startedAt = os.clock()
-	ZombieFight.setArena(middle, D.ArenaRadius)
-	local toPlayer = flat(Layout.arenaPlayerSpot(plot).Position - middle)
+	ZombieFight.setArena(middle, if type(event.radius) == "number" then event.radius else D.ArenaRadius)
+	local toPlayer = flat(spot - middle)
 	toPlayer = if toPlayer.Magnitude > 1e-3 then toPlayer.Unit else Vector3.zAxis
 	local members: { string } = event.members
 	local roles: { [string]: string } = if type(event.roles) == "table" then event.roles else {}
@@ -480,14 +482,22 @@ local function onEvents(events: { any })
 	end
 end
 
--- The monster slimes of the map a run is on start loading as it begins, so their meshes are there by the first wave.
+-- The monster slimes of the map a run is on start loading as it begins, so their meshes are there by the first wave. A
+-- zone of the big world names its map in its numbers, and its guards may come from other maps.
 local function prepareMap()
 	local mapId = player:GetAttribute("DungeonMap")
-	local map = if type(mapId) == "string" then (D.Maps :: any)[mapId] else nil
+	local zoneId = player:GetAttribute("DungeonZone")
+	local zone = if type(zoneId) == "string" then (Config.World.Zones :: any)[zoneId] else nil
+	local map = (D.Maps :: any)[if zone then zone.map else mapId]
 	if map then
 		local ids = {}
 		for _, def in map.monsters do
 			table.insert(ids, def.id)
+		end
+		for _, entry in if zone then zone.waves else {} do
+			if entry.guard then
+				table.insert(ids, entry.guard)
+			end
 		end
 		MonsterLook.prepare(ids)
 	end
@@ -495,9 +505,11 @@ end
 
 function DungeonFight.start()
 	ZombieFight.setDungeon(onEvents)
-	player:GetAttributeChangedSignal("DungeonMap"):Connect(function()
-		safe("prepare", prepareMap)
-	end)
+	for _, name in { "DungeonMap", "DungeonZone" } do
+		player:GetAttributeChangedSignal(name):Connect(function()
+			safe("prepare", prepareMap)
+		end)
+	end
 	safe("prepare", prepareMap)
 end
 

@@ -80,6 +80,10 @@ local reasons: { [string]: string } = {
 	VILLAGE_LEVEL = "Needs village level " .. Config.Dungeon.EnterMinVillageLevel .. ".",
 	NO_FIT = "Nobody can go.",
 	NO_RUN = "Not in the Dungeon.",
+	-- the zones of the big world
+	ZONE_LOCKED = "Defeat the three bosses first.",
+	ZONE_RESTING = "The guard is not back yet.",
+	ZONE_UNKNOWN = "Not available.",
 	BAD_PHASE = "Not yet.",
 }
 

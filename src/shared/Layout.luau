@@ -164,13 +164,16 @@ function Layout.arenaFrame(plot: number): CFrame
 	return CFrame.new(D.ArenaOrigin.x + (plot - 1) * D.ArenaSpacing, D.ArenaOrigin.y, D.ArenaOrigin.z)
 end
 
--- Where a player stands in the arena: Config.Dungeon.PlayerSpot, PlayerLift up, facing the middle.
-function Layout.arenaPlayerSpot(plot: number): CFrame
+-- Where a player stands in an arena whose middle is `frame`: Config.Dungeon.PlayerSpot, PlayerLift up, facing the middle.
+function Layout.arenaSpot(frame: CFrame): CFrame
 	local D = Config.Dungeon
-	local frame = Layout.arenaFrame(plot)
 	local at = (frame * CFrame.new(D.PlayerSpot.x, D.PlayerLift, D.PlayerSpot.z)).Position
 	local toward = frame.Position - at
 	return CFrame.new(at) * CFrame.Angles(0, math.atan2(-toward.X, -toward.Z), 0)
+end
+
+function Layout.arenaPlayerSpot(plot: number): CFrame
+	return Layout.arenaSpot(Layout.arenaFrame(plot))
 end
 
 return Layout

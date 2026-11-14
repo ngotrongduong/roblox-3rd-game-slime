@@ -133,6 +133,7 @@ credits, no Remesh needed); import into Roblox as one MeshPart.
 | 7 | Ruin set (broken column, fallen arch, wall end) | Sunken Ruins | 8-20 | 600 each | RuinArch, DryStoneWall |
 | 8 | Hub town houses | a small town round the Market | - | - | Quaternius / Kenney packs first (`art/library/`), no generation |
 | 9 | Crownfall's moving water and mist | the waterfall | - | - | parts; the effect comes from the VFX library, not a model |
+| 10 | King Goo | the Heart's own boss (M5 left him out) | about 3 x a region boss | 8,000 | the four region bosses in turn (`Config.World.Zones.heart`); from the owner's `reference/goo-lineage-web/assets/enemy-goo-king.png` through skill `meshy-multiview`, then a def in `Config.Dungeon` and one wave in `heart` |
 
 ### ChatGPT image prompts (one message each, image generator, highest thinking; attach `world_ref_2.webp` as the style lock)
 
@@ -226,8 +227,39 @@ A finished model replaces its interim by one line in `tools/world/build_sites.lu
   - Retired with the valley: `tools/map/build_terrain.luau`, `build_greybox.luau`, `build_wild_slices.luau`,
     `check_wild_slices.luau`, `replace_greybox_trees.luau` (deleted; git has them); `build_market.luau` and
     `check_market.luau` stay as the record of how the Market is made but build on the old rim.
-- **M5 Fights in the world**: each zone gets its encounter (camp spawn ring = the arena pad; tier from
-  `WorldPlan.Zones`), boss kills open the three gates, King Goo on the island. Design with `game-designer` first.
+- **M5 Fights in the world (done 2026-11-14, except King Goo's own model)**: every zone has its fight, the three boss
+  kills open the three gates, the Heart is fought on the island. Designed by the orchestrator; the decisions:
+  - A zone's fight is a short run of the Slime Dungeon fought **in the open on the zone's pad**: the same rules,
+    fight events, HUD and end card (`server/Dungeon` with `run.zone`), no arena model, no teleport away. The prompt
+    of a zone ("Fight", the zone's name) hangs over the middle of its pad (`server/ZoneGuards`,
+    `workspace.ZoneGuards`), opens the Dungeon's own sheet with the zone's name, level and drops and no level stepper.
+    Entry needs a plot and a usable team, nothing else. The Slime Dungeon in the Market and the zombie camps at the
+    village gates stay as they are (`Layout.campFrame` is no longer an interim).
+  - Numbers: `Config.World` (`shared/ConfigWorld.luau`), rules `shared/ZoneFights.luau`. A zone sends 2 waves (mini),
+    3 (boss) or 4 (the Heart): a crowd of the Dungeon's wave n on the zone's map, or one named monster alone; the
+    last wave is always the zone's **guard**. The fight keeps to the flat middle of the pad (radius 48, monsters
+    come in at 30-44; b3's middle is 30 studs north of its pad's, a mound fills the south-west).
+  - Guards: m1 Bramblehorn (green_boar), m2 green_turtle, m3 dark_wyrm, m4 dark_deer, b1 dark_wyrm then dark_bear,
+    m5 lava_bull, m6 lava_tortoise, b2 lava_bull then lava_golem, m7 dark_totem, m8 lava_phoenix, m9 ice_golem,
+    m10 ice_mammoth, b3 ice_mammoth then ice_yeti. **The Heart (interim)**: the four region bosses in turn, until
+    King Goo has a model.
+  - Pay: only the last guard pays the zone's reward (`Config.World.Reward` by kind, coins x `1 + 0.25 x (tier - 1)`,
+    a boss zone adds two of its region's trophy) in place of its own drops; every other monster pays its own drops.
+  - A won zone **rests** for the player who won it: mini 300 s, boss 900 s, mega 1800 s (the prompt reads
+    "Resting m:ss"). No Next Level; Replay only after a defeat.
+  - Wins are saved: `farm.world.beaten[zoneId]` = the time of the last win (**save schema 15**; a publish must shut
+    down all old servers), shown to the client as the player's `Zone_<id>` attributes.
+  - Gates: an unseen wall stands in each gate of the Heart (`workspace.ZoneGates`) with a lock picture; each client
+    drops its own wall once its boss zone is won (gate_w = b1, gate_e = b2, gate_n = b3). The server's real check is
+    the Heart's own: it needs all three bosses (`ZONE_LOCKED`).
+  - Balance, by `lune run tools/balance/zone_sim.luau 60` (`... fit` finds the levels again): four even slimes of the
+    target level win 72-85 % of fights, four levels lower almost never. Target team level by tier 1..14: 6, 10, 14,
+    18, 22, 26, 30, 34, 38, 42, 46, 50, 54, 60. The owner tunes by playing: one `level` a zone.
+  - Proved in the StudioTest play test (in-memory store): 14 prompts and 3 seals made; far, unknown, locked and
+    resting entries refused; m1 and b1 fought on their pads and won (monsters and slimes on the ground, HUD "Wave
+    2/2 Lv 16"); the end card shows Leave only after a win, Replay and Leave after a defeat (b3 lost); gate_w's wall
+    and lock went when b1 was won. Known limits: the fight is drawn only for its owner (others see nobody there);
+    the sheet was entered by script, not by hand; no phone view seen.
 - **M6 Own models** for section 5, swapped in; region light and sound (client-side Atmosphere by region, no ambient
   particle layers).
 - **M7 Phone pass** and the owner's walk through every road.
