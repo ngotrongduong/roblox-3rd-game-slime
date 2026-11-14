@@ -2303,6 +2303,140 @@ return function(T: any)
 		)
 	end)
 
+	T.test("combat rows default from the weapon and Balanced remains seeded-identical", function()
+		local function play(explicit: boolean): { any }
+			local squad = {
+				slime("g", "guardian", { tier = 1 }),
+				slime("r", "ranger", { tier = 1 }),
+				slime("h", "healer", { tier = 1 }),
+				slime("b", nil),
+			}
+			local foes = { foe("a", { attack = 10 }), foe("b", { attack = 10 }) }
+			local opts = if explicit then { tactics = { squad = "balanced" } } else nil
+			local fight = Combat.new(squad, foes, Rng.new(137), opts)
+			T.eq(unitOf(fight, "g").row, "front")
+			T.eq(unitOf(fight, "r").row, "middle")
+			T.eq(unitOf(fight, "h").row, "back")
+			T.eq(unitOf(fight, "b").row, "front")
+			T.eq(unitOf(fight, "a").row, "front")
+			return run(fight, 8)
+		end
+		T.same(play(false), play(true))
+	end)
+
+	T.test("Focus Fire leader priority: Warrior, Guardian, highest attack", function()
+		local function choice(squad: { any }, leaderId: string, followerId: string): any
+			local fight = Combat.new(squad, { foe("a"), foe("b") }, Rng.new(138), {
+				tactics = { squad = "focus" },
+			})
+			for _, enemy in { "a", "b" } do
+				freeze(unitOf(fight, enemy))
+			end
+			local leader = unitOf(fight, leaderId)
+			freeze(leader, unitOf(fight, "b"))
+			for _, member in fight.units do
+				if member.side == "squad" and member ~= leader then
+					member.cooldown, member.aimed, member.target = 0.4, false, nil
+				end
+			end
+			local follower = unitOf(fight, followerId)
+			run(fight, 1)
+			T.ok(follower.target ~= nil)
+			return fight
+		end
+		local warrior = choice({
+			slime("g", "guardian"),
+			slime("w", "warrior"),
+			slime("r", "ranger"),
+		}, "w", "r")
+		T.eq(unitOf(warrior, "r").target.id, "b")
+		T.eq(unitOf(warrior, "g").target.id, "b", "Guardian follows when no ally needs peeling")
+		local guardian = choice({ slime("g", "guardian"), slime("r", "ranger") }, "g", "r")
+		T.eq(unitOf(guardian, "r").target.id, "b")
+		local strongest = choice({
+			slime("r", "ranger", { attack = 6 }),
+			slime("a", "alchemist", { attack = 15 }),
+			slime("m", "mage", { attack = 9 }),
+		}, "a", "m")
+		T.eq(unitOf(strongest, "m").target.id, "b")
+		local taunted = choice({ slime("w", "warrior"), slime("r", "ranger") }, "w", "r")
+		local r = unitOf(taunted, "r")
+		r.target = unitOf(taunted, "a")
+		r.tauntBy, r.tauntUntil = unitOf(taunted, "a"), taunted.seconds + 10
+		r.aimed, r.cooldown = false, 0.4
+		run(taunted, 0.5)
+		T.eq(r.target.id, "a", "a taunt outranks the leader's chosen target")
+		T.eq(taunted.tactics.foe, "balanced")
+	end)
+
+	T.test("Focus Fire's highest-attack leader uses team order to break a tie", function()
+		local fight = Combat.new({
+			slime("first", "ranger", { attack = 20 }),
+			slime("second", "alchemist", { attack = 20 }),
+			slime("follower", "mage", { attack = 5 }),
+		}, { foe("a"), foe("b") }, Rng.new(141), { tactics = { squad = "focus" } })
+		local first, second, follower = unitOf(fight, "first"), unitOf(fight, "second"), unitOf(fight, "follower")
+		freeze(first, unitOf(fight, "a"))
+		freeze(second, unitOf(fight, "b"))
+		freeze(unitOf(fight, "a"))
+		freeze(unitOf(fight, "b"))
+		follower.cooldown = 0.4
+		run(fight, 1)
+		T.eq(follower.target.id, "a", "the first of equal-strength leaders supplies the focus")
+	end)
+
+	T.test("Protect Backline makes a Warrior and Guardian peel the closest threat to any back row", function()
+		local function fightOf(class: string, protected: boolean): any
+			local fight = Combat.new({
+				slime("s", class, { x = 0, z = 0 }),
+				slime("h", nil, { row = "back", x = 0, z = -5 }),
+			}, {
+				foe("decoy", { x = 5, z = 0 }),
+				foe("threat", { x = 7, z = 0 }),
+				foe("farThreat", { x = 18, z = 0 }),
+			}, Rng.new(139), { moves = true, tactics = { squad = "protect" } })
+			local s, h = unitOf(fight, "s"), unitOf(fight, "h")
+			freeze(h)
+			freeze(unitOf(fight, "decoy"))
+			freeze(unitOf(fight, "threat"), if protected then h else s)
+			freeze(unitOf(fight, "farThreat"), if protected then h else s)
+			s.target, s.cooldown = unitOf(fight, "decoy"), 0.4
+			return fight
+		end
+		for _, class in { "warrior", "guardian" } do
+			local protected = fightOf(class, true)
+			run(protected, 0.5)
+			T.eq(unitOf(protected, "s").target.id, "threat", class .. " protects a Brawler placed in back")
+			local quiet = fightOf(class, false)
+			run(quiet, 0.5)
+			T.eq(unitOf(quiet, "s").target.id, "decoy", "without a backline threat it retains its target")
+			local taunted = fightOf(class, true)
+			local s = unitOf(taunted, "s")
+			s.tauntBy, s.tauntUntil = unitOf(taunted, "decoy"), 10
+			run(taunted, 0.5)
+			T.eq(s.target.id, "decoy", "Taunt still wins over Protect Backline")
+		end
+	end)
+
+	T.test("Protect Backline widens a middle or back-row hop but never a front-row hop", function()
+		local function hopFrom(row: string, tactic: string): { any }
+			local fight = Combat.new({ slime("r", "ranger", { row = row, x = 0, z = 0 }) }, {
+				foe("f", { x = 10, z = 0 }),
+			}, Rng.new(140), { moves = true, tactics = { squad = tactic } })
+			freeze(unitOf(fight, "f"), unitOf(fight, "r"))
+			return run(fight, DT)
+		end
+		local function hopped(events: { any }): boolean
+			return firstOf(events, function(e: any): boolean
+				return e.kind == "move" and e.from == "r" and e.hop == true
+			end) ~= nil
+		end
+		T.eq(hopped(hopFrom("back", "protect")), true)
+		T.eq(hopped(hopFrom("middle", "protect")), true)
+		T.eq(hopped(hopFrom("front", "protect")), false)
+		T.eq(hopped(hopFrom("back", "balanced")), false)
+	end)
+
 	T.test("a mixed class fight is the same from the same seed", function()
 		local function play(): { any }
 			local fight = Combat.new({

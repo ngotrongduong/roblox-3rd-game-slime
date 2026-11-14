@@ -19,6 +19,8 @@ export type Fighter = {
 	class: string?,
 	tier: number?,
 	kind: string?,
+	-- (never set here: an Arena fighter stands in its class's row, Combat.unit)
+	row: string?,
 	skills: { string }?,
 	-- (where it starts on the field: set by simulate, ArenaFight.spot)
 	x: number?,

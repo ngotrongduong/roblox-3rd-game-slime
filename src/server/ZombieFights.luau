@@ -297,7 +297,8 @@ local function fire(session: Session, teamIndex: number, events: { any })
 	end
 end
 
-local function publishTeam(team: March, farmTeam: any)
+local function publishTeam(team: March, farm: any)
+	local farmTeam = farm.teams[team.index]
 	local folder = team.folder
 	local marching = team.state ~= "home"
 	set(folder, "State", team.state)
@@ -305,6 +306,12 @@ local function publishTeam(team: March, farmTeam: any)
 	set(folder, "Repeat", farmTeam.repeatOn)
 	set(folder, "Waiting", team.waiting)
 	set(folder, "Members", table.concat(farmTeam.members, ","))
+	local rows: { string } = {}
+	for _, id in farmTeam.members do
+		table.insert(rows, Zombies.rowOf(farm, id))
+	end
+	set(folder, "Rows", table.concat(rows, ","))
+	set(folder, "Tactic", Zombies.tacticOf(farmTeam))
 	set(folder, "Marching", if marching then table.concat(team.members, ",") else "")
 	set(folder, "FromX", if marching then team.from.X else 0)
 	set(folder, "FromZ", if marching then team.from.Z else 0)
@@ -354,7 +361,7 @@ local function openSession(player: Player, root: Folder, farm: any, plot: number
 			folder = make(session.teamsFolder, tostring(index)),
 		}
 		table.insert(session.teams, team)
-		publishTeam(team, farm.teams[index])
+		publishTeam(team, farm)
 	end
 	return session
 end
@@ -549,6 +556,7 @@ local function beginFight(session: Session, team: March, farm: any, now: number)
 	local group = team.group :: Group
 	local fighters: { any } = {}
 	local here: { string } = {}
+	local rows: { string } = {}
 	local roles: { [string]: string } = {}
 	-- (positional, as in the Slime Dungeon: everyone starts where its body stands, flat from the group's position, and
 	-- walks into reach; the team in its formation at the end of its march, the zombies on their ring)
@@ -557,15 +565,15 @@ local function beginFight(session: Session, team: March, farm: any, now: number)
 	local dir = if way.Magnitude > 0.01 then way.Unit else Vector3.zAxis
 	local endX, endZ = team.spot.X - centre.X, team.spot.Z - centre.Z
 	local spots: { [string]: { number } } = {}
-	for slot, id in team.members do
+	for _, id in team.members do
 		local slime = FarmState.findSlime(farm, id)
 		if slime then
 			local fighter: any = Zombies.fighter(slime, now, 1 - (session.wounds[id] or 0))
 			fighter.role = fighter.class or Combat.role(fighter, slime.seed)
-			fighter.x, fighter.z = Zombies.formation(endX, endZ, dir.X, dir.Z, slot, #team.members)
-			spots[id] = { fighter.x, fighter.z }
+			fighter.row = Zombies.rowOf(farm, id)
 			table.insert(fighters, fighter)
 			table.insert(here, id)
+			table.insert(rows, fighter.row)
 			roles[id] = fighter.role
 		else
 			-- (gone from the farm while away: nothing of it is left to bring back)
@@ -573,6 +581,14 @@ local function beginFight(session: Session, team: March, farm: any, now: number)
 		end
 	end
 	team.members = here
+	-- The march remains staggered; combat uses three independently centred rows.
+	local rowSpots = Zombies.rowSpots(rows)
+	for index, fighter in fighters do
+		local row = rowSpots[index]
+		fighter.x = endX - dir.Z * row.across - dir.X * row.back
+		fighter.z = endZ + dir.X * row.across - dir.Z * row.back
+		spots[fighter.id] = { fighter.x, fighter.z }
+	end
 	if #fighters == 0 then
 		-- nobody left to fight: the group stands free again and the team is home
 		group.state = "waiting"
@@ -594,7 +610,11 @@ local function beginFight(session: Session, team: March, farm: any, now: number)
 		spots[foe.id] = { foe.x, foe.z }
 		table.insert(foes, foe)
 	end
-	local fight = Combat.new(fighters, foes, session.rng, { moves = true, radius = Config.Zombies.FieldRadius })
+	local fight = Combat.new(fighters, foes, session.rng, {
+		moves = true,
+		radius = Config.Zombies.FieldRadius,
+		tactics = { squad = Zombies.tacticOf(farm.teams[team.index]) },
+	})
 	team.fight = fight
 	team.coins, team.dead = 0, 0
 	team.nodes = {}
@@ -800,7 +820,7 @@ local function frame(session: Session, dt: number)
 		else
 			team.waiting = ""
 		end
-		publishTeam(team, farm.teams[team.index])
+		publishTeam(team, farm)
 	end
 	-- the health share on every slime's model
 	local fighting: { [string]: number } = {}

@@ -397,6 +397,28 @@ own clock; numbers in `Config.Classes.Skills`; the contract in `docs/briefs/clas
 0.8, 1.2 and 1.5 s) and the six Legendary traits (`Config.Classes.Traits`) are built; the contract is in
 `docs/briefs/class-skills-5.md`, the effects in `docs/STATUS.md`. Every tier now casts its own skill.
 
+**Step 6 (2026-11-14):** the team sheet of §6 is built for camp and pack fights and the Dungeon (the Arena keeps each
+class's own row); the contract is `docs/briefs/team-sheet.md`. A team saves `formation` (slime id -> row, only the rows
+that differ from the weapon's own, `Config.Classes.Rows.Default`) and `tactic` (absent = Balanced); no schema change.
+Rows stand `Rows.Depth` (5) studs apart, each row centred by itself (`Zombies.rowSpots`, `Dungeon.squadSpots`).
+Simpler than §6's "+25": under **Focus Fire** a slime that needs a new target takes the leader's (the first Warrior,
+else the first Guardian, else the highest ATK); under **Protect Backline** a Guardian or Warrior goes at once for the
+nearest foe that is after a middle- or back-row slime, and those rows hop away from `Tactics.protect.danger` (1.5)
+times their danger range. Balanced draws the same random numbers as before (tested). On the Teams sheet each slime has
+a row pill under its frame (tap: Front -> Mid -> Back) and the team one tactic button (tap: Balanced -> Focus Fire ->
+Protect), both only while the team is home.
+
+Measured (`tools/balance/class_sim.luau 20 tactics`, meadow, slimes level 20, 20 seeds): no tactic dominates.
+
+| team | tier | Balanced | Focus Fire | Protect |
+|---|---|---|---|---|
+| GWRH | wood | best 1, 5.8 waves | best 1, 6.2 | best 0, 8.4 |
+| GMMH | wood | best 1, 6.0 | best 0, 7.7 | best 1, 6.1 |
+| WRMA | wood | best 0, 7.1 | best 0, 7.2 | best 0, 7.4 |
+| GWRH | bramble | best 2, 6.5 | best 2, 6.8 | best 2, 6.8 |
+
+("best" = the highest level cleared; "waves" = waves cleared of the level above it.)
+
 Simpler than §2-§3 for now (each is a later fix, none changes a rule the owner sees):
 - No threat table: a monster's target is still today's pick by its kind; a Guardian draws foes by Taunt and Pull (Pull 3).
 - Ranged slimes do not shoot while walking (80%) and the Healer and Alchemist do not back away; Rangers and Mages hop.

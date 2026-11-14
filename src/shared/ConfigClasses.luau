@@ -10,6 +10,21 @@ return {
 		kit = "alchemist",
 	},
 	Tiers = { wood = 1, iron = 2, core = 3, bramble = 4, legend = 5 },
+	-- Team sheet: row offsets are measured away from the monsters' side at fight entry.
+	Rows = {
+		Order = { "front", "middle", "back" },
+		Depth = 5,
+		Brawler = "front",
+		Default = {
+			guardian = "front",
+			warrior = "front",
+			ranger = "middle",
+			mage = "middle",
+			healer = "back",
+			alchemist = "back",
+		},
+	},
+	Tactics = { Order = { "balanced", "focus", "protect" }, protect = { danger = 1.5 } },
 	Kinds = {
 		-- (`taken`: the Guardian always takes that share less, behind its shield; its Taunt raises it while it lasts)
 		-- (the ranged reaches are 1.5 times the first ones, the owner, 2026-11-13: 16, 16, 15, 14)

@@ -33,6 +33,11 @@ return {
 		pointer = 110115571347055,
 		plus = 115669941400247,
 		again = 87479558872031, -- the Repeat toggle
+		-- A team's tactic on the team sheet (ChatGPT in the owner's style, 2026-11-14, art/icons/tactic_*.png): a scale with a
+		-- sword and a shield, three arrows in one bullseye, a slime safe behind a shield.
+		tacticBalanced = 115541736148862,
+		tacticFocus = 115118402947931,
+		tacticProtect = 89281044598620,
 		level = 99981918632333, -- the Level sort button
 		order = 105007209294287, -- which way a list sorts (points down)
 		-- The round travel buttons (home, market): not drawn yet, a short word stands in (UiKit glyphs).

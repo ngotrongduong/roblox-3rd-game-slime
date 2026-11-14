@@ -10,7 +10,7 @@
 --     (the Common slimes get the level points the better weapons add, as the Arena's matching counts them).
 --   lune run tools/balance/class_sim.luau [seeds] [part] [slimeLevel]
 -- (a team is its letters: G guardian, W warrior, R ranger, M mage, H healer, A alchemist, B a Brawler with no weapon;
--- `part` is dungeon, teams or tiers, all when left out; the slimes are level 20 when slimeLevel is left out)
+-- `part` is dungeon, teams, tiers or tactics, the first three when left out; the slimes are level 20 when slimeLevel is left out)
 local process = require("@lune/process")
 local ArenaFight = require("../../src/shared/ArenaFight")
 local Combat = require("../../src/shared/Combat")
@@ -26,6 +26,8 @@ local D = Config.Dungeon
 local K = Config.Classes
 local STEP = Config.Zombies.FightStepSeconds
 local MAP = "meadow"
+-- (the squad's tactic in the dungeon runs: the `tactics` part tries each, the others fight Balanced)
+local TACTIC = "balanced"
 local LETTERS = { G = "guardian", W = "warrior", R = "ranger", M = "mage", H = "healer", A = "alchemist" }
 local FAMILY = {}
 for family, class in K.Families do
@@ -68,11 +70,17 @@ end
 -- `extras` are each slime's extra level points.
 local function team(letters: string, tier: string, prefix: string, seed: number, flip: boolean, extras: { number }?): { any }
 	local out = {}
+	local rows: { string } = {}
 	for index = 1, #letters do
 		local f = slime(prefix .. index, letters:sub(index, index), tier, seed + index, extras and extras[index])
-		local x, z = Dungeon.squadSpot(index, #letters)
-		f.x, f.z = if flip then -x else x, if flip then -z else z
+		f.row = if f.class then K.Rows.Default[f.class] else K.Rows.Brawler
 		table.insert(out, f)
+		table.insert(rows, f.row)
+	end
+	local spots = Dungeon.squadSpots(rows)
+	for index, f in out do
+		local point = spots[index]
+		f.x, f.z = if flip then -point.x else point.x, if flip then -point.z else point.z
 	end
 	return out
 end
@@ -125,7 +133,7 @@ local function dungeonRun(letters: string, tier: string, level: number, seed: nu
 	for _, f in squad do
 		classOf[f.id] = f.class or "brawler"
 	end
-	local fight = Combat.new(squad, {}, rng, { moves = true, radius = D.ArenaRadius })
+	local fight = Combat.new(squad, {}, rng, { moves = true, radius = D.ArenaRadius, tactics = { squad = TACTIC } })
 	fight.open = true
 	for wave = 1, D.Waves do
 		local queue = Dungeon.plan(MAP, level, wave, seed * 31)
@@ -250,6 +258,25 @@ if PART == nil or PART == "dungeon" then
 			)
 		)
 	end
+	print("")
+end
+
+-- The team sheet's tactics (docs/WEAPONS.md 6): the same mixed teams in the dungeon under each tactic: the highest level
+-- cleared in half the runs and the waves cleared one level above it. Only asked for by name (it is slow).
+if PART == "tactics" then
+	print(string.format("## Tactics in the dungeon (%s), slimes level %d, %d seeds a probe", MAP, LEVEL, SEEDS))
+	print("")
+	print("| team | tier | tactic | best level | waves cleared a level up |")
+	print("|---|---|---|---|---|")
+	for _, row in { { "GWRH", "wood" }, { "GMMH", "wood" }, { "WRMA", "wood" }, { "GWRH", "bramble" } } do
+		for _, tactic in K.Tactics.Order do
+			TACTIC = tactic
+			local best = bestLevel(row[1], row[2])
+			local _, above = clearShare(row[1], row[2], best + 1, newTally())
+			print(string.format("| %s | %s | %s | %d | %.1f |", row[1], row[2], tactic, best, above))
+		end
+	end
+	TACTIC = "balanced"
 	print("")
 end
 

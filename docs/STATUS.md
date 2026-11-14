@@ -1,5 +1,26 @@
 # Status
 
+## 2026-11-14 — the team sheet: rows and three tactics (WEAPONS step 6; built, NOT yet seen in play)
+
+**What it is.** On the Teams sheet every slime of a team has a row pill (Front / Mid / Back, tap to cycle) and the team
+one tactic button (Balanced / Focus Fire / Protect, pictures from ChatGPT in the owner's style, `Config.Ui.Icons.tactic*`).
+Saved on the team (`formation`, `tactic`; optional fields, schema stays 15). The server places the squad by rows at the
+start of a camp / pack fight and a Dungeon run and gives the tactic to `Combat.new`; the rules are in
+`docs/WEAPONS.md` §13 "Step 6", the contract in `docs/briefs/team-sheet.md` (rules, server and tests by ChatGPT, branch
+`chatgpt/team-sheet`; the screen by Claude). The Arena is untouched.
+
+**Proved.** `tools\check.ps1`: CHECK OK, 791 tests passed, on top of M5b's packs (new: farmstate repair, zombies rows, requests
+`SetTeamRow` / `SetTeamTactic`, dungeon `squadSpots`, classes: Balanced parity, Focus leadership, Protect targeting,
+row hops). `tools\types.ps1`: TYPES OK for `src/shared`, `src/server`, `UiTeams`, `ZombieTeams`, `DungeonFight`.
+`class_sim.luau 20 tactics`: no tactic dominates (table in WEAPONS §13).
+
+**Not verified.** Everything a play test shows: the pills and the tactic button on the sheet (and on a phone frame),
+rows at the start of a fight, a tactic changing whom the squad hits. Studio was held by the world session's play test.
+
+**Also today.** VfxLib 60b30ec: Bulwark's spirit knight redrawn solid for bright ground (not yet looked at in a run).
+Ember Lava seen in a run with both Legendary debug teams: Meteor is strong and Catalyst Cloud reads on the dark ground;
+Bulwark, Whirlwind, Arrow Rain, Momentum and Last Stand played there but were not framed.
+
 ## 2026-11-14 — M5, fights in the big world (done, except King Goo's own model)
 
 **What it is.** Every zone of `WorldPlan.Zones` is a short Dungeon run fought in the open on the zone's pad

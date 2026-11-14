@@ -761,6 +761,7 @@ Families.List = {
 			"streak_wisp",
 			"summon_golem",
 			"summon_guardian",
+			"summon_guardian_bright",
 			"summon_tentacle",
 			"summon_wolf",
 			"wave_wall",

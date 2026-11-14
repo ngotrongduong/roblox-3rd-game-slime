@@ -227,4 +227,26 @@ return function(T: any)
 		T.ok(first ~= nil and (first :: number) < 3, "the first blow is announced within seconds, wherever they stand")
 		T.eq(unitOf(fight, "s").x, 0)
 	end)
+
+	T.test("Dungeon squadSpots places middle and back further toward the player than front", function()
+		local rows = { "front", "middle", "back", "front" }
+		local spots = Dungeon.squadSpots(rows)
+		T.eq(#spots, #rows)
+		local player = Config.Dungeon.PlayerSpot
+		local magnitude = math.sqrt(player.x * player.x + player.z * player.z)
+		local px, pz = player.x / magnitude, player.z / magnitude
+		local function toward(index: number): number
+			return spots[index].x * px + spots[index].z * pz
+		end
+		local depth = Config.Classes.Rows.Depth
+		T.near(toward(2) - toward(1), depth, 1e-9)
+		T.near(toward(3) - toward(1), 2 * depth, 1e-9)
+		T.near(toward(4), toward(1), 1e-9)
+		T.ok(toward(1) > 0, "all rows are on the squad's side of the arena")
+		local acrossX, acrossZ = -pz, px
+		local first = spots[1].x * acrossX + spots[1].z * acrossZ
+		local fourth = spots[4].x * acrossX + spots[4].z * acrossZ
+		T.near(first + fourth, 0, 1e-9, "the two front slimes are centred")
+		T.near(fourth - first, Config.Zombies.View.FormationSpacing, 1e-9)
+	end)
 end

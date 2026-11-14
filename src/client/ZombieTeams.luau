@@ -17,6 +17,9 @@ export type Team = {
 	-- the saved line-up, and who went on this trip
 	members: { string },
 	marching: { string },
+	-- the row each member starts a fight in (parallel to `members`) and the team's tactic (Config.Classes.Rows, Tactics)
+	rows: { string },
+	tactic: string,
 	-- the published leg: flat studs (y is 0) and server times
 	from: Vector3,
 	to: Vector3,
@@ -95,6 +98,8 @@ function ZombieTeams.get(index: number, village: Folder?): Team?
 		waiting = text(node, "Waiting"),
 		members = ZombieTeams.split(text(node, "Members")),
 		marching = ZombieTeams.split(text(node, "Marching")),
+		rows = ZombieTeams.split(text(node, "Rows")),
+		tactic = if text(node, "Tactic") ~= "" then text(node, "Tactic") else Config.Classes.Tactics.Order[1],
 		from = Vector3.new(number(node, "FromX"), 0, number(node, "FromZ")),
 		to = Vector3.new(number(node, "ToX"), 0, number(node, "ToZ")),
 		legStart = number(node, "LegStart"),

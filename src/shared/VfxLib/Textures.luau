@@ -254,6 +254,9 @@ Textures.Images = {
 	-- stored for a Beam from the feet (top row) up (prepare_beam.py --flip), so `emerge` brings the head out first.
 	summon_wolf = { id = 127242025167802, black = true, from = SKILL_ART }, -- an ice-blue spirit wolf leaping away (a particle)
 	summon_guardian = { id = 130276948979801, black = true, from = SKILL_ART }, -- a gold knight of light: tower shield, sword
+	-- (the same knight drawn solid for bright ground: gold armour, blue cape and shield, dark outline, keyed off magenta,
+	-- stored for a Beam from the feet up; worn normal, 2026-11-14)
+	summon_guardian_bright = { id = 135021911799585, from = SKILL_ART },
 	summon_golem = { id = 121447514135142, from = SKILL_ART }, -- a golem of rock slabs, amber rune cracks, moss
 	-- (keyed by a plain key that keeps purple, prepare_beam.py --plain --flip: prepare_flip's fire key turns it green)
 	summon_tentacle = { id = 70716005411734, from = SKILL_ART }, -- a purple-black tentacle, glowing violet suckers

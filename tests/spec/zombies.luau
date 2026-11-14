@@ -461,4 +461,59 @@ return function(T: any)
 		local strong = FarmKit.slime("b", { stats = { attack = 9, defence = 9, speed = 9, hp = 90 } })
 		T.ok(Zombies.deathReward(strong) > Zombies.deathReward(plain))
 	end)
+
+	T.test("changing a team keeps the remaining rows and drops transferred members' rows", function()
+		local farm = FarmKit.farm(NOW, FarmKit.many(6))
+		openTeams(farm)
+		T.ok(Zombies.setTeam(farm, 1, { "s1", "s2", "s3" }, NOW))
+		farm.teams[1].formation = { s1 = "back", s2 = "middle", s3 = "back" }
+		T.ok(Zombies.setTeam(farm, 1, { "s1", "s3", "s4" }, NOW))
+		T.same(farm.teams[1].formation, { s1 = "back", s3 = "back" })
+		T.ok(Zombies.setTeam(farm, 2, { "s1", "s5" }, NOW))
+		T.same(farm.teams[1].members, { "s3", "s4" })
+		T.same(farm.teams[1].formation, { s3 = "back" })
+		T.eq(farm.teams[2].formation, nil, "the previous team's choice does not follow a transferred slime")
+		T.ok(Zombies.setTeam(farm, 1, {}, NOW))
+		T.eq(farm.teams[1].formation, nil)
+	end)
+
+	T.test("rowOf uses saved choice, weapon family or Brawler front; missing tactic is Balanced", function()
+		local farm = FarmKit.farm(NOW, FarmKit.many(4))
+		farm.slimes[1].gear.hand = "bow-wood"
+		farm.slimes[2].gear.hand = "staff-wood"
+		farm.slimes[3].gear.hand = "shield-wood"
+		farm.teams[1].members = { "s1", "s2", "s3", "s4" }
+		T.eq(Zombies.rowOf(farm, "s1"), "middle")
+		T.eq(Zombies.rowOf(farm, "s2"), "back")
+		T.eq(Zombies.rowOf(farm, "s3"), "front")
+		T.eq(Zombies.rowOf(farm, "s4"), "front")
+		T.eq(Zombies.rowOf(farm, "unknown"), Config.Classes.Rows.Brawler)
+		farm.teams[1].formation = { s1 = "back", s3 = "middle" }
+		T.eq(Zombies.rowOf(farm, "s1"), "back")
+		T.eq(Zombies.rowOf(farm, "s3"), "middle")
+		T.eq(Zombies.tacticOf(farm.teams[1]), "balanced")
+		farm.teams[1].tactic = "protect"
+		T.eq(Zombies.tacticOf(farm.teams[1]), "protect")
+	end)
+
+	T.test("rowSpots centers four in one row, or each row separately in original member order", function()
+		local spacing = Config.Zombies.View.FormationSpacing
+		local depth = Config.Classes.Rows.Depth
+		local one = Zombies.rowSpots({ "front", "front", "front", "front" })
+		T.eq(#one, 4)
+		for index, spot in one do
+			T.near(spot.across, (index - 2.5) * spacing, 1e-9)
+			T.eq(spot.back, 0)
+		end
+		local groups = Zombies.rowSpots({ "back", "front", "middle", "front" })
+		T.eq(#groups, 4)
+		T.near(groups[1].across, 0, 1e-9)
+		T.eq(groups[1].back, 2 * depth)
+		T.near(groups[2].across, -spacing / 2, 1e-9)
+		T.eq(groups[2].back, 0)
+		T.near(groups[3].across, 0, 1e-9)
+		T.eq(groups[3].back, depth)
+		T.near(groups[4].across, spacing / 2, 1e-9)
+		T.eq(groups[4].back, 0)
+	end)
 end

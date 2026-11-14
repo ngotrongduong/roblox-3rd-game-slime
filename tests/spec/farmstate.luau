@@ -274,4 +274,42 @@ return function(T)
 		T.same(farm.teams[2].members, { "s2" })
 		T.eq(FarmState.teamOf(farm, "s1"), nil)
 	end)
+
+	T.test("team sheet repair keeps valid rows and tactics but discards stale or bad overrides", function()
+		local farm = FarmKit.farm(NOW, FarmKit.many(5))
+		farm.teams[1] = {
+			members = { "s1", "s2" },
+			repeatOn = false,
+			formation = { s1 = "back", s2 = "elsewhere", ghost = "middle" },
+			tactic = "focus",
+		}
+		farm.teams[2] = {
+			members = { "s3" },
+			repeatOn = false,
+			formation = { ghost = "front", s3 = "side" },
+			tactic = "nonsense",
+		}
+		farm.teams[3] = { members = { "s4" }, repeatOn = false, tactic = "protect" }
+		farm.teams[4] = { members = { "s5" }, repeatOn = false, tactic = "balanced" }
+		local repaired = FarmState.repair(farm, NOW)
+		T.same(repaired.teams[1].formation, { s1 = "back" })
+		T.eq(repaired.teams[1].tactic, "focus")
+		T.eq(repaired.teams[2].formation, nil, "an empty override map does not survive repair")
+		T.eq(repaired.teams[2].tactic, nil)
+		T.eq(repaired.teams[3].tactic, "protect")
+		T.eq(repaired.teams[4].tactic, nil, "Balanced is the absence of an override")
+	end)
+
+	T.test("removing a slime prunes its team row without disturbing another member", function()
+		local farm = FarmKit.farm(NOW, FarmKit.many(4))
+		farm.teams[1].members = { "s1", "s2" }
+		farm.teams[1].formation = { s1 = "back", s2 = "middle" }
+		farm.teams[1].tactic = "protect"
+		T.ok(FarmState.removeSlime(farm, "s1"))
+		T.same(farm.teams[1].members, { "s2" })
+		T.same(farm.teams[1].formation, { s2 = "middle" })
+		T.eq(farm.teams[1].tactic, "protect")
+		T.ok(FarmState.removeSlime(farm, "s2"))
+		T.eq(farm.teams[1].formation, nil)
+	end)
 end

@@ -670,6 +670,13 @@ return {
 		StateIcons = { home = "slimes", going = "speed", fighting = "attack_order", returning = "back" },
 		WaitingIcons = { health = "hp", hungry = "food", tired = "energy", group = "skull" },
 		WaitingText = { health = "Healing", hungry = "Hungry", tired = "Tired", group = "Group busy" },
+		-- The fight plan under the slots (docs/WEAPONS.md 6): a pill under each member with its row (a tap moves it to the
+		-- next row) and one button with the team's tactic (a tap takes the next one). Their height, words and pictures.
+		PlanHeight = 28,
+		RowText = { front = "Front", middle = "Mid", back = "Back" },
+		RowStyle = { front = "danger", middle = "primary", back = "good" },
+		TacticText = { balanced = "Balanced", focus = "Focus Fire", protect = "Protect" },
+		TacticIcons = { balanced = "tacticBalanced", focus = "tacticFocus", protect = "tacticProtect" },
 		-- ===== The march: real slime bodies hop along the published leg, spread side by side =====
 		-- Bodies are built within DrawDistance of the camera and checked this often. A long leg is cut into pieces of
 		-- SegmentHops hops, each measured against the ground again (the slime's own ground ray only looks a little way).

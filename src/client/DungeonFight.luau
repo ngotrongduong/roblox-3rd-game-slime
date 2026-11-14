@@ -403,10 +403,15 @@ local function onStart(event: { [string]: any })
 	toPlayer = if toPlayer.Magnitude > 1e-3 then toPlayer.Unit else Vector3.zAxis
 	local members: { string } = event.members
 	local roles: { [string]: string } = if type(event.roles) == "table" then event.roles else {}
+	-- (the server puts the fighters at these same places: shared/Dungeon.squadSpots, by the rows of the team sheet)
+	local rows: { string } = {}
+	for index in members do
+		local row = if type(event.rows) == "table" then event.rows[index] else nil
+		rows[index] = if type(row) == "string" then row else Config.Classes.Rows.Brawler
+	end
+	local spots = DungeonRules.squadSpots(rows)
 	for index, id in members do
-		-- (the server puts the fighter at this same place: shared/Dungeon.squadSpot)
-		local lx, lz = DungeonRules.squadSpot(index, #members)
-		addSquad(id, roles[id] or "attack", middle + Vector3.new(lx, 0, lz), -toPlayer)
+		addSquad(id, roles[id] or "attack", middle + Vector3.new(spots[index].x, 0, spots[index].z), -toPlayer)
 	end
 	startPolling()
 end

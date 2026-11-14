@@ -21,16 +21,17 @@ local END = 4
 
 local GUARDIAN = {
 	name = "guardian",
-	texture = "summon_guardian",
-	colors = { { 190, 135, 40 }, { 150, 95, 20 } },
+	texture = "summon_guardian_bright",
+	-- (the picture is solid and drawn in its own colours: gold, blue, a dark outline; so white, untinted)
+	colors = { { 255, 255, 255 }, { 255, 255, 255 } },
 	-- (from his feet under the ground to the top of his crest: the picture is stored that way)
 	from = { SIDE, GROUND - 0.3, BEHIND },
 	to = { SIDE, GROUND + 9, BEHIND },
-	width = { 9, 9 },
+	width = { 6.2, 6.2 },
 	delay = RISE,
 	life = END - RISE,
 	-- (see-through: the caster shows through him from the player's camera)
-	transparency = { { 0, 0.2 }, { 0.85, 0.25 }, { 1, 1 } },
+	transparency = { { 0, 0.25 }, { 0.85, 0.3 }, { 1, 1 } },
 	face = true,
 	-- (his own colours as drawn, barely lit: his shield, sword and cape must read on grass and snow)
 	glow = 0,

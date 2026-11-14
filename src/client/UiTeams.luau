@@ -19,6 +19,8 @@ local ZombieWorld = require(script.Parent.ZombieWorld)
 local U = Config.Ui
 local Z = Config.Zombies
 local V = Z.View
+local Rows = Config.Classes.Rows
+local Tactics = Config.Classes.Tactics
 
 export type Context = {
 	own: () -> Folder?,
@@ -153,6 +155,7 @@ local function openTeams(point: Vector3?, teamIndex: number?)
 	end
 	local busy = false
 	local slotsKey = ""
+	local planKey = ""
 	local tick: () -> () = function() end
 	local modal = c.open("teams", V.TeamsSheetHeight, function()
 		tick()
@@ -260,11 +263,38 @@ local function openTeams(point: Vector3?, teamIndex: number?)
 		end,
 	})
 
+	-- the fight plan under the slots: each member's row under its slot, the team's tactic under Best and Repeat
+	local planTop = V.SlotSize + 4
+	local plan = UiKit.make("Frame", {
+		Name = "Plan",
+		BackgroundTransparency = 1,
+		Position = UDim2.fromOffset(0, planTop),
+		Size = UDim2.new(1, 0, 0, V.PlanHeight),
+	}, modal.content)
+	local rowPills = UiKit.make("Frame", {
+		Name = "Rows",
+		BackgroundTransparency = 1,
+		Size = UDim2.new(1, -buttonsWidth, 1, 0),
+	}, plan)
+	UiKit.make("UIListLayout", {
+		FillDirection = Enum.FillDirection.Horizontal,
+		Padding = UDim.new(0, U.Gap),
+		SortOrder = Enum.SortOrder.LayoutOrder,
+	}, rowPills)
+	local tacticHost = UiKit.make("Frame", {
+		Name = "Tactic",
+		BackgroundTransparency = 1,
+		AnchorPoint = Vector2.new(1, 0),
+		Position = UDim2.fromScale(1, 0),
+		Size = UDim2.new(0, buttonsWidth - U.Gap, 1, 0),
+	}, plan)
+	local planBottom = planTop + V.PlanHeight
+
 	-- why a repeating team waits: its picture and a short word
 	local info = UiKit.make("Frame", {
 		Name = "Info",
 		BackgroundTransparency = 1,
-		Position = UDim2.fromOffset(0, V.SlotSize + 4),
+		Position = UDim2.fromOffset(0, planBottom + 4),
 		Size = UDim2.new(1, 0, 0, U.IconSmall),
 		Visible = false,
 	}, modal.content)
@@ -309,6 +339,59 @@ local function openTeams(point: Vector3?, teamIndex: number?)
 			UiKit.toast(c.reason(why))
 		end
 		return ok
+	end
+
+	-- The plan's buttons: a tap asks for the next row or tactic of the list, round to the first; the server's answer
+	-- comes back in the team's attributes and redraws them.
+	local function nextOf(order: { string }, value: string): string
+		return order[(table.find(order, value) or 0) % #order + 1]
+	end
+	local function drawPlan(team: ZombieTeams.Team)
+		UiKit.clear(rowPills)
+		UiKit.clear(tacticHost)
+		local function ask(data: { [string]: any })
+			if team.state ~= "home" then
+				UiKit.toast(c.reason("TEAM_OUT"))
+				return
+			end
+			change(function()
+				local ok, why = c.ask(data)
+				if not ok then
+					UiKit.toast(c.reason(why))
+				end
+			end)
+		end
+		-- (a pill stands under its member's slot: the slots hold the members that still exist, in the line-up's order)
+		local at = 0
+		for index, id in team.members do
+			if slimeById(id) then
+				at += 1
+				local row = team.rows[index] or Rows.Brawler
+				UiKit.button(rowPills, {
+					Name = "Row" .. at,
+					Text = (V.RowText :: any)[row] or row,
+					TextSize = U.TextTiny,
+					Style = (V.RowStyle :: any)[row] or "secondary",
+					Size = UDim2.fromOffset(V.SlotSize, V.PlanHeight),
+					LayoutOrder = at,
+					OnClick = function()
+						ask({ action = "SetTeamRow", team = team.index, slimeId = id, row = nextOf(Rows.Order, row) })
+					end,
+				})
+			end
+		end
+		UiKit.button(tacticHost, {
+			Name = "Tactic",
+			Icon = (V.TacticIcons :: any)[team.tactic],
+			IconSize = U.IconSmall,
+			Text = (V.TacticText :: any)[team.tactic] or team.tactic,
+			TextSize = U.TextTiny,
+			Style = "secondary",
+			Size = UDim2.fromScale(1, 1),
+			OnClick = function()
+				ask({ action = "SetTeamTactic", team = team.index, tactic = nextOf(Tactics.Order, team.tactic) })
+			end,
+		})
 	end
 
 	local function drawSlots(team: ZombieTeams.Team)
@@ -413,7 +496,7 @@ local function openTeams(point: Vector3?, teamIndex: number?)
 	})
 	-- the list sits under the slots, and under the waiting line only while that shows
 	local function placeList()
-		local listTop = V.SlotSize + U.Gap + (if info.Visible then U.IconSmall + 4 else 0)
+		local listTop = planBottom + U.Gap + (if info.Visible then U.IconSmall + 4 else 0)
 		list.root.Position = UDim2.fromOffset(0, listTop)
 		list.root.Size = UDim2.new(1, 0, 1, -listTop)
 	end
@@ -505,6 +588,11 @@ local function openTeams(point: Vector3?, teamIndex: number?)
 		if key ~= slotsKey then
 			slotsKey = key
 			drawSlots(mine)
+		end
+		local planNow = table.concat({ key, table.concat(mine.rows, ","), mine.tactic }, "|")
+		if planNow ~= planKey then
+			planKey = planNow
+			drawPlan(mine)
 		end
 		local out = mine.state ~= "home"
 		lock.Visible = out

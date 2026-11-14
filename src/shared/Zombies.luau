@@ -143,14 +143,30 @@ function Zombies.setTeam(
 		end
 	end
 	for _, other in farm.teams do
-		for _, id in ids do
-			local at = table.find(other.members, id)
-			if at then
-				table.remove(other.members, at)
+		if other ~= team then
+			for _, id in ids do
+				local at = table.find(other.members, id)
+				if at then
+					table.remove(other.members, at)
+					if other.formation then
+						other.formation[id] = nil
+						if next(other.formation) == nil then
+							other.formation = nil
+						end
+					end
+				end
 			end
 		end
 	end
+	local kept: { [string]: string } = {}
+	for _, id in ids do
+		local row = if team.formation then team.formation[id] else nil
+		if row then
+			kept[id] = row
+		end
+	end
 	team.members = table.clone(ids)
+	team.formation = if next(kept) then kept else nil
 	return true, nil
 end
 
@@ -186,6 +202,52 @@ function Zombies.marchSeconds(distance: number, speeds: { number }): number
 		return 0
 	end
 	return VillagePath.duration(distance, slowest, Config.Zombies.MarchGait)
+end
+
+-- The weapon sets the default row; a slime without a valid weapon is always in front.
+function Zombies.defaultRow(slime: Slime?): string
+	local class = if slime then Classes.ofSlime(slime) else nil
+	return if class
+		then (Config.Classes.Rows.Default :: any)[class] or Config.Classes.Rows.Brawler
+		else Config.Classes.Rows.Brawler
+end
+
+-- A saved override belongs to this team only; otherwise the weapon sets the row.
+function Zombies.rowOf(farm: Farm, slimeId: string): string
+	local teamIndex = FarmState.teamOf(farm, slimeId)
+	local team = if teamIndex then farm.teams[teamIndex] else nil
+	local chosen = if team and team.formation then team.formation[slimeId] else nil
+	if chosen and table.find(Config.Classes.Rows.Order, chosen) then
+		return chosen
+	end
+	local slime = FarmState.findSlime(farm, slimeId)
+	return Zombies.defaultRow(slime)
+end
+
+-- A missing tactic deliberately has the same combat behavior as the original rules.
+function Zombies.tacticOf(team: { tactic: string? }?): string
+	local selected = if team then team.tactic else nil
+	return if selected and table.find(Config.Classes.Tactics.Order, selected) then selected else "balanced"
+end
+
+-- Fight positions: centre each row independently and keep the team's original order within it.
+function Zombies.rowSpots(rows: { string }): { { across: number, back: number } }
+	local result: { { across: number, back: number } } = {}
+	local counts: { [string]: number } = {}
+	local seen: { [string]: number } = {}
+	local K = Config.Classes.Rows
+	for _, row in rows do
+		local name = if table.find(K.Order, row) then row else K.Brawler
+		counts[name] = (counts[name] or 0) + 1
+	end
+	for index, row in rows do
+		local name = if table.find(K.Order, row) then row else K.Brawler
+		seen[name] = (seen[name] or 0) + 1
+		local across = (seen[name] - ((counts[name] or 0) + 1) / 2) * Config.Zombies.View.FormationSpacing
+		local depth = (table.find(K.Order, name) or 1) - 1
+		result[index] = { across = across, back = depth * K.Depth }
+	end
+	return result
 end
 
 -- Where a pack fight's fighters stand as it begins, flat from the group's position; the server places the fight by these

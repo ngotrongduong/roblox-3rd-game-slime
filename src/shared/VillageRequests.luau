@@ -147,6 +147,10 @@ function VillageRequests.valid(data: any, hasPlot: boolean): boolean
 		return teamNumber(data.team) and idList(data.slimeIds) and hasPlot
 	elseif action == "SetTeamRepeat" then
 		return teamNumber(data.team) and type(data.on) == "boolean" and hasPlot
+	elseif action == "SetTeamRow" then
+		return teamNumber(data.team) and shortText(data.slimeId) and type(data.row) == "string" and hasPlot
+	elseif action == "SetTeamTactic" then
+		return teamNumber(data.team) and type(data.tactic) == "string" and hasPlot
 	elseif action == "AttackGroup" then
 		return teamNumber(data.team)
 			and type(data.groupId) == "string"
@@ -251,6 +255,43 @@ function VillageRequests.run(farm: any, data: any, now: number, env: Env): (bool
 			return false, "TEAM_OUT"
 		end
 		return Zombies.setTeam(farm, data.team, data.slimeIds, now, env.isOut)
+	elseif action == "SetTeamRow" or action == "SetTeamTactic" then
+		if not teamNumber(data.team) or not farm.teams[data.team] then
+			return false, "BAD_TEAM"
+		elseif not Zombies.teamOpen(farm, data.team) then
+			return false, "LOCKED"
+		elseif env.teamOut(data.team) then
+			return false, "TEAM_OUT"
+		end
+		local team = farm.teams[data.team]
+		if action == "SetTeamTactic" then
+			if not table.find(Config.Classes.Tactics.Order, data.tactic) then
+				return false, "BAD_TACTIC"
+			end
+			team.tactic = if data.tactic == "balanced" then nil else data.tactic
+			return true, nil
+		end
+		if not table.find(team.members, data.slimeId) then
+			return false, "NO_SLIME"
+		elseif not table.find(Config.Classes.Rows.Order, data.row) then
+			return false, "BAD_ROW"
+		end
+		local slime = FarmState.findSlime(farm, data.slimeId)
+		local default = Zombies.defaultRow(slime)
+		if data.row == default then
+			if team.formation then
+				team.formation[data.slimeId] = nil
+				if next(team.formation) == nil then
+					team.formation = nil
+				end
+			end
+		else
+			if not team.formation then
+				team.formation = {}
+			end
+			team.formation[data.slimeId] = data.row
+		end
+		return true, nil
 	elseif action == "SetTeamRepeat" then
 		local team = farm.teams[data.team]
 		if data.on and not Zombies.teamOpen(farm, data.team) then
