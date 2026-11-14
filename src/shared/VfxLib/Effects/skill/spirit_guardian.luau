@@ -19,24 +19,17 @@ local RAISE = 0.9 -- (the shield is raised)
 local SMITE = 1.3 -- (lv3: the sword in the ground)
 local END = 4
 
+-- (the owner's own 3D knight, 2026-11-14, 9 studs tall (a tower shield and a hammer), worn as a HOLOGRAM, a ghost of
+-- gold-white light: the model's ForceField look and a faint copy under it, so he reads on snow, grass and the dark floor
+-- but is no solid body: the owner's note, same day)
 local GUARDIAN = {
-	name = "guardian",
-	texture = "summon_guardian_bright",
-	-- (the picture is solid and drawn in its own colours: gold, blue, a dark outline; so white, untinted)
-	colors = { { 255, 255, 255 }, { 255, 255, 255 } },
-	-- (from his feet under the ground to the top of his crest: the picture is stored that way)
-	from = { SIDE, GROUND - 0.3, BEHIND },
-	to = { SIDE, GROUND + 9, BEHIND },
-	width = { 6.2, 6.2 },
+	model = "guardian_knight",
+	at = { SIDE, GROUND, BEHIND },
 	delay = RISE,
 	life = END - RISE,
-	-- (see-through: the caster shows through him from the player's camera)
-	transparency = { { 0, 0.25 }, { 0.85, 0.3 }, { 1, 1 } },
-	face = true,
-	-- (his own colours as drawn, barely lit: his shield, sword and cape must read on grass and snow)
-	glow = 0,
-	zOffset = -1,
 	emerge = OUT,
+	color = { 255, 205, 95 },
+	transparency = { { 0, 1 }, { 0.12, 0.1 }, { 0.85, 0.2 }, { 1, 1 } },
 }
 
 local function pieces(n)
@@ -247,7 +240,7 @@ return {
 	blend = "normal+bloom",
 	tintable = false,
 	markers = LV3.markers,
-	beams = { GUARDIAN },
+	bodies = { GUARDIAN },
 	pieces = LV3.pieces,
 	variants = { lv1 = level(1), lv2 = level(2), lv3 = {} },
 	defaultVariant = "lv3",

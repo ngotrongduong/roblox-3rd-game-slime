@@ -82,6 +82,58 @@ Models.list = {
 	},
 }
 
+-- A STATUE: a still textured MeshPart a one-shot's `bodies` stand in the world (the owner's own model, Tripo, 2026-11-14;
+-- tools/blender/knight_prepare.py, models/guardian/guardian_knight_owner.glb, uploaded by Open Cloud as a Model):
+--   mesh      the MeshPart's mesh asset id
+--   texture   its picture's asset id (the MeshPart's TextureID: an import's picture is not carried by the mesh)
+--   size      the MeshPart's size at scale 1 (studs); its middle is the part's middle, its feet the bottom
+--   facing    degrees about up that turn its front to the play's -z (the way a caster faces); set by looking at it
+--   look      (optional) the Material it is drawn in instead of its picture: "ForceField", a see-through ghost lit at its
+--             edges (a picture on a ForceField turns to flowing streaks, lesson 314); the body's `color` tints it
+--   fill      (with `look`) the transparency of a faint Neon copy under it, so the ghost still reads over a bright floor
+--   paint     (with `look` and `fill`) a picture's asset id painted on the Neon copy by the mesh's UVs, its colours kept
+--             (the picture's bottom at the model's foot): a wall of light bright at its foot, gone at its top
+--   statue    true: no bones, no `area` (Schema's serpents refuse it)
+Models.list.guardian_knight = {
+	mesh = 85240162598491,
+	texture = 81879877784190,
+	look = "ForceField",
+	fill = 0.88,
+	size = { 6.529, 9, 3.17 },
+	facing = 0,
+	statue = true,
+}
+-- The stock's own creatures (monsters/MonsterKit.rbxm, MonsterLib), worn as ghosts: the meshes come in one stud tall at
+-- most; their sizes here are those at scale 1 (a spirit wolf six studs long, a golem eight tall). Both look along -z.
+Models.list.ember_wolf = {
+	mesh = 121775813364029,
+	look = "ForceField",
+	fill = 0.88,
+	size = { 4.673, 5.324, 6 },
+	facing = 0,
+	statue = true,
+}
+Models.list.totem_golem = {
+	mesh = 130444144834997,
+	look = "ForceField",
+	fill = 0.86,
+	size = { 6.683, 8, 2.796 },
+	facing = 0,
+	statue = true,
+}
+
+-- CGHOW's spawn cylinder (yl_er-KCQU0, 2026-11-15): an open tube, its walls both ways (tools/blender/tube.py,
+-- models/tube.glb, Studio Import 3D), a hologram whose copy wears the green curtain cg_spawn_wall_paint
+Models.list.spawn_tube = {
+	mesh = 90373498490636,
+	look = "ForceField",
+	fill = 0.35,
+	paint = 95792612285332,
+	size = { 2.756, 2.6, 2.756 },
+	facing = 0,
+	statue = true,
+}
+
 -- The library's swimming fish: small skinned MeshParts in their own painted texture, worn by an aura's `swimmers`
 -- (Builder: each rides its orbit head first, its tail sweeping side to side).
 --
@@ -180,6 +232,10 @@ Models.fish = {
 -- An aura's `dome`: an open half sphere of radius 1 (a 2 x 1 x 2 MeshPart, its rim at the bottom), UVs wrapping the
 -- picture twice round it and from the rim up to the top (tools/blender/dome.py, models/dome.glb, Studio Import 3D)
 Models.Dome = 117271829701905
+
+-- An aura's `dome` with model "Tornado": an open twisted funnel, foot at the bottom, 2 studs high, top radius 1 (a
+-- 2 x 2 x 2 MeshPart), an inner wall too, UVs wound up it (tools/blender/tornado.py, models/tornado.glb, Import 3D)
+Models.Tornado = 75965121013498
 
 -- A model an effect brings with it (a packaged effect: `assets.models`): kept only when the key is new.
 function Models.add(key, entry)

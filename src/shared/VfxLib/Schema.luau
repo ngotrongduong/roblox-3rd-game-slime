@@ -57,7 +57,16 @@
 --             Textures: the streaks the ForceField draws over it, its light edges; none: a plain bubble), transparency?
 --             (0..1, 0), fill? (0..1: the transparency of a Neon copy under it, a faint body, lesson 152) }: a real 3D half sphere (Models.Dome, made in Blender) over the host, its rim on the floor at the
 --             host's feet, in ForceField: see-through, lit at its edges, the picture's streaks flowing over it by
---             themselves (CGHOW's magic dome, lesson 314); hidden when Lod turns the aura to a ribbon or off
+--             themselves (CGHOW's magic dome, lesson 314); hidden when Lod turns the aura to a ribbon or off.
+--             model? = "Tornado": a twisted funnel (Models.Tornado, Blender) in its place, its foot at the feet, 2 x
+--             radius high; spin? (turns a second about the host's up axis, - the other way): the shell spins;
+--             paint? (a key of Textures: a COLOURED picture painted by the mesh's UVs on a Neon copy under it, its
+--             colours kept: an aurora curtain, a tornado's skin; paintTransparency? 0..1, 0), lesson 322
+--   echo      (a mid or heavy character's trail) { every (seconds), life (seconds), max (ghosts at once), color = { r, g, b },
+--             transparency? (0..0.9, 0.2: a new ghost's) }: while the runner runs, every `every` seconds a frozen ghost of
+--             it in its pose of the moment is left where it was (a copy of each of its seen parts, anchored, ForceField in
+--             the colour), fading out over `life` (CGHOW's ghost trails, 2026-11-15); none standing still, far off or on
+--             Low quality. Budget counts each ghost as `echoes` and a body's front as its area
 --   highlight (one-shot) { fill = role, outline = role, fillTransparency, outlineTransparency, seconds, max }: an outline
 --             on the instances the caller names (`opts.adornees`), fading out
 --   projectile (one-shot) a PIECE that flies from `opts.from` to the spot first: { texture, size, seconds, arc, ... };
@@ -66,7 +75,9 @@
 --             alpha, taper }: a ribbon behind it; wait = seconds before it leaves (the impact is then wait + seconds);
 --             ease = "in": slow, then fast (a fall); head = { texture, length, width, colors | color | role, glow,
 --             zOffset }: the picture on a Beam lying along the flight (its top row behind, its bottom at the front: a
---             dragon's head, a meteor), in place of the particle; path = { { f, x, y, z }, ... }: with a head or a body,
+--             dragon's head, a meteor), in place of the particle; model = { model = statue key, size, color,
+--             transparency }: a 3D STATUE (Models.list, `statue = true`) riding the arc, its front (-z) along the way it
+--             flies, fading in at the throw and out at the landing (keys over the flight), in place of the particle; path = { { f, x, y, z }, ... }: with a head or a body,
 --             it flies a curve through these points (studs in the `along` frame at f of the way from the caster to the
 --             spot), even with no `opts.from`; body = { texture | textures, length, width, taper, colors | color |
 --             role, glow, zOffset } (with a path): a serpent's body, a curved Beam laid on the path just flown behind
@@ -77,6 +88,11 @@
 --             `cast = true` is timed from the cast, not the impact (a warning circle)
 --   beams     (one-shot) ribbons of a picture between two points of the play's frame, each a BEAM (below): a crescent
 --             slash, an energy beam, a crackling bolt
+--   bodies    (one-shot, up to 2) a STATUE: a still 3D model (Models.list, `statue = true`) standing in the play's frame, each
+--             { model = key, at = { x, y, z } (its feet, studs at refHeight), turn = degrees about up (on the model's own
+--             facing), size = factor (default 1), delay, life (seconds), emerge = seconds it takes to rise out of the
+--             ground (0: no rise), transparency = keys over its life (0 solid, 1 gone; default fades in and out),
+--             color = { r, g, b } (a hologram statue only: the model has a `look` in Models) }
 --   follow    (one-shot) true: played on a host, it moves and turns with it (a charge, a transformation)
 --   duration  (one-shot) seconds until everything is cleaned up (default: the last particle's end)
 --   markers   (one-shot) { name = seconds }: moments a game may sync to ("flash": show the hatched body); (a lasting
@@ -407,8 +423,8 @@ function Schema.serpentProblem(fields, serpent, what)
 		{ "period", 1, 30 },
 	}
 	if serpent.model ~= nil then
-		if Models.list[serpent.model] == nil then
-			return `{what}: model is a key of Models`
+		if Models.list[serpent.model] == nil or Models.list[serpent.model].statue then
+			return `{what}: model is a key of Models (not a statue)`
 		end
 		for _, field in { "texture", "length", "width", "taper", "side", "glow" } do
 			if serpent[field] ~= nil then
@@ -1300,6 +1316,28 @@ function Schema.problem(effect, variantOf)
 				end
 			end
 		end
+		if fields.echo ~= nil then
+			local echo = fields.echo
+			if fields.kind ~= "trail" or fields.host ~= "character" or fields.tier == "cheap" then
+				return `{label}: only a mid or heavy character's trail leaves echoes`
+			end
+			if type(echo.every) ~= "number" or echo.every < 0.2 or echo.every > 3 then
+				return `{label}: echo every is 0.2 to 3 seconds`
+			end
+			if type(echo.life) ~= "number" or echo.life < 0.3 or echo.life > 3 then
+				return `{label}: echo life is 0.3 to 3 seconds`
+			end
+			if type(echo.max) ~= "number" or echo.max < 1 or echo.max ~= math.floor(echo.max) then
+				return `{label}: echo max is a whole number of ghosts`
+			end
+			if type(echo.color) ~= "table" or #echo.color ~= 3 or type(echo.color[1]) ~= "number" then
+				return `{label}: echo color is \{ r, g, b \}`
+			end
+			local start = echo.transparency
+			if start ~= nil and (type(start) ~= "number" or start < 0 or start > 0.9) then
+				return `{label}: echo transparency is 0 to 0.9`
+			end
+		end
 		if fields.dome ~= nil then
 			local dome = fields.dome
 			if fields.kind ~= "aura" or (fields.tier ~= "mid" and fields.tier ~= "heavy") then
@@ -1320,6 +1358,19 @@ function Schema.problem(effect, variantOf)
 				if alpha ~= nil and (type(alpha) ~= "number" or alpha < 0 or alpha > 1) then
 					return `{label}: dome {field} is 0 to 1`
 				end
+			end
+			if dome.paint ~= nil and Textures.url(dome.paint) == "" then
+				return `{label}: dome paint {dome.paint} is not a picture of Textures`
+			end
+			local paintAlpha = dome.paintTransparency
+			if paintAlpha ~= nil and (type(paintAlpha) ~= "number" or paintAlpha < 0 or paintAlpha > 1) then
+				return `{label}: dome paintTransparency is 0 to 1`
+			end
+			if dome.model ~= nil and dome.model ~= "Dome" and dome.model ~= "Tornado" then
+				return `{label}: dome model is Dome or Tornado`
+			end
+			if dome.spin ~= nil and (type(dome.spin) ~= "number" or math.abs(dome.spin) > 3) then
+				return `{label}: dome spin is -3 to 3 turns a second`
 			end
 		end
 		for index, serpent in fields.serpents or {} do
@@ -1417,7 +1468,22 @@ function Schema.problem(effect, variantOf)
 		if fields.projectile then
 			local projectile = fields.projectile
 			local problem = nil
-			if (projectile.head == nil and projectile.body == nil) or projectile.texture ~= nil then
+			if projectile.model ~= nil then
+				local flier = projectile.model
+				local statue = if type(flier) == "table" then Models.list[flier.model] else nil
+				if statue == nil or not statue.statue then
+					return `{label} projectile: model is a table with a statue key of Models`
+				end
+				if flier.size ~= nil and (type(flier.size) ~= "number" or flier.size < 0.3 or flier.size > 2) then
+					return `{label} projectile model: size is 0.3 to 2`
+				end
+				if flier.color ~= nil and (not statue.look or not isTriple(flier.color)) then
+					return `{label} projectile model: color is three numbers, on a hologram statue only`
+				end
+				if projectile.head ~= nil or projectile.body ~= nil or projectile.path ~= nil then
+					return `{label} projectile: a model flies its arc alone (no head, body or path)`
+				end
+			elseif (projectile.head == nil and projectile.body == nil) or projectile.texture ~= nil then
 				problem = textureProblem(projectile.texture, `{label} projectile`)
 				if problem then
 					return problem
@@ -1566,6 +1632,72 @@ function Schema.problem(effect, variantOf)
 					end
 					if landing == nil or landing.onLand ~= true then
 						return `{label} beam {index}: names no piece called {name} with onLand = true`
+					end
+				end
+			end
+		end
+		if fields.bodies ~= nil then
+			if not oneShot then
+				return `{label}: only a one-shot has bodies`
+			end
+			if #fields.bodies > 2 then
+				return `{label}: at most 2 bodies`
+			end
+			for index, body in fields.bodies do
+				local what = `{label} body {index}`
+				local statue = Models.list[body.model]
+				if statue == nil or not statue.statue then
+					return `{what}: model is a statue key of Models`
+				end
+				if type(body.at) ~= "table" or #body.at ~= 3 then
+					return `{what}: at is three numbers: x, y, z`
+				end
+				for _, number in { body.at[1], body.at[2], body.at[3] } do
+					if type(number) ~= "number" then
+						return `{what}: at is three numbers`
+					end
+				end
+				if type(body.life) ~= "number" or body.life <= 0 or body.life > 12 then
+					return `{what}: life is over 0 up to 12 seconds`
+				end
+				if body.delay ~= nil and (type(body.delay) ~= "number" or body.delay < 0 or body.delay > 12) then
+					return `{what}: delay is 0 to 12 seconds`
+				end
+				if
+					body.emerge ~= nil
+					and (type(body.emerge) ~= "number" or body.emerge < 0 or body.emerge > body.life)
+				then
+					return `{what}: emerge is 0 up to its life, in seconds`
+				end
+				if body.size ~= nil and (type(body.size) ~= "number" or body.size < 0.3 or body.size > 2) then
+					return `{what}: size is 0.3 to 2`
+				end
+				if body.turn ~= nil and type(body.turn) ~= "number" then
+					return `{what}: turn is degrees`
+				end
+				if body.color ~= nil then
+					if not statue.look then
+						return `{what}: only a hologram statue (a look in Models) has a colour`
+					end
+					if type(body.color) ~= "table" or #body.color ~= 3 then
+						return `{what}: color is three numbers 0 to 255`
+					end
+					for _, number in { body.color[1], body.color[2], body.color[3] } do
+						if type(number) ~= "number" or number < 0 or number > 255 then
+							return `{what}: color is three numbers 0 to 255`
+						end
+					end
+				end
+				if body.transparency ~= nil then
+					local last = -1
+					for _, key in body.transparency do
+						if type(key) ~= "table" or type(key[1]) ~= "number" or type(key[2]) ~= "number" then
+							return `{what}: transparency is a list of keys, each a share of its life and a transparency`
+						end
+						if key[1] < last or key[1] < 0 or key[1] > 1 or key[2] < 0 or key[2] > 1 then
+							return `{what}: transparency keys run from 0 to 1 in order, each 0 to 1`
+						end
+						last = key[1]
 					end
 				end
 			end

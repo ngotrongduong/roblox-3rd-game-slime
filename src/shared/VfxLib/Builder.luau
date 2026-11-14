@@ -2063,18 +2063,19 @@ local function wearFish(handle, entry)
 	part.Parent = handle.folder
 end
 
--- An aura's DOME: the library's half sphere (Models.Dome) over the host in ForceField, its rim at the host's feet;
--- loaded once a game (it yields: run apart), cloned for each host.
-local domeTemplate = nil
+-- An aura's DOME: one of the library's shells (Models.Dome, Models.Tornado) over the host in ForceField, its foot at
+-- the host's feet; each loaded once a game (it yields: run apart), cloned for each host.
+local domeTemplates = {}
 
 local function wearDome(handle, dome)
-	if not domeTemplate then
-		local ok, part = pcall(Builder.engine.meshPart, Models.Dome)
+	local key = dome.model or "Dome"
+	if not domeTemplates[key] then
+		local ok, part = pcall(Builder.engine.meshPart, Models[key])
 		if not ok then
 			warn(`VfxLib: {handle.id} could not load its dome ({part})`)
 			return
 		end
-		part.Name = "Dome"
+		part.Name = key
 		part.Anchored = false
 		part.CanCollide = false
 		part.CanQuery = false
@@ -2082,37 +2083,57 @@ local function wearDome(handle, dome)
 		part.CastShadow = false
 		part.Massless = true
 		part.Material = Enum.Material.ForceField
-		domeTemplate = part
+		domeTemplates[key] = part
 	end
 	if handle.dead then
 		return
 	end
+	local template = domeTemplates[key]
+	-- (the meshes are made radius 1: the dome 2 x 1 x 2, the tornado 2 x 2 x 2)
 	local radius = dome.radius * handle.scale
 	local layers = { { dome.transparency or 0, "" } }
 	if dome.fill then
 		-- (a faint Neon copy under it: a body that still reads over a bright sky, lesson 152)
 		table.insert(layers, { dome.fill, "Neon" })
 	end
+	if dome.paint then
+		-- (a coloured picture painted on a Neon copy under it, by the mesh's UVs: an aurora, a tornado's skin)
+		table.insert(layers, { dome.paintTransparency or 0, "Paint" })
+	end
 	handle.domeParts = {}
 	for _, layer in layers do
-		local part = domeTemplate:Clone()
-		part.Size = Vector3.new(2 * radius, radius, 2 * radius)
+		local part = template:Clone()
+		part.Size = template.Size * radius
 		part.Color = Palette.color3(dome.color)
-		if layer[2] == "Neon" then
+		if layer[2] == "Paint" then
+			part.Material = Enum.Material.Neon
+			part.Color = Color3.new(1, 1, 1)
+			part.TextureID = Textures.url(dome.paint)
+			part.Size *= 0.99
+		elseif layer[2] == "Neon" then
 			part.Material = Enum.Material.Neon
 			part.Size *= 0.98
 		elseif dome.texture then
 			part.TextureID = Textures.url(dome.texture)
 		end
 		part.Transparency = if handle.domeHidden then 1 else layer[1]
-		part.CFrame = handle.carrier.CFrame * CFrame.new(0, (part.Size.Y - handle.size.Y) / 2, 0)
+		local offset = CFrame.new(0, (part.Size.Y - handle.size.Y) / 2, 0)
+		part.CFrame = handle.carrier.CFrame * offset
+		local spun = nil
 		if handle.carrier.Anchored then
 			part.Anchored = true
+		elseif dome.spin then
+			-- (a spinning shell rides a Weld whose C0 Builder.update turns)
+			spun = Instance.new("Weld")
+			spun.Part0 = handle.carrier
+			spun.Part1 = part
+			spun.C0 = offset
+			spun.Parent = part
 		else
 			weld(handle.carrier, part)
 		end
 		part.Parent = handle.folder
-		table.insert(handle.domeParts, { part, layer[1] })
+		table.insert(handle.domeParts, { part, layer[1], offset, spun })
 	end
 end
 
@@ -2348,6 +2369,81 @@ local function hostHeight(size, opts)
 	return opts.height or size.Y
 end
 
+-- A trail's ECHO (CGHOW's ghost trails, zTuzF25-B3I, 2026-11-15): a frozen ghost of the runner in its pose of the
+-- moment, left where it was: a copy of each of the host's seen parts, anchored, in ForceField and the echo's colour
+-- (see-through, lit at its edges, its own pictures dropped), in workspace's `VfxLib` folder, never under the host: a
+-- host moved by PivotTo takes every part under it along, and the ghosts would ride on the runner (seen 2026-11-15).
+local function leaveEcho(handle, echo, clock)
+	local host = handle.host
+	local ghost = Instance.new("Folder")
+	ghost.Name = "VfxLib_Echo"
+	ghost:SetAttribute("VfxId", handle.effect.id)
+	local parts = {}
+	local color = Palette.color3(echo.color)
+	local start = echo.transparency or 0.2
+	for _, item in host:GetDescendants() do
+		if item:IsA("BasePart") and item.Transparency < 0.95 and not isEffectPart(item, host) then
+			local ok, copy = pcall(item.Clone, item)
+			if ok and copy then
+				for _, child in copy:GetChildren() do
+					-- (a hat's shape is its SpecialMesh: kept, its picture dropped; joints, welds and the rest go)
+					if child:IsA("SpecialMesh") then
+						child.TextureId = ""
+					else
+						child:Destroy()
+					end
+				end
+				copy.Anchored = true
+				copy.CanCollide = false
+				copy.CanQuery = false
+				copy.CanTouch = false
+				copy.CastShadow = false
+				copy.Massless = true
+				copy.CFrame = item.CFrame
+				copy.Material = Enum.Material.ForceField
+				copy.Color = color
+				if copy:IsA("MeshPart") then
+					copy.TextureID = ""
+				end
+				copy.Transparency = start
+				copy.Parent = ghost
+				table.insert(parts, copy)
+			end
+		end
+	end
+	local holder = workspace:FindFirstChild("VfxLib")
+	if not holder then
+		holder = Instance.new("Folder")
+		holder.Name = "VfxLib"
+		holder.Parent = workspace
+	end
+	ghost.Parent = holder
+	table.insert(handle.echoes, { folder = ghost, parts = parts, born = clock })
+end
+
+-- The echoes at `clock`: a new ghost every `every` seconds while the host runs (none standing still, as his particle
+-- count driven by the speed), each fading out over its `life` and then gone; `max` at once at most.
+local function stepEchoes(handle, echo, clock, moving, on)
+	local start = echo.transparency or 0.2
+	for index = #handle.echoes, 1, -1 do
+		local entry = handle.echoes[index]
+		local p = (clock - entry.born) / echo.life
+		if p >= 1 or p < 0 or not on then
+			entry.folder:Destroy()
+			table.remove(handle.echoes, index)
+		else
+			local alpha = start + (1 - start) * p * p
+			for _, part in entry.parts do
+				part.Transparency = alpha
+			end
+		end
+	end
+	if on and moving >= 0.5 and clock - (handle.echoAt or -math.huge) >= echo.every and #handle.echoes < echo.max then
+		handle.echoAt = clock
+		leaveEcho(handle, echo, clock)
+	end
+end
+
 -- A LASTING effect on `host`. opts = { palette, variant, grade (a key of the effect's `grades`), height (studs: the host's
 -- own, when its box says less), parent (where the folder goes, the host by default) }. nil when the host has no part.
 function Builder.attach(effect, host, opts)
@@ -2396,6 +2492,7 @@ function Builder.attach(effect, host, opts)
 		partsLeft = kindBudget.parts or 0,
 		items = {},
 		bands = {},
+		echoes = {},
 		light = nil,
 		mode = "full",
 		shiftAt = -1,
@@ -2599,6 +2696,12 @@ function Builder.detach(handle)
 	if handle.folder then
 		handle.folder:Destroy()
 	end
+	for _, entry in handle.echoes or {} do
+		entry.folder:Destroy()
+	end
+	if handle.echoes then
+		table.clear(handle.echoes)
+	end
 end
 
 -- How long what a lasting effect has out lingers once nothing new is born: its longest ribbon or particle life (a
@@ -2719,12 +2822,30 @@ function Builder.update(handle, info)
 			handle.glaze.Enabled = on
 		end
 	end
+	local echo = effect.echo
+	if echo and info.clock and typeof(handle.host) == "Instance" then
+		-- (ghosts of the runner: near only, and none on Low quality, a ghost costs a draw of each of its parts)
+		local on = (mode == "full" or mode == "half") and not handle.fading and (keep or Quality.secondary())
+		stepEchoes(handle, echo, info.clock, moving, on)
+	end
 	if handle.effect.dome then
 		local hidden = not (mode == "full" or mode == "half")
 		if handle.domeHidden ~= hidden then
 			handle.domeHidden = hidden
 			for _, entry in handle.domeParts or {} do
 				entry[1].Transparency = if hidden then 1 else entry[2]
+			end
+		end
+		local spin = handle.effect.dome.spin
+		if spin and info.clock and not hidden then
+			-- (a spinning shell, a tornado, turns about the host's up axis on every frame)
+			local turn = CFrame.Angles(0, -info.clock * spin * 2 * math.pi, 0)
+			for _, entry in handle.domeParts or {} do
+				if entry[4] then
+					entry[4].C0 = entry[3] * turn
+				elseif entry[1].Anchored then
+					entry[1].CFrame = handle.carrier.CFrame * entry[3] * turn
+				end
 			end
 		end
 	end
@@ -2931,6 +3052,192 @@ local function axisFrame(position, direction, normal)
 	local up = if math.abs(x.Y) > 0.95 then Vector3.new(1, 0, 0) else Vector3.new(0, 1, 0)
 	local y = (up - x * up:Dot(x)).Unit
 	return CFrame.fromMatrix(position, x, y)
+end
+
+-- A BODY of a one-shot: a statue (Models.list, `statue = true`) standing in the play's frame, rising out of the ground
+-- and fading as its keys say. The mesh loads once a game (it yields: run apart, and a body that loads late joins at the
+-- one-shot's own time); each play clones it.
+local statueTemplates = {}
+
+local function statueTemplate(live, key)
+	local statue = Models.list[key]
+	local template = statueTemplates[key]
+	if not template then
+		local ok, part = pcall(Builder.engine.meshPart, statue.mesh)
+		if not ok then
+			warn(`VfxLib: {live.id} could not load its body {key} ({part})`)
+			return nil
+		end
+		part.Name = "Body_" .. key
+		part.Anchored = true
+		part.CanCollide = false
+		part.CanQuery = false
+		part.CanTouch = false
+		part.CastShadow = false
+		if statue.look then
+			-- (a hologram: a plain colour in the look's material, no picture: lesson 314)
+			part.Material = (Enum.Material :: any)[statue.look]
+		else
+			part.TextureID = `rbxassetid://{statue.texture}`
+			part.Material = Enum.Material.SmoothPlastic
+		end
+		part.Transparency = 1
+		statueTemplates[key] = part
+		template = part
+	end
+	return template
+end
+
+-- Loads the statues the effects wear ahead of their first play (a mesh loads in a moment; a leap lasts under a second,
+-- and the first wolf of a game would arrive without its body).
+function Builder.warmStatues(effects)
+	local wanted = {}
+	for _, effect in effects do
+		for _, body in effect.bodies or {} do
+			wanted[body.model] = true
+		end
+		local flier = effect.projectile and effect.projectile.model
+		if flier then
+			wanted[flier.model] = true
+		end
+	end
+	for key in wanted do
+		if Models.list[key] and statueTemplates[key] == nil then
+			task.spawn(statueTemplate, { id = "setup" }, key)
+		end
+	end
+end
+
+-- A statue's parts for one play: the body (cloned, sized, in its colour) and, for a hologram, its faint copy under it.
+local function statueParts(template, statue, factor, color)
+	local part = template:Clone()
+	part.Size = Vector3.new(statue.size[1], statue.size[2], statue.size[3]) * factor
+	if statue.look and color then
+		part.Color = Palette.color3(color)
+	end
+	local parts = { part }
+	local fill = nil
+	if statue.look and statue.fill then
+		-- (a faint solid copy under it: a see-through hologram alone fades out over a bright floor, lesson 51)
+		local copy = part:Clone()
+		copy.Name = part.Name .. "Fill"
+		copy.Material = Enum.Material.Neon
+		if statue.paint then
+			-- (a coloured picture painted by the mesh's UVs on the copy, its colours kept: a spawn's wall of light
+			-- bright at its foot and gone at its top, as an aura dome's `paint`, lesson 322)
+			copy.TextureID = `rbxassetid://{statue.paint}`
+		end
+		fill = { part = copy, base = statue.fill }
+		table.insert(parts, copy)
+	end
+	return part, fill, parts
+end
+
+local function wearBody(live, body, ctx)
+	local statue = Models.list[body.model]
+	local template = statueTemplate(live, body.model)
+	if not template or live.dead then
+		return
+	end
+	local part, fill, parts = statueParts(template, statue, (body.size or 1) * ctx.scale, body.color)
+	-- (the part's middle, standing: its feet at `at`)
+	local standing = ctx.cframe
+		* CFrame.new(vector(body.at, ctx.scale))
+		* CFrame.Angles(0, math.rad((body.turn or 0) + statue.facing), 0)
+		* CFrame.new(0, part.Size.Y / 2, 0)
+	local entry = {
+		part = part,
+		data = body,
+		feet = standing,
+		height = part.Size.Y,
+		from = ctx.delay + (body.delay or 0),
+		life = body.life,
+		alpha = 1,
+		fill = fill,
+	}
+	for _, each in parts do
+		each.CFrame = if live.follow then standing else standing * CFrame.new(0, -entry.height, 0) -- (not yet up)
+		each.Parent = live.folder
+		if live.follow then
+			each.Anchored = false
+			weld(live.root, each)
+		end
+	end
+	table.insert(live.bodies, entry)
+end
+
+-- A body at the one-shot's time `t`: risen out of the ground over its `emerge`, its transparency from its keys over
+-- its life (fading in and out when it has none), faded out quickly once the one-shot is cancelled.
+local function stepBody(live, entry, t)
+	local data = entry.data
+	local p = (t - entry.from) / entry.life
+	local on = p >= 0 and p < 1
+	if live.cancelled and (entry.from > live.cancelled or t - live.cancelled >= live.fade) then
+		on = false
+	end
+	local alpha = 1
+	if on then
+		alpha = if data.transparency
+			then Budget.valueAt(data.transparency, p)
+			else math.max(0, 1 - 4 * math.min(p, 1 - p))
+		if live.cancelled then
+			alpha = 1 - (1 - alpha) * math.max(0, 1 - (t - live.cancelled) / live.fade)
+		end
+		local rise = if data.emerge and data.emerge > 0 then math.clamp((t - entry.from) / data.emerge, 0, 1) else 1
+		local out = 1 - (1 - rise) * (1 - rise)
+		if not live.follow then
+			local risen = entry.feet * CFrame.new(0, -entry.height * (1 - out), 0)
+			entry.part.CFrame = risen
+			if entry.fill then
+				entry.fill.part.CFrame = risen
+			end
+		end
+	end
+	if math.abs(alpha - entry.alpha) > 0.005 then
+		entry.alpha = alpha
+		entry.part.Transparency = alpha
+		if entry.fill then
+			entry.fill.part.Transparency = 1 - (1 - entry.fill.base) * (1 - alpha)
+		end
+	end
+end
+
+-- A projectile's 3D BODY (`projectile.model`): a statue riding the flight, its middle on the flying part, its front
+-- (the model's -z) along the way it flies. It shows from the throw to the landing, fading in and out.
+local function wearFlightModel(live, spec, ctx)
+	local statue = Models.list[spec.model]
+	local template = statueTemplate(live, spec.model)
+	if not template or live.dead or live.flight == nil then
+		return
+	end
+	local part, fill, parts = statueParts(template, statue, (spec.size or 1) * ctx.scale, spec.color)
+	for _, each in parts do
+		each.Parent = live.folder
+	end
+	live.flight.model = { part = part, fill = fill, spec = spec, alpha = 1 }
+end
+
+-- The flying body at flight share `p` (nil: not flying): its pose from the flying part, its transparency from its keys
+-- (it fades in at the throw and out at the landing when it has none).
+local function stepFlightModel(flight, p)
+	local entry = flight.model
+	local alpha = 1
+	if p then
+		alpha = if entry.spec.transparency
+			then Budget.valueAt(entry.spec.transparency, p)
+			else math.max(0, 1 - p * 8, 1 - (1 - p) * 6)
+		entry.part.CFrame = flight.part.CFrame
+		if entry.fill then
+			entry.fill.part.CFrame = flight.part.CFrame
+		end
+	end
+	if math.abs(alpha - entry.alpha) > 0.005 then
+		entry.alpha = alpha
+		entry.part.Transparency = alpha
+		if entry.fill then
+			entry.fill.part.Transparency = 1 - (1 - entry.fill.base) * (1 - alpha)
+		end
+	end
 end
 
 -- A BEAM of a one-shot: a ribbon of the picture between two points of the play's frame (a crescent slash bent by its
@@ -3352,6 +3659,9 @@ function Builder.play(effect, at, opts)
 		markers = table.clone(fields.markers or {}),
 		emitters = {},
 		beams = {},
+		bodies = {},
+		follow = follow,
+		root = root,
 		spins = {},
 		landers = {},
 		riding = {},
@@ -3450,7 +3760,7 @@ function Builder.play(effect, at, opts)
 		end
 		local start = newPart("Shot", Vector3.new(0.2, 0.2, 0.2), CFrame.lookAt(origin, origin + v0), folder)
 		start.Anchored = true
-		if not (projectile.head or projectile.body) then
+		if not (projectile.head or projectile.body or projectile.model) then
 			local piece = table.clone(projectile)
 			piece.riders = nil
 			piece.trail = nil
@@ -3473,7 +3783,7 @@ function Builder.play(effect, at, opts)
 		end
 		delay = wait + seconds
 		live.markers.impact = delay
-		if projectile.riders or projectile.trail or projectile.head or projectile.body then
+		if projectile.riders or projectile.trail or projectile.head or projectile.body or projectile.model then
 			-- (what rides the flight: a part moved each step along the same arc as the picture, turned along its path;
 			-- its riders shed flames and sparks into the air behind it, its trail draws a ribbon)
 			local flight = newPart("Flight", Vector3.new(0.2, 0.2, 0.2), start.CFrame, folder)
@@ -3489,6 +3799,10 @@ function Builder.play(effect, at, opts)
 				path = path and pathOf(path),
 				done = false,
 			}
+			if projectile.model then
+				-- (a 3D body on the flight: it loads apart and joins the flight when it has)
+				task.spawn(wearFlightModel, live, projectile.model, { scale = scale })
+			end
 			local head = projectile.head
 			local back = 0
 			if head then
@@ -3738,6 +4052,14 @@ function Builder.play(effect, at, opts)
 		end
 	end
 
+	if (kindBudget.beams or 0) > 0 then
+		for _, body in fields.bodies or {} do
+			-- (the mesh loads apart: it yields)
+			task.spawn(wearBody, live, body, { scale = scale, delay = delay, cframe = cframe })
+			last = math.max(last, delay + (body.delay or 0) + body.life)
+		end
+	end
+
 	local light = fields.light
 	if light then
 		local point = Instance.new("PointLight")
@@ -3831,6 +4153,9 @@ function Builder.step(live, dt)
 			flight.part.CFrame = CFrame.lookAt(position, position + velocity)
 		end
 		local flying = t >= flight.wait and not live.cancelled
+		if flight.model then
+			stepFlightModel(flight, if flying then s / flight.seconds else nil)
+		end
 		if flight.head and flight.head.Enabled ~= flying then
 			flight.head.Enabled = flying
 		end
@@ -3866,6 +4191,9 @@ function Builder.step(live, dt)
 		end
 		if t >= flight.wait + flight.seconds or live.cancelled then
 			flight.done = true
+			if flight.model then
+				stepFlightModel(flight, nil)
+			end
 			if flight.trail then
 				flight.trail.Enabled = false
 			end
@@ -3901,6 +4229,9 @@ function Builder.step(live, dt)
 	end
 	for _, entry in live.beams do
 		stepBeam(live, entry, t)
+	end
+	for _, entry in live.bodies do
+		stepBody(live, entry, t)
 	end
 	for _, rider in live.riding do
 		-- (a piece riding a rolling beam: on its middle, turned as it; left where it is when its beam was not made)
@@ -3973,6 +4304,7 @@ function Builder.measure(handle)
 		parts = 0,
 		cards = #handle.cards,
 		spirals = 0,
+		echoes = #handle.echoes,
 	}
 	for _, entry in handle.wings do
 		measured.parts += #entry.parts

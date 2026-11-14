@@ -380,6 +380,43 @@ Textures.Images = {
 	cg_explosion_flip = { id = 124460687506440, from = SKILL_ART }, -- a flash swells to a rolling fireball, cools to red, smoke thins away (untinted)
 	cg_smoke_wisp_flip = { id = 123326402301210, from = SKILL_ART }, -- a grey wisp of smoke rises, curls into tendrils, dissolves (tinted)
 	cg_real_flame_flip = { id = 107156124653527, from = SKILL_ART }, -- a realistic flame tongue buds, licks up, tears off, dies to an ember (untinted)
+	-- CGHOW wave 3 (2026-11-14). One picture, on black, added:
+	cg_spin_ring_outer = { id = 92532802251718, black = true, from = SKILL_ART }, -- two rings of broken swirling light arcs, an empty middle
+	cg_spin_ring_inner = { id = 123611484069968, black = true, from = SKILL_ART }, -- a tight swirling spiral of light strokes round a bright core
+	cg_muzzle_front = { id = 87248594571704, black = true, from = SKILL_ART }, -- a muzzle flash down the barrel: a hot core, six smudged flame petals
+	cg_ground_crack = { id = 126526309879251, black = true, from = SKILL_ART }, -- a shattered crater from above, glowing cracks branching out (1024)
+	cg_swirl_ring = { id = 98555578807562, black = true, from = SKILL_ART }, -- four comet-like arcs of light swirling round an empty middle
+	-- (a Trail's and a Beam's strips, rows along the length, on black, added)
+	cg_trail_comet = { id = 74280824438698, black = true, from = SKILL_ART }, -- a bright orb at the top, a thin wavy tail thinning to wisps below
+	cg_arrow_light = { id = 112050304807425, black = true, from = SKILL_ART }, -- an arrow of light: fletching flares at the top, the point at the bottom
+	cg_muzzle_side = { id = 84695785351134, black = true, from = SKILL_ART }, -- a muzzle blast from the side: the hot muzzle on top, jagged tongues below
+	cg_fire_stream = { id = 80492316667178, black = true, from = SKILL_ART }, -- a rope of fire: a white-hot core wrapped in twisting orange tongues (colour)
+	-- (seamless tiles a ForceField shell draws: tools/blender's dome and tornado; greyscale, tinted by the shell)
+	cg_wind_streaks = { id = 124560037718248, from = SKILL_ART }, -- long thin wavy wind streaks running diagonally
+	cg_aurora_grey = { id = 134245248769572, from = SKILL_ART }, -- the aurora curtain in grey
+	-- (coloured tiles painted on a shell by its UVs, `dome.paint`: their colours kept)
+	cg_aurora = { id = 133289864148080, from = SKILL_ART }, -- an aurora curtain: green at the foot through cyan and blue to violet, black above
+	cg_tornado_paint = { id = 137827484451535, from = SKILL_ART }, -- the wind streaks graded dark crimson to red to hot white (a tornado's skin)
+	-- ChatGPT clips, 4 x 4 OneShot (clip_frames.py), keyed off magenta, drawn normal, untinted:
+	cg_erode_orb_flip = { id = 96055929283917, from = SKILL_ART }, -- a glossy black sphere erodes in holes with glowing red-orange edges
+	cg_toon_blob_flip = { id = 107192260038988, from = SKILL_ART }, -- a toon fireball swells, cools to red and black, its red then black erode away
+	cg_toon_scorch_flip = { id = 125796402096756, from = SKILL_ART }, -- a black scorch from above, its glowing edge eating in to the middle
+	-- CGHOW wave 4 (2026-11-15). One picture, on black, added (white, tinted):
+	cg_spawn_ring = { id = 134276966437639, black = true, from = SKILL_ART }, -- a teleporter pad from above: a thick notched ring, a thin ring inside
+	cg_wind_disc = { id = 101249568925095, black = true, from = SKILL_ART }, -- a whirlwind from above: broken rings and curved swirl streaks, a faint middle
+	cg_laser_arcs = { id = 123210978440566, black = true, from = SKILL_ART }, -- a thin full circle round three broken arcs and a hot dot
+	cg_electric_ring = { id = 82125335542501, black = true, from = SKILL_ART }, -- a ring of crackling lightning, small forks in and out
+	-- (on black, in colour, drawn added untinted)
+	cg_burn_ring = { id = 135925558397749, black = true, from = SKILL_ART }, -- a thin ring of fire: a white-yellow line, orange and red flames, embers
+	cg_lava_disc = { id = 85927724507003, black = true, from = SKILL_ART }, -- a lava whirlpool from above: a white-hot middle, orange spirals, a red rim, cracks
+	-- (coloured tiles painted on a shell by its UVs: the image's bottom at the shell's foot)
+	cg_fire_funnel_paint = { id = 82129379485685, from = SKILL_ART }, -- wavy fire streaks graded white-yellow (bottom) to orange to dark red (top)
+	cg_spawn_wall_paint = { id = 95792612285332, from = SKILL_ART }, -- a curtain of green light streaks, white at the bottom, black at the top
+	-- (a wing's picture, keyed off magenta, greyscale: prepare_wing.py --key; its root at the top, tinted lime)
+	cg_tentacle = { id = 135603661059452, from = SKILL_ART }, -- a glossy tapering tentacle, bright rims, a darker middle, its tip curled
+	-- ChatGPT clips, 4 x 4 OneShot (clip_frames.py), keyed off magenta, drawn normal, untinted:
+	cg_lava_blob_flip = { id = 99742102682663, from = SKILL_ART }, -- a faceted lava lump swells yellow, cools red with cracks, turns brown, erodes to bits
+	cg_toon_splat_flip = { id = 107278986087130, from = SKILL_ART }, -- a toon splat from above bursts yellow, cools red, turns a black scorch, erodes
 }
 
 -- The pictures of the packs that the baker met (tools/bake.luau writes them here: `lune run tools/bake.luau`). Each is

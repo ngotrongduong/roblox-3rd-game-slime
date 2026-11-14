@@ -103,6 +103,7 @@ function VfxLib.setup(options)
 	end
 	if folder then
 		registerFolder(folder)
+		Builder.warmStatues(VfxLib.effects)
 	end
 	if not ready then
 		Quality.onChange(function()

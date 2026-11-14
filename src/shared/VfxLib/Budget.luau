@@ -131,6 +131,7 @@ Budget.Tiers = {
 			parts = 0,
 			cards = 1,
 			spirals = 0,
+			echoes = 0,
 		},
 		mid = {
 			emitters = 8,
@@ -142,6 +143,8 @@ Budget.Tiers = {
 			parts = 8,
 			cards = 2,
 			spirals = 24,
+			-- (`echoes`: a trail's ghosts of the runner at once, each a copy of its parts: a character's 15 or so)
+			echoes = 4,
 		},
 		heavy = {
 			emitters = 30,
@@ -153,6 +156,7 @@ Budget.Tiers = {
 			parts = 16,
 			cards = 2,
 			spirals = 32,
+			echoes = 6,
 		},
 	},
 	oneShot = {
@@ -419,6 +423,7 @@ function Budget.measure(effect, variantOf)
 			parts = 0,
 			cards = 0,
 			spirals = 0,
+			echoes = 0,
 		}
 		local specs = {}
 		-- (a piece born where falling beams land: its count each time one lands)
@@ -460,6 +465,7 @@ function Budget.measure(effect, variantOf)
 		end
 		local head = fields.projectile and fields.projectile.head
 		local body = fields.projectile and fields.projectile.body
+		local flier = fields.projectile and fields.projectile.model
 		local slices = if body then #(body.textures or { body.texture }) else 0
 		if head then
 			-- (a head is a beam lying along the flight: its picture's area, once; counted with the beams below)
@@ -469,11 +475,18 @@ function Budget.measure(effect, variantOf)
 			-- (a serpent's body: curved beams, one a slice, its length times its width in all)
 			total.burstArea += body.length * body.width
 		end
-		if fields.projectile and not head and not body then
+		if fields.projectile and not head and not body and not flier then
 			total.emitters += 1
 			total.count += 1
 		end
 		total.beams = (if head then 1 else 0) + slices
+		if flier then
+			-- (a flying statue: one MeshPart, a beam; its front face's area, and its faint copy under it)
+			local statue = Models.list[flier.model]
+			local layers = if statue.look and statue.fill then 2 else 1
+			total.beams += 1
+			total.burstArea += layers * statue.size[1] * statue.size[2] * (flier.size or 1) ^ 2
+		end
 		for _, beam in fields.beams or {} do
 			-- (a beam paints its length times its width at its widest, once: added to the burst's area)
 			total.beams += 1
@@ -487,6 +500,13 @@ function Budget.measure(effect, variantOf)
 				-- (a striking beam's ribbon: its width along the flight it draws in its life, as a projectile's)
 				total.burstArea += streak.width * 20 * streak.life
 			end
+		end
+		for _, standing in fields.bodies or {} do
+			-- (a statue: one MeshPart, counted as a beam; its front face's area seen from the camera, once)
+			local statue = Models.list[standing.model]
+			total.beams += 1
+			local layers = if statue.look and statue.fill then 2 else 1 -- (a hologram's faint copy under it)
+			total.burstArea += layers * statue.size[1] * statue.size[2] * (standing.size or 1) ^ 2
 		end
 		local band = fields.projectile and fields.projectile.trail
 		if band then
@@ -539,9 +559,17 @@ function Budget.measure(effect, variantOf)
 		end
 		if fields.dome then
 			-- (a dome: one MeshPart, about its circle's area seen from the gameplay camera; its fill another)
-			local layers = if fields.dome.fill then 2 else 1
+			local layers = 1 + (if fields.dome.fill then 1 else 0) + (if fields.dome.paint then 1 else 0)
 			total.parts += layers
-			total.area += layers * math.pi * fields.dome.radius ^ 2
+			-- (a tornado: its side, a funnel 2 radii high, about 0.8 of its 2r x 2r box)
+			local shape = if fields.dome.model == "Tornado" then 3.2 else math.pi
+			total.area += layers * shape * fields.dome.radius ^ 2
+		end
+		if fields.echo then
+			-- (a ghost of the runner: a copy of each of its parts, about a body's front: its height by 0.4 of it)
+			local height = fields.refHeight or 5
+			total.echoes = fields.echo.max
+			total.area += fields.echo.max * 0.4 * height * height
 		end
 		total.bands = #(fields.bands or {})
 		total.lights = if fields.light then 1 else 0

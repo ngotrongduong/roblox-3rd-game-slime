@@ -1,5 +1,15 @@
 # Status
 
+## 2026-11-15 — VfxLib d5bfc24: Bulwark's spirit knight is the owner's 3D knight as a hologram
+
+The game's VfxLib copy taken up to the library's main (`import.ps1 --update`, same 130 effects): the runtime learnt
+one-shot 3D `bodies`, and `skill.spirit_guardian` (Bulwark's knight) is now the owner's own 3D knight drawn as a
+see-through ghost. The weapon impacts by tier and the class skill pieces were already in the game since 60b30ec.
+**Proved:** CHECK OK (797 passed), TYPES OK (`src/shared/VfxLib`); MapWork play: the knight played on meadow grass
+and on snow with no VfxLib error in either log. **Seen:** on grass it reads as a pale gold ghost with its shield;
+on snow, pale gold on white, it is hard to pick out, and from a far camera it melts into the glow. Not tried in a
+real fight or on a phone.
+
 ## 2026-11-14 — the Heart redesigned (the central area)
 
 **What it is** (the owner: "the central area is designed too poorly, redesign it"; then two notes while it was built:
