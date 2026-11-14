@@ -48,6 +48,7 @@ local reasons: { [string]: string } = {
 	NOT_WAITING = "Already fighting.",
 	OUT = "Out fighting.",
 	TEAM_OUT = "That team is out.",
+	EXPLORING = "A fighter is out exploring",
 	IN_TEAM = "In another team.",
 	NO_MEMBERS = "Nobody can go.",
 	BAD_TEAM = "No such team.",

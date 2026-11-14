@@ -98,6 +98,15 @@ local function envOf(player: Player, social: boolean?): VillageRequests.Env
 		teamOut = function(team: number): boolean
 			return ZombieFights.teamOut(player, team)
 		end,
+		-- The team banner inside the player's own gate (the sheet there closes a little farther off, so the slack is double).
+		atHome = function(): boolean
+			local plot = Plots.of(player)
+			return plot ~= nil
+				and ZombieFights.near(player, Layout.plotMuster(plot).Position, Config.Zombies.GateRangeStuds * 2)
+		end,
+		recall = function(team: number)
+			ZombieFights.recall(player, team)
+		end,
 		attack = function(farm: any, team: number, groupId: string, now: number): (boolean, string?)
 			return ZombieFights.attack(player, farm, team, groupId, now)
 		end,
@@ -186,6 +195,9 @@ local function request(player: Player, data: any): { ok: boolean, reason: string
 		print(Config.LogPrefix, "zombies: team", data.team, "line-up", table.concat(data.slimeIds, ","))
 	elseif action == "SetTeamRepeat" then
 		print(Config.LogPrefix, "zombies: team", data.team, "repeat", if data.on then "on" else "off")
+	elseif action == "SetTeamExplore" then
+		print(Config.LogPrefix, "zombies: team", data.team, "explore band", data.band)
+		PlayerData.markKeyMoment(player, "team explore")
 	elseif action == "SetTeamRow" then
 		print(Config.LogPrefix, "zombies: team", data.team, "slime", data.slimeId, "row", data.row)
 	elseif action == "SetTeamTactic" then

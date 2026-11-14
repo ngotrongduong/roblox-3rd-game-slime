@@ -10,6 +10,8 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Config = require(ReplicatedStorage.Shared.Config)
 local Layout = require(ReplicatedStorage.Shared.Layout)
 local Zombies = require(ReplicatedStorage.Shared.Zombies)
+local WorldPacks = require(ReplicatedStorage.Shared.WorldPacks)
+local UiFood = require(script.Parent.UiFood)
 local UiKit = require(script.Parent.UiKit)
 local UiSlimeList = require(script.Parent.UiSlimeList)
 local UiSlimes = require(script.Parent.UiSlimes)
@@ -17,6 +19,7 @@ local ZombieTeams = require(script.Parent.ZombieTeams)
 local ZombieWorld = require(script.Parent.ZombieWorld)
 
 local U = Config.Ui
+local W = U.Team
 local Z = Config.Zombies
 local V = Z.View
 local Rows = Config.Classes.Rows
@@ -101,7 +104,33 @@ local function idsOf(members: { string }, without: string?, extra: string?): { s
 	return ids
 end
 
+-- The words for a refusal on these sheets: the ones of the owner's own wording here, else the sheet's usual.
+local function reason(why: any): string
+	return (W.Reasons :: any)[why] or context().reason(why)
+end
+
+-- A team's job in words: Home, Marching, Fighting, Exploring Lv 1-20, Coming home.
+local function jobText(team: ZombieTeams.Team): string
+	if team.explore > 0 then
+		return W.Exploring .. " " .. WorldPacks.bandName(team.explore)
+	end
+	return (W.Jobs :: any)[team.state] or W.Jobs.home
+end
+
+-- Starts a team exploring a band, or (band 0) calls it back; the server decides, the sheet redraws from what it publishes.
+local function setExplore(index: number, band: number)
+	task.spawn(function()
+		local ok, why = context().ask({ action = "SetTeamExplore", team = index, band = band })
+		if not ok then
+			UiKit.toast(reason(why))
+		end
+	end)
+end
+
 local function stateIcon(team: ZombieTeams.Team): string
+	if team.explore > 0 then
+		return W.ExploreIcon
+	end
 	if team.state == "home" and team.repeatOn and team.waiting ~= "" then
 		return (V.WaitingIcons :: any)[team.waiting] or V.StateIcons.home
 	end
@@ -146,13 +175,10 @@ end
 
 -- ===== The team sheet at the gate =====
 
--- From the gate (`point`: it closes when the player walks off) or from a team's chip (`teamIndex`: that team's tab; it
--- stays open wherever the player goes).
-local function openTeams(point: Vector3?, teamIndex: number?)
+-- At the team banner only (`point`: it closes when the player walks off): the line-up of each team, and where it explores.
+-- A team's chip opens the small members sheet instead (openMembers).
+local function openTeams(point: Vector3)
 	local c = context()
-	if teamIndex then
-		tab = teamIndex
-	end
 	local busy = false
 	local slotsKey = ""
 	local planKey = ""
@@ -201,9 +227,10 @@ local function openTeams(point: Vector3?, teamIndex: number?)
 	modal.header:GetPropertyChangedSignal("AbsoluteSize"):Connect(fitTabs)
 	fitTabs()
 
-	-- the four slots, Best and the Repeat toggle
+	-- the four slots, Best and Explore
 	local bestWidth = U.Touch + 24
-	local buttonsWidth = bestWidth + U.Touch + 2 * U.Gap
+	local exploreWidth = 2 * U.Touch
+	local buttonsWidth = bestWidth + exploreWidth + 2 * U.Gap
 	local top = UiKit.make("Frame", {
 		Name = "Top",
 		BackgroundTransparency = 1,
@@ -236,29 +263,30 @@ local function openTeams(point: Vector3?, teamIndex: number?)
 		Position = UDim2.fromScale(0.5, 0.5),
 		ZIndex = 21,
 	})
-	local repeatButton: TextButton
-	repeatButton = UiKit.button(top, {
-		Name = "Repeat",
-		Icon = "again",
+	-- Explore opens the bands to choose from; while the team explores it is Call back
+	local choices: { { id: string, text: string } } = {}
+	for band = 1, WorldPacks.bands() do
+		table.insert(choices, { id = tostring(band), text = WorldPacks.bandName(band) })
+	end
+	local exploreButton: TextButton
+	exploreButton = UiKit.button(top, {
+		Name = "Explore",
+		Text = W.Explore,
 		Style = "secondary",
-		Size = UDim2.fromOffset(U.Touch, U.Touch),
+		Size = UDim2.fromOffset(exploreWidth, U.Touch),
 		AnchorPoint = Vector2.new(1, 0.5),
 		Position = UDim2.fromScale(1, 0.5),
 		OnClick = function()
 			local team = ZombieTeams.get(tab)
-			if not team or busy then
+			if not team then
 				return
 			end
-			busy = true
-			local on = not team.repeatOn
-			UiKit.setStyle(repeatButton, if on then "good" else "secondary")
-			task.spawn(function()
-				local ok, why = c.ask({ action = "SetTeamRepeat", team = team.index, on = on })
-				if not ok then
-					UiKit.toast(c.reason(why))
-				end
-				busy = false
-				tick()
+			if team.explore > 0 then
+				setExplore(team.index, 0)
+				return
+			end
+			UiKit.dropdown(exploreButton, choices, nil, function(id)
+				setExplore(team.index, tonumber(id) or 0)
 			end)
 		end,
 	})
@@ -336,7 +364,7 @@ local function openTeams(point: Vector3?, teamIndex: number?)
 	local function setTeam(index: number, ids: { string }): boolean
 		local ok, why = c.ask({ action = "SetTeam", team = index, slimeIds = ids })
 		if not ok then
-			UiKit.toast(c.reason(why))
+			UiKit.toast(reason(why))
 		end
 		return ok
 	end
@@ -357,7 +385,7 @@ local function openTeams(point: Vector3?, teamIndex: number?)
 			change(function()
 				local ok, why = c.ask(data)
 				if not ok then
-					UiKit.toast(c.reason(why))
+					UiKit.toast(reason(why))
 				end
 			end)
 		end
@@ -532,7 +560,7 @@ local function openTeams(point: Vector3?, teamIndex: number?)
 		Style = "primary",
 		Size = UDim2.fromOffset(bestWidth, U.Touch),
 		AnchorPoint = Vector2.new(1, 0.5),
-		Position = UDim2.new(1, -U.Touch - U.Gap, 0.5, 0),
+		Position = UDim2.new(1, -exploreWidth - U.Gap, 0.5, 0),
 		OnClick = function()
 			local mine = teamsNow[tab]
 			if not mine then
@@ -599,14 +627,27 @@ local function openTeams(point: Vector3?, teamIndex: number?)
 		if lockIcon:IsA("ImageLabel") then
 			setImage(lockIcon, stateIcon(mine))
 		end
-		UiKit.setStyle(repeatButton, if mine.repeatOn then "good" else "secondary")
+		-- out: the slime list goes (the line-up changes at home only), the line says where the team is and why
+		local exploring = mine.explore > 0
 		local waiting = mine.repeatOn and not out and mine.waiting ~= ""
-		info.Visible = waiting
-		if waiting then
+		info.Visible = out or waiting
+		if out then
+			setImage(infoIcon, stateIcon(mine))
+			infoText.Text = if exploring then jobText(mine) else W.OutLine
+		elseif waiting then
 			setImage(infoIcon, stateIcon(mine))
 			infoText.Text = (V.WaitingText :: any)[mine.waiting] or ""
 		end
-		list.refresh()
+		list.root.Visible = not out
+		UiKit.setEnabled(exploreButton, exploring or (not out and #mine.members > 0))
+		local label = exploreButton:FindFirstChild("Label", true)
+		if label and label:IsA("TextLabel") then
+			label.Text = if exploring then W.CallBack else W.Explore
+		end
+		UiKit.setStyle(exploreButton, if exploring then "good" else "secondary")
+		if not out then
+			list.refresh()
+		end
 	end
 	tick()
 end
@@ -800,13 +841,19 @@ local function openAttack(groupId: string)
 				end
 				local out = team.state ~= "home"
 				local empty = #members == 0
-				card.stateIcon.Visible = out
-				if out then
+				-- an exploring team reads "Exploring Lv 1-20" where the power goes, and cannot be sent
+				local exploring = team.explore > 0
+				card.stateIcon.Visible = out and not exploring
+				if out and not exploring then
 					setImage(card.stateIcon, stateIcon(team))
 				end
-				card.powerLabel.Visible = not out
-				card.powerLabel.Text = if empty then "Empty" else "Lv " .. tostring(power(members))
-				card.powerLabel.TextSize = if empty then U.TextTiny else U.TextSmall
+				card.powerLabel.Visible = not out or exploring
+				card.powerLabel.Size = UDim2.fromOffset(if exploring then W.CardExploreWidth else 42, U.Touch)
+				card.powerLabel.Text = if exploring
+					then jobText(team)
+					elseif empty then "Empty"
+					else "Lv " .. tostring(power(members))
+				card.powerLabel.TextSize = if empty or exploring then U.TextTiny else U.TextSmall
 				UiKit.setStyle(card.repeatButton, if team.repeatOn then "good" else "secondary")
 				UiKit.setEnabled(card.go, not out and not empty and not busy)
 			end
@@ -815,10 +862,219 @@ local function openAttack(groupId: string)
 	tick()
 end
 
+-- ===== The members sheet of a team's chip =====
+
+type Member = {
+	slime: Configuration,
+	name: TextLabel,
+	values: { [string]: TextLabel },
+	bar: UiKit.Bar,
+	mark: Frame,
+	markKey: string,
+	gear: Frame,
+	gearKey: string,
+}
+
+-- Only this team's own members, with no list of other slimes and no way to change the line-up (the owner, 2026-11-14):
+-- each with its portrait, name, level, fight stats, gear, health and state, and a dish button that opens the food sheet with
+-- that slime chosen (UiFood). Over them the team's job and, while it explores, Call back. It stays open wherever the player is.
+local function openMembers(index: number)
+	local c = context()
+	local tick: () -> () = function() end
+	local modal = c.open("members", W.MembersSheetHeight, function()
+		tick()
+	end, nil, 0)
+
+	local callWidth = 2 * U.Touch
+	local jobIcon = UiKit.make("ImageLabel", {
+		Name = "Job",
+		BackgroundTransparency = 1,
+		ScaleType = Enum.ScaleType.Fit,
+		AnchorPoint = Vector2.new(0, 0.5),
+		Position = UDim2.fromScale(0, 0.5),
+		Size = UDim2.fromOffset(U.IconNormal, U.IconNormal),
+	}, modal.header)
+	local jobLabel = UiKit.label(modal.header, "", U.TextNormal, "Brown", {
+		Position = UDim2.fromOffset(U.IconNormal + U.Gap, 0),
+		Size = UDim2.new(1, -U.IconNormal - callWidth - 2 * U.Gap, 1, 0),
+		TextTruncate = Enum.TextTruncate.AtEnd,
+	})
+	local callBack = UiKit.button(modal.header, {
+		Name = "CallBack",
+		Text = W.CallBack,
+		Style = "good",
+		Size = UDim2.fromOffset(callWidth, U.Touch),
+		AnchorPoint = Vector2.new(1, 0.5),
+		Position = UDim2.fromScale(1, 0.5),
+		OnClick = function()
+			setExplore(index, 0)
+		end,
+	})
+
+	local scroller = UiKit.make("ScrollingFrame", {
+		Name = "Members",
+		BackgroundTransparency = 1,
+		BorderSizePixel = 0,
+		Size = UDim2.fromScale(1, 1),
+		ScrollBarThickness = 5,
+		ScrollBarImageColor3 = UiKit.colour("BrownSoft"),
+		AutomaticCanvasSize = Enum.AutomaticSize.Y,
+		CanvasSize = UDim2.new(),
+		ScrollingDirection = Enum.ScrollingDirection.Y,
+	}, modal.content)
+	UiKit.make("UIListLayout", { Padding = UDim.new(0, U.Gap), SortOrder = Enum.SortOrder.LayoutOrder }, scroller)
+	UiKit.make("UIPadding", { PaddingRight = UDim.new(0, 8), PaddingBottom = UDim.new(0, 4) }, scroller)
+
+	local function line(parent: Instance, top: number, height: number): Frame
+		local row = UiKit.make("Frame", {
+			BackgroundTransparency = 1,
+			Position = UDim2.fromOffset(0, top),
+			Size = UDim2.new(1, 0, 0, height),
+		}, parent)
+		UiKit.make("UIListLayout", {
+			FillDirection = Enum.FillDirection.Horizontal,
+			VerticalAlignment = Enum.VerticalAlignment.Center,
+			Padding = UDim.new(0, 3),
+			SortOrder = Enum.SortOrder.LayoutOrder,
+		}, row)
+		return row
+	end
+
+	local members: { Member } = {}
+	local function build(slimes: { Configuration })
+		for _, child in scroller:GetChildren() do
+			if child:IsA("GuiObject") then
+				UiSlimes.park(child)
+			end
+		end
+		UiKit.clear(scroller)
+		table.clear(members)
+		local T = U.Tile
+		local left = W.MemberPortrait + U.Gap
+		for order, slime in slimes do
+			local _, body = UiKit.card(scroller, { Size = UDim2.new(1, 0, 0, W.MemberHeight), LayoutOrder = order })
+			local _, show = UiSlimes.portrait(body, slime, W.MemberPortrait, {
+				AnchorPoint = Vector2.new(0, 0.5),
+				Position = UDim2.fromScale(0, 0.5),
+			}, "member", true)
+			show()
+			UiKit.button(body, {
+				Name = "Dish",
+				Icon = "food",
+				Style = "good",
+				Size = UDim2.fromOffset(U.Touch, U.Touch),
+				AnchorPoint = Vector2.new(1, 0.5),
+				Position = UDim2.fromScale(1, 0.5),
+				OnClick = function()
+					UiFood.open(c.own(), slime.Name)
+				end,
+			})
+			local info = UiKit.make("Frame", {
+				Name = "Info",
+				BackgroundTransparency = 1,
+				Position = UDim2.fromOffset(left, 0),
+				Size = UDim2.new(1, -left - U.Touch - U.Gap, 1, 0),
+			}, body)
+			local name = UiKit.label(info, "", U.TextSmall, "Brown", {
+				Size = UDim2.new(1, 0, 0, 20),
+				TextTruncate = Enum.TextTruncate.AtEnd,
+			})
+			local stats = line(info, 22, T.StatRow)
+			local values: { [string]: TextLabel } = {}
+			for at, key in UiSlimeList.stats do
+				UiKit.icon(stats, key, T.StatIcon, { LayoutOrder = at * 2 - 1 })
+				values[key] = UiKit.label(stats, "", U.TextTiny, "Brown", {
+					LayoutOrder = at * 2,
+					Size = UDim2.fromScale(0, 1),
+					AutomaticSize = Enum.AutomaticSize.X,
+				})
+			end
+			local state = line(info, 42, T.GearIcon + 2)
+			local bar = UiKit.bar(state, "hp", "Green", { Size = UDim2.fromOffset(90, T.GearIcon), LayoutOrder = 1 })
+			local mark = UiKit.make("Frame", {
+				Name = "Mark",
+				BackgroundTransparency = 1,
+				LayoutOrder = 2,
+				Size = UDim2.fromOffset(T.GearIcon, T.GearIcon),
+			}, state)
+			local gear = UiKit.make("Frame", {
+				Name = "Gear",
+				BackgroundTransparency = 1,
+				LayoutOrder = 3,
+				Size = UDim2.fromOffset(0, T.GearIcon),
+				AutomaticSize = Enum.AutomaticSize.X,
+			}, state)
+			UiKit.make("UIListLayout", {
+				FillDirection = Enum.FillDirection.Horizontal,
+				Padding = UDim.new(0, 3),
+				SortOrder = Enum.SortOrder.LayoutOrder,
+			}, gear)
+			table.insert(members, {
+				slime = slime,
+				name = name,
+				values = values,
+				bar = bar,
+				mark = mark,
+				markKey = "",
+				gear = gear,
+				gearKey = "",
+			})
+		end
+	end
+
+	local function update(member: Member)
+		local slime = member.slime
+		member.name.Text = UiSlimes.name(slime) .. "  Lv " .. tostring(UiSlimes.number(slime, "Level"))
+		for stat, label in member.values do
+			label.Text = UiSlimeList.short(UiSlimes.number(slime, (U.SortAttributes :: any)[stat]))
+		end
+		local share = UiSlimes.hpShare(slime)
+		member.bar.set(share, share < U.Tile.WoundLow)
+		local mark = UiSlimeList.stateMark(slime)
+		local markKey = if mark and mark.icon then mark.icon else ""
+		if markKey ~= member.markKey then
+			member.markKey = markKey
+			UiKit.clear(member.mark)
+			if markKey ~= "" then
+				UiKit.icon(member.mark, markKey, U.Tile.GearIcon)
+			end
+		end
+		local gearKey = tostring(slime:GetAttribute("Gear"))
+		if gearKey ~= member.gearKey then
+			member.gearKey = gearKey
+			UiSlimeList.drawGear(member.gear, slime, U.Tile.GearIcon)
+		end
+	end
+
+	local key = ""
+	tick = function()
+		local team = ZombieTeams.get(index)
+		if not team then
+			return
+		end
+		setImage(jobIcon, stateIcon(team))
+		jobLabel.Text = "Team " .. tostring(index) .. "  " .. jobText(team)
+		callBack.Visible = team.explore > 0
+		local slimes = membersOf(team)
+		local ids: { string } = {}
+		for _, slime in slimes do
+			table.insert(ids, slime.Name)
+		end
+		if table.concat(ids, ",") ~= key then
+			key = table.concat(ids, ",")
+			build(slimes)
+		end
+		for _, member in members do
+			update(member)
+		end
+	end
+	tick()
+end
+
 -- ===== The team chips (left edge) =====
 
 -- A team's chip: a square button with its number in the corner, its state's picture in the middle and, while it is out,
--- its march under it. A tap opens its team's sheet wherever the player is (the owner, 2026-11-12).
+-- its march under it. A tap opens its team's members sheet wherever the player is (the owner, 2026-11-12, 2026-11-14).
 local function chipFor(index: number): TeamChip
 	local item = chips[index]
 	if item then
@@ -832,7 +1088,7 @@ local function chipFor(index: number): TeamChip
 		Size = UDim2.fromOffset(U.Touch, U.Touch),
 		LayoutOrder = index,
 		OnClick = function()
-			openTeams(nil, index)
+			openMembers(index)
 		end,
 	})
 	local body = box:FindFirstChild("Visual") :: Instance

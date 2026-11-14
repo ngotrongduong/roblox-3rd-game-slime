@@ -30,6 +30,7 @@ local ArenaSeason = require(ReplicatedStorage.Shared.ArenaSeason)
 local Board = require(ReplicatedStorage.Shared.Leaderboard)
 local Config = require(ReplicatedStorage.Shared.Config)
 local Rng = require(ReplicatedStorage.Shared.Rng)
+local Zombies = require(ReplicatedStorage.Shared.Zombies)
 local ArenaStore = require(script.Parent.ArenaStore)
 local Dungeon = require(script.Parent.Dungeon)
 local PlayerData = require(script.Parent.PlayerData)
@@ -628,7 +629,12 @@ local function attack(player: Player, data: any): Reply
 	end
 	local now = clock()
 	local name = nameOf(player)
-	local mine = ArenaPlay.snapshotDoc(farm, ArenaPlay.fightTeam(farm, now), name)
+	local fighters = ArenaPlay.fightTeam(farm, now)
+	-- (a slime of a team set to explore does that and nothing else: the owner, 2026-11-14)
+	if Zombies.exploring(farm, fighters) then
+		return fail("EXPLORING")
+	end
+	local mine = ArenaPlay.snapshotDoc(farm, fighters, name)
 	if not mine then
 		return fail("NO_TEAM")
 	end

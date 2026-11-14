@@ -14,6 +14,8 @@ export type Team = {
 	target: string,
 	repeatOn: boolean,
 	waiting: string,
+	-- the band of the world it explores (WorldPacks.bands), 0 when it does not
+	explore: number,
 	-- the saved line-up, and who went on this trip
 	members: { string },
 	marching: { string },
@@ -96,6 +98,7 @@ function ZombieTeams.get(index: number, village: Folder?): Team?
 		target = text(node, "Target"),
 		repeatOn = node:GetAttribute("Repeat") == true,
 		waiting = text(node, "Waiting"),
+		explore = number(node, "Explore"),
 		members = ZombieTeams.split(text(node, "Members")),
 		marching = ZombieTeams.split(text(node, "Marching")),
 		rows = ZombieTeams.split(text(node, "Rows")),

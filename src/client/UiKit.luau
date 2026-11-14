@@ -791,4 +791,64 @@ function UiKit.toast(text: string, icon: string?)
 	end)
 end
 
+-- A short list of choices hanging from a button's lower right edge (the owner, 2026-11-14): a tap on a choice picks it and
+-- closes the list, a tap anywhere else closes it. `choices` is { id, text }; `current` is drawn as the chosen one. It scrolls
+-- when the screen is shorter than the list.
+function UiKit.dropdown(
+	anchor: GuiObject,
+	choices: { { id: string, text: string } },
+	current: string?,
+	onPick: (string) -> ()
+)
+	local parent = UiKit.root()
+	local scale = if scaler then scaler.Scale else 1
+	local backdrop = make("TextButton", {
+		Name = "DropdownBackdrop",
+		Text = "",
+		AutoButtonColor = false,
+		BackgroundTransparency = 1,
+		Size = FULL,
+		ZIndex = 40,
+	}, parent)
+	local screen = parent.AbsoluteSize.Y / scale
+	local height = math.min(#choices * (U.Touch + U.Gap) + 2 * U.Gap + 8, screen - 2 * U.Edge)
+	local corner = (anchor.AbsolutePosition + anchor.AbsoluteSize - parent.AbsolutePosition) / scale
+	local card, body = UiKit.card(parent, {
+		Name = "Dropdown",
+		AnchorPoint = Vector2.new(1, 0),
+		Position = UDim2.fromOffset(corner.X, math.clamp(corner.Y + 2, U.Edge, screen - height - U.Edge)),
+		Size = UDim2.fromOffset(U.DropdownWidth, height),
+		ZIndex = 41,
+	})
+	card.Active = true
+	local list = make("ScrollingFrame", {
+		BackgroundTransparency = 1,
+		BorderSizePixel = 0,
+		Size = FULL,
+		ScrollBarThickness = 4,
+		AutomaticCanvasSize = Enum.AutomaticSize.Y,
+		CanvasSize = UDim2.new(),
+	}, body)
+	make("UIListLayout", { Padding = UDim.new(0, U.Gap), SortOrder = Enum.SortOrder.LayoutOrder }, list)
+	make("UIPadding", { PaddingTop = UDim.new(0, 2), PaddingRight = UDim.new(0, 6) }, list)
+	local function close()
+		card:Destroy()
+		backdrop:Destroy()
+	end
+	backdrop.Activated:Connect(close)
+	for index, choice in choices do
+		UiKit.button(list, {
+			Name = choice.id,
+			Text = choice.text,
+			Style = if choice.id == current then "primary" else "secondary",
+			Size = UDim2.new(1, 0, 0, U.Touch),
+			LayoutOrder = index,
+			OnClick = function()
+				close()
+				onPick(choice.id)
+			end,
+		})
+	end
+end
+
 return UiKit

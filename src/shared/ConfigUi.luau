@@ -486,9 +486,16 @@ return {
 	-- the size of the mark in a tile's corner.
 	Sorts = { "level", "attack", "defence", "speed", "hp" },
 	SortAttributes = { level = "Level", attack = "Attack", defence = "Defence", speed = "Speed", hp = "Hp" },
+	-- A tile also shows the four fight stats (StatIcon, StatRow high) and the worn gear (GearIcon); the sort is one dropdown
+	-- button (SortWidth wide) whose choices are named by SortNames.
+	SortNames = { level = "Level", attack = "Attack", defence = "Defence", speed = "Speed", hp = "HP" },
 	Tile = {
-		Width = 84,
-		Height = 112,
+		Width = 96,
+		Height = 152,
+		StatIcon = 14,
+		StatRow = 16,
+		GearIcon = 18,
+		SortWidth = 150,
 		Portrait = 56,
 		WoundHeight = 5,
 		WoundLow = 0.35,
@@ -498,5 +505,22 @@ return {
 		-- frame: 70 tiles made in one frame was the stall the owner saw on opening a slime list (2026-11-04).
 		PerFrame = 8,
 		PicturesPerFrame = 6,
+	},
+	-- The dropdown (UiKit.dropdown): its width.
+	DropdownWidth = 160,
+	-- The team sheets (UiTeams): a team's job in words, the Explore picture, the short words, the small members sheet of a
+	-- team's chip (its height, one member's row) and the reasons the team sheets word themselves.
+	Team = {
+		Jobs = { home = "Home", going = "Marching", fighting = "Fighting", returning = "Coming home" },
+		ExploreIcon = "map",
+		Explore = "Explore",
+		Exploring = "Exploring",
+		CallBack = "Call back",
+		OutLine = "Change the team at home",
+		CardExploreWidth = 170,
+		MembersSheetHeight = 428, -- (a full team of four shows without scrolling)
+		MemberHeight = 78,
+		MemberPortrait = 56,
+		Reasons = { TOO_FAR = "Go to your team banner at home" },
 	},
 }

@@ -1,5 +1,46 @@
 # Status
 
+## 2026-11-14 — exploration teams, one job a team, richer slime lists
+
+**What it is** (the owner's request of 2026-11-14).
+- A team can be set to **explore** one of the map's 8 level bands (`WorldPacks.bandName`, "Lv 1-20" ...): it then roams
+  from pack to pack of that band by itself and comes home only when it is called back or every member has fallen. Saved as
+  `farm.teams[n].explore` (optional, schema unchanged); request `SetTeamExplore { team, band }` (band 0 = call back, from
+  anywhere; starting needs the player at the home team banner, the team home and not empty). Server: `ZombieFights`
+  (`roamOn`, `recall`, the `Explore` attribute on `Teams/<n>`), rules in `shared/VillageRequests`.
+- An exploring team's fights cost no energy or fullness, its wounds heal on the walk between packs, and it walks
+  `Config.Zombies.ExplorePace` (3) times as fast between packs and on its way home from the field. Its coins and losses are
+  added up over the whole outing for the "home" notice.
+- One job a team: the Dungeon refuses a team set to explore ("TEAM_OUT"); the Arena refuses an attack while one of its
+  fighters is in an exploring team ("EXPLORING"; the Arena keeps its own line-up, so the rule is by slime).
+- A line-up is changed only at the home team banner and only while the team is home ("TOO_FAR", "TEAM_OUT"); a buff dish
+  can be fed to a slime that is out (`FeedDish`).
+- Screens (`client/UiTeams`, `UiSlimeList`, `UiKit.dropdown`, numbers in `Config.Ui.Team`):
+  - the home team sheet (the banner) has **Explore** in the place of Repeat: a dropdown of the 8 bands; while the team
+    explores the button is "Call back", the line under the slots reads "Exploring Lv 1-20" and the slime list is hidden.
+    Repeat stays on the pack's attack sheet, where an exploring team's card reads "Exploring <band>" and cannot be sent;
+  - a team chip of the HUD opens the **members sheet**: only that team's own slimes (portrait, name, level, four stats,
+    health, gear, a dish button), its job (Home / Marching / Fighting / Exploring <band> / Coming home) and "Call back";
+    no other slimes and no way to change the line-up. The dish button opens `UiFood.open(own, slimeId)`: only the dishes,
+    and the dish sheet has that slime chosen (Feed / When hungry);
+  - every slime list (all go through `UiSlimeList`) shows on each tile the four fight stats and the worn gear, and its
+    sort buttons are one "Sort: <name>" button at the right with a dropdown (picking the current one flips the order).
+- Pictures still missing (stand-ins in use): an exploring / compass icon (the `map` icon stands in on the chip and the
+  sheet; the Explore button is text only).
+- The owner's number of the same day: players walk at `Config.World.WalkSpeed` 32.
+- The minimap covering other HUD parts on a flattened window: the owner said no fix is needed (full screen is fine).
+
+**Proved in a StudioTest play** (mid preset, band 1): the team went pack to pack without coming home (legs 19-32 s, 57-95 s
+before `ExplorePace`); called back while walking it was home in 6 s, called back in a fight it finished the fight and came
+home; a team sent at band 8 died and its exploring ended; the Dungeon answered "TEAM_OUT", the Arena "EXPLORING", and
+starting away from the banner "TOO_FAR". Seen on screen in the same play (a 1920 x 928 window): the home sheet with the new
+tiles, the band dropdown, "Exploring Lv 1-20" with Call back, the members sheet with all four members and their dish
+buttons, the Sort dropdown. `check.ps1`: 797 passed, CHECK OK; `types.ps1`: TYPES OK.
+
+**Not verified:** the heal on the walk and the summed "home" notice were not looked at in play (the test vault was full, so
+every kill paid 0); the dish list for one slime was seen only empty ("No dishes yet": the test save has no cooked dish);
+the Book's, the Arena's and the Dungeon's slime lists were not opened; nothing was seen in Studio's phone device view.
+
 ## 2026-11-14 — M5b: packs Lv 4-150, the Heart's rim closed, waystones, the map (done)
 
 **What it is** (the owner's request of 2026-11-14; every decision in `docs/WORLD.md` §7 "M5b").

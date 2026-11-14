@@ -20,6 +20,10 @@ local function env(changes: { [string]: any }?): any
 		teamOut = function()
 			return false
 		end,
+		atHome = function()
+			return true
+		end,
+		recall = function() end,
 		attack = function()
 			return true, nil
 		end,
@@ -119,7 +123,6 @@ return function(T: any)
 		local requests: { any } = {
 			{ action = "Assign", area = "fishing", slot = 1, slimeId = "slime-1", asReserve = false },
 			{ action = "SetPair", index = 1, a = "slime-1", b = "slime-2" },
-			{ action = "FeedDish", slimeId = "slime-1", dish = "grilledFish" },
 			{ action = "Revive", slimeId = "slime-1" },
 		}
 		for _, data in requests do
@@ -127,6 +130,9 @@ return function(T: any)
 		end
 		T.eq(farm.work.fishing.slots[1].worker, nil)
 		T.eq(farm.fridge.grilledFish, 1)
+		-- but it is fed its dish out there (a team's sheet feeds each member)
+		T.ok(VillageRequests.run(farm, { action = "FeedDish", slimeId = "slime-1", dish = "grilledFish" }, NOW, out))
+		T.eq(farm.fridge.grilledFish or 0, 0)
 	end)
 
 	T.test("unassign knows the slime and frees its place", function()
@@ -162,10 +168,47 @@ return function(T: any)
 		T.eq(farm.coins, 0)
 	end)
 
-	T.test("teams change anywhere, only while home", function()
+	T.test("a team explores from home until it is called back", function()
+		local farm = FarmKit.farm(NOW)
+		local go = { action = "SetTeamExplore", team = 1, band = 2 }
+		T.ok(VillageRequests.valid(go, true))
+		T.ok(not VillageRequests.valid(go, false))
+		T.ok(not VillageRequests.valid({ action = "SetTeamExplore", team = 1, band = -1 }, true))
+		T.ok(not VillageRequests.valid({ action = "SetTeamExplore", team = 1, band = 1.5 }, true))
+		T.ok(not VillageRequests.valid({ action = "SetTeamExplore", team = 1, band = 99 }, true))
+		T.eq(select(2, VillageRequests.run(farm, go, NOW, env())), "NO_MEMBERS")
+		farm.teams[1].members = { "slime-1" }
+		farm.teams[1].repeatOn = true
+		T.eq(select(2, VillageRequests.run(farm, go, NOW, env({ atHome = refuse }))), "TOO_FAR")
+		T.eq(select(2, VillageRequests.run(farm, go, NOW, env({ teamOut = isOut }))), "TEAM_OUT")
+		farm.teams[2].members = { "slime-2" }
+		T.eq(
+			select(2, VillageRequests.run(farm, { action = "SetTeamExplore", team = 2, band = 1 }, NOW, env())),
+			"LOCKED"
+		)
+		T.eq(farm.teams[1].explore, nil)
+		T.ok(VillageRequests.run(farm, go, NOW, env()))
+		T.eq(farm.teams[1].explore, 2)
+		T.eq(farm.teams[1].repeatOn, false, "exploring replaces the repeat")
+		-- called back from anywhere, even out: the server brings it home
+		local called = 0
+		local away = env({
+			atHome = refuse,
+			teamOut = isOut,
+			recall = function(team: number)
+				called = team
+			end,
+		})
+		T.ok(VillageRequests.run(farm, { action = "SetTeamExplore", team = 1, band = 0 }, NOW, away))
+		T.eq(farm.teams[1].explore, nil)
+		T.eq(called, 1)
+	end)
+
+	T.test("a line-up is set at the team banner, only while the team is home", function()
 		local farm = FarmKit.farm(NOW)
 		local set = { action = "SetTeam", team = 1, slimeIds = {} }
 		T.eq(select(1, VillageRequests.run(farm, set, NOW, env())), true)
+		T.eq(select(2, VillageRequests.run(farm, set, NOW, env({ atHome = refuse }))), "TOO_FAR")
 		T.eq(select(2, VillageRequests.run(farm, set, NOW, env({ teamOut = isOut }))), "TEAM_OUT")
 		local again = { action = "SetTeamRepeat", team = 1, on = true }
 		T.eq(select(2, VillageRequests.run(farm, again, NOW, env())), "NO_MEMBERS")

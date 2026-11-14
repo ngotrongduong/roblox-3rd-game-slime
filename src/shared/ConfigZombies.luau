@@ -72,6 +72,13 @@ return {
 	-- the largest wait of all (37% of the cycle); at 2 a team fights about 35 times, an hour or more, before it naps.
 	FightEnergy = 2,
 	FightFullness = 2,
+	-- An exploring team (the owner, 2026-11-14) roams from pack to pack of the band it was given and comes home only when
+	-- it is called back or every member has fallen. Its fights cost no energy or fullness, and its wounds heal while it
+	-- walks to the next pack as they do at home. With no pack of its band waiting it looks again this often.
+	ExploreLookSeconds = 1,
+	-- Packs stand far apart (a minute and more at the village walk), so a team out roaming, and one coming home from the
+	-- field, covers the ground this many times as fast: longer leaps in the same beat.
+	ExplorePace = 3,
 	-- HpShare on a slime's model is rounded to this step, so a healing wound does not rewrite it every frame.
 	HpShareStep = 0.01,
 	-- ===== The client (src/client/ZombieWorld, ZombieFight, ZombieLook, UiSquad) =====

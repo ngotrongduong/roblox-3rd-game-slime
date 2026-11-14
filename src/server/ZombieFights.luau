@@ -20,7 +20,11 @@
 --                     markers by it) and
 --     Teams/<n>       (n = 1..Config.Zombies.Teams, always there) Configuration:
 --                     State ("home" | "going" | "fighting" | "returning"), Target (pack id or ""), Repeat (boolean),
---                     Waiting (why a repeating team at home has not set out: "health" | "hungry" | "tired" | "group" | ""),
+--                     Explore (the band of packs, WorldPacks.band, the team explores by itself; 0 when it does not. An
+--                     exploring team goes from pack to pack of that band, "going" then "fighting", and never "home" until it
+--                     is called back or all of it has fallen; State not "home" with Explore 0 is a team on its way back),
+--                     Waiting (why a repeating or exploring team at home has not set out: "health" | "hungry" | "tired" |
+--                     "group" | ""),
 --                     Members (the saved line-up, slime ids comma separated), Marching (who went on this trip, comma
 --                     separated, "" at home), and while State is not "home" the leg: FromX, FromZ, ToX, ToZ (flat studs),
 --                     LegStart, LegEnd (workspace:GetServerTimeNow(); "going" walks muster spot to fight spot,
@@ -86,8 +90,13 @@ type March = {
 	spot: Vector3,
 	waiting: string,
 	folder: Configuration,
-	-- a team that won cheers on the field until then (server time), then marches home
+	-- a team that won cheers on the field until then (server time), then marches home (an exploring team: on to its next pack)
 	cheerUntil: number?,
+	-- an exploring team that has walked on from its first pack: its way home starts where it stands, not at `origin`
+	roam: boolean,
+	-- what the fights before this one earned and cost on the same trip (an exploring team fights many)
+	bankCoins: number,
+	bankDead: number,
 }
 type Session = {
 	player: Player,
@@ -304,6 +313,7 @@ local function publishTeam(team: March, farm: any)
 	set(folder, "State", team.state)
 	set(folder, "Target", farmTeam.target or "")
 	set(folder, "Repeat", farmTeam.repeatOn)
+	set(folder, "Explore", farmTeam.explore or 0)
 	set(folder, "Waiting", team.waiting)
 	set(folder, "Members", table.concat(farmTeam.members, ","))
 	local rows: { string } = {}
@@ -359,6 +369,9 @@ local function openSession(player: Player, root: Folder, farm: any, plot: number
 			spot = session.gate,
 			waiting = "",
 			folder = make(session.teamsFolder, tostring(index)),
+			roam = false,
+			bankCoins = 0,
+			bankDead = 0,
 		}
 		table.insert(session.teams, team)
 		publishTeam(team, farm)
@@ -387,9 +400,13 @@ local function speedsOf(farm: any, ids: { string }): { number }
 	return speeds
 end
 
--- Starts a leg of the march: the team walks from `from` to `to`, at the pace of the slowest of its members.
+-- Starts a leg of the march: the team walks from `from` to `to`, at the pace of the slowest of its members (a roaming
+-- team hurries: Config.Zombies.ExplorePace).
 local function startLeg(team: March, farm: any, from: Vector3, to: Vector3)
 	local seconds = Zombies.marchSeconds((to - from).Magnitude, speedsOf(farm, team.members))
+	if team.roam then
+		seconds /= Config.Zombies.ExplorePace
+	end
 	team.from, team.to = from, to
 	team.legStart = workspace:GetServerTimeNow()
 	team.legEnd = team.legStart + seconds
@@ -400,7 +417,8 @@ local function arriveHome(session: Session, team: March)
 	for _, id in team.members do
 		Village.setOut(session.player, id, false, true)
 	end
-	fire(session, team.index, { { kind = "home", team = team.index, dead = team.dead, coins = team.coins } })
+	local dead, coins = team.bankDead + team.dead, team.bankCoins + team.coins
+	fire(session, team.index, { { kind = "home", team = team.index, dead = dead, coins = coins } })
 	print(
 		Config.LogPrefix,
 		"zombies: team",
@@ -408,18 +426,25 @@ local function arriveHome(session: Session, team: March)
 		"is home,",
 		#team.members,
 		"slimes back,",
-		team.dead,
+		dead,
 		"died, earned",
-		team.coins
+		coins
 	)
 	team.members = {}
 	team.state = "home"
+	team.roam = false
+	team.bankCoins, team.bankDead = 0, 0
 end
 
 -- The survivors march back from their spot to the muster spot (or are home at once when the save is gone).
 local function goHome(session: Session, team: March)
 	local farm = PlayerData.get(session.player)
 	if farm and #team.members > 0 then
+		if team.roam then
+			-- (far from where it set out: it leaves the field towards its gate, as a march to this spot would have come)
+			local x, z = WorldPacks.musterSpot(team.spot.X, team.spot.Z, session.gate.X, session.gate.Z)
+			team.origin = Vector3.new(x, 0, z)
+		end
 		team.state = "returning"
 		startLeg(team, farm, team.spot, team.origin)
 	else
@@ -451,7 +476,10 @@ local function endFight(session: Session, team: March, winner: string, now: numb
 	end
 	team.dead = #team.members - #survivors
 	team.members = survivors
-	if #survivors > 0 then
+	local saved = PlayerData.get(player)
+	local exploring = saved ~= nil and saved.teams[team.index].explore ~= nil
+	-- (an exploring team's fights cost it no energy or fullness: it fights on and on)
+	if #survivors > 0 and not exploring then
 		PlayerData.update(player, function(farm: any)
 			for _, id in survivors do
 				local slime = FarmState.findSlime(farm, id)
@@ -495,10 +523,20 @@ local function endFight(session: Session, team: March, winner: string, now: numb
 		#survivors
 	)
 	if #survivors == 0 then
+		if exploring then
+			PlayerData.update(player, function(farm: any)
+				farm.teams[team.index].explore = nil
+			end)
+			print(Config.LogPrefix, "zombies: team", team.index, "has fallen, its exploring is over")
+		end
 		arriveHome(session, team)
 	elseif winner == "squad" then
-		-- the winners stay on the field to cheer (still "fighting" to the clients, with no fight), then march home
+		-- the winners stay on the field to cheer (still "fighting" to the clients, with no fight), then march home (an
+		-- exploring team: on to its next pack, see frame)
 		team.cheerUntil = workspace:GetServerTimeNow() + Config.Zombies.CheerSeconds
+	elseif exploring then
+		-- an exploring team that did not win stays out and looks for its next pack at once
+		team.cheerUntil = workspace:GetServerTimeNow()
 	else
 		goHome(session, team)
 	end
@@ -648,6 +686,61 @@ local function beginFight(session: Session, team: March, farm: any, now: number)
 	print(Config.LogPrefix, "zombies: team", team.index, "met", group.id, "level", group.level)
 end
 
+-- The team walks from `origin` to its spot beside a waiting pack, which is its own from now on.
+local function march(session: Session, team: March, group: Group, farm: any, origin: Vector3)
+	team.group = group
+	team.origin = origin
+	team.spot = spotBeside(origin, group)
+	team.state = "going"
+	startLeg(team, farm, origin, team.spot)
+	group.state = "taken"
+	group.team = team.index
+	group.attacker = session.player
+	publishGroup(group)
+end
+
+-- The nearest waiting pack of a band to a point (flat), nil when none waits.
+local function nearestPack(band: number, from: Vector3): Group?
+	local best: Group? = nil
+	local bestDistance = math.huge
+	for _, group in order do
+		if group.state == "waiting" and group.band == band then
+			local distance = Vector3.new(group.position.X - from.X, 0, group.position.Z - from.Z).Magnitude
+			if distance < bestDistance then
+				best, bestDistance = group, distance
+			end
+		end
+	end
+	return best
+end
+
+-- An exploring team on the field walks on from where it stands to the nearest waiting pack of its band. False when none
+-- waits (it looks again soon).
+local function roamOn(session: Session, team: March, farm: any): boolean
+	local group = nearestPack(farm.teams[team.index].explore, team.spot)
+	if not group then
+		return false
+	end
+	team.bankCoins += team.coins
+	team.bankDead += team.dead
+	team.coins, team.dead = 0, 0
+	team.roam = true
+	march(session, team, group, farm, team.spot)
+	print(
+		Config.LogPrefix,
+		"zombies: team",
+		team.index,
+		"explores on to",
+		group.id,
+		"level",
+		group.level,
+		"march",
+		string.format("%.1f", team.legEnd - team.legStart),
+		"s"
+	)
+	return true
+end
+
 -- Sends a team from its muster spot at a waiting pack (the player's order, or a repeating team setting out again). The team's
 -- members that cannot go now (asleep, tired, dead, away) stay home. Returns whether it went, else why not; nothing
 -- changes on a refusal.
@@ -668,16 +761,10 @@ local function launch(session: Session, team: March, group: Group, farm: any, no
 	end
 	team.members = going
 	team.coins, team.dead = 0, 0
-	team.group = group
+	team.bankCoins, team.bankDead = 0, 0
+	team.roam = false
 	local musterX, musterZ = WorldPacks.musterSpot(group.position.X, group.position.Z, session.gate.X, session.gate.Z)
-	team.origin = Vector3.new(musterX, 0, musterZ)
-	team.spot = spotBeside(team.origin, group)
-	team.state = "going"
-	startLeg(team, farm, team.origin, team.spot)
-	group.state = "taken"
-	group.team = team.index
-	group.attacker = session.player
-	publishGroup(group)
+	march(session, team, group, farm, Vector3.new(musterX, 0, musterZ))
 	for _, id in going do
 		Village.setOut(session.player, id, true)
 	end
@@ -709,7 +796,36 @@ local function repeatTeam(session: Session, team: March, farm: any, now: number)
 	local line = farm.teams[team.index]
 	team.waiting = ""
 	-- (a team of an old save the village has not opened yet stays home)
-	if not line.repeatOn or not Zombies.teamOpen(farm, team.index) then
+	if not Zombies.teamOpen(farm, team.index) then
+		return
+	end
+	if line.explore then
+		-- An exploring team at home (just set, or its player came back to the game) sets out at the nearest waiting pack of
+		-- its band with every member that can go; with nobody alive its exploring is over.
+		local someone = false
+		for _, id in line.members do
+			local slime = FarmState.findSlime(farm, id)
+			if slime and not (slime.ghostUntil and slime.ghostUntil > now) then
+				someone = true
+				break
+			end
+		end
+		if not someone then
+			PlayerData.update(session.player, function(live: any)
+				live.teams[team.index].explore = nil
+			end)
+			print(Config.LogPrefix, "zombies: team", team.index, "has no slime alive, its exploring is over")
+			return
+		end
+		local pack = nearestPack(line.explore, session.gate)
+		if not pack then
+			team.waiting = "group"
+		elseif not launch(session, team, pack, farm, now) then
+			team.waiting = "tired"
+		end
+		return
+	end
+	if not line.repeatOn then
 		return
 	end
 	local alive = 0
@@ -774,8 +890,17 @@ local function frame(session: Session, dt: number)
 			end
 		end
 		if state == "fighting" and not team.fight and team.cheerUntil and serverNow >= team.cheerUntil then
-			team.cheerUntil = nil
-			goHome(session, team)
+			if farm and farm.teams[index].explore then
+				-- an exploring team does not go home: on to its next pack, or it waits here for one
+				if roamOn(session, team, farm) then
+					team.cheerUntil = nil
+				else
+					team.cheerUntil = serverNow + Config.Zombies.ExploreLookSeconds
+				end
+			else
+				team.cheerUntil = nil
+				goHome(session, team)
+			end
 		end
 	end
 	-- the fights
@@ -793,12 +918,20 @@ local function frame(session: Session, dt: number)
 	if not farm then
 		return
 	end
-	-- wounds heal at home only (a slime on a march keeps them)
+	-- wounds heal at home (a slime on a march keeps them), and on an exploring team's walk to its next pack
+	local walking: { [string]: boolean } = {}
+	for index, team in session.teams do
+		if team.state == "going" and farm.teams[index].explore then
+			for _, id in team.members do
+				walking[id] = true
+			end
+		end
+	end
 	for id, hurt in session.wounds do
 		local slime = FarmState.findSlime(farm, id)
 		if not slime or (slime.ghostUntil and slime.ghostUntil > now) then
 			session.wounds[id] = nil
-		elseif not Village.isOut(player, id) then
+		elseif walking[id] or not Village.isOut(player, id) then
 			local left = Zombies.heal(hurt, dt)
 			if left > 0 then
 				session.wounds[id] = left
@@ -877,6 +1010,30 @@ function ZombieFights.attack(
 		farm.teams[teamIndex].target = groupId
 	end
 	return went, why
+end
+
+-- An exploring team is called back (its `explore` is already cleared in the save): on its way to a pack it turns round
+-- where it is and the pack is free again; in a fight it fights that one out and then goes home, as any team does.
+function ZombieFights.recall(player: Player, teamIndex: number)
+	local session = sessions[player]
+	local team = if session then session.teams[teamIndex] else nil
+	if not session or not team or team.state ~= "going" then
+		return
+	end
+	local group = team.group
+	if group then
+		group.state = "waiting"
+		group.team = 0
+		group.attacker = nil
+		publishGroup(group)
+	end
+	team.group = nil
+	local span = team.legEnd - team.legStart
+	local share = if span > 0 then math.clamp((workspace:GetServerTimeNow() - team.legStart) / span, 0, 1) else 1
+	team.spot = team.from:Lerp(team.to, share)
+	team.roam = true
+	goHome(session, team)
+	print(Config.LogPrefix, "zombies: team", teamIndex, "is called back")
 end
 
 -- Whether the team is away from home (on a march or fighting). A team that does not exist counts as away.

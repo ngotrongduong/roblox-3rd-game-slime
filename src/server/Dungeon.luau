@@ -428,7 +428,8 @@ local function squadFor(
 			return nil, "BAD_TEAM"
 		elseif not Zombies.teamOpen(farm, index) then
 			return nil, "LOCKED"
-		elseif ZombieFights.teamOut(player, index) then
+		elseif ZombieFights.teamOut(player, index) or line.explore then
+			-- (a team set to explore does that and nothing else: the owner, 2026-11-14)
 			return nil, "TEAM_OUT"
 		elseif #line.members == 0 then
 			return nil, "NO_MEMBERS"

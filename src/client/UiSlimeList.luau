@@ -1,18 +1,23 @@
 --!strict
--- THE slime list of the whole game (the owner, 2026-11-02: one form everywhere): a row of sort buttons (Level, Attack,
--- Defence, Speed, HP; tapping the chosen one again flips the order) over a scrolling grid of tiles. A tile is the slime's
--- portrait with its level, the stat the list is sorted by and, when it is wounded, a thin health bar. Each place passes only
+-- THE slime list of the whole game (the owner, 2026-11-02: one form everywhere): one sort button at the right of the header
+-- ("Sort: Level"; its dropdown offers Level, Attack, Defence, Speed, HP, and choosing the chosen one again flips the order)
+-- over a scrolling grid of tiles. A tile is the slime's portrait with its level, its four fight stats, the gear it wears
+-- and, when it is wounded, a thin health bar. Each place passes only
 -- what differs: which slimes, which of them are unavailable and why, a small mark in a tile's corner, and what a tap does.
 -- The chosen sort is remembered for the session. Tiles are made once and updated in place; a refresh with the same slimes
 -- touches only what changed, so a list of 72 stays cheap on a phone. Reads attributes; decides nothing.
+local HttpService = game:GetService("HttpService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Config = require(ReplicatedStorage.Shared.Config)
+local Gear = require(ReplicatedStorage.Shared.Gear)
 local UiKit = require(script.Parent.UiKit)
 local UiSlimes = require(script.Parent.UiSlimes)
 
 local U = Config.Ui
 local T = U.Tile
+-- the fight stats a tile shows, in the order of the slime's page
+local STATS = { "attack", "defence", "speed", "hp" }
 
 -- A small picture and/or short text in the tile's top right corner; colour is a Config.Ui.Colours name for its plate.
 export type Mark = { icon: string?, text: string?, colour: string? }
@@ -46,9 +51,12 @@ type Tile = {
 	root: TextButton,
 	fill: Frame?,
 	level: TextLabel,
+	-- the caption row (the revive time) or, without a caption, the stats grid with its four numbers
 	statRow: Frame,
-	statIcon: ImageLabel,
 	statValue: TextLabel,
+	grid: Frame,
+	values: { [string]: TextLabel },
+	gear: Frame,
 	woundTrack: Frame,
 	woundFill: Frame,
 	markHost: Frame,
@@ -62,15 +70,11 @@ type Tile = {
 }
 
 local UiSlimeList = {}
+UiSlimeList.stats = STATS
 
 -- Remembered for the session, shared by every list.
 local sortKey: string = U.Sorts[1]
 local descending = true
-
-local function imageOf(name: string): string
-	local id = (U.Icons :: any)[name]
-	return if type(id) == "number" and id > 0 then "rbxassetid://" .. tostring(id) else ""
-end
 
 -- The default mark for what a slime is doing: its job, its pair, out on a team, resting, baby, fallen.
 function UiSlimeList.stateMark(slime: Configuration): Mark?
@@ -90,6 +94,56 @@ function UiSlimeList.stateMark(slime: Configuration): Mark?
 		return { icon = "energy" }
 	end
 	return nil
+end
+
+-- A stat in a few characters: 1250 is "1.2k".
+function UiSlimeList.short(amount: number): string
+	if amount >= 10000 then
+		return tostring(math.floor(amount / 1000)) .. "k"
+	elseif amount >= 1000 then
+		return string.format("%.1fk", amount / 1000)
+	end
+	return tostring(amount)
+end
+
+-- The pieces a slime wears (its `Gear` attribute), one small tile each in the colour of its tier, drawn into `host` (a row);
+-- nothing for an empty slot. (UiSmithy draws the same tile, but it cannot be required from here: it needs UiTeams.)
+function UiSlimeList.drawGear(host: Frame, slime: Instance, size: number)
+	UiKit.clear(host)
+	local text = slime:GetAttribute("Gear")
+	local ok, worn = pcall(function()
+		return HttpService:JSONDecode(text)
+	end)
+	if not ok or type(worn) ~= "table" then
+		return
+	end
+	for order, slot in Config.Smithy.Slots do
+		local def: any = Gear.get(worn[slot])
+		if def and def.slot == slot then
+			local tier: any = (Config.Smithy.Tiers :: any)[def.tier]
+			local tile = UiKit.make("Frame", {
+				Name = slot,
+				BackgroundColor3 = if tier then Color3.fromHex(tier.colour) else UiKit.colour("CardDeep"),
+				BorderSizePixel = 0,
+				Size = UDim2.fromOffset(size, size),
+				LayoutOrder = order,
+			}, host)
+			UiKit.make("UICorner", { CornerRadius = UDim.new(0.2, 0) }, tile)
+			local icon = def.icon
+			local image = if type(icon) == "number" and icon > 0
+				then "rbxassetid://" .. tostring(icon)
+				elseif type(icon) == "string" then icon
+				else ""
+			if image ~= "" then
+				UiKit.make("ImageLabel", {
+					BackgroundTransparency = 1,
+					Image = image,
+					ScaleType = Enum.ScaleType.Fit,
+					Size = UDim2.fromScale(1, 1),
+				}, tile)
+			end
+		end
+	end
 end
 
 local function markKeyOf(mark: Mark?): string
@@ -193,19 +247,56 @@ local function makeTile(parent: Instance, entry: Entry, onTap: (Configuration) -
 		Padding = UDim.new(0, 3),
 		SortOrder = Enum.SortOrder.LayoutOrder,
 	}, statRow)
-	local statIcon = UiKit.make("ImageLabel", {
-		Name = "Icon",
-		BackgroundTransparency = 1,
-		ScaleType = Enum.ScaleType.Fit,
-		Size = UDim2.fromOffset(U.IconSmall - 4, U.IconSmall - 4),
-		LayoutOrder = 1,
-	}, statRow)
 	local statValue = UiKit.label(statRow, "", U.TextTiny, "Brown", {
 		LayoutOrder = 2,
 		Size = UDim2.fromScale(0, 1),
 		AutomaticSize = Enum.AutomaticSize.X,
 		TextXAlignment = Enum.TextXAlignment.Center,
 	})
+	-- the four fight stats, two to a row: its picture and a short number
+	local grid = UiKit.make("Frame", {
+		Name = "Stats",
+		BackgroundTransparency = 1,
+		LayoutOrder = 3,
+		Size = UDim2.new(1, 0, 0, 2 * T.StatRow),
+	}, stack)
+	UiKit.make("UIGridLayout", {
+		CellSize = UDim2.new(0.5, 0, 0, T.StatRow),
+		CellPadding = UDim2.new(),
+		SortOrder = Enum.SortOrder.LayoutOrder,
+	}, grid)
+	local values: { [string]: TextLabel } = {}
+	for index, key in STATS do
+		local cell = UiKit.make("Frame", { Name = key, BackgroundTransparency = 1, LayoutOrder = index }, grid)
+		UiKit.make("UIListLayout", {
+			FillDirection = Enum.FillDirection.Horizontal,
+			HorizontalAlignment = Enum.HorizontalAlignment.Center,
+			VerticalAlignment = Enum.VerticalAlignment.Center,
+			Padding = UDim.new(0, 2),
+			SortOrder = Enum.SortOrder.LayoutOrder,
+		}, cell)
+		UiKit.icon(cell, key, T.StatIcon, { LayoutOrder = 1 })
+		values[key] = UiKit.label(cell, "", U.TextTiny, "Brown", {
+			LayoutOrder = 2,
+			Size = UDim2.fromScale(0, 1),
+			AutomaticSize = Enum.AutomaticSize.X,
+			TextXAlignment = Enum.TextXAlignment.Center,
+		})
+	end
+	-- what it wears
+	local gear = UiKit.make("Frame", {
+		Name = "Gear",
+		BackgroundTransparency = 1,
+		LayoutOrder = 4,
+		Size = UDim2.new(1, 0, 0, T.GearIcon),
+	}, stack)
+	UiKit.make("UIListLayout", {
+		FillDirection = Enum.FillDirection.Horizontal,
+		HorizontalAlignment = Enum.HorizontalAlignment.Center,
+		VerticalAlignment = Enum.VerticalAlignment.Center,
+		Padding = UDim.new(0, 3),
+		SortOrder = Enum.SortOrder.LayoutOrder,
+	}, gear)
 	local markHost = UiKit.make("Frame", {
 		Name = "Mark",
 		BackgroundTransparency = 1,
@@ -230,8 +321,10 @@ local function makeTile(parent: Instance, entry: Entry, onTap: (Configuration) -
 		fill = if fill and fill:IsA("Frame") then fill else nil,
 		level = level,
 		statRow = statRow,
-		statIcon = statIcon,
 		statValue = statValue,
+		grid = grid,
+		values = values,
+		gear = gear,
 		woundTrack = track,
 		woundFill = woundFill,
 		markHost = markHost,
@@ -259,14 +352,16 @@ local function update(tile: Tile, entry: Entry)
 	tile.entry = entry
 	local slime = entry.slime
 	local level = UiSlimes.number(slime, "Level")
-	local attribute = (U.SortAttributes :: any)[sortKey]
-	local stat = if sortKey ~= "level" then UiSlimes.number(slime, attribute) else 0
 	local share = UiSlimes.hpShare(slime)
 	local mark = if entry.suggested then { text = "Best", colour = "Green" } else entry.mark
+	local gearText = tostring(slime:GetAttribute("Gear"))
 	local key = table.concat({
 		tostring(level),
-		sortKey,
-		tostring(stat),
+		UiSlimeList.short(UiSlimes.number(slime, "Attack")),
+		UiSlimeList.short(UiSlimes.number(slime, "Defence")),
+		UiSlimeList.short(UiSlimes.number(slime, "Speed")),
+		UiSlimeList.short(UiSlimes.number(slime, "Hp")),
+		gearText,
 		tostring(math.floor(share * 100)),
 		tostring(entry.blocked == true),
 		tostring(entry.selected == true),
@@ -278,16 +373,16 @@ local function update(tile: Tile, entry: Entry)
 		tile.key = key
 		tile.level.Text = "Lv " .. tostring(level)
 		local caption = entry.caption
-		tile.statRow.Visible = caption ~= nil or sortKey ~= "level"
-		tile.statIcon.Visible = caption == nil
+		tile.statRow.Visible = caption ~= nil
+		tile.grid.Visible = caption == nil
 		if caption then
 			tile.statValue.Text = caption
 			tile.statValue.TextColor3 = UiKit.colour(entry.captionColour or "Brown")
-		else
-			tile.statIcon.Image = imageOf(sortKey)
-			tile.statValue.Text = tostring(stat)
-			tile.statValue.TextColor3 = UiKit.colour("Brown")
 		end
+		for stat, label in tile.values do
+			label.Text = UiSlimeList.short(UiSlimes.number(slime, (U.SortAttributes :: any)[stat]))
+		end
+		UiSlimeList.drawGear(tile.gear, slime, T.GearIcon)
 		tile.woundTrack.Visible = share < 1
 		tile.woundFill.Size = UDim2.fromScale(share, 1)
 		tile.woundFill.BackgroundColor3 = UiKit.colour(if share < T.WoundLow then "Red" else "Green")
@@ -332,11 +427,6 @@ function UiSlimeList.new(parent: Instance, options: Options): List
 		BackgroundTransparency = 1,
 		Size = UDim2.new(1, 0, 0, U.Touch),
 	}, root)
-	UiKit.make("UIListLayout", {
-		FillDirection = Enum.FillDirection.Horizontal,
-		Padding = UDim.new(0, U.Gap),
-		SortOrder = Enum.SortOrder.LayoutOrder,
-	}, row)
 	local scroller = UiKit.make("ScrollingFrame", {
 		Name = "Tiles",
 		BackgroundTransparency = 1,
@@ -358,8 +448,6 @@ function UiSlimeList.new(parent: Instance, options: Options): List
 
 	local tiles: { [string]: Tile } = {}
 	local order: { string } = {}
-	local arrows: { [string]: GuiObject } = {}
-	local buttons: { [string]: TextButton } = {}
 
 	local function fit()
 		local width = math.max(UiKit.units(scroller).X - 8 - 5, T.Width)
@@ -413,22 +501,30 @@ function UiSlimeList.new(parent: Instance, options: Options): List
 	local refresh: () -> ()
 	-- A refresh of the rest of the tiles is already waiting for the next frame.
 	local continuing = false
-	local function paintSorts()
-		for id, button in buttons do
-			UiKit.setStyle(button, if id == sortKey then "primary" else "secondary")
-			local arrow = arrows[id]
-			arrow.Visible = id == sortKey
-			arrow.Rotation = if descending then 0 else 180
-		end
+	-- One button at the right of the header shows the sort ("Sort: Level") and opens the choices; choosing the sort already
+	-- in use flips its order, which the little arrow on the button shows.
+	local choices: { { id: string, text: string } } = {}
+	for _, id in U.Sorts do
+		table.insert(choices, { id = id, text = (U.SortNames :: any)[id] })
 	end
-	for index, id in U.Sorts do
-		local button = UiKit.button(row, {
-			Name = id,
-			Icon = id,
-			Style = "secondary",
-			Size = UDim2.fromOffset(U.Touch, U.Touch),
-			LayoutOrder = index,
-			OnClick = function()
+	local sortButton: TextButton
+	local arrow: GuiObject
+	local function paintSorts()
+		local label = sortButton:FindFirstChild("Label", true)
+		if label and label:IsA("TextLabel") then
+			label.Text = "Sort: " .. (U.SortNames :: any)[sortKey]
+		end
+		arrow.Rotation = if descending then 0 else 180
+	end
+	sortButton = UiKit.button(row, {
+		Name = "Sort",
+		Text = "Sort",
+		Style = "secondary",
+		Size = UDim2.fromOffset(T.SortWidth, U.Touch),
+		AnchorPoint = Vector2.new(1, 0),
+		Position = UDim2.new(1, -8, 0, 0),
+		OnClick = function()
+			UiKit.dropdown(sortButton, choices, sortKey, function(id)
 				if sortKey == id then
 					descending = not descending
 				else
@@ -436,18 +532,15 @@ function UiSlimeList.new(parent: Instance, options: Options): List
 				end
 				paintSorts()
 				refresh()
-			end,
-		})
-		-- the way it sorts: an arrow on the chosen button's corner
-		arrows[id] = UiKit.icon(button, "order", T.SortArrow, {
-			Name = "Order",
-			AnchorPoint = Vector2.new(1, 1),
-			Position = UDim2.new(1, -2, 1, -2),
-			ZIndex = 8,
-			Visible = false,
-		})
-		buttons[id] = button
-	end
+			end)
+		end,
+	})
+	arrow = UiKit.icon(sortButton, "order", T.SortArrow, {
+		Name = "Order",
+		AnchorPoint = Vector2.new(1, 0.5),
+		Position = UDim2.new(1, -8, 0.5, 0),
+		ZIndex = 8,
+	})
 	paintSorts()
 
 	refresh = function()

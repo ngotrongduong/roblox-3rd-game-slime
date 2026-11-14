@@ -15,6 +15,7 @@ local Social = if script then require(script.Parent.Social) else require("./Soci
 local Stations = if script then require(script.Parent.Stations) else require("./Stations")
 local Village = if script then require(script.Parent.Village) else require("./Village")
 local Wheel = if script then require(script.Parent.Wheel) else require("./Wheel")
+local WorldPacks = if script then require(script.Parent.WorldPacks) else require("./WorldPacks")
 local Zombies = if script then require(script.Parent.Zombies) else require("./Zombies")
 
 export type Env = {
@@ -23,6 +24,10 @@ export type Env = {
 	-- The Blacksmith's stall: within Config.Market.SmithyRangeStuds plus its slack.
 	atSmithy: () -> boolean,
 	teamOut: (team: number) -> boolean,
+	-- Whether the player stands at their own team banner, inside the village gate (a line-up is set up at home).
+	atHome: () -> boolean,
+	-- Calls a team that is out exploring back (ZombieFights.recall).
+	recall: (team: number) -> (),
 	attack: (farm: any, team: number, groupId: string, now: number) -> (boolean, string?),
 	clearWounds: (slimeId: string) -> (),
 	freeUpgrades: boolean,
@@ -147,6 +152,13 @@ function VillageRequests.valid(data: any, hasPlot: boolean): boolean
 		return teamNumber(data.team) and idList(data.slimeIds) and hasPlot
 	elseif action == "SetTeamRepeat" then
 		return teamNumber(data.team) and type(data.on) == "boolean" and hasPlot
+	elseif action == "SetTeamExplore" then
+		-- (band 0 calls the team back)
+		return teamNumber(data.team)
+			and integer(data.band)
+			and data.band >= 0
+			and data.band <= WorldPacks.bands()
+			and hasPlot
 	elseif action == "SetTeamRow" then
 		return teamNumber(data.team) and shortText(data.slimeId) and type(data.row) == "string" and hasPlot
 	elseif action == "SetTeamTactic" then
@@ -233,9 +245,7 @@ function VillageRequests.run(farm: any, data: any, now: number, env: Env): (bool
 		end
 		return false, "INVALID_RECIPE_OR_SLOT"
 	elseif action == "FeedDish" then
-		if env.isOut(data.slimeId) then
-			return false, "OUT"
-		end
+		-- (a slime that is out with its team is fed too: a team's sheet gives each member its dish, the owner 2026-11-14)
 		return Food.feed(farm, data.slimeId, data.dish, now)
 	elseif action == "SetAutoDish" then
 		return Food.setAutoDish(farm, data.slimeId, data.dish)
@@ -250,11 +260,33 @@ function VillageRequests.run(farm: any, data: any, now: number, env: Env): (bool
 	elseif action == "UpgradeArea" then
 		return Village.upgrade(farm, data.areaId, env.freeUpgrades)
 	elseif action == "SetTeam" then
-		-- the line-ups are set anywhere (a team's chip opens its sheet: the owner, 2026-11-12), never while that team is out
-		if env.teamOut(data.team) then
+		-- a line-up is set at home, at the team banner, and only while that team is in the village (the owner, 2026-11-14)
+		if not env.atHome() then
+			return false, "TOO_FAR"
+		elseif env.teamOut(data.team) then
 			return false, "TEAM_OUT"
 		end
 		return Zombies.setTeam(farm, data.team, data.slimeIds, now, env.isOut)
+	elseif action == "SetTeamExplore" then
+		local team = farm.teams[data.team]
+		if data.band == 0 then
+			-- called back, from anywhere: it comes home after the fight in hand
+			team.explore = nil
+			env.recall(data.team)
+			return true, nil
+		elseif not env.atHome() then
+			return false, "TOO_FAR"
+		elseif not Zombies.teamOpen(farm, data.team) then
+			return false, "LOCKED"
+		elseif env.teamOut(data.team) then
+			return false, "TEAM_OUT"
+		elseif #team.members == 0 then
+			return false, "NO_MEMBERS"
+		end
+		-- (the team sets out by itself: ZombieFights looks at every team at home a few times a second)
+		team.explore = data.band
+		team.repeatOn = false
+		return true, nil
 	elseif action == "SetTeamRow" or action == "SetTeamTactic" then
 		if not teamNumber(data.team) or not farm.teams[data.team] then
 			return false, "BAD_TEAM"

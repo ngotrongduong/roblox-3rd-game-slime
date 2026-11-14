@@ -39,6 +39,7 @@ local sections: { Section } = {}
 local scroller: ScrollingFrame? = nil
 local emptyLabel: TextLabel? = nil
 local ownRef: Instance? = nil
+local forSlime: string? = nil
 local dishRefresh: (() -> ())? = nil
 local openDishSheet: (own: Instance?, id: string) -> () = function() end
 
@@ -362,12 +363,15 @@ function UiFood.isOpen(): boolean
 	return UiKit.modalId() == MODAL
 end
 
-function UiFood.open(own: Instance?)
+-- `slimeId`: the team sheet's dish button: only the dishes are listed, and the dish sheet that one opens has that slime
+-- chosen already.
+function UiFood.open(own: Instance?, slimeId: string?)
 	if UiFood.isOpen() then
 		UiKit.closeModal()
 		return
 	end
 	ownRef = own
+	forSlime = slimeId
 	local modal = UiKit.openModal(MODAL, {
 		Width = U.FoodWidth,
 		Height = U.FoodHeight,
@@ -377,7 +381,7 @@ function UiFood.open(own: Instance?)
 			scroller, emptyLabel = nil, nil
 		end,
 	})
-	UiKit.label(modal.header, "Food", U.TextHeader, "Brown", {
+	UiKit.label(modal.header, if slimeId then "Buff dishes" else "Food", U.TextHeader, "Brown", {
 		Size = UDim2.fromScale(1, 1),
 		TextYAlignment = Enum.TextYAlignment.Center,
 	})
@@ -397,17 +401,21 @@ function UiFood.open(own: Instance?)
 		SortOrder = Enum.SortOrder.LayoutOrder,
 	}, list)
 	scroller = list
-	emptyLabel = UiKit.label(modal.content, "No food yet", U.TextNormal, "BrownSoft", {
-		Name = "Empty",
-		Position = UDim2.fromOffset(0, U.Gap),
-		TextXAlignment = Enum.TextXAlignment.Center,
-		Visible = false,
-	})
-	sections = {
-		{ title = "Fish", ids = Config.Food.FishOrder },
-		{ title = "Vegetables", ids = Config.Food.VegOrder },
-		{ title = "Dishes", ids = Config.Food.DishOrder },
-	}
+	emptyLabel =
+		UiKit.label(modal.content, if slimeId then "No dishes yet" else "No food yet", U.TextNormal, "BrownSoft", {
+			Name = "Empty",
+			Position = UDim2.fromOffset(0, U.Gap),
+			TextXAlignment = Enum.TextXAlignment.Center,
+			Visible = false,
+		})
+	-- (for one slime only the dishes show: fish and vegetables give it no buff)
+	sections = if slimeId
+		then { { title = "Dishes", ids = Config.Food.DishOrder } }
+		else {
+			{ title = "Fish", ids = Config.Food.FishOrder },
+			{ title = "Vegetables", ids = Config.Food.VegOrder },
+			{ title = "Dishes", ids = Config.Food.DishOrder },
+		}
 	for index, section in sections do
 		section.header = UiKit.label(list, section.title, U.TextNormal, "Gold", {
 			Name = "Section" .. section.title,
@@ -431,7 +439,8 @@ openDishSheet = function(own: Instance?, id: string)
 	ownRef = own
 	local name, rarityName, colour = UiFood.describe(id)
 	local stat, percent, minutes = UiFood.facts(id)
-	local selected: string? = nil
+	local selected: string? = forSlime
+	forSlime = nil
 	local busy = false
 	local refresh: () -> () = function() end
 	local modal = UiKit.openModal(DISH_MODAL, {
@@ -611,8 +620,8 @@ openDishSheet = function(own: Instance?, id: string)
 		end
 		if chosen then
 			bar.Visible = true
-			-- the server refuses a slime out fighting or a dish none is left of: grey, not hidden logic
-			UiKit.setEnabled(feed, count > 0 and chosen:GetAttribute("OutOnSquad") ~= true and not busy)
+			-- (a slime out with its team can be fed too) the server refuses a dish none is left of: grey, not hidden logic
+			UiKit.setEnabled(feed, count > 0 and not busy)
 			UiKit.setEnabled(auto, not busy)
 			UiKit.setStyle(auto, if chosen:GetAttribute("AutoDish") == id then "primary" else "secondary")
 		else

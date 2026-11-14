@@ -300,6 +300,19 @@ return function(T)
 		T.eq(repaired.teams[4].tactic, nil, "Balanced is the absence of an override")
 	end)
 
+	T.test("a team's exploring survives repair only as a real band", function()
+		local farm: any = FarmKit.farm(NOW, FarmKit.many(3))
+		farm.teams[1] = { members = { "s1" }, repeatOn = false, explore = 2 }
+		farm.teams[2] = { members = { "s2" }, repeatOn = false, explore = 0 }
+		farm.teams[3] = { members = { "s3" }, repeatOn = false, explore = 999 }
+		farm.teams[4] = { members = {}, repeatOn = false, explore = "far" }
+		local repaired = FarmState.repair(farm, NOW)
+		T.eq(repaired.teams[1].explore, 2)
+		T.eq(repaired.teams[2].explore, nil)
+		T.eq(repaired.teams[3].explore, nil)
+		T.eq(repaired.teams[4].explore, nil)
+	end)
+
 	T.test("removing a slime prunes its team row without disturbing another member", function()
 		local farm = FarmKit.farm(NOW, FarmKit.many(4))
 		farm.teams[1].members = { "s1", "s2" }

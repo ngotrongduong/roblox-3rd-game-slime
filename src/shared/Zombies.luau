@@ -104,6 +104,18 @@ function Zombies.teamOpen(farm: Farm, teamIndex: number): boolean
 	return teamIndex <= Zombies.teamsOpen(FarmState.villageLevel(farm.areas), Boosts.extraTeams(farm))
 end
 
+-- Whether any of these slimes is in a team set to explore: a team does one job at a time (the owner, 2026-11-14), so
+-- the Arena and the Dungeon refuse them.
+function Zombies.exploring(farm: Farm, ids: { string }): boolean
+	for _, id in ids do
+		local index = FarmState.teamOf(farm, id)
+		if index and farm.teams[index].explore then
+			return true
+		end
+	end
+	return false
+end
+
 -- Sets the line-up of team `teamIndex` to these slimes (none empties it). A slime already in another team moves here.
 -- `isOut` says which slimes are away on a march. Returns whether it was set, else why not; nothing changes on a refusal:
 -- BAD_TEAM, LOCKED (the village is not big enough for it yet; it can still be emptied), BAD_SIZE, DUPLICATE, NO_SLIME,

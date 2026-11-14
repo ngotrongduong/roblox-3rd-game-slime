@@ -71,6 +71,7 @@ local REASONS: { [string]: string } = {
 	SOLD_OUT = "Sold out this week.",
 	NO_POINTS = "Not enough Arena points.",
 	NO_ANSWER = "No answer from the server.",
+	EXPLORING = "A fighter is out exploring",
 }
 
 local TABS = {

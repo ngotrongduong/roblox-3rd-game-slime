@@ -13,6 +13,7 @@ local GardenPlots = if script then require(script.Parent.GardenPlots) else requi
 local Mutations = if script then require(script.Parent.Mutations) else require("./Mutations")
 local Rng = if script then require(script.Parent.Rng) else require("./Rng")
 local StatsModule = if script then require(script.Parent.Stats) else require("./Stats")
+local WorldPacks = if script then require(script.Parent.WorldPacks) else require("./WorldPacks")
 
 local FarmState = {}
 
@@ -121,6 +122,8 @@ export type Team = {
 	-- Only overridden rows are saved; absent means the weapon's row. Balanced is also absent.
 	formation: { [string]: string }?,
 	tactic: string?,
+	-- The band of packs (WorldPacks.band) the team explores by itself until it is called back; absent when it does not.
+	explore: number?,
 }
 -- The tutorial (shared/Guide): its step (Config.Guide.Steps, or "done"), the number the step measures from, the intro on
 -- screen and the number it measures from, and the intros already done or put away.
@@ -1309,6 +1312,10 @@ local function validateTeams(raw: any, slimes: { Slime }, work: Work, pairing: P
 			end
 			if row.tactic == "focus" or row.tactic == "protect" then
 				team.tactic = row.tactic
+			end
+			local band = row.explore
+			if type(band) == "number" and band % 1 == 0 and band >= 1 and band <= WorldPacks.bands() then
+				team.explore = band
 			end
 		end
 	end
