@@ -1075,6 +1075,8 @@ local function onAim(event: { [string]: any })
 		TweenService:Create(glow, TweenInfo.new(windup, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
 			FillTransparency = V.Skill.Power.GlowMost,
 		}):Play()
+		-- (its class's own charge rides it through the aim)
+		charges[event.from] = vfx((V.Skill.Power.Charge :: any)[wayOf(event.from)], attacker.model, { follow = true })
 		task.delay(windup + 1, function()
 			if glows[event.from] == glow then
 				endCharge(event.from)

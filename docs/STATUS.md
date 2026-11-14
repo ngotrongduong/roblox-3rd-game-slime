@@ -82,8 +82,28 @@ Coloured bodies hold on the snow (sword, shield, kit, staff at core); still pale
 core shield and bow; the kit's burst reads as black ink. Sent back to the library session. Not seen: iron and
 bramble, the dark maps, a real phone.
 
-**Next (wave 2b, being made in the VFX library):** the 14 class-skill pieces of `docs/weapons/SKILL-VFX.md` §3 and a
-short charge per class that fits a 0.3 s aim; then the skills of Uncommon to Legendary.
+**Wave 2b, done the same day** (VfxLib 5c79d3b, 104 effects):
+- **Taunt** is the library's Guardian Taunt (`skill.guardian_taunt`: three crimson rings, a gold shield emblem, a floor
+  ring) instead of the icon bubble `burst.shield_up` (removed from the game's copy).
+- **A charge per class through the aim** (`View.Skill.Power.Charge`, one line in `client/ZombieFight` `onAim`): Guardian
+  `skill.guardian_charge`, Ranger `skill.draw_aim`, Mage `skill.arcane_charge`, Healer `skill.blessing_charge`,
+  Alchemist `skill.alchemist_charge`; it rides the caster and fades as the skill fires.
+- **The weapon impacts that were pale on snow were redone in the library** and imported again.
+- Seen in MapWork Play on Frozen Ice: a real run played `skill.guardian_taunt`, `skill.guardian_charge`,
+  `skill.arcane_charge`, `skill.draw_aim` and four `hit.weapon_*` with no warning; the charges on the real squad from
+  behind (a ring of light round each; Mage and Healer strong, Guardian and Alchemist soft gold on the snow); a test row
+  of the six impacts at legend (all coloured and clear now) and wood (small, each its own shape); Taunt's red rings
+  read on snow, its gold emblem and floor ring are faint there.
+- **Not verified:** the Healer's and the Alchemist's charge fired by a real skill (only played by hand on the squad),
+  iron and bramble impacts, the four darker maps, a real phone.
+- **Left as they are on purpose:** Acid Rain keeps the owner's flasks (the library's `skill.alchemist_acid_rain` flies
+  0.73 s and drips 4-5 s, which does not fit the game's rain; `buff.acid_melt` already shows the drip) and Arcane
+  Barrage keeps the owner's orbs with `burst.ether_burst` (the library's `skill.mage_barrage` is heavy and still pale
+  on snow).
+
+**Next:** the skills of Uncommon to Legendary are not built in the game yet; their library pieces wait on library main
+(Shield Bash, Shield Wall, Bulwark, Frost Burst, Meteor wind-up, Ward, Healing Ring wind-up, Squad Tonic, Cursed
+Flask, Catalyst Cloud, Arrow Rain warning) and are imported when each skill is built.
 
 ## 2026-11-14 — favorite the game and join the group: a big gift each, the tutorial's last step
 

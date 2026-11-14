@@ -66,6 +66,10 @@ return function(T)
 		for way in V.Skill.Power.Glow do
 			T.ok(V.Fx.Styles[way] ~= nil, `Power.Glow.{way} is a way of fighting`)
 		end
+		for way, id in V.Skill.Power.Charge :: any do
+			T.ok(imported(id), `Power.Charge.{way} {id}`)
+			T.ok(V.Skill.Power.Glow[way] ~= nil, `Power.Charge.{way} glows too`)
+		end
 		-- (a plain blow's impact: every weapon family has its own, with a design per tier)
 		local W = Config.Weapons
 		for family in W.Families do

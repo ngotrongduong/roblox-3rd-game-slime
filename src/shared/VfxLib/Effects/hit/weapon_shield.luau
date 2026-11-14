@@ -83,7 +83,51 @@ end
 
 local ONE_OF = { layout = "Grid4x4", mode = "Loop", fps = { 0, 0 }, random = true }
 
-return {
+-- (readable on snow from the game's camera, 25 to 35 studs: a pale body is deepened to a saturated mid-tone and the
+-- piece grown, its glow kept low; only the glints stay white. plan = { variant = growth })
+local KEEP = { glint = true, glints = true, twinkles = true, spark = true, sparks = true, specks = true, dust = true }
+
+local function deepen(c)
+	local mean = (c[1] + c[2] + c[3]) / 3
+	local out = {}
+	for i = 1, 3 do
+		out[i] = math.floor(math.clamp((mean + (c[i] - mean) * 1.5) * 0.8, 20, 235))
+	end
+	return out
+end
+
+local function deepenColor(color)
+	if type(color[1]) == "number" then
+		return deepen(color)
+	end
+	local out = {}
+	for i, entry in color do
+		out[i] = deepen(entry)
+	end
+	return out
+end
+
+local function readable(effect, plan)
+	for name, grow in plan do
+		local pieces = if name == "wood" then effect.pieces else effect.variants[name].pieces
+		for _, piece in pieces do
+			if not KEEP[piece.name] and piece.color and piece.role ~= "keep" then
+				piece.color = deepenColor(piece.color)
+				piece.lightEmission = math.min(piece.lightEmission or 0, 0.25)
+			end
+			if piece.size and not KEEP[piece.name] then
+				local size = {}
+				for i, key in piece.size do
+					size[i] = { key[1], key[2] * grow, key[3] }
+				end
+				piece.size = size
+			end
+		end
+	end
+	return effect
+end
+
+return readable({
 	id = "hit.weapon_shield",
 	name = "Weapon Hit Shield",
 	kind = "hit",
@@ -185,4 +229,4 @@ return {
 		licence = "the owner's own art; Creator Store free assets (no scripts kept)",
 	},
 	notes = "VfxLib.play('hit.weapon_shield', CFrame.lookAt(skin, skin + blowDirection), { variant = rarity, scale = foeHeight / 2.2 }): at the foe's skin, -Z along the blow. 0.3 to 0.4 s. Wood and iron are cheap, core to legend mid; bramble and legend flash a light and mark the floor.",
-}
+}, { core = 1.25 })

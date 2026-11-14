@@ -213,6 +213,15 @@ return {
 					healer = "#fff2a8",
 					alchemist = "#8dff6a",
 				},
+				-- A weapon class's own charge from the VFX library, on the caster through the aim (let go softly as the
+				-- skill fires). The Warrior's Dash Strike is drawn from its aim already.
+				Charge = {
+					guardian = "skill.guardian_charge",
+					ranger = "skill.draw_aim",
+					mage = "skill.arcane_charge",
+					healer = "skill.blessing_charge",
+					alchemist = "skill.alchemist_charge",
+				},
 			},
 			-- (`lib`: a VFX library effect played where the skill bursts, on top of the owner's art, `libScale` times its
 			-- size: Goo Slam's landing throws a ring of dust, Belly Bounce's a whirl of sparks)
@@ -285,14 +294,14 @@ return {
 				-- them (docs/weapons/SKILL-VFX.md): Taunt rings out from the shield and rings every foe it pulls (`mark`);
 				-- Arcane Barrage fires an orb from the focus at every foe it strikes (`fire`), each bursting in the
 				-- library's Ether Burst (`hitVfx`); Acid Rain drops flasks out of the sky, each breaking in the library's
-				-- Acid Splat on the foe it falls on; Taunt's shield stands over the Guardian for a moment (`lib`).
+				-- Acid Splat on the foe it falls on; Taunt's shout rolls out of the Guardian in the library's Guardian
+				-- Taunt (`lib`).
 				taunt = {
 					burst = "shockwave",
 					bits = "sparkStar",
 					ring = "ringShock",
 					mark = "ring",
-					lib = "burst.shield_up",
-					libScale = 1.4,
+					lib = "skill.guardian_taunt",
 				},
 				dash_strike = { vfx = "skill.flash_step", aim = true, impact = "impact", ownHit = true },
 				piercing_shot = { vfx = "skill.piercing_arrow", impact = "impact", ownHit = true, pierce = true },

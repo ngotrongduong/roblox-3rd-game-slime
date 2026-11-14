@@ -34,13 +34,25 @@ local function splash(name, texture, color, size, over)
 		color = color,
 		count = 1,
 		life = { 0.4, 0.4 },
-		size = { { 0, size * 0.8 }, { 0.2, size }, { 1, size * 1.1 } },
-		transparency = { { 0, 0 }, { 0.8, 0.1 }, { 1, 1 } },
+		-- (the ink splat is only a thin dark rim under the potion's own coloured body, see `body`)
+		size = { { 0, size * 0.5 }, { 0.2, size * 0.65 }, { 1, size * 0.7 } },
+		transparency = { { 0, 0.15 }, { 0.8, 0.3 }, { 1, 1 } },
 		rotation = { 0, 359 },
 		lightEmission = 0,
 		brightness = 1.8,
 		zOffset = 1,
 	}, over)
+end
+
+-- (the splash in the potion's colours: a solid fat star drawn normal, over the rim)
+local function body(color, size)
+	return flash("body", "star_fat", color, size, {
+		life = { 0.3, 0.3 },
+		transparency = { { 0, 0 }, { 0.7, 0.1 }, { 1, 1 } },
+		lightEmission = 0.15,
+		brightness = 1.6,
+		zOffset = 1.5,
+	})
 end
 
 local function spray(name, texture, color, count, size, over)
@@ -110,14 +122,8 @@ return {
 	markers = { peak = 0.08 },
 	pieces = {
 		splash("splash", "splash_dark_flip", { 235, 80, 80 }, 2.2, { flipbook = ONCE }),
+		body({ { 235, 70, 70 }, { 90, 120, 235 } }, 3.4),
 		spray("drops", "droplet_gloss", { { 220, 80, 80 }, { 90, 130, 235 } }, 8, 0.45, {}),
-		spray("dust", "dust_ring", { 228, 208, 170 }, 2, 1.1, {
-			size = { { 0, 0.9 }, { 1, 2.2 } },
-			transparency = { { 0, 0.25 }, { 1, 1 } },
-			speed = { 0.5, 1 },
-			accel = { 0, 0, 0 },
-			flipbook = ONCE,
-		}),
 	},
 	variants = {
 		wood = { tier = "cheap" },
@@ -125,7 +131,7 @@ return {
 			tier = "cheap",
 			pieces = {
 				splash("splash", "splash_dark_flip", { 150, 185, 235 }, 2.5, { flipbook = ONCE }),
-				flash("glint", "star_glint_sharp", { 255, 255, 255 }, 1.7),
+				body({ { 90, 150, 235 }, { 50, 110, 220 } }, 3.6),
 				spray("sparks", "needle_glow", { { 255, 240, 200 }, { 255, 160, 60 } }, 12, 0.5, {
 					life = { 0.15, 0.28 },
 					speed = { 8, 15 },
@@ -140,7 +146,7 @@ return {
 		core = {
 			pieces = {
 				splash("splash", "splash_dark_flip", { 185, 110, 255 }, 3, { flipbook = ONCE }),
-				flash("spark", "sparkStar", { 235, 205, 255 }, 2, {}),
+				body({ { 190, 110, 255 }, { 130, 60, 220 } }, 4.2),
 				bubbles({ { 205, 160, 255 }, { 150, 90, 235 } }, 12),
 				spray("glints", "sparkStar", { 255, 240, 255 }, 6, 0.5, { lightEmission = 1, accel = { 0, 0, 0 } }),
 			},
@@ -168,7 +174,7 @@ return {
 		legend = {
 			pieces = {
 				flash("flare", "star_flare", { 255, 225, 140 }, 3.6, { lightEmission = 0.8 }),
-				splash("splash", "splash_dark_flip", { 195, 120, 255 }, 3.8, { flipbook = ONCE, brightness = 2 }),
+				body({ { 200, 90, 255 }, { 255, 170, 40 } }, 5.2),
 				-- (flasks fly out whole and burst: the clip)
 				spray("flasks", "flask_flip", { 255, 235, 190 }, 4, 1.1, {
 					life = { 0.4, 0.4 },

@@ -191,7 +191,9 @@ From the audit of 2026-11-14 (`docs/STATUS.md`). All of it is data in `Config.Zo
 | A crit, by class | Warrior `hit.blade_cross`, Guardian `hit.comic_punch`, Ranger `hit.side_gust`, Mage `hit.shard_nova`, Healer `hit.holy` crit, Alchemist `burst.stylized_blast`, sized by the weapon's tier | `Fx.CritLooks` |
 | Goo Slam lands | `burst.cghow_dust_shockwave` on the floor | `Skill.Looks.attack.lib` |
 | Belly Bounce lands | `burst.prism_pop` on the floor | `Skill.Looks.hp.lib` |
-| Taunt | `burst.shield_up` round the Guardian | `Skill.Looks.taunt.lib` |
+| Taunt | `skill.guardian_taunt`: three crimson rings roll out, a gold shield emblem, a floor ring (wave 2b) | `Skill.Looks.taunt.lib` |
+| A slime aims a skill, by class | its class's own charge rides it through the aim and fades as the skill fires: Guardian `skill.guardian_charge`, Ranger `skill.draw_aim`, Mage `skill.arcane_charge`, Healer `skill.blessing_charge`, Alchemist `skill.alchemist_charge` (the Warrior's Dash Strike draws its own); wave 2b | `Skill.Power.Charge` |
+| A plain blow of a held weapon lands | `hit.weapon_<family>` at the weapon's tier (wood, iron, core, bramble, legend), over the owner's mark (wave 2a) | `Config.Weapons.Fx.Hit`, `HitHeight` |
 | Acid Rain, each foe struck | `hit.acid_splat` | `Skill.Looks.acid_rain.hitVfx` |
 | A slime falls | `burst.smoke_poof` | `FallVfx` |
 | The winners cheer | `burst.reward_glitter` | `CheerVfx` |
