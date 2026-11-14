@@ -371,13 +371,13 @@ do
 end
 
 ---------------------------------------------------------------------------------------------------------------------
--- 7. Wayfinding: a gate, a sign and lamps where the lane meets each village; signs at the junctions; lamps along the
--- King's Road (the way a new player first walks).
+-- 7. Wayfinding: a sign and lamps where the lane meets each village; signs at the junctions; lamps along the
+-- King's Road (the way a new player first walks). No gate here: every home plot brings its own in its fence, and a
+-- second one in front of it read as a mistake (the owner, 2026-11-15).
 local villages = folder("Villages")
 for _, village in Plan.Villages do
 	local fx, fz = Plan.villageFacing(village)
 	local out = Plan.Village.GateOut - 14
-	put(villages, "PropKit", "VillageGate", village.x + fx * out, village.z + fz * out, 15, { fx, fz }, { name = village.name .. " Gate" })
 	for side = -1, 1, 2 do
 		put(villages, "PropKit", "VillageLamp", village.x + fx * (out + 5) - fz * side * 13, village.z + fz * (out + 5) + fx * side * 13, 12)
 	end
