@@ -114,7 +114,14 @@ export type Pair = { a: string?, b: string?, courtingUntil: number? }
 export type Pairing = { pairs: { Pair } }
 -- A fighting team (Config.Zombies.Teams of them, always): its line-up, whether it attacks again by itself, and the
 -- id of the zombie group it was last ordered at (ZombieFights; a group id is stable, so the order survives a rejoin).
-export type Team = { members: { string }, repeatOn: boolean, target: string? }
+export type Team = {
+	members: { string },
+	repeatOn: boolean,
+	target: string?,
+	-- Only overridden rows are saved; absent means the weapon's row. Balanced is also absent.
+	formation: { [string]: string }?,
+	tactic: string?,
+}
 -- The tutorial (shared/Guide): its step (Config.Guide.Steps, or "done"), the number the step measures from, the intro on
 -- screen and the number it measures from, and the intros already done or put away.
 export type Guide = { step: string, mark: number, intro: string?, introMark: number, seen: { [string]: boolean } }
@@ -548,6 +555,12 @@ function FarmState.removeSlime(farm: Farm, id: string): boolean
 		local inTeam = table.find(team.members, id)
 		if inTeam then
 			table.remove(team.members, inTeam)
+		end
+		if team.formation then
+			team.formation[id] = nil
+			if next(team.formation) == nil then
+				team.formation = nil
+			end
 		end
 	end
 	-- (farms built by hand in older specs may have no arena)
@@ -1277,6 +1290,25 @@ local function validateTeams(raw: any, slimes: { Slime }, work: Work, pairing: P
 			team.repeatOn = row.repeatOn == true
 			if isText(row.target) and #row.target <= Config.Zombies.TargetIdMaxLength then
 				team.target = row.target
+			end
+			if type(row.formation) == "table" then
+				local formation: { [string]: string } = {}
+				for id, chosen in row.formation do
+					if
+					type(id) == "string"
+						and table.find(team.members, id)
+						and type(chosen) == "string"
+						and table.find(Config.Classes.Rows.Order, chosen)
+					then
+						formation[id] = chosen
+					end
+				end
+				if next(formation) then
+					team.formation = formation
+				end
+			end
+			if row.tactic == "focus" or row.tactic == "protect" then
+				team.tactic = row.tactic
 			end
 		end
 	end
