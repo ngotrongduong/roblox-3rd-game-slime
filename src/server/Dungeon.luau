@@ -578,14 +578,16 @@ local function startRun(run: Run, farm: any, level: number, ids: { string }, now
 	run.monsters:ClearAllChildren()
 	setSquad(run, ids)
 	local fighters: { any } = {}
+	local rows: { string } = {}
 	local roles: { [string]: string } = {}
-	for index, id in ids do
+	for _, id in ids do
 		local slime = FarmState.findSlime(farm, id)
 		if slime then
 			local fighter: any = Zombies.fighter(slime, now, 1 - ZombieFights.woundOf(run.player, id))
 			fighter.role = fighter.class or Combat.role(fighter, slime.seed)
-			fighter.x, fighter.z = DungeonRules.squadSpot(index, #ids)
+			fighter.row = Zombies.rowOf(farm, id)
 			table.insert(fighters, fighter)
+			table.insert(rows, fighter.row)
 			roles[id] = fighter.role
 			local node = run.nodes[id]
 			if node then
@@ -594,8 +596,19 @@ local function startRun(run: Run, farm: any, level: number, ids: { string }, now
 			end
 		end
 	end
+	-- The same row spots are reused at each run start; waves keep surviving fighters in place.
+	local spots = DungeonRules.squadSpots(rows)
+	for index, fighter in fighters do
+		fighter.x, fighter.z = spots[index].x, spots[index].z
+	end
+	local firstTeam = farm.teams[run.teams[1]]
+	local tactic = Zombies.tacticOf(firstTeam)
 	-- (positional: the fighters walk into reach, at their own speed)
-	local fight = Combat.new(fighters, {}, run.rng, { moves = true, radius = run.radius })
+	local fight = Combat.new(fighters, {}, run.rng, {
+		moves = true,
+		radius = run.radius,
+		tactics = { squad = tactic },
+	})
 	-- (the queue brings monsters in one by one: the fight does not end when the monsters in it are down)
 	fight.open = true
 	run.fight = fight
@@ -604,6 +617,7 @@ local function startRun(run: Run, farm: any, level: number, ids: { string }, now
 			kind = "start",
 			group = "dungeon",
 			members = table.clone(ids),
+			rows = table.clone(rows),
 			roles = roles,
 			level = shownLevel(run),
 			waves = run.waves,
