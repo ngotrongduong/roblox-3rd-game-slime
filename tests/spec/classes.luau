@@ -412,7 +412,7 @@ return function(T: any)
 		for _, id in { "f1", "f2", "f3", "f4" } do
 			freeze(unitOf(fight, id), m)
 		end
-		g.skillReady = 0
+		g.skillReady.taunt = 0
 		local taunts: { any } = {}
 		local statuses: { [string]: string } = {}
 		local at = 0
@@ -443,7 +443,7 @@ return function(T: any)
 			T.near(f.tauntUntil, at + 4, 1e-9)
 		end
 		T.near(g.effects.taken.value, Skills.taunt.taken, 1e-9)
-		T.near(g.skillReady, at + Skills.taunt.cooldown, 1e-9)
+		T.near(g.skillReady.taunt, at + Skills.taunt.cooldown, 1e-9)
 		run(fight, 4.1)
 		-- (let them aim again: their next aim finds the taunt over and picks by its own rule)
 		for _, event in taunts do
@@ -461,7 +461,7 @@ return function(T: any)
 	T.test("Intercept: 70% of a blow at a team-mate within 9, once every 8 s", function()
 		local fight = Combat.new({ slime("g", "guardian"), slime("m") }, { foe("f", { attack = 10 }) }, Rng.new(3))
 		local g, m, f = unitOf(fight, "g"), unitOf(fight, "m"), unitOf(fight, "f")
-		g.skillReady, f.target = 1e9, m
+		g.skillReady.taunt, f.target = 1e9, m
 		-- (Guardian and team-mate never strike back)
 		freeze(g, f)
 		freeze(m, f)
@@ -513,7 +513,7 @@ return function(T: any)
 
 	T.test("Dash Strike when ready; positional it dashes from 7-18 and walks from farther", function()
 		local fight = Combat.new({ slime("w", "warrior") }, { foe("f", { defence = 10 }) }, Rng.new(4))
-		unitOf(fight, "w").skillReady = 0
+		unitOf(fight, "w").skillReady.dash_strike = 0
 		freeze(unitOf(fight, "f"))
 		local hit = firstOf(run(fight, 3), function(event: any): boolean
 			return event.kind == "hit" and event.from == "w"
@@ -528,7 +528,7 @@ return function(T: any)
 			Rng.new(4),
 			{ moves = true }
 		)
-		unitOf(near, "w").skillReady = 0
+		unitOf(near, "w").skillReady.dash_strike = 0
 		freeze(unitOf(near, "f"))
 		local events = run(near, 3)
 		local move = firstOf(events, function(event: any): boolean
@@ -547,7 +547,7 @@ return function(T: any)
 			Rng.new(4),
 			{ moves = true }
 		)
-		unitOf(far, "w").skillReady = 0
+		unitOf(far, "w").skillReady.dash_strike = 0
 		freeze(unitOf(far, "f"))
 		local walked = firstOf(run(far, 0.5), function(event: any): boolean
 			return event.kind == "move" and event.from == "w"
@@ -568,7 +568,7 @@ return function(T: any)
 			foe("h", { x = -5, z = 0, defence = 20 }),
 		}, Rng.new(5), { moves = true })
 		local r = unitOf(fight, "r")
-		r.skillReady, r.target = 0, unitOf(fight, "t")
+		r.skillReady.piercing_shot, r.target = 0, unitOf(fight, "t")
 		for _, id in { "t", "b", "n", "o", "e", "h" } do
 			freeze(unitOf(fight, id))
 		end
@@ -589,7 +589,7 @@ return function(T: any)
 		-- (a quick fight with no places: its target only)
 		local quick = Combat.new({ slime("r", "ranger") }, { foe("t"), foe("b") }, Rng.new(5))
 		local q = unitOf(quick, "r")
-		q.skillReady, q.target = 0, unitOf(quick, "t")
+		q.skillReady.piercing_shot, q.target = 0, unitOf(quick, "t")
 		freeze(unitOf(quick, "t"))
 		freeze(unitOf(quick, "b"))
 		local struck = 0
@@ -608,7 +608,7 @@ return function(T: any)
 				{ foe("f", { defence = 10 }) },
 				Rng.new(4)
 			)
-			unitOf(fight, "w").skillReady = 0
+			unitOf(fight, "w").skillReady.dash_strike = 0
 			freeze(unitOf(fight, "f"))
 			local hit = firstOf(run(fight, 3), function(event: any): boolean
 				return event.kind == "hit" and event.from == "w"
@@ -623,7 +623,7 @@ return function(T: any)
 	T.test("Arcane Barrage: every foe within its radius, as hard as the target; no places: cap foes", function()
 		local weight = Config.Classes.Kinds.mage.factor * Config.Classes.SkillPower[1]
 		local function barrage(fight: any, ids: { string }): { any }
-			unitOf(fight, "m").skillReady = 0
+			unitOf(fight, "m").skillReady.arcane_barrage = 0
 			for _, id in ids do
 				freeze(unitOf(fight, id))
 			end
@@ -677,7 +677,7 @@ return function(T: any)
 				{ foe("f", { defence = 20 }) },
 				Rng.new(7)
 			)
-			unitOf(fight, "h").skillReady = ready
+			unitOf(fight, "h").skillReady.mend = ready
 			freeze(unitOf(fight, "m"), unitOf(fight, "f"))
 			freeze(unitOf(fight, "f"))
 			return fight, run(fight, 2)
@@ -723,7 +723,7 @@ return function(T: any)
 			foe("d", { x = 0, z = 14, defence = 10 }),
 		}, Rng.new(8), { moves = true })
 		local a = unitOf(fight, "a")
-		a.skillReady, a.target = 0, unitOf(fight, "lone")
+		a.skillReady.acid_rain, a.target = 0, unitOf(fight, "lone")
 		for _, id in { "lone", "b", "c", "d" } do
 			freeze(unitOf(fight, id))
 		end
@@ -752,7 +752,7 @@ return function(T: any)
 			foe("c", { x = 2, z = 12, defence = 30 }),
 			foe("d", { x = 0, z = 14, defence = 10 }),
 		}, Rng.new(8), { moves = true })
-		unitOf(fight2, "a").skillReady = 0
+		unitOf(fight2, "a").skillReady.acid_rain = 0
 		for _, id in { "b", "c", "d" } do
 			freeze(unitOf(fight2, id))
 		end
@@ -769,7 +769,7 @@ return function(T: any)
 		end
 		-- the melt lowers DEF: the next blow on c counts 20% less of it
 		local c = unitOf(fight, "c")
-		a.skillReady, a.target = 1e9, c
+		a.skillReady.acid_rain, a.target = 1e9, c
 		local next = firstOf(run(fight, 3), function(event: any): boolean
 			return event.kind == "hit" and event.from == "a"
 		end)
@@ -788,7 +788,7 @@ return function(T: any)
 					{ moves = true, radius = 70 }
 				)
 				local r, f = unitOf(fight, "r"), unitOf(fight, "f")
-				r.skillReady = 1e9
+				r.skillReady.piercing_shot = 1e9
 				freeze(f, r)
 				local hops: { any } = {}
 				for _ = 1, math.floor(12 / DT) do
@@ -815,7 +815,7 @@ return function(T: any)
 				{ moves = true, radius = 70 }
 			)
 			local r = unitOf(edge, "r")
-			r.skillReady = 1e9
+			r.skillReady.piercing_shot = 1e9
 			freeze(unitOf(edge, "f"), r)
 			local hop = firstOf(run(edge, 0.3), function(event: any): boolean
 				return event.kind == "move" and event.hop == true
