@@ -1048,7 +1048,7 @@ local function attackersReady(fight: Fight, u: Unit): number
 		if mate.side == u.side and mate.hp > 0 then
 			local kind = kindOf(mate)
 			local m = Config.Dungeon.Move
-			local reach = if kind then kind.reach else if (Config.Combat.Ranged :: any)[mate.role] then m.RangedStuds else m.MeleeStuds
+			local reach = if kind then kind.reach elseif (Config.Combat.Ranged :: any)[mate.role] then m.RangedStuds else m.MeleeStuds
 			for _, enemy in foes do
 				if not fight.moves or distance(mate, enemy) <= reach + m.BlowSlack then
 					count += 1
