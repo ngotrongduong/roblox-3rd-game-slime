@@ -183,7 +183,11 @@ brief `docs/briefs/class-skills-5.md`; VfxLib 1a3ee47, 130 effects). Every weapo
   and the shields on the squad read.
 - **Not good yet (library, asked for 2026-11-14):** on bright ground three effects wash out: Sanctuary is a white dome
   of glare on the snow that hides the fighters, Bulwark's spirit knight is a yellow-white blaze on the meadow, Catalyst
-  Cloud's gas hardly shows on the meadow. When the library ships them: `import.ps1 --update`.
+  Cloud's gas hardly shows on the meadow. When the library ships them: move the clean import worktree
+  `C:\roblox-vfx-library\.claude\worktrees\game-import` to `origin/main` and run its `tools\import.ps1 "<game>" --update`,
+  then look at the three in a Dungeon run (levels 6 and 9, the `late` debug preset with Legendary weapons).
+- **Balance after steps 4-5** (`docs/WEAPONS.md` §13): at the same Arena power a higher tier now beats Common 75-100%
+  (target about 63%): the skills are worth more than the Arena's power counts. Kept for the full sweep after step 6.
 - **Not verified:** Last Stand in a picture (it played twice, not framed), Sanctuary on a dark map, Hawkeye / Echo /
   Overflow / Lingering Brew by eye (tests only), a real phone.
 
