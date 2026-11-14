@@ -325,7 +325,7 @@ return {
 	Effects = { melt = 0.75, taken = 0.4, dealt = 0.25, curse = 0.5, steady = 0.5 },
 	-- Passive Legendary traits; all tunable values live here, even when the effect makes no separate event.
 	Traits = {
-		guardian = { key = "last_stand", left = 1, taunt = "taunt" },
+		guardian = { key = "last_stand", uses = 1, left = 1, taunt = "taunt" },
 		warrior = { key = "momentum", reset = "dash_strike" },
 		ranger = { key = "hawkeye", every = 4, share = 0.55, flight = "piercing_shot" },
 		mage = { key = "echo", skill = "arcane_barrage", delay = 0.6, share = 0.5 },
