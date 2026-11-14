@@ -358,6 +358,13 @@ function Zombies.homeOffset(slice: number, camp: number, index: number): (number
 	return radius * math.sin(angle), gateRadius - radius * math.cos(angle)
 end
 
+-- The weapon sets the default row; a slime without a valid weapon is always in front.
+function Zombies.defaultRow(slime: Slime?): string
+	local class = if slime then Classes.ofSlime(slime) else nil
+	return if class then (Config.Classes.Rows.Default :: any)[class] or Config.Classes.Rows.Brawler
+		else Config.Classes.Rows.Brawler
+end
+
 -- A saved override belongs to this team only; otherwise the weapon sets the row.
 function Zombies.rowOf(farm: Farm, slimeId: string): string
 	local teamIndex = FarmState.teamOf(farm, slimeId)
@@ -366,10 +373,7 @@ function Zombies.rowOf(farm: Farm, slimeId: string): string
 	if chosen and table.find(Config.Classes.Rows.Order, chosen) then
 		return chosen
 	end
-	local slime = FarmState.findSlime(farm, slimeId)
-	local class = if slime then Classes.ofSlime(slime) else nil
-	return if class then (Config.Classes.Rows.Default :: any)[class] or Config.Classes.Rows.Brawler
-		else Config.Classes.Rows.Brawler
+	return Zombies.defaultRow(FarmState.findSlime(farm, slimeId))
 end
 
 -- A missing tactic deliberately has the same combat behavior as the original rules.
