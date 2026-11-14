@@ -2370,6 +2370,24 @@ return function(T: any)
 		T.eq(taunted.tactics.foe, "balanced")
 	end)
 
+
+	T.test("Focus Fire's highest-attack leader uses team order to break a tie", function()
+		local fight = Combat.new({
+			slime("first", "ranger", { attack = 20 }),
+			slime("second", "alchemist", { attack = 20 }),
+			slime("follower", "mage", { attack = 5 }),
+		}, { foe("a"), foe("b") }, Rng.new(141), { tactics = { squad = "focus" } })
+		local first, second, follower =
+			unitOf(fight, "first"), unitOf(fight, "second"), unitOf(fight, "follower")
+		freeze(first, unitOf(fight, "a"))
+		freeze(second, unitOf(fight, "b"))
+		freeze(unitOf(fight, "a"))
+		freeze(unitOf(fight, "b"))
+		follower.cooldown = 0.4
+		run(fight, 1)
+		T.eq(follower.target.id, "a", "the first of equal-strength leaders supplies the focus")
+	end)
+
 	T.test("Protect Backline makes a Warrior and Guardian peel the closest threat to any back row", function()
 		local function fightOf(class: string, protected: boolean): any
 			local fight = Combat.new({
@@ -2378,11 +2396,13 @@ return function(T: any)
 			}, {
 				foe("decoy", { x = 5, z = 0 }),
 				foe("threat", { x = 7, z = 0 }),
+				foe("farThreat", { x = 18, z = 0 }),
 			}, Rng.new(139), { moves = true, tactics = { squad = "protect" } })
 			local s, h = unitOf(fight, "s"), unitOf(fight, "h")
 			freeze(h)
 			freeze(unitOf(fight, "decoy"))
 			freeze(unitOf(fight, "threat"), if protected then h else s)
+			freeze(unitOf(fight, "farThreat"), if protected then h else s)
 			s.target, s.cooldown = unitOf(fight, "decoy"), 0.4
 			return fight
 		end
