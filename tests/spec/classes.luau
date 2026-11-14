@@ -2083,7 +2083,7 @@ return function(T: any)
 		local function healer(tier: number, key: string?): (any, { any })
 			local fight = Combat.new({
 				slime("h", "healer", { tier = tier, attack = 300 }),
-				slime("m", nil, { hp = if key then 50 else 89, maxHp = 100 }),
+				slime("m", nil, { hp = if key then 50 else 89.9, maxHp = 100 }),
 			}, { foe("f") }, Rng.new(122))
 			local h = unitOf(fight, "h")
 			for name in h.skillReady do
