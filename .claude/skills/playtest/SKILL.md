@@ -67,6 +67,11 @@ not.
 - `tools/map/sync_all.ps1`: Studio refuses a script Source of 200000 characters or more; the sync blanks the whole-line
   comments of a file that big. Config passed it on 2026-11-08 and was split into parts (CLAUDE.md, "Rules of the code").
 - Studio dialogs (Asset Manager import, File > Publish As) are invisible to computer use: the owner clicks them.
+- `execute_luau` that `require`s a game module gets a fresh copy, not the running game's (2026-11-16: `PlayerData.get`
+  returned nil for a loaded player). Read state from attributes, or ask through the game's own remotes from the Client
+  datamodel (`Remotes.Debug`, `Remotes.Village`). Pure modules (`Shared.Layout`) are fine to require.
+- Frame times: sample with a `Heartbeat` / `RenderStepped` counter inside `execute_luau`; a client stuck at 66 ms a frame
+  is Studio's unfocused throttle, not the game (2026-11-16, the pre-launch audit; `docs/audit/OPTIMIZATION_RESULTS.md`).
 - The command bar runs a multi-line command with Ctrl+Enter; a command that touches `CurrentCamera` or destroys things
   in Edit mode asks "Dangerous Command Detected".
 
