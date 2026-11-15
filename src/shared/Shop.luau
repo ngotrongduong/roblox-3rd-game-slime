@@ -85,6 +85,9 @@ function Shop.sellDish(farm: Farm, dishId: string, count: number, now: number?):
 	if type(count) ~= "number" or count ~= count or count % 1 ~= 0 or count < 1 then
 		return nil, "INVALID_COUNT"
 	end
+	if not Food.sellable(dishId) then
+		return nil, "NOT_SELLABLE"
+	end
 	local held = farm.fridge[dishId] or 0
 	if held <= 0 then
 		return nil, "NO_DISH"
@@ -96,6 +99,28 @@ function Shop.sellDish(farm: Farm, dishId: string, count: number, now: number?):
 	farm.coins += value
 	farm.lifetime.coinsEarned += value
 	return value, nil
+end
+
+-- Buys `count` of a cooking spice (1 up to Config.Food.SpiceBuyMax) for coins: the coins go and the spices come in one step,
+-- or nothing changes. Returns the coins paid, or nil and why not.
+function Shop.buySpice(farm: Farm, spice: string, count: number): (number?, string?)
+	local kind = (Config.Food.Spices :: any)[spice]
+	if not kind then
+		return nil, "UNKNOWN_SPICE"
+	end
+	if type(count) ~= "number" or count % 1 ~= 0 or count < 1 or count > Config.Food.SpiceBuyMax then
+		return nil, "INVALID_COUNT"
+	end
+	if farm.spices[spice] + count > Config.Food.SpiceCap then
+		return nil, "FULL"
+	end
+	local cost = kind.price * count
+	if farm.coins < cost then
+		return nil, "NO_COINS"
+	end
+	farm.coins -= cost
+	farm.spices[spice] += count
+	return cost, nil
 end
 
 return Shop

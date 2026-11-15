@@ -311,8 +311,8 @@ function Zombies.fighter(
 	local stats =
 		{ attack = slime.stats.attack, defence = slime.stats.defence, speed = slime.stats.speed, hp = slime.stats.hp }
 	local buff = slime.buff
-	if buff and buff.untilTime > now and (stats :: any)[buff.stat] then
-		(stats :: any)[buff.stat] *= 1 + buff.percent / 100
+	if buff and buff.untilTime > now then
+		Stats.applyBuff(stats, buff.stat, buff.percent)
 	end
 	-- the gear it wears adds flat points on top (the slime's own stats, level and price do not change)
 	local bonus = Gear.bonus(slime)

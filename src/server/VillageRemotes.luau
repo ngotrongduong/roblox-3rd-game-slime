@@ -191,6 +191,9 @@ local function request(player: Player, data: any): { ok: boolean, reason: string
 		print(Config.LogPrefix, "shop: sold", #data.slimeIds, "slimes for", value)
 	elseif action == "SellDish" then
 		print(Config.LogPrefix, "shop: sold dish", data.dish, "for", value)
+	elseif action == "BuySpice" then
+		print(Config.LogPrefix, "shop:", player.Name, "bought", data.count, data.spice, "for", value)
+		PlayerData.markKeyMoment(player, "buyspice")
 	elseif action == "SetTeam" then
 		print(Config.LogPrefix, "zombies: team", data.team, "line-up", table.concat(data.slimeIds, ","))
 	elseif action == "SetTeamRepeat" then

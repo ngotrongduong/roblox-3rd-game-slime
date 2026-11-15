@@ -172,7 +172,7 @@ function Brain.choose(farm: Farm, slimeId: string, ctx: Context, now: number, rn
 		return make("sleep", "nap", "sleepy")
 	end
 	if Needs.wantsFood(slime.needs) then
-		local item, location = Food.chooseMeal(farm, slimeId)
+		local item, location = Food.chooseMeal(farm, slimeId, now)
 		if item and location then
 			local action = make("eat", location, "hungry")
 			action.carry = { item = item, count = 1 }
@@ -314,10 +314,10 @@ function Brain.choose(farm: Farm, slimeId: string, ctx: Context, now: number, rn
 	end
 	for _, baby in farm.slimes do
 		if baby.id ~= slimeId and adult(farm, slime, now) and not adult(farm, baby, now) then
-			if Needs.wantsFood(baby.needs) and Food.chooseMeal(farm, baby.id) ~= nil then
+			if Needs.wantsFood(baby.needs) and Food.chooseMeal(farm, baby.id, now) ~= nil then
 				local a = make("feedBaby", "nursery", "loved")
 				a.partner = baby.id
-				local _, source = Food.chooseMeal(farm, baby.id)
+				local _, source = Food.chooseMeal(farm, baby.id, now)
 				a.source = source
 				offer(a, "care", Config.Brain.BabyFoodScore)
 			end
@@ -381,7 +381,7 @@ function Brain.arrive(farm: Farm, slimeId: string, action: Action, now: number):
 		if not Needs.wantsFood(slime.needs) or not action.carry then
 			return farm, false
 		end
-		local item, place = Food.chooseMeal(farm, slimeId)
+		local item, place = Food.chooseMeal(farm, slimeId, now)
 		if item ~= action.carry.item or place ~= action.spot then
 			return farm, false
 		end

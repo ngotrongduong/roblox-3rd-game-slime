@@ -38,6 +38,15 @@ function Stats.set(stats: Stats, key: string, value: number)
 	(stats :: any)[key] = value
 end
 
+-- A dish buff on a stat table (changed in place): the named stat by `percent`, or all four when the buff is "all".
+function Stats.applyBuff(stats: Stats, stat: string, percent: number)
+	for _, key in Stats.Keys do
+		if stat == "all" or stat == key then
+			(stats :: any)[key] *= 1 + percent / 100
+		end
+	end
+end
+
 -- floor(attack + defence + speed + hp / 10): 4 for the starters, 1296 at the limits.
 function Stats.level(stats: Stats): number
 	return math.floor(stats.attack + stats.defence + stats.speed + stats.hp / Config.Stats.HpPerLevel)

@@ -148,13 +148,7 @@ local function doWork(
 				local chosen = Food.slotRecipe(slot, level)
 				recipeId = chosen
 				local recipe = (Config.Food.Dishes :: any)[chosen]
-				local ready = Food.canCook(farm)
-				for item, count in recipe.ingredients do
-					if (farm.counter[item] or 0) < count then
-						ready = false
-						break
-					end
-				end
+				local ready = Food.canCook(farm) and Food.hasIngredients(farm, recipe)
 				-- An empty counter cannot bank work towards a later dish.
 				if not ready then
 					slot.progress = 0
@@ -250,22 +244,14 @@ local function doWork(
 				elseif areaId == "kitchen" then
 					local id = recipeId :: string
 					local dish = (Config.Food.Dishes :: any)[id]
-					local ready = Food.canCook(farm)
-					for item, count in dish.ingredients do
-						if (farm.counter[item] or 0) < count then
-							ready = false
-							break
-						end
-					end
-					if not ready then
+					local made = Food.cookYield(farm, id)
+					if made < 1 or not Food.canCook(farm) or not Food.hasIngredients(farm, dish) then
 						progress = 0
 						break
 					end
-					for item, count in dish.ingredients do
-						Food.take(farm.counter, item, count)
-					end
-					Food.add(workArea.box, id, Config.Work.KitchenYield, Config.Work.BoxCapacity)
-					farm.lifetime.dishesCooked += Config.Work.KitchenYield
+					Food.takeIngredients(farm, dish)
+					Food.add(workArea.box, id, made, Config.Work.BoxCapacity)
+					farm.lifetime.dishesCooked += made
 					table.insert(events, { kind = "cooked", item = id })
 				elseif areaId == "training" then
 					local statKey = slot.stat

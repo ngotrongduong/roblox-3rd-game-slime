@@ -1795,7 +1795,22 @@ Config.Food = {
 		uncommon = { name = "Uncommon", colour = "#3f9a38", order = 2 },
 		rare = { name = "Rare", colour = "#2f7fd0", order = 3 },
 		epic = { name = "Epic", colour = "#9a45c8", order = 4 },
+		legendary = { name = "Legendary", colour = "#e0a020", order = 5 },
 	},
+	-- Cooking spices (the owner, 2026-11-15): bought at the Market for coins, kept in farm.spices apart from raw food (never
+	-- eaten, never revive, not in the storehouse). A dish that needs one is cooked as a batch and cannot be sold.
+	Spices = {
+		honey = { name = "Wild Honey", rarity = "uncommon", price = 500 },
+		truffle = { name = "Moon Truffle", rarity = "epic", price = 8000 },
+		saffron = { name = "Golden Saffron", rarity = "legendary", price = 40000 },
+	},
+	SpiceOrder = { "honey", "truffle", "saffron" },
+	SpiceCap = 99,
+	SpiceBuyMax = 10,
+	-- Dishes one cook of a spice dish puts in the box.
+	SpiceBatch = 4,
+	-- A slime that eats by itself does not take a buff dish while its buff has more than this share of its time left.
+	RebuffShare = 0.1,
 	-- Raw fullness by id and the order every store, bin and picker walks (derived from Kinds above).
 	Raw = FoodRaw,
 	RawOrder = FoodRawOrder,
@@ -1807,6 +1822,7 @@ Config.Food = {
 		uncommon = { kitchenLevel = 8, percent = 6, buffSeconds = 660, cookSeconds = 150, price = 1100 },
 		rare = { kitchenLevel = 20, percent = 9, buffSeconds = 780, cookSeconds = 200, price = 1300 },
 		epic = { kitchenLevel = 35, percent = 12, buffSeconds = 900, cookSeconds = 300, price = 2000 },
+		legendary = { kitchenLevel = 45, percent = 20, buffSeconds = 1500, cookSeconds = 360, price = 0 },
 	},
 	DefaultRecipe = "grilledFish",
 	CookReservePerSlime = 1,
@@ -1923,6 +1939,58 @@ Config.Food = {
 			fullness = 100,
 			rarity = "epic",
 		},
+		-- Spice dishes: a spice among the ingredients. A Lasting dish carries its own numbers (percent, buffSeconds,
+		-- kitchenLevel, cookSeconds) over its rarity row (Food.dishValue) and lifts all four stats.
+		lastingStew = {
+			name = "Lasting Stew",
+			ingredients = { honey = 1, trout = 1, carrot = 1 },
+			stat = "all",
+			fullness = 90,
+			rarity = "uncommon",
+			percent = 3,
+			buffSeconds = 3600,
+			kitchenLevel = 10,
+			cookSeconds = 240,
+		},
+		lastingStewII = {
+			name = "Grand Lasting Stew",
+			ingredients = { truffle = 1, salmon = 1, pumpkin = 1 },
+			stat = "all",
+			fullness = 90,
+			rarity = "epic",
+			percent = 5,
+			buffSeconds = 5400,
+			kitchenLevel = 25,
+			cookSeconds = 240,
+		},
+		goldenCarpRoyale = {
+			name = "Golden Carp Royale",
+			ingredients = { goldenCarp = 1, salmon = 1, saffron = 1 },
+			stat = "attack",
+			fullness = 100,
+			rarity = "legendary",
+		},
+		saffronPufferCrown = {
+			name = "Saffron Puffer Crown",
+			ingredients = { starfruit = 1, pufferfish = 1, saffron = 1 },
+			stat = "defence",
+			fullness = 100,
+			rarity = "legendary",
+		},
+		saffronStarTart = {
+			name = "Saffron Star Tart",
+			ingredients = { starfruit = 1, pumpkin = 1, saffron = 1 },
+			stat = "speed",
+			fullness = 100,
+			rarity = "legendary",
+		},
+		saffronBanquet = {
+			name = "Saffron Banquet",
+			ingredients = { goldenCarp = 1, starfruit = 1, saffron = 1 },
+			stat = "hp",
+			fullness = 100,
+			rarity = "legendary",
+		},
 	},
 	DishOrder = {
 		"grilledFish",
@@ -1933,6 +2001,8 @@ Config.Food = {
 		"cornChowder",
 		"sweetCornSalad",
 		"tomatoFishStew",
+		"lastingStew",
+		"lastingStewII",
 		"salmonSteak",
 		"pumpkinStew",
 		"pufferfishRolls",
@@ -1941,6 +2011,10 @@ Config.Food = {
 		"starfruitGlazedPuffer",
 		"starfruitTart",
 		"goldenBanquet",
+		"goldenCarpRoyale",
+		"saffronPufferCrown",
+		"saffronStarTart",
+		"saffronBanquet",
 	},
 	Start = { fish = 10, carrot = 10 },
 	StorehouseBase = 100,
@@ -2761,7 +2835,7 @@ Config.Save = {
 	-- 15: the zones of the big world won (`world.beaten`: zone id -> the time of the last win).
 	-- 16: four dungeons and their shared depth (`dungeon.maps`: each dungeon's highest level cleared; `dungeon.best` moved to
 	--     the new ladder).
-	SchemaVersion = 16,
+	SchemaVersion = 17,
 	-- A stored envelope without a version is this one.
 	FirstSchemaVersion = 1,
 

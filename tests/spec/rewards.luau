@@ -722,7 +722,7 @@ return function(T: any)
 	end)
 
 	T.test("a schema 11 save migrates (through every later step) and keeps what it took", function()
-		T.eq(Config.Save.SchemaVersion, 16)
+		T.eq(Config.Save.SchemaVersion, 17)
 		local old: any = played(FarmState.newFarm(NOW))
 		Rewards.ensureQuests(old, 8, NOW)
 		Rewards.claimDaily(old, NOW)

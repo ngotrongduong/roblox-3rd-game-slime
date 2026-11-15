@@ -42,8 +42,8 @@ return function(T: any)
 		end
 	end)
 
-	T.test("sixteen recipes in rarity/stat order, locked recipes cannot be assigned", function()
-		T.eq(#Config.Food.DishOrder, 16)
+	T.test("twenty-two recipes in rarity/stat order, locked recipes cannot be assigned", function()
+		T.eq(#Config.Food.DishOrder, 22)
 		local farm = FarmKit.farm(NOW)
 		T.eq(Food.slotRecipe(farm.work.kitchen.slots[1], 1), "grilledFish")
 		T.ok(not Stations.setCookRecipe(farm, 1, "bakedTrout"))

@@ -287,6 +287,8 @@ export type Farm = {
 	coins: number,
 	items: { Item },
 	materials: { [string]: number },
+	-- Cooking spices bought at the Market, a whole number of each (schema 17; Config.Food.Spices, capped at SpiceCap).
+	spices: { [string]: number },
 	-- The gear bag: crafted pieces nobody wears, by gear id (schema 10; shared/Gear).
 	gear: { [string]: number },
 
@@ -432,6 +434,15 @@ function FarmState.newArena(now: number): Arena
 		bought = {},
 		snapshotAt = 0,
 	}
+end
+
+-- No spice held: every id of Config.Food.Spices at 0.
+function FarmState.newSpices(): { [string]: number }
+	local spices: { [string]: number } = {}
+	for _, id in Config.Food.SpiceOrder do
+		spices[id] = 0
+	end
+	return spices
 end
 
 function FarmState.newTeams(): { Team }
@@ -715,6 +726,7 @@ function FarmState.newFarm(now: number): Farm
 		coins = f.StartingCoins,
 		items = items,
 		materials = {},
+		spices = FarmState.newSpices(),
 		gear = {},
 		lifetime = {
 			coinsEarned = 0,
@@ -844,13 +856,13 @@ end
 local function validateBuff(raw: any): Buff?
 	if
 		type(raw) == "table"
-		and table.find(StatsModule.Keys, raw.stat)
+		and (raw.stat == "all" or table.find(StatsModule.Keys, raw.stat))
 		and isNum(raw.percent)
 		and isNum(raw.untilTime)
 		and raw.untilTime >= 0
 	then
 		return {
-			stat = raw.stat,
+			stat = raw.stat :: string,
 			percent = math.clamp(raw.percent, 0, Config.Needs.Max),
 			untilTime = raw.untilTime,
 			dish = if type(raw.dish) == "string" and (Config.Food.Dishes :: any)[raw.dish] then raw.dish else nil,
@@ -1947,6 +1959,16 @@ function FarmState.repair(data: any, now: number): (Farm, { string }, boolean)
 		end
 	end
 
+	local spices = FarmState.newSpices()
+	if type(data.spices) == "table" then
+		for id in spices do
+			local held = data.spices[id]
+			if isNum(held) then
+				spices[id] = math.clamp(math.floor(held), 0, Config.Food.SpiceCap)
+			end
+		end
+	end
+
 	local items = validateItems(data.items, warnings)
 
 	local gearBag = validateBag(data.gear, warnings)
@@ -2065,6 +2087,7 @@ function FarmState.repair(data: any, now: number): (Farm, { string }, boolean)
 		coins = coins,
 		items = items,
 		materials = materials,
+		spices = spices,
 		gear = gearBag,
 		lifetime = lifetime,
 		avatar = validateAvatar(data.avatar, now, warnings),

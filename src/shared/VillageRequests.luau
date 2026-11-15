@@ -157,6 +157,11 @@ function VillageRequests.valid(data: any, hasPlot: boolean): boolean
 			and integer(data.count)
 			and data.count >= 1
 			and data.count <= Food.fridgeCapacity(Config.Village.MaxLevel)
+	elseif action == "BuySpice" then
+		return type(data.spice) == "string"
+			and integer(data.count)
+			and data.count >= 1
+			and data.count <= Config.Food.SpiceBuyMax
 	elseif action == "UpgradeArea" then
 		return type(data.areaId) == "string" and table.find(Config.Village.Areas, data.areaId) ~= nil and hasPlot
 	elseif action == "SetTeam" then
@@ -270,6 +275,12 @@ function VillageRequests.run(farm: any, data: any, now: number, env: Env): (bool
 		end
 		local value, why = Shop.sellDish(farm, data.dish, data.count, now)
 		return value ~= nil, why, value
+	elseif action == "BuySpice" then
+		if not env.atMarket() then
+			return false, "TOO_FAR"
+		end
+		local cost, why = Shop.buySpice(farm, data.spice, data.count)
+		return cost ~= nil, why, cost
 	elseif action == "UpgradeArea" then
 		return Village.upgrade(farm, data.areaId, env.freeUpgrades)
 	elseif action == "SetTeam" then

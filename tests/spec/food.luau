@@ -29,9 +29,9 @@ return function(T)
 		local farm = FarmKit.farm(1000)
 		farm.fridge = { fishVegSoup = 1 }
 		farm.storehouse = { fish = 2, carrot = 5 }
-		T.eq(Food.chooseMeal(farm, "slime-1"), "carrot")
+		T.eq(Food.chooseMeal(farm, "slime-1", 1000), "carrot")
 		T.ok(Food.setAutoDish(farm, "slime-1", "fishVegSoup"))
-		T.eq(Food.chooseMeal(farm, "slime-1"), "fishVegSoup")
+		T.eq(Food.chooseMeal(farm, "slime-1", 1000), "fishVegSoup")
 		farm.slimes[1].needs.fullness = 20
 		T.eq(Food.eat(farm, "slime-1", 1000), "fishVegSoup")
 		T.eq(farm.slimes[1].needs.fullness, 100)

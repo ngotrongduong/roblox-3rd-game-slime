@@ -378,10 +378,8 @@ local function workClock(
 		if not Food.canCook(farm) then
 			return "", 0, 0
 		end
-		for item, count in dish.ingredients do
-			if (farm.counter[item] or 0) < count then
-				return "", 0, 0
-			end
+		if not Food.hasIngredients(farm, dish) then
+			return "", 0, 0
 		end
 	end
 	if slot.progress >= total then
@@ -398,6 +396,8 @@ local function show(session: Session, farm: Farm, epoch: number)
 	set(root, "Storehouse", HttpService:JSONEncode(farm.storehouse))
 	set(root, "Fridge", HttpService:JSONEncode(farm.fridge))
 	set(root, "Counter", HttpService:JSONEncode(farm.counter))
+	-- The cooking spices held, JSON { [id] = count } (Config.Food.Spices).
+	set(root, "Spices", HttpService:JSONEncode(farm.spices))
 	-- The Smithy's sheet: the dungeon materials held and the gear bag, JSON { [id] = count } (docs/SMITHY.md).
 	set(root, "Materials", HttpService:JSONEncode(farm.materials))
 	set(root, "GearBag", HttpService:JSONEncode(farm.gear))

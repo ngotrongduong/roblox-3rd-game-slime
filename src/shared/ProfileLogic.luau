@@ -550,6 +550,21 @@ function ProfileLogic.migrateDepth(data: any, _now: number): any
 	return out
 end
 
+-- A farm saved before the cooking spices (schema 17): none held. (Config.Food.Spices lists the ids; repair caps the counts.)
+function ProfileLogic.migrateSpices(data: any, _now: number): any
+	if type(data) ~= "table" then
+		return data
+	end
+	local out = ProfileLogic.deepCopy(data)
+	if type(out.spices) ~= "table" then
+		out.spices = {}
+		for _, id in Config.Food.SpiceOrder do
+			out.spices[id] = 0
+		end
+	end
+	return out
+end
+
 -- Runs the steps from `fromVersion` to `toVersion`, each found by its `from`, so the list may be in
 -- any order. Refuses data from a newer version instead of guessing at it.
 function ProfileLogic.migrate(

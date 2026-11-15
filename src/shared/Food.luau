@@ -86,10 +86,72 @@ function Food.take(stock: { [string]: number }, item: string, amount: number): n
 	return moved
 end
 
+-- A dish's number (percent, buffSeconds, kitchenLevel, cookSeconds, price): the dish's own when it sets one (the Lasting
+-- dishes), else its rarity row's.
+function Food.dishValue(dish: any, key: string): number
+	local own = dish[key]
+	if own ~= nil then
+		return own
+	end
+	return (Config.Food.DishRarities :: any)[dish.rarity][key]
+end
+
+-- A dish with a spice among its ingredients: cooked as a batch, never sold.
+local function hasSpice(dish: any): boolean
+	for item in dish.ingredients do
+		if (Config.Food.Spices :: any)[item] then
+			return true
+		end
+	end
+	return false
+end
+
+-- Whether a dish may be sold at the Market (what the screens use to hide the sell buttons). Unknown ids: no.
+function Food.sellable(id: string): boolean
+	local dish = (Config.Food.Dishes :: any)[id]
+	return dish ~= nil and not hasSpice(dish)
+end
+
+-- The counter holds the raw ingredients, farm.spices the spices.
+function Food.hasIngredients(farm: Farm, dish: any): boolean
+	for item, count in dish.ingredients do
+		local held = if (Config.Food.Spices :: any)[item] then farm.spices[item] else farm.counter[item]
+		if (held or 0) < count then
+			return false
+		end
+	end
+	return true
+end
+
+function Food.takeIngredients(farm: Farm, dish: any)
+	for item, count in dish.ingredients do
+		if (Config.Food.Spices :: any)[item] then
+			farm.spices[item] = math.max(0, farm.spices[item] - count)
+		else
+			Food.take(farm.counter, item, count)
+		end
+	end
+end
+
+-- Dishes one cook puts in the box: one, or a batch of Config.Food.SpiceBatch for a spice dish as far as the box and the
+-- fridge have room (0 when none).
+function Food.cookYield(farm: Farm, id: string): number
+	local dish = (Config.Food.Dishes :: any)[id]
+	if not hasSpice(dish) then
+		return Config.Work.KitchenYield
+	end
+	local boxTotal = Food.total(farm.work.kitchen.box)
+	local room = math.min(
+		Food.fridgeCapacity(farm.areas.kitchen.level) - Food.total(farm.fridge) - boxTotal,
+		Config.Work.BoxCapacity - boxTotal
+	)
+	return math.max(0, math.min(Config.Food.SpiceBatch, room))
+end
+
 -- Unknown or still-locked selections safely cook the starter recipe.
 function Food.recipeUnlocked(id: string, kitchenLevel: number): boolean
 	local dish = (Config.Food.Dishes :: any)[id]
-	return dish ~= nil and kitchenLevel >= (Config.Food.DishRarities :: any)[dish.rarity].kitchenLevel
+	return dish ~= nil and kitchenLevel >= Food.dishValue(dish, "kitchenLevel")
 end
 
 function Food.slotRecipe(slot: { recipe: string? }, kitchenLevel: number): string
@@ -102,8 +164,8 @@ function Food.cookSeconds(id: string, kitchenLevel: number): number
 	if not dish then
 		return math.huge
 	end
-	local rarity = (Config.Food.DishRarities :: any)[dish.rarity]
-	return rarity.cookSeconds * Config.Work.CycleLevelFactor ^ (kitchenLevel - Config.Village.StartLevel)
+	return Food.dishValue(dish, "cookSeconds")
+		* Config.Work.CycleLevelFactor ^ (kitchenLevel - Config.Village.StartLevel)
 end
 
 function Food.canCook(farm: Farm): boolean
@@ -120,6 +182,7 @@ function Food.ingredientsWanted(farm: Farm): { [string]: number }
 	end
 	local pantry = table.clone(farm.storehouse)
 	local counter = table.clone(farm.counter)
+	local spices = table.clone(farm.spices)
 	local spare = math.max(0, storeTotal - reserve)
 	local space = math.max(0, Config.Food.CounterCapacity - Food.total(farm.counter))
 	local wanted: { [string]: number } = {}
@@ -132,16 +195,25 @@ function Food.ingredientsWanted(farm: Farm): { [string]: number }
 		local totalMissing = 0
 		local possible = true
 		for item, count in dish.ingredients do
-			local need = math.max(0, count - (counter[item] or 0))
-			if need > (pantry[item] or 0) then
-				possible = false
+			if (Config.Food.Spices :: any)[item] then
+				-- a spice is not carried: it only has to be held
+				possible = (spices[item] or 0) >= count
+			else
+				local need = math.max(0, count - (counter[item] or 0))
+				possible = need <= (pantry[item] or 0)
+				missing[item] = need
+				totalMissing += need
+			end
+			if not possible then
 				break
 			end
-			missing[item] = need
-			totalMissing += need
 		end
 		if possible and totalMissing <= space and totalMissing <= spare then
 			for item, count in dish.ingredients do
+				if (Config.Food.Spices :: any)[item] then
+					spices[item] -= count
+					continue
+				end
 				counter[item] = math.max(0, (counter[item] or 0) - count)
 				local amount = missing[item] or 0
 				pantry[item] = (pantry[item] or 0) - amount
@@ -173,9 +245,18 @@ function Food.cheapestRaw(stock: { [string]: number }): string?
 	return best
 end
 
-function Food.chooseMeal(farm: Farm, slimeId: string): (string?, string?)
+-- Whether a slime's buff still has more than Config.Food.RebuffShare of its time left (a buff from before dishes were
+-- recorded has no known length: never counted).
+local function buffFresh(slime: any, now: number): boolean
+	local buff = slime.buff
+	local dish = if buff and buff.dish then (Config.Food.Dishes :: any)[buff.dish] else nil
+	return dish ~= nil and buff.untilTime - now > Config.Food.RebuffShare * Food.dishValue(dish, "buffSeconds")
+end
+
+-- A slime's own pick: its auto dish from the fridge unless its buff is still fresh, else the cheapest raw food.
+function Food.chooseMeal(farm: Farm, slimeId: string, now: number): (string?, string?)
 	local slime = FarmState.findSlime(farm, slimeId)
-	if slime and slime.autoDish and (farm.fridge[slime.autoDish] or 0) > 0 then
+	if slime and slime.autoDish and (farm.fridge[slime.autoDish] or 0) > 0 and not buffFresh(slime, now) then
 		return slime.autoDish, "fridge"
 	end
 	local raw = Food.cheapestRaw(farm.storehouse)
@@ -196,14 +277,18 @@ local function consume(farm: Farm, slimeId: string, item: string, from: string, 
 	local dish = (Config.Food.Dishes :: any)[item]
 	slime.needs = Needs.eatValue(slime.needs, if dish then dish.fullness else (Config.Food.Raw :: any)[item])
 	if dish then
-		local rarity = (Config.Food.DishRarities :: any)[dish.rarity]
-		slime.buff = { stat = dish.stat, percent = rarity.percent, untilTime = now + rarity.buffSeconds, dish = item }
+		slime.buff = {
+			stat = dish.stat,
+			percent = Food.dishValue(dish, "percent"),
+			untilTime = now + Food.dishValue(dish, "buffSeconds"),
+			dish = item,
+		}
 	end
 	return true
 end
 
 function Food.eat(farm: Farm, slimeId: string, now: number): string?
-	local item, from = Food.chooseMeal(farm, slimeId)
+	local item, from = Food.chooseMeal(farm, slimeId, now)
 	if item and from and consume(farm, slimeId, item, from, now) then
 		return item
 	end
