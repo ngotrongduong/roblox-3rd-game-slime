@@ -25,7 +25,7 @@ rounds of review by ChatGPT (plan file `n-ng-c-p-to-n-b-piped-shore.md`); docs: 
 - **Forge scene** (44059fd, `client/ForgeScene`, `Config.Ui.Forge`): at the Market anvil the hammer strikes 2-3 times, the
   face heats, the piece rises out of it with its tier's aura and its name card, screens and the character hidden; a tap
   skips a tier already seen. Its effects come from the VFX library (`hit.forge_strike`, `burst.forge_reveal`,
-  `burst.forge_quench`, a variant per tier; imported with the runtime at a23485e); their pictures are fetched at start.
+  `burst.forge_quench`, a variant per tier; imported with the runtime at 4c63757); their pictures are fetched at start.
 
 **Proved:** CHECK OK (821 passed), TYPES OK. `dungeon_sim`: a team of the level clears 82-98 runs in 100, five levels
 above 98-100, a run 4-5 min; `zone_sim`: the zone's team wins 77-90 in 100; `loot_sim` (new): a sword, shield, bow and
@@ -37,8 +37,9 @@ paid), then Checkpoint jumped to level 10 in the same map (monsters Lv 10); won 
 10, 16 Iron Ore, 1 Ember Core), Meadow at 10 (boss Bramblehorn Lv 13, 23 Hardwood) and Grove at 15 (monsters Lv 11-19,
 mini-boss Lv 16, boss Hollowheart Lv 18, 23 Mushroom Silk). With the library effects: the strike's sparks and stars on
 the anvil, the Legendary reveal's gold pillar and swirls, and a temper's steam billowing round "Sunfire Blade +" (the
-first temper showed no steam: its smoke picture was not loaded yet, hence the fetch at start; the smoke then read as
-fetched before any temper, though Studio's cache may also explain that).
+first temper showed no steam: its smoke picture was not loaded yet, hence `VfxLib.preload` of the three at start, library
+4c63757; measured in Play: all 17 of their pictures read Success 8 s after start, where a preload of plain urls had left
+16 Loading).
 **Not verified:** the Common, Uncommon, Epic and Mythic reveals in play (seen only in the library's previews); sounds by
 ear; the phone frame and hover; the new food icons inside StudioTest (its ClientKit is older); cooking a Legendary
 batch; the skip tap. **Needs the owner:** the save shape changed twice (schemas 16 and 17): a publish must shut down every old

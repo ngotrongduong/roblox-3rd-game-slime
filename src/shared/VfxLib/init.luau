@@ -13,6 +13,7 @@
 --   VfxLib.play(id, at, opts)       a one-shot (hit, burst, reveal, skill) at a Vector3 / CFrame / host
 --   VfxLib.stop(live)               ends a one-shot at once (gone this frame)
 --   VfxLib.cancel(live, fade)       ends a one-shot softly: an interrupted attack fades out, nothing left behind
+--   VfxLib.preload(ids)             loads those effects' pictures before their first play (yields)
 --   VfxLib.get(id), VfxLib.list(kind), VfxLib.measure(idOrHandle), VfxLib.freeze(on)
 -- `opts` of both: palette (role colours of your own, for a tintable effect), variant, grade, height / scale, and the
 -- one-shot's size, from, angle, adornees (Builder.play).
@@ -128,6 +129,48 @@ end
 function VfxLib.get(id)
 	ensure()
 	return VfxLib.effects[id]
+end
+
+-- Loads the pictures of these effects (every variant's) before their first play: a picture not loaded yet draws
+-- nothing the first time (burst.forge_quench showed no steam on a session's first temper, 2026-11-15). Yields until
+-- loaded (task.spawn it to go on); returns the urls asked for. Each is loaded through a Decal (lesson 359).
+function VfxLib.preload(ids)
+	ensure()
+	local urls, seen = {}, {}
+	local function walk(value)
+		if type(value) == "string" then
+			local url = not seen[value] and Textures.url(value) or ""
+			seen[value] = true
+			if url ~= "" and not seen[url] then
+				seen[url] = true
+				table.insert(urls, url)
+			end
+		elseif type(value) == "table" then
+			for _, inner in value do
+				walk(inner)
+			end
+		end
+	end
+	for _, id in ids do
+		walk(VfxLib.effects[id])
+	end
+	if #urls > 0 and typeof(game) == "Instance" then
+		-- (a plain content string loads no image: PreloadAsync returns at once and the picture stays Loading;
+		-- a Decal wearing it loads it, measured in Goo Lineage's Play, 2026-11-15)
+		local decals = {}
+		pcall(function()
+			for _, url in urls do
+				local decal = Instance.new("Decal")
+				decal.Texture = url
+				table.insert(decals, decal)
+			end
+			(game :: any):GetService("ContentProvider"):PreloadAsync(decals)
+		end)
+		for _, decal in decals do
+			decal:Destroy()
+		end
+	end
+	return urls
 end
 
 -- The effects of a kind (every one when nil), sorted by id.
