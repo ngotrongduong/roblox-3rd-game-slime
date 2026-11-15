@@ -9,6 +9,7 @@ local HttpService = game:GetService("HttpService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Config = require(ReplicatedStorage.Shared.Config)
+local ForgeScene = require(script.Parent.ForgeScene)
 local Gear = require(ReplicatedStorage.Shared.Gear)
 local Layout = require(ReplicatedStorage.Shared.Layout)
 local UiDungeon = require(script.Parent.UiDungeon)
@@ -366,8 +367,12 @@ local function pieceCard(list: Instance, gearId: string, order: number, refresh:
 			task.spawn(function()
 				local ok, why = UiSmithy.ask({ action = "SmithyCraft", recipeId = gearId })
 				crafting = false
-				UiKit.toast(if ok then "Crafted " .. def.name .. "!" else UiSmithy.reasonText(why))
 				refresh()
+				if ok then
+					ForgeScene.play(gearId, false)
+				else
+					UiKit.toast(UiSmithy.reasonText(why))
+				end
 			end)
 		end,
 	})
@@ -421,8 +426,12 @@ local function pieceCard(list: Instance, gearId: string, order: number, refresh:
 				task.spawn(function()
 					local ok, why = UiSmithy.ask({ action = "SmithyTemper", gearId = gearId })
 					tempering = false
-					UiKit.toast(if ok then "Tempered " .. def.name .. "!" else UiSmithy.reasonText(why))
 					refresh()
+					if ok then
+						ForgeScene.play(twin, true)
+					else
+						UiKit.toast(UiSmithy.reasonText(why))
+					end
 				end)
 			end,
 		})

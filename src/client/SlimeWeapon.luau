@@ -201,6 +201,26 @@ function SlimeWeapon.wear(model: Model, worn: string?)
 	give(model, h)
 end
 
+-- A loose copy of a weapon's model for a show (the forge scene), `length` studs tall, standing along its Y; nil for a piece
+-- that is no weapon or whose mesh is still loading (the load starts here). A tempered id shows its plain piece.
+function SlimeWeapon.copy(gearId: string, length: number): BasePart?
+	local twin = GEAR[gearId]
+	local gear = if twin and twin.base then twin.base else gearId
+	local family, tier = weaponOf(gear)
+	if not family or not tier then
+		return nil
+	end
+	load(gear, family, tier)
+	local template = templates[gear]
+	if not template then
+		return nil
+	end
+	local part = template:Clone()
+	local size = sizeOf(gear, family, tier, 1)
+	part.Size = size * (length / size.Y)
+	return part
+end
+
 local function blendOf(h: Held, now: number): number
 	local t = math.clamp((now - h.blendAt) / W.DrawSeconds, 0, 1)
 	local k = t * t * (3 - 2 * t)

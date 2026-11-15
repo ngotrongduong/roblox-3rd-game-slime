@@ -461,6 +461,63 @@ return {
 		click = { id = 9119717523, volume = 0.25 },
 		coins = { id = 9113849583, volume = 0.35 },
 	},
+	-- The forge scene (client/ForgeScene, the owner 2026-11-15): once the server has made or tempered a piece, a few seconds
+	-- at the Market's anvil (workspace.Map.Market.<Anvil>: its AnvilFace, and the HammerHead and HammerHandle lying on it).
+	-- The camera glides in over Glide seconds to CameraBack studs from the face (towards the player, turned SideAngle
+	-- degrees, away from the forge's wall) and CameraUp above it, looking LookUp above the face, at FieldOfView; it glides
+	-- back over Back. The player's own character is hidden meanwhile (it would stand in the shot). A copy of the hammer strikes Hits times by tier, the first lift at FirstHit,
+	-- HitGap apart, the fall taking Fall of a gap, swung HammerTip degrees about the handle's end and lifted HammerLift studs.
+	-- RiseDelay after the last strike the piece rises out of the face over Rising seconds: from StartScale of its size to
+	-- full, its foot Hover studs over the face, turning Turns times, then SpinAfter radians a second; a weapon is
+	-- WeaponLength studs tall, a helm or a charm (or a weapon whose model has not loaded) its picture, IconSize pixels. Its
+	-- name shows CardAbove studs over it (CardWidth x CardHeight pixels, CardText) as it stops, for Hold seconds by tier. A
+	-- weapon of a tier with an aura (Config.Weapons.Fx) gets it once it has grown AuraAt of the way.
+	-- Each strike heats the face towards HotFace, glowing metal (HeatShare of the way at the last), and flashes a light of the
+	-- tier's Heat colour, HeatLight brightness and HeatRange studs, fading over HeatFade. Effects are VFX library ids (one the library does not
+	-- have yet is left out); sounds from Roblox's licensed Pro Sound Effects, played at the anvil (steam cut after
+	-- `seconds`).
+	Forge = {
+		Anvil = "Blacksmith",
+		FieldOfView = 50,
+		CameraBack = 7.5,
+		CameraUp = 4.5,
+		LookUp = 1.8,
+		SideAngle = -30,
+		Glide = 0.35,
+		Back = 0.4,
+		Hits = { wood = 2, iron = 2, core = 3, bramble = 3, legend = 3 },
+		FirstHit = 0.35,
+		HitGap = 0.33,
+		Fall = 0.25,
+		HammerTip = 55,
+		HammerLift = 0.5,
+		RiseDelay = 0.06,
+		Rising = 0.8,
+		StartScale = 0.15,
+		Hover = 0.8,
+		Turns = 1,
+		SpinAfter = 1.2,
+		WeaponLength = 2.6,
+		IconSize = 110,
+		AuraAt = 0.9,
+		Hold = { wood = 0.6, iron = 0.6, core = 0.7, bramble = 0.8, legend = 0.9 },
+		CardAbove = 0.9,
+		CardWidth = 480,
+		CardHeight = 64,
+		CardText = 48,
+		Heat = { wood = "#ff9440", iron = "#7cf060", core = "#c07cff", bramble = "#ff7020", legend = "#ffd23c" },
+		HotFace = "#ff7a2e",
+		HeatShare = 0.6,
+		HeatLight = 3,
+		HeatRange = 7,
+		HeatFade = 0.3,
+		Effects = { strike = "hit.forge_strike", reveal = "burst.forge_reveal", quench = "burst.forge_quench" },
+		Sounds = {
+			strike = { id = 9113446419, volume = 0.6 },
+			ting = { id = 9113446419, volume = 0.5, speed = 1.7 },
+			steam = { id = 9116496050, volume = 0.45, seconds = 1.3 },
+		},
+	},
 	-- Behind every slime portrait (UiSlimes.portrait; ChatGPT 2026-11-15, art/icons/backdrop_*.png): its kind's picture; a
 	-- plain slime's glow is tinted BackdropTint of the way towards its colour.
 	Backdrops = { normal = 103303036977086, dual = 91772423795167, secret = 120497343021109, material = 87700129481895 },
