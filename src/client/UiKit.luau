@@ -3,6 +3,7 @@
 -- rounded font. Mobile first: nothing a finger can press is below Config.Ui.Touch. One modal at a time, tap outside to
 -- close. Pure drawing: it never reads game state and never decides a rule.
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local SoundService = game:GetService("SoundService")
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 
@@ -313,7 +314,28 @@ function UiKit.outline(label: TextLabel, on: boolean)
 	label.TextColor3 = if on then Color3.new(1, 1, 1) else UiKit.colour("Brown")
 end
 
+-- A short sound of the screens (Config.Ui.Sounds: an id and a volume), heard by this player only; a name with no entry
+-- plays nothing. One Sound a name, made the first time.
+local sounds: { [string]: Sound } = {}
+function UiKit.sound(name: string)
+	local entry: any = (U.Sounds :: any)[name]
+	if not entry then
+		return
+	end
+	local sound = sounds[name]
+	if not sound then
+		local made = Instance.new("Sound")
+		made.Name = "Ui_" .. name
+		made.SoundId = "rbxassetid://" .. tostring(entry.id)
+		made.Volume = entry.volume
+		made.Parent = SoundService
+		sounds[name], sound = made, made
+	end
+	SoundService:PlayLocalSound(sound :: Sound)
+end
+
 -- How a button answers a finger or the mouse: under the mouse `target` grows to `hover`; pressed it shrinks to `press` and
+-- clicks (UiKit.sound);
 -- `shade` (a CanvasGroup or a picture) darkens; let go, it springs back. Hover listens to mouse movement only, so a
 -- phone never leaves a button grown.
 local PRESSES = { [Enum.UserInputType.MouseButton1] = true, [Enum.UserInputType.Touch] = true }
@@ -341,6 +363,7 @@ local function pressable(button: GuiButton, target: Instance, hover: number, pre
 		elseif PRESSES[input.UserInputType] then
 			down = true
 			settle()
+			UiKit.sound("click")
 		end
 	end)
 	button.InputEnded:Connect(function(input)
@@ -926,6 +949,10 @@ function UiKit.coinFly(from: GuiObject, amount: number)
 			flight.Completed:Connect(function()
 				coin:Destroy()
 				along:Destroy()
+				-- (the jingle starts with the first coin home and runs under the count-up)
+				if index == 1 then
+					UiKit.sound("coins")
+				end
 				pop.Scale = U.CoinPop
 				UiKit.tween(pop, 0.2, { Scale = 1 }, Enum.EasingStyle.Back)
 			end)

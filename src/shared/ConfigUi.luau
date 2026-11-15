@@ -455,6 +455,12 @@ return {
 	CoinPop = 1.18,
 	CoinCountSeconds = 0.8,
 	CoinFlyLayer = 5,
+	-- The screens' sounds (UiKit.sound), from Roblox's own licensed library (Pro Sound Effects, free in the Creator Store):
+	-- a light click on every press, a jingle when sold coins fly home.
+	Sounds = {
+		click = { id = 9119717523, volume = 0.25 },
+		coins = { id = 9113849583, volume = 0.35 },
+	},
 	-- Behind every slime portrait (UiSlimes.portrait; ChatGPT 2026-11-15, art/icons/backdrop_*.png): its kind's picture; a
 	-- plain slime's glow is tinted BackdropTint of the way towards its colour.
 	Backdrops = { normal = 103303036977086, dual = 91772423795167, secret = 120497343021109, material = 87700129481895 },
