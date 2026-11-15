@@ -71,6 +71,11 @@ local function showCoins(amount: number, cap: any, instant: boolean)
 		coinsCounter, counter = made, made
 	end
 	assert(counter, "coin counter made above")
+	-- (the HUD refreshes often: a count running towards the same amount is left to run)
+	if amount == coinsGoal and not instant then
+		drawCoins(math.floor(counter.Value + 0.5))
+		return
+	end
 	if coinsCount then
 		coinsCount:Cancel()
 		coinsCount = nil
@@ -78,10 +83,8 @@ local function showCoins(amount: number, cap: any, instant: boolean)
 	if instant or coinsGoal == nil or amount < counter.Value then
 		counter.Value = amount
 		drawCoins(amount)
-	elseif amount ~= coinsGoal then
-		coinsCount = UiKit.tween(counter, U.CoinCountSeconds, { Value = amount })
 	else
-		drawCoins(math.floor(counter.Value + 0.5))
+		coinsCount = UiKit.tween(counter, U.CoinCountSeconds, { Value = amount })
 	end
 	coinsGoal = amount
 end
