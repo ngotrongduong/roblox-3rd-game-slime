@@ -321,6 +321,31 @@ return function(T)
 	end)
 
 	T.test(
+		"a grant that throws halfway changes nothing and keeps no receipt; the retry grants it whole once",
+		function()
+			local farm = farmWith()
+			local base = Rewards.coinBase(farm)
+			local luck = farm.luckPotionUntil
+			-- the starter pack pays its coins and its luck before the spins, which find no wheel and throw
+			local wheel = farm.rewards.wheel
+			farm.rewards.wheel = nil
+			T.eq((pcall(Products.redeem, farm, "starterPack", "sp1", NOW)), false, "the grant throws")
+			T.eq(farm.coins, 0, "no coins kept from the half grant")
+			T.eq(farm.luckPotionUntil, luck, "no luck kept from the half grant")
+			T.eq(farm.robux.starterBought, false)
+			T.eq(Products.hasReceipt(farm, "sp1"), false, "no receipt, so Roblox asks again")
+			farm.rewards.wheel = wheel
+			T.same(
+				{ Products.redeem(farm, "starterPack", "sp1", NOW) },
+				{ true, "GRANTED", "starter pack, gold " .. 7 * base }
+			)
+			T.eq(farm.coins, 7 * base, "the coins once")
+			T.same({ Products.redeem(farm, "starterPack", "sp1", NOW) }, { true, "DUPLICATE" })
+			T.eq(farm.coins, 7 * base, "a repeated receipt pays nothing")
+		end
+	)
+
+	T.test(
 		"what may be bought: a pass once, the next tier needs the one before, a lower luck tier is refused, random items are region-gated",
 		function()
 			local farm = farmWith()
