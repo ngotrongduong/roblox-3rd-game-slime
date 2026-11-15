@@ -149,8 +149,11 @@ export type Rewards = {
 	wheel: { day: number, used: number, bank: number },
 	social: { favorite: boolean, group: boolean },
 }
--- The Slime Dungeon (shared/Dungeon): the highest dungeon level cleared, 0 for none (level best + 1 is the next to open).
-export type Dungeon = { best: number }
+-- The Slime Dungeon (shared/Dungeon, schema 16): `best` the depth the four dungeons share (the highest level cleared in any,
+-- 0 for none; it opens every level up to the checkpoint above it), and each dungeon's own highest level cleared by its
+-- Config.Dungeon.MapOrder id. A best moved from an older save may stand above every map's record (it opens levels, it
+-- clears none).
+export type Dungeon = { best: number, maps: { [string]: number } }
 -- The zones of the big world (schema 15; shared/ZoneFights): beaten[zone id] = the server time (os.time) of the player's
 -- last win there. A zone that is not in it was never won.
 export type World = { beaten: { [string]: number } }
@@ -382,7 +385,20 @@ function FarmState.newRewards(): Rewards
 end
 
 function FarmState.newDungeon(): Dungeon
-	return { best = 0 }
+	local maps: { [string]: number } = {}
+	for _, id in Config.Dungeon.MapOrder do
+		maps[id] = 0
+	end
+	return { best = 0, maps = maps }
+end
+
+-- The highest dungeon level really cleared, in any of the four (a goal counts this, not the shared best).
+function FarmState.dungeonCleared(dungeon: Dungeon): number
+	local most = 0
+	for _, level in dungeon.maps do
+		most = math.max(most, level)
+	end
+	return most
 end
 
 function FarmState.newWorld(): World
@@ -1535,7 +1551,13 @@ local function validateDungeon(raw: any, warnings: { string }): Dungeon
 	if raw.best ~= nil and not (isNum(raw.best) and raw.best >= 0 and raw.best % 1 == 0) then
 		table.insert(warnings, "dungeon: best level damaged, repaired")
 	end
-	return { best = nonNegInt(raw.best, 0) }
+	local out = FarmState.newDungeon()
+	out.best = math.min(nonNegInt(raw.best, 0), Config.Dungeon.MaxLevel)
+	local maps = if type(raw.maps) == "table" then raw.maps else {}
+	for id in out.maps do
+		out.maps[id] = math.min(nonNegInt(maps[id], 0), out.best)
+	end
+	return out
 end
 
 -- The zones won: a known zone id and the whole, positive time of the win; anything else is dropped.

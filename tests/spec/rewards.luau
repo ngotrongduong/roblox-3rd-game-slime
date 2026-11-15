@@ -658,7 +658,9 @@ return function(T: any)
 		T.eq(farm.coins, coins + paid, "paid once")
 		-- the other counts
 		farm.lifetime.slimesSold = 100
+		-- (a goal counts the levels really cleared, in any of the four dungeons)
 		farm.dungeon.best = 10
+		farm.dungeon.maps.mushroom = 10
 		farm.lifetime.gearCrafted = 5
 		for _, id in Config.Village.Areas do
 			farm.areas[id].level = 20
@@ -719,7 +721,7 @@ return function(T: any)
 	end)
 
 	T.test("a schema 11 save migrates (through every later step) and keeps what it took", function()
-		T.eq(Config.Save.SchemaVersion, 15)
+		T.eq(Config.Save.SchemaVersion, 16)
 		local old: any = played(FarmState.newFarm(NOW))
 		Rewards.ensureQuests(old, 8, NOW)
 		Rewards.claimDaily(old, NOW)

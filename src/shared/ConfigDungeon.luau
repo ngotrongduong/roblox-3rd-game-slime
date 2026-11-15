@@ -135,6 +135,8 @@ return {
 	Maps = {
 		meadow = {
 			name = "Sunny Meadow",
+			-- (the gate's tab)
+			short = "Meadow",
 			monsters = {
 				{
 					id = "green_sprout",
@@ -269,6 +271,7 @@ return {
 		-- darkforest map drop): the boss pays two, never fewer; the mini-boss, the spitter and the healer sometimes one.
 		mushroom = {
 			name = "Mushroom Grove",
+			short = "Grove",
 			monsters = {
 				{
 					id = "dark_hare",
@@ -405,6 +408,7 @@ return {
 		-- fewer; the mini-boss, the spitter and the healer sometimes one.
 		lava = {
 			name = "Ember Lava",
+			short = "Lava",
 			monsters = {
 				{
 					id = "lava_newt",
@@ -544,6 +548,7 @@ return {
 		-- and the Penguin sometimes one.
 		ice = {
 			name = "Frozen Ice",
+			short = "Ice",
 			monsters = {
 				{
 					id = "ice_fox",
@@ -676,12 +681,9 @@ return {
 			} :: { any },
 		},
 	},
-	-- The maps turn one step each dungeon level (shared/Dungeon.mapForLevel), from a first map each player's UserId picks
-	-- (MapFirstRandom, the original's seeded first map; off, everyone starts on the first of the list). MapSeedOffset is the
-	-- original's seed + 77. Frozen Ice is the last of the four.
+	-- The four dungeons, in the order the gate lists them: the player picks one for a run (the owner, 2026-11-15: four
+	-- dungeons, each its own group of materials), and Next and Replay stay on it.
 	MapOrder = { "meadow", "mushroom", "lava", "ice" },
-	MapFirstRandom = true,
-	MapSeedOffset = 77,
 	-- How long the lighting takes to come back to the place's own day when a run ends (client/DungeonLight).
 	LightBackSeconds = 1.5,
 
@@ -705,19 +707,61 @@ return {
 	PauseSeconds = 2.5,
 	CountdownSeconds = 1,
 
-	-- ===== Difficulty (the owner tunes these by playing) =====
-	-- HP and ATK of a monster times WaveGrowth^(wave - 1) inside a run, and times LevelPower^(level - 1) for the dungeon
-	-- level. Defence and speed are never scaled. A monster's shown level is Stats.level of its scaled stats, so it rises
-	-- every wave. LuckPerLevel: loot luck = 1 + LuckPerLevel x (level - 1). StatScale: HP and ATK of every monster times
-	-- this (the original's numbers beat a team of four starters in wave 1; tools/balance/dungeon_sim.luau).
-	-- Measured (20 seeds, a team of four): at 0.3 starters reach wave 3, level-10 slimes the boss's door, level 40 clear
-	-- level 1. LevelPower 1.6 (the original's 5 left even level-80 slimes short of clearing level 2).
-	StatScale = 0.3,
-	WaveGrowth = 1.12,
-	LevelPower = 1.6,
-	LuckPerLevel = 0.05,
-	-- The first dungeon level, and the best one that must be cleared before the next opens.
+	-- ===== Levels and monsters (the owner, 2026-11-15; the owner tunes these by playing) =====
+	-- Dungeon levels FirstLevel..MaxLevel. The depth is shared by the four dungeons: `best` is the highest level cleared in
+	-- any of them, and every level up to the checkpoint above it is open (min(MaxLevel, CheckpointEvery x (floor(best /
+	-- CheckpointEvery) + 1)): 1-5 at first, 1-10 once 5 is cleared). Next Checkpoint jumps to the next multiple of
+	-- CheckpointEvery.
 	FirstLevel = 1,
+	MaxLevel = 200,
+	CheckpointEvery = 5,
+	-- A monster's level on dungeon level L (shared/Dungeon.plan). Levels come in bands of BandSize (11-20 holds monsters of
+	-- 10-20, 21-30 of 20-30, ...); the first band holds FirstBandLow..FirstBandHigh (levels 1-10 hold monsters 4-10, the
+	-- main level rising evenly). NearShare of a wave's crowd stands within NearSpread of the main level; the rest anywhere
+	-- in the band, never on wave 1 and at most one above the near levels a wave (the owner's example: on level 11 nine in
+	-- ten are level 11 and one in ten level 20; on 20 most are 19-20, the rest lower). The mini-boss stands MiniBossAbove
+	-- over the main level, the boss BossAbove.
+	BandSize = 10,
+	FirstBandLow = 4,
+	FirstBandHigh = 10,
+	NearShare = 0.85,
+	NearSpread = 1,
+	MiniBossAbove = 1,
+	BossAbove = 3,
+	-- A monster's stats: those of an even slime of its level (every stat level / 4, HP x Config.Stats.HpPerLevel, as the
+	-- world's packs are) times its role's RoleFactor and the power of the run's main level, its HP times RoleHp; attack and HP grow
+	-- WaveGrowth a wave. Slimes win with their class skills and traits.
+	-- PowerCurve: { level, power } points, straight between them, the end ones held past the ends. Fit with
+	-- tools/balance/dungeon_sim.luau (`fit`): at each point a mixed team of that level holding the weapons a player has
+	-- there (its tier's class skills lift a team most just after a new tier) clears about FitShare of the runs. Fitted
+	-- 2026-11-15 and smoothed over each tier's levels (tools/balance/squad_run tierAt: Common to 7, Uncommon 8-22, Epic
+	-- 23-67, Mythic 68-109, Legendary from 110): the steps are where a team takes its next weapons.
+	PowerCurve = {
+		{ 4, 0.31 },
+		{ 7, 0.33 },
+		{ 8, 0.40 },
+		{ 22, 0.40 },
+		{ 23, 0.42 },
+		{ 30, 0.45 },
+		{ 67, 0.45 },
+		{ 68, 0.505 },
+		{ 109, 0.515 },
+		{ 110, 0.55 },
+	},
+	FitShare = 0.87,
+	RoleFactor = {
+		swarmer = 0.55,
+		raider = 0.55,
+		spitter = 0.55,
+		shaman = 0.55,
+		armoured = 0.65,
+		miniboss = 0.75,
+		boss = 0.85,
+	},
+	RoleHp = { miniboss = 3, boss = 5 },
+	WaveGrowth = 1.03,
+	-- (loot luck, until the drop tables of the four dungeons replace it: 1 + LuckPerLevel x (level - 1))
+	LuckPerLevel = 0.05,
 	-- The Dungeon is not for new players (the owner, 2026-11-04): a farm enters only with at least EnterMinSlimes slimes
 	-- (eggs not counted) and a village of level EnterMinVillageLevel or more (15: the first level whose population limit
 	-- holds 20 slimes, Config.Village.PopulationProgression).

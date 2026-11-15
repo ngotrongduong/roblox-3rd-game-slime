@@ -118,8 +118,19 @@ function VillageRequests.valid(data: any, hasPlot: boolean): boolean
 				and teamList(data.teams)
 				and hasPlot
 		end
-		return integer(data.level) and data.level >= Config.Dungeon.FirstLevel and teamList(data.teams) and hasPlot
-	elseif action == "DungeonNext" or action == "DungeonReplay" or action == "DungeonLeave" then
+		-- (`map` the dungeon picked: Config.Dungeon.Maps)
+		return integer(data.level)
+			and data.level >= Config.Dungeon.FirstLevel
+			and type(data.map) == "string"
+			and (Config.Dungeon.Maps :: any)[data.map] ~= nil
+			and teamList(data.teams)
+			and hasPlot
+	elseif
+		action == "DungeonNext"
+		or action == "DungeonJump"
+		or action == "DungeonReplay"
+		or action == "DungeonLeave"
+	then
 		return hasPlot
 	elseif action == "SetPair" then
 		return integer(data.index)

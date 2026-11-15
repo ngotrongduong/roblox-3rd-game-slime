@@ -63,6 +63,8 @@ local busy = false
 local leaveSureUntil = 0
 local refreshPending = false
 local bound: { [ProximityPrompt]: boolean } = setmetatable({}, { __mode = "k" }) :: any
+-- the dungeon last picked at the gate: the sheet opens on it again
+local pickedMap: string = D.MapOrder[1]
 
 local function context(): Context
 	assert(ctx, "UiDungeon.start first")
@@ -263,13 +265,16 @@ local function teamRow(scroll: Instance, index: number, onTap: () -> ()): Row
 		Position = UDim2.fromScale(1, 0.5),
 		Visible = false,
 	})
-	UiKit.make("TextButton", {
-		Name = "Tap",
-		BackgroundTransparency = 1,
-		Text = "",
-		Size = FULL,
-		ZIndex = 20,
-	}, root).Activated
+	UiKit.feel(
+		UiKit.make("TextButton", {
+			Name = "Tap",
+			BackgroundTransparency = 1,
+			Text = "",
+			Size = FULL,
+			ZIndex = 20,
+		}, root),
+		root
+	).Activated
 		:Connect(onTap)
 	return { root = root, portraits = portraits, key = "", body = body, mark = mark, away = nil, awayState = "" }
 end
@@ -280,8 +285,11 @@ local function openGate(point: Vector3, zone: string?)
 	if phase() ~= "" then
 		return
 	end
-	local top = numberAttribute("DungeonBest", 0) + D.FirstLevel
-	local level = top
+	-- (the depth is shared by the four dungeons: every level up to the checkpoint above the best is open; the sheet starts
+	-- on the one after the best)
+	local best = numberAttribute("DungeonBest", 0)
+	local top = DungeonRules.maxOpen(best)
+	local level = math.clamp(best + 1, D.FirstLevel, top)
 	local selected: { [number]: boolean } = {}
 	local picked = false
 	local busyEnter = false
@@ -291,8 +299,7 @@ local function openGate(point: Vector3, zone: string?)
 		tick()
 	end, point, (if zone then W.PromptRangeStuds else D.Portal.PromptRangeStuds) * 1.3)
 
-	-- the map turns with the level (shared/Dungeon.mapForLevel: the same one the server builds), so the title and the list of
-	-- what drops follow the stepper
+	-- the title and the list of what drops follow the dungeon picked in the tabs above the list
 	UiKit.icon(modal.header, "dungeon", U.Touch - 12, {
 		AnchorPoint = Vector2.new(0, 0.5),
 		Position = UDim2.fromScale(0, 0.5),
@@ -317,6 +324,18 @@ local function openGate(point: Vector3, zone: string?)
 	UiKit.make("UIListLayout", { Padding = UDim.new(0, U.Gap), SortOrder = Enum.SortOrder.LayoutOrder }, scroll)
 	UiKit.make("UIPadding", { PaddingRight = UDim.new(0, 8), PaddingBottom = UDim.new(0, 4) }, scroll)
 
+	-- the four dungeons, one tab each (a zone of the big world names its own)
+	if not zone then
+		local tabs: { { id: string, text: string?, icon: string? } } = {}
+		for _, id in D.MapOrder do
+			table.insert(tabs, { id = id, text = (D.Maps :: any)[id].short })
+		end
+		UiKit.segmented(scroll, tabs, pickedMap, function(id: string)
+			pickedMap = id
+			tick()
+		end, { LayoutOrder = -1 })
+	end
+
 	-- what the dungeon gives, as a plain list in two columns: picture, name, how many (the owner, 2026-11-04: a list,
 	-- not a framed plate each)
 	local drops = UiKit.make("Frame", {
@@ -338,7 +357,8 @@ local function openGate(point: Vector3, zone: string?)
 			local _, place = ZoneFights.zone(zone)
 			map = { name = place.name, monsters = ZoneFights.dropDefs(zone) }
 		end
-		title.Text = map.name
+		local own = if zone then 0 else numberAttribute("DungeonMapBest_" .. mapId, 0)
+		title.Text = if own > 0 then map.name .. "   Best " .. own else map.name
 		UiKit.clear(drops)
 		local ranges = dropRanges(map)
 		for order, item in D.DropOrder do
@@ -467,7 +487,7 @@ local function openGate(point: Vector3, zone: string?)
 				local ok, why = c.ask(
 					if zone
 						then { action = "DungeonEnter", zone = zone, teams = teams }
-						else { action = "DungeonEnter", level = level, teams = teams }
+						else { action = "DungeonEnter", level = level, map = pickedMap, teams = teams }
 				)
 				busyEnter = false
 				if ok then
@@ -561,9 +581,9 @@ local function openGate(point: Vector3, zone: string?)
 				return
 			end
 		end
-		top = numberAttribute("DungeonBest", 0) + D.FirstLevel
+		top = DungeonRules.maxOpen(numberAttribute("DungeonBest", 0))
 		level = math.clamp(level, D.FirstLevel, top)
-		local mapId = if zone then (W.Zones :: any)[zone].map else DungeonRules.mapForLevel(player.UserId, level)
+		local mapId = if zone then (W.Zones :: any)[zone].map else pickedMap
 		if mapId ~= shownMap then
 			showMap(mapId)
 		end
@@ -759,7 +779,11 @@ local function drawEnd(current: string)
 		return
 	end
 	local victory = current == "VICTORY"
-	local key = current .. ":" .. tostring(numberAttribute("DungeonLevel", 0))
+	local key = current
+		.. ":"
+		.. tostring(numberAttribute("DungeonLevel", 0))
+		.. ":"
+		.. tostring(numberAttribute("DungeonBest", 0))
 	if key ~= endKey then
 		endKey = key
 		title.Text = if victory then "Victory!" else "Defeated"
@@ -768,7 +792,15 @@ local function drawEnd(current: string)
 		-- (a zone of the big world has no next level, and rests once won: only a lost fight is tried again)
 		local zone = player:GetAttribute("DungeonZone")
 		local inZone = type(zone) == "string" and zone ~= ""
-		local count = if inZone then (if victory then 1 else 2) elseif victory then 3 else 2
+		-- (Next Level is there while a level above is open; Next Checkpoint when the checkpoint is further than that)
+		local level = numberAttribute("DungeonLevel", D.FirstLevel)
+		local best = numberAttribute("DungeonBest", 0)
+		local hasNext = victory and not inZone and level < DungeonRules.maxOpen(best)
+		local hasJump = hasNext and DungeonRules.nextCheckpoint(level, best) > level + 1
+		local count = (if hasNext then 1 else 0)
+			+ (if hasJump then 1 else 0)
+			+ (if victory and inZone then 0 else 1)
+			+ 1
 		local order = 0
 		local function add(name: string, text: string, icon: string?, style: string, action: string)
 			order += 1
@@ -777,8 +809,11 @@ local function drawEnd(current: string)
 			end)
 			button.Size = UDim2.new(1 / count, -U.Gap * (count - 1) / count, 1, 0)
 		end
-		if victory and not inZone then
+		if hasNext then
 			add("Next", "Next Level", nil, "primary", "DungeonNext")
+		end
+		if hasJump then
+			add("Jump", "Next Checkpoint", nil, "secondary", "DungeonJump")
 		end
 		if not (victory and inZone) then
 			add("Replay", "Replay", "again", if victory then "secondary" else "primary", "DungeonReplay")
@@ -1027,7 +1062,9 @@ end
 function UiDungeon.start(context_: Context)
 	ctx = context_
 	buildHud()
-	for _, name in { "DungeonPhase", "DungeonWave", "DungeonWaves", "DungeonLevel", "DungeonLeft", "DungeonLedger" } do
+	for _, name in
+		{ "DungeonPhase", "DungeonWave", "DungeonWaves", "DungeonLevel", "DungeonLeft", "DungeonLedger", "DungeonBest" }
+	do
 		player:GetAttributeChangedSignal(name):Connect(scheduleHud)
 	end
 	scheduleHud()

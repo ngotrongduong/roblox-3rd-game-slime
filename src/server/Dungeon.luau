@@ -27,7 +27,8 @@
 --       Monsters/<id>     the stand-in Part of a monster in play: MonsterId (its def id, e.g. "green_boar"), MonsterName,
 --                     Role, Kind, Level, Hp, MaxHp, X, Z (flat, from the middle)
 --   Player            DungeonPhase ("" outside a run), DungeonWave, DungeonWaves, DungeonLevel, DungeonLeft,
---                     DungeonLedger (as Ledger above), and DungeonBest (always: the best level cleared)
+--                     DungeonLedger (as Ledger above), and always DungeonBest (the depth the four dungeons share) and
+--                     DungeonMapBest_<map id> (each dungeon's own highest level cleared)
 --   Remotes.Fight     the zombie fights' event, with { team = 0, dungeon = true, teams = { n }, events = { event } };
 --                     event kinds: "start" ({ members, roles, level, waves, best }), "wave" ({ wave, waves, count,
 --                     waveKind }), "spawn" ({ id, defId, name, role, foeKind, level, hp, x, z, wx, wy, wz }), the fight's
@@ -309,6 +310,14 @@ local function shownLevel(run: Run): number
 	return if run.zone then ZoneFights.level(run.zone) else run.level
 end
 
+-- The depth the four dungeons share and each one's own record, on the player (the gate sheet reads them).
+local function publishBest(player: Player, farm: any)
+	set(player, "DungeonBest", if farm then farm.dungeon.best else 0)
+	for _, id in D.MapOrder do
+		set(player, "DungeonMapBest_" .. id, if farm then farm.dungeon.maps[id] or 0 else 0)
+	end
+end
+
 local function publish(run: Run)
 	local farm = PlayerData.get(run.player)
 	local best = if farm then farm.dungeon.best else 0
@@ -342,7 +351,7 @@ local function publish(run: Run)
 	set(player, "DungeonZone", run.zone or "")
 	set(player, "DungeonLeft", left)
 	set(player, "DungeonLedger", ledger)
-	set(player, "DungeonBest", best)
+	publishBest(player, farm)
 	local fight = run.fight
 	if fight then
 		for _, unit in fight.units do
@@ -774,7 +783,7 @@ local function clearWave(run: Run, fight: Fight)
 		if last and zone then
 			ZoneFights.recordClear(farm, zone, os.time())
 		elseif last then
-			newBest = DungeonRules.recordClear(farm, run.level)
+			newBest = DungeonRules.recordClear(farm, run.mapId, run.level)
 		end
 	end)
 	if last and zone then
@@ -986,10 +995,10 @@ local function enter(player: Player, data: any, farm: any): { ok: boolean, reaso
 	if not ids then
 		return fail(why or "NO_FIT")
 	end
-	-- (the map follows the level: a pure function of the player and the level; a zone names its own map and level)
+	-- (the dungeon the player picked; a zone names its own map, and its level is the one it shows)
 	local numbers: any = if zone then ZoneFights.zone(zone) else nil
-	local mapId: string = if numbers then numbers.map else DungeonRules.mapForLevel(player.UserId, data.level)
-	local level: number = if numbers then numbers.level else data.level
+	local mapId: string = if numbers then numbers.map else data.map
+	local level: number = if zone then ZoneFights.level(zone) else data.level
 	local arena, monsters, squad = buildArena(plot, mapId, zone)
 	local run: Run = {
 		player = player,
@@ -1085,22 +1094,7 @@ local function again(run: Run, level: number, farm: any): { ok: boolean, reason:
 	if not ids then
 		return fail(why or "NO_FIT")
 	end
-	-- The next level may lie on another map: its arena is built on the same ground and the old one goes (the player stands
-	-- on the same spot, so nothing moves; the squad's and monsters' folders are the new arena's, startRun fills them).
-	local mapId = if zone then run.mapId else DungeonRules.mapForLevel(run.player.UserId, level)
-	if mapId ~= run.mapId then
-		local old = run.arena
-		run.arena, run.monsters, run.squad = buildArena(run.plot, mapId)
-		run.nodes = {}
-		run.mapId = mapId
-		old:Destroy()
-		task.spawn(function()
-			pcall(function()
-				(run.player :: any):RequestStreamAroundAsync(Layout.arenaPlayerSpot(run.plot).Position, D.StreamSeconds)
-			end)
-		end)
-	end
-	-- (as enter does: a run half reset by an error is ended, not left standing)
+	-- (the same dungeon and arena: Next and Replay never change the map. As enter does: a run half reset by an error is ended, not left standing)
 	local started, err = pcall(startRun :: any, run, farm, level, ids, now)
 	if not started then
 		warn(Config.LogPrefix, "dungeon: the next run of", run.player.Name, "did not start:", err)
@@ -1142,6 +1136,15 @@ function Dungeon.request(player: Player, data: any): { ok: boolean, reason: stri
 			return fail("BAD_PHASE")
 		end
 		return again(run, run.level + 1, farm)
+	elseif action == "DungeonJump" then
+		-- Next Checkpoint: the next multiple of CheckpointEvery that is open
+		local target = DungeonRules.nextCheckpoint(run.level, farm.dungeon.best)
+		if run.phase ~= VICTORY or run.zone then
+			return fail("BAD_PHASE")
+		elseif target <= run.level then
+			return fail("LEVEL_LOCKED")
+		end
+		return again(run, target, farm)
 	elseif action == "DungeonReplay" then
 		if run.phase ~= VICTORY and run.phase ~= DEFEAT then
 			return fail("BAD_PHASE")
@@ -1180,7 +1183,7 @@ function Dungeon.start()
 	end)
 	PlayerData.onReady(function(player: Player, data: any)
 		if player.Parent == Players then
-			set(player, "DungeonBest", if data and data.dungeon then data.dungeon.best else 0)
+			publishBest(player, data)
 			clearPlayerAttributes(player)
 		end
 	end)

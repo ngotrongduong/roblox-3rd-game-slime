@@ -404,7 +404,7 @@ local intros: { [string]: Intro } = {
 				and FarmState.villageLevel(farm.areas) >= Config.Dungeon.EnterMinVillageLevel
 		end,
 		done = function(farm)
-			return farm.dungeon.best >= 1
+			return FarmState.dungeonCleared(farm.dungeon) >= 1
 		end,
 	},
 	recipes = {

@@ -510,6 +510,46 @@ function ProfileLogic.migrateWorld(data: any, _now: number): any
 	return out
 end
 
+-- A farm saved before the four dungeons and their shared depth (schema 15): the old best level (whose monsters grew 1.6
+-- times a level) becomes the level of the new ladder its monsters stood at, 40 x 1.6 ^ (best - 1), but never above what the
+-- farm's fourth strongest slime (a team's weakest) can face, rounded down to a checkpoint. It only opens levels: no map
+-- records a clear.
+function ProfileLogic.migrateDepth(data: any, _now: number): any
+	if type(data) ~= "table" then
+		return data
+	end
+	local out = ProfileLogic.deepCopy(data)
+	local old = if type(out.dungeon) == "table" and type(out.dungeon.best) == "number" then out.dungeon.best else 0
+	local levels: { number } = {}
+	if type(out.slimes) == "table" then
+		for _, slime in out.slimes do
+			local s = if type(slime) == "table" then slime.stats else nil
+			if type(s) == "table" then
+				local sum = (tonumber(s.attack) or 0)
+					+ (tonumber(s.defence) or 0)
+					+ (tonumber(s.speed) or 0)
+					+ (tonumber(s.hp) or 0) / Config.Stats.HpPerLevel
+				table.insert(levels, math.floor(sum))
+			end
+		end
+	end
+	table.sort(levels, function(a, b)
+		return a > b
+	end)
+	local D = Config.Dungeon
+	local cap = D.CheckpointEvery * math.floor((levels[Config.Zombies.TeamSize] or 0) / D.CheckpointEvery)
+	local best = 0
+	if old >= 1 then
+		best = math.clamp(math.min(math.floor(40 * 1.6 ^ (old - 1) + 0.5), cap), 0, D.MaxLevel)
+	end
+	local maps = {}
+	for _, id in D.MapOrder do
+		maps[id] = 0
+	end
+	out.dungeon = { best = best, maps = maps }
+	return out
+end
+
 -- Runs the steps from `fromVersion` to `toVersion`, each found by its `from`, so the list may be in
 -- any order. Refuses data from a newer version instead of guessing at it.
 function ProfileLogic.migrate(

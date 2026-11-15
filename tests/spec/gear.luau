@@ -323,7 +323,7 @@ return function(T: any)
 			ProfileLogic.prepareLoad({ schemaVersion = 8, savedAt = NOW, data = older }, FarmSave.hooks(), NOW + 1)
 		T.ok(far.ok)
 		T.same(far.data.gear, {})
-		T.same(far.data.dungeon, { best = 0 })
+		T.same(far.data.dungeon, FarmState.newDungeon())
 	end)
 
 	T.test("the three requests: shapes are checked, and each runs on the farm", function()

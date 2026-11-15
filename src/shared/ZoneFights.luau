@@ -58,21 +58,22 @@ function ZoneFights.level(id: string): number
 	return WorldPacks.levelAt(place.x, place.z)
 end
 
--- The monsters of wave `wave` of a zone, in the order they come. The same seed makes the same wave.
+-- The monsters of wave `wave` of a zone, in the order they come: every one of the zone's level (the Dungeon's crowd of
+-- that wave, each made again at the level), HP and attack times the zone's `power` and the wave's. The same seed makes
+-- the same wave.
 function ZoneFights.plan(id: string, wave: number, seed: number): { Monster }
 	local numbers = (W.Zones :: any)[id]
 	local entry = numbers.waves[wave]
-	local monsters: { Monster }
+	local level = ZoneFights.level(id)
+	local power = (numbers.power or 1) * (entry.power or 1)
 	if entry.guard then
 		local def = assert(Dungeon.defOf(numbers.map, entry.guard), "unknown guard " .. tostring(entry.guard))
-		monsters = { Dungeon.monster(def, numbers.level, entry.wave, "m" .. entry.wave .. "-1", entry.power) }
-	else
-		monsters = Dungeon.plan(numbers.map, numbers.level, entry.wave, seed)
+		return { Dungeon.monster(def, level, entry.wave, "m" .. entry.wave .. "-1", power) }
 	end
-	-- (a monster's level is only what it shows: every one of a zone shows the zone's)
-	local level = ZoneFights.level(id)
-	for _, monster in monsters do
-		monster.level = level
+	local monsters: { Monster } = {}
+	for _, crowd in Dungeon.plan(numbers.map, level, entry.wave, seed) do
+		local def = Dungeon.defOf(numbers.map, crowd.defId)
+		table.insert(monsters, Dungeon.monster(def, level, entry.wave, crowd.id, power))
 	end
 	return monsters
 end

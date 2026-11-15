@@ -101,33 +101,87 @@ return function(T: any)
 		T.eq(Dungeon.plan("meadow", 1, 3, 5)[1].id, "m3-1")
 	end)
 
-	T.test(
-		"HP and attack rise with the wave and the level, defence and speed never do, and the shown level climbs",
-		function()
-			local snail = def("green_snail")
-			local last = 0
-			for wave = 1, 9 do
-				local stats = Dungeon.scale(snail, 1, wave)
-				T.near(stats.hp, snail.hp * D.StatScale * D.WaveGrowth ^ (wave - 1), 1e-9)
-				T.near(stats.attack, snail.attack * D.StatScale * D.WaveGrowth ^ (wave - 1), 1e-9)
-				T.eq(stats.defence, snail.defence)
-				T.eq(stats.speed, snail.speed)
-				local level = Dungeon.monsterLevel(snail, 1, wave)
-				T.ok(level >= last, "the level never falls from wave to wave")
-				last = level
-			end
-			T.ok(Dungeon.monsterLevel(snail, 1, 9) > Dungeon.monsterLevel(snail, 1, 1))
-			local one, two = Dungeon.scale(snail, 1, 1), Dungeon.scale(snail, 2, 1)
-			T.near(two.hp, one.hp * D.LevelPower, 1e-9)
-			T.near(two.attack, one.attack * D.LevelPower, 1e-9)
-			T.eq(two.defence, one.defence)
-			T.eq(two.speed, one.speed)
-			T.ok(Dungeon.monsterLevel(snail, 2, 1) > Dungeon.monsterLevel(snail, 1, 1))
-			local planned = Dungeon.plan("meadow", 3, 9, 4)[1]
-			T.ok(planned.level >= 1 and planned.hp > 0)
-			T.eq(planned.level, Dungeon.monsterLevel(def(planned.defId), 3, 9))
+	T.test("a monster is an even slime of its level times its role's factor; attack and HP grow a wave", function()
+		local snail = def("green_snail")
+		local factor = D.RoleFactor[snail.role]
+		for wave = 1, 9 do
+			local stats = Dungeon.stats(20, snail.role, wave)
+			local share = 20 / 4 * factor * Dungeon.power(20)
+			T.near(stats.attack, share * D.WaveGrowth ^ (wave - 1), 1e-9)
+			T.near(stats.hp, share * Config.Stats.HpPerLevel * D.WaveGrowth ^ (wave - 1), 1e-9)
+			T.near(stats.defence, share, 1e-9)
+			T.near(stats.speed, share, 1e-9)
 		end
-	)
+		local boss = Dungeon.stats(20, "boss", 1)
+		T.near(boss.hp, 20 / 4 * D.RoleFactor.boss * Dungeon.power(20) * Config.Stats.HpPerLevel * D.RoleHp.boss, 1e-9)
+		-- the power of a level: straight between the curve's points, the ends held
+		local curve = D.PowerCurve
+		T.near(Dungeon.power(0), curve[1][2], 1e-9)
+		T.near(Dungeon.power(10000), curve[#curve][2], 1e-9)
+		for index = 2, #curve do
+			local low, high = curve[index - 1], curve[index]
+			T.near(Dungeon.power((low[1] + high[1]) / 2), (low[2] + high[2]) / 2, 1e-9)
+		end
+		T.ok(boss.attack > Dungeon.stats(20, "swarmer", 1).attack, "a boss hits harder than a swarmer of its level")
+		-- the level it shows is the level it is made at, every wave
+		local made = Dungeon.monster(snail, 17, 9, "x")
+		T.eq(made.level, 17)
+		T.near(made.attack, Dungeon.stats(17, snail.role, 9).attack, 1e-9)
+		local strong = Dungeon.monster(snail, 17, 9, "x", 3)
+		T.near(strong.hp, made.hp * 3, 1e-9)
+		T.near(strong.defence, made.defence, 1e-9)
+	end)
+
+	T.test("monster levels: bands of ten, 4-10 in the first; most near the level, one at most above", function()
+		T.eq(Dungeon.mainLevel(1), D.FirstBandLow)
+		T.eq(Dungeon.mainLevel(D.BandSize), D.FirstBandHigh)
+		T.eq(Dungeon.mainLevel(11), 11)
+		T.eq(Dungeon.mainLevel(100), 100)
+		local low, high = Dungeon.band(5)
+		T.eq(low, 4)
+		T.eq(high, 10)
+		low, high = Dungeon.band(11)
+		T.eq(low, 10)
+		T.eq(high, 20)
+		low, high = Dungeon.band(20)
+		T.eq(low, 10)
+		T.eq(high, 20)
+		low, high = Dungeon.band(21)
+		T.eq(low, 20)
+		T.eq(high, 30)
+		for _, level in { 1, 7, 11, 15, 20, 64, 100, 200 } do
+			local main = Dungeon.mainLevel(level)
+			local bandLow, bandHigh = Dungeon.band(level)
+			local near, count = 0, 0
+			for seed = 1, 60 do
+				for wave = 1, D.Waves do
+					local over = 0
+					for _, monster in Dungeon.plan("meadow", level, wave, seed) do
+						local kind = Dungeon.waveKind(wave)
+						if kind == "boss" then
+							T.eq(monster.level, main + D.BossAbove)
+						elseif kind == "miniboss" then
+							T.eq(monster.level, main + D.MiniBossAbove)
+						else
+							count += 1
+							T.ok(monster.level >= bandLow and monster.level <= bandHigh, "in the band, level " .. level)
+							if math.abs(monster.level - main) <= D.NearSpread then
+								near += 1
+							end
+							if monster.level > main + D.NearSpread then
+								over += 1
+							end
+							if wave == 1 then
+								T.ok(math.abs(monster.level - main) <= D.NearSpread, "wave 1 is all near")
+							end
+						end
+					end
+					T.ok(over <= 1, "at most one above the near levels a wave")
+				end
+			end
+			T.ok(near / count >= D.NearShare - 0.03, "most stand near the level " .. level .. ": " .. near / count)
+		end
+	end)
 
 	T.test("every drop line of every monster can hit, with amounts in range, at about its chance", function()
 		for _, each in everyDef() do
@@ -282,21 +336,38 @@ return function(T: any)
 		T.eq(farm.materials.food, nil, "food is no material")
 	end)
 
-	T.test("the ladder opens one level at a time", function()
+	T.test("the four dungeons share a depth: every level up to the checkpoint above the best is open", function()
 		local farm = FarmKit.farm(NOW)
+		local first = D.CheckpointEvery
 		T.ok(Dungeon.canEnter(farm, 1))
-		T.eq(Dungeon.canEnter(farm, 2), false)
+		T.ok(Dungeon.canEnter(farm, first), "the first checkpoint's levels are open from the start")
+		T.eq(Dungeon.canEnter(farm, first + 1), false)
 		T.eq(Dungeon.canEnter(farm, 0), false)
 		T.eq(Dungeon.canEnter(farm, 1.5), false)
-		T.eq(Dungeon.recordClear(farm, 2), false, "a level that was not open cannot be cleared")
-		T.ok(Dungeon.recordClear(farm, 1))
-		T.eq(farm.dungeon.best, 1)
-		T.ok(Dungeon.canEnter(farm, 2))
-		T.eq(Dungeon.canEnter(farm, 3), false)
-		T.ok(Dungeon.recordClear(farm, 2))
-		T.eq(Dungeon.recordClear(farm, 1), false, "an old level does not lower the best")
-		T.eq(farm.dungeon.best, 2)
-		T.ok(Dungeon.canEnter(farm, 1), "any cleared level can be played again")
+		T.eq(Dungeon.recordClear(farm, "meadow", first + 1), false, "a level that was not open cannot be cleared")
+		T.eq(Dungeon.recordClear(farm, "nowhere", 1), false, "only a known dungeon")
+		T.ok(Dungeon.recordClear(farm, "meadow", 3))
+		T.eq(farm.dungeon.best, 3)
+		T.eq(farm.dungeon.maps.meadow, 3)
+		T.eq(Dungeon.canEnter(farm, first + 1), false, "the checkpoint is not passed yet")
+		T.ok(Dungeon.recordClear(farm, "lava", first))
+		T.eq(farm.dungeon.maps.lava, first)
+		T.eq(farm.dungeon.maps.meadow, 3, "each dungeon keeps its own record")
+		T.ok(Dungeon.canEnter(farm, 2 * first), "a checkpoint cleared anywhere opens the next block everywhere")
+		T.eq(Dungeon.canEnter(farm, 2 * first + 1), false)
+		T.eq(Dungeon.recordClear(farm, "meadow", 1), false, "an old level does not lower the best")
+		T.eq(farm.dungeon.best, first)
+		T.eq(farm.dungeon.maps.meadow, 3)
+		T.eq(FarmState.dungeonCleared(farm.dungeon), first)
+		-- Next Checkpoint: the next multiple above, if open
+		T.eq(Dungeon.nextCheckpoint(first + 2, first), 2 * first)
+		T.eq(Dungeon.nextCheckpoint(first, first), 2 * first)
+		T.eq(Dungeon.nextCheckpoint(2 * first, first), 2 * first, "nothing above is open")
+		farm.dungeon.best = D.MaxLevel
+		T.ok(Dungeon.canEnter(farm, D.MaxLevel))
+		T.eq(Dungeon.canEnter(farm, D.MaxLevel + 1), false)
+		T.eq(Dungeon.maxOpen(D.MaxLevel), D.MaxLevel)
+		T.ok(Dungeon.isMap("ice") and not Dungeon.isMap("heart") and not Dungeon.isMap(3))
 	end)
 
 	T.test("only a grown farm enters: enough slimes and a village of the set level", function()
@@ -528,23 +599,12 @@ return function(T: any)
 		T.ok(heavy and splash, "a heavy blow and thorns beside it")
 	end)
 
-	T.test("the maps turn one step each level, from a first map the player's id picks; always the same", function()
+	T.test("four dungeons to pick from, each with a name, a tab, monsters and an arena", function()
 		local order = D.MapOrder
-		T.ok(#order >= 2, "more than one map")
-		local firsts: { [string]: boolean } = {}
-		for seed = 1, 60 do
-			local first = Dungeon.mapForLevel(seed, D.FirstLevel)
-			firsts[first] = true
-			T.ok(table.find(order, first) ~= nil, "a known map " .. first)
-			T.eq(Dungeon.mapForLevel(seed, D.FirstLevel), first, "the same ask, the same map")
-			local index = table.find(order, first) :: number
-			for step = 1, 7 do
-				local want = order[(index - 1 + step) % #order + 1]
-				T.eq(Dungeon.mapForLevel(seed, D.FirstLevel + step), want, "level step " .. step)
-			end
-		end
+		T.eq(#order, 4)
 		for _, id in order do
-			T.ok(firsts[id], "some player starts on " .. id)
+			T.ok(Dungeon.isMap(id), id)
+			T.ok(type((D.Maps :: any)[id].short) == "string", id .. " has a tab name")
 			T.ok(
 				(D.Maps :: any)[id] ~= nil and (Config.Dungeon.Arenas :: any)[id] ~= nil,
 				id .. " has monsters and an arena"
@@ -843,23 +903,36 @@ return function(T: any)
 		end
 	)
 
-	T.test("the best dungeon level is saved, repaired and migrated from schema 8", function()
+	T.test("the depth and each dungeon's record are saved, repaired and migrated", function()
+		local empty = { meadow = 0, mushroom = 0, lava = 0, ice = 0 }
 		local farm: any = FarmState.newFarm(NOW)
-		T.same(farm.dungeon, { best = 0 })
+		T.same(farm.dungeon, { best = 0, maps = empty })
 		farm.dungeon.best = 4
-		T.same(FarmState.repair(farm, NOW).dungeon, { best = 4 })
+		farm.dungeon.maps.lava = 4
+		T.same(
+			FarmState.repair(farm, NOW).dungeon,
+			{ best = 4, maps = { meadow = 0, mushroom = 0, lava = 4, ice = 0 } }
+		)
 		for _, bad in { -3, "x", 2.5, 0 / 0 } do
 			local broken: any = FarmState.newFarm(NOW)
-			broken.dungeon = { best = bad }
+			broken.dungeon = { best = bad, maps = { meadow = bad, nowhere = 3 } }
 			local fixed = FarmState.repair(broken, NOW)
 			T.ok(fixed.dungeon.best >= 0 and fixed.dungeon.best % 1 == 0, "best repaired from " .. tostring(bad))
+			T.ok(fixed.dungeon.maps.meadow >= 0 and fixed.dungeon.maps.meadow % 1 == 0, "a record repaired")
+			T.eq(fixed.dungeon.maps.nowhere, nil, "no unknown dungeon is kept")
 		end
 		local half: any = FarmState.newFarm(NOW)
-		half.dungeon = { best = 2.5 }
-		T.eq(FarmState.repair(half, NOW).dungeon.best, 2)
+		half.dungeon = { best = 2.5, maps = { ice = 9 } }
+		local mended = FarmState.repair(half, NOW).dungeon
+		T.eq(mended.best, 2)
+		T.eq(mended.maps.ice, 2, "no record above the shared best")
+		local deep: any = FarmState.newFarm(NOW)
+		deep.dungeon = { best = D.MaxLevel + 50 }
+		T.eq(FarmState.repair(deep, NOW).dungeon.best, D.MaxLevel)
 		local nothing: any = FarmState.newFarm(NOW)
 		nothing.dungeon = "x"
-		T.same(FarmState.repair(nothing, NOW).dungeon, { best = 0 })
+		T.same(FarmState.repair(nothing, NOW).dungeon, { best = 0, maps = empty })
+		-- from schema 8 (before the Dungeon): nothing cleared
 		local old: any = FarmState.newFarm(NOW)
 		old.dungeon = nil
 		old.coins = 777
@@ -867,7 +940,47 @@ return function(T: any)
 			ProfileLogic.prepareLoad({ schemaVersion = 8, savedAt = NOW, data = old }, FarmSave.hooks(), NOW + 1)
 		T.ok(load.ok and load.migrated)
 		T.eq(load.data.coins, 777)
-		T.same(load.data.dungeon, { best = 0 })
+		T.same(load.data.dungeon, { best = 0, maps = empty })
 		T.eq(old.dungeon, nil, "migration never alters the stored snapshot")
 	end)
+
+	T.test(
+		"schema 15 -> 16: the old best becomes the new ladder's level, no higher than a team's weakest can face",
+		function()
+			-- a farm of eight slimes of levels 90, 80, 70, 63, then four of 10
+			local function farmWith(best: number): any
+				local farm: any = FarmState.newFarm(NOW)
+				farm.slimes = {}
+				for index, level in { 90, 80, 70, 63, 10, 10, 10, 10 } do
+					local slime: any = FarmKit.slime("s" .. index)
+					slime.stats = { attack = level / 4, defence = level / 4, speed = level / 4, hp = level / 4 * 10 }
+					table.insert(farm.slimes, slime)
+				end
+				farm.dungeon = { best = best }
+				return farm
+			end
+			local function moved(best: number): any
+				local load = ProfileLogic.prepareLoad(
+					{ schemaVersion = 15, savedAt = NOW, data = farmWith(best) },
+					FarmSave.hooks(),
+					NOW + 1
+				)
+				T.ok(load.ok and load.migrated)
+				return load.data.dungeon
+			end
+			T.same(moved(0), { best = 0, maps = { meadow = 0, mushroom = 0, lava = 0, ice = 0 } })
+			-- level 1 of old stood at the new 40: under the fourth slime's 60
+			T.eq(moved(1).best, 40)
+			-- level 3 of old stood at the new 102: the fourth slime (63) caps it at 60
+			T.eq(moved(3).best, 60)
+			T.eq(moved(3).maps.lava, 0, "it opens levels, it clears none")
+			T.eq(FarmState.dungeonCleared(moved(3)), 0)
+			-- a farm without four slimes opens nothing new
+			local few: any = FarmKit.farm(NOW, FarmKit.many(2))
+			few.dungeon = { best = 5 }
+			local load =
+				ProfileLogic.prepareLoad({ schemaVersion = 15, savedAt = NOW, data = few }, FarmSave.hooks(), NOW + 1)
+			T.eq(load.data.dungeon.best, 0)
+		end
+	)
 end

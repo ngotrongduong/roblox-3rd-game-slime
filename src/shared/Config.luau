@@ -2759,7 +2759,9 @@ Config.Save = {
 	--     used yet), and six teams in place of four.
 	-- 14: the community rewards taken (`rewards.social`: favorite, group).
 	-- 15: the zones of the big world won (`world.beaten`: zone id -> the time of the last win).
-	SchemaVersion = 15,
+	-- 16: four dungeons and their shared depth (`dungeon.maps`: each dungeon's highest level cleared; `dungeon.best` moved to
+	--     the new ladder).
+	SchemaVersion = 16,
 	-- A stored envelope without a version is this one.
 	FirstSchemaVersion = 1,
 

@@ -638,7 +638,7 @@ function Rewards.goalCount(farm: Farm, kind: string): number
 	if kind == "village" then
 		return FarmState.villageLevel(farm.areas)
 	elseif kind == "dungeon" then
-		return farm.dungeon.best
+		return FarmState.dungeonCleared(farm.dungeon)
 	elseif kind == "hatch" then
 		-- (the starters count as hatched in the Index but nobody hatched them)
 		return math.max(0, Rewards.count(farm, kind) - Config.Farm.StarterCount)

@@ -1,130 +1,138 @@
 --!nocheck
--- How teams of 4 fare in a full 10-wave Slime Dungeon run on the real Combat and Dungeon rules: the average wave they
--- reach (the wave they fell in, 10 for a cleared run), the share of runs cleared and the average length. The team keeps its
--- health from wave to wave. Spawning as in play: one monster every SpawnSeconds while fewer than MaxAlive stand.
---   lune run tools/balance/dungeon_sim.luau [seeds] [dungeonLevel] [StatScale] [WaveGrowth] [map] [plain]
--- (StatScale and WaveGrowth try other values of Config.Dungeon's without editing it; `map` is a Config.Dungeon.Maps id,
--- meadow when left out; `plain` takes the monsters' own specials away, to see what they add)
+-- How teams of four fare in full 10-wave runs of the four dungeons on the real Combat and Dungeon rules (squad_run: positional
+-- as in play, each slime with its class's weapon of the tier a player has at that level, wounds kept from wave to wave).
+-- For each dungeon level: the share of runs cleared by a team of the level's main monster level (and, with side=on, five
+-- levels above and below) and the median length of a cleared run (the owner's targets, 2026-11-15: about 85-90 in 100 at
+-- the level, nearly every run five above, a third five below; a run of 5-6 minutes).
+--   lune run tools/balance/dungeon_sim.luau [seeds] [levels] [key=value ...]
+-- `levels` is a list joined by "/" (1/10/20/40/80/150 when left out). key=value tries other numbers without editing
+-- Config: rf (times every RoleFactor), mini / boss (their RoleFactor), minihp / bosshp (RoleHp), grow (WaveGrowth), maps (a
+-- "/" list of Config.Dungeon.Maps ids), teams (a "/" list of team letters, squad_run's), side=on, and fit=on: the power of
+-- each level at which its team clears Config.Dungeon.FitShare of the runs, printed as a PowerCurve to copy into Config.
 local process = require("@lune/process")
-local Combat = require("../../src/shared/Combat")
 local Config = require("../../src/shared/Config")
 local Dungeon = require("../../src/shared/Dungeon")
-local Rng = require("../../src/shared/Rng")
-local Stats = require("../../src/shared/Stats")
+local SquadRun = require("./squad_run")
 
-local SEEDS = tonumber(process.args[1]) or 20
-local LEVEL = tonumber(process.args[2]) or 1
 local D = Config.Dungeon
-D.StatScale = tonumber(process.args[3]) or D.StatScale
-D.WaveGrowth = tonumber(process.args[4]) or D.WaveGrowth
-local MAP = process.args[5] or "meadow"
-if process.args[6] == "plain" then
-	for _, monster in D.Maps[MAP].monsters do
-		monster.skills = nil
-	end
-end
-local STEP = Config.Zombies.FightStepSeconds
 
--- A team of 4: `slimeLevel` nil is the four starters, otherwise the level shared evenly over the four stats (as fight_sim).
--- `tier` puts that tier's three pieces of gear on every slime (Config.Smithy), the sword as its weapon.
-local function team(slimeLevel: number?, tier: string?): { any }
+local function list(text: string?, default: { any }, number: boolean): { any }
+	if not text or text == "" then
+		return default
+	end
 	local out = {}
-	for index = 1, Config.Zombies.TeamSize do
-		local stats = Stats.starter()
-		if slimeLevel then
-			local share = slimeLevel / #Stats.Keys
-			stats = { attack = share, defence = share, speed = share, hp = share * Config.Stats.HpPerLevel }
-		end
-		if tier then
-			for _, piece in Config.Smithy.Gear do
-				if piece.tier == tier and (piece.family == nil or piece.family == "sword") then
-					for key, points in piece.stats do
-						stats[key] += points
-					end
-				end
-			end
-		end
-		table.insert(out, {
-			id = "s" .. index,
-			attack = stats.attack,
-			defence = stats.defence,
-			speed = stats.speed,
-			hp = stats.hp,
-			-- (one slime of each way of fighting, as a mixed team)
-			role = Config.Combat.Roles[(index - 1) % #Config.Combat.Roles + 1],
-		})
+	for part in string.gmatch(text, "[^/]+") do
+		table.insert(out, if number then tonumber(part) else part)
 	end
 	return out
 end
 
--- One run: returns the wave it ended in, whether it was cleared and its length in seconds.
-local function run(slimeLevel: number?, tier: string?, seed: number): (number, boolean, number)
-	local fight = Combat.new(team(slimeLevel, tier), {}, Rng.new(seed))
-	fight.open = true
-	local waveSeed = seed * 31
-	for wave = 1, D.Waves do
-		local queue = Dungeon.plan(MAP, LEVEL, wave, waveSeed)
-		local next = 1
-		local sinceSpawn = D.SpawnSeconds
-		local started = fight.seconds
-		while true do
-			local alive = 0
-			for _, unit in fight.units do
-				if unit.side == "foe" and unit.hp > 0 then
-					alive += 1
+local SEEDS = tonumber(process.args[1]) or 20
+local LEVELS = list(process.args[2], { 1, 10, 20, 40, 80, 150 }, true)
+local options: { [string]: string } = {}
+for index = 3, #process.args do
+	local key, value = string.match(process.args[index], "^(%w+)=(.+)$")
+	if key then
+		options[key] = value
+	end
+end
+if options.rf then
+	for role, factor in D.RoleFactor do
+		D.RoleFactor[role] = factor * tonumber(options.rf)
+	end
+end
+D.RoleFactor.miniboss = tonumber(options.mini) or D.RoleFactor.miniboss
+D.RoleFactor.boss = tonumber(options.boss) or D.RoleFactor.boss
+D.RoleHp.miniboss = tonumber(options.minihp) or D.RoleHp.miniboss
+D.RoleHp.boss = tonumber(options.bosshp) or D.RoleHp.boss
+D.WaveGrowth = tonumber(options.grow) or D.WaveGrowth
+local MAPS = list(options.maps, D.MapOrder, false)
+local TEAMS = list(options.teams, { "GWRH", "WRMA", "GGHA", "GMMH", "WWRM" }, false)
+local SIDE = options.side == "on"
+
+-- Over every team and map: the share cleared, the average waves cleared and the median length of a cleared run.
+local function measure(teamLevel: number, level: number): (number, number, number)
+	local cleared, waves, runs = 0, 0, 0
+	local lengths = {}
+	for _, mapId in MAPS do
+		for _, letters in TEAMS do
+			for seed = 1, SEEDS do
+				local won, done, seconds = SquadRun.run(SquadRun.team(letters, teamLevel), D.Waves, function(wave)
+					return Dungeon.plan(mapId, level, wave, seed * 31)
+				end, seed)
+				runs += 1
+				waves += done
+				if won then
+					cleared += 1
+					table.insert(lengths, seconds)
 				end
 			end
-			if next > #queue and alive == 0 then
-				break
-			end
-			sinceSpawn += STEP
-			if next <= #queue and alive < D.MaxAlive and sinceSpawn >= D.SpawnSeconds then
-				Combat.add(fight, queue[next], "foe")
-				next += 1
-				sinceSpawn = 0
-			end
-			Combat.step(fight, STEP)
-			if fight.winner == "foe" or fight.seconds - started > Config.Zombies.FightMaxSeconds then
-				return wave, false, fight.seconds
-			end
-		end
-		-- the pause before the next wave: the team heals nothing, but healers of the next wave are not yet there
-		for _ = 1, math.floor(D.PauseSeconds / STEP) do
-			Combat.step(fight, STEP)
 		end
 	end
-	return D.Waves, true, fight.seconds
+	table.sort(lengths)
+	local median = if #lengths > 0 then lengths[math.max(1, math.floor(#lengths / 2))] else 0
+	return cleared / runs, waves / runs, median
 end
 
 print(
 	string.format(
-		"Slime Dungeon, %s%s, dungeon level %d, %d seeds a team (StatScale %.2f, WaveGrowth %.2f)",
-		MAP,
-		if process.args[6] == "plain" then " without its specials" else "",
-		LEVEL,
+		"Four dungeons (%s), teams %s, %d seeds each; RoleFactor regular %.2f armoured %.2f mini %.2f boss %.2f, RoleHp mini %.1f boss %.1f, WaveGrowth %.3f",
+		table.concat(MAPS, " "),
+		table.concat(TEAMS, " "),
 		SEEDS,
-		D.StatScale,
+		D.RoleFactor.swarmer,
+		D.RoleFactor.armoured,
+		D.RoleFactor.miniboss,
+		D.RoleFactor.boss,
+		D.RoleHp.miniboss,
+		D.RoleHp.boss,
 		D.WaveGrowth
 	)
 )
-print("team                 avg wave reached  cleared%  avg seconds")
-local rows = {
-	{ "4 starters (level 4)", nil },
-	{ "starters, wood gear", nil, "wood" },
-	{ "starters, iron gear", nil, "iron" },
-	{ "4 slimes level 10", 10 },
-	{ "4 slimes level 20", 20 },
-	-- (stronger teams, to see where a first clear lies)
-	{ "4 slimes level 40", 40 },
-	{ "4 slimes level 80", 80 },
-}
-for _, row in rows do
-	local waves, cleared, seconds = 0, 0, 0
-	for seed = 1, SEEDS do
-		local reached, won, length = run(row[2], row[3], seed)
-		waves += reached
-		cleared += if won then 1 else 0
-		seconds += length
+-- fit=on: for each level, the power at which a team of its main level clears FitShare of the runs (every monster of the
+-- run at that power), to copy into Config.Dungeon.PowerCurve
+if options.fit == "on" then
+	local points = {}
+	for _, level in LEVELS do
+		local main = Dungeon.mainLevel(level)
+		local lo, hi = 0.05, 1.5
+		for _ = 1, 7 do
+			D.PowerCurve = { { 1, (lo + hi) / 2 } }
+			if measure(main, level) >= D.FitShare then
+				lo = (lo + hi) / 2
+			else
+				hi = (lo + hi) / 2
+			end
+		end
+		local power = math.floor(lo * 100 + 0.5) / 100
+		print(string.format("level %d (monsters %d, %s): power %.2f", level, main, SquadRun.tierAt(main), power))
+		table.insert(points, string.format("{ %d, %.2f }", main, power))
 	end
-	print(string.format("%-20s %16.1f %9.0f %12.0f", row[1], waves / SEEDS, cleared / SEEDS * 100, seconds / SEEDS))
+	print("PowerCurve = { " .. table.concat(points, ", ") .. " },")
+	return
+end
+
+print("| dungeon level | team (tier) | cleared | waves | median run | team 5 above | team 5 below |")
+print("|---|---|---|---|---|---|---|")
+for _, level in LEVELS do
+	local main = Dungeon.mainLevel(level)
+	local share, waves, median = measure(main, level)
+	local above, below = "-", "-"
+	if SIDE then
+		above = string.format("%.0f%%", measure(main + 5, level) * 100)
+		below = string.format("%.0f%%", measure(math.max(1, main - 5), level) * 100)
+	end
+	print(
+		string.format(
+			"| %d | %d (%s) | %.0f%% | %.1f | %.1f min | %s | %s |",
+			level,
+			main,
+			SquadRun.tierAt(main),
+			share * 100,
+			waves,
+			median / 60,
+			above,
+			below
+		)
+	)
 end

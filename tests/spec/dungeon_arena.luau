@@ -104,27 +104,30 @@ return function(T: any)
 	end)
 
 	T.test("Dungeon requests have the shape the server checks", function()
-		T.ok(VillageRequests.valid({ action = "DungeonEnter", level = 1, teams = { 1 } }, true))
-		T.ok(VillageRequests.valid({ action = "DungeonEnter", level = 3, teams = { 4 } }, true))
+		local function enter(level: any, teams: any, map: any): any
+			return { action = "DungeonEnter", level = level, teams = teams, map = map or "meadow" }
+		end
+		T.ok(VillageRequests.valid(enter(1, { 1 }), true))
+		T.ok(VillageRequests.valid(enter(3, { 4 }, "ice"), true))
+		T.ok(not VillageRequests.valid({ action = "DungeonEnter", level = 1, teams = { 1 } }, true), "no dungeon named")
+		T.ok(not VillageRequests.valid(enter(1, { 1 }, "heart"), true), "no such dungeon")
+		T.ok(not VillageRequests.valid(enter(1, { 1 }, 4), true), "a dungeon is named by its id")
 		-- (one team a run: Config.Dungeon.RunTeams)
-		T.ok(not VillageRequests.valid({ action = "DungeonEnter", level = 3, teams = { 1, 2 } }, true), "two teams")
-		T.ok(not VillageRequests.valid({ action = "DungeonEnter", level = 1, teams = { 1 } }, false), "needs a plot")
-		T.ok(
-			not VillageRequests.valid({ action = "DungeonEnter", level = 0, teams = { 1 } }, true),
-			"level below the first"
-		)
-		T.ok(not VillageRequests.valid({ action = "DungeonEnter", level = 1.5, teams = { 1 } }, true))
-		T.ok(not VillageRequests.valid({ action = "DungeonEnter", level = 0 / 0, teams = { 1 } }, true))
-		T.ok(not VillageRequests.valid({ action = "DungeonEnter", level = 1, teams = {} }, true), "no team")
-		T.ok(not VillageRequests.valid({ action = "DungeonEnter", level = 1, teams = { 1, 1 } }, true), "a team twice")
-		T.ok(VillageRequests.valid({ action = "DungeonEnter", level = 1, teams = { 6 } }, true), "a pass team")
-		T.ok(not VillageRequests.valid({ action = "DungeonEnter", level = 1, teams = { 7 } }, true), "no such team")
-		T.ok(not VillageRequests.valid({ action = "DungeonEnter", level = 1, teams = { 0 } }, true))
-		T.ok(not VillageRequests.valid({ action = "DungeonEnter", level = 1, teams = { 1, 2, 3, 4, 1 } }, true))
-		T.ok(not VillageRequests.valid({ action = "DungeonEnter", level = 1, teams = { a = 1 } }, true))
-		T.ok(not VillageRequests.valid({ action = "DungeonEnter", level = 1, teams = "1" }, true))
-		T.ok(not VillageRequests.valid({ action = "DungeonEnter", level = 1 }, true))
-		for _, action in { "DungeonNext", "DungeonReplay", "DungeonLeave" } do
+		T.ok(not VillageRequests.valid(enter(3, { 1, 2 }), true), "two teams")
+		T.ok(not VillageRequests.valid(enter(1, { 1 }), false), "needs a plot")
+		T.ok(not VillageRequests.valid(enter(0, { 1 }), true), "level below the first")
+		T.ok(not VillageRequests.valid(enter(1.5, { 1 }), true))
+		T.ok(not VillageRequests.valid(enter(0 / 0, { 1 }), true))
+		T.ok(not VillageRequests.valid(enter(1, {}), true), "no team")
+		T.ok(not VillageRequests.valid(enter(1, { 1, 1 }), true), "a team twice")
+		T.ok(VillageRequests.valid(enter(1, { 6 }), true), "a pass team")
+		T.ok(not VillageRequests.valid(enter(1, { 7 }), true), "no such team")
+		T.ok(not VillageRequests.valid(enter(1, { 0 }), true))
+		T.ok(not VillageRequests.valid(enter(1, { 1, 2, 3, 4, 1 }), true))
+		T.ok(not VillageRequests.valid(enter(1, { a = 1 }), true))
+		T.ok(not VillageRequests.valid(enter(1, "1"), true))
+		T.ok(not VillageRequests.valid({ action = "DungeonEnter", level = 1, map = "meadow" }, true))
+		for _, action in { "DungeonNext", "DungeonJump", "DungeonReplay", "DungeonLeave" } do
 			T.ok(VillageRequests.valid({ action = action }, true), action)
 			T.ok(not VillageRequests.valid({ action = action }, false), action .. " needs a plot")
 		end

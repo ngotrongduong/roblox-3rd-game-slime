@@ -63,22 +63,63 @@ function Dungeon.budget(wave: number): number?
 	return math.min(math.floor((D.BudgetBase + D.BudgetPerWave * (wave - 1)) * late + 0.5), D.BudgetMax)
 end
 
--- A def's stats on this dungeon level in this wave: HP and attack grow with the wave and with the level, defence and speed
--- stay as they are.
-function Dungeon.scale(def: any, level: number, wave: number): typeof(Stats.starter())
-	local factor = D.StatScale * D.WaveGrowth ^ (wave - 1) * D.LevelPower ^ (level - 1)
-	return { attack = def.attack * factor, defence = def.defence, speed = def.speed, hp = def.hp * factor }
+-- ===== monster levels =====
+
+-- The band of monster levels dungeon level `level` draws from, low and high (Config.Dungeon BandSize: 1-10 hold
+-- FirstBandLow..FirstBandHigh, 11-20 hold 10-20, 21-30 20-30, ...).
+function Dungeon.band(level: number): (number, number)
+	if level <= D.BandSize then
+		return D.FirstBandLow, D.FirstBandHigh
+	end
+	local low = D.BandSize * math.floor((level - 1) / D.BandSize)
+	return low, low + D.BandSize
 end
 
--- The level a monster shows: its scaled stats read as a slime's would, so it rises every wave.
-function Dungeon.monsterLevel(def: any, level: number, wave: number): number
-	return Stats.level(Dungeon.scale(def, level, wave))
+-- The main monster level of a dungeon level: the level itself, past the first band; in it, FirstBandLow on level 1 rising
+-- evenly to FirstBandHigh on level BandSize.
+function Dungeon.mainLevel(level: number): number
+	if level > D.BandSize then
+		return level
+	end
+	local step = (D.FirstBandHigh - D.FirstBandLow) / (D.BandSize - 1)
+	return math.floor(D.FirstBandLow + (level - 1) * step + 0.5)
 end
 
--- One monster of a wave. `power` multiplies its HP and attack once more (a common monster standing guard over a zone:
--- shared/ZoneFights).
-function Dungeon.monster(def: any, level: number, wave: number, id: string, power: number?): Monster
-	local stats = Dungeon.scale(def, level, wave)
+-- The power of a monster's level (Config.Dungeon.PowerCurve): straight between its points, the end ones held past the ends.
+function Dungeon.power(level: number): number
+	local curve: { { number } } = D.PowerCurve
+	if level <= curve[1][1] then
+		return curve[1][2]
+	end
+	for index = 2, #curve do
+		local low, high = curve[index - 1], curve[index]
+		if level <= high[1] then
+			return low[2] + (high[2] - low[2]) * (level - low[1]) / (high[1] - low[1])
+		end
+	end
+	return curve[#curve][2]
+end
+
+-- The stats of a monster of this level and role in this wave: an even slime of the level (every stat level / 4, HP
+-- x HpPerLevel, as the world's packs) times its role's RoleFactor and the power of `runLevel` (its own level when left
+-- out), HP times RoleHp, attack and HP x WaveGrowth^(wave - 1).
+function Dungeon.stats(level: number, role: string?, wave: number, runLevel: number?): typeof(Stats.starter())
+	local factor = (D.RoleFactor :: any)[role or ""] or D.RoleFactor.swarmer
+	local share = level / #Stats.Keys * factor * Dungeon.power(runLevel or level)
+	local grow = D.WaveGrowth ^ (wave - 1)
+	return {
+		attack = share * grow,
+		defence = share,
+		speed = share,
+		hp = math.max(1, share * Config.Stats.HpPerLevel * ((D.RoleHp :: any)[role or ""] or 1) * grow),
+	}
+end
+
+-- One monster of a wave, of this level (the one it shows). `power` multiplies its HP and attack once more (a common monster
+-- standing guard over a zone: shared/ZoneFights). `runLevel`: the level whose power it takes (Dungeon.plan: the run's main
+-- level, so the whole run is as strong as the fit measured and a boss above it never steps into the next tier's power).
+function Dungeon.monster(def: any, level: number, wave: number, id: string, power: number?, runLevel: number?): Monster
+	local stats = Dungeon.stats(level, def.role, wave, runLevel)
 	if power then
 		stats.attack *= power
 		stats.hp *= power
@@ -94,21 +135,25 @@ function Dungeon.monster(def: any, level: number, wave: number, id: string, powe
 		defence = stats.defence,
 		speed = stats.speed,
 		hp = stats.hp,
-		level = Stats.level(stats),
+		level = level,
 	}
 end
 
--- The monsters of one wave, in the order they come. Wave 5 is the mini-boss alone, wave 10 the boss alone; the others draw
--- from every def that is no mini-boss or boss until the budget is spent, and stop at the first def that would not fit
--- (it does not look for a cheaper one). The same seed makes the same wave.
+-- The monsters of one wave of dungeon level `level`, in the order they come. Wave 5 is the mini-boss alone (MiniBossAbove the
+-- main level), wave 10 the boss alone (BossAbove); the others draw from every def that is no mini-boss or boss until the
+-- budget is spent, and stop at the first def that would not fit (it does not look for a cheaper one). A crowd's monster
+-- stands within NearSpread of the main level NearShare of the time, else anywhere in the level's band; never on wave 1, and
+-- at most one a wave above the near levels. The same seed makes the same wave.
 function Dungeon.plan(mapId: string, level: number, wave: number, seed: number): { Monster }
 	local defs: { any } = map(mapId).monsters
 	local out: { Monster } = {}
 	local kind = Dungeon.waveKind(wave)
+	local main = Dungeon.mainLevel(level)
 	if kind ~= "normal" then
+		local above = if kind == "boss" then D.BossAbove else D.MiniBossAbove
 		for _, def in defs do
 			if def.role == kind then
-				table.insert(out, Dungeon.monster(def, level, wave, "m" .. wave .. "-1"))
+				table.insert(out, Dungeon.monster(def, main + above, wave, "m" .. wave .. "-1", nil, main))
 				break
 			end
 		end
@@ -121,31 +166,30 @@ function Dungeon.plan(mapId: string, level: number, wave: number, seed: number):
 		end
 	end
 	local rng = Rng.new(seed + wave * D.WaveSeedStep)
+	local low, high = Dungeon.band(level)
 	local left = Dungeon.budget(wave) :: number
+	local over = false
 	while #pool > 0 do
 		local def = rng:pick(pool)
+		-- (every monster spends the same three rolls, so one monster's level never moves another's)
+		local near = rng:next() < D.NearShare
+		local offset = rng:int(-D.NearSpread, D.NearSpread)
+		local spread = rng:int(low, high)
 		if def.cost > left then
 			break
 		end
 		left -= def.cost
-		table.insert(out, Dungeon.monster(def, level, wave, "m" .. wave .. "-" .. (#out + 1)))
+		local at = math.clamp(main + offset, low, high)
+		if not near and wave > 1 then
+			if spread <= main + D.NearSpread then
+				at = spread
+			elseif not over then
+				at, over = spread, true
+			end
+		end
+		table.insert(out, Dungeon.monster(def, at, wave, "m" .. wave .. "-" .. (#out + 1), nil, main))
 	end
 	return out
-end
-
--- ===== the maps =====
-
--- The map a dungeon level is fought on: the maps of Config.Dungeon.MapOrder turn one step each level (the original's
--- BATTLE_MAPS), starting from a first map the player's own `seed` (their UserId) picks, as the original seeds its first map
--- (MapFirstRandom; off, every player starts on MapOrder[1]). Pure, so the server that builds the arena and the screens that name
--- it agree without a word between them, and a save needs no new field.
-function Dungeon.mapForLevel(seed: number, level: number): string
-	local order = D.MapOrder
-	local first = 0
-	if D.MapFirstRandom and #order > 1 then
-		first = Rng.new(seed + D.MapSeedOffset):int(0, #order - 1)
-	end
-	return order[(first + level - D.FirstLevel) % #order + 1]
 end
 
 -- ===== the arena =====
@@ -341,12 +385,32 @@ end
 
 -- ===== the ladder =====
 
--- A dungeon level is open when it is a whole number from the first to one above the best cleared.
+-- The highest dungeon level open to a player whose best is `best`: the checkpoint above it (Config.Dungeon CheckpointEvery),
+-- never past MaxLevel.
+function Dungeon.maxOpen(best: number): number
+	return math.min(D.MaxLevel, D.CheckpointEvery * (math.floor(best / D.CheckpointEvery) + 1))
+end
+
+-- Where Next Checkpoint goes from `level`: the next multiple of CheckpointEvery above it, if that is open, else the highest
+-- open level (no higher than `level` when nothing above is open).
+function Dungeon.nextCheckpoint(level: number, best: number): number
+	return math.max(
+		level,
+		math.min(D.CheckpointEvery * (math.floor(level / D.CheckpointEvery) + 1), Dungeon.maxOpen(best))
+	)
+end
+
+-- A dungeon level is open when it is a whole number from the first to the highest open (maxOpen).
 function Dungeon.canEnter(farm: Farm, level: number): boolean
 	return type(level) == "number"
 		and level % 1 == 0
 		and level >= D.FirstLevel
-		and level <= farm.dungeon.best + D.FirstLevel
+		and level <= Dungeon.maxOpen(farm.dungeon.best)
+end
+
+-- A dungeon id the player may pick.
+function Dungeon.isMap(mapId: any): boolean
+	return type(mapId) == "string" and (D.Maps :: any)[mapId] ~= nil
 end
 
 -- Why this farm may not go into the Dungeon at all: "FEW_SLIMES" or "VILLAGE_LEVEL"; nil when it may.
@@ -359,10 +423,16 @@ function Dungeon.entryBlock(farm: Farm): string?
 	return nil
 end
 
--- A level was cleared: the best moves up when this is the best so far (and was open). True when it did.
-function Dungeon.recordClear(farm: Farm, level: number): boolean
-	if Dungeon.canEnter(farm, level) and level > farm.dungeon.best then
-		farm.dungeon.best = level
+-- A level of dungeon `mapId` was cleared: that dungeon's record and the shared best move up when this beats them (and the
+-- level was open). True when the best moved.
+function Dungeon.recordClear(farm: Farm, mapId: string, level: number): boolean
+	if not Dungeon.canEnter(farm, level) or not Dungeon.isMap(mapId) then
+		return false
+	end
+	local dungeon = farm.dungeon
+	dungeon.maps[mapId] = math.max(dungeon.maps[mapId] or 0, level)
+	if level > dungeon.best then
+		dungeon.best = level
 		return true
 	end
 	return false
