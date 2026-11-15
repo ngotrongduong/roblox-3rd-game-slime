@@ -38,6 +38,12 @@ local Dungeon = {}
 
 local D = Config.Dungeon
 
+-- The four group materials ("basics"), one a map: the ones the clear bonus counts.
+local BASICS: { [string]: boolean } = {}
+for _, each in D.Maps :: { [string]: any } do
+	BASICS[each.basic] = true
+end
+
 local function map(mapId: string): any
 	local found = (D.Maps :: any)[mapId]
 	assert(found, "unknown dungeon map " .. tostring(mapId))
@@ -276,37 +282,86 @@ function Dungeon.defOf(mapId: string, defId: string): any
 	return nil
 end
 
--- Loot luck of a dungeon level: 1 at the first, more above.
-function Dungeon.luck(level: number): number
-	return 1 + D.LuckPerLevel * (level - 1)
-end
-
 -- A monster's own stream of rolls: its id and the run's seed, so a drop is the same however often it is asked for.
 local function stream(enemyId: string, seed: number): Rng
 	return Rng.new(Rng.hash(enemyId) + seed)
 end
 
--- A line's chance on this dungeon level: luck multiplies a chance below 1, and nothing goes past 1.
-function Dungeon.chance(line: any, level: number): number
-	if line.chance >= 1 then
-		return 1
+-- The chance of a Loot line on dungeon level `level` (the steps of Config.Dungeon.Loot): the last step that starts at or below
+-- the level, rising evenly to its `chanceTo` at its `to`.
+local function chanceAt(steps: { any }, level: number): number
+	local found: any = nil
+	for _, step in steps do
+		if step.from <= level then
+			found = step
+		end
 	end
-	return math.min(1, line.chance * Dungeon.luck(level))
+	if not found then
+		return 0
+	end
+	if found.to then
+		return found.chance
+			+ (found.chanceTo - found.chance) * (math.min(level, found.to) - found.from) / (found.to - found.from)
+	end
+	return found.chance
 end
 
--- Every drop of a fallen monster, in the order of its def's lines (docs/SMITHY.md §2): each line is rolled on its own. A
--- line always spends its two numbers from the monster's stream, hit or not, so one line's luck never moves another's roll.
-function Dungeon.rollDrops(def: any, level: number, enemyId: string, seed: number): { Drop }
+-- The materials a monster of this role may drop on a run of `level` in map `mapId`: lines { item, chance, min, max }, the
+-- map's own "basic" and "trophy" named. A line is listed even when its chance is 0 here, so the rolls of a stream never shift.
+function Dungeon.lootLines(mapId: string, role: string, level: number): { any }
+	local found = map(mapId)
+	local out: { any } = {}
+	for _, line in D.Loot.Lines :: { any } do
+		if line.role == (if role == "miniboss" or role == "boss" then role else "regular") then
+			local item = if line.item == "basic" or line.item == "trophy" then found[line.item] else line.item
+			table.insert(out, { item = item, chance = chanceAt(line.chance, level), min = line.min, max = line.max })
+		end
+	end
+	return out
+end
+
+-- Every drop of a fallen monster: the lines of its def (coins, food), then, when `mapId` is given (a Dungeon run; a zone's
+-- fight gives only the def's lines), the materials of Loot. Each line is rolled on its own and always spends its two numbers
+-- from the monster's stream, hit or not, so one line never moves another's roll.
+function Dungeon.rollDrops(def: any, level: number, enemyId: string, seed: number, mapId: string?): { Drop }
 	local out: { Drop } = {}
 	local rng = stream(enemyId, seed)
-	for _, line in def.drops or {} do
+	local lines: { any } = table.clone(def.drops or {})
+	if mapId then
+		local loot = Dungeon.lootLines(mapId, def.role, level)
+		table.move(loot, 1, #loot, #lines + 1, lines)
+	end
+	for _, line in lines do
 		local r = rng:next()
 		local amount = rng:int(line.min, line.max)
-		if r < Dungeon.chance(line, level) then
+		if r < line.chance then
 			table.insert(out, { item = line.item, amount = amount })
 		end
 	end
 	return out
+end
+
+-- What a Dungeon run of `mapId` at `level` may drop, as the range of each item: { [item] = { min, max } }. The gate sheet
+-- lists it. Items whose chance is 0 at this level are left out.
+function Dungeon.dropTable(mapId: string, level: number): { [string]: { number } }
+	local found: { [string]: { number } } = {}
+	local function add(line: any)
+		local seen = found[line.item]
+		if seen then
+			seen[1], seen[2] = math.min(seen[1], line.min), math.max(seen[2], line.max)
+		elseif line.chance > 0 then
+			found[line.item] = { line.min, line.max }
+		end
+	end
+	for _, def in map(mapId).monsters :: { any } do
+		for _, line in def.drops do
+			add(line)
+		end
+		for _, line in Dungeon.lootLines(mapId, def.role, level) do
+			add(line)
+		end
+	end
+	return found
 end
 
 -- ===== the ledger =====
@@ -362,6 +417,24 @@ function Dungeon.commitWave(farm: Farm, ledger: Ledger, wave: number, now: numbe
 		else
 			farm.materials[item] = (farm.materials[item] or 0) + amount
 			paid.materials[item] = amount
+		end
+	end
+	if wave == D.Waves then
+		-- the clear bonus: the basics the run collected (the waves paid before and this one) grow by ClearBonus
+		local basics: { [string]: number } = {}
+		for _, each in ledger.waves do
+			if each.state == "committed" then
+				for item, amount in each.drops do
+					if BASICS[item] then
+						basics[item] = (basics[item] or 0) + amount
+					end
+				end
+			end
+		end
+		for item, amount in basics do
+			local bonus = math.floor(amount * D.Loot.ClearBonus + 0.5)
+			farm.materials[item] = (farm.materials[item] or 0) + bonus
+			paid.materials[item] = (paid.materials[item] or 0) + bonus
 		end
 	end
 	return paid

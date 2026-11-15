@@ -7,8 +7,8 @@ return {
 	-- which come alone), its level-1 stats (the same kind of numbers a slime has), its `role`, and `kind`: the way it
 	-- fights in Config.Combat (melee strikes anyone; ranged keeps its distance; hunter goes for the slime with the least
 	-- health and stings it slow; healer mends its wounded team-mates; bloomshell and bramblehorn are the two bosses with a
-	-- skill of their own). `drops` (docs/SMITHY.md §2): a list of lines { item, chance, min, max }, each rolled on its own
-	-- when the monster falls (see "Loot" below); an item is a key of Materials.
+	-- skill of their own). `drops`: its own coins and food, a list of lines { item, chance, min, max } each rolled on
+	-- its own when the monster falls; the materials come from "Loot" below, by the map and the monster's role.
 	-- The monsters' specials (docs/MONSTER-SLIMES.md, "Attacks"), copied by Config into Config.Combat.Skills, which says what
 	-- each `kind` does. A monster's `skills` list (Maps) takes them in turn; each comes every `every` blows of the FIRST in
 	-- the list (every mending, for a mend). Numbers are a first guess the owner tunes by playing. A boss's and a mini-boss's
@@ -135,6 +135,9 @@ return {
 	Maps = {
 		meadow = {
 			name = "Sunny Meadow",
+			-- its group of materials (the "basic" every run of it drops) and its trophy (Loot below)
+			basic = "wood",
+			trophy = "boar_tusk",
 			-- (the gate's tab)
 			short = "Meadow",
 			monsters = {
@@ -152,7 +155,6 @@ return {
 					drops = {
 						{ item = "coins", chance = 0.25, min = 2, max = 4 },
 						{ item = "food", chance = 0.15, min = 3, max = 5 },
-						{ item = "wood", chance = 0.35, min = 1, max = 1 },
 					},
 				},
 				{
@@ -169,8 +171,6 @@ return {
 					drops = {
 						{ item = "coins", chance = 0.25, min = 2, max = 5 },
 						{ item = "food", chance = 0.10, min = 3, max = 5 },
-						{ item = "wood", chance = 0.15, min = 1, max = 1 },
-						{ item = "ore", chance = 0.10, min = 1, max = 1 },
 					},
 				},
 				{
@@ -187,7 +187,6 @@ return {
 					drops = {
 						{ item = "coins", chance = 0.25, min = 2, max = 5 },
 						{ item = "food", chance = 0.15, min = 3, max = 5 },
-						{ item = "wood", chance = 0.30, min = 1, max = 1 },
 					},
 				},
 				{
@@ -204,8 +203,6 @@ return {
 					drops = {
 						{ item = "coins", chance = 0.25, min = 2, max = 5 },
 						{ item = "food", chance = 0.10, min = 3, max = 5 },
-						{ item = "ore", chance = 0.15, min = 1, max = 1 },
-						{ item = "rare_part", chance = 0.05, min = 1, max = 1 },
 					},
 				},
 				{
@@ -222,8 +219,6 @@ return {
 					drops = {
 						{ item = "coins", chance = 0.30, min = 3, max = 6 },
 						{ item = "food", chance = 0.10, min = 3, max = 5 },
-						{ item = "ore", chance = 0.45, min = 1, max = 2 },
-						{ item = "rare_part", chance = 0.12, min = 1, max = 1 },
 					},
 				},
 				{
@@ -238,10 +233,6 @@ return {
 					kind = "bloomshell",
 					drops = {
 						{ item = "coins", chance = 1, min = 6, max = 11 },
-						{ item = "ore", chance = 1, min = 2, max = 3 },
-						{ item = "rare_part", chance = 0.60, min = 1, max = 2 },
-						{ item = "monster_core", chance = 0.30, min = 1, max = 1 },
-						{ item = "boar_tusk", chance = 0.20, min = 1, max = 1 },
 					},
 				},
 				{
@@ -256,12 +247,6 @@ return {
 					kind = "bramblehorn",
 					drops = {
 						{ item = "coins", chance = 1, min = 12, max = 20 },
-						{ item = "ore", chance = 1, min = 3, max = 5 },
-						{ item = "rare_part", chance = 1, min = 2, max = 3 },
-						{ item = "monster_core", chance = 0.50, min = 1, max = 1 },
-						{ item = "boss_essence", chance = 0.25, min = 1, max = 1 },
-						-- the map's trophy: two horns, never fewer
-						{ item = "boar_tusk", chance = 1, min = 2, max = 2 },
 					},
 				},
 			} :: { any },
@@ -271,6 +256,8 @@ return {
 		-- darkforest map drop): the boss pays two, never fewer; the mini-boss, the spitter and the healer sometimes one.
 		mushroom = {
 			name = "Mushroom Grove",
+			basic = "silk",
+			trophy = "glow_spore",
 			short = "Grove",
 			monsters = {
 				{
@@ -287,7 +274,6 @@ return {
 					drops = {
 						{ item = "coins", chance = 0.25, min = 2, max = 4 },
 						{ item = "food", chance = 0.15, min = 3, max = 5 },
-						{ item = "wood", chance = 0.35, min = 1, max = 1 },
 					},
 				},
 				{
@@ -304,8 +290,6 @@ return {
 					drops = {
 						{ item = "coins", chance = 0.25, min = 2, max = 5 },
 						{ item = "food", chance = 0.10, min = 3, max = 5 },
-						{ item = "wood", chance = 0.15, min = 1, max = 1 },
-						{ item = "ore", chance = 0.10, min = 1, max = 1 },
 					},
 				},
 				{
@@ -322,8 +306,6 @@ return {
 					drops = {
 						{ item = "coins", chance = 0.25, min = 2, max = 5 },
 						{ item = "food", chance = 0.15, min = 3, max = 5 },
-						{ item = "wood", chance = 0.30, min = 1, max = 1 },
-						{ item = "glow_spore", chance = 0.10, min = 1, max = 1 },
 					},
 				},
 				{
@@ -340,9 +322,6 @@ return {
 					drops = {
 						{ item = "coins", chance = 0.25, min = 2, max = 5 },
 						{ item = "food", chance = 0.10, min = 3, max = 5 },
-						{ item = "ore", chance = 0.15, min = 1, max = 1 },
-						{ item = "rare_part", chance = 0.05, min = 1, max = 1 },
-						{ item = "glow_spore", chance = 0.12, min = 1, max = 1 },
 					},
 				},
 				{
@@ -359,8 +338,6 @@ return {
 					drops = {
 						{ item = "coins", chance = 0.30, min = 3, max = 6 },
 						{ item = "food", chance = 0.10, min = 3, max = 5 },
-						{ item = "ore", chance = 0.45, min = 1, max = 2 },
-						{ item = "rare_part", chance = 0.12, min = 1, max = 1 },
 					},
 				},
 				{
@@ -375,10 +352,6 @@ return {
 					kind = "sporeburst",
 					drops = {
 						{ item = "coins", chance = 1, min = 6, max = 11 },
-						{ item = "ore", chance = 1, min = 2, max = 3 },
-						{ item = "rare_part", chance = 0.60, min = 1, max = 2 },
-						{ item = "monster_core", chance = 0.30, min = 1, max = 1 },
-						{ item = "glow_spore", chance = 0.35, min = 1, max = 2 },
 					},
 				},
 				{
@@ -393,12 +366,6 @@ return {
 					kind = "bearslam",
 					drops = {
 						{ item = "coins", chance = 1, min = 12, max = 20 },
-						{ item = "ore", chance = 1, min = 3, max = 5 },
-						{ item = "rare_part", chance = 1, min = 2, max = 3 },
-						{ item = "monster_core", chance = 0.50, min = 1, max = 1 },
-						{ item = "boss_essence", chance = 0.25, min = 1, max = 1 },
-						-- the map's trophy: two glow spores, never fewer
-						{ item = "glow_spore", chance = 1, min = 2, max = 2 },
 					},
 				},
 			} :: { any },
@@ -408,6 +375,8 @@ return {
 		-- fewer; the mini-boss, the spitter and the healer sometimes one.
 		lava = {
 			name = "Ember Lava",
+			basic = "ore",
+			trophy = "ember_core",
 			short = "Lava",
 			monsters = {
 				{
@@ -424,7 +393,6 @@ return {
 					drops = {
 						{ item = "coins", chance = 0.25, min = 2, max = 4 },
 						{ item = "food", chance = 0.15, min = 3, max = 5 },
-						{ item = "wood", chance = 0.35, min = 1, max = 1 },
 					},
 				},
 				{
@@ -441,8 +409,6 @@ return {
 					drops = {
 						{ item = "coins", chance = 0.25, min = 2, max = 5 },
 						{ item = "food", chance = 0.10, min = 3, max = 5 },
-						{ item = "wood", chance = 0.15, min = 1, max = 1 },
-						{ item = "ore", chance = 0.10, min = 1, max = 1 },
 					},
 				},
 				{
@@ -459,8 +425,6 @@ return {
 					drops = {
 						{ item = "coins", chance = 0.25, min = 2, max = 5 },
 						{ item = "food", chance = 0.15, min = 3, max = 5 },
-						{ item = "wood", chance = 0.30, min = 1, max = 1 },
-						{ item = "ember_core", chance = 0.10, min = 1, max = 1 },
 					},
 				},
 				{
@@ -477,9 +441,6 @@ return {
 					drops = {
 						{ item = "coins", chance = 0.25, min = 2, max = 5 },
 						{ item = "food", chance = 0.10, min = 3, max = 5 },
-						{ item = "ore", chance = 0.15, min = 1, max = 1 },
-						{ item = "rare_part", chance = 0.05, min = 1, max = 1 },
-						{ item = "ember_core", chance = 0.12, min = 1, max = 1 },
 					},
 				},
 				{
@@ -496,8 +457,6 @@ return {
 					drops = {
 						{ item = "coins", chance = 0.30, min = 3, max = 6 },
 						{ item = "food", chance = 0.10, min = 3, max = 5 },
-						{ item = "ore", chance = 0.45, min = 1, max = 2 },
-						{ item = "rare_part", chance = 0.12, min = 1, max = 1 },
 					},
 				},
 				{
@@ -512,10 +471,6 @@ return {
 					kind = "lavastomp",
 					drops = {
 						{ item = "coins", chance = 1, min = 6, max = 11 },
-						{ item = "ore", chance = 1, min = 2, max = 3 },
-						{ item = "rare_part", chance = 0.60, min = 1, max = 2 },
-						{ item = "monster_core", chance = 0.30, min = 1, max = 1 },
-						{ item = "ember_core", chance = 0.35, min = 1, max = 2 },
 					},
 				},
 				{
@@ -530,12 +485,6 @@ return {
 					kind = "eruption",
 					drops = {
 						{ item = "coins", chance = 1, min = 12, max = 20 },
-						{ item = "ore", chance = 1, min = 3, max = 5 },
-						{ item = "rare_part", chance = 1, min = 2, max = 3 },
-						{ item = "monster_core", chance = 0.50, min = 1, max = 1 },
-						{ item = "boss_essence", chance = 0.25, min = 1, max = 1 },
-						-- the map's trophy: two ember cores, never fewer
-						{ item = "ember_core", chance = 1, min = 2, max = 2 },
 					},
 				},
 			} :: { any },
@@ -548,6 +497,8 @@ return {
 		-- and the Penguin sometimes one.
 		ice = {
 			name = "Frozen Ice",
+			basic = "crystal",
+			trophy = "frost_fang",
 			short = "Ice",
 			monsters = {
 				{
@@ -564,7 +515,6 @@ return {
 					drops = {
 						{ item = "coins", chance = 0.25, min = 2, max = 5 },
 						{ item = "food", chance = 0.15, min = 3, max = 5 },
-						{ item = "wood", chance = 0.35, min = 1, max = 1 },
 					},
 				},
 				{
@@ -581,8 +531,6 @@ return {
 					drops = {
 						{ item = "coins", chance = 0.25, min = 3, max = 6 },
 						{ item = "food", chance = 0.10, min = 3, max = 5 },
-						{ item = "wood", chance = 0.15, min = 1, max = 1 },
-						{ item = "ore", chance = 0.12, min = 1, max = 1 },
 					},
 				},
 				{
@@ -599,8 +547,6 @@ return {
 					drops = {
 						{ item = "coins", chance = 0.25, min = 3, max = 6 },
 						{ item = "food", chance = 0.15, min = 3, max = 5 },
-						{ item = "wood", chance = 0.30, min = 1, max = 1 },
-						{ item = "frost_fang", chance = 0.10, min = 1, max = 1 },
 					},
 				},
 				{
@@ -617,9 +563,6 @@ return {
 					drops = {
 						{ item = "coins", chance = 0.25, min = 3, max = 6 },
 						{ item = "food", chance = 0.10, min = 3, max = 5 },
-						{ item = "ore", chance = 0.15, min = 1, max = 1 },
-						{ item = "rare_part", chance = 0.05, min = 1, max = 1 },
-						{ item = "frost_fang", chance = 0.12, min = 1, max = 1 },
 					},
 				},
 				{
@@ -636,8 +579,6 @@ return {
 					drops = {
 						{ item = "coins", chance = 0.30, min = 4, max = 7 },
 						{ item = "food", chance = 0.10, min = 3, max = 5 },
-						{ item = "ore", chance = 0.45, min = 1, max = 2 },
-						{ item = "rare_part", chance = 0.12, min = 1, max = 1 },
 					},
 				},
 				{
@@ -652,10 +593,6 @@ return {
 					kind = "tuskcharge",
 					drops = {
 						{ item = "coins", chance = 1, min = 8, max = 13 },
-						{ item = "ore", chance = 1, min = 2, max = 3 },
-						{ item = "rare_part", chance = 0.60, min = 1, max = 2 },
-						{ item = "monster_core", chance = 0.30, min = 1, max = 1 },
-						{ item = "frost_fang", chance = 0.35, min = 1, max = 2 },
 					},
 				},
 				{
@@ -670,12 +607,6 @@ return {
 					kind = "blizzard",
 					drops = {
 						{ item = "coins", chance = 1, min = 14, max = 23 },
-						{ item = "ore", chance = 1, min = 3, max = 5 },
-						{ item = "rare_part", chance = 1, min = 2, max = 3 },
-						{ item = "monster_core", chance = 0.50, min = 1, max = 1 },
-						{ item = "boss_essence", chance = 0.25, min = 1, max = 1 },
-						-- the map's trophy: two frost fangs, never fewer
-						{ item = "frost_fang", chance = 1, min = 2, max = 2 },
 					},
 				},
 			} :: { any },
@@ -760,18 +691,127 @@ return {
 	},
 	RoleHp = { miniboss = 3, boss = 5 },
 	WaveGrowth = 1.03,
-	-- (loot luck, until the drop tables of the four dungeons replace it: 1 + LuckPerLevel x (level - 1))
-	LuckPerLevel = 0.05,
 	-- The Dungeon is not for new players (the owner, 2026-11-04): a farm enters only with at least EnterMinSlimes slimes
 	-- (eggs not counted) and a village of level EnterMinVillageLevel or more (15: the first level whose population limit
 	-- holds 20 slimes, Config.Village.PopulationProgression).
 	EnterMinSlimes = 20,
 	EnterMinVillageLevel = 15,
 
-	-- ===== Loot (docs/SMITHY.md §2) =====
-	-- Every line of a monster's `drops` (Maps above) is rolled on its own: a roll r in [0, 1) under the line's `chance` pays
-	-- min..max of its item. The level's luck (1 + LuckPerLevel x (level - 1)) multiplies a chance below 1 and never takes
-	-- one past 1; a line at 1 never fails (the boss's two horns).
+	-- ===== Loot (the owner, 2026-11-15; docs/SMITHY.md §2) =====
+	-- Every line of a monster's `drops` (Maps above: coins and food) is rolled on its own: a roll r in [0, 1) under the line's
+	-- `chance` pays min..max of its item. There is no luck: a chance is what it says.
+	-- The materials come from Loot.Lines, rolled the same way per fallen monster by its ROLE (regular = every role but the
+	-- mini-boss and the boss) and the run's dungeon level L. A line's item "basic" and "trophy" are the map's own (Maps).
+	-- `chance` is a list of steps { from = level, chance = c }: the last step whose `from` is not above L holds; a step with
+	-- `to` and `chanceTo` rises evenly from c at `from` to chanceTo at `to`. When wave Waves is cleared the run's collected
+	-- basics grow by ClearBonus (rounded), paid with that wave.
+	Loot = {
+		ClearBonus = 0.35,
+		Lines = {
+			{
+				role = "regular",
+				item = "basic",
+				min = 1,
+				max = 1,
+				chance = {
+					{ from = 1, chance = 0.20 },
+					{ from = 21, chance = 0.24 },
+					{ from = 51, chance = 0.30 },
+					{ from = 91, chance = 0.40 },
+				},
+			},
+			{
+				role = "regular",
+				item = "rare_part",
+				min = 1,
+				max = 1,
+				chance = {
+					{ from = 1, chance = 0 },
+					{ from = 21, chance = 0.02 },
+					{ from = 51, chance = 0.01 },
+					{ from = 91, chance = 0 },
+				},
+			},
+			{
+				role = "regular",
+				item = "monster_core",
+				min = 1,
+				max = 1,
+				chance = {
+					{ from = 1, chance = 0 },
+					{ from = 51, chance = 0.02 },
+					{ from = 91, chance = 0.03 },
+				},
+			},
+			{ role = "miniboss", item = "basic", min = 2, max = 3, chance = { { from = 1, chance = 1 } } },
+			{
+				role = "miniboss",
+				item = "rare_part",
+				min = 1,
+				max = 1,
+				chance = {
+					{ from = 1, chance = 0.03 },
+					{ from = 21, chance = 0.35 },
+				},
+			},
+			{
+				role = "miniboss",
+				item = "monster_core",
+				min = 1,
+				max = 1,
+				chance = {
+					{ from = 1, chance = 0 },
+					{ from = 31, chance = 0.03 },
+					{ from = 51, chance = 0.50 },
+				},
+			},
+			{
+				role = "miniboss",
+				item = "boss_essence",
+				min = 1,
+				max = 1,
+				chance = {
+					{ from = 1, chance = 0 },
+					{ from = 100, chance = 0.20 },
+				},
+			},
+			{ role = "miniboss", item = "trophy", min = 1, max = 1, chance = { { from = 1, chance = 0.30 } } },
+			{ role = "boss", item = "basic", min = 3, max = 5, chance = { { from = 1, chance = 1 } } },
+			{
+				role = "boss",
+				item = "rare_part",
+				min = 1,
+				max = 1,
+				chance = {
+					{ from = 1, chance = 0.03 },
+					{ from = 21, chance = 0.70 },
+				},
+			},
+			{
+				role = "boss",
+				item = "monster_core",
+				min = 1,
+				max = 1,
+				chance = {
+					{ from = 1, chance = 0 },
+					{ from = 31, chance = 0.03 },
+					{ from = 51, chance = 1 },
+				},
+			},
+			{
+				role = "boss",
+				item = "boss_essence",
+				min = 1,
+				max = 1,
+				chance = {
+					{ from = 1, chance = 0 },
+					{ from = 81, chance = 0.10, to = 99, chanceTo = 0.25 },
+					{ from = 100, chance = 1 },
+				},
+			},
+			{ role = "boss", item = "trophy", min = 1, max = 1, chance = { { from = 1, chance = 1 } } },
+		},
+	},
 	-- A "food" drop is this raw food in the storehouse (Config.Food.Raw); what does not fit the pantry is lost.
 	FoodItem = "carrot",
 	-- What a drop is. `kind`: coins go to the purse, food to the storehouse, a material to farm.materials. The screens
@@ -783,7 +823,10 @@ return {
 		food = { name = "Slime Snacks", kind = "food" },
 		-- (the pictures: ChatGPT in the game's icon style, 2026-11-04, art/icons/dg_*.png)
 		wood = { name = "Hardwood", short = "Wood", kind = "material", icon = 105540459123913 },
-		-- (cloth and common_part no longer drop, but saves hold them: the entries stay, and a later map may take them back)
+		-- The Mushroom Grove's and Frozen Ice's group materials
+		silk = { name = "Mushroom Silk", short = "Silk", kind = "material", icon = 78628266154450 },
+		crystal = { name = "Frost Crystal", short = "Crystal", kind = "material", icon = 100541004288230 },
+		-- (cloth and common_part never drop or are asked for now, but saves hold them: the entries stay)
 		cloth = { name = "Linen Cloth", short = "Cloth", kind = "material", icon = 128498997412713 },
 		ore = { name = "Iron Ore", short = "Ore", kind = "material", icon = 107577459785586 },
 		common_part = { name = "Slime Residue", short = "Residue", kind = "material", icon = 109902889353186 },
@@ -803,7 +846,9 @@ return {
 		"coins",
 		"food",
 		"wood",
+		"silk",
 		"ore",
+		"crystal",
 		"rare_part",
 		"monster_core",
 		"boss_essence",

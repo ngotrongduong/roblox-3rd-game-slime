@@ -11,7 +11,8 @@
 -- who sends the team.
 --
 --   workspace.ZombieCamps/<band>/<packId>   (band 1.. is WorldPacks.band of the pack's level; the id is "p<col>x<row>",
---                     unique across the server) Configuration: Band, Map (a Config.Dungeon.Maps id), Level, Position,
+--                     unique across the server) Configuration: Band, Map (a Config.Dungeon.Maps id), Material (the basic
+--                     it pays when won), Level, Position,
 --                     State ("waiting" | "taken" | "fighting" | "gone"), RespawnAt (server unix seconds, 0 unless gone),
 --                     Team (the number of the team that ordered an attack on it, 0 when none), Attacker (the UserId of that
 --                     team's player, 0 when none)
@@ -59,6 +60,9 @@ type Group = {
 	id: string,
 	band: number,
 	map: string,
+	-- the basic material it pays when won (WorldPacks.material) and, fixed by this roll of the pack, all it pays
+	material: string,
+	loot: { { item: string, amount: number } },
 	level: number,
 	zombies: { Monster },
 	byId: { [string]: Monster },
@@ -184,6 +188,7 @@ local function publishGroup(group: Group)
 	local folder = group.folder
 	set(folder, "Band", group.band)
 	set(folder, "Map", group.map)
+	set(folder, "Material", group.material)
 	set(folder, "Level", group.level)
 	set(folder, "Position", group.position)
 	set(folder, "State", group.state)
@@ -197,7 +202,9 @@ end
 -- A fresh roll of the pack, whole, waiting: new monsters with new ids at the pack's own level.
 local function spawnGroup(group: Group)
 	packSerial += 1
-	group.zombies = WorldPacks.pack(group.id .. "-" .. packSerial, group.map, group.level, packRng)
+	local prefix = group.id .. "-" .. packSerial
+	group.zombies = WorldPacks.pack(prefix, group.map, group.level, packRng)
+	group.loot = WorldPacks.loot(prefix, group.material, group.level)
 	group.byId = {}
 	group.folder:ClearAllChildren()
 	for _, monster in group.zombies do
@@ -258,6 +265,8 @@ local function makePacks()
 			id = spot.id,
 			band = band,
 			map = WorldPacks.mapOf(spot.plan[1], spot.plan[2]),
+			material = WorldPacks.material(spot.id, spot.plan[1], spot.plan[2]),
+			loot = {},
 			level = level,
 			zombies = {},
 			byId = {},
@@ -488,6 +497,17 @@ local function endFight(session: Session, team: March, winner: string, now: numb
 		end)
 	end
 	if winner == "squad" then
+		-- (a won pack pays its materials, fixed by its roll, to the player who sent the team)
+		PlayerData.update(player, function(farm: any)
+			for _, drop in group.loot do
+				farm.materials[drop.item] = (farm.materials[drop.item] or 0) + drop.amount
+			end
+		end)
+		local names: { string } = {}
+		for _, drop in group.loot do
+			table.insert(names, drop.item .. " x" .. drop.amount)
+		end
+		print(Config.LogPrefix, "zombies:", group.id, "won, paid", table.concat(names, ", "))
 		group.state = "gone"
 		group.team = 0
 		group.attacker = nil

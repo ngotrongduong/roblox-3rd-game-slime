@@ -23,6 +23,7 @@ function Classes.handOf(class: string?, tier: number?): string?
 	for id, piece in Config.Smithy.Gear :: any do
 		if
 			piece.slot == "hand"
+			and not piece.tempered
 			and piece.family
 			and (Config.Classes.Families :: any)[piece.family] == class
 			and (Config.Classes.Tiers :: any)[piece.tier] == tier

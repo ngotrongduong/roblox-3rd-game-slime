@@ -33,6 +33,8 @@ type Step = {
 	blocked: ((Farm, number) -> boolean)?,
 	ui: boolean?,
 	tip: boolean?,
+	-- the step's opening pays Config.Guide.StarterKit into the farm's materials (once: a step opens once)
+	kit: boolean?,
 	-- the number the check measures from, taken when the step opens (`previous` is the last step's)
 	mark: ((Farm, number) -> number)?,
 	done: ((Farm, Env, number, number) -> boolean)?,
@@ -206,6 +208,12 @@ local steps: { [string]: Step } = {
 		end,
 	},
 	sell = { line = "Sell spare slimes and dishes here for coins.", target = "market", tip = true },
+	smithy = {
+		line = "The Blacksmith gave you a starter kit! Craft your first weapon here.",
+		target = "smithy",
+		tip = true,
+		kit = true,
+	},
 	home = {
 		line = "Tap Home to go back.",
 		target = "hud:home",
@@ -461,6 +469,11 @@ local function advance(farm: Farm, now: number)
 	local step = steps[nextId]
 	farm.guide.mark = if step.mark then step.mark(farm, farm.guide.mark) else 0
 	farm.guide.step = nextId
+	if step.kit then
+		for item, amount in Config.Guide.StarterKit :: { [string]: number } do
+			farm.materials[item] = (farm.materials[item] or 0) + amount
+		end
+	end
 end
 
 -- Moves the tutorial on as far as the farm already allows (a rejoin can pass several steps at once), then opens, closes or

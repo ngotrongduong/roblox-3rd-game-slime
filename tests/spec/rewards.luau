@@ -236,7 +236,8 @@ return function(T: any)
 	T.test("the counts are bumped where the game does it", function()
 		-- gear made
 		local farm: any = FarmKit.farm(NOW)
-		farm.materials.wood = 2
+		farm.materials.wood = 1
+		farm.materials.crystal = 2
 		T.ok(Gear.craft(farm, "charm-wood") ~= nil)
 		T.eq(farm.lifetime.gearCrafted, 1)
 		T.eq(select(2, Gear.craft(farm, "charm-wood")), "INSUFFICIENT_MATERIALS")

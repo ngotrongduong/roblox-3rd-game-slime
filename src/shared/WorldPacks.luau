@@ -37,6 +37,35 @@ function WorldPacks.mapOf(x: number, z: number): string
 	return (P.Maps :: { [string]: string })[WorldPacks.region(x, z)]
 end
 
+-- The basic material a pack standing in cell `id` at this plan point pays when won: the Dungeon map's own of its region
+-- (Config.Dungeon.Maps), or, in Home Vale, one of ValeBasics by the cell's column and row, so neighbours differ.
+function WorldPacks.material(id: string, x: number, z: number): string
+	if WorldPacks.region(x, z) == "vale" then
+		local col, row = string.match(id, "^p(%d+)x(%d+)$")
+		return P.ValeBasics[((tonumber(col) :: number) + (tonumber(row) :: number)) % #P.ValeBasics + 1]
+	end
+	return (Config.Dungeon.Maps :: any)[WorldPacks.mapOf(x, z)].basic
+end
+
+-- What winning the pack `prefix` (its monsters' id stem, new with every roll of the pack) pays, in the pack's own stream:
+-- { item, amount } for its basic and, by level, a second unit, a Core Fragment and a Monster Core. Every line spends its
+-- roll hit or not, so the drop is fixed by the pack's roll.
+function WorldPacks.loot(prefix: string, basic: string, level: number): { { item: string, amount: number } }
+	local rng = Rng.new(Rng.hash(prefix .. ":loot"))
+	local second, rare, core = rng:next(), rng:next(), rng:next()
+	local out = { { item = basic, amount = 1 } }
+	if level >= P.SecondBasicFrom and second < P.SecondBasicChance then
+		out[1].amount = 2
+	end
+	if level >= P.RarePartFrom and rare < P.RarePartChance then
+		table.insert(out, { item = "rare_part", amount = 1 })
+	end
+	if level >= P.MonsterCoreFrom and core < P.MonsterCoreChance then
+		table.insert(out, { item = "monster_core", amount = 1 })
+	end
+	return out
+end
+
 -- Studs to the middle of the nearest village.
 function WorldPacks.villageDistance(x: number, z: number): number
 	local best = math.huge

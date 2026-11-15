@@ -115,6 +115,18 @@ return {
 		StatFactor = 0.55,
 		CoinBase = { swarmer = 100, raider = 150, spitter = 150, shaman = 200, armoured = 300 },
 		Maps = { vale = "meadow", meadow = "meadow", mushroom = "mushroom", ember = "lava", frost = "ice" },
+		-- What a won pack pays (the owner, 2026-11-15; shared/WorldPacks.loot, rolled with the pack): one unit of its region's
+		-- basic (the Dungeon map's own, Config.Dungeon.Maps; a Home Vale pack takes ValeBasics in turn by its cell, so a new
+		-- player meets all four near home), a second unit with SecondBasicChance from pack level SecondBasicFrom, a Core
+		-- Fragment with RarePartChance from RarePartFrom and a Monster Core with MonsterCoreChance from MonsterCoreFrom.
+		-- Never a trophy, never Boss Essence.
+		ValeBasics = { "wood", "silk", "ore", "crystal" },
+		SecondBasicFrom = 60,
+		SecondBasicChance = 0.5,
+		RarePartFrom = 25,
+		RarePartChance = 1 / 6,
+		MonsterCoreFrom = 65,
+		MonsterCoreChance = 0.1,
 		-- A team sets out at most this far from its pack, on the pack's side towards the player's village (a march from
 		-- the gate itself would take minutes across the world), and comes back to the same spot.
 		MarchMostStuds = 60,
@@ -154,13 +166,12 @@ return {
 	-- Its picture is drawn from WorldPlan by tools/world/map_picture.ps1 (art/map/world_map.png): a square of Size studs
 	-- whose north-west corner is (MinX, MinZ) in the plan's coordinates. Run the tool again after the plan changes.
 	Map = { Image = 110309697818054, MinX = -2300, MinZ = -2500, Size = 4600 },
-	-- What a zone's guard pays when it falls, by the zone's kind, in place of its own drops (the Dungeon's bosses pay
-	-- trophies that a short fight may not hand out every few minutes). Lines as a monster's drops (item, chance, min..max).
-	-- "trophy" is the region's own (Trophy below; a region without one pays none). Coins are what the guard pays at
+	-- What a zone's guard pays when it falls, by the zone's kind, in place of its own drops. Lines as a monster's drops (item,
+	-- chance, min..max). No trophy: those are the Dungeon's own (the owner, 2026-11-15). Coins are what the guard pays at
 	-- level 0, raised by the zone's level as a pack monster's are (x 1 + level x Config.Economy.SellLevelStep): a mini
 	-- guard pays about what two or three packs round it do, a boss three times that (the owner, 2026-11-14: the guards'
-	-- coins match their new levels; they were 10-120 before). Every other monster of a zone drops what its def says,
-	-- at luck 1.
+	-- coins match their new levels; they were 10-120 before). Every other monster of a zone drops what its def says
+	-- (coins and food only).
 	Reward = {
 		mini = {
 			{ item = "coins", chance = 1, min = 1000, max = 1600 },
@@ -173,7 +184,6 @@ return {
 			{ item = "rare_part", chance = 1, min = 2, max = 3 },
 			{ item = "monster_core", chance = 1, min = 1, max = 1 },
 			{ item = "boss_essence", chance = 0.5, min = 1, max = 1 },
-			{ item = "trophy", chance = 1, min = 2, max = 2 },
 		},
 		mega = {
 			{ item = "coins", chance = 1, min = 8000, max = 12000 },
@@ -181,7 +191,6 @@ return {
 			{ item = "boss_essence", chance = 1, min = 2, max = 2 },
 		},
 	},
-	Trophy = { meadow = "boar_tusk", mushroom = "glow_spore", ember = "ember_core", frost = "frost_fang" },
 	-- The zones, by their WorldPlan id.
 	--   map     the Config.Dungeon.Maps id its crowds are drawn from
 	--           Every monster of a zone stands at the zone's level (shared/ZoneFights.level: the level of the packs round

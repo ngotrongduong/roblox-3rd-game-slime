@@ -918,10 +918,6 @@ end
 -- The fights of the big world's zones (docs/WORLD.md §7, M5): short Dungeon runs in the open; the rules are shared/ZoneFights.
 Config.World = if script then require(script.Parent.ConfigWorld) else require("./ConfigWorld")
 
--- (one Legendary recipe for all six weapon families; each recipe gets its own copy below)
-local LEGEND_COINS = 1000
-local LEGEND_RECIPE = { ember_core = 4, frost_fang = 4, monster_core = 3, boss_essence = 2 }
-
 -- Gear and the Smithy (the owner, 2026-11-04; docs/SMITHY.md): three slots on every slime, four tiers, a piece each crafted
 -- from dungeon drops at the Blacksmith. Gear adds flat points to a slime's stats in every fight (shared/Gear.bonus); it
 -- never changes the slime's own stats, level or price. Rules: shared/Gear; requests: shared/VillageRequests.
@@ -1286,87 +1282,91 @@ Config.Smithy = {
 			icon = "rbxassetid://131165304696818",
 		},
 	},
-	-- One recipe a piece (the recipe's id is the piece's id): `materials` are keys of Config.Dungeon.Materials with how many,
-	-- `coins` the price. A craft takes them once and adds one piece to the bag (an all-or-nothing step).
-	Recipes = {
-		["shield-wood"] = { gear = "shield-wood", materials = { wood = 3 }, coins = 0 },
-		["shield-iron"] = { gear = "shield-iron", materials = { ore = 4, wood = 2 }, coins = 25 },
-		["shield-core"] = {
-			gear = "shield-core",
-			materials = { ore = 8, rare_part = 6, monster_core = 1 },
-			coins = 150,
-		},
-		["shield-bramble"] = {
-			gear = "shield-bramble",
-			materials = { boar_tusk = 4, rare_part = 12, monster_core = 2, boss_essence = 1 },
-			coins = 400,
-		},
-		["bow-wood"] = { gear = "bow-wood", materials = { wood = 3 }, coins = 0 },
-		["bow-iron"] = { gear = "bow-iron", materials = { ore = 4, wood = 2 }, coins = 25 },
-		["bow-core"] = { gear = "bow-core", materials = { ore = 8, rare_part = 6, monster_core = 1 }, coins = 150 },
-		["bow-bramble"] = {
-			gear = "bow-bramble",
-			materials = { boar_tusk = 4, rare_part = 12, monster_core = 2, boss_essence = 1 },
-			coins = 400,
-		},
-		["focus-wood"] = { gear = "focus-wood", materials = { wood = 3 }, coins = 0 },
-		["focus-iron"] = { gear = "focus-iron", materials = { ore = 4, wood = 2 }, coins = 25 },
-		["focus-core"] = { gear = "focus-core", materials = { ore = 8, rare_part = 6, monster_core = 1 }, coins = 150 },
-		["focus-bramble"] = {
-			gear = "focus-bramble",
-			materials = { boar_tusk = 4, rare_part = 12, monster_core = 2, boss_essence = 1 },
-			coins = 400,
-		},
-		["staff-wood"] = { gear = "staff-wood", materials = { wood = 3 }, coins = 0 },
-		["staff-iron"] = { gear = "staff-iron", materials = { ore = 4, wood = 2 }, coins = 25 },
-		["staff-core"] = { gear = "staff-core", materials = { ore = 8, rare_part = 6, monster_core = 1 }, coins = 150 },
-		["staff-bramble"] = {
-			gear = "staff-bramble",
-			materials = { boar_tusk = 4, rare_part = 12, monster_core = 2, boss_essence = 1 },
-			coins = 400,
-		},
-		["kit-wood"] = { gear = "kit-wood", materials = { wood = 3 }, coins = 0 },
-		["kit-iron"] = { gear = "kit-iron", materials = { ore = 4, wood = 2 }, coins = 25 },
-		["kit-core"] = { gear = "kit-core", materials = { ore = 8, rare_part = 6, monster_core = 1 }, coins = 150 },
-		["kit-bramble"] = {
-			gear = "kit-bramble",
-			materials = { boar_tusk = 4, rare_part = 12, monster_core = 2, boss_essence = 1 },
-			coins = 400,
-		},
-		["sword-wood"] = { gear = "sword-wood", materials = { wood = 3 }, coins = 0 },
-		["helm-wood"] = { gear = "helm-wood", materials = { wood = 4 }, coins = 0 },
-		["charm-wood"] = { gear = "charm-wood", materials = { wood = 2 }, coins = 0 },
-		["sword-iron"] = { gear = "sword-iron", materials = { ore = 4, wood = 2 }, coins = 25 },
-		["helm-iron"] = { gear = "helm-iron", materials = { ore = 5 }, coins = 25 },
-		["charm-iron"] = { gear = "charm-iron", materials = { ore = 3, wood = 2 }, coins = 25 },
-		["sword-core"] = { gear = "sword-core", materials = { ore = 8, rare_part = 6, monster_core = 1 }, coins = 150 },
-		["helm-core"] = { gear = "helm-core", materials = { ore = 8, rare_part = 6, monster_core = 1 }, coins = 150 },
-		["charm-core"] = { gear = "charm-core", materials = { wood = 6, rare_part = 6, monster_core = 1 }, coins = 150 },
-		["sword-bramble"] = {
-			gear = "sword-bramble",
-			materials = { boar_tusk = 4, rare_part = 12, monster_core = 2, boss_essence = 1 },
-			coins = 400,
-		},
-		["helm-bramble"] = {
-			gear = "helm-bramble",
-			materials = { boar_tusk = 4, rare_part = 12, monster_core = 2, boss_essence = 1 },
-			coins = 400,
-		},
-		["charm-bramble"] = {
-			gear = "charm-bramble",
-			materials = { boar_tusk = 4, rare_part = 12, monster_core = 2, boss_essence = 1 },
-			coins = 400,
-		},
-		-- Legendary, one recipe for every family: the trophies of the two hardest maps (Ember Lava's and Frozen Ice's
-		-- bosses pay two each), so the top tier is the reward for clearing them.
-		["sword-legend"] = { gear = "sword-legend", materials = table.clone(LEGEND_RECIPE), coins = LEGEND_COINS },
-		["shield-legend"] = { gear = "shield-legend", materials = table.clone(LEGEND_RECIPE), coins = LEGEND_COINS },
-		["bow-legend"] = { gear = "bow-legend", materials = table.clone(LEGEND_RECIPE), coins = LEGEND_COINS },
-		["focus-legend"] = { gear = "focus-legend", materials = table.clone(LEGEND_RECIPE), coins = LEGEND_COINS },
-		["staff-legend"] = { gear = "staff-legend", materials = table.clone(LEGEND_RECIPE), coins = LEGEND_COINS },
-		["kit-legend"] = { gear = "kit-legend", materials = table.clone(LEGEND_RECIPE), coins = LEGEND_COINS },
+	-- One recipe a piece (the recipe's id is the piece's id), built below from Pairs and Cost: `materials` are keys of
+	-- Config.Dungeon.Materials with how many, `coins` the price. A craft takes them once and adds one piece to the bag (an
+	-- all-or-nothing step).
+	Recipes = {},
+	-- The two basics (Config.Dungeon.Maps `basic`) every piece of a family costs, the larger share first (the owner,
+	-- 2026-11-15: every recipe needs two groups). The helm and the charm are the families "helm" and "charm", listed in `Half`:
+	-- they cost half of every amount, rounded up.
+	Pairs = {
+		sword = { "ore", "wood" },
+		shield = { "ore", "crystal" },
+		bow = { "wood", "silk" },
+		focus = { "crystal", "silk" },
+		staff = { "wood", "crystal" },
+		kit = { "silk", "ore" },
+		helm = { "ore", "silk" },
+		charm = { "crystal", "wood" },
+	},
+	Half = { helm = true, charm = true },
+	-- What a piece of each tier costs: `a` of the pair's first basic, `b` of its second, the `catalysts` (keys of
+	-- Config.Dungeon.Materials) and the coins.
+	Cost = {
+		wood = { a = 3, b = 2, catalysts = {}, coins = 0 },
+		iron = { a = 6, b = 4, catalysts = {}, coins = 500 },
+		core = { a = 12, b = 8, catalysts = { rare_part = 2 }, coins = 3000 },
+		bramble = { a = 20, b = 12, catalysts = { monster_core = 3 }, coins = 12000 },
+		legend = { a = 30, b = 20, catalysts = { monster_core = 5, boss_essence = 2 }, coins = 30000 },
+	},
+	-- Tempering (the owner, 2026-11-15: gear from the Dungeon is a little better): a plain piece of tier iron and up becomes
+	-- its tempered twin (id .. "-t", built below: the same card, `base` the plain id, `tempered` true) with one more point in
+	-- its main stat, the one with the most points (TemperHp when that is HP). The cost, by tier, in the trophies of the two
+	-- Dungeon maps whose basics the family's pair is: `of` "either" is `count` of the trophy the bag has more of, "each"
+	-- `count` of both; `extra` the catalysts on top.
+	TemperHp = 10,
+	Temper = {
+		iron = { of = "either", count = 1, extra = {} },
+		core = { of = "each", count = 1, extra = {} },
+		bramble = { of = "each", count = 1, extra = { monster_core = 2 } },
+		legend = { of = "each", count = 2, extra = { boss_essence = 2 } },
 	},
 }
+
+for family, pair in Config.Smithy.Pairs :: { [string]: any } do
+	for _, tier in Config.Smithy.TierOrder do
+		local id = family .. "-" .. tier
+		-- (helm and charm stop at Mythic: they have no Legendary piece)
+		if (Config.Smithy.Gear :: any)[id] then
+			local cost = (Config.Smithy.Cost :: any)[tier]
+			local function share(amount: number): number
+				return if (Config.Smithy.Half :: any)[family] then math.ceil(amount / 2) else amount
+			end
+			local materials: { [string]: number } = {}
+			materials[pair[1]] = share(cost.a)
+			materials[pair[2]] = share(cost.b)
+			for item, amount in cost.catalysts do
+				materials[item] = share(amount)
+			end
+			local recipes: any = Config.Smithy.Recipes
+			recipes[id] = { gear = id, materials = materials, coins = share(cost.coins) }
+		end
+	end
+end
+
+do
+	local keys = { "attack", "defence", "speed", "hp" }
+	for _, id in Config.Smithy.GearOrder do
+		local plain: any = (Config.Smithy.Gear :: any)[id]
+		if plain.tier ~= "wood" then
+			local stats: { [string]: number } = table.clone(plain.stats)
+			local main = keys[1]
+			for _, key in keys do
+				if (stats[key] or 0) > (stats[main] or 0) then
+					main = key
+				end
+			end
+			stats[main] = (stats[main] or 0) + (if main == "hp" then Config.Smithy.TemperHp else 1)
+			local tempered: any = table.clone(plain)
+			tempered.name = plain.name .. " +"
+			tempered.stats = stats
+			tempered.tempered = true
+			tempered.base = id
+			local gear: any = Config.Smithy.Gear
+			gear[id .. "-t"] = tempered
+		end
+	end
+end
 
 Config.Growth = {
 	-- Grow-up: round((Base + max(0, level - 1) * PerLevel) * Factor ^ min(MaxLevel, upgradeLevel)) → 303 s at level 4.
@@ -3381,6 +3381,7 @@ Config.Guide = {
 		"hatch",
 		"market",
 		"sell",
+		"smithy",
 		"home",
 		"pads",
 		"team",
@@ -3406,6 +3407,8 @@ Config.Guide = {
 		"index",
 		"dungeon",
 	},
+	-- The Smithy step pays this into the materials when it opens (the owner, 2026-11-15: enough for the first Common weapon).
+	StarterKit = { wood = 3, silk = 3, ore = 3, crystal = 3 },
 	-- (a step or intro id a request may name is at most this long)
 	IdMaxLength = 16,
 	-- The server looks at every player's step this often.

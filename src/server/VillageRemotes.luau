@@ -207,6 +207,9 @@ local function request(player: Player, data: any): { ok: boolean, reason: string
 	elseif action == "SmithyCraft" then
 		print(Config.LogPrefix, "smithy:", player.Name, "crafted", data.recipeId)
 		PlayerData.markKeyMoment(player, "smithy craft")
+	elseif action == "SmithyTemper" then
+		print(Config.LogPrefix, "smithy:", player.Name, "tempered", data.gearId)
+		PlayerData.markKeyMoment(player, "smithy temper")
 	elseif action == "GearEquip" then
 		print(Config.LogPrefix, "gear:", player.Name, "put", data.gearId, "on", data.slimeId)
 		PlayerData.markKeyMoment(player, "gear equip")

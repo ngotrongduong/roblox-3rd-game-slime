@@ -88,6 +88,68 @@ function Gear.craft(farm: Farm, recipeId: any): (string?, string?)
 	return recipe.gear, nil
 end
 
+-- The trophy of the Dungeon map whose group material is `basic`.
+local function trophyOf(basic: string): string
+	for _, each in Config.Dungeon.Maps :: { [string]: any } do
+		if each.basic == basic then
+			return each.trophy
+		end
+	end
+	error("no dungeon map for " .. basic)
+end
+
+-- What tempering this plain piece takes from this farm (Config.Smithy.Temper): the trophies of the two maps its family's
+-- basics come from ("either": the one the bag has more of) and the catalysts. Nil when the piece cannot be tempered (a
+-- tempered one, or Common).
+function Gear.temperCost(farm: Farm, plainId: any): { [string]: number }?
+	local piece = Gear.get(plainId)
+	local rule: any = if piece and not piece.tempered then (S.Temper :: any)[piece.tier] else nil
+	if not rule then
+		return nil
+	end
+	local pair: any = (S.Pairs :: any)[string.match(plainId, "^(%a+)%-")]
+	local first, second = trophyOf(pair[1]), trophyOf(pair[2])
+	local cost: { [string]: number } = table.clone(rule.extra)
+	if rule.of == "each" then
+		cost[first] = rule.count
+		cost[second] = rule.count
+	else
+		cost[if (farm.materials[second] or 0) > (farm.materials[first] or 0) then second else first] = rule.count
+	end
+	return cost
+end
+
+-- Tempers one plain piece of the bag into its twin (shared in Config.Smithy.Gear as id .. "-t": +1 to its main stat): takes
+-- the piece and the cost (temperCost), adds the tempered one, counts as a craft. A piece a slime wears is not in the bag, so
+-- it cannot be tempered until it is taken off. Returns the twin's id, or nil and why not: "GEAR_NOT_FOUND", "CANNOT_TEMPER",
+-- "NOT_IN_BAG" or "INSUFFICIENT_MATERIALS"; a refusal changes nothing.
+function Gear.temper(farm: Farm, plainId: any): (string?, string?)
+	if Gear.get(plainId) == nil then
+		return nil, "GEAR_NOT_FOUND"
+	end
+	local cost = Gear.temperCost(farm, plainId)
+	if not cost then
+		return nil, "CANNOT_TEMPER"
+	elseif (farm.gear[plainId] or 0) < 1 then
+		return nil, "NOT_IN_BAG"
+	end
+	for item, need in cost do
+		if (farm.materials[item] or 0) < need then
+			return nil, "INSUFFICIENT_MATERIALS"
+		end
+	end
+	local materials: any, bag: any = farm.materials, farm.gear
+	for item, need in cost do
+		local left = (materials[item] or 0) - need
+		materials[item] = if left > 0 then left else nil
+	end
+	local held: number = bag[plainId] or 0
+	bag[plainId] = if held > 1 then held - 1 else nil
+	Gear.give(farm, plainId .. "-t", 1)
+	farm.lifetime.gearCrafted += 1
+	return plainId .. "-t", nil
+end
+
 -- One piece from the bag onto the slime, in the slot the piece belongs to; what that slot held goes back to the bag.
 -- Returns the slot, or nil and why not: "MISSING_SLIME", "GEAR_NOT_FOUND" (no such piece) or "NOT_IN_BAG".
 function Gear.equip(farm: Farm, slimeId: any, gearId: any): (string?, string?)

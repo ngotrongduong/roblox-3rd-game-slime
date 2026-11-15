@@ -19,7 +19,7 @@ local NOW = 1_000_000
 -- A farm that holds plenty of everything.
 local function rich(): any
 	local farm = FarmKit.farm(NOW)
-	farm.coins = 10_000
+	farm.coins = 1_000_000
 	for id in Config.Dungeon.Materials do
 		farm.materials[id] = 100
 	end
@@ -91,13 +91,29 @@ return function(T: any)
 			end
 		end
 		-- the design's numbers, spot-checked
-		T.same(S.Recipes["sword-iron"].materials, { ore = 4, wood = 2 })
-		T.eq(S.Recipes["sword-iron"].coins, 25)
-		T.same(
-			S.Recipes["helm-bramble"].materials,
-			{ boar_tusk = 4, rare_part = 12, monster_core = 2, boss_essence = 1 }
-		)
-		T.eq(S.Recipes["charm-bramble"].coins, 400)
+		T.same(S.Recipes["sword-iron"].materials, { ore = 6, wood = 4 })
+		T.eq(S.Recipes["sword-iron"].coins, 500)
+		T.same(S.Recipes["sword-wood"].materials, { ore = 3, wood = 2 })
+		T.same(S.Recipes["bow-core"].materials, { wood = 12, silk = 8, rare_part = 2 })
+		T.same(S.Recipes["staff-legend"].materials, { wood = 30, crystal = 20, monster_core = 5, boss_essence = 2 })
+		T.eq(S.Recipes["staff-legend"].coins, 30000)
+		-- the helm and the charm cost half of everything, rounded up
+		T.same(S.Recipes["helm-bramble"].materials, { ore = 10, silk = 6, monster_core = 2 })
+		T.same(S.Recipes["charm-iron"].materials, { crystal = 3, wood = 2 })
+		T.eq(S.Recipes["charm-bramble"].coins, 6000)
+		-- every recipe needs two different basics, and none asks for a trophy
+		local basics = { wood = true, silk = true, ore = true, crystal = true }
+		local trophies = { boar_tusk = true, glow_spore = true, ember_core = true, frost_fang = true }
+		for recipeId, recipe in S.Recipes do
+			local found = 0
+			for item in recipe.materials do
+				T.ok(not trophies[item], recipeId .. " asks for no trophy")
+				if basics[item] then
+					found += 1
+				end
+			end
+			T.eq(found, 2, recipeId .. " needs two basics")
+		end
 		T.same(S.Gear["sword-core"].stats, { attack = 4, speed = 1 })
 		T.eq(S.Tiers.core.rarity, "Epic")
 		T.eq(S.Tiers.bramble.colour, "#f08a24")
@@ -111,8 +127,8 @@ return function(T: any)
 		T.eq(select(2, Gear.canCraft(farm, "no-such-recipe")), "RECIPE_NOT_FOUND")
 		T.eq(select(2, Gear.canCraft(farm, nil)), "RECIPE_NOT_FOUND")
 		T.eq(select(2, Gear.canCraft(farm, "sword-iron")), "INSUFFICIENT_MATERIALS")
-		farm.materials.ore = 4
-		farm.coins = 24
+		farm.materials = { wood = 5, ore = 6 }
+		farm.coins = 499
 		T.eq(select(2, Gear.canCraft(farm, "sword-iron")), "INSUFFICIENT_COINS")
 		for _, id in { "no-such-recipe", "sword-iron", "sword-core" } do
 			local copy = FarmState.repair(farm, NOW)
@@ -128,21 +144,21 @@ return function(T: any)
 
 	T.test("a craft takes its materials and coins exactly once and adds one piece to the bag", function()
 		local farm = FarmKit.farm(NOW)
-		farm.coins = 60
-		farm.materials = { ore = 9, wood = 5 }
+		farm.coins = 1200
+		farm.materials = { ore = 15, wood = 9 }
 		T.ok(Gear.canCraft(farm, "sword-iron"))
 		T.eq(Gear.craft(farm, "sword-iron"), "sword-iron")
-		T.same(farm.materials, { ore = 5, wood = 3 })
-		T.eq(farm.coins, 35)
+		T.same(farm.materials, { ore = 9, wood = 5 })
+		T.eq(farm.coins, 700)
 		T.same(farm.gear, { ["sword-iron"] = 1 })
 		T.eq(Gear.craft(farm, "sword-iron"), "sword-iron")
-		T.same(farm.materials, { ore = 1, wood = 1 })
-		T.eq(farm.coins, 10)
+		T.same(farm.materials, { ore = 3, wood = 1 })
+		T.eq(farm.coins, 200)
 		T.eq(farm.gear["sword-iron"], 2)
 		T.eq(select(2, Gear.craft(farm, "sword-iron")), "INSUFFICIENT_MATERIALS")
 		T.eq(farm.gear["sword-iron"], 2, "a refused third craft adds nothing")
 		-- a free recipe costs no coins; a spent material is gone from the table, not left at zero
-		farm.materials = { wood = 3 }
+		farm.materials = { ore = 3, wood = 2 }
 		farm.coins = 0
 		T.eq(Gear.craft(farm, "sword-wood"), "sword-wood")
 		T.same(farm.materials, {})
@@ -339,7 +355,7 @@ return function(T: any)
 
 		local farm = FarmKit.farm(NOW)
 		farm.coins = 0
-		farm.materials = { wood = 3 }
+		farm.materials = { wood = 3, ore = 3 }
 		local a = farm.slimes[1].id
 		local ok, why = VillageRequests.run(farm, { action = "SmithyCraft", recipeId = "sword-iron" }, NOW, request())
 		T.eq(ok, false)
@@ -348,7 +364,7 @@ return function(T: any)
 		ok, why = VillageRequests.run(farm, { action = "SmithyCraft", recipeId = "sword-wood" }, NOW, request(false))
 		T.eq(ok, false)
 		T.eq(why, "FAR")
-		T.same(farm.materials, { wood = 3 })
+		T.same(farm.materials, { wood = 3, ore = 3 })
 		T.same(farm.gear, {})
 		ok = VillageRequests.run(farm, { action = "SmithyCraft", recipeId = "sword-wood" }, NOW, request())
 		T.ok(ok)

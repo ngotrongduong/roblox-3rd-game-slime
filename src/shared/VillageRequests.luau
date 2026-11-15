@@ -181,6 +181,8 @@ function VillageRequests.valid(data: any, hasPlot: boolean): boolean
 			and hasPlot
 	elseif action == "SmithyCraft" then
 		return shortText(data.recipeId)
+	elseif action == "SmithyTemper" then
+		return shortText(data.gearId)
 	elseif action == "GearEquip" then
 		return shortText(data.slimeId) and shortText(data.gearId)
 	elseif action == "GearUnequip" then
@@ -379,6 +381,12 @@ function VillageRequests.run(farm: any, data: any, now: number, env: Env): (bool
 			return false, "FAR"
 		end
 		local gearId, why = Gear.craft(farm, data.recipeId)
+		return gearId ~= nil, why
+	elseif action == "SmithyTemper" then
+		if not env.atSmithy() then
+			return false, "FAR"
+		end
+		local gearId, why = Gear.temper(farm, data.gearId)
 		return gearId ~= nil, why
 	elseif action == "GearEquip" then
 		-- (a slime that is out on a march or in the dungeon keeps the gear it set out with)

@@ -178,7 +178,6 @@ return function(T: any)
 				local sword = Config.Smithy.Recipes["sword-" .. gear.tier]
 				T.eq(recipe.gear, id)
 				T.eq(recipe.coins, sword.coins)
-				T.same(recipe.materials, sword.materials)
 			end
 		end
 		T.eq(count, 30)

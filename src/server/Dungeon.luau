@@ -716,10 +716,11 @@ end
 local function dropsOf(run: Run, foe: Foe): { any }
 	local drops: { any } = {}
 	local id = foe.monster.id
-	-- (a zone: its guard pays the zone's reward, and nothing is luckier than the first dungeon level)
+	-- (a zone: its guard pays the zone's reward and every other monster its def's coins and food, never the dungeon's materials)
 	local zone = run.zone
 	local def = if zone then ZoneFights.dropDef(zone, run.wave, foe.def) else foe.def
-	for _, roll in DungeonRules.rollDrops(def, if zone then D.FirstLevel else run.level, id, run.seed) do
+	local mapId = if zone then nil else run.mapId
+	for _, roll in DungeonRules.rollDrops(def, if zone then D.FirstLevel else run.level, id, run.seed, mapId) do
 		if DungeonRules.addDrop(run.ledger, run.wave, roll) then
 			table.insert(drops, { item = roll.item, amount = roll.amount })
 		end

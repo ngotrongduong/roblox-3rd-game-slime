@@ -17,7 +17,8 @@ return function(T)
 	T.test("every hand gear has a model of its own, sized", function()
 		local meshes = {}
 		for id, piece in Config.Smithy.Gear do
-			if piece.slot == "hand" then
+			-- (a tempered twin is drawn as its `base` piece)
+			if piece.slot == "hand" and not piece.tempered then
 				local model = W.Models[id]
 				T.ok(model ~= nil, `{id} has no model`)
 				if model then

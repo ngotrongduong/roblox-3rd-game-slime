@@ -203,16 +203,21 @@ local function fillDrops(host: Frame, drops: { [string]: number })
 	end
 end
 
--- What a run of this map can drop, as a range for each item (from the drop lines of its monsters).
-local function dropRanges(map: any): { [string]: string }
+-- What a run can drop, as a range for each item: a dungeon's from DungeonRules.dropTable (its map at `level`), a zone's
+-- (`mapId` nil) from the drop lines of its monsters.
+local function dropRanges(map: any, mapId: string?, level: number): { [string]: string }
 	local found: { [string]: { number } } = {}
-	for _, def in map.monsters do
-		for _, line in def.drops do
-			local seen = found[line.item]
-			if seen then
-				seen[1], seen[2] = math.min(seen[1], line.min), math.max(seen[2], line.max)
-			else
-				found[line.item] = { line.min, line.max }
+	if mapId then
+		found = DungeonRules.dropTable(mapId, level)
+	else
+		for _, def in map.monsters do
+			for _, line in def.drops do
+				local seen = found[line.item]
+				if seen then
+					seen[1], seen[2] = math.min(seen[1], line.min), math.max(seen[2], line.max)
+				else
+					found[line.item] = { line.min, line.max }
+				end
 			end
 		end
 	end
@@ -351,7 +356,7 @@ local function openGate(point: Vector3, zone: string?)
 		SortOrder = Enum.SortOrder.LayoutOrder,
 	}, drops)
 	local function showMap(mapId: string)
-		shownMap = mapId
+		shownMap = mapId .. ":" .. level
 		local map: any = (D.Maps :: any)[mapId]
 		if zone then
 			local _, place = ZoneFights.zone(zone)
@@ -360,7 +365,7 @@ local function openGate(point: Vector3, zone: string?)
 		local own = if zone then 0 else numberAttribute("DungeonMapBest_" .. mapId, 0)
 		title.Text = if own > 0 then map.name .. "   Best " .. own else map.name
 		UiKit.clear(drops)
-		local ranges = dropRanges(map)
+		local ranges = dropRanges(map, if zone then nil else mapId, level)
 		for order, item in D.DropOrder do
 			if ranges[item] then
 				local entry: any = (D.Materials :: any)[item]
@@ -584,7 +589,7 @@ local function openGate(point: Vector3, zone: string?)
 		top = DungeonRules.maxOpen(numberAttribute("DungeonBest", 0))
 		level = math.clamp(level, D.FirstLevel, top)
 		local mapId = if zone then (W.Zones :: any)[zone].map else pickedMap
-		if mapId ~= shownMap then
+		if mapId .. ":" .. level ~= shownMap then
 			showMap(mapId)
 		end
 		levelLabel.Text = "Lv " .. (if zone then ZoneFights.level(zone) else level)

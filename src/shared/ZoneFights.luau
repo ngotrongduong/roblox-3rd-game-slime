@@ -79,22 +79,19 @@ function ZoneFights.plan(id: string, wave: number, seed: number): { Monster }
 end
 
 -- What the zone's guard pays: Config.World.Reward of the zone's kind, the coins raised by the zone's level as a pack
--- monster's are (WorldPacks.killReward) and "trophy" turned into the region's own (dropped where the region has none).
+-- monster's are (WorldPacks.killReward). No trophy: those are the Dungeon's own.
 function ZoneFights.reward(id: string): { any }
 	local _, place = ZoneFights.zone(id)
 	local grow = 1 + ZoneFights.level(id) * Config.Economy.SellLevelStep
 	local out: { any } = {}
 	for _, line in (W.Reward :: any)[place.kind] do
-		local item = if line.item == "trophy" then (W.Trophy :: any)[place.region] else line.item
-		if item then
-			local scale = if item == "coins" then grow else 1
-			table.insert(out, {
-				item = item,
-				chance = line.chance,
-				min = math.floor(line.min * scale + 0.5),
-				max = math.floor(line.max * scale + 0.5),
-			})
-		end
+		local scale = if line.item == "coins" then grow else 1
+		table.insert(out, {
+			item = line.item,
+			chance = line.chance,
+			min = math.floor(line.min * scale + 0.5),
+			max = math.floor(line.max * scale + 0.5),
+		})
 	end
 	return out
 end

@@ -213,15 +213,15 @@ return function(T: any)
 		)
 	end)
 
-	T.test("the boss always pays 2 Bramble Horns; no monster drops cloth or common_part", function()
+	T.test("the boss always pays 1 Bramble Horn; no monster drops cloth or common_part", function()
 		for n = 1, 200 do
 			local horns = 0
-			for _, drop in Dungeon.rollDrops(def("green_boar"), 1, "m10-" .. n, n) do
+			for _, drop in Dungeon.rollDrops(def("green_boar"), 1, "m10-" .. n, n, "meadow") do
 				if drop.item == "boar_tusk" then
 					horns += drop.amount
 				end
 			end
-			T.eq(horns, 2)
+			T.eq(horns, 1)
 		end
 		for _, each in everyDef() do
 			for _, line in each.drops do
@@ -235,50 +235,6 @@ return function(T: any)
 		T.eq(D.Materials.boar_tusk.short, "Horn")
 		T.eq(D.Materials.rare_part.name, "Core Fragment")
 		T.eq(D.Materials.rare_part.short, "Fragment")
-	end)
-
-	T.test("luck raises a chance below 1 but never past 1, and leaves a sure line alone", function()
-		T.near(Dungeon.luck(1), 1, 1e-9)
-		T.near(Dungeon.luck(21), 2, 1e-9)
-		T.near(Dungeon.chance({ chance = 0.25 }, 1), 0.25, 1e-9)
-		T.near(Dungeon.chance({ chance = 0.25 }, 21), 0.5, 1e-9)
-		T.eq(Dungeon.chance({ chance = 0.5 }, 41), 1)
-		T.eq(Dungeon.chance({ chance = 0.9 }, 1000), 1)
-		T.eq(Dungeon.chance({ chance = 1 }, 1000), 1)
-		local function essence(level: number): number
-			local count = 0
-			for n = 1, 6000 do
-				for _, drop in Dungeon.rollDrops(def("green_boar"), level, "m10-" .. n, 5) do
-					if drop.item == "boss_essence" then
-						count += 1
-					end
-				end
-			end
-			return count
-		end
-		local low, high = essence(1), essence(21)
-		T.ok(high > low * 1.5, "level 21 has twice the luck: " .. low .. " -> " .. high)
-		-- and a Twigling pays wood more often
-		local function wood(level: number): number
-			local count = 0
-			for n = 1, 4000 do
-				for _, drop in Dungeon.rollDrops(def("green_sprout"), level, "m1-" .. n, 5) do
-					if drop.item == "wood" then
-						count += 1
-					end
-				end
-			end
-			return count
-		end
-		T.ok(wood(21) > wood(1) * 1.5, "luck makes a plain drop likelier")
-		-- a line that is sure keeps paying at any level
-		for n = 1, 100 do
-			local got = {}
-			for _, drop in Dungeon.rollDrops(def("green_boar"), 200, "m10-" .. n, n) do
-				got[drop.item] = true
-			end
-			T.ok(got.coins and got.ore and got.rare_part and got.monster_core and got.boar_tusk, "sure lines pay")
-		end
 	end)
 
 	T.test("a wave pays once when it clears; a second commit pays nothing", function()
@@ -641,12 +597,12 @@ return function(T: any)
 			T.eq(bear.kind, "bearslam")
 			for n = 1, 100 do
 				local spores = 0
-				for _, drop in Dungeon.rollDrops(def("dark_bear"), 1, "m10-" .. n, n) do
+				for _, drop in Dungeon.rollDrops(def("dark_bear"), 1, "m10-" .. n, n, "mushroom") do
 					if drop.item == "glow_spore" then
 						spores += drop.amount
 					end
 				end
-				T.eq(spores, 2, "the Grove's boss always pays 2 Glow Spores")
+				T.eq(spores, 1, "the Grove's boss always pays 1 Glow Spore")
 			end
 			T.eq(D.Materials.glow_spore.name, "Glow Spore")
 		end
@@ -700,12 +656,12 @@ return function(T: any)
 		T.eq(golem.kind, "eruption")
 		for n = 1, 100 do
 			local cores = 0
-			for _, drop in Dungeon.rollDrops(def("lava_golem"), 1, "m10-" .. n, n) do
+			for _, drop in Dungeon.rollDrops(def("lava_golem"), 1, "m10-" .. n, n, "lava") do
 				if drop.item == "ember_core" then
 					cores += drop.amount
 				end
 			end
-			T.eq(cores, 2, "the boss always pays 2 Ember Cores")
+			T.eq(cores, 1, "the boss always pays 1 Ember Core")
 		end
 		T.eq(D.Materials.ember_core.name, "Ember Core")
 		-- every monster of the map is a step stronger than its role in the Grove
@@ -789,12 +745,12 @@ return function(T: any)
 			T.eq(yeti.kind, "blizzard")
 			for n = 1, 100 do
 				local fangs = 0
-				for _, drop in Dungeon.rollDrops(def("ice_yeti"), 1, "m10-" .. n, n) do
+				for _, drop in Dungeon.rollDrops(def("ice_yeti"), 1, "m10-" .. n, n, "ice") do
 					if drop.item == "frost_fang" then
 						fangs += drop.amount
 					end
 				end
-				T.eq(fangs, 2, "the boss always pays 2 Frost Fangs")
+				T.eq(fangs, 1, "the boss always pays 1 Frost Fang")
 			end
 			T.eq(D.Materials.frost_fang.name, "Frost Fang")
 			T.ok(

@@ -89,13 +89,13 @@ return function(T: any)
 			T.ok((Config.Dungeon.Materials :: any)[line.item], line.item .. " is a material")
 		end
 		T.eq(ZoneFights.dropDef("m1", 1, boar), boar)
-		-- a boss zone pays its region's trophy; the Heart's region has none
-		local trophy = false
-		for _, line in ZoneFights.reward("b2") do
-			trophy = trophy or line.item == "ember_core"
-			T.ok(line.item ~= "trophy")
+		-- no zone pays a trophy: those are the Dungeon's own
+		for id in W.Zones :: { [string]: any } do
+			for _, line in ZoneFights.reward(id) do
+				T.ok((Config.Dungeon.Materials :: any)[line.item] ~= nil, line.item .. " is a material")
+				T.ok(line.item ~= "ember_core" and line.item ~= "frost_fang" and line.item ~= "glow_spore")
+			end
 		end
-		T.ok(trophy, "the Molten Throne pays Ember Cores")
 		for _, line in ZoneFights.reward("heart") do
 			T.ok((Config.Dungeon.Materials :: any)[line.item], line.item .. " is a material")
 		end
