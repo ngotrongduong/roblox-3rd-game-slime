@@ -45,6 +45,7 @@ local reasons: { [string]: string } = {
 	RATE_LIMIT = "One moment.",
 	NOT_READY = "Village is loading.",
 	INVALID_ARGUMENT = "Not available.",
+	CANNOT_TEMPER = "This piece cannot be tempered.",
 }
 -- The four stats in the order tags show them, with their short names.
 local statOrder = { { "attack", "ATK" }, { "defence", "DEF" }, { "speed", "SPD" }, { "hp", "HP" } }
@@ -126,7 +127,70 @@ function UiSmithy.pieceTile(parent: Instance?, gearId: string?, size: number, pr
 			Size = UDim2.fromScale(1, 1),
 		}, tile)
 	end
+	if def and def.tempered then
+		UiKit.icon(tile, "tempered", math.max(14, math.floor(size * G.BadgeShare)), {
+			Name = "Tempered",
+			AnchorPoint = Vector2.new(1, 0),
+			Position = UDim2.new(1, 2, 0, -2),
+			ZIndex = 3,
+		})
+	end
 	return tile
+end
+
+-- Config.Smithy.GearOrder with each piece's tempered twin right after it: the order the lists of pieces held show them in.
+local listOrder: { string }? = nil
+function UiSmithy.order(): { string }
+	local found = listOrder
+	if not found then
+		local made: { string } = {}
+		for _, id in S.GearOrder do
+			table.insert(made, id)
+			if Gear.get(id .. "-t") then
+				table.insert(made, id .. "-t")
+			end
+		end
+		listOrder, found = made, made
+	end
+	return found :: { string }
+end
+
+-- The lowest dungeon level at which some monster drops `item` with at least Config.Ui.Gear.SourceChance (nil: none does).
+local function dungeonFrom(item: string): number?
+	local best: number? = nil
+	for _, line in D.Loot.Lines :: { any } do
+		if line.item == item then
+			for _, step in line.chance do
+				if step.chance >= G.SourceChance and (best == nil or step.from < best) then
+					best = step.from
+				end
+			end
+		end
+	end
+	return best
+end
+
+-- Where a material comes from, one short line (shown when a cost or a Bag tile is tapped).
+function UiSmithy.sourceText(item: string): string
+	local entry: any = (D.Materials :: any)[item]
+	local name: string = if entry then entry.name else item
+	for _, map in D.Maps :: { [string]: any } do
+		if map.basic == item then
+			return name .. ": " .. map.name .. " dungeon and monsters on the map"
+		elseif map.trophy == item then
+			return name .. ": " .. map.name .. " dungeon bosses"
+		end
+	end
+	local from = dungeonFrom(item)
+	if not from then
+		return name
+	end
+	local packs: number? = if item == "rare_part"
+		then Config.World.Packs.RarePartFrom
+		elseif item == "monster_core" then Config.World.Packs.MonsterCoreFrom
+		else nil
+	local text = name .. ": Dungeon Lv " .. tostring(from) .. "+"
+	return if packs then text .. ", monsters on the map Lv " .. tostring(packs) .. "+" else text .. " bosses"
 end
 
 -- A row of small tags "+2 ATK" for the stats given (all four are looked at, zero ones are left out). `colour` names the
@@ -183,15 +247,23 @@ local function setButtonText(button: TextButton, text: string, size: number)
 	end
 end
 
--- One cost on a card: the material's picture and "have/need" (red when short).
+-- One cost on a card: the material's picture and "have/need" (red when short); a tap on a material says where it drops.
 local function costChip(row: Frame, item: string, order: number): TextLabel
-	local chip = UiKit.make("Frame", {
+	local chip = UiKit.make("TextButton", {
 		Name = item,
+		Text = "",
+		AutoButtonColor = false,
 		BackgroundTransparency = 1,
 		Size = UDim2.fromOffset(0, G.CostIcon),
 		AutomaticSize = Enum.AutomaticSize.X,
 		LayoutOrder = order,
-	}, row)
+	}, row) :: TextButton
+	if item ~= "coins" then
+		UiKit.feel(chip)
+		chip.Activated:Connect(function()
+			UiKit.toast(UiSmithy.sourceText(item))
+		end)
+	end
 	UiKit.make("UIListLayout", {
 		FillDirection = Enum.FillDirection.Horizontal,
 		VerticalAlignment = Enum.VerticalAlignment.Center,
@@ -216,10 +288,11 @@ end
 local function pieceCard(list: Instance, gearId: string, order: number, refresh: () -> ()): (View) -> ()
 	local def: any = Gear.get(gearId)
 	local recipe: any = (S.Recipes :: any)[gearId]
+	local temperable = Gear.temperCost({ materials = {} } :: any, gearId) ~= nil
 	local _, body = UiKit.card(list, {
 		Name = gearId,
 		LayoutOrder = order,
-		Size = UDim2.new(1, -8, 0, G.CardHeight),
+		Size = UDim2.new(1, -8, 0, G.CardHeight + (if temperable then G.TemperRow else 0)),
 	})
 	-- the rarity colour runs down the card's edge
 	local stripe = UiKit.make("Frame", {
@@ -299,7 +372,105 @@ local function pieceCard(list: Instance, gearId: string, order: number, refresh:
 		end,
 	})
 
+	-- Tempering (Uncommon and up): how many tempered ones the bag holds, what tempering one more takes, and Temper.
+	local temperView: ((View) -> ())? = nil
+	if temperable then
+		local twin = gearId .. "-t"
+		local row = UiKit.make("Frame", {
+			Name = "Temper",
+			BackgroundTransparency = 1,
+			Position = UDim2.fromOffset(0, G.Tile + G.CostIcon + U.Touch + 22),
+			Size = UDim2.new(1, 0, 0, U.Touch),
+		}, inner)
+		UiKit.icon(row, "tempered", G.CostIcon, {
+			AnchorPoint = Vector2.new(0, 0.5),
+			Position = UDim2.fromScale(0, 0.5),
+		})
+		local twins = UiKit.label(row, "", U.TextSmall, "BrownSoft", {
+			Position = UDim2.fromOffset(G.CostIcon + 2, 0),
+			Size = UDim2.new(0, 40, 1, 0),
+			TextYAlignment = Enum.TextYAlignment.Center,
+		})
+		local costLeft = G.CostIcon + 46
+		local costRow = UiKit.make("Frame", {
+			Name = "Costs",
+			BackgroundTransparency = 1,
+			Position = UDim2.fromOffset(costLeft, 0),
+			Size = UDim2.new(1, -costLeft - G.TemperWidth - 8, 1, 0),
+		}, row)
+		UiKit.make("UIListLayout", {
+			FillDirection = Enum.FillDirection.Horizontal,
+			VerticalAlignment = Enum.VerticalAlignment.Center,
+			Padding = UDim.new(0, 8),
+			SortOrder = Enum.SortOrder.LayoutOrder,
+		}, costRow)
+		local tempering = false
+		local temper = UiKit.button(row, {
+			Name = "TemperButton",
+			Text = "Temper",
+			Style = "good",
+			TextSize = U.TextSmall,
+			AnchorPoint = Vector2.new(1, 0),
+			Position = UDim2.fromScale(1, 0),
+			Size = UDim2.fromOffset(G.TemperWidth, U.Touch),
+			OnClick = function()
+				if tempering then
+					return
+				end
+				tempering = true
+				task.spawn(function()
+					local ok, why = UiSmithy.ask({ action = "SmithyTemper", gearId = gearId })
+					tempering = false
+					UiKit.toast(if ok then "Tempered " .. def.name .. "!" else UiSmithy.reasonText(why))
+					refresh()
+				end)
+			end,
+		})
+		local shown = ""
+		local temperValues: { [string]: TextLabel } = {}
+		temperView = function(view: View)
+			twins.Text = "x" .. tostring(view.bag[twin] or 0)
+			-- (the same rule the server runs; an Uncommon piece takes whichever trophy of its pair the bag has more of, so the
+			-- chips are made again when the items asked change)
+			local cost = Gear.temperCost({ materials = view.materials } :: any, gearId) or {}
+			local items: { string } = {}
+			for _, item in D.DropOrder do
+				if cost[item] then
+					table.insert(items, item)
+				end
+			end
+			local key = table.concat(items, ",")
+			if key ~= shown then
+				shown = key
+				UiKit.clear(costRow)
+				temperValues = {}
+				for index, item in items do
+					temperValues[item] = costChip(costRow, item, index)
+				end
+			end
+			local short = false
+			for item, label in temperValues do
+				local have, need = view.materials[item] or 0, cost[item]
+				label.Text = tostring(math.min(have, 999)) .. "/" .. tostring(need)
+				label.TextColor3 = UiKit.colour(if have < need then "Red" else "Brown")
+				short = short or have < need
+			end
+			local plain = view.bag[gearId] or 0
+			local ok = plain > 0 and not short
+			UiKit.setStyle(temper, if ok then "good" else "secondary")
+			setButtonText(
+				temper,
+				if ok then "Temper" elseif plain == 0 then "None in bag" else "Need more",
+				U.TextSmall
+			)
+			UiKit.setEnabled(temper, ok and not tempering)
+		end
+	end
+
 	return function(view: View)
+		if temperView then
+			temperView(view)
+		end
 		local held = view.bag[gearId] or 0
 		count.Text = if held > 0 then "x" .. tostring(held) else ""
 		for item, label in values do

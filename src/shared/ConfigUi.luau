@@ -274,6 +274,13 @@ return {
 		SlotCell = 92,
 		PickerRow = 48,
 		PickerTile = 36,
+		-- (a card whose piece can be tempered is TemperRow taller: its tempered count, the cost and a TemperWidth button; a
+		-- tempered piece's picture wears the badge Icons.tempered in its top right corner, BadgeShare of the picture wide)
+		TemperRow = 54,
+		TemperWidth = 120,
+		BadgeShare = 0.4,
+		-- (a material's "where it drops" line names the first dungeon level a monster drops it at this chance or more)
+		SourceChance = 0.1,
 	},
 	-- The slime's page in the book (UiSlimeSheet, UiGearSlots), an RPG character sheet after docs/ui/slime-sheet/concept.webp.
 	-- It is drawn from the UI kit (Config.Ui.Kit) on a fixed stage of DesignWidth x DesignHeight points laid out as the concept,

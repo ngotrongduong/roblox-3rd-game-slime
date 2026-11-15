@@ -287,9 +287,24 @@ local function showMarker(group: Group, on: boolean)
 	gui.Parent = anchor
 	local scale = Instance.new("UIScale")
 	scale.Parent = gui
+	-- (the picture of the material the pack pays when won, left of its level)
+	local material: any = (Config.Dungeon.Materials :: any)[stringAttr(group.folder, "Material", "")]
+	local left = 0
+	if material and type(material.icon) == "number" and material.icon > 0 then
+		local picture = Instance.new("ImageLabel")
+		picture.Name = "Material"
+		picture.BackgroundTransparency = 1
+		picture.Image = "rbxassetid://" .. tostring(material.icon)
+		picture.ScaleType = Enum.ScaleType.Fit
+		picture.Size = UDim2.fromOffset(V.MarkerHeight, V.MarkerHeight)
+		picture.Parent = gui
+		left = V.MarkerHeight + 2
+	end
 	local label = Instance.new("TextLabel")
 	label.BackgroundTransparency = 1
-	label.Size = UDim2.fromScale(1, 1)
+	label.Position = UDim2.fromOffset(left, 0)
+	label.Size = UDim2.new(1, -left, 1, 0)
+	label.TextXAlignment = if left > 0 then Enum.TextXAlignment.Left else Enum.TextXAlignment.Center
 	label.Font = Enum.Font.FredokaOne
 	label.TextScaled = true
 	label.TextStrokeTransparency = 0

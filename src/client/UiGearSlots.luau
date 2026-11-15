@@ -184,7 +184,7 @@ function UiGearSlots.new(stage: Instance, slime: Configuration): Slots
 				end,
 			})
 		end
-		for _, gearId in S.GearOrder do
+		for _, gearId in UiSmithy.order() do
 			local def: any = Gear.get(gearId)
 			local held = bag[gearId] or 0
 			if def and def.slot == slot and held > 0 then
@@ -282,7 +282,7 @@ function UiGearSlots.new(stage: Instance, slime: Configuration): Slots
 		local wornId = if slot then wornIn(worn, slot) else nil
 		local parts: { string } = { slot or "-", wornId or "-" }
 		if slot then
-			for _, gearId in S.GearOrder do
+			for _, gearId in UiSmithy.order() do
 				local def: any = Gear.get(gearId)
 				if def and def.slot == slot and (bag[gearId] or 0) > 0 then
 					table.insert(parts, gearId .. "=" .. tostring(bag[gearId]))

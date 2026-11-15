@@ -211,6 +211,8 @@ local function worldTarget(target: string): Vector3?
 		return Layout.marketPortal().Position
 	elseif kind == "market" then
 		return Layout.marketPoint(Config.Market.Buyer)
+	elseif kind == "smithy" then
+		return Layout.marketPoint(Config.Market.Smithy)
 	elseif kind == "group" then
 		return groupPosition()
 	elseif kind == "pad" then

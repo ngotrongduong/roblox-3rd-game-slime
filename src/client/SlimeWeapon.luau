@@ -168,7 +168,10 @@ end
 
 -- Gives the slime drawn by `model` the weapon of this hand gear id (nil, or any other gear: none); on its back until
 -- SlimeWeapon.fight says otherwise.
-function SlimeWeapon.wear(model: Model, gear: string?)
+function SlimeWeapon.wear(model: Model, worn: string?)
+	-- (a tempered piece looks like its plain one: the same model, the same aura)
+	local twin = if worn then GEAR[worn] else nil
+	local gear: string? = if twin and twin.base then twin.base else worn
 	local family, tier = weaponOf(gear)
 	local current = held[model]
 	if current and current.gear == gear then

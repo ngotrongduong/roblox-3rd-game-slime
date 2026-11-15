@@ -63,7 +63,7 @@ local function keyOf(view: View): string
 	for _, item in D.DropOrder do
 		table.insert(parts, item .. "=" .. tostring(view.materials[item] or 0))
 	end
-	for _, id in S.GearOrder do
+	for _, id in UiSmithy.order() do
 		table.insert(parts, id .. "=" .. tostring(view.bag[id] or 0) .. "/" .. tostring(view.worn[id] or 0))
 	end
 	return table.concat(parts, ",")
@@ -84,7 +84,7 @@ end
 -- The pieces of a slot held (in the bag or worn), weakest tier first.
 local function pieceList(view: View, slot: string): { string }
 	local found: { string } = {}
-	for _, id in S.GearOrder do
+	for _, id in UiSmithy.order() do
 		local def: any = Gear.get(id)
 		if def and def.slot == slot and (view.bag[id] or 0) + (view.worn[id] or 0) > 0 then
 			table.insert(found, id)
@@ -221,7 +221,7 @@ local function drawGrid(host: ScrollingFrame, view: View)
 	if tab == "materials" then
 		local items = materialList(view)
 		if #items == 0 then
-			emptyLine(host, "Nothing yet. Monsters in the Dungeon drop materials.")
+			emptyLine(host, "Nothing yet. Monsters drop materials.")
 			return
 		end
 		local row = wrapRow(host, "Materials", 1)
@@ -310,7 +310,13 @@ local function drawDetail(body: Frame, view: View, id: string)
 			pictureSize,
 			{ AnchorPoint = Vector2.new(0, 0.5), Position = UDim2.fromScale(0, 0.5) }
 		)
-		autoLabel(top, if entry then entry.name else id, U.TextNormal, "Brown", 1)
+		-- (the name, then where it drops)
+		local source = UiSmithy.sourceText(id)
+		local name: string = if entry then entry.name else id
+		autoLabel(top, name, U.TextNormal, "Brown", 1)
+		if #source > #name + 2 then
+			autoLabel(top, string.sub(source, #name + 3), U.TextTiny, "BrownSoft", 2)
+		end
 		local used = 0
 		for _, gearId in S.GearOrder do
 			local need = (S.Recipes :: any)[gearId].materials[id]
@@ -334,7 +340,20 @@ local function drawDetail(body: Frame, view: View, id: string)
 			end
 		end
 		if used == 0 then
-			autoLabel(second, "Not used by any gear yet.", U.TextSmall, "BrownSoft", 1)
+			local tempers = false
+			for _, rule in S.Temper :: { [string]: any } do
+				tempers = tempers or rule.extra[id] ~= nil
+			end
+			for _, map in D.Maps :: { [string]: any } do
+				tempers = tempers or map.trophy == id
+			end
+			autoLabel(
+				second,
+				if tempers then "Used to temper gear." else "Not used by any gear yet.",
+				U.TextSmall,
+				"BrownSoft",
+				1
+			)
 		end
 		return
 	end
