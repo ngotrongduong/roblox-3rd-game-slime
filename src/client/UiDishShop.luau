@@ -66,7 +66,8 @@ function UiDishShop.new(parent: Instance, context: Context): Shop
 	local rows: { [string]: Row } = {}
 	local selling = false
 
-	local function sell(id: string, count: number)
+	-- `from`: the button pressed, where the coins fly from
+	local function sell(id: string, count: number, from: GuiObject)
 		if selling or count < 1 then
 			return
 		end
@@ -76,6 +77,7 @@ function UiDishShop.new(parent: Instance, context: Context): Shop
 			selling = false
 			if ok then
 				UiKit.toast("+" .. UiKit.money(paid or 0))
+				UiKit.coinFly(from, paid or 0)
 			else
 				UiKit.toast(context.reason(why))
 			end
@@ -128,7 +130,8 @@ function UiDishShop.new(parent: Instance, context: Context): Shop
 			AutomaticSize = Enum.AutomaticSize.X,
 		})
 		local row: Row = { root = card, count = count, held = 0 }
-		UiKit.button(card, {
+		local one: TextButton, all: TextButton
+		one = UiKit.button(card, {
 			Name = "SellOne",
 			Text = "1",
 			TextSize = U.TextNormal,
@@ -137,10 +140,10 @@ function UiDishShop.new(parent: Instance, context: Context): Shop
 			AnchorPoint = Vector2.new(1, 0.5),
 			Position = UDim2.new(1, -U.Gap - ALL_WIDTH - BUTTON_GAP, 0.5, 0),
 			OnClick = function()
-				sell(id, 1)
+				sell(id, 1, one)
 			end,
 		})
-		UiKit.button(card, {
+		all = UiKit.button(card, {
 			Name = "SellAll",
 			Text = "All",
 			Style = "good",
@@ -149,7 +152,7 @@ function UiDishShop.new(parent: Instance, context: Context): Shop
 			Position = UDim2.new(1, -U.Gap, 0.5, 0),
 			OnClick = function()
 				-- (the server takes at most what the fridge of the highest level could hold in one go)
-				sell(id, math.min(row.held, FoodRules.fridgeCapacity(Config.Village.MaxLevel)))
+				sell(id, math.min(row.held, FoodRules.fridgeCapacity(Config.Village.MaxLevel)), all)
 			end,
 		})
 		return row

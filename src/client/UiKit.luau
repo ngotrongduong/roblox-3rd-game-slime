@@ -840,6 +840,79 @@ function UiKit.toast(text: string, icon: string?)
 	end)
 end
 
+-- Coins that fly from a sale to the coins chip (UiKit.coinTarget, the HUD's): a few burst out of `from`, then each curves
+-- to the chip, which pops as each one lands. Called after the server has paid; drawing only.
+local flyLayer: ScreenGui? = nil
+local coinTarget: GuiObject? = nil
+
+function UiKit.coinTarget(target: GuiObject)
+	coinTarget = target
+end
+
+-- A GuiObject's middle in whole-screen pixels: its ScreenGui's place on the screen (insets, the top bar) plus its own.
+local function screenMiddle(inst: GuiObject): Vector2
+	local layer = inst:FindFirstAncestorWhichIsA("ScreenGui") :: ScreenGui?
+	local origin = if layer then layer.AbsolutePosition else Vector2.zero
+	return origin + inst.AbsolutePosition + inst.AbsoluteSize / 2
+end
+
+function UiKit.coinFly(from: GuiObject, amount: number)
+	local target = coinTarget
+	if not target or not target.Parent or amount <= 0 then
+		return
+	end
+	if not flyLayer then
+		local host = UiKit.root():FindFirstAncestorOfClass("ScreenGui")
+		flyLayer = make("ScreenGui", {
+			Name = "GooCoinFly",
+			ResetOnSpawn = false,
+			IgnoreGuiInset = true,
+			DisplayOrder = (if host then host.DisplayOrder else 0) + U.CoinFlyLayer,
+		}, if host then host.Parent else nil)
+	end
+	local layer = flyLayer :: ScreenGui
+	local scale = if scaler then scaler.Scale else 1
+	local start = screenMiddle(from) - layer.AbsolutePosition
+	local count = math.clamp(math.floor(U.CoinFlyMin + math.log10(amount + 1)), U.CoinFlyMin, U.CoinFlyMax)
+	local pop = (target:FindFirstChild("CoinPop") or make("UIScale", { Name = "CoinPop" }, target)) :: UIScale
+	for index = 1, count do
+		local coin = UiKit.icon(layer, "coins", U.IconNormal * scale, {
+			AnchorPoint = Vector2.new(0.5, 0.5),
+			Position = UDim2.fromOffset(start.X, start.Y),
+		})
+		local angle = math.random() * math.pi * 2
+		local reach = U.CoinBurst * scale * (0.5 + math.random() * 0.5)
+		local burst = start + Vector2.new(math.cos(angle), math.sin(angle)) * reach
+		UiKit.tween(coin, 0.22, { Position = UDim2.fromOffset(burst.X, burst.Y) })
+		task.delay(0.22 + index * U.CoinFlyStagger, function()
+			if not target.Parent then
+				coin:Destroy()
+				return
+			end
+			local goal = screenMiddle(target) - layer.AbsolutePosition
+			-- (a curve: the middle of the way lifted by one burst's reach)
+			local bend = (burst + goal) / 2 - Vector2.new(0, U.CoinBurst * scale)
+			local along = Instance.new("NumberValue")
+			along.Changed:Connect(function(k: number)
+				local point = burst:Lerp(bend, k):Lerp(bend:Lerp(goal, k), k)
+				coin.Position = UDim2.fromOffset(point.X, point.Y)
+			end)
+			local flight = TweenService:Create(
+				along,
+				TweenInfo.new(U.CoinFlySeconds, Enum.EasingStyle.Quad, Enum.EasingDirection.In),
+				{ Value = 1 }
+			)
+			flight.Completed:Connect(function()
+				coin:Destroy()
+				along:Destroy()
+				pop.Scale = U.CoinPop
+				UiKit.tween(pop, 0.2, { Scale = 1 }, Enum.EasingStyle.Back)
+			end)
+			flight:Play()
+		end)
+	end
+end
+
 -- A short list of choices hanging from a button's lower right edge (the owner, 2026-11-14): a tap on a choice picks it and
 -- closes the list, a tap anywhere else closes it. `choices` is { id, text }; `current` is drawn as the chosen one. It scrolls
 -- when the screen is shorter than the list.

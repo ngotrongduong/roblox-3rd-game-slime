@@ -4,6 +4,7 @@
 -- Reads the attributes the server publishes; decides nothing.
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
+local Colours = require(ReplicatedStorage.Shared.Colours)
 local Config = require(ReplicatedStorage.Shared.Config)
 local FaceArt = require(ReplicatedStorage.Shared.FaceArt)
 local SlimeLook = require(script.Parent.SlimeLook)
@@ -209,6 +210,32 @@ function UiSlimes.prewarm(own: Instance?)
 	end)
 end
 
+-- The picture behind a portrait (the owner, 2026-11-15: a background behind every slime's avatar): a Secret, Material or
+-- Dual slime its kind's own, any other the plain glow tinted softly with its colour.
+local function backdrop(parent: Instance, slime: Configuration)
+	local kind = "normal"
+	for _, pair in { { "SecretId", "secret" }, { "Material", "material" }, { "DualId", "dual" } } do
+		local value = slime:GetAttribute(pair[1])
+		if type(value) == "string" and value ~= "" then
+			kind = pair[2]
+			break
+		end
+	end
+	local colour = Colours.get(tostring(slime:GetAttribute("Colour")))
+	local white = Color3.new(1, 1, 1)
+	local image = UiKit.make("ImageLabel", {
+		Name = "Backdrop",
+		BackgroundTransparency = 1,
+		Image = "rbxassetid://" .. tostring((U.Backdrops :: any)[kind]),
+		ImageColor3 = if kind == "normal" and colour
+			then white:Lerp(Color3.fromHex(colour.swatch), U.BackdropTint)
+			else white,
+		Size = UDim2.fromScale(1, 1),
+		ZIndex = 0,
+	}, parent)
+	UiKit.make("UICorner", { CornerRadius = UDim.new(0, U.Gap) }, image)
+end
+
 -- `variant`: a viewport sits in one place at a time, so a slime shown twice at once (a team slot and its list tile) asks
 -- for a second one by another name ("ui" is the list's). `bare`: no frame of its own, for a slime inside a card that
 -- already has one (the owner, 2026-11-04: no frame inside a frame).
@@ -229,6 +256,7 @@ function UiSlimes.portrait(
 	else
 		box, body = UiKit.skin(parent, "Wood", "Portrait", props)
 	end
+	backdrop(body, slime)
 	box.Size = UDim2.fromOffset(size, size)
 	local built = false
 	local function build()

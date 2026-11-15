@@ -31,6 +31,11 @@ local vipCrown: GuiObject? = nil
 local coinsFull: boolean? = nil
 -- Whether a Slime Dungeon run is on (the village's edge buttons stay put away).
 local inArena = false
+-- The coins number counts up to a higher amount in Config.Ui.CoinCountSeconds (a sale's coins arriving) and drops at once.
+local coinsGoal: number? = nil
+local coinsCap: any = nil
+local coinsCounter: NumberValue? = nil
+local coinsCount: Tween? = nil
 
 -- 2,000 up to 99,999 in full with commas, then 120K and 1.2M, so "amount/cap" stays short in a phone's strip.
 local function short(amount: number): string
@@ -48,6 +53,37 @@ local function paint(chip: UiKit.Chip, full: boolean)
 	if value and value:IsA("TextLabel") then
 		value.TextColor3 = UiKit.colour(if full then "Red" else "Brown")
 	end
+end
+
+local function drawCoins(amount: number)
+	local cap = coinsCap
+	chips.coins.set(if type(cap) == "number" then short(amount) .. "/" .. short(cap) else short(amount))
+end
+
+local function showCoins(amount: number, cap: any, instant: boolean)
+	coinsCap = cap
+	local counter = coinsCounter
+	if not counter then
+		local made = Instance.new("NumberValue")
+		made.Changed:Connect(function(value: number)
+			drawCoins(math.floor(value + 0.5))
+		end)
+		coinsCounter, counter = made, made
+	end
+	assert(counter, "coin counter made above")
+	if coinsCount then
+		coinsCount:Cancel()
+		coinsCount = nil
+	end
+	if instant or coinsGoal == nil or amount < counter.Value then
+		counter.Value = amount
+		drawCoins(amount)
+	elseif amount ~= coinsGoal then
+		coinsCount = UiKit.tween(counter, U.CoinCountSeconds, { Value = amount })
+	else
+		drawCoins(math.floor(counter.Value + 0.5))
+	end
+	coinsGoal = amount
 end
 
 local function item(name: string): Instance?
@@ -102,6 +138,7 @@ function UiHud.start(
 		chips[key] = UiKit.chip(bar, icon, "0", order, model)
 	end
 	add("coins", "coins")
+	UiKit.coinTarget(chips.coins.root)
 	add("food", "food", item(FOOD_ICON))
 	-- the whole food chip is a button: a transparent press area over it
 	UiKit.feel(
@@ -290,7 +327,8 @@ function UiHud.setArena(on: boolean)
 end
 
 function UiHud.refresh(own: Folder?)
-	if own ~= lastOwn then
+	local fresh = own ~= lastOwn
+	if fresh then
 		-- a new village: the first look at its vault is silent
 		coinsFull = nil
 	end
@@ -304,7 +342,7 @@ function UiHud.refresh(own: Folder?)
 	-- The coins over what the vault holds ("100/2,000"; sales and gifts may go above it): the number turns red at the cap,
 	-- and one toast the moment it fills.
 	local cap = own:GetAttribute("CoinCap")
-	chips.coins.set(if type(cap) == "number" then short(amount) .. "/" .. short(cap) else short(amount))
+	showCoins(amount, cap, fresh)
 	local full = type(cap) == "number" and amount >= cap
 	paint(chips.coins, full)
 	if type(cap) == "number" then

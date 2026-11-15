@@ -5,6 +5,7 @@
 return {
 	Icons = {
 		coins = 127025864156501, -- mat-coins.png
+		tempered = 126061717519300, -- mark_tempered.png (ChatGPT 2026-11-15): the corner badge of a tempered piece
 		food = 128780371839699, -- mat-food.png
 		fullness = 128780371839699, -- mat-food.png (the sack stands for being fed)
 		slimes = 120929268236217, -- slime.base.navy.png (the original's slime-count icon)
@@ -435,6 +436,22 @@ return {
 	FeelHover = 1.02,
 	FeelPress = 0.97,
 	TapGap = 0.15,
+	-- Coins flying from a sale to the coins chip (UiKit.coinFly): CoinFlyMin to CoinFlyMax coins (more for a bigger sale)
+	-- burst up to CoinBurst points out, then one every CoinFlyStagger seconds curves to the chip in CoinFlySeconds; the chip
+	-- pops to CoinPop as each lands and its number counts up to the new amount in CoinCountSeconds. The coins fly in a
+	-- ScreenGui CoinFlyLayer above the main one.
+	CoinFlyMin = 6,
+	CoinFlyMax = 12,
+	CoinBurst = 60,
+	CoinFlyStagger = 0.05,
+	CoinFlySeconds = 0.5,
+	CoinPop = 1.18,
+	CoinCountSeconds = 0.8,
+	CoinFlyLayer = 5,
+	-- Behind every slime portrait (UiSlimes.portrait; ChatGPT 2026-11-15, art/icons/backdrop_*.png): its kind's picture; a
+	-- plain slime's glow is tinted BackdropTint of the way towards its colour.
+	Backdrops = { normal = 103303036977086, dual = 91772423795167, secret = 120497343021109, material = 87700129481895 },
+	BackdropTint = 0.35,
 	BackdropTransparency = 0.55,
 	DisabledTransparency = 0.5,
 	-- The map (UiMap). Picture: the pixels of the map picture's side. The minimap is MiniSize square (MiniTall on a screen at

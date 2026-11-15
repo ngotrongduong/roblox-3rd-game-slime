@@ -504,6 +504,7 @@ local function openShop(point: Vector3)
 				if ok then
 					selected = {}
 					UiKit.toast("+" .. UiKit.money(paid or amount), "coins")
+					UiKit.coinFly(sell, paid or amount)
 				else
 					UiKit.toast(reasonText(why))
 				end
