@@ -3127,6 +3127,8 @@ Config.SlimeBuffFx = {
 	LowQualityMax = 2,
 	LightQualityMax = 5,
 	LightShare = 0.5,
+	-- a buff to all four stats (the Lasting dishes) wears the four stats' effects together, each at this share of its rate
+	AllShare = 0.3,
 	-- a buff that shows up within this long of the slime appearing is its first state, not a dish eaten: no burst
 	AnnounceAfterSeconds = 2,
 	-- a burst that could not be drawn (no body yet) is forgotten after this long
@@ -3154,6 +3156,8 @@ Config.SlimeBuffFx = {
 		uncommon = { rate = 1.4, size = 1.1, alpha = 0.2, burst = 1.4 },
 		rare = { rate = 1.9, size = 1.2, alpha = 0.1, burst = 1.9 },
 		epic = { rate = 2.6, size = 1.35, alpha = 0, burst = 2.6 },
+		-- (the saffron dishes, 2026-11-15)
+		legendary = { rate = 3.2, size = 1.5, alpha = 0, burst = 3.4 },
 	},
 	-- Every particle is the owner's icon of its stat (Config.Ui.Icons), untinted, each with its own motion: soft sparks,
 	-- flames and smoke all vanished on the bright village ground in a play test. Sizes are shares of the body's height.

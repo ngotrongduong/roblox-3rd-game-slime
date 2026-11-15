@@ -132,6 +132,27 @@ function UiKit.clear(parent: Instance)
 	end
 end
 
+-- The picture of a buff's stat: the stat's own icon, or for "all" (a buff to every stat) the four stat icons two by two.
+function UiKit.statIcon(parent: Instance?, stat: string, size: number, props: Props?): GuiObject
+	if stat ~= "all" then
+		return UiKit.icon(parent, stat, size, props)
+	end
+	local grid =
+		make("Frame", { Name = "AllStats", BackgroundTransparency = 1, Size = UDim2.fromOffset(size, size) }, parent)
+	if props then
+		for key, value in props do
+			(grid :: any)[key] = value
+		end
+	end
+	local half = math.floor(size / 2)
+	for index, key in { "attack", "defence", "speed", "hp" } do
+		UiKit.icon(grid, key, half, {
+			Position = UDim2.fromOffset(((index - 1) % 2) * half, math.floor((index - 1) / 2) * half),
+		})
+	end
+	return grid
+end
+
 -- A picture the screen needs. id 0 = not drawn yet: logged once, a short stand-in shows.
 function UiKit.icon(parent: Instance?, name: string, size: number, props: Props?): GuiObject
 	local id = (U.Icons :: any)[name]

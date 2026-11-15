@@ -37,8 +37,7 @@ type Row = {
 local UiRecipes = {}
 
 local function neededLevel(id: string): number
-	local dish = (Config.Food.Dishes :: any)[id]
-	return (Config.Food.DishRarities :: any)[dish.rarity].kitchenLevel
+	return FoodRules.dishValue((Config.Food.Dishes :: any)[id], "kitchenLevel")
 end
 
 -- The chosen dish over its ingredients; tapping it runs `onTap` (opens the list).

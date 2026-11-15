@@ -75,6 +75,11 @@ local reasons: { [string]: string } = {
 	UNKNOWN_DISH = "Not available.",
 	INVALID_COUNT = "Not available.",
 	INVALID_ARGUMENT = "Not available.",
+	-- the Grocer's spices, and a spice dish at the counter
+	UNKNOWN_SPICE = "Not available.",
+	NO_COINS = "Not enough coins.",
+	FULL = "You cannot carry more.",
+	NOT_SELLABLE = "Spice dishes cannot be sold.",
 	-- the Slime Dungeon
 	IN_RUN = "Already in the Dungeon.",
 	NO_PLOT = "Village is loading.",
@@ -393,18 +398,24 @@ local function openShop(point: Vector3)
 		Padding = UDim.new(0, U.Gap),
 		SortOrder = Enum.SortOrder.LayoutOrder,
 	}, head)
-	-- two tabs at the left, as in the book: the slimes and the dishes (pictures only); then the player's coins
-	UiKit.icon(head, "coins", U.Touch - 12, { LayoutOrder = 3 })
+	-- three tabs at the left, as in the book: the slimes, the dishes and the Grocer's spices (pictures only; the spices' is
+	-- the saffron's model); then the player's coins
+	UiKit.icon(head, "coins", U.Touch - 12, { LayoutOrder = 10 })
 	local coins = UiKit.label(head, "", U.TextNormal, "Brown", {
-		LayoutOrder = 4,
+		LayoutOrder = 11,
 		Size = UDim2.fromOffset(0, U.Touch),
 		AutomaticSize = Enum.AutomaticSize.X,
 	})
 	local tab = "slimes"
 	local setTab: (name: string) -> () = function(_) end
 	local tabButtons: { [string]: TextButton } = {}
-	for index, item in { { id = "slimes", icon = "slimes" }, { id = "dishes", icon = "food" } } do
-		tabButtons[item.id] = UiKit.button(head, {
+	local tabItems: { { id: string, icon: string?, model: string? } } = {
+		{ id = "slimes", icon = "slimes" },
+		{ id = "dishes", icon = "food" },
+		{ id = "grocer", model = "saffron" },
+	}
+	for index, item in tabItems do
+		local button = UiKit.button(head, {
 			Name = item.id,
 			Icon = item.icon,
 			Style = if item.id == tab then "primary" else "secondary",
@@ -414,6 +425,11 @@ local function openShop(point: Vector3)
 				setTab(item.id)
 			end,
 		})
+		local body = button:FindFirstChild("Body", true)
+		if item.model and body then
+			UiFood.icon(body, item.model, U.Touch - 12, { LayoutOrder = 1 })
+		end
+		tabButtons[item.id] = button
 	end
 
 	local slimes: { Configuration } = {}
@@ -514,6 +530,7 @@ local function openShop(point: Vector3)
 
 	-- The dishes tab sits over the slime list; the server checks the Market's range for both kinds of sale.
 	local dishes = UiDishShop.new(modal.content, { own = ownOf, ask = ask, reason = reasonText })
+	local grocer = UiDishShop.grocer(modal.content, { own = ownOf, ask = ask, reason = reasonText })
 	setTab = function(name)
 		tab = name
 		for id, button in tabButtons do
@@ -521,6 +538,7 @@ local function openShop(point: Vector3)
 		end
 		list.root.Visible = name == "slimes"
 		dishes.root.Visible = name == "dishes"
+		grocer.root.Visible = name == "grocer"
 		bar.Visible = false
 		tick()
 	end
@@ -531,6 +549,9 @@ local function openShop(point: Vector3)
 		coins.Text = UiKit.money(if type(money) == "number" then money else 0)
 		if tab == "dishes" then
 			dishes.tick()
+			return
+		elseif tab == "grocer" then
+			grocer.tick()
 			return
 		end
 		slimes = UiSlimes.slimes(own)

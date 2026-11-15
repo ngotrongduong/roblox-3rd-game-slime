@@ -9,6 +9,7 @@ local HttpService = game:GetService("HttpService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Config = require(ReplicatedStorage.Shared.Config)
+local FoodRules = require(ReplicatedStorage.Shared.Food)
 local UiKit = require(script.Parent.UiKit)
 local UiSlimeList = require(script.Parent.UiSlimeList)
 local UiSlimes = require(script.Parent.UiSlimes)
@@ -76,13 +77,18 @@ function UiFood.read(own: Instance?): ({ [string]: number }, { [string]: number 
 	return parse(own:GetAttribute("Storehouse")), parse(own:GetAttribute("Fridge"))
 end
 
--- What a cook can reach: the storehouse and the kitchen counter together.
+-- The cooking spices a village holds (the Spices attribute), by spice id.
+function UiFood.spices(own: Instance?): { [string]: number }
+	return if own then parse(own:GetAttribute("Spices")) else {}
+end
+
+-- What a cook can reach: the storehouse, the kitchen counter and the spices together.
 function UiFood.have(own: Instance?): { [string]: number }
 	local have: { [string]: number } = {}
 	if not own then
 		return have
 	end
-	for _, attribute in { "Storehouse", "Counter" } do
+	for _, attribute in { "Storehouse", "Counter", "Spices" } do
 		for id, amount in parse(own:GetAttribute(attribute)) do
 			have[id] = (have[id] or 0) + amount
 		end
@@ -106,9 +112,9 @@ function UiFood.icon(parent: Instance?, id: string, size: number, props: UiKit.P
 	return UiKit.icon(parent, "food", size, props)
 end
 
--- Name, rarity name and rarity colour (hex) of a raw food or a dish.
+-- Name, rarity name and rarity colour (hex) of a raw food, a spice or a dish.
 function UiFood.describe(id: string): (string, string, string)
-	local kind = (Config.Food.Kinds :: any)[id]
+	local kind = (Config.Food.Kinds :: any)[id] or (Config.Food.Spices :: any)[id]
 	if kind then
 		local rarity = (Config.Food.Rarities :: any)[kind.rarity]
 		return kind.name, rarity.name, rarity.colour
@@ -118,22 +124,25 @@ function UiFood.describe(id: string): (string, string, string)
 	return dish.name, rarity.name, rarity.colour
 end
 
--- What a dish gives: the stat icon name, the percent and the minutes the buff lasts.
+-- What a dish gives: the stat icon name ("all": every stat), the percent and the minutes the buff lasts.
 function UiFood.facts(id: string): (string, number, number)
 	local dish = (Config.Food.Dishes :: any)[id]
-	local rarity = (Config.Food.DishRarities :: any)[dish.rarity]
-	return dish.stat, rarity.percent, math.floor(rarity.buffSeconds / 60 + 0.5)
+	return dish.stat,
+		FoodRules.dishValue(dish, "percent"),
+		math.floor(FoodRules.dishValue(dish, "buffSeconds") / 60 + 0.5)
 end
 
--- The ingredients of a dish in the order of the raw food list.
+-- The ingredients of a dish in the order of the raw food list, then its spices.
 function UiFood.ingredients(dishId: string): { Need }
 	local list: { Need } = {}
 	local dish = (Config.Food.Dishes :: any)[dishId]
 	if dish then
-		for _, id in Config.Food.RawOrder do
-			local need = dish.ingredients[id]
-			if need then
-				table.insert(list, { id = id, need = need })
+		for _, order in { Config.Food.RawOrder, Config.Food.SpiceOrder } do
+			for _, id in order do
+				local need = dish.ingredients[id]
+				if need then
+					table.insert(list, { id = id, need = need })
+				end
 			end
 		end
 	end
@@ -251,7 +260,7 @@ function UiFood.factsRow(parent: Instance?, id: string, props: UiKit.Props?): Fr
 		Padding = UDim.new(0, 3),
 		SortOrder = Enum.SortOrder.LayoutOrder,
 	}, row)
-	UiKit.icon(row, stat, U.IconSmall, { LayoutOrder = 1 })
+	UiKit.statIcon(row, stat, if stat == "all" then U.IconNormal else U.IconSmall, { LayoutOrder = 1 })
 	UiKit.label(row, "+" .. tostring(percent) .. "%", U.TextSmall, "Brown", {
 		LayoutOrder = 2,
 		Size = UDim2.fromScale(0, 1),
@@ -336,11 +345,12 @@ function UiFood.refresh(own: Instance?)
 		return
 	end
 	local store, fridge = UiFood.read(own)
+	local spices = UiFood.spices(own)
 	local anything = false
 	for index, section in sections do
 		local shown = false
 		for position, id in section.ids do
-			local amount = math.floor((store[id] or fridge[id] or 0) + 0.5)
+			local amount = math.floor((store[id] or fridge[id] or spices[id] or 0) + 0.5)
 			local row = rows[id]
 			if amount > 0 and not row then
 				row = makeRow(list, id, index * SECTION_STEP + position)
@@ -417,6 +427,7 @@ function UiFood.open(own: Instance?, slimeId: string?)
 		else {
 			{ title = "Fish", ids = Config.Food.FishOrder },
 			{ title = "Vegetables", ids = Config.Food.VegOrder },
+			{ title = "Spices", ids = Config.Food.SpiceOrder },
 			{ title = "Dishes", ids = Config.Food.DishOrder },
 		}
 	for index, section in sections do
@@ -497,7 +508,7 @@ openDishSheet = function(own: Instance?, id: string)
 		Padding = UDim.new(0, U.Gap),
 		SortOrder = Enum.SortOrder.LayoutOrder,
 	}, info)
-	UiKit.icon(info, stat, U.IconNormal, { LayoutOrder = 1 })
+	UiKit.statIcon(info, stat, U.IconNormal, { LayoutOrder = 1 })
 	UiKit.label(info, "+" .. tostring(percent) .. "%", U.TextNormal, "Brown", {
 		LayoutOrder = 2,
 		Size = UDim2.fromScale(0, 1),

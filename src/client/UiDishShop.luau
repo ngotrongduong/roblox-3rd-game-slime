@@ -1,7 +1,8 @@
 --!strict
--- The Dishes tab of the Market's sell sheet: every dish the fridge holds, with its picture, how many there are and the price
--- of one, and two buttons: sell one, sell all. The price comes from the dish's rarity (Config.Food.DishRarities); the server
--- checks the range and the count and pays. The sheet (UiSquad) calls `tick` while it is open.
+-- The Dishes tab of the Market's sell sheet: every dish the fridge holds that may be sold (a spice dish never is), with its
+-- picture, how many there are and the price of one, and two buttons: sell one, sell all. The price comes from the dish's
+-- rarity (Config.Food.DishRarities); the server checks the range and the count and pays. Also the Grocer tab (spices for
+-- coins, below). The sheet (UiSquad) calls `tick` while it is open.
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Config = require(ReplicatedStorage.Shared.Config)
@@ -19,6 +20,8 @@ export type Context = {
 export type Shop = { root: Frame, tick: () -> () }
 
 type Row = { root: Frame, count: TextLabel, held: number }
+-- a spice of the Grocer tab: its count and price labels, its two buy buttons, the price of one
+type Line = { count: TextLabel, price: TextLabel, one: TextButton, many: TextButton, cost: number }
 
 local UiDishShop = {}
 
@@ -162,7 +165,8 @@ function UiDishShop.new(parent: Instance, context: Context): Shop
 		local _, fridge = UiFood.read(context.own())
 		local any = false
 		for order, id in Config.Food.DishOrder do
-			local held = math.floor((fridge[id] or 0) + 0.5)
+			-- (a dish cooked with a spice is never sold: it does not show here)
+			local held = if FoodRules.sellable(id) then math.floor((fridge[id] or 0) + 0.5) else 0
 			local row = rows[id]
 			if held > 0 and not row then
 				row = makeRow(id, order)
@@ -176,6 +180,127 @@ function UiDishShop.new(parent: Instance, context: Context): Shop
 			any = any or held > 0
 		end
 		empty.Visible = not any
+	end
+
+	return { root = root, tick = tick }
+end
+
+-- The Grocer tab (the owner, 2026-11-15): the cooking spices for coins, each row its picture, name in its rarity colour, the
+-- price of one and how many are held, and two buttons: buy one, buy SpiceBuyMax. The server checks the range, the coins and
+-- the cap, and takes the coins and adds the spices in one step.
+function UiDishShop.grocer(parent: Instance, context: Context): Shop
+	local root = UiKit.make("Frame", {
+		Name = "Grocer",
+		BackgroundTransparency = 1,
+		Size = UDim2.fromScale(1, 1),
+		Visible = false,
+	}, parent)
+	UiKit.make("UIListLayout", { Padding = UDim.new(0, U.Gap), SortOrder = Enum.SortOrder.LayoutOrder }, root)
+	UiKit.make("UIPadding", { PaddingRight = UDim.new(0, 8) }, root)
+	local F = Config.Food
+	local buying = false
+	local lines: { [string]: Line } = {}
+
+	local function buy(id: string, count: number)
+		if buying then
+			return
+		end
+		buying = true
+		task.spawn(function()
+			local ok, why, paid = context.ask({ action = "BuySpice", spice = id, count = count })
+			buying = false
+			UiKit.toast(if ok then "-" .. UiKit.money(paid or 0) else context.reason(why))
+		end)
+	end
+
+	for order, id in F.SpiceOrder do
+		local spice: any = (F.Spices :: any)[id]
+		local card = UiKit.make("Frame", {
+			Name = id,
+			BorderSizePixel = 0,
+			Size = UDim2.new(1, 0, 0, U.Touch + 8),
+			LayoutOrder = order,
+		}, root)
+		UiKit.rowBack(card)
+		local icon = U.FoodIconSize
+		UiFood.icon(card, id, icon, { AnchorPoint = Vector2.new(0, 0.5), Position = UDim2.new(0, U.Gap + 4, 0.5, 0) })
+		local textLeft = U.Gap * 2 + 4 + icon
+		local buttons = ONE_WIDTH + ALL_WIDTH + BUTTON_GAP + U.Gap
+		local name, _, colour = UiFood.describe(id)
+		UiKit.label(card, name, U.TextSmall, nil, {
+			TextColor3 = Color3.fromHex(colour),
+			Position = UDim2.fromOffset(textLeft, 5),
+			Size = UDim2.new(1, -textLeft - buttons, 0, U.TextSmall + 4),
+		})
+		local line = UiKit.make("Frame", {
+			Name = "Line",
+			BackgroundTransparency = 1,
+			Position = UDim2.fromOffset(textLeft, 8 + U.TextSmall),
+			Size = UDim2.new(1, -textLeft - buttons, 0, U.IconSmall + 2),
+		}, card)
+		UiKit.make("UIListLayout", {
+			FillDirection = Enum.FillDirection.Horizontal,
+			VerticalAlignment = Enum.VerticalAlignment.Center,
+			Padding = UDim.new(0, 4),
+			SortOrder = Enum.SortOrder.LayoutOrder,
+		}, line)
+		UiKit.icon(line, "coins", U.IconSmall, { LayoutOrder = 1 })
+		local price = UiKit.label(line, UiKit.money(spice.price), U.TextSmall, "Brown", {
+			LayoutOrder = 2,
+			Size = UDim2.fromScale(0, 1),
+			AutomaticSize = Enum.AutomaticSize.X,
+		})
+		local count = UiKit.label(line, "", U.TextSmall, "BrownSoft", {
+			LayoutOrder = 3,
+			Size = UDim2.fromScale(0, 1),
+			AutomaticSize = Enum.AutomaticSize.X,
+		})
+		local one = UiKit.button(card, {
+			Name = "BuyOne",
+			Text = "1",
+			TextSize = U.TextNormal,
+			Style = "good",
+			Size = UDim2.fromOffset(ONE_WIDTH, U.Touch),
+			AnchorPoint = Vector2.new(1, 0.5),
+			Position = UDim2.new(1, -U.Gap - ALL_WIDTH - BUTTON_GAP, 0.5, 0),
+			OnClick = function()
+				buy(id, 1)
+			end,
+		})
+		local many = UiKit.button(card, {
+			Name = "BuyMany",
+			Text = tostring(F.SpiceBuyMax),
+			TextSize = U.TextNormal,
+			Style = "good",
+			Size = UDim2.fromOffset(ALL_WIDTH, U.Touch),
+			AnchorPoint = Vector2.new(1, 0.5),
+			Position = UDim2.new(1, -U.Gap, 0.5, 0),
+			OnClick = function()
+				buy(id, F.SpiceBuyMax)
+			end,
+		})
+		lines[id] = { count = count, price = price, one = one, many = many, cost = spice.price }
+	end
+
+	local function tick()
+		local own = context.own()
+		local money = if own then own:GetAttribute("Coins") else nil
+		local coins = if type(money) == "number" then money else 0
+		local held = UiFood.spices(own)
+		for id, line in lines do
+			local have = math.floor((held[id] or 0) + 0.5)
+			line.count.Text = "x" .. tostring(have)
+			line.price.TextColor3 = UiKit.colour(if coins < line.cost then "Red" else "Brown")
+			-- (greyed when the coins or the room fall short; the server decides all the same)
+			local choices: { { button: TextButton, amount: number } } =
+				{ { button = line.one, amount = 1 }, { button = line.many, amount = F.SpiceBuyMax } }
+			for _, choice in choices do
+				local button, amount = choice.button, choice.amount
+				local can = coins >= line.cost * amount and have + amount <= F.SpiceCap
+				UiKit.setStyle(button, if can then "good" else "secondary")
+				UiKit.setEnabled(button, can)
+			end
+		end
 	end
 
 	return { root = root, tick = tick }

@@ -231,6 +231,17 @@ local builders: { [string]: (BasePart, number, Rarity) -> { Piece } } = {
 	speed = speedPieces,
 	hp = hpPieces,
 }
+-- (a buff to every stat: the four designs together, each thinned so the whole costs about one)
+builders.all = function(body: BasePart, s: number, r: Rarity): { Piece }
+	local pieces: { Piece } = {}
+	for _, build in { attackPieces, defencePieces, speedPieces, hpPieces } do
+		for _, piece in build(body, s, r) do
+			piece.rate *= C.AllShare
+			table.insert(pieces, piece)
+		end
+	end
+	return pieces
+end
 
 -- ===== The start burst, one design a stat =====
 
@@ -418,7 +429,7 @@ local function buildBadge(st: State, body: BasePart, key: string): Badge
 		ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
 	}, pill)
 	local scale = UiKit.make("UIScale", { Scale = 0 }, pill)
-	UiKit.icon(pill, st.stat, B.IconPixels, {
+	UiKit.statIcon(pill, st.stat, B.IconPixels, {
 		AnchorPoint = Vector2.new(0, 0.5),
 		Position = UDim2.new(0, BADGE_PAD, 0.5, 0),
 	})
