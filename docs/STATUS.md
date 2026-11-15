@@ -1,5 +1,44 @@
 # Status
 
+## 2026-11-15 — the big rebalance: four dungeons, loot by stage, tempering, spices, button feel, coin fly, forge scene
+
+The owner asked for buttons that answer hover and press, backdrops behind slime portraits, a 2-3 s forge scene grander
+by tier, coins flying out of a sale, rare spices and new dishes, and crafting, loot and monsters redone for every stage of
+a player: four dungeons, each with its own material group, every recipe needing two groups, monsters in bands of ten
+levels, simulations so a team of a level clears that level, five gear tiers with Legendary from 100. Planned with two
+rounds of review by ChatGPT (plan file `n-ng-c-p-to-n-b-piped-shore.md`); docs: `SMITHY.md` (rewritten), `GAMEPLAY.md`
+§5/§12/§14, `DUNGEON_MAPS.md` §6, `ECONOMY.md`, `WEAPONS.md` §4, `UI.md`.
+- **Dungeon** (eda79ea): the gate has four tabs (Meadow, Grove, Lava, Ice); one shared depth (open up to the next
+  checkpoint of five above the best cleared anywhere), a best per map; the end card offers Next Level and Checkpoint.
+  Monsters: levels 1-10 hold Lv 4-10, every later band its own; 85% within one level, the rest in the band; mini-boss
+  +1, boss +3. Save schema 16 (`dungeon = { best, maps }`, old best migrated).
+- **Loot and the Smithy** (8a00973, 19b3452): Mushroom Silk and Frost Crystal join Hardwood and Iron Ore, one per dungeon,
+  with a trophy each; Core Fragment, Monster Core and Boss Essence by depth; no luck multiplier; a 35% clear bonus;
+  packs pay their region's basic. Every family takes a fixed pair of basics. Tempering: a plain Uncommon+ piece plus
+  trophies becomes its "+" twin (+1 main stat, still below the next tier), one atomic server step. The Smithy screen
+  shows where each material drops and a Temper row.
+- **Cooking** (ea7badb, 9057ccd, 19967e1): Wild Honey, Moon Truffle, Golden Saffron at the Market's new Grocer tab (schema
+  17, `farm.spices`); four Legendary dishes and two Lasting stews; spice dishes cook 4 and never sell; auto-feed keeps a
+  running buff. Models for the nine new food items in ClientKit.
+- **Screens** (375a8d6, 584e929, 42f079f, 1f9cf2d): every button grows on hover, shrinks and darkens on press, clicks;
+  portraits stand on painted backdrops; a sale's coins fly to the HUD chip, which counts up and jingles.
+- **Forge scene** (44059fd, `client/ForgeScene`, `Config.Ui.Forge`): at the Market anvil the hammer strikes 2-3 times, the
+  face heats, the piece rises out of it with its tier's aura and its name card, screens and the character hidden; a tap
+  skips a tier already seen. Its library effects (`hit.forge_strike`, `burst.forge_reveal`, `burst.forge_quench`) are
+  being made in the VFX library; the scene runs without them until they are imported.
+
+**Proved:** CHECK OK (821 passed), TYPES OK. `dungeon_sim`: a team of the level clears 82-98 runs in 100, five levels
+above 98-100, a run 4-5 min; `zone_sim`: the zone's team wins 77-90 in 100; `loot_sim` (new): a sword, shield, bow and
+staff take a median of 4 runs at Iron (level 10), 4 at Epic (35), 5 at Mythic (70), 7 at Legendary (110), all within the
+plan's gates. **Seen** in StudioTest Play: temper through the real button; coin fly and count-up; Grocer purchase;
+backdrops in the lists; the forge scene for Iron, Epic and Legendary (Sunfire Blade's gold aura and card); the gate's
+four tabs with each map's drops; a full Ice run at level 5 (monsters Lv 6-8 labelled, 22 Frost Crystal and 2 Frost Fang
+paid), then Checkpoint jumped to level 10 in the same map (monsters Lv 10).
+**Not verified:** the library forge effects; sounds by ear; the phone frame and hover; the new food icons inside
+StudioTest (its ClientKit is older); a run in Meadow, Grove and Lava; cooking a Legendary batch; the skip tap; the temper
+quench steam. **Needs the owner:** the save shape changed twice (schemas 16 and 17): a publish must shut down every old
+server.
+
 ## 2026-11-15 — Crownfall ends at its foot in foam and mist; the Hidden Grotto behind it
 
 The owner: the falling water need not run on over the pool; make the foam at its foot more real (cloud and smoke

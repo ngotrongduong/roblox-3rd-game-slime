@@ -38,7 +38,21 @@ built with UiKit is in the style with no extra work. Text on a coloured piece is
   (`UiSlimes.portrait(..., bare = true)`); only a slime standing alone (a team slot, a seat) keeps its own frame. A list row is
   the kit's row plate (`UiKit.rowBack`), never a hand-drawn rounded box with a stroke; a text pill is wide enough for its word to
   clear the round ends; an empty bar or line gives its room back to the list under it.
-- Not done: the concept's warm glow behind the slime (it needs a painted glow piece, not a code shape).
+- Slime portrait backdrops (2026-11-15; the owner's concept glow, now painted): `UiSlimes.portrait` puts a ChatGPT-painted backdrop
+  behind every slime, by kind: normal, dual, secret or material (`Config.Ui` backdrop ids; pictures `art/icons/backdrop_*.png`). The kind
+  is read from the slime's attributes `SecretId`, then `Material`, then `DualId`, else normal. A normal slime's glow is tinted
+  `BackdropTint` 0.35 of the way to its colour swatch; `BackdropTransparency` sets its strength, `DisabledTransparency` 0.5 a greyed
+  one. It sits at ZIndex 0 with a UICorner.
+- Buttons feel alive (2026-11-15; `UiKit` `pressable`, shared by `UiKit.button` and `UiKit.feel`; numbers in `Config.Ui`): on hover a
+  button grows to `HoverScale` 1.05; pressed it shrinks to `PressScale` 0.92 and darkens to `PressShade` 0.8, then springs back. Rows
+  and tiles (`UiKit.feel`) use the gentler `FeelHover` 1.02 and `FeelPress` 0.97. Hover follows mouse movement only, so a phone never
+  leaves a button grown. Every press plays `UiKit.sound("click")` (`Sounds.click`, volume 0.25); a second tap inside `TapGap` 0.15 s is
+  ignored.
+- Coin fly (2026-11-15; `UiKit.coinFly(from, amount)`, the HUD coin chip registered with `UiKit.coinTarget`): after the server says a sale
+  went through (slimes in `UiSquad`, dishes in `UiDishShop`), `CoinFlyMin` 6 to `CoinFlyMax` 12 coins (more for a bigger sale) burst up
+  to `CoinBurst` 60 points from the button, then one every `CoinFlyStagger` 0.05 s curves into the chip in `CoinFlySeconds` 0.5. The
+  chip pops to `CoinPop` 1.18, the coin jingle (`Sounds.coins`) plays on the first coin home, and the HUD number counts up over
+  `CoinCountSeconds` 0.8 (a lower amount drops at once). The coins live in the ScreenGui `CoinFlyLayer`, 5 above the others.
 - Shots on a phone frame: `docs/ui/kit/`.
 
 ## The slime's page (the owner, 2026-11-04: "make it like an RPG")
@@ -60,5 +74,20 @@ smaller room and never grown past 1.25x; it is laid out for landscape, not for a
 once the tutorial is over). Tabs Materials and Gear. Materials: a tile for each material held (picture, count in the corner) in
 the Dungeon's drop order, coins and food left out. Gear: grouped Weapon / Head / Charm, weakest tier first; a piece counts the
 ones in the bag plus the ones slimes wear, and a small slime badge says how many are worn. Tapping a tile opens a strip at the
-bottom: a material shows the pieces that need it (picture and how many), a piece its points, rarity and how many are worn. It
-reads the village folder's `Materials` and `GearBag` and each slime's `Gear`, and asks the server for nothing.
+bottom: a material shows where it drops (`UiSmithy.sourceText`; a trophy reads "Used to temper gear.") and the pieces that need it
+(picture and how many), a piece its points, rarity and how many are worn. A tempered twin is listed right after its plain piece and
+wears the tempered badge (`Icons.tempered`, top right of its picture, `BadgeShare` 0.4 of the width). It reads the village folder's `Materials` and `GearBag` and each slime's `Gear`, and asks the server for nothing.
+
+## The Market's Grocer tab (2026-11-15)
+
+`client/UiDishShop` has two tabs at the Market: Dishes (only sellable dishes; spice dishes cannot be sold, so they never show) and
+Grocer. The Grocer lists a row for each spice in `Config.Food.SpiceOrder`: its picture, its name in its rarity colour, the price of
+one, how many are held, and two buy buttons, one for 1 and one for `Config.Food.SpiceBuyMax` (10). A button greys out when the coins
+are short or the purchase would pass `SpiceCap` (99). A buy asks the server (`BuySpice`), and the coin fly and the counting chip
+(above) play on the answer. The food list and the squad page read each dish's own numbers, so a Lasting Stew shows its +3% / +5% on all
+four stats.
+
+## The Smithy sheet and the forge scene (2026-11-15)
+
+The Smithy's screen (tabs, family row, cost chips, Temper row) is in `docs/SMITHY.md` §6 and the forge scene after a craft or a
+temper in §7; sizes are in `Config.Ui.Gear` and `Config.Ui.Forge`.

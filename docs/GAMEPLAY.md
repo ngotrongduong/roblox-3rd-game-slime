@@ -98,16 +98,38 @@ playing). Nothing dies of hunger and no stat is ever lost to hunger.
 - **Idle slimes carry** box → storehouse (pantry), and storehouse → kitchen counter when the cook needs ingredients;
   cooked dishes go into the **fridge** in the kitchen. With nobody idle, the worker itself carries when its box is
   full, so the village never jams. Offline (and in the abstract sim) every carry happens at once.
-- **Dishes** (2026-11-03; every number in `Config.Food`, why they are what they are in `docs/ECONOMY.md`): 16 recipes, 4
-  rarities x 4 stats. The player picks a recipe for each kitchen position (default Grilled Fish); a cook with an ingredient
-  missing waits, takes nothing, and the models of what it lacks float over it, crossed out.
+- **Dishes** (2026-11-03, grown 2026-11-15; every number in `Config.Food`, why they are what they are in `docs/ECONOMY.md`):
+  22 recipes (`Config.Food.DishOrder`): 16 in 4 rarities x 4 stats, two Lasting Stews and four Legendary dishes. The player picks a
+  recipe for each kitchen position (default Grilled Fish); a cook with an ingredient missing waits, takes nothing, and the models
+  of what it lacks float over it, crossed out.
 
-  | Rarity | Kitchen level | Buff | Lasts | Cook, level 1 | Sells for |
+  | Rarity (`Food.DishRarities`) | Kitchen level | Buff | Lasts | Cook, level 1 | Sells for |
   |---|---|---|---|---|---|
   | Common | 1 | +4% | 10 min | 120 s | 1000 |
   | Uncommon | 8 | +6% | 11 min | 150 s | 1100 |
   | Rare | 20 | +9% | 13 min | 200 s | 1300 |
   | Epic | 35 | +12% | 15 min | 300 s | 2000 |
+  | Legendary | 45 | +20% | 25 min | 360 s | cannot be sold (price 0) |
+
+- **Spices** (2026-11-15; `Config.Food.Spices`, `SpiceOrder`): a spice is bought at the Market's **Grocer** tab for coins and
+  kept in `farm.spices` (schema 17), never eaten raw, never used to revive, not counted in the storehouse. Wild Honey (uncommon)
+  500 coins, Moon Truffle (epic) 8000, Golden Saffron (legendary) 40000 (`price`); at most `SpiceCap` 99 of each, and a buy is
+  1 to `SpiceBuyMax` 10 at once, checked on the server at the Market (`BuySpice { spice, count }`, refused with `TOO_FAR`,
+  `UNKNOWN_SPICE`, `INVALID_COUNT`, `FULL` or `NO_COINS`; coins and spice change in one step).
+- **Spice dishes** (the owner, 2026-11-15): a recipe that holds a spice among its ingredients.
+  - **Lasting Stew** (kitchen level 10; Wild Honey + trout + carrot) gives +3% to all four stats for 60 min, **Grand Lasting Stew**
+    (level 25; Moon Truffle + salmon + pumpkin) +5% for 90 min. Both cook in 240 s, fullness 90; their own numbers sit on the
+    dish (`Food.dishValue(dish, key)` reads the dish before its rarity row), and the stat is `"all"` (`Stats.applyBuff` raises
+    each of the four stats by the percent; the same code for fights and the slime sheet).
+  - **Legendary dishes** (kitchen level 45, +20% for 25 min, cook 360 s, fullness 100): Golden Carp Royale (attack), Saffron
+    Puffer Crown (defence), Saffron Star Tart (speed), Saffron Banquet (health), each with a Golden Saffron.
+  - **Batch rule** (`Config.Food.SpiceBatch` 4, `Food.cookYield`): one cook with a spice makes up to 4 dishes from one set of
+    ingredients and one spice, as far as the fridge (and the box) has room; other dishes make `Config.Work.KitchenYield`.
+  - **They cannot be sold** (`Food.sellable` false; `Shop.sellDish` refuses `NOT_SELLABLE`): the Dishes tab lists only sellable
+    dishes and the client says "Spice dishes cannot be sold."
+- **The "all" buff and re-buffing**: when a slime's auto dish ("When hungry") is a dish whose live buff still has more than
+  `Config.Food.RebuffShare` (10%) of that dish's `buffSeconds` left, the slime eats the cheapest raw food instead and keeps the buff
+  (`Food.chooseMeal`); a buff from before dishes were recorded counts as not fresh.
 
 - **Reserve**: the kitchen takes nothing while the storehouse holds fewer than one food per slime.
 - **Eating**: a hungry slime eats raw food from the storehouse, lowest rarity first, so rare food stays for recipes. From
@@ -116,7 +138,7 @@ playing). Nothing dies of hunger and no stat is ever lost to hunger.
 - **Buffs**: one per slime, a new one replaces the old, they count in fights only. A live buff shows the stat's icon and
   "+N%" over the slime, with particles made of the owner's icon of that stat (stars, shields, bolts, hearts), each with its own
   motion and start burst; rarer is denser, nearest few slimes only, off at low graphics quality.
-- **Selling**: the Dishes tab at the Market buyer.
+- **Selling**: the Dishes tab at the Market buyer (sellable dishes only); spices are bought on the Grocer tab beside it.
 - **Levels**: kitchen = faster cooking and higher rarities; pond and garden = rarer catches, moving from `weight` at level 1 to
   `topWeight` at level 50; pantry = storehouse room and the coin vault, the larger of 2000 and 3 x the upgrade price at its
   level. Fight income stops at the vault ("Vault full"); selling always pays in full, even above it; coins held never fall.
@@ -300,6 +322,7 @@ HUD button that pulses) and it moves on only when the server sees the farm reall
 | hatch | the breeding house | the egg hatched |
 | market | the Market button | the player stands at the Market |
 | sell | the buyer | Next |
+| smithy | the Blacksmith | Next; its opening pays the starter kit once (`Config.Guide.StarterKit`: 3 each of Hardwood, Silk, Ore, Crystal), "The Blacksmith gave you a starter kit! Craft your first weapon here." |
 | home | the Home button | the player is home |
 | pads | the cheapest upgrade pad | Next |
 | team | the team banner | a team has a member (while there is no free adult: "Your baby grows up soon...") |
@@ -357,45 +380,74 @@ strength rising). Numbers from the original (`docs/reference/02-battle.md` §5-7
 - **Who may go** (the owner, 2026-11-04: not for new players): a farm with at least 20 slimes and a village of level 15
   (`EnterMinSlimes`, `EnterMinVillageLevel`). Until then a golden lock hangs in the ring for that player (drawn by their own
   client) and the prompt says what is missing in one line; the server checks the same.
-- **The sheet**: the map (Sunny Meadow) with its drops as a plain two-column list (picture, name, how many), the teams that are
-  home and have members (several can go), the level from 1 to the best cleared + 1, Enter.
-- **A run**: 10 waves. A wave's crowd has a budget (6, 9, 12, 15, then x1.3 from wave 6, at most 40) filled from the map's monsters by
-  cost; wave 5 is the mini-boss Bloomshell alone, wave 10 the boss Bramblehorn alone. One monster comes in every 0.8 s while fewer than
-  8 stand, at the arena's rim. HP and attack are x`StatScale` (0.3), x1.12 each wave and x1.6 each level; the shown level is the
-  monster's stats read as a slime's.
-- **Monsters of Sunny Meadow**: Sproutling (melee), Honey Bee (goes for the weakest, its sting slows 70% for 2 s), Puffdandy (ranged),
-  Glowmoth (heals the most wounded monster), Clover Snail (armoured elite), Bloomshell (Pollen Shockwave: hits every slime, a short
-  stun), Bramblehorn (Thorn Charge: a heavy blow that splashes).
-- **Drops**: each monster has its own list in `Config.Dungeon.Maps.meadow.monsters[].drops` (`docs/SMITHY.md` §2); every line is
-  rolled on its own (chance, amount min..max), luck (+5% a level) multiplies a chance below 1 and never takes it past 1, and the boss's
-  two Bramble Horns never fail. Coins go to the purse (the vault limit holds), "food" is carrots in the storehouse, the rest to
-  `farm.materials` (the Smithy's recipes). Cloth and Residue no longer drop (saves still hold them). A wave's drops are paid when it
-  clears; the wave in play is lost on a defeat or a leave.
+- **Four dungeons, one depth** (the owner, 2026-11-15): Sunny Meadow, Mushroom Grove, Ember Lava and Frozen Ice
+  (`Config.Dungeon.MapOrder`; maps in `docs/DUNGEON_MAPS.md`). The player picks one on the gate sheet (a tab each, `Maps.<id>.short`,
+  with its "Best N"); a run, Next and Replay stay on the dungeon picked. The depth is one ladder of levels 1 to `MaxLevel` 200
+  (`FirstLevel` 1) shared by all four. A level L is open while L is at most `Dungeon.maxOpen(best)` = min(200, 5 x (floor(best / 5)
+  + 1)) where `best` is the deepest level cleared anywhere: levels 1-5 at first, 1-10 once 5 is cleared. Every `CheckpointEvery` (5)
+  levels is a checkpoint. After a win the sheet offers Next Level (while a level above is open), Checkpoint (`DungeonJump`: the
+  next multiple of 5 that is open), Replay or Leave.
+- **The sheet**: the four tabs, the picked map's drops at the chosen level as a plain two-column list (picture, name, how many;
+  `Dungeon.dropTable(mapId, level)`), the teams that are home and have members (several can go), the level, Enter.
+- **A run**: 10 waves (`Waves`). A wave's crowd has a budget (`BudgetBase` 6 plus `BudgetPerWave` 3 a wave, so 6, 9, 12, 15, then
+  x`BudgetLateFactor` 1.3 from wave `BudgetLateFrom` 6, at most `BudgetMax` 40) filled from the map's monsters by cost; wave 5
+  (`MiniBossWave`) is the mini-boss alone, wave 10 (`BossWave`) the boss alone. One monster comes in every `SpawnSeconds` 0.8 s while fewer
+  than `MaxAlive` 8 stand, at the arena's rim.
+- **Monster levels** (by band): the run's level L has a main level (levels 1-10 rise evenly through 4 to 10; above that the main
+  level is L itself) and a band of `BandSize` 10 levels (`FirstBandLow` 4 to `FirstBandHigh` 10 for levels 1-10; for L above 10, from
+  10 x floor((L-1)/10) to that plus 10). `NearShare` 0.85 of a crowd stands within `NearSpread` 1 level of the main level; the rest are
+  drawn anywhere in the band, never on wave 1, and at most one above the near levels per wave. The mini-boss is `MiniBossAbove` 1
+  levels over the main level, the boss `BossAbove` 3.
+- **Monster strength** (`Dungeon.stats`): a monster of level N has the stats of an even slime of that level (each stat N / 4, HP x
+  `Config.Stats.HpPerLevel`), times its role factor (`RoleFactor`: swarmer, raider, spitter and shaman 0.55, armoured 0.65, mini-boss
+  0.75, boss 0.85) and `PowerCurve(L)` (a line through 0.31 at level 4, 0.40 at 8-22, 0.45 at 30-67, 0.505 at 68 and 0.55 from 110), and
+  its HP x`RoleHp` (mini-boss 3, boss 5); attack and HP grow x`WaveGrowth` 1.03 a wave. The curve was fitted with
+  `tools/balance/dungeon_sim.luau` so that a team of the tier that level asks for (Common to 7, Uncommon 8-22, Epic 23-67, Mythic
+  68-109, Legendary from 110) clears about `FitShare` 0.87. No luck: the old luck multiplier is gone.
+- **Monsters**: each map has its own seven (Sunny Meadow: Sproutling, Honey Bee, Puffdandy, Glowmoth, Clover Snail, Bloomshell,
+  Bramblehorn; the others in `docs/DUNGEON_MAPS.md`).
+- **Drops**: a monster's own `drops` (`Config.Dungeon.Maps.<id>.monsters[].drops`) are coins and food only. Every material comes from
+  `Config.Dungeon.Loot`, rolled by role and level L with plain chances: the map's basic, Core Fragments, Monster Cores, Boss Essence
+  and the map's trophy; the table is `docs/SMITHY.md` §2. `Loot.ClearBonus` 0.35: wave 10 pays 35% more basics, rounded. Coins go to
+  the purse (the vault limit holds), "food" is carrots in the storehouse, the rest to `farm.materials`. Cloth and Residue no longer
+  drop (saves still hold them). A wave's drops are paid when it clears; the wave in play is lost on a defeat or a leave.
 - **Slimes**: a slime that falls is a ghost (the village's rule, revived with food); wounds carry from wave to wave and home. A run
   costs every slime that went energy 8 and fullness 2, once.
 - **End**: Victory raises the best level and offers Next Level, Replay or Leave; Defeat offers Replay or Leave. Leave puts the player in
   front of their portal; the slimes walk home.
 
-Saved in the farm as `dungeon = { best }` (schema 9). Requests through the Village remote (`DungeonEnter`, `DungeonNext`,
-`DungeonReplay`, `DungeonLeave`), each checked on the server (who, where, which teams, the level, the rate).
+Saved in the farm as `dungeon = { best, maps }` (schema 9 had `best` only; schema 16: `best` is the deepest level cleared in any
+dungeon and `maps[id]` each dungeon's own record, `Dungeon.recordClear(farm, mapId, level)`). The migration `ProfileLogic.migrateDepth`
+turns an old best (a level of the old 1.6-a-level ladder) into min(round(40 x 1.6^(old - 1)), cap) where cap is the level of the fourth
+strongest slime (`Config.Zombies.TeamSize`) rounded down to a checkpoint, clamped to 0..`MaxLevel`, and sets every map record to 0.
+Requests through the Village remote (`DungeonEnter`, `DungeonNext`, `DungeonJump`, `DungeonReplay`, `DungeonLeave`), each checked on
+the server (who, where, which teams, the level, the rate).
+
+**Packs and zone guards in the open world** (`Config.World`, `docs/SMITHY.md` §2): a won pack pays one basic of its region (and sometimes
+a second unit, a Core Fragment or a Monster Core by its level, `Config.World.Packs`), never a trophy or Boss Essence; a zone's guard
+pays coins and catalysts by its kind (`Config.World.Reward`), no trophy. The Dungeon stays the better source of materials.
 
 ## Gear and the Smithy
 
-Three slots on every slime (Hand, Head, Tail), four tiers (wood, iron, core, bramble), twelve pieces crafted from dungeon drops
-and coins at the Blacksmith; all numbers and the reasoning are in `docs/SMITHY.md`, the numbers in `Config.Smithy`. Worn gear adds
+Three slots on every slime (Weapon, Head, Charm; ids `hand`, `head`, `tail`), five tiers (wood, iron, core, bramble, and legend for
+weapons only), pieces crafted from dungeon and world materials and coins at the Blacksmith: every recipe is two groups of basics (a
+family's fixed pair) plus catalysts from Epic up, and an Iron-and-up piece can be **tempered** with dungeon trophies into a twin
+that is one point better (`<id>-t`). A new player gets a starter kit at the tutorial's Smithy step. All numbers and the reasoning are
+in `docs/SMITHY.md`, the numbers in `Config.Smithy`. Worn gear adds
 flat points to a slime's stats in every fight (`Zombies.fighter`, so the dungeon and the zombie fights both) and never changes the
 slime's own stats, level or price. Rules in `shared/Gear` (`bonus`, `canCraft`, `craft`, `equip`, `unequip`, `returnAll`; tests
 `tests/spec/gear.luau`). A crafted piece waits in the bag (`farm.gear = { [gearId] = count }`); a worn one is on the slime
 (`slime.gear = { hand?, head?, tail? }`); a slime that is sold or lost gives its gear back to the bag. Saved as schema 10.
-Requests through the Village remote: `SmithyCraft { recipeId }` (refused with `FAR` unless the character stands within
-`SmithyRangeStuds + SmithyRangeSlackStuds` of the Blacksmith's spot, horizontal distance; `env.atSmithy`),
+Requests through the Village remote: `SmithyCraft { recipeId }` and `SmithyTemper { gearId }` (each refused with `FAR` unless the character
+stands within `SmithyRangeStuds + SmithyRangeSlackStuds` of the Blacksmith's spot, horizontal distance; `env.atSmithy`),
 `GearEquip { slimeId, gearId }`, `GearUnequip { slimeId, slot }`. The client reads the root's `Materials` and `GearBag`
 attributes (JSON `{ id = count }`) and each slime's `Gear` attribute (JSON `{ hand?, head?, tail? }`).
 
 Screens (`client/UiSmithy`, `client/UiGearSlots`): the Blacksmith's prompt (F, "Blacksmith") stands at `Config.Market.Smithy` with or
-without the stall's model and opens the **Smithy** sheet: tabs Hand / Head / Tail, a card per piece with its picture on the rarity
-colour (an optional `icon` in `Config.Smithy.Gear[id]`; none yet, so a plain colour square), its name, the points it adds as tags
-("+2 ATK"), the count in the bag ("x2"), each material as picture and have/need (red when short), the coins and a Craft button that
-reads "Missing materials" or "Not enough coins" when greyed. In the slime book, a slime's page has three slots under its card: tap one
+without the stall's model and opens the **Smithy** sheet: tabs Weapon / Head / Charm (the Weapon tab with a row of the six families), a
+card per piece with its picture on the rarity colour, its name, the points it adds as tags ("+2 ATK"), the count in the bag ("x2"),
+each material as picture and have/need (red when short), the coins and a Craft button that reads "Missing materials" or "Not enough
+coins" when greyed, and on a piece of Iron and up a Temper row (the trophies it takes, a Temper button). After a craft or a temper the
+forge scene plays at the anvil (`docs/SMITHY.md` §7). In the slime book, a slime's page has three slots under its card: tap one
 to list the pieces of that slot in the bag (tap a piece to wear it) or "Take off"; the points all its gear adds show as green tags
 under the slots, and the card's own numbers stay the slime's own.

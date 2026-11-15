@@ -2,7 +2,7 @@
 
 Written 2026-11-08. The Sunny Meadow (`battle.map.meadow.png`) is built: `shared/DungeonArenaPlan`, `server/DungeonArena`,
 `Config.Dungeon.Arenas.meadow`, props from `Config.LibraryKit`. This file plans Mushroom, Lava and Ice the same way, and the
-code that rotates the maps each level.
+code that picks the map (2026-11-15: the player picks the dungeon, see §6; all four maps are built).
 
 **Lava, phase A done (2026-11-09).** Code: `Config.Dungeon.Arenas.lava`, `Maps.lava` (seven monsters), `MapOrder = { meadow, mushroom,
 lava }`, plan kinds `pool` (claims ground, rim only, the map's six lights on the first pools of each quarter) and `vein`
@@ -304,24 +304,21 @@ Monsters:
   glb, a different rig: only worth it where Egg Heist has no fit (Mushroom King, Imp), and each needs the
   `roblox-creature-rigging` route first.
 - Stats: copy the Meadow's role rows (cost, attack, defence, speed, hp, drops), then the balance-tester agent tunes them per map;
-  drops per map use `Materials` that exist (`SMITHY.md`). A map's trophy (the Meadow's two horns) needs a new material per map:
-  Mushroom `moss_heart`, Lava `ember_core`, Ice `frost_fang` (names to confirm with the owner's smithy list).
+  materials no longer sit on the monsters: they come from `Config.Dungeon.Loot` by role and level (`SMITHY.md` §2). Each map has
+  its own `basic` and `trophy` (`Config.Dungeon.Maps.<id>`): Meadow `wood` and `boar_tusk` (Bramble Horn), Mushroom `silk`
+  and `glow_spore`, Lava `ore` and `ember_core`, Ice `crystal` and `frost_fang`. A monster's own `drops` keep coins and food only.
 
-## 6. Maps rotate each level
+## 6. The player picks the dungeon (changed 2026-11-15; the plan to rotate the maps each level was dropped)
 
-Rule from `docs/reference/02-battle.md` ("Choose the map"): the first map is chosen from a seed, then each level moves to the
-next map in the cycle.
+`Config.Dungeon.MapOrder = { meadow, mushroom, lava, ice }` is only the order of the gate's tabs. The gate sheet has one tab per
+map (labelled `Maps.<id>.short`: Meadow, Grove, Lava, Ice) with that map's "Best N" (attribute `DungeonMapBest_<id>`). The
+player taps a tab, then Enter: the run's `mapId` is the one chosen (`DungeonEnter { mapId, level }`), and Next Level, Next
+Checkpoint and Replay all stay on it. The four dungeons share one depth ladder (`farm.dungeon = { best, maps }`, `docs/GAMEPLAY.md`
+§14): `best` is the deepest level cleared in any of them and sets which levels are open in all; `maps[id]` is each one's own record.
+The old seeded rotation (`Dungeon.mapForLevel`) is gone.
 
-- Config: `Maps` gets `mushroom`, `lava`, `ice` entries; `MapOrder = { "meadow", "mushroom", "lava", "ice" }` (the order of the
-  original's `BATTLE_MAPS`; check it in `reference/goo-lineage-web/` before fixing the order).
-- Pure logic in `shared/Dungeon.luau` (it already has the map lookup, line 40): `Dungeon.mapForLevel(seed: number, level: number): string`
-  = `MapOrder[(first - 1 + level - 1) % #MapOrder + 1]` where `first = floor(Rng.new(seed + 77):next() * #MapOrder) + 1`
-  (matching the original's `mulberry32(seed + 77)`). Test: same seed gives the same list; four levels in a row visit all four;
-  level 1 differs between seeds.
-- Server: `Dungeon.luau` line 908 sets `mapId = D.MapOrder[1]` at the start of a run: use `mapForLevel(seed, 1)`; when a level
-  changes (`continueRun` past the last wave, if the Roblox design keeps levels), set the new `mapId` and swap the arena Model
-  (destroy and clone the next template; players and slimes are moved to its spawns). The monsters' `Maps[mapId].monsters` already
-  drive the wave director.
+- Server: `Dungeon.luau` starts a run on the chosen map; the monsters' `Maps[mapId].monsters` drive the wave director and
+  `DungeonArena.template(mapId)` gives that map's arena.
 - Arena: `DungeonArena.template(mapId)` builds and caches one Model per map (a table `cached[mapId]`). `Config.Dungeon.Arena`
   becomes `Config.Dungeon.Arenas[mapId]` (the Meadow's block moved under `meadow`, the plan reading `A` as a parameter); each
   has its own `Models`, `Tints`, sizes, floor colour, path style, hill colour and a `Lighting` block (ambient, outdoor ambient,

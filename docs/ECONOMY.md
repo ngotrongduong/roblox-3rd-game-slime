@@ -171,6 +171,43 @@ stays at 100% wins, with income up 2-15%. Defence alone does nothing at +5 (0-11
 - The player always has a dish for the buff they want; in play they pick a recipe, not the best price.
 - Food, not coins, limits dishes at levels 1-20: more fighters or more `FightFullness` take the dishes away first.
 
+### Faucets and sinks of gear and spices (2026-11-15; every number from the code, nothing here is measured)
+
+Coins in: slime and dish sales, fights, and now the dungeon's and the world's coin lines (`Config.Dungeon.Maps.<id>.monsters[].drops`,
+`Config.World.Reward`: mini guard 1000-1600, boss guard 3000-4500, mega guard 8000-12000). Coins out, new this round:
+
+| Sink | Price (coins) | Config key |
+|---|---|---|
+| Iron piece | 500 | `Config.Smithy.Cost.iron.coins` |
+| Epic piece | 3000 | `Cost.core.coins` |
+| Mythic piece | 12000 | `Cost.bramble.coins` |
+| Legendary weapon | 30000 | `Cost.legend.coins` |
+| Head or Charm | half of the above, rounded up (250, 1500, 6000) | `Config.Smithy.Half` |
+| Wild Honey / Moon Truffle / Golden Saffron | 500 / 8000 / 40000 each | `Config.Food.Spices.<id>.price` |
+
+Tempering costs no coins, only trophies (and, from Mythic, catalysts). The materials side of gear is a second currency earned
+only by fighting: basics from the dungeon (a map's own, 20-40% a regular monster by depth, always from a mini-boss or a boss) and
+from packs (one unit a won pack); catalysts and trophies are gated by depth (`docs/SMITHY.md` §2), a Core Fragment from dungeon level
+21, a Monster Core from 31 and mostly 51, Boss Essence from 81; the dungeon's `Loot.ClearBonus` (35% more basics on wave 10) rewards
+finishing. Packs pay one basic (from level 60 a second one half the time, `Config.World.Packs.SecondBasicFrom`) and a rare
+catalyst, and never a trophy or Boss Essence, so exploring cannot replace the dungeon; the target that four exploring teams gather
+no more basics an hour than one dungeon team is a design rule, not a measured figure.
+
+Measured (`lune run tools/balance/loot_sim.luau`, 200 players a tier, every run won, the shortest basic's dungeon picked each run,
+packs and the guide's gift left out): full runs to forge a sword, a shield, a bow and a staff of one tier.
+
+| Tier | Dungeon level | Median runs | 9 in 10 within | Plan's gate |
+|---|---|---|---|---|
+| Uncommon (Iron) | 10 | 4 | 4 | 4 |
+| Epic | 35 | 4 | 5 | 5 |
+| Mythic | 70 | 5 | 6 | 7 |
+| Legendary | 110 | 7 | 8 | 8 |
+
+Spice dishes are a coin sink with no coin loop: they cannot be sold (`Food.sellable`), one spice cooks a batch of `SpiceBatch` 4
+(`Food.cookYield`), and the Legendary dish (price 0 in `Food.DishRarities.legendary`) pays +20% for 1500 s. Lasting Stews give +3% for
+3600 s and +5% for 5400 s to all four stats. The kitchen tables above cover the 16 old dishes only; the 6 new dishes are not
+measured (`tools/balance` has no run for them), and neither are the dungeon's materials an hour.
+
 ## Sources
 
 - Prices grow by a fixed share while income grows more slowly: [The Math of Idle Games](https://www.gamedeveloper.com/design/the-math-of-idle-games-part-i),

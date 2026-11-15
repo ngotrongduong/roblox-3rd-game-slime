@@ -223,11 +223,15 @@ leaning on its own stat as in the original.
 The Legendary names are ours, from the look of the owner's set; each is about 12 level points (Mythic 8-9). Its pictures
 are renders of his models with a dark line like the painted ones (`tools/blender/weapon_icons.ps1`), not drawings.
 
-Recipes: one recipe a tier for every family (the owner: few drops, recipes easy to read), today's sword recipes: wood 3;
-ore 4 + wood 2 + 25 coins; ore 8 + Core Fragment 6 + Monster Core 1 + 150 coins; Bramble Horn 4 + Core Fragment 12 +
-Monster Core 2 + Boss Essence 1 + 400 coins; Legendary: Ember Core 4 + Frost Fang 4 + Monster Core 3 + Boss Essence 2 +
-1000 coins (the trophies of the two hardest maps, which had no use yet). Head and Charm stay as they are: small stats, no
-skills, no Legendary.
+Recipes (rewritten 2026-11-15, the full tables in `docs/SMITHY.md` §4, numbers in `Config.Smithy.Pairs` and `Cost`): one recipe a
+tier for every family, built from two groups of basics, the family's fixed pair, in a larger and a smaller share (`a` and `b`): sword
+Iron Ore + Hardwood, shield Iron Ore + Frost Crystal, bow Hardwood + Mushroom Silk, focus Frost Crystal + Mushroom Silk, staff
+Hardwood + Frost Crystal, kit Mushroom Silk + Iron Ore. By tier: wood 3 + 2; iron 6 + 4 and 500 coins; core 12 + 8, 2 Core Fragment
+and 3000 coins; bramble 20 + 12, 3 Monster Core and 12000 coins; legend 30 + 20, 5 Monster Core, 2 Boss Essence and 30000 coins.
+No recipe asks for a trophy: the trophies temper (a plain piece of Iron and up becomes a twin one point better in its main stat,
+named with " +", `Config.Smithy.Temper`; a tempered piece of a tier stays below the plain piece of the next). Head and Charm cost
+half of every amount, rounded up (`Config.Smithy.Half`), stay small stats with no skills and no Legendary; they can be tempered
+too. A tempered weapon has the plain weapon's class, skills and model.
 
 Watch: flat points weigh far more at low levels (a Dawnbreaker's +5 ATK on a slime of ATK 1). The simulator measures
 Mythic against Common at levels 4, 10, 20 and late; if the gap is far past 65% at low levels, the stat points shrink, the

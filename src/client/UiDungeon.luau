@@ -818,7 +818,7 @@ local function drawEnd(current: string)
 			add("Next", "Next Level", nil, "primary", "DungeonNext")
 		end
 		if hasJump then
-			add("Jump", "Next Checkpoint", nil, "secondary", "DungeonJump")
+			add("Jump", "Checkpoint", nil, "secondary", "DungeonJump")
 		end
 		if not (victory and inZone) then
 			add("Replay", "Replay", "again", if victory then "secondary" else "primary", "DungeonReplay")
