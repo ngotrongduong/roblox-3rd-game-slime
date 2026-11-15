@@ -74,9 +74,10 @@ for _, name in { "ArenaStage", "MonsterKit" } do
 	end
 end
 
--- The owner's debug menu is for Studio only: these two modules (and nothing else) never reach players. The game finds them
--- by name and runs without them (Main.server.luau, UiHud.luau). The check below fails the build if either is still here.
-local DEBUG_ONLY = { OwnerDebug = "Server", UiDebug = "Client" }
+-- The owner's debug menu is for Studio only: these modules (and nothing else) never reach players. The game finds the menu
+-- by name and runs without it (Main.server.luau, UiHud.luau); DebugPresets is read by the menu alone, so without the menu it
+-- would only be sent to every client unused. The check below fails the build if any of them is still here.
+local DEBUG_ONLY = { OwnerDebug = "Server", UiDebug = "Client", DebugPresets = "Shared" }
 for _, service in place:GetChildren() do
 	for _, d in service:GetDescendants() do
 		if not STUDIO_TEST and DEBUG_ONLY[d.Name] and d:IsA("LuaSourceContainer") then
@@ -197,6 +198,8 @@ if
 	or Config.Pads.FreeUpgrades
 	or Config.Leaderboard.StudioUsesRealStore
 	or Config.Arena.StudioUsesRealStore
+	or Config.Robux.TestGrant
+	or Config.Village.DevFreeUpgrades
 then
 	problem("a test switch in Config is on")
 end

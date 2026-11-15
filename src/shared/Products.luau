@@ -7,6 +7,7 @@
 local Boosts = if script then require(script.Parent.Boosts) else require("./Boosts")
 local Config = if script then require(script.Parent.Config) else require("./Config")
 local FarmState = if script then require(script.Parent.FarmState) else require("./FarmState")
+local ProfileLogic = if script then require(script.Parent.ProfileLogic) else require("./ProfileLogic")
 local Rewards = if script then require(script.Parent.Rewards) else require("./Rewards")
 
 type Farm = typeof(FarmState.newFarm(0))
@@ -283,13 +284,26 @@ end
 
 -- One purchase, once: the receipt is written and the good granted in the same change. (true, "GRANTED", detail), (true,
 -- "DUPLICATE") when the receipt was already granted (answered as granted so Roblox stops asking), or (false, "UNKNOWN").
+-- The good is granted on a copy that replaces the farm only once the grant has finished: a grant that throws halfway leaves
+-- the farm as it was and no receipt, so Roblox's retry grants it whole, never half of it twice. (The village tick replaces
+-- the farm's tables the same way, VillageSim.step.)
 function Products.redeem(farm: Farm, key: string, receiptId: string, now: number): (boolean, string, string?)
 	if Products.hasReceipt(farm, receiptId) then
 		return true, "DUPLICATE", nil
 	end
-	local ok, detail = Products.grant(farm, key, now)
+	local draft = ProfileLogic.deepCopy(farm)
+	local ok, detail = Products.grant(draft, key, now)
 	if not ok then
 		return false, detail, nil
+	end
+	local into = farm :: any
+	for field in into do
+		if draft[field] == nil then
+			into[field] = nil
+		end
+	end
+	for field, value in draft do
+		into[field] = value
 	end
 	Products.takeReceipt(farm, receiptId)
 	return true, "GRANTED", detail

@@ -1,5 +1,24 @@
 # Status
 
+## 2026-11-16 — pre-launch audit: CONDITIONAL GO
+
+The owner asked for a full pre-launch audit, cleanup and optimization. Reports: `docs/audit/PRELAUNCH_AUDIT.md` (what was
+checked and found), `docs/audit/OPTIMIZATION_RESULTS.md` (what changed, what was measured), `docs/audit/RELEASE_READINESS.md`
+(gates, conditions, rollback). Work on branch `chore/prelaunch-audit`, merged into main with a merge commit.
+- **Fixed**: a Robux grant that threw halfway kept half the good and no receipt, so Roblox's retry would pay that half
+  again; `Products.redeem` now grants on a copy (test in `purchases`). The release build leaves `DebugPresets` out
+  (only the Studio menu reads it) and refuses `Robux.TestGrant` and `Village.DevFreeUpgrades`. `ArenaReplay.playing`
+  (unused) removed. Nothing in gameplay, balance or the save shape changed.
+- **Found sound**: saves (no load failure becomes a new farm, migrations 1-17 tested), receipts, every remote validated
+  and rate-limited, all test switches off, no secrets, no dead module, every per-player table cleared on leave.
+- **Measured** in MapWork (PC, Studio): server 60 Hz in a warm Dungeon run, no memory growth over three runs (server and
+  client); the village tick 0.155 ms a player a second on the Late farm (`tools/perf/server_bench.luau`).
+**Proved:** CHECK OK (824 passed), TYPES OK, PUBLISH PLACE OK. **Not verified:** a phone, a live server, two players,
+the cold first Dungeon run's hitches (42-482 ms server frames in Studio, source not isolated).
+**Needs the owner:** a one-hour phone play on a private test place; the two textures that do not load
+(`136198076207142` Heart guardians, `102905861327564` lava_tortoise); Robux products (22 at id 0) and the group id; shut
+down all servers at publish.
+
 ## 2026-11-15 — the economy re-solved: the owner's road (20 levels in an hour, 30 in 2-4 h more, then ever slower)
 
 The owner asked for the whole economy reviewed: coins from monsters, the areas' upgrade prices and the Smithy's prices,
