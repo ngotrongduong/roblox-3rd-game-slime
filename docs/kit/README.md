@@ -191,6 +191,26 @@ pivot at the middle; the skewer 1.4, the golden dishes 1.1 and 1.2) and looked a
 Not tinted gold: the generator makes warm peach rather than metal gold (like the golden carp); a redo with a gold
 material is possible if the owner asks.
 
+### The new dishes and spices (2026-11-15)
+
+Nine more `generate_mesh` models (segmentation "none" when auto-segmentation failed), taken in with
+`intake_dishes.luau`, looked at from two sides with `viewer_dishes.luau`, and listed in the key lists of
+`export_client_kit.luau` and `fill_client_items.luau` (so in `ClientKit.Items` and `assets/ClientKit.rbxm`). Spices 0.8
+studs on the longest side, dishes 1.0 to 1.2. The id is each model's mesh id (its first MeshPart; the model also has
+smaller part meshes), not an upload id of the whole model.
+
+| Model (ClientKit.Items) | Asset id | Notes |
+|---|---|---|
+| honey | 140043462579362 | a glass jar with a cloth lid tied by string and a wooden dipper; the glass comes out pale peach, honey colour is weak |
+| truffle | 119348943615681 | a dark knobbly truffle with a cut marbled slice, on a green leaf |
+| saffron | 108941390180220 | a wooden bowl heaped with red threads |
+| lastingStew | 114742674407772 | a clay pot (cream band, handles) of golden stew with a spoon; fish and carrot bits are small |
+| lastingStewII | 104555277480648 | a dark iron pot with two handles of stew with salmon, pumpkin and truffle cubes |
+| goldenCarpRoyale | 131479342135106 | a carp on a peach-gold pedestal platter with saffron threads and lemon slices |
+| saffronPufferCrown | 96057899681279 | a round puffer in a crown of saffron threads and star slices, on a dark plate |
+| saffronStarTart | 113469354752521 | a scalloped tart with a glaze and a big star slice on top; shorter than asked |
+| saffronBanquet | 88751840873193 | a pedestal platter with a fish, star slices, gems and a saffron fan; second try (the first was a koi on a red stand) |
+
 ## FoodKit (more fish and vegetables, 2026-10-30)
 
 The owner asked for several kinds of fish and vegetables with rarities (`Config.Food.Kinds`). The free Creator Store
