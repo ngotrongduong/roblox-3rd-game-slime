@@ -320,14 +320,37 @@ function Dungeon.lootLines(mapId: string, role: string, level: number): { any }
 	return out
 end
 
+-- A def's own lines (coins, food) as a Dungeon run of `level` pays them: the coins raised by the run's main monster level
+-- as a pack monster's are (WorldPacks.killReward, ZoneFights.reward), every other line as it stands.
+local function ownLines(def: any, level: number): { any }
+	local grow = 1 + Dungeon.mainLevel(level) * Config.Economy.SellLevelStep
+	local out: { any } = {}
+	for _, line in def.drops or {} do
+		table.insert(
+			out,
+			if line.item == "coins"
+				then {
+					item = line.item,
+					chance = line.chance,
+					min = math.floor(line.min * grow + 0.5),
+					max = math.floor(line.max * grow + 0.5),
+				}
+				else line
+		)
+	end
+	return out
+end
+
 -- Every drop of a fallen monster: the lines of its def (coins, food), then, when `mapId` is given (a Dungeon run; a zone's
--- fight gives only the def's lines), the materials of Loot. Each line is rolled on its own and always spends its two numbers
--- from the monster's stream, hit or not, so one line never moves another's roll.
+-- fight gives only the def's lines as they stand), the def's coins raised by the run's level (ownLines) and the materials
+-- of Loot. Each line is rolled on its own and always spends its two numbers from the monster's stream, hit or not, so one
+-- line never moves another's roll.
 function Dungeon.rollDrops(def: any, level: number, enemyId: string, seed: number, mapId: string?): { Drop }
 	local out: { Drop } = {}
 	local rng = stream(enemyId, seed)
-	local lines: { any } = table.clone(def.drops or {})
+	local lines: { any } = def.drops or {}
 	if mapId then
+		lines = ownLines(def, level)
 		local loot = Dungeon.lootLines(mapId, def.role, level)
 		table.move(loot, 1, #loot, #lines + 1, lines)
 	end
@@ -354,7 +377,7 @@ function Dungeon.dropTable(mapId: string, level: number): { [string]: { number }
 		end
 	end
 	for _, def in map(mapId).monsters :: { any } do
-		for _, line in def.drops do
+		for _, line in ownLines(def, level) do
 			add(line)
 		end
 		for _, line in Dungeon.lootLines(mapId, def.role, level) do

@@ -196,6 +196,76 @@ return function(T: any)
 		T.ok(a > 10 and a < b and b < c and c < d, `{a} {b} {c} {d}`)
 	end)
 
+	T.test(
+		"a run's coins rise with its monsters' level, the same by role in every dungeon; a zone's fight pays the line as it stands",
+		function()
+			local function coinLine(each: any): any
+				for _, line in each.drops do
+					if line.item == "coins" then
+						return line
+					end
+				end
+				return nil
+			end
+			local function coins(each: any, level: number, key: string, seed: number, mapId: string?): number
+				local sum = 0
+				for _, drop in Dungeon.rollDrops(each, level, key, seed, mapId) do
+					sum += if drop.item == "coins" then drop.amount else 0
+				end
+				return sum
+			end
+			local boss = Dungeon.defOf("meadow", "green_boar")
+			local line = coinLine(boss)
+			for n = 1, 100 do
+				local zone = coins(boss, 200, "m10-" .. n, n)
+				T.ok(zone >= line.min and zone <= line.max, "a zone's fight pays the line as it stands")
+				for _, level in { 1, 100 } do
+					local grow = 1 + Dungeon.mainLevel(level) * Config.Economy.SellLevelStep
+					local got = coins(boss, level, "m10-" .. n, n, "meadow")
+					T.ok(
+						got >= math.floor(line.min * grow + 0.5) and got <= math.floor(line.max * grow + 0.5),
+						`level {level} pays {got}`
+					)
+				end
+			end
+			T.same(Dungeon.dropTable("meadow", 1).coins, { 60, 600 })
+			T.same(Dungeon.dropTable("meadow", 100).coins, { 300, 3000 })
+			-- no dungeon is the one to farm coins in
+			local byRole: { [string]: any } = {}
+			for _, id in D.MapOrder do
+				for _, each in (D.Maps :: any)[id].monsters do
+					local own = coinLine(each)
+					local seen = byRole[each.role] or own
+					byRole[each.role] = seen
+					T.same({ own.chance, own.min, own.max }, { seen.chance, seen.min, seen.max }, each.id)
+				end
+			end
+			-- a won run is worth three to five fights with a pack of its monsters' level (what one team earns from the
+			-- world in the five minutes a run lasts: tools/balance/road_sim.luau)
+			local roster = WorldPacks.roster("meadow")
+			for _, level in { 1, 40, 150 } do
+				local fight = 0
+				for _, def in roster do
+					fight += WorldPacks.killReward(def.role, Dungeon.mainLevel(level)) / #roster * (P.SizeMin + P.SizeMax) / 2
+				end
+				local sum, runs = 0, 0
+				for _, id in D.MapOrder do
+					for seed = 1, 5 do
+						for wave = 1, D.Waves do
+							for _, monster in Dungeon.plan(id, level, wave, seed) do
+								local each = Dungeon.defOf(id, monster.defId)
+								sum += coins(each, level, monster.id .. ":" .. seed, seed, id)
+							end
+						end
+						runs += 1
+					end
+				end
+				local worth = sum / runs / fight
+				T.ok(worth >= 3 and worth <= 5, `a level {level} run is worth {worth} pack fights`)
+			end
+		end
+	)
+
 	T.test("the clear bonus is paid once with wave 10, never on a lost wave 10 or an earlier wave", function()
 		local farm = rich()
 		local ledger = Dungeon.newLedger()

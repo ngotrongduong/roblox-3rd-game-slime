@@ -1,5 +1,27 @@
 # Status
 
+## 2026-11-15 — the economy re-solved: the owner's road (20 levels in an hour, 30 in 2-4 h more, then ever slower)
+
+The owner asked for the whole economy reviewed: coins from monsters, the areas' upgrade prices and the Smithy's prices,
+so that the first 20 village levels take about an hour, the next ten 2-4 hours and every later level longer. Full
+tables: `docs/ECONOMY.md`, "The owner's road (2026-11-15)".
+- **Upgrade prices** (`Config.Village.UpgradePrices`): 70 at level 1 (was 150), 260 at 10 (550), 2,700 at 20 (2,100),
+  28,000 at 30 (14,000), 250,000 at 40 (41,000), 700,000 at 49 (99,000). The old table was dear early and far too cheap
+  late (a village that trains walked 30 to 50 in seven hours).
+- **Dungeon coins** (`Config.Dungeon` drop lines, `Dungeon.rollDrops`): a monster's coin line is what it pays at level 0,
+  the same by role in all four dungeons, and a run raises it by its monsters' level as a pack does. A won run pays
+  3,200 coins at level 1 and 29,500 at 200 (was about 110 at every level), level with one team's five minutes on packs.
+- **The world's packs**: stats 0.85 -> 0.55 of an even slime (already in e4b509b): the starters now win at home.
+- **Kept after checking**: the Smithy's coins (a weapon is a quarter to a third of an upgrade where its tier opens),
+  what a pack and a zone guard pay, sale values, spices. Rewards follow the prices by themselves.
+
+**Proved:** CHECK OK (823 passed), TYPES OK on `Config` and `Dungeon`. `road_sim`: a village that trains a little reaches
+20 at 0.91 h, 30 at 3.64 h, 40 at 11.7 h, 50 at 37.9 h (old prices: 1.23, 3.04, 5.88, 10.2 h); never trains: 0.99, 6.4,
+47, 206 h. `early_game_sim` (real rules, one team only, nothing trained): village 10 at 10 min, 20 at 74-84 min by seed.
+`loot_sim`: LOOT GATES OK. New guards: `tests/spec/village.luau` (the road's stretches), `tests/spec/loot.luau` (a run's
+coins). **Not verified:** nothing was played in Studio; the road rests on assumptions (40 fights an hour a team, a second
+team in use from level 10-15, a quarter of the training reaching the teams) that a real hour of play must confirm.
+
 ## 2026-11-15 — the big rebalance: four dungeons, loot by stage, tempering, spices, button feel, coin fly, forge scene
 
 The owner asked for buttons that answer hover and press, backdrops behind slime portraits, a 2-3 s forge scene grander

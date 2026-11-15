@@ -20,6 +20,7 @@
 --   * half the babies and dishes a village could sell are sold.
 local process = require("@lune/process")
 local Config = require("../../src/shared/Config")
+local Dungeon = require("../../src/shared/Dungeon")
 local FarmState = require("../../src/shared/FarmState")
 local Stations = require("../../src/shared/Stations")
 local Training = require("../../src/shared/Training")
@@ -222,25 +223,114 @@ for level = 1, MAX - 1 do
 end
 print(string.format("one area, 1 to %d: %d coins; the whole village: %d coins", MAX, total, total * AREAS))
 
+-- The stretches of the road in coins (the whole village), in fights with the first packs and against the stretch before
+-- (tests/spec/village.luau guards these).
+print("\nThe stretches of the road")
+print("village levels | coins | first-pack fights | times the stretch before")
+local before
+for _, stretch in { { 1, 19 }, { 20, 29 }, { 30, 39 }, { 40, 49 } } do
+	local sum = 0
+	for level = stretch[1], stretch[2] do
+		sum += Village.upgradeCost(level) * AREAS
+	end
+	print(
+		string.format(
+			"%2d-%2d | %9d | %7.0f | %s",
+			stretch[1],
+			stretch[2] + 1,
+			sum,
+			sum / packCoins(Config.World.Packs.LevelMin),
+			if before then string.format("%.1f", sum / before) else ""
+		)
+	)
+	before = sum
+end
+
+-- The village level at which the typical player's fighters reach this level (never under the Dungeon's door).
+local function villageAt(slimeLevel: number): number
+	for level = Config.Dungeon.EnterMinVillageLevel, MAX - 1 do
+		if typicalRows[level].slimeLevel >= slimeLevel then
+			return level
+		end
+	end
+	return MAX - 1
+end
+
 -- ===== the Smithy beside the road =====
--- A piece's price against the upgrade price and the typical income at the village level its tier is made at
--- (CRAFT_AT: wood with the Dungeon's door, the others where their materials are first within reach).
-local CRAFT_AT = { wood = 15, iron = 20, core = 27, bramble = 34, legend = 42 }
-print("\nThe Smithy: a piece's coins beside the road (sword of each tier)")
-print("tier | coins | made at village level | upgrades it equals there | minutes of typical income | fits the vault there")
+-- A weapon's price against the upgrade price and the typical income at the village level its tier opens at: where the
+-- typical fighters reach the tier's first level (TIER_FROM: tools/balance/squad_run tierAt, docs/SMITHY.md's stages).
+-- A team's set is four weapons, four helms and four charms (the top tier has weapons only).
+local TIER_FROM = { wood = 4, iron = 8, core = 23, bramble = 68, legend = 110 }
+print("\nThe Smithy: a weapon's coins beside the road")
+print("tier | fighters' level | village level | coins | upgrades it equals there | minutes of typical income | a team's set, minutes | fits the vault")
 for _, tier in Config.Smithy.TierOrder do
-	local recipe = Config.Smithy.Recipes["sword-" .. tier]
-	local at = CRAFT_AT[tier]
+	local coins = Config.Smithy.Recipes["sword-" .. tier].coins
+	local set = 0
+	for _, family in { "sword", "helm", "charm" } do
+		local recipe = Config.Smithy.Recipes[family .. "-" .. tier]
+		set += if recipe then recipe.coins * Config.Zombies.TeamSize else 0
+	end
+	local at = villageAt(TIER_FROM[tier])
 	local row = typicalRows[at]
 	print(
 		string.format(
-			"%-8s | %7d | %2d | %5.2f | %5.1f | %s",
+			"%-8s | %3d | %2d | %6d | %5.2f | %5.1f | %5.1f | %s",
 			tier,
-			recipe.coins,
+			TIER_FROM[tier],
 			at,
-			recipe.coins / row.price,
-			recipe.coins / (row.earning / 60),
-			if recipe.coins <= Village.coinCap(at) then "yes" else "NO"
+			coins,
+			coins / row.price,
+			coins / (row.earning / 60),
+			set / (row.earning / 60),
+			if coins <= Village.coinCap(at) then "yes" else "NO"
+		)
+	)
+end
+
+-- ===== the Dungeon's coins beside the road =====
+-- The coins of a won run (every wave's drops, the four dungeons, RUN_SEEDS runs each) against what one team earns from
+-- the world's packs of the same level in the RUN_MINUTES a run lasts (dungeon_sim: 4.4-5.3 min), and against the
+-- upgrade price at the village level where the typical fighters are of the run's level.
+local RUN_MINUTES = 5
+local RUN_SEEDS = 20
+local function runCoins(mapId: string, level: number, seed: number): number
+	local sum = 0
+	for wave = 1, Config.Dungeon.Waves do
+		for _, monster in Dungeon.plan(mapId, level, wave, seed) do
+			local def = Dungeon.defOf(mapId, monster.defId)
+			for _, drop in Dungeon.rollDrops(def, level, monster.id .. ":" .. seed, seed, mapId) do
+				if drop.item == "coins" then
+					sum += drop.amount
+				end
+			end
+		end
+	end
+	return sum
+end
+print("\nThe Dungeon: a won run's coins beside the road")
+print("dungeon level | monsters' level | coins a run | one team on packs, 5 min | run / team | village level | upgrades a run buys there")
+for _, level in { 1, 10, 20, 40, 70, 110, 150, 200 } do
+	local sum, runs = 0, 0
+	for _, mapId in Config.Dungeon.MapOrder do
+		for seed = 1, RUN_SEEDS do
+			sum += runCoins(mapId, level, seed)
+			runs += 1
+		end
+	end
+	local coins = sum / runs
+	local main = Dungeon.mainLevel(level)
+	local team = FIGHTS_PER_TEAM_HOUR * RUN_MINUTES / 60 * packCoins(packLevel(main))
+	local at = villageAt(main)
+	print(
+		string.format(
+			"%4d | %4d | %6.0f | %6.0f | %4.2f | %2d | %4.1f",
+			level,
+			main,
+			coins,
+			team,
+			coins / team,
+			at,
+			coins / typicalRows[at].price
 		)
 	)
 end

@@ -153,7 +153,7 @@ return {
 					hp = 13,
 					kind = "melee",
 					drops = {
-						{ item = "coins", chance = 0.25, min = 2, max = 4 },
+						{ item = "coins", chance = 0.25, min = 50, max = 100 },
 						{ item = "food", chance = 0.15, min = 3, max = 5 },
 					},
 				},
@@ -169,7 +169,7 @@ return {
 					hp = 18,
 					kind = "hunter",
 					drops = {
-						{ item = "coins", chance = 0.25, min = 2, max = 5 },
+						{ item = "coins", chance = 0.25, min = 50, max = 125 },
 						{ item = "food", chance = 0.10, min = 3, max = 5 },
 					},
 				},
@@ -185,7 +185,7 @@ return {
 					hp = 16,
 					kind = "ranged",
 					drops = {
-						{ item = "coins", chance = 0.25, min = 2, max = 5 },
+						{ item = "coins", chance = 0.25, min = 50, max = 125 },
 						{ item = "food", chance = 0.15, min = 3, max = 5 },
 					},
 				},
@@ -201,7 +201,7 @@ return {
 					hp = 20,
 					kind = "healer",
 					drops = {
-						{ item = "coins", chance = 0.25, min = 2, max = 5 },
+						{ item = "coins", chance = 0.25, min = 50, max = 125 },
 						{ item = "food", chance = 0.10, min = 3, max = 5 },
 					},
 				},
@@ -217,7 +217,7 @@ return {
 					hp = 38,
 					kind = "melee",
 					drops = {
-						{ item = "coins", chance = 0.30, min = 3, max = 6 },
+						{ item = "coins", chance = 0.30, min = 75, max = 150 },
 						{ item = "food", chance = 0.10, min = 3, max = 5 },
 					},
 				},
@@ -232,7 +232,7 @@ return {
 					hp = 140,
 					kind = "bloomshell",
 					drops = {
-						{ item = "coins", chance = 1, min = 6, max = 11 },
+						{ item = "coins", chance = 1, min = 150, max = 275 },
 					},
 				},
 				{
@@ -246,7 +246,7 @@ return {
 					hp = 280,
 					kind = "bramblehorn",
 					drops = {
-						{ item = "coins", chance = 1, min = 12, max = 20 },
+						{ item = "coins", chance = 1, min = 300, max = 500 },
 					},
 				},
 			} :: { any },
@@ -272,7 +272,7 @@ return {
 					hp = 14,
 					kind = "melee",
 					drops = {
-						{ item = "coins", chance = 0.25, min = 2, max = 4 },
+						{ item = "coins", chance = 0.25, min = 50, max = 100 },
 						{ item = "food", chance = 0.15, min = 3, max = 5 },
 					},
 				},
@@ -288,7 +288,7 @@ return {
 					hp = 16,
 					kind = "hunter",
 					drops = {
-						{ item = "coins", chance = 0.25, min = 2, max = 5 },
+						{ item = "coins", chance = 0.25, min = 50, max = 125 },
 						{ item = "food", chance = 0.10, min = 3, max = 5 },
 					},
 				},
@@ -304,7 +304,7 @@ return {
 					hp = 16,
 					kind = "ranged",
 					drops = {
-						{ item = "coins", chance = 0.25, min = 2, max = 5 },
+						{ item = "coins", chance = 0.25, min = 50, max = 125 },
 						{ item = "food", chance = 0.15, min = 3, max = 5 },
 					},
 				},
@@ -320,7 +320,7 @@ return {
 					hp = 20,
 					kind = "healer",
 					drops = {
-						{ item = "coins", chance = 0.25, min = 2, max = 5 },
+						{ item = "coins", chance = 0.25, min = 50, max = 125 },
 						{ item = "food", chance = 0.10, min = 3, max = 5 },
 					},
 				},
@@ -336,7 +336,7 @@ return {
 					hp = 38,
 					kind = "melee",
 					drops = {
-						{ item = "coins", chance = 0.30, min = 3, max = 6 },
+						{ item = "coins", chance = 0.30, min = 75, max = 150 },
 						{ item = "food", chance = 0.10, min = 3, max = 5 },
 					},
 				},
@@ -351,7 +351,7 @@ return {
 					hp = 150,
 					kind = "sporeburst",
 					drops = {
-						{ item = "coins", chance = 1, min = 6, max = 11 },
+						{ item = "coins", chance = 1, min = 150, max = 275 },
 					},
 				},
 				{
@@ -365,7 +365,7 @@ return {
 					hp = 300,
 					kind = "bearslam",
 					drops = {
-						{ item = "coins", chance = 1, min = 12, max = 20 },
+						{ item = "coins", chance = 1, min = 300, max = 500 },
 					},
 				},
 			} :: { any },
@@ -391,7 +391,7 @@ return {
 					hp = 16,
 					kind = "melee",
 					drops = {
-						{ item = "coins", chance = 0.25, min = 2, max = 4 },
+						{ item = "coins", chance = 0.25, min = 50, max = 100 },
 						{ item = "food", chance = 0.15, min = 3, max = 5 },
 					},
 				},
@@ -407,7 +407,7 @@ return {
 					hp = 19,
 					kind = "hunter",
 					drops = {
-						{ item = "coins", chance = 0.25, min = 2, max = 5 },
+						{ item = "coins", chance = 0.25, min = 50, max = 125 },
 						{ item = "food", chance = 0.10, min = 3, max = 5 },
 					},
 				},
@@ -423,7 +423,7 @@ return {
 					hp = 18,
 					kind = "ranged",
 					drops = {
-						{ item = "coins", chance = 0.25, min = 2, max = 5 },
+						{ item = "coins", chance = 0.25, min = 50, max = 125 },
 						{ item = "food", chance = 0.15, min = 3, max = 5 },
 					},
 				},
@@ -439,7 +439,7 @@ return {
 					hp = 22,
 					kind = "healer",
 					drops = {
-						{ item = "coins", chance = 0.25, min = 2, max = 5 },
+						{ item = "coins", chance = 0.25, min = 50, max = 125 },
 						{ item = "food", chance = 0.10, min = 3, max = 5 },
 					},
 				},
@@ -455,7 +455,7 @@ return {
 					hp = 44,
 					kind = "melee",
 					drops = {
-						{ item = "coins", chance = 0.30, min = 3, max = 6 },
+						{ item = "coins", chance = 0.30, min = 75, max = 150 },
 						{ item = "food", chance = 0.10, min = 3, max = 5 },
 					},
 				},
@@ -470,7 +470,7 @@ return {
 					hp = 170,
 					kind = "lavastomp",
 					drops = {
-						{ item = "coins", chance = 1, min = 6, max = 11 },
+						{ item = "coins", chance = 1, min = 150, max = 275 },
 					},
 				},
 				{
@@ -484,7 +484,7 @@ return {
 					hp = 340,
 					kind = "eruption",
 					drops = {
-						{ item = "coins", chance = 1, min = 12, max = 20 },
+						{ item = "coins", chance = 1, min = 300, max = 500 },
 					},
 				},
 			} :: { any },
@@ -513,7 +513,7 @@ return {
 					hp = 20,
 					kind = "melee",
 					drops = {
-						{ item = "coins", chance = 0.25, min = 2, max = 5 },
+						{ item = "coins", chance = 0.25, min = 50, max = 100 },
 						{ item = "food", chance = 0.15, min = 3, max = 5 },
 					},
 				},
@@ -529,7 +529,7 @@ return {
 					hp = 24,
 					kind = "hunter",
 					drops = {
-						{ item = "coins", chance = 0.25, min = 3, max = 6 },
+						{ item = "coins", chance = 0.25, min = 50, max = 125 },
 						{ item = "food", chance = 0.10, min = 3, max = 5 },
 					},
 				},
@@ -545,7 +545,7 @@ return {
 					hp = 22,
 					kind = "ranged",
 					drops = {
-						{ item = "coins", chance = 0.25, min = 3, max = 6 },
+						{ item = "coins", chance = 0.25, min = 50, max = 125 },
 						{ item = "food", chance = 0.15, min = 3, max = 5 },
 					},
 				},
@@ -561,7 +561,7 @@ return {
 					hp = 27,
 					kind = "healer",
 					drops = {
-						{ item = "coins", chance = 0.25, min = 3, max = 6 },
+						{ item = "coins", chance = 0.25, min = 50, max = 125 },
 						{ item = "food", chance = 0.10, min = 3, max = 5 },
 					},
 				},
@@ -577,7 +577,7 @@ return {
 					hp = 56,
 					kind = "melee",
 					drops = {
-						{ item = "coins", chance = 0.30, min = 4, max = 7 },
+						{ item = "coins", chance = 0.30, min = 75, max = 150 },
 						{ item = "food", chance = 0.10, min = 3, max = 5 },
 					},
 				},
@@ -592,7 +592,7 @@ return {
 					hp = 215,
 					kind = "tuskcharge",
 					drops = {
-						{ item = "coins", chance = 1, min = 8, max = 13 },
+						{ item = "coins", chance = 1, min = 150, max = 275 },
 					},
 				},
 				{
@@ -606,7 +606,7 @@ return {
 					hp = 420,
 					kind = "blizzard",
 					drops = {
-						{ item = "coins", chance = 1, min = 14, max = 23 },
+						{ item = "coins", chance = 1, min = 300, max = 500 },
 					},
 				},
 			} :: { any },
@@ -700,6 +700,10 @@ return {
 	-- ===== Loot (the owner, 2026-11-15; docs/SMITHY.md §2) =====
 	-- Every line of a monster's `drops` (Maps above: coins and food) is rolled on its own: a roll r in [0, 1) under the line's
 	-- `chance` pays min..max of its item. There is no luck: a chance is what it says.
+	-- Coins (2026-11-15): the lines hold what a monster pays at level 0, the same in all four dungeons by role; in a Dungeon
+	-- run they are raised by the run's main monster level as a pack monster's are (x 1 + level x Config.Economy.SellLevelStep,
+	-- shared/Dungeon.rollDrops), so a won run pays about what one team earns from the world's packs in the same five minutes
+	-- (tools/balance/road_sim.luau). They were 2-5 coins a monster at every level (a run about 110) when a pack fight paid 860.
 	-- The materials come from Loot.Lines, rolled the same way per fallen monster by its ROLE (regular = every role but the
 	-- mini-boss and the boss) and the run's dungeon level L. A line's item "basic" and "trophy" are the map's own (Maps).
 	-- `chance` is a list of steps { from = level, chance = c }: the last step whose `from` is not above L holds; a step with

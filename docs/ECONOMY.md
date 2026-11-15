@@ -3,9 +3,111 @@
 The owner's design (2026-11-02), worked out and measured. Playable in MapWork: zombies on the map, sending squads, fights,
 coins for each death, revive, loss for good, the shop (rules in `src/shared/Combat`, `Zombies`, `Shop`; `src/server/ZombieFights`;
 `src/client/Zombie*`, `UiSquad`). The price table, the kitchen's dish prices and the coin vault are in `Config`. Tools: `tools/balance/fight_sim.luau`,
-`income_sim.luau`, `kitchen_sim.luau`, `price_curve.luau` (with `income_model.luau` and `kitchen_lib.luau`, which they share).
+`income_sim.luau`, `kitchen_sim.luau`, `price_curve.luau` (with `income_model.luau` and `kitchen_lib.luau`, which they share);
+since 2026-11-15 `road_sim.luau` (the road below), `pack_sim.luau` (the world's packs) and `early_game_sim.luau`.
 
-## The owner's road
+## The owner's road (2026-11-15)
+
+The owner: the first 20 village levels fairly easy, within about an hour; the next ten in 2-4 hours; every level after
+that slower than the one before. It replaces the 2026-11-02 road (20 at 2 h, 40 at 12 h, 50 in a week); the sections
+further down that name the old price table are kept as history.
+
+`lune run tools/balance/road_sim.luau` solves the price of every area level from what a village earns at that point, then
+walks the real prices (`Config.Village.UpgradePrices`) with three kinds of player. Hours of play to reach a village level:
+
+| Player | 5 | 10 | 20 | 30 | 40 | 50 |
+|---|---|---|---|---|---|---|
+| Target | 0.05 | 0.17 | 0.93 | 3.64 | 12.1 | 38.2 |
+| Trains a little (a quarter of what the training ground gives reaches the teams) | 0.07 | 0.21 | **0.91** | **3.64** | **11.7** | **37.9** |
+| Trains hard (half) | 0.07 | 0.21 | 0.84 | 2.99 | 10.1 | 36.2 |
+| Never trains | 0.07 | 0.21 | 0.99 | 6.40 | 47.5 | 206 |
+| On the old prices: trains a little | | | 1.23 | 3.04 | 5.88 | 10.2 |
+| On the old prices: never trains | | | 1.38 | 4.62 | 13.9 | 37.9 |
+
+The old table was too dear at the start and far too cheap late: a village that trained walked from 30 to 50 in seven hours.
+
+| Area level | Price (was) | A village level takes (trains a little) | Income an hour | Fighters' level | Teams |
+|---|---|---|---|---|---|
+| 1 | 70 (150) | 1 min | 37,000 | 4 | 1 |
+| 5 | 120 (260) | 1.5 min | 39,000 | 4 | 1 |
+| 10 | 260 (550) | 2 min | 48,000 | 5 | 1.2 |
+| 15 | 800 (1,100) | 3.5 min | 82,000 | 7 | 2 |
+| 20 | 2,700 (2,100) | 9.5 min | 106,000 | 11 | 2.2 |
+| 25 | 9,500 (6,000) | 16 min | 206,000 | 25 | 3 |
+| 30 | 28,000 (14,000) | 28 min | 348,000 | 52 | 3.2 |
+| 35 | 110,000 (24,000) | 50 min | 759,000 | 108 | 4 |
+| 40 | 250,000 (41,000) | 1.5 h | 1,006,000 | past 150 | 4 |
+| 45 | 440,000 (67,000) | 2.6 h | 1,007,000 | past 150 | 4 |
+| 49 | 700,000 (99,000) | 4.2 h | 1,007,000 | past 150 | 4 |
+
+One area from 1 to 50 costs 5.57 million coins, the whole village 33.4 million (was 1.0 and 6 million). The shape: up to
+level 20 one or two teams fight packs of level 4-11; from 20 to 38 the third and fourth teams open and the fighters climb
+to the packs' last level (150, reached near village level 37), so income rises tenfold and prices rise about 27 % a level;
+from 38 income stands still, prices rise 12 % a level and so does the time of every village level.
+
+| Stretch | Coins (the whole village) | In fights with the first packs | Against the stretch before |
+|---|---|---|---|
+| 1-20 | 61,332 | 71 | |
+| 20-30 | 607,800 | 703 | 9.9 times |
+| 30-40 | 6,486,000 | 7,507 | 10.7 times |
+| 40-50 | 26,280,000 | 30,417 | 4.1 times |
+
+`tests/spec/village.luau` guards these (1-20 within 80 first-pack fights, 20-30 six to fourteen times that, each later
+stretch more again, every level dearer than the one before). The vault is unchanged in rule (six upgrades of the pantry's
+level, never under 2,000): it fills in 3-4 min at the start and in about the time of one village level later. Daily gifts,
+online gifts, quests and the wheel pay shares of the cheapest next upgrade, so they follow the new prices by themselves.
+
+**The slowest sensible player, with the real rules** (`lune run tools/balance/early_game_sim.luau 30 0 240 1 quiet`: one
+team on Repeat for the whole time, nothing trained, babies sold): village level 5 at 4.3 min, 10 at 10.2 min, 20 at 84 min
+(seeds 2 and 3: 74 and 82 min); 865 coins a fight, 0.08 slimes fall a fight, a cycle of 80 s. The road's hour is the
+player who also sends the second team, which opens at level 10.
+
+**The world's packs** (`pack_sim.luau`): their stats went from 0.85 to 0.55 of an even slime of their level
+(`Config.World.Packs.StatFactor`). At 0.85 the four starters won 62 fights in 100 against the packs beside their village
+and lost two slimes a fight, so a new village could not earn; at 0.55 a team beats a pack of its own level every time and
+loses a slime about once in 12 fights. What a pack pays is unchanged (`CoinBase` by role, raised 5 % a level).
+
+**The Dungeon's coins.** A monster's coin line (`Config.Dungeon.Maps.<id>.monsters[].drops`) now holds what it pays at
+level 0, the same in all four dungeons by role (swarmer 50-100 one time in four, raider, spitter and shaman 50-125,
+armoured 75-150 three times in ten, mini-boss 150-275, boss 300-500), and a Dungeon run raises it by its monsters' level
+as a pack does (`Dungeon.rollDrops`). Before, a monster paid 2-5 coins at every depth and a won run about 110, when one
+pack fight paid 860: every run cost a team thousands of coins. A zone's fight pays the lines as they stand.
+
+| Dungeon level | Monsters' level | Coins of a won run | One team on packs in the same 5 min | Upgrades a run buys (at the village level of such fighters) |
+|---|---|---|---|---|
+| 1 | 4 | 3,200 | 2,900 | 4.0 (15) |
+| 10 | 10 | 4,000 | 3,600 | 1.5 (20) |
+| 20 | 20 | 5,400 | 4,800 | 0.7 (24) |
+| 40 | 40 | 8,000 | 7,200 | 0.3 (29) |
+| 70 | 70 | 12,100 | 10,800 | 0.2 (33) |
+| 110 | 110 | 17,400 | 15,600 | 0.1 (36) |
+| 150 | 150 | 22,800 | 20,400 | 0.1 (38) |
+| 200 | 200 | 29,500 | 20,400 | 0.1 (40) |
+
+A won run pays 12 % more than the same team's five minutes in the world, and a team of the level wins 87 runs in 100
+(`dungeon_sim`), so the two are level: the Dungeon is chosen for its materials, not left for its coins. Past level 150 it
+pays more than the packs, which stop there. `tests/spec/loot.luau` guards the rule and the worth (3-5 pack fights a run).
+
+**The Smithy's prices** are the big rebalance's (`Config.Smithy.Cost`), checked against the new road and kept:
+
+| Tier | Fighters' level | Village level | A weapon | In upgrades there | In minutes of income | A team's whole set, minutes |
+|---|---|---|---|---|---|---|
+| Wood | 4 | 15 | 0 | | | |
+| Iron | 8 | 18 | 500 | 0.29 | 0.3 | 2.7 |
+| Epic | 23 | 25 | 3,000 | 0.32 | 0.9 | 7.0 |
+| Mythic | 68 | 32 | 12,000 | 0.25 | 1.5 | 12.0 |
+| Legendary | 110 | 36 | 30,000 | 0.23 | 2.1 | 8.5 |
+
+A piece costs a quarter to a third of one area upgrade where its tier opens and always fits the vault; the materials, not
+the coins, are what a piece waits for (`loot_sim`: 4-7 runs for four weapons of a tier).
+
+Left as they were: what a pack and a zone's guard pay, slime and dish sale values, spices, `Config.Index.DiscoverCoins`.
+
+**Assumed, not measured** (a play test moves these, and every price with them): a team wins 40 fights an hour against
+packs of its own level; a new team is in full use five village levels after it opens; the fighters' level follows the
+training ground; half the babies and dishes a village could sell are sold. No play test in Studio has been run on these numbers.
+
+## The road before (2026-11-02, history)
 
 | Village level | Upgrades bought (6 a level) | Play time |
 |---|---|---|
@@ -54,7 +156,7 @@ Decided while working it out:
   the shop never sells the last 2. Otherwise a player could end the game with no way to breed.
 - A fight dropped by leaving the game simply ends, and nobody dies in it.
 
-## Income and the price table
+## Income and the price table (history: the table of 2026-11-04, replaced on 2026-11-15 by the road above)
 
 Permanent death makes **slimes what limits income**. A village replaces about 14 slimes an hour through breeding at the
 start (24 from level 21, 32 from level 41) and has food for about 10 revives. Run out and fights stop paying, so the camps
@@ -174,7 +276,8 @@ stays at 100% wins, with income up 2-15%. Defence alone does nothing at +5 (0-11
 ### Faucets and sinks of gear and spices (2026-11-15; every number from the code, nothing here is measured)
 
 Coins in: slime and dish sales, fights, and now the dungeon's and the world's coin lines (`Config.Dungeon.Maps.<id>.monsters[].drops`,
-`Config.World.Reward`: mini guard 1000-1600, boss guard 3000-4500, mega guard 8000-12000). Coins out, new this round:
+`Config.World.Reward`: mini guard 1000-1600, boss guard 3000-4500, mega guard 8000-12000; the dungeon's lines were resized
+the same day, see "The Dungeon's coins" in the road above). Coins out, new this round:
 
 | Sink | Price (coins) | Config key |
 |---|---|---|

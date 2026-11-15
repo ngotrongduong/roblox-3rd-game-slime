@@ -1459,23 +1459,30 @@ Config.Village = {
 		{ level = 40, cap = 57 },
 		{ level = 50, cap = 72 },
 	},
-	-- The owner, 2026-11-04: the first 20 levels were too slow for what a new player earns (a camp-1 fight pays about
-	-- 800 all game). Halved there: 1-2 is a fifth of a fight, 19-20 about two fights. Level 25 eases into the old curve.
+	-- The owner's road, 2026-11-15: village levels 1-20 within about an hour, 21-30 in 2-4 hours more, every level after
+	-- that slower than the one before. Solved by tools/balance/road_sim.luau (`solve`) for a village that trains its
+	-- fighters a little: a village level takes 0.6 min at first and 15.5 % longer each level up to 20, then 12 % longer
+	-- each level (20 at about 1 h, 30 at 3.6 h, 40 at 12 h, 50 at 38 h). The steep stretch 20-38 is where the third and
+	-- fourth teams open and the fighters' levels climb; from 38 the world's packs pay no more (level 150), so prices
+	-- rise 12 % a level. A village that never trains is on the same road to 20 and about twice as slow to 30
+	-- (docs/ECONOMY.md). Before: 150 at level 1 to 99,000 at 49 (the 2026-11-04 table), which a village that trains
+	-- walked to 50 in 10 hours.
 	UpgradePrices = {
-		{ level = 1, price = 150 },
-		{ level = 5, price = 260 },
-		{ level = 10, price = 550 },
-		{ level = 15, price = 1100 },
-		{ level = 19, price = 1700 },
-		{ level = 25, price = 6000 },
-		{ level = 30, price = 14000 },
-		{ level = 35, price = 24000 },
-		{ level = 39, price = 37000 },
-		{ level = 45, price = 67000 },
-		{ level = 49, price = 99000 },
+		{ level = 1, price = 70 },
+		{ level = 5, price = 120 },
+		{ level = 10, price = 260 },
+		{ level = 15, price = 800 },
+		{ level = 20, price = 2700 },
+		{ level = 25, price = 9500 },
+		{ level = 30, price = 28000 },
+		{ level = 35, price = 110000 },
+		{ level = 38, price = 200000 },
+		{ level = 40, price = 250000 },
+		{ level = 45, price = 440000 },
+		{ level = 49, price = 700000 },
 	},
 	CoinCapMin = 2000,
-	-- (was 3 before the early prices were halved on 2026-11-04; 6 keeps the vault where it was)
+	-- (six upgrades of the pantry's level: one village level's worth of one area)
 	CoinCapPriceFactor = 6,
 	OfflineCapSeconds = 8 * 60 * 60,
 	StepSeconds = 60,
