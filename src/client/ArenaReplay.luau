@@ -502,10 +502,6 @@ function ArenaReplay.stop()
 	end
 end
 
-function ArenaReplay.playing(): boolean
-	return current ~= nil
-end
-
 -- Plays the fight of an `attack` answer; `onDone` runs once, when the replay is over and everything it made is gone.
 function ArenaReplay.play(answer: any, onDone: (() -> ())?)
 	ArenaReplay.stop()
