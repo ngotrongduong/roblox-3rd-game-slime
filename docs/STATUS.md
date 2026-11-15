@@ -33,9 +33,11 @@ staff take a median of 4 runs at Iron (level 10), 4 at Epic (35), 5 at Mythic (7
 plan's gates. **Seen** in StudioTest Play: temper through the real button; coin fly and count-up; Grocer purchase;
 backdrops in the lists; the forge scene for Iron, Epic and Legendary (Sunfire Blade's gold aura and card); the gate's
 four tabs with each map's drops; a full Ice run at level 5 (monsters Lv 6-8 labelled, 22 Frost Crystal and 2 Frost Fang
-paid), then Checkpoint jumped to level 10 in the same map (monsters Lv 10).
+paid), then Checkpoint jumped to level 10 in the same map (monsters Lv 10); won runs in Lava at 5 (boss Calderos Lv
+10, 16 Iron Ore, 1 Ember Core), Meadow at 10 (boss Bramblehorn Lv 13, 23 Hardwood) and Grove at 15 (monsters Lv 11-19,
+mini-boss Lv 16, boss Hollowheart Lv 18, 23 Mushroom Silk).
 **Not verified:** the library forge effects; sounds by ear; the phone frame and hover; the new food icons inside
-StudioTest (its ClientKit is older); a run in Meadow, Grove and Lava; cooking a Legendary batch; the skip tap; the temper
+StudioTest (its ClientKit is older); cooking a Legendary batch; the skip tap; the temper
 quench steam. **Needs the owner:** the save shape changed twice (schemas 16 and 17): a publish must shut down every old
 server.
 
