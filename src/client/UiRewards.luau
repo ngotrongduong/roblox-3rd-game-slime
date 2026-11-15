@@ -478,6 +478,7 @@ local function tile(
 			Size = UDim2.fromScale(1, 1),
 			ZIndex = 10,
 		}, box)
+		UiKit.feel(press, box)
 		press.Activated:Connect(onClaim)
 	end
 	box:SetAttribute("State", state)
@@ -682,6 +683,7 @@ local function drawDaily(host: Frame, data: { [string]: any })
 			Size = UDim2.fromScale(1, 1),
 			ZIndex = 10,
 		}, box)
+		UiKit.feel(press, box)
 		press.Activated:Connect(function()
 			if ctx then
 				ctx.shop("boost")

@@ -307,13 +307,16 @@ local function makeRow(parent: Instance, id: string, order: number): Row
 			Position = UDim2.new(1, -U.Pad - U.FoodCountWidth, 0.5, 0),
 		})
 		-- the whole row is the button that opens the dish sheet
-		UiKit.make("TextButton", {
-			Name = "Open",
-			Text = "",
-			BackgroundTransparency = 1,
-			Size = UDim2.fromScale(1, 1),
-			ZIndex = 5,
-		}, root).Activated
+		UiKit.feel(
+			UiKit.make("TextButton", {
+				Name = "Open",
+				Text = "",
+				BackgroundTransparency = 1,
+				Size = UDim2.fromScale(1, 1),
+				ZIndex = 5,
+			}, root),
+			root
+		).Activated
 			:Connect(function()
 				openDishSheet(ownRef, id)
 			end)

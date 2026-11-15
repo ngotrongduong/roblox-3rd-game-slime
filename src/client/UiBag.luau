@@ -158,6 +158,7 @@ local function tileButton(parent: Instance, name: string, order: number, onTap: 
 		Size = UDim2.fromOffset(B.Tile, B.Tile),
 		LayoutOrder = order,
 	}, parent) :: TextButton
+	UiKit.feel(button)
 	button.Activated:Connect(onTap)
 	return button
 end

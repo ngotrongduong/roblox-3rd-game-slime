@@ -335,6 +335,7 @@ local function makeTile(parent: Instance, entry: Entry, onTap: (Configuration) -
 		key = "",
 		markKey = "",
 	}
+	UiKit.feel(root)
 	root.Activated:Connect(function()
 		local current = tile.entry
 		if current.blocked then

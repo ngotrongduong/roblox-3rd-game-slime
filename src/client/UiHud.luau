@@ -104,16 +104,19 @@ function UiHud.start(
 	add("coins", "coins")
 	add("food", "food", item(FOOD_ICON))
 	-- the whole food chip is a button: a transparent press area over it
-	UiKit.make("TextButton", {
-		Name = "Open",
-		BackgroundTransparency = 1,
-		Text = "",
-		-- (taller than the plate: a touch target is never below U.Touch)
-		AnchorPoint = Vector2.new(0, 0.5),
-		Position = UDim2.fromScale(0, 0.5),
-		Size = UDim2.new(1, 0, 0, U.Touch),
-		ZIndex = 20,
-	}, chips.food.root).Activated
+	UiKit.feel(
+		UiKit.make("TextButton", {
+			Name = "Open",
+			BackgroundTransparency = 1,
+			Text = "",
+			-- (taller than the plate: a touch target is never below U.Touch)
+			AnchorPoint = Vector2.new(0, 0.5),
+			Position = UDim2.fromScale(0, 0.5),
+			Size = UDim2.new(1, 0, 0, U.Touch),
+			ZIndex = 20,
+		}, chips.food.root),
+		chips.food.root
+	).Activated
 		:Connect(function()
 			UiFood.open(lastOwn)
 		end)

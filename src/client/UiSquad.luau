@@ -587,13 +587,16 @@ function UiSquad.start(own: () -> Folder?)
 	made.root.AnchorPoint = Vector2.new(0, 0.5)
 	made.root.Position = UDim2.new(0, U.Edge, 0.5, 0)
 	made.root.Visible = false
-	UiKit.make("TextButton", {
-		Name = "Open",
-		BackgroundTransparency = 1,
-		Text = "",
-		Size = UDim2.fromScale(1, 1),
-		ZIndex = 20,
-	}, made.root).Activated
+	UiKit.feel(
+		UiKit.make("TextButton", {
+			Name = "Open",
+			BackgroundTransparency = 1,
+			Text = "",
+			Size = UDim2.fromScale(1, 1),
+			ZIndex = 20,
+		}, made.root),
+		made.root
+	).Activated
 		:Connect(function()
 			openRevive()
 		end)

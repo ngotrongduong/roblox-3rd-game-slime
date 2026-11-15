@@ -426,7 +426,15 @@ return {
 	ToastSeconds = 2.6,
 	OpenSeconds = 0.18,
 	OpenSlide = 28,
-	PressScale = 0.94,
+	-- How a button answers (UiKit): under the mouse it grows to HoverScale; pressed it shrinks to PressScale and darkens to
+	-- PressShade (1 = as drawn), let go it springs back. Rows and tiles (UiKit.feel) move less: FeelHover and FeelPress. A
+	-- second tap within TapGap seconds is not a second press.
+	HoverScale = 1.05,
+	PressScale = 0.92,
+	PressShade = 0.8,
+	FeelHover = 1.02,
+	FeelPress = 0.97,
+	TapGap = 0.15,
 	BackdropTransparency = 0.55,
 	DisabledTransparency = 0.5,
 	-- The map (UiMap). Picture: the pixels of the map picture's side. The minimap is MiniSize square (MiniTall on a screen at

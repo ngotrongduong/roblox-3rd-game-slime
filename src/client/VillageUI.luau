@@ -557,6 +557,7 @@ local function seat(parent: Instance, id: string?, size: number, position: UDim2
 			Position = UDim2.fromScale(0.5, 0.5),
 		})
 	end
+	UiKit.feel(button)
 	button.Activated:Connect(onClick)
 	return button
 end

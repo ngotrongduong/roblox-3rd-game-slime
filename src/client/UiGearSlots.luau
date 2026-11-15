@@ -82,6 +82,7 @@ local function buildCell(parent: Instance, slot: string, centreX: number, top: n
 		ZIndex = 4,
 	})
 	UiKit.outline(name, true)
+	UiKit.feel(button)
 	button.Activated:Connect(onTap)
 	return { body = body, frame = frame, shown = "?" }
 end
@@ -197,6 +198,7 @@ function UiGearSlots.new(stage: Instance, slime: Configuration): Slots
 					LayoutOrder = order,
 				}, scroll)
 				UiKit.kit(row, "row", { Size = UDim2.fromScale(1, 1), ZIndex = 0 })
+				UiKit.feel(row)
 				row.Activated:Connect(function()
 					send({ action = "GearEquip", slimeId = slime.Name, gearId = gearId })
 				end)

@@ -372,6 +372,7 @@ function UiSlimeSheet.new(
 				TextXAlignment = Enum.TextXAlignment.Right,
 				ZIndex = 2,
 			})
+			UiKit.feel(row)
 			row.Activated:Connect(function()
 				request({ action = "FeedDish", slimeId = slime.Name, dish = id }, function()
 					showDishes(false)

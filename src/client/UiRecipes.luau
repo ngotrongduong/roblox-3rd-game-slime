@@ -63,13 +63,16 @@ function UiRecipes.bar(parent: Instance, options: Options, onTap: () -> ()): Bar
 		})
 		UiFood.factsRow(body, recipe, { AnchorPoint = Vector2.new(1, 0.5), Position = UDim2.fromScale(1, 0.5) })
 	end
-	UiKit.make("TextButton", {
-		Name = "Change",
-		Text = "",
-		BackgroundTransparency = 1,
-		Size = UDim2.fromScale(1, 1),
-		ZIndex = 8,
-	}, box).Activated
+	UiKit.feel(
+		UiKit.make("TextButton", {
+			Name = "Change",
+			Text = "",
+			BackgroundTransparency = 1,
+			Size = UDim2.fromScale(1, 1),
+			ZIndex = 8,
+		}, box),
+		box
+	).Activated
 		:Connect(onTap)
 	refresh()
 	return { root = box, refresh = refresh }
@@ -135,6 +138,7 @@ function UiRecipes.list(parent: Instance, options: Options): List
 			Visible = false,
 		}, root)
 		UiKit.make("UICorner", { CornerRadius = UDim.new(0, 10) }, veil)
+		UiKit.feel(root)
 		root.Activated:Connect(function()
 			if FoodRules.recipeUnlocked(id, options.level()) then
 				options.choose(id)

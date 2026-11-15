@@ -397,6 +397,7 @@ function UiSlimes.card(parent: Instance?, entry: Entry, onClick: ((Configuration
 		UiKit.setFill(box, if next.suggested then "Portrait" else "Card")
 	end
 	update(entry)
+	UiKit.feel(root)
 	root.Activated:Connect(function()
 		if onClick and not current.blocked then
 			onClick(slime)

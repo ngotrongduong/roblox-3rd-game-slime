@@ -292,18 +292,67 @@ function UiKit.outline(label: TextLabel, on: boolean)
 	label.TextColor3 = if on then Color3.new(1, 1, 1) else UiKit.colour("Brown")
 end
 
-local function pressable(button: GuiButton, target: Instance)
+-- How a button answers a finger or the mouse: under the mouse `target` grows to `hover`; pressed it shrinks to `press` and
+-- `shade` (a CanvasGroup or a picture) darkens; let go, it springs back. Hover listens to mouse movement only, so a
+-- phone never leaves a button grown.
+local PRESSES = { [Enum.UserInputType.MouseButton1] = true, [Enum.UserInputType.Touch] = true }
+local function pressable(button: GuiButton, target: Instance, hover: number, press: number, shade: GuiObject?)
 	local scale = make("UIScale", nil, target)
-	local function rest()
-		UiKit.tween(scale, 0.08, { Scale = 1 })
+	local over, down = false, false
+	local function settle()
+		if down then
+			UiKit.tween(scale, 0.06, { Scale = press })
+		else
+			UiKit.tween(scale, 0.18, { Scale = if over then hover else 1 }, Enum.EasingStyle.Back)
+		end
+		if shade then
+			local tone = if down then Color3.new(U.PressShade, U.PressShade, U.PressShade) else Color3.new(1, 1, 1)
+			UiKit.tween(shade, 0.06, { [if shade:IsA("CanvasGroup") then "GroupColor3" else "ImageColor3"] = tone })
+		end
 	end
-	button.MouseButton1Down:Connect(function()
-		if button:GetAttribute("Enabled") ~= false then
-			UiKit.tween(scale, 0.06, { Scale = U.PressScale })
+	button.InputBegan:Connect(function(input)
+		if button:GetAttribute("Enabled") == false then
+			return
+		end
+		if input.UserInputType == Enum.UserInputType.MouseMovement then
+			over = true
+			settle()
+		elseif PRESSES[input.UserInputType] then
+			down = true
+			settle()
 		end
 	end)
-	button.MouseButton1Up:Connect(rest)
-	button.MouseLeave:Connect(rest)
+	button.InputEnded:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseMovement or PRESSES[input.UserInputType] then
+			over = over and input.UserInputType ~= Enum.UserInputType.MouseMovement
+			down = false
+			settle()
+		end
+	end)
+	button.MouseLeave:Connect(function()
+		over, down = false, false
+		settle()
+	end)
+end
+
+-- A press handler that lets a second tap within TapGap go by: a double tap asks the server once.
+local function once(handler: () -> ()): () -> ()
+	local last = -math.huge
+	return function()
+		local now = os.clock()
+		if now - last >= U.TapGap then
+			last = now
+			handler()
+		end
+	end
+end
+
+-- A plain row or tile made into a button (a TextButton or ImageButton drawn by its screen): it answers as the kit's
+-- buttons do, a little less. `target` is what moves when the button is a clear press area laid over it (the button
+-- itself when left out). Returns the button.
+function UiKit.feel(button: GuiButton, target: GuiObject?): GuiButton
+	pressable(button, target or button, U.FeelHover, U.FeelPress, nil)
+	return button
 end
 
 function UiKit.setStyle(button: GuiButton, style: string)
@@ -378,15 +427,15 @@ function UiKit.button(parent: Instance?, props: Props): TextButton
 			TextXAlignment = Enum.TextXAlignment.Center,
 		})
 	end
-	pressable(button, group)
+	pressable(button, group, U.HoverScale, U.PressScale, group)
 	UiKit.setStyle(button, style)
 	UiKit.setEnabled(button, props.Enabled ~= false)
 	local onClick = props.OnClick
-	button.Activated:Connect(function()
+	button.Activated:Connect(once(function()
 		if button:GetAttribute("Enabled") ~= false and onClick then
 			onClick()
 		end
-	end)
+	end))
 	return button
 end
 
@@ -408,8 +457,8 @@ function UiKit.roundButton(parent: Instance?, key: string, size: number, onClick
 	if button.Image == "" then
 		UiKit.icon(button, key, size)
 	end
-	pressable(button, button)
-	button.Activated:Connect(onClick)
+	pressable(button, button, U.HoverScale, U.PressScale, button)
+	button.Activated:Connect(once(onClick))
 	return button
 end
 
