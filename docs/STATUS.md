@@ -24,8 +24,8 @@ rounds of review by ChatGPT (plan file `n-ng-c-p-to-n-b-piped-shore.md`); docs: 
   portraits stand on painted backdrops; a sale's coins fly to the HUD chip, which counts up and jingles.
 - **Forge scene** (44059fd, `client/ForgeScene`, `Config.Ui.Forge`): at the Market anvil the hammer strikes 2-3 times, the
   face heats, the piece rises out of it with its tier's aura and its name card, screens and the character hidden; a tap
-  skips a tier already seen. Its library effects (`hit.forge_strike`, `burst.forge_reveal`, `burst.forge_quench`) are
-  being made in the VFX library; the scene runs without them until they are imported.
+  skips a tier already seen. Its effects come from the VFX library (`hit.forge_strike`, `burst.forge_reveal`,
+  `burst.forge_quench`, a variant per tier; imported with the runtime at a23485e); their pictures are fetched at start.
 
 **Proved:** CHECK OK (821 passed), TYPES OK. `dungeon_sim`: a team of the level clears 82-98 runs in 100, five levels
 above 98-100, a run 4-5 min; `zone_sim`: the zone's team wins 77-90 in 100; `loot_sim` (new): a sword, shield, bow and
@@ -35,10 +35,13 @@ backdrops in the lists; the forge scene for Iron, Epic and Legendary (Sunfire Bl
 four tabs with each map's drops; a full Ice run at level 5 (monsters Lv 6-8 labelled, 22 Frost Crystal and 2 Frost Fang
 paid), then Checkpoint jumped to level 10 in the same map (monsters Lv 10); won runs in Lava at 5 (boss Calderos Lv
 10, 16 Iron Ore, 1 Ember Core), Meadow at 10 (boss Bramblehorn Lv 13, 23 Hardwood) and Grove at 15 (monsters Lv 11-19,
-mini-boss Lv 16, boss Hollowheart Lv 18, 23 Mushroom Silk).
-**Not verified:** the library forge effects; sounds by ear; the phone frame and hover; the new food icons inside
-StudioTest (its ClientKit is older); cooking a Legendary batch; the skip tap; the temper
-quench steam. **Needs the owner:** the save shape changed twice (schemas 16 and 17): a publish must shut down every old
+mini-boss Lv 16, boss Hollowheart Lv 18, 23 Mushroom Silk). With the library effects: the strike's sparks and stars on
+the anvil, the Legendary reveal's gold pillar and swirls, and a temper's steam billowing round "Sunfire Blade +" (the
+first temper showed no steam: its smoke picture was not loaded yet, hence the fetch at start; the smoke then read as
+fetched before any temper, though Studio's cache may also explain that).
+**Not verified:** the Common, Uncommon, Epic and Mythic reveals in play (seen only in the library's previews); sounds by
+ear; the phone frame and hover; the new food icons inside StudioTest (its ClientKit is older); cooking a Legendary
+batch; the skip tap. **Needs the owner:** the save shape changed twice (schemas 16 and 17): a publish must shut down every old
 server.
 
 ## 2026-11-15 — Crownfall ends at its foot in foam and mist; the Hidden Grotto behind it

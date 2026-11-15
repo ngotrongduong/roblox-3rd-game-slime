@@ -93,6 +93,14 @@ Models.list = {
 --   fill      (with `look`) the transparency of a faint Neon copy under it, so the ghost still reads over a bright floor
 --   paint     (with `look` and `fill`) a picture's asset id painted on the Neon copy by the mesh's UVs, its colours kept
 --             (the picture's bottom at the model's foot): a wall of light bright at its foot, gone at its top
+--   clear     (instead of `look`) a see-through SHELL: a Textures key of a CLEAR picture (tools/clear_paint.py) worn
+--             on one Neon part a hair see-through: only its light shows, never its body or its top edge (the owner,
+--             2026-11-15, lesson 338); its colours are kept
+--   hinge     (optional) { x, y, z }: the model's FOOT in the part's own frame at scale 1 (studs from its middle), the
+--             point a petal is turned about: a body's `bloom` clones it round a flower (tools/blender/lotus.py prints it
+--             in the frame Roblox gives the part: Import 3D brings a GLB in turned half round about up, so Blender's
+--             x and depth come in negated, lesson 358); a bloom turns each petal by `facing` about this foot, so the
+--             petal's inside faces the flower's middle
 --   statue    true: no bones, no `area` (Schema's serpents refuse it)
 Models.list.guardian_knight = {
 	mesh = 85240162598491,
@@ -122,14 +130,79 @@ Models.list.totem_golem = {
 	statue = true,
 }
 
+-- CGHOW's flower (uQhhDxT4scI, 2026-11-15): ONE real lotus petal (its outline and colours ChatGPT's photoreal petal,
+-- bent as a boat with a hooded tip: tools/blender/lotus.py, models/lotus_petal.glb, Studio Import 3D), its foot the
+-- hinge a body's `bloom` turns it about; and the flower's middle, the seed pod in its skirts of stamens, painted from
+-- above (textures/fx/lotus_pod.png, its blue between the stamens see-through)
+Models.list.lotus_petal = {
+	mesh = 110979780640559,
+	texture = 102611017120476,
+	size = { 1.1576, 1.9505, 0.435 },
+	hinge = { 0.0008, -0.9737, -0.2115 },
+	facing = 180,
+	statue = true,
+}
+Models.list.lotus_pod = {
+	mesh = 95780843910522,
+	texture = 83552641363742,
+	size = { 1.2416, 0.7387, 1.2416 },
+	facing = 0,
+	statue = true,
+}
+
 -- CGHOW's spawn cylinder (yl_er-KCQU0, 2026-11-15): an open tube, its walls both ways (tools/blender/tube.py,
--- models/tube.glb, Studio Import 3D), a hologram whose copy wears the green curtain cg_spawn_wall_paint
+-- models/tube.glb, Studio Import 3D), a see-through shell wearing the green curtain, clear above
 Models.list.spawn_tube = {
 	mesh = 90373498490636,
-	look = "ForceField",
-	fill = 0.35,
-	paint = 95792612285332,
+	clear = "cg_spawn_wall_paint_clear",
 	size = { 2.756, 2.6, 2.756 },
+	facing = 0,
+	statue = true,
+}
+
+-- CGHOW's ice spikes (-AM7QtT7vuo, 2026-11-15): two rows of faceted crystals leaning out from a ring, a crown of
+-- icicles (tools/blender/ice_crown.py, models/ice_crown.glb, Studio Import 3D), its copy painted frost to deep blue
+Models.list.ice_crown = {
+	mesh = 108260410217344,
+	look = "ForceField",
+	fill = 0.4,
+	paint = 121231241479553,
+	size = { 5.609, 2.411, 5.458 },
+	facing = 0,
+	statue = true,
+}
+
+-- CGHOW wave 6 (2026-11-15). His panned, eroding cylinder: the spawn tube's mesh again, a see-through shell wearing a
+-- body breaking up into embers (the teleport)
+Models.list.teleport_tube = {
+	mesh = 90373498490636,
+	clear = "cg_teleport_tube_paint_clear",
+	size = { 2.756, 2.6, 2.756 },
+	facing = 0,
+	statue = true,
+}
+-- His heart ships (7sh9ja9L_NE): a heart outline drawn up into open walls (tools/blender/heart_tube.py,
+-- models/heart_tube.glb, Studio Import 3D), a see-through shell wearing glossy pink walls, clear above
+Models.list.heart_tube = {
+	mesh = 124299072901597,
+	clear = "cg_heart_tube_paint_clear",
+	size = { 2.288, 1.6, 2.068 },
+	facing = 0,
+	statue = true,
+}
+-- His crack with rays (bm_Tv_MyNhE): branching cracks with jagged walls of rays on them (tools/blender/crack_rays.py,
+-- models/crack_rays.glb, Studio Import 3D), in pink and in mint
+Models.list.crack_rays_pink = {
+	mesh = 136676610637392,
+	clear = "cg_rays_pink_paint_clear",
+	size = { 6.004, 1.599, 2.681 },
+	facing = 0,
+	statue = true,
+}
+Models.list.crack_rays_mint = {
+	mesh = 136676610637392,
+	clear = "cg_rays_mint_paint_clear",
+	size = { 6.004, 1.599, 2.681 },
 	facing = 0,
 	statue = true,
 }
@@ -236,6 +309,11 @@ Models.Dome = 117271829701905
 -- An aura's `dome` with model "Tornado": an open twisted funnel, foot at the bottom, 2 studs high, top radius 1 (a
 -- 2 x 2 x 2 MeshPart), an inner wall too, UVs wound up it (tools/blender/tornado.py, models/tornado.glb, Import 3D)
 Models.Tornado = 75965121013498
+
+-- An aura's `dome` with model "Tube": the spawn tube's open cylinder, foot at the bottom, its walls both ways (a
+-- 2.756 x 2.6 x 2.756 MeshPart as Import 3D sized it), UVs wrapping three times round, from the foot to the top
+-- (tools/blender/tube.py); CGHOW's panned cylinders of a lasting aura (his death energy, 2026-11-15)
+Models.Tube = 90373498490636
 
 -- A model an effect brings with it (a packaged effect: `assets.models`): kept only when the key is new.
 function Models.add(key, entry)

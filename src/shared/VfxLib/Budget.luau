@@ -506,6 +506,13 @@ function Budget.measure(effect, variantOf)
 			local statue = Models.list[standing.model]
 			total.beams += 1
 			local layers = if statue.look and statue.fill then 2 else 1 -- (a hologram's faint copy under it)
+			if standing.bloom then
+				-- (a bloom: every petal's face, each ring's petals at their own size)
+				layers = 0
+				for _, ring in standing.bloom do
+					layers += ring.count * ring.size ^ 2
+				end
+			end
 			total.burstArea += layers * statue.size[1] * statue.size[2] * (standing.size or 1) ^ 2
 		end
 		local band = fields.projectile and fields.projectile.trail
@@ -558,11 +565,17 @@ function Budget.measure(effect, variantOf)
 			total.area += length * (spiral.width[1] + spiral.width[2]) / 2
 		end
 		if fields.dome then
-			-- (a dome: one MeshPart, about its circle's area seen from the gameplay camera; its fill another)
-			local layers = 1 + (if fields.dome.fill then 1 else 0) + (if fields.dome.paint then 1 else 0)
-			total.parts += layers
+			-- (a dome: one MeshPart wearing its clear picture, about its circle's area seen from the gameplay camera; an
+			-- `over` shell a second one, a little bigger)
+			local over = fields.dome.over
+			local layers = if over then 1 + (over.scale or 1.03) ^ 2 else 1
+			total.parts += if over then 2 else 1
 			-- (a tornado: its side, a funnel 2 radii high, about 0.8 of its 2r x 2r box)
-			local shape = if fields.dome.model == "Tornado" then 3.2 else math.pi
+			-- (a tube: its side, 2.756 r across by 2.6 r high, a full box)
+			local shape = if fields.dome.model == "Tornado"
+				then 3.2
+				elseif fields.dome.model == "Tube" then 7.2
+				else math.pi
 			total.area += layers * shape * fields.dome.radius ^ 2
 		end
 		if fields.echo then

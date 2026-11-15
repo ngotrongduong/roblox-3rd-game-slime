@@ -6,12 +6,14 @@
 -- steams as it rises (the quench). Only a show: the server has already given the piece. The village screens hide while it
 -- plays; after the first scene of a tier in a session, a tap skips it. Numbers in Config.Ui.Forge; the effects come from
 -- the VFX library (one it does not have yet is left out).
+local ContentProvider = game:GetService("ContentProvider")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 
 local Config = require(ReplicatedStorage.Shared.Config)
 local VfxLib = require(ReplicatedStorage.Shared.VfxLib)
+local Textures = require(ReplicatedStorage.Shared.VfxLib.Textures)
 local SlimeWeapon = require(script.Parent.SlimeWeapon)
 local UiKit = require(script.Parent.UiKit)
 
@@ -34,6 +36,35 @@ local function effect(id: string, at: CFrame, variant: string)
 		pcall(VfxLib.play, id, at, { variant = variant })
 	end
 end
+
+-- The scene's pictures are fetched once at start: one first asked for mid-scene arrives after its moment (the quench's
+-- smoke did on the first temper, 2026-11-15).
+task.defer(function()
+	local urls: { string } = {}
+	local found: { [string]: boolean } = {}
+	local function walk(value: any, depth: number)
+		if type(value) == "string" then
+			local url = Textures.url(value)
+			if url ~= "" and not found[url] then
+				found[url] = true
+				table.insert(urls, url)
+			end
+		elseif type(value) == "table" and depth < 8 then
+			for _, item in value do
+				walk(item, depth + 1)
+			end
+		end
+	end
+	for _, id in F.Effects :: { [string]: string } do
+		local ok, data = pcall(VfxLib.get, id)
+		if ok then
+			walk(data, 0)
+		end
+	end
+	if #urls > 0 then
+		pcall(ContentProvider.PreloadAsync, ContentProvider, urls)
+	end
+end)
 
 local function sound(name: string, parent: Instance, speed: number?): Sound
 	local entry: any = (F.Sounds :: any)[name]

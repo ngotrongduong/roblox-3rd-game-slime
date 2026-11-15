@@ -235,6 +235,6 @@ or while another scene plays, nothing plays.
 **Skip**: the first scene of a tier in a session always plays whole; after it, a tap anywhere ends a scene of that tier.
 
 **Effects and sounds**: the three effects are VFX library ids (`Forge.Effects`: `hit.forge_strike`, `burst.forge_reveal`,
-`burst.forge_quench`). The library does not have them yet: the scene runs without any effect it lacks and they appear with the
-library's next import. Sounds are Roblox's licensed Pro Sound Effects (`Forge.Sounds`: strike, ting, steam), played at the
+`burst.forge_quench`, imported from library a23485e), each with a variant per tier; the scene skips any effect the game's
+copy lacks, and fetches the three's pictures once at start (a picture first asked for mid-scene came too late). Sounds are Roblox's licensed Pro Sound Effects (`Forge.Sounds`: strike, ting, steam), played at the
 anvil.

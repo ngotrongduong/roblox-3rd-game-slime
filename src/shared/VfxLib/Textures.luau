@@ -10,6 +10,9 @@
 --          Brightness instead), or the black shows as a dark square round every particle (Egg Heist, the owner saw it round
 --          the auras, 2026-10-19; measured on all 335 pack textures: more than 30% of the pixels opaque black). Never in an
 --          ImageLabel or a Decal, which cannot add.
+--   clear  a see-through shell's picture (tools/clear_paint.py): a paint whose dark is a real alpha and whose top third
+--          is clear, worn on a shell's MeshPart (an aura's `dome`, a statue's `clear`); a MeshPart shows a picture's
+--          alpha only while it is itself a hair see-through (lesson 338)
 --   from   where it came from (the licence is in textures/LICENCES.md)
 --
 -- Asset privacy: images stay Open Use while the creator's Asset Privacy is off, so any experience can use these ids.
@@ -391,7 +394,7 @@ Textures.Images = {
 	cg_arrow_light = { id = 112050304807425, black = true, from = SKILL_ART }, -- an arrow of light: fletching flares at the top, the point at the bottom
 	cg_muzzle_side = { id = 84695785351134, black = true, from = SKILL_ART }, -- a muzzle blast from the side: the hot muzzle on top, jagged tongues below
 	cg_fire_stream = { id = 80492316667178, black = true, from = SKILL_ART }, -- a rope of fire: a white-hot core wrapped in twisting orange tongues (colour)
-	-- (seamless tiles a ForceField shell draws: tools/blender's dome and tornado; greyscale, tinted by the shell)
+	-- (seamless grey tiles for tools/blender's dome and tornado: worn only as clear pictures coloured by --tint)
 	cg_wind_streaks = { id = 124560037718248, from = SKILL_ART }, -- long thin wavy wind streaks running diagonally
 	cg_aurora_grey = { id = 134245248769572, from = SKILL_ART }, -- the aurora curtain in grey
 	-- (coloured tiles painted on a shell by its UVs, `dome.paint`: their colours kept)
@@ -417,6 +420,76 @@ Textures.Images = {
 	-- ChatGPT clips, 4 x 4 OneShot (clip_frames.py), keyed off magenta, drawn normal, untinted:
 	cg_lava_blob_flip = { id = 99742102682663, from = SKILL_ART }, -- a faceted lava lump swells yellow, cools red with cracks, turns brown, erodes to bits
 	cg_toon_splat_flip = { id = 107278986087130, from = SKILL_ART }, -- a toon splat from above bursts yellow, cools red, turns a black scorch, erodes
+	-- CGHOW wave 5 (2026-11-15). One picture, on black, added (white, tinted):
+	cg_portal_rings = { id = 104717186234811, black = true, from = SKILL_ART }, -- a ground portal from above: an outer ring, broken inner arcs, ticks, a hot middle
+	cg_crater_ring = { id = 82871357210267, black = true, from = SKILL_ART }, -- radial glowing cracks round a hole, small holes between them
+	-- (a Trail's and a Beam's strips, rows along the length, on black, added)
+	cg_sword_streaks = { id = 114140745805770, black = true, from = SKILL_ART }, -- five wavy lines of light along a sword's swing, the brightest at the top (the tip)
+	cg_beam_crack = { id = 88781642565048, black = true, from = SKILL_ART }, -- a long glowing crack in the floor, side cracks and little holes
+	cg_arcane_orb = { id = 80194873847388, black = true, from = SKILL_ART }, -- a violet fresnel orb at the bottom, jellyfish ribbon tentacles streaming up (colour)
+	-- (keyed off magenta, drawn normal)
+	cg_beam_shards = { id = 101552698208884, from = SKILL_ART }, -- two rows of dark violet jagged shards with a gap down the middle (a beam's sheath)
+	cg_bubble = { id = 134140671548803, from = SKILL_ART }, -- a soap bubble, see-through, an iridescent rim and a window glint (untinted)
+	-- (coloured tiles painted on a shell by its UVs: the image's bottom at the shell's foot)
+	cg_ice_paint = { id = 121231241479553, from = SKILL_ART }, -- ice graded white frost (bottom) to deep blue (top)
+	cg_scifi_grid_paint = { id = 73609508241581, from = SKILL_ART }, -- a cyan and magenta crisscross grid of light lines and pixels, brightest at the bottom
+	-- 4 x 4 clips: the glitch is ChatGPT's GIF frames, colour on black, added; the pop is unmixed, drawn normal, untinted
+	cg_glitch_flip = { id = 117265804000297, black = true, from = SKILL_ART }, -- red, green and blue glitch bars and blocks flicker and jump
+	cg_bubble_pop_flip = { id = 89552226697888, from = SKILL_ART }, -- a soap bubble wobbles, tears open, curls into ribbons, scatters as droplets
+	-- CGHOW wave 6 (2026-11-15). One picture, on black, added (white, tinted):
+	cg_petal_ring = { id = 96301819187420, black = true, from = SKILL_ART }, -- a ground circle from above: a soft ring, wispy flame curls round its rim
+	cg_teleport_pad = { id = 140486240590317, black = true, from = SKILL_ART }, -- a pad from above: three thin rings, ticks between the outer two, a hot middle
+	cg_heart_outline = { id = 93040610769361, black = true, from = SKILL_ART }, -- a heart drawn as a thick glowing outline, a sparkle on its left lobe
+	-- (on black, in colour, drawn added untinted)
+	cg_strike_ground = { id = 134661480447306, black = true, from = SKILL_ART }, -- a lightning strike's mark from above: a white core, blue and magenta forks, gold arcs
+	-- (a Beam's strip, rows along the length, on black in colour: a flat beam on the floor)
+	cg_lava_crack = { id = 137640471732611, black = true, from = SKILL_ART }, -- a long lava crack with branches, white-yellow to orange to red
+	-- (coloured tiles painted on a shell by its UVs: the image's bottom at the shell's foot)
+	cg_energy_tube_paint = { id = 95328059993257, from = SKILL_ART }, -- wavy flame streaks rising, white-yellow (bottom) to orange to pink, black at the top
+	cg_teleport_tube_paint = { id = 101423059603533, from = SKILL_ART }, -- orange streaks and square pixel embers rising and thinning out, black above
+	cg_heart_tube_paint = { id = 136951523305588, from = SKILL_ART }, -- glossy pink, light at the foot, a glowing red band and a white-hot rim at the top
+	cg_rays_pink_paint = { id = 135405781967513, from = SKILL_ART }, -- thin rays of uneven height, bright pink at the foot, black above
+	cg_rays_mint_paint = { id = 127148977759251, from = SKILL_ART }, -- the same rays in mint
+	-- (the shells' pictures made see-through, tools/clear_paint.py: the dark clear, the light dying out in tongues by
+	-- two thirds of the height so a shell's top edge never lights; a dome's kept whole. The owner, 2026-11-15)
+	cg_energy_tube_paint_clear = { id = 75888671250330, clear = true, from = SKILL_ART }, -- the rising flames, clear above
+	cg_spawn_wall_paint_clear = { id = 129973240634258, clear = true, from = SKILL_ART }, -- the green light streaks, clear above
+	cg_teleport_tube_paint_clear = { id = 136819828496388, clear = true, from = SKILL_ART }, -- the orange streaks and embers, clear above
+	cg_heart_tube_paint_clear = { id = 97722997748963, clear = true, from = SKILL_ART }, -- the glossy pink, clear above
+	cg_rays_pink_paint_clear = { id = 138999903628350, clear = true, from = SKILL_ART }, -- the pink rays, clear above
+	cg_rays_mint_paint_clear = { id = 133530729700962, clear = true, from = SKILL_ART }, -- the mint rays, clear above
+	-- (a funnel's: its wide top is the tornado, so the light dies out just under the rim: --cut 0.92 --fade 0.45)
+	cg_tornado_paint_clear = { id = 111567320503405, clear = true, from = SKILL_ART }, -- the crimson wind streaks, clear at the rim
+	cg_fire_funnel_paint_clear = { id = 131933160893454, clear = true, from = SKILL_ART }, -- the fire streaks, clear at the rim
+	-- (a grey picture's colour baked in, `--tint R G B --as`: a MeshPart does not tint its picture, lesson 348)
+	cg_wind_streaks_mint_clear = { id = 118335240599812, clear = true, from = SKILL_ART }, -- the wind streaks in mint, clear at the rim (--gain 2)
+	-- domes (--cut 0.72 --fade 0.4): the light rises from the rim and dies out before the top
+	cg_aurora_clear = { id = 124575768268489, clear = true, from = SKILL_ART }, -- the aurora curtain, its black clear
+	cg_scifi_grid_paint_clear = { id = 73069102781784, clear = true, from = SKILL_ART }, -- the light grid, its black clear
+	cg_wind_streaks_pink_clear = { id = 99629512123553, clear = true, from = SKILL_ART }, -- the wind streaks in pink (--tint, --gain 2)
+	-- ChatGPT clips, 4 x 4 OneShot (clip_frames.py; --black: light on black turned to alpha, drawn normal, untinted):
+	cg_energy_orb_flip = { id = 87741671916005, from = SKILL_ART }, -- an orange energy ball erodes in holes with pink edges, breaks into wisps (a GIF's frames)
+	cg_flame_crown_flip = { id = 119402574119481, from = SKILL_ART }, -- a ring of flame tongues splaying out round an empty middle, a loop (a GIF's frames)
+	cg_lava_spike_flip = { id = 85865913704548, from = SKILL_ART }, -- lava crystals burst up, glow, cool red, crumble into embers
+	-- (keyed off magenta, its pink restored with --fix red; a loop)
+	cg_petal_flip = { id = 84304028287714, from = SKILL_ART }, -- a rose petal tumbling over and over, face, edge, back
+	-- CGHOW wave 7 (2026-11-15). One picture, on black, added:
+	cg_swirl_orb = { id = 77483746082047, black = true, from = SKILL_ART }, -- a ball of cyan and blue swirl arms curling into a white-hot middle (colour)
+	-- (2 x 2, one note a cell, white on black, a random still frame each)
+	cg_music_notes = { id = 74242948373768, black = true, from = SKILL_ART }, -- a treble clef, beamed quavers, a quaver, a crotchet
+	-- (a spiral's and a Beam's strips, rows along the length, on black, added, in colour)
+	cg_music_staff = { id = 139982355015583, black = true, from = SKILL_ART }, -- four wavy staff lines green to cyan, three little notes on them (seamless)
+	cg_energy_tendrils = { id = 104541122526152, black = true, from = SKILL_ART }, -- a white-violet core line, purple lightning tendrils off both sides (seamless)
+	cg_spiral_helix = { id = 105666736811488, black = true, from = SKILL_ART }, -- two blue ribbons of light winding round each other, two turns (seamless)
+	cg_light_streaks = { id = 90406063882579, black = true, from = SKILL_ART }, -- thin cyan light streaks fanning from a white-hot point at the bottom (a spear's tip)
+	-- (cg_trail_comet upside down: on a Beam the orb leads at the `to` end, its tail behind toward `from`)
+	cg_trail_comet_down = { id = 118987328311588, black = true, from = SKILL_ART }, -- a bright orb at the bottom, a thin wavy tail thinning to wisps above
+	-- (2 x 2, keyed off magenta with --pink so the pink stays whole, drawn normal, untinted, a random still frame each)
+	cg_lotus_petals = { id = 82130761373826, from = SKILL_ART }, -- four loose pink lotus petals, white at their foot
+	-- ChatGPT clips, 4 x 4 (clip_frames.py; magenta unmixed; --black: light on black to alpha):
+	cg_smoke_plume_flip = { id = 116581474003595, from = SKILL_ART }, -- a white puff swells into a billowing cloud, thins into wisps, gone (tinted)
+	cg_morpho_flip = { id = 127860839921068, from = SKILL_ART }, -- a blue morpho butterfly from above beating its wings shut and open, a loop (untinted)
+	cg_spell_bubble_flip = { id = 87797891521452, from = SKILL_ART }, -- a spark grows into a swirling blue bubble on a ring, cracks, bursts into blue dust (untinted)
 }
 
 -- The pictures of the packs that the baker met (tools/bake.luau writes them here: `lune run tools/bake.luau`). Each is
@@ -513,6 +586,12 @@ function Textures.isBlack(key)
 		return true
 	end
 	return type(entry.id) == "number" and Textures.BlackIds[entry.id] == true
+end
+
+-- Whether a key's picture is a see-through shell's (see `clear` above).
+function Textures.isClear(key)
+	local entry = Textures.Images[key]
+	return entry ~= nil and entry.clear == true
 end
 
 -- The floor art of auras (rune circles, sigils, an element's ground pattern): one aura wears each (the tests check it).

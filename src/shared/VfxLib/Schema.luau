@@ -42,8 +42,8 @@
 --   spirals   (an aura, up to Budget's `spirals` beams in all: a held weapon's) ribbons wound round the host's long axis
 --             (its y), each a SPIRAL: { name, texture (a picture drawn along its length that repeats, the beam family:
 --             `repeats` (1 to 12) times a turn, 4), colors | color | role (from the low end to the high end), low,
---             high (studs up the host from its middle, at refHeight), radius { low, high } (studs from the axis), width
---             { low, high } (studs), turns (round the host from low to high; - the other way), phase? (0..1 of a turn:
+--             high (studs up the host from its middle, at refHeight), radius { low, high } (studs from the axis, up to 6:
+--             a flat ring round a body, low and high a hair apart), width { low, high } (studs, up to 3), turns (round the host from low to high; - the other way), phase? (0..1 of a turn:
 --             where it starts), flow? (pictures a second running up it, - down; 1), glow? (Brightness, 1), alpha?
 --             (0..1), fade? (0..0.5: the share of its length at each end that fades in and out, 0.15), additive?
 --             (LightEmission 1, true; false: drawn normal, its colour kept on a bright sky), zOffset?, secondary? }: one
@@ -53,15 +53,22 @@
 --   glaze     (a mid or heavy aura on a body) { fill = { r, g, b }, outline? = { r, g, b }, fillTransparency? (0.5),
 --             outlineTransparency? (0.2) }: the host's own body glazed by a Highlight while it is worn, a colour over
 --             it and a bright rim (CGHOW's ice body, 2026-11-14); off when Lod turns the aura to a ribbon or off
---   dome      (a mid or heavy aura) { radius (studs at refHeight, 1 to 10), color = { r, g, b }, texture? (a key of
---             Textures: the streaks the ForceField draws over it, its light edges; none: a plain bubble), transparency?
---             (0..1, 0), fill? (0..1: the transparency of a Neon copy under it, a faint body, lesson 152) }: a real 3D half sphere (Models.Dome, made in Blender) over the host, its rim on the floor at the
---             host's feet, in ForceField: see-through, lit at its edges, the picture's streaks flowing over it by
---             themselves (CGHOW's magic dome, lesson 314); hidden when Lod turns the aura to a ribbon or off.
+--   dome      (a mid or heavy aura) { radius (studs at refHeight, 1 to 10), color = { r, g, b } (its main colour, for
+--             the record), paint (a CLEAR key of Textures, tools/clear_paint.py, its colours its own: a MeshPart does not
+--             tint its picture, a grey one is coloured with `--tint`, lesson 348), transparency? (0..1, 0) }: a real 3D
+--             half sphere (Models.Dome, made in Blender)
+--             over the host, its rim on the floor at the host's feet, of which ONLY ITS PICTURE SHOWS: one Neon part a
+--             hair see-through wearing the clear picture by its UVs (the picture's bottom at the foot), its dark
+--             see-through, its light gone by two thirds of an open shell's height so its top edge never lights (the
+--             owner, 2026-11-15, lesson 338); hidden when Lod turns the aura to a ribbon or off.
 --             model? = "Tornado": a twisted funnel (Models.Tornado, Blender) in its place, its foot at the feet, 2 x
---             radius high; spin? (turns a second about the host's up axis, - the other way): the shell spins;
---             paint? (a key of Textures: a COLOURED picture painted by the mesh's UVs on a Neon copy under it, its
---             colours kept: an aurora curtain, a tornado's skin; paintTransparency? 0..1, 0), lesson 322
+--             radius high; model? = "Tube": an open cylinder (Models.Tube, the spawn tube) about 1.3 x radius
+--             round and 2.6 x radius high; spin? (turns a second about the host's up axis, - the other way): the shell spins
+--             over? = { paint (a clear key), transparency? (0), scale? (1.03: 1 to 1.3), spin (turns a second, not
+--             0) }: a second clear shell just outside the first,
+--             turning on its own way, so the light moves and crosses over the dome (a dome standing still reads as a
+--             still picture: the owner, 2026-11-15, lesson 347); breathe? (1 to 20 seconds): each layer's light swells
+--             and fades over that time, the over layer swelling as the first fades, so the light flows between them
 --   echo      (a mid or heavy character's trail) { every (seconds), life (seconds), max (ghosts at once), color = { r, g, b },
 --             transparency? (0..0.9, 0.2: a new ghost's) }: while the runner runs, every `every` seconds a frozen ghost of
 --             it in its pose of the moment is left where it was (a copy of each of its seen parts, anchored, ForceField in
@@ -89,10 +96,18 @@
 --   beams     (one-shot) ribbons of a picture between two points of the play's frame, each a BEAM (below): a crescent
 --             slash, an energy beam, a crackling bolt
 --   bodies    (one-shot, up to 2) a STATUE: a still 3D model (Models.list, `statue = true`) standing in the play's frame, each
---             { model = key, at = { x, y, z } (its feet, studs at refHeight), turn = degrees about up (on the model's own
+--             { model = key, at = { x, y, z } (its feet, studs at refHeight from the host's ROOT, its middle: on the
+--             ground is y = -refHeight / 2, lesson 333), turn = degrees about up (on the model's own
 --             facing), size = factor (default 1), delay, life (seconds), emerge = seconds it takes to rise out of the
 --             ground (0: no rise), transparency = keys over its life (0 solid, 1 gone; default fades in and out),
---             color = { r, g, b } (a hologram statue only: the model has a `look` in Models) }
+--             color = { r, g, b } (a hologram statue only: the model has a `look` in Models),
+--             bloom = rings of PETALS (the statue is one petal with a `hinge`, its foot): a flower put together and
+--             opening, each ring { count (3-16 petals), radius (studs from the middle to their feet), size (of a
+--             petal, 0.3-2), lift (studs its feet sit up, default 0), closed and open (degrees each leans out about
+--             its foot, the bud and in bloom), phase (a share of one step the ring is turned by), roll (degrees
+--             each is turned about its own length while closed, none once open: the bud's wrap), start and seconds
+--             (when, from the body's own start, the ring opens and over how long) }, at most 40 petals; `at` is
+--             the flower's middle on the ground; a bloom never follows a host (its petals move by themselves) }
 --   follow    (one-shot) true: played on a host, it moves and turns with it (a charge, a transformation)
 --   duration  (one-shot) seconds until everything is cleaned up (default: the last particle's end)
 --   markers   (one-shot) { name = seconds }: moments a game may sync to ("flash": show the hatched body); (a lasting
@@ -357,7 +372,8 @@ function Schema.spiralProblem(fields, spiral, what)
 	if problem then
 		return problem
 	end
-	for _, key in { "radius", "width" } do
+	-- (a ring round a body reaches 6: CGHOW's music ring lies 3.5 out from a 5 stud body, 2026-11-15)
+	for key, most in { radius = 6, width = 3 } do
 		local pair = spiral[key]
 		if
 			type(pair) ~= "table"
@@ -365,10 +381,10 @@ function Schema.spiralProblem(fields, spiral, what)
 			or type(pair[2]) ~= "number"
 			or pair[1] < 0
 			or pair[2] < 0
-			or pair[1] > 3
-			or pair[2] > 3
+			or pair[1] > most
+			or pair[2] > most
 		then
-			return `{what}: {key} \{ low, high } of 0 to 3 studs`
+			return `{what}: {key} \{ low, high } of 0 to {most} studs`
 		end
 	end
 	local numbers = {
@@ -1350,27 +1366,61 @@ function Schema.problem(effect, variantOf)
 			if type(color) ~= "table" or #color ~= 3 or type(color[1]) ~= "number" then
 				return `{label}: dome color is \{ r, g, b \}`
 			end
-			if dome.texture ~= nil and Textures.url(dome.texture) == "" then
-				return `{label}: dome texture {dome.texture} is not a picture of Textures`
+			-- (only the shell's picture shows: one clear picture, its colours its own, lessons 338 and 348)
+			if dome.texture ~= nil then
+				return `{label}: a dome has no texture: a MeshPart does not tint its picture, so it wears a paint with its colour in it (clear_paint.py --tint, lesson 348)`
 			end
-			for _, field in { "transparency", "fill" } do
-				local alpha = dome[field]
-				if alpha ~= nil and (type(alpha) ~= "number" or alpha < 0 or alpha > 1) then
-					return `{label}: dome {field} is 0 to 1`
+			local picture = dome.paint
+			if type(picture) ~= "string" then
+				return `{label}: a dome wears its paint, a clear picture of Textures`
+			end
+			if not Textures.isClear(picture) then
+				return `{label}: dome picture {picture} is not a clear picture of Textures (tools/clear_paint.py)`
+			end
+			local alpha = dome.transparency
+			if alpha ~= nil and (type(alpha) ~= "number" or alpha < 0 or alpha > 1) then
+				return `{label}: dome transparency is 0 to 1`
+			end
+			for _, gone in { "fill", "paintTransparency" } do
+				if dome[gone] ~= nil then
+					return `{label}: a dome has no {gone} any more (only its picture shows, lesson 338)`
 				end
 			end
-			if dome.paint ~= nil and Textures.url(dome.paint) == "" then
-				return `{label}: dome paint {dome.paint} is not a picture of Textures`
-			end
-			local paintAlpha = dome.paintTransparency
-			if paintAlpha ~= nil and (type(paintAlpha) ~= "number" or paintAlpha < 0 or paintAlpha > 1) then
-				return `{label}: dome paintTransparency is 0 to 1`
-			end
-			if dome.model ~= nil and dome.model ~= "Dome" and dome.model ~= "Tornado" then
-				return `{label}: dome model is Dome or Tornado`
+			if dome.model ~= nil and dome.model ~= "Dome" and dome.model ~= "Tornado" and dome.model ~= "Tube" then
+				return `{label}: dome model is Dome, Tornado or Tube`
 			end
 			if dome.spin ~= nil and (type(dome.spin) ~= "number" or math.abs(dome.spin) > 3) then
 				return `{label}: dome spin is -3 to 3 turns a second`
+			end
+			local over = dome.over
+			if over ~= nil then
+				-- (a second clear shell turning over the first: the light moves, lesson 347)
+				if
+					type(over) ~= "table"
+					or type(over.paint) ~= "string"
+					or over.texture ~= nil
+					or over.color ~= nil
+				then
+					return `{label}: a dome's over wears its paint only, a clear picture with its colour in it (lesson 348)`
+				end
+				if not Textures.isClear(over.paint) then
+					return `{label}: dome over picture {over.paint} is not a clear picture of Textures`
+				end
+				if
+					over.transparency ~= nil
+					and (type(over.transparency) ~= "number" or over.transparency < 0 or over.transparency > 1)
+				then
+					return `{label}: dome over transparency is 0 to 1`
+				end
+				if over.scale ~= nil and (type(over.scale) ~= "number" or over.scale < 1 or over.scale > 1.3) then
+					return `{label}: dome over scale is 1 to 1.3`
+				end
+				if type(over.spin) ~= "number" or over.spin == 0 or math.abs(over.spin) > 3 then
+					return `{label}: dome over spin is -3 to 3 turns a second, not 0 (it is there to move)`
+				end
+			end
+			if dome.breathe ~= nil and (type(dome.breathe) ~= "number" or dome.breathe < 1 or dome.breathe > 20) then
+				return `{label}: dome breathe is 1 to 20 seconds`
 			end
 		end
 		for index, serpent in fields.serpents or {} do
@@ -1649,6 +1699,9 @@ function Schema.problem(effect, variantOf)
 				if statue == nil or not statue.statue then
 					return `{what}: model is a statue key of Models`
 				end
+				if statue.clear ~= nil and not Textures.isClear(statue.clear) then
+					return `{what}: its shell's picture {statue.clear} is not a clear picture of Textures`
+				end
 				if type(body.at) ~= "table" or #body.at ~= 3 then
 					return `{what}: at is three numbers: x, y, z`
 				end
@@ -1674,6 +1727,58 @@ function Schema.problem(effect, variantOf)
 				end
 				if body.turn ~= nil and type(body.turn) ~= "number" then
 					return `{what}: turn is degrees`
+				end
+				if body.bloom ~= nil then
+					if type(statue.hinge) ~= "table" or #statue.hinge ~= 3 then
+						return `{what}: a bloom's statue is a petal with a hinge (its foot) in Models`
+					end
+					if fields.follow then
+						return `{what}: a bloom never follows a host (its petals move by themselves)`
+					end
+					if type(body.bloom) ~= "table" or #body.bloom == 0 then
+						return `{what}: bloom is a list of rings`
+					end
+					local petals = 0
+					for ringIndex, ring in body.bloom do
+						local where = `{what} bloom ring {ringIndex}`
+						if type(ring) ~= "table" then
+							return `{where}: a ring is a table`
+						end
+						if type(ring.count) ~= "number" or ring.count % 1 ~= 0 or ring.count < 3 or ring.count > 16 then
+							return `{where}: count is 3 to 16 petals`
+						end
+						petals += ring.count
+						if type(ring.radius) ~= "number" or ring.radius < 0 or ring.radius > 4 then
+							return `{where}: radius is 0 to 4 studs`
+						end
+						if type(ring.size) ~= "number" or ring.size < 0.3 or ring.size > 2 then
+							return `{where}: size is 0.3 to 2`
+						end
+						if ring.lift ~= nil and (type(ring.lift) ~= "number" or math.abs(ring.lift) > 4) then
+							return `{where}: lift is -4 to 4 studs`
+						end
+						for _, angle in { "closed", "open" } do
+							local value = ring[angle]
+							if type(value) ~= "number" or value < -60 or value > 135 then
+								return `{where}: {angle} is -60 to 135 degrees`
+							end
+						end
+						if ring.phase ~= nil and (type(ring.phase) ~= "number" or ring.phase < 0 or ring.phase > 1) then
+							return `{where}: phase is 0 to 1`
+						end
+						if ring.roll ~= nil and (type(ring.roll) ~= "number" or math.abs(ring.roll) > 45) then
+							return `{where}: roll is -45 to 45 degrees`
+						end
+						if type(ring.start) ~= "number" or ring.start < 0 or ring.start >= body.life then
+							return `{where}: start is 0 up to its body's life, in seconds`
+						end
+						if type(ring.seconds) ~= "number" or ring.seconds <= 0 or ring.seconds > body.life then
+							return `{where}: seconds is over 0 up to its body's life`
+						end
+					end
+					if petals > 40 then
+						return `{what}: at most 40 petals in a bloom`
+					end
 				end
 				if body.color ~= nil then
 					if not statue.look then

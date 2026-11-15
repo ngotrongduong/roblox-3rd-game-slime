@@ -2063,9 +2063,18 @@ local function wearFish(handle, entry)
 	part.Parent = handle.folder
 end
 
--- An aura's DOME: one of the library's shells (Models.Dome, Models.Tornado) over the host in ForceField, its foot at
--- the host's feet; each loaded once a game (it yields: run apart), cloned for each host.
+-- An aura's DOME: one of the library's shells (Models.Dome, Models.Tornado, Models.Tube) over the host, its foot at the
+-- host's feet; each loaded once a game (it yields: run apart), cloned for each host. Only its picture shows (the owner,
+-- 2026-11-15: "the effect shaped like a cylinder, never the cylinder itself"): one Neon MeshPart wearing a CLEAR picture
+-- (Textures `clear`, tools/clear_paint.py), its dark see-through, its light gone by two thirds of the height. No
+-- ForceField skin (it lit the rim and the sides) and no faint body under it (it showed as dark glass).
 local domeTemplates = {}
+
+-- (a MeshPart shows its picture's alpha only while it is itself a hair see-through: at 0 the clear parts are opaque,
+-- lesson 338)
+Builder.ShellClear = 0.02
+-- (a breathing dome's layer fades this share of the way to clear at the low of its breath)
+Builder.DomeBreath = 0.6
 
 local function wearDome(handle, dome)
 	local key = dome.model or "Dome"
@@ -2082,7 +2091,7 @@ local function wearDome(handle, dome)
 		part.CanTouch = false
 		part.CastShadow = false
 		part.Massless = true
-		part.Material = Enum.Material.ForceField
+		part.Material = Enum.Material.Neon
 		domeTemplates[key] = part
 	end
 	if handle.dead then
@@ -2091,38 +2100,28 @@ local function wearDome(handle, dome)
 	local template = domeTemplates[key]
 	-- (the meshes are made radius 1: the dome 2 x 1 x 2, the tornado 2 x 2 x 2)
 	local radius = dome.radius * handle.scale
-	local layers = { { dome.transparency or 0, "" } }
-	if dome.fill then
-		-- (a faint Neon copy under it: a body that still reads over a bright sky, lesson 152)
-		table.insert(layers, { dome.fill, "Neon" })
-	end
-	if dome.paint then
-		-- (a coloured picture painted on a Neon copy under it, by the mesh's UVs: an aurora, a tornado's skin)
-		table.insert(layers, { dome.paintTransparency or 0, "Paint" })
+	-- (each layer: its transparency, its picture (its colours its own: a MeshPart's Color does not tint its picture,
+	-- lesson 348), its size, its turns a second and its share of the breath; `over` a second shell just outside the
+	-- first, turning its own way, so the light moves over the dome, lesson 347)
+	local layers = { { dome.transparency or 0, dome.paint, 1, dome.spin, 0 } }
+	local over = dome.over
+	if over then
+		table.insert(layers, { over.transparency or 0, over.paint, over.scale or 1.03, over.spin, 0.5 })
 	end
 	handle.domeParts = {}
 	for _, layer in layers do
 		local part = template:Clone()
-		part.Size = template.Size * radius
-		part.Color = Palette.color3(dome.color)
-		if layer[2] == "Paint" then
-			part.Material = Enum.Material.Neon
-			part.Color = Color3.new(1, 1, 1)
-			part.TextureID = Textures.url(dome.paint)
-			part.Size *= 0.99
-		elseif layer[2] == "Neon" then
-			part.Material = Enum.Material.Neon
-			part.Size *= 0.98
-		elseif dome.texture then
-			part.TextureID = Textures.url(dome.texture)
-		end
-		part.Transparency = if handle.domeHidden then 1 else layer[1]
+		part.Size = template.Size * radius * layer[3]
+		part.Color = Color3.new(1, 1, 1)
+		part.TextureID = Textures.url(layer[2])
+		local alpha = math.max(Builder.ShellClear, layer[1])
+		part.Transparency = if handle.domeHidden then 1 else alpha
 		local offset = CFrame.new(0, (part.Size.Y - handle.size.Y) / 2, 0)
 		part.CFrame = handle.carrier.CFrame * offset
 		local spun = nil
 		if handle.carrier.Anchored then
 			part.Anchored = true
-		elseif dome.spin then
+		elseif layer[4] then
 			-- (a spinning shell rides a Weld whose C0 Builder.update turns)
 			spun = Instance.new("Weld")
 			spun.Part0 = handle.carrier
@@ -2133,7 +2132,7 @@ local function wearDome(handle, dome)
 			weld(handle.carrier, part)
 		end
 		part.Parent = handle.folder
-		table.insert(handle.domeParts, { part, layer[1], offset, spun })
+		table.insert(handle.domeParts, { part, alpha, offset, spun, layer[4], layer[5] })
 	end
 end
 
@@ -2836,15 +2835,23 @@ function Builder.update(handle, info)
 				entry[1].Transparency = if hidden then 1 else entry[2]
 			end
 		end
-		local spin = handle.effect.dome.spin
-		if spin and info.clock and not hidden then
-			-- (a spinning shell, a tornado, turns about the host's up axis on every frame)
-			local turn = CFrame.Angles(0, -info.clock * spin * 2 * math.pi, 0)
+		local breathe = handle.effect.dome.breathe
+		if info.clock and not hidden then
 			for _, entry in handle.domeParts or {} do
-				if entry[4] then
-					entry[4].C0 = entry[3] * turn
-				elseif entry[1].Anchored then
-					entry[1].CFrame = handle.carrier.CFrame * entry[3] * turn
+				local spin = entry[5]
+				if spin then
+					-- (a spinning shell, a tornado, turns about the host's up axis on every frame; each layer its own way)
+					local turn = CFrame.Angles(0, -info.clock * spin * 2 * math.pi, 0)
+					if entry[4] then
+						entry[4].C0 = entry[3] * turn
+					elseif entry[1].Anchored then
+						entry[1].CFrame = handle.carrier.CFrame * entry[3] * turn
+					end
+				end
+				if breathe then
+					-- (the light swells and fades, the over layer when the first one fades: it flows between them)
+					local swell = (1 - math.cos(2 * math.pi * (info.clock / breathe + entry[6]))) / 2
+					entry[1].Transparency = entry[2] + (1 - entry[2]) * Builder.DomeBreath * swell
 				end
 			end
 		end
@@ -3074,7 +3081,12 @@ local function statueTemplate(live, key)
 		part.CanQuery = false
 		part.CanTouch = false
 		part.CastShadow = false
-		if statue.look then
+		if statue.clear then
+			-- (a see-through shell: only its clear picture's light, its colours kept, lesson 338)
+			part.Material = Enum.Material.Neon
+			part.Color = Color3.new(1, 1, 1)
+			part.TextureID = Textures.url(statue.clear)
+		elseif statue.look then
 			-- (a hologram: a plain colour in the look's material, no picture: lesson 314)
 			part.Material = (Enum.Material :: any)[statue.look]
 		else
@@ -3133,10 +3145,60 @@ local function statueParts(template, statue, factor, color)
 	return part, fill, parts
 end
 
+-- A BLOOM's petal at opening share `share` (0 the bud, 1 open): its foot on its ring round the flower's middle, its
+-- inside (the model's -z once turned by its `facing`) toward the middle, leaning out about its foot, turned about its
+-- own length while closed (one
+-- edge over the next petal's, as a real bud wraps; kept open, the flower turns to a pinwheel).
+local function bloomFoot(flower, ring, k, share, scale)
+	return flower
+		* CFrame.Angles(0, (k - 1 + (ring.phase or 0)) / ring.count * math.pi * 2, 0)
+		* CFrame.new(0, (ring.lift or 0) * scale, ring.radius * scale)
+		* CFrame.Angles(math.rad(ring.closed + (ring.open - ring.closed) * share), 0, 0)
+		* CFrame.Angles(0, math.rad((ring.roll or 0) * (1 - share)), 0)
+end
+
+-- A body's `bloom`: the statue is ONE petal (with its foot, Models' `hinge`), cloned round the flower ring by ring.
+local function wearBloom(live, body, ctx, statue, template)
+	local factor = (body.size or 1) * ctx.scale
+	local flower = ctx.cframe * CFrame.new(vector(body.at, ctx.scale)) * CFrame.Angles(0, math.rad(body.turn or 0), 0)
+	local hinge = Vector3.new(statue.hinge[1], statue.hinge[2], statue.hinge[3])
+	-- (each petal turned by the statue's `facing` about its own foot: Import 3D brings a GLB in turned half round,
+	-- its inside then +z, lesson 358)
+	local face = CFrame.Angles(0, math.rad(statue.facing), 0)
+	local height = statue.size[2] * factor
+	local start = if (body.emerge or 0) > 0 then flower * CFrame.new(0, -height, 0) else flower -- (not yet up)
+	local petals = {}
+	for _, ring in body.bloom do
+		local scale = factor * ring.size
+		for k = 1, ring.count do
+			local part = statueParts(template, statue, scale, body.color)
+			local petal = { part = part, ring = ring, k = k, back = face * CFrame.new(-hinge * scale) }
+			part.CFrame = bloomFoot(start, ring, k, 0, factor) * petal.back
+			part.Parent = live.folder
+			table.insert(petals, petal)
+		end
+	end
+	table.insert(live.bodies, {
+		petals = petals,
+		data = body,
+		flower = flower,
+		factor = factor,
+		height = height,
+		from = ctx.delay + (body.delay or 0),
+		life = body.life,
+		alpha = 1,
+		least = 0,
+	})
+end
+
 local function wearBody(live, body, ctx)
 	local statue = Models.list[body.model]
 	local template = statueTemplate(live, body.model)
 	if not template or live.dead then
+		return
+	end
+	if body.bloom then
+		wearBloom(live, body, ctx, statue, template)
 		return
 	end
 	local part, fill, parts = statueParts(template, statue, (body.size or 1) * ctx.scale, body.color)
@@ -3154,6 +3216,8 @@ local function wearBody(live, body, ctx)
 		life = body.life,
 		alpha = 1,
 		fill = fill,
+		-- (a shell stays a hair see-through, or its clear parts show solid: Builder.ShellClear)
+		least = if statue.clear then Builder.ShellClear else 0,
 	}
 	for _, each in parts do
 		each.CFrame = if live.follow then standing else standing * CFrame.new(0, -entry.height, 0) -- (not yet up)
@@ -3185,7 +3249,16 @@ local function stepBody(live, entry, t)
 		end
 		local rise = if data.emerge and data.emerge > 0 then math.clamp((t - entry.from) / data.emerge, 0, 1) else 1
 		local out = 1 - (1 - rise) * (1 - rise)
-		if not live.follow then
+		if entry.petals then
+			-- (a bloom: each ring opens over its own seconds, easing out as a flower slows into full bloom)
+			local flower = entry.flower * CFrame.new(0, -entry.height * (1 - out), 0)
+			for _, petal in entry.petals do
+				local ring = petal.ring
+				local x = math.clamp((t - entry.from - ring.start) / ring.seconds, 0, 1)
+				local share = 1 - (1 - x) ^ 3
+				petal.part.CFrame = bloomFoot(flower, ring, petal.k, share, entry.factor) * petal.back
+			end
+		elseif not live.follow then
 			local risen = entry.feet * CFrame.new(0, -entry.height * (1 - out), 0)
 			entry.part.CFrame = risen
 			if entry.fill then
@@ -3193,9 +3266,14 @@ local function stepBody(live, entry, t)
 			end
 		end
 	end
-	if math.abs(alpha - entry.alpha) > 0.005 then
+	if math.abs(alpha - entry.alpha) > 0.005 and entry.petals then
 		entry.alpha = alpha
-		entry.part.Transparency = alpha
+		for _, petal in entry.petals do
+			petal.part.Transparency = alpha
+		end
+	elseif math.abs(alpha - entry.alpha) > 0.005 then
+		entry.alpha = alpha
+		entry.part.Transparency = math.max(alpha, entry.least)
 		if entry.fill then
 			entry.fill.part.Transparency = 1 - (1 - entry.fill.base) * (1 - alpha)
 		end
