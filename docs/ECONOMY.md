@@ -105,7 +105,9 @@ Left as they were: what a pack and a zone's guard pay, slime and dish sale value
 
 **Assumed, not measured** (a play test moves these, and every price with them): a team wins 40 fights an hour against
 packs of its own level; a new team is in full use five village levels after it opens; the fighters' level follows the
-training ground; half the babies and dishes a village could sell are sold. No play test in Studio has been run on these numbers.
+training ground; half the babies and dishes a village could sell are sold. A Studio play (2026-11-15) confirmed what is
+charged and paid (70 an upgrade at level 1, 2,700 at 20, a refusal one coin short; 3,341 coins for a won level-1 Meadow
+run), not the hours: see `docs/STATUS.md`.
 
 ## The road before (2026-11-02, history)
 

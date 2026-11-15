@@ -19,8 +19,17 @@ tables: `docs/ECONOMY.md`, "The owner's road (2026-11-15)".
 20 at 0.91 h, 30 at 3.64 h, 40 at 11.7 h, 50 at 37.9 h (old prices: 1.23, 3.04, 5.88, 10.2 h); never trains: 0.99, 6.4,
 47, 206 h. `early_game_sim` (real rules, one team only, nothing trained): village 10 at 10 min, 20 at 74-84 min by seed.
 `loot_sim`: LOOT GATES OK. New guards: `tests/spec/village.luau` (the road's stretches), `tests/spec/loot.luau` (a run's
-coins). **Not verified:** nothing was played in Studio; the road rests on assumptions (40 fights an hour a team, a second
-team in use from level 10-15, a quarter of the training reaching the teams) that a real hour of play must confirm.
+coins).
+
+**Played in Studio** (MapWork, the in-memory save, 2026-11-15; requests sent by script, numbers read from the server and
+the Output): a new farm has 0 coins, a vault of 2,000 and 70 on all six pads; real `UpgradeArea` requests charged 70, 80,
+92, 100, 120, 140 (levels 1-6) and, from the debug "mid" village, 1,000, 1,300, 1,700, 2,100, 2,700 (levels 16-20); a
+2,700 upgrade with 2,600 coins was refused `NO_COINS`; the vault grew to 21,000 with the pantry at 21. A won Meadow run
+at level 1 (4 slimes of level 30) paid 3,341 coins (`road_sim` average 3,214): 61-175 a drop from the waves, 280 from
+the mini-boss, 477 from the boss, and the wallet rose by exactly that (2,600 -> 5,941). No script error.
+**Not verified:** the pacing itself: nobody played an hour, so the road still rests on assumptions (40 fights an hour a
+team, a second team in use from level 10-15, a quarter of the training reaching the teams); a deeper Dungeon level and
+the other three maps in play (only the tests and the sim); the prices as the pads and cards draw them, and a phone.
 
 ## 2026-11-15 — the big rebalance: four dungeons, loot by stage, tempering, spices, button feel, coin fly, forge scene
 
