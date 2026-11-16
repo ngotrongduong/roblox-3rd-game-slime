@@ -1,8 +1,10 @@
 --!strict
 -- The monsters standing at the zones of the open world (Config.World.Crowds; the owner, 2026-11-16: "at the miniboss spots,
 -- a group of monsters"): each zone's guard on the middle of its pad with a few of its map's common monsters round it, all
--- facing the zone's waystone. Client only and only near the camera; put away while the viewer's own fight runs (the run
--- brings its own monsters) and while the zone rests for the viewer after a win. They do nothing but stand and breathe.
+-- facing the zone's waystone. Client only and only near the camera. Everyone sees them while the guard is up: it is the
+-- whole server's (the owner, 2026-11-16: "this is a multiplayer map: hidden, how would the others fight it?"). They are
+-- away while it is down, for everyone (its anchor's FellAt and the zone's rest), and only the crowd of the zone the viewer
+-- is fighting is away during their fight (the run brings its own monsters). They do nothing but stand and breathe.
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
@@ -69,9 +71,13 @@ local function undraw(crowd: Crowd)
 end
 
 -- The zone's anchor (server/ZoneGuards: AnchorLift over the middle of the fight on the ground), once it has streamed in.
-local function groundOf(crowd: Crowd): Vector3?
+local function anchorOf(crowd: Crowd): Instance?
 	local guards = workspace:FindFirstChild(W.Folder)
-	local anchor = if guards then guards:FindFirstChild(crowd.id) else nil
+	return if guards then guards:FindFirstChild(crowd.id) else nil
+end
+
+local function groundOf(crowd: Crowd): Vector3?
+	local anchor = anchorOf(crowd)
 	if not anchor or not anchor:IsA("BasePart") then
 		return nil
 	end
@@ -117,14 +123,12 @@ local function draw(crowd: Crowd, foot: Vector3)
 end
 
 local function wanted(crowd: Crowd, from: Vector3): boolean
-	local run = player:GetAttribute("DungeonPhase")
-	if type(run) == "string" and run ~= "" then
+	if player:GetAttribute("DungeonZone") == crowd.id then
 		return false
 	end
-	local beaten = player:GetAttribute(W.Attribute .. crowd.id)
-	if
-		ZoneFights.restLeft(crowd.id, if type(beaten) == "number" then beaten else 0, workspace:GetServerTimeNow()) > 0
-	then
+	local anchor = anchorOf(crowd)
+	local fell = if anchor then anchor:GetAttribute("FellAt") else nil
+	if type(fell) == "number" and ZoneFights.restLeft(crowd.id, fell, workspace:GetServerTimeNow()) > 0 then
 		return false
 	end
 	local flat = Vector3.new(from.X - crowd.middle.X, 0, from.Z - crowd.middle.Z).Magnitude

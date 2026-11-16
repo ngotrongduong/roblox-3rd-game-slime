@@ -17,8 +17,13 @@ Two lists of notes from the owner's own play. All in code, most seen in a Studio
 - **A slime falls**: a toast "Revive <name> in m:ss or lose it forever!" (seen; the longer first line was cut).
 - **Sold or deleted slime's gear** already went back to the bag (`FarmState.removeSlime`, test in `gear`).
 - **Zone crowds** (`Config.World.Crowds`, `client/ZoneCrowds`): at every mini-boss and boss zone its guard stands with
-  three of its map's monsters, client only, near the camera, hidden during the viewer's run and while the zone rests
-  (seen at m1: 4 bodies).
+  three of its map's monsters, client only, near the camera (seen at m1: 4 bodies).
+- **Zone guards are the whole server's** (the owner's next note: "hidden, how would the others fight it?"): everyone
+  sees a guard while it is up; the first to beat it takes it, every other run at that zone ends "Too late!" with a
+  toast naming the winner, and it is down for everyone for its rest (`server/ZoneGuards.fall`, anchor `FellAt` /
+  `TakenBy`, `ZoneFights.backIn`; docs/WORLD.md §7). The crowd hides only for the one fighting it. Seen at m1: crowd
+  there before, away during the fight, gone after the win with "Resting 4:40", back once the rest was over (FellAt
+  moved back by hand). Not verified: two players racing (a Studio solo test has one player).
 - **Bosses and mini-bosses 1.5x** (`Config.Dungeon.LookScale.Big` 1.15 -> 1.725; measured 17.6 studs tall).
 - **Training half as fast** (`Config.Work.CycleSeconds.training` 90 -> 180).
 - **Dungeon skies**: the arenas moved to x 20000 (`ArenaOrigin`), and each map wears its own sky box
@@ -26,7 +31,7 @@ Two lists of notes from the owner's own play. All in code, most seen in a Studio
   after the run (seen: Meadow's day with clouds, Grove's violet dusk with stars, Lava's red, Ice's overcast; nothing
   of the island shows).
 
-**Proved:** CHECK OK (826 passed, `treasure` 2 passed), TYPES OK. **Not verified:** the index reward, the hammer
+**Proved:** CHECK OK (826 passed, `treasure` 2 passed, `zone_fights` with the shared rest), TYPES OK. **Not verified:** the index reward, the hammer
 swing, the cooking info and the Deep-Sea lure in Studio; a boss in a real run at the new size (a level-80 squad killed
 it first); a phone frame for the new toasts.
 

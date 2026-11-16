@@ -45,7 +45,9 @@
 -- A zone of the big world (docs/WORLD.md §7, M5; shared/ZoneFights, server/ZoneGuards) is fought as a run too, asked with
 -- DungeonEnter { zone = id }: in the open, on the zone's own pad (no arena is built: the run's Model only carries what is
 -- published, and the stand-ins are unseen), with the zone's own few waves; the player is not moved away when it ends, and
--- a win is written as the zone's (it rests, and a boss's opens its gate). Such a run publishes DungeonZone (the zone's id,
+-- a win is written as the zone's (it rests, and a boss's opens its gate). A zone's guard is the whole server's: several
+-- players may fight it at once, the first to beat it takes it, every other run at the zone ends lost then, and it is down
+-- for everyone while it rests (server/ZoneGuards.fall). Such a run publishes DungeonZone (the zone's id,
 -- "" otherwise) and DungeonMap = "", shows its guard's level as its Level, and its "start" also carries zone, at (the
 -- middle), spot (where the player stands) and radius.
 local HttpService = game:GetService("HttpService")
@@ -790,6 +792,19 @@ local function clearWave(run: Run, fight: Fight)
 	if last and zone then
 		-- (the win shows at once: the zone rests and a boss's gate opens)
 		ZoneGuards.publish(run.player, PlayerData.get(run.player))
+		-- (the guard is the whole server's: it is down for everyone now, and whoever else was fighting it lost the race)
+		ZoneGuards.fall(zone, run.player, os.time())
+		for _, other in runs do
+			if
+				other.player ~= run.player
+				and other.zone == zone
+				and other.phase ~= VICTORY
+				and other.phase ~= DEFEAT
+			then
+				-- (the cast: the checker reads a run of `runs` and `defeat`'s Run as two types)
+				defeat(other :: any, "the guard was taken by " .. run.player.Name)
+			end
+		end
 		print(Config.LogPrefix, "dungeon:", run.player.Name, "won the zone", zone)
 	end
 	PlayerData.markKeyMoment(run.player, "dungeon wave")
@@ -977,7 +992,9 @@ local function enter(player: Player, data: any, farm: any): { ok: boolean, reaso
 	-- (a zone of the big world: fought where it lies, by anyone with a team, when it is open and rested)
 	local zone: string? = data.zone
 	local now = os.time()
-	local blocked = if zone then ZoneFights.block(farm.world.beaten, zone, now) else DungeonRules.entryBlock(farm)
+	local blocked = if zone
+		then ZoneFights.block(farm.world.beaten, zone, now, ZoneGuards.fellAt(zone))
+		else DungeonRules.entryBlock(farm)
 	local door = if zone then ZoneGuards.frame(zone).Position else Layout.marketPortal().Position
 	local reach = if zone then W.PromptRangeStuds else D.Portal.PromptRangeStuds
 	if not plot then
@@ -1083,8 +1100,8 @@ local function again(run: Run, level: number, farm: any): { ok: boolean, reason:
 	local now = os.time()
 	local zone = run.zone
 	if zone then
-		-- (a zone that was just won rests: only a lost fight is tried again at once)
-		local blocked = ZoneFights.block(farm.world.beaten, zone, now)
+		-- (a zone that was just won, by anyone on the server, rests: only a lost fight is tried again at once)
+		local blocked = ZoneFights.block(farm.world.beaten, zone, now, ZoneGuards.fellAt(zone))
 		if blocked then
 			return fail(blocked)
 		end

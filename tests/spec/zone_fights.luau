@@ -138,6 +138,15 @@ return function(T: any)
 		T.eq(ZoneFights.block(farm.world.beaten, "m1", NOW + W.Rest.mini), nil)
 		T.eq(ZoneFights.restLeft("m1", nil, NOW), 0)
 
+		-- the guard is the whole server's: beaten by anyone, it is down for everyone, and back for everyone after the rest
+		local other = FarmState.newFarm(NOW)
+		T.eq(ZoneFights.block(other.world.beaten, "m1", NOW + 1, NOW), "ZONE_RESTING")
+		T.eq(ZoneFights.backIn(other.world.beaten, "m1", NOW + 100, NOW), W.Rest.mini - 100)
+		T.eq(ZoneFights.block(other.world.beaten, "m1", NOW + W.Rest.mini, NOW), nil)
+		-- (and a player's own win rests on a server where nobody has beaten it)
+		T.eq(ZoneFights.block(farm.world.beaten, "m1", NOW + 1, nil), "ZONE_RESTING")
+		T.eq(ZoneFights.backIn(farm.world.beaten, "m1", NOW + 100, NOW + 50), W.Rest.mini - 50)
+
 		T.eq(ZoneFights.block(farm.world.beaten, "heart", NOW), "ZONE_LOCKED")
 		ZoneFights.recordClear(farm, "b1", NOW)
 		ZoneFights.recordClear(farm, "b2", NOW)

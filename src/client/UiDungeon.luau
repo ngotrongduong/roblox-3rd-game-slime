@@ -675,6 +675,18 @@ local function zonesWon(): { [string]: number }
 	return won
 end
 
+-- A zone's anchor (server/ZoneGuards), once it has streamed in.
+local function zoneAnchor(zone: string): Instance?
+	local folder = workspace:FindFirstChild(W.Folder)
+	return if folder then folder:FindFirstChild(zone) else nil
+end
+
+-- When the zone's guard was last beaten on this server, by anyone (its anchor's FellAt: the guard is the whole server's).
+local function fellAt(anchor: Instance?): number?
+	local at = if anchor then anchor:GetAttribute("FellAt") else nil
+	return if type(at) == "number" then at else nil
+end
+
 -- Every zone's prompt opens its sheet, or says in one line why not (resting, locked); the seal of a gate of the Heart lets
 -- this player through once its boss is won (the server's real check is the Heart's own), and wears a lock until then.
 -- Called every GateWatchSeconds: anchors and seals stream in with the map.
@@ -690,7 +702,8 @@ local function watchZones()
 			if not bound[prompt] then
 				bound[prompt] = true
 				prompt.Triggered:Connect(function()
-					local why = ZoneFights.block(zonesWon(), zone, math.floor(workspace:GetServerTimeNow()))
+					local why =
+						ZoneFights.block(zonesWon(), zone, math.floor(workspace:GetServerTimeNow()), fellAt(anchor))
 					if why then
 						UiKit.toast(context().reason(why))
 					else
@@ -699,9 +712,9 @@ local function watchZones()
 				end)
 			end
 			prompt.Enabled = free
-			local why = ZoneFights.block(won, zone, now)
+			local why = ZoneFights.block(won, zone, now, fellAt(anchor))
 			if why == "ZONE_RESTING" then
-				local left = ZoneFights.restLeft(zone, won[zone], now)
+				local left = ZoneFights.backIn(won, zone, now, fellAt(anchor))
 				prompt.ActionText = string.format("Resting %d:%02d", left // 60, left % 60)
 			else
 				prompt.ActionText = if why then "Locked" else "Fight"
@@ -791,21 +804,26 @@ local function drawEnd(current: string)
 		.. tostring(numberAttribute("DungeonBest", 0))
 	if key ~= endKey then
 		endKey = key
-		title.Text = if victory then "Victory!" else "Defeated"
-		title.TextColor3 = UiKit.colour(if victory then "Green" else "Red")
-		UiKit.clear(buttons)
-		-- (a zone of the big world has no next level, and rests once won: only a lost fight is tried again)
+		-- (a zone of the big world has no next level, and rests once won: only a lost fight is tried again, and not one
+		-- lost because another player beat the guard first: it is down for everyone now)
 		local zone = player:GetAttribute("DungeonZone")
 		local inZone = type(zone) == "string" and zone ~= ""
+		local anchor = if inZone then zoneAnchor(zone) else nil
+		local fell = if victory then nil else fellAt(anchor)
+		local taken = fell ~= nil and ZoneFights.restLeft(zone, fell, math.floor(workspace:GetServerTimeNow())) > 0
+		title.Text = if victory then "Victory!" elseif taken then "Too late!" else "Defeated"
+		title.TextColor3 = UiKit.colour(if victory then "Green" else "Red")
+		if taken and anchor then
+			UiKit.toast(tostring(anchor:GetAttribute("TakenBy") or "Someone") .. " beat the guard first!")
+		end
+		UiKit.clear(buttons)
+		local canReplay = not (inZone and (victory or taken))
 		-- (Next Level is there while a level above is open; Next Checkpoint when the checkpoint is further than that)
 		local level = numberAttribute("DungeonLevel", D.FirstLevel)
 		local best = numberAttribute("DungeonBest", 0)
 		local hasNext = victory and not inZone and level < DungeonRules.maxOpen(best)
 		local hasJump = hasNext and DungeonRules.nextCheckpoint(level, best) > level + 1
-		local count = (if hasNext then 1 else 0)
-			+ (if hasJump then 1 else 0)
-			+ (if victory and inZone then 0 else 1)
-			+ 1
+		local count = (if hasNext then 1 else 0) + (if hasJump then 1 else 0) + (if canReplay then 1 else 0) + 1
 		local order = 0
 		local function add(name: string, text: string, icon: string?, style: string, action: string)
 			order += 1
@@ -820,7 +838,7 @@ local function drawEnd(current: string)
 		if hasJump then
 			add("Jump", "Checkpoint", nil, "secondary", "DungeonJump")
 		end
-		if not (victory and inZone) then
+		if canReplay then
 			add("Replay", "Replay", "again", if victory then "secondary" else "primary", "DungeonReplay")
 		end
 		add("Leave", "Leave", "back", "secondary", "DungeonLeave")

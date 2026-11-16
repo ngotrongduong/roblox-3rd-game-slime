@@ -4,8 +4,10 @@
 -- as attributes. The fight itself is a Dungeon run (server/Dungeon).
 --
 --   workspace.ZoneGuards.<zone id>   an unseen Part over the middle of the zone's fight. Attributes: Zone (its id),
---                     ZoneName, Level (the level its guard shows). Child: ZonePrompt (ProximityPrompt), answered by each
---                     client for itself (client/UiDungeon: the sheet, the rest, the lock).
+--                     ZoneName, Level (the level its guard shows), FellAt (os.time its guard was last beaten on this
+--                     server, by anyone: it is down for everyone while it rests; unset before), TakenBy (the display
+--                     name of who beat it then). Child: ZonePrompt (ProximityPrompt), answered by each client for itself
+--                     (client/UiDungeon: the sheet, the rest, the lock).
 --   workspace.ZoneGates.<gate id>    an unseen wall across a gate of the Heart. Attributes: Zone (the boss zone that
 --                     opens it), ZoneName. A client lets its own player through once that zone is won (client/UiDungeon);
 --                     what the server holds to is the Heart's own fight, which needs the three bosses.
@@ -24,6 +26,8 @@ local W = Config.World
 
 local ZoneGuards = {}
 local frames: { [string]: CFrame } = {}
+local anchors: { [string]: BasePart } = {}
+local fell: { [string]: number } = {}
 
 -- The top of the land at a flat point (the terrain only: no rock, tree or player), nil where there is none.
 local function ground(x: number, z: number): number?
@@ -93,6 +97,21 @@ function ZoneGuards.publish(player: Player, farm: any)
 	end
 end
 
+-- When the zone's guard was last beaten on this server, by anyone; nil when nobody has since the server began.
+function ZoneGuards.fellAt(id: string): number?
+	return fell[id]
+end
+
+-- `winner` beat the zone's guard: it is theirs, and it is down for everyone on the server while it rests.
+function ZoneGuards.fall(id: string, winner: Player, now: number)
+	fell[id] = now
+	local anchor = anchors[id]
+	if anchor then
+		anchor:SetAttribute("FellAt", now)
+		anchor:SetAttribute("TakenBy", winner.DisplayName)
+	end
+end
+
 local function folder(name: string): Folder
 	local made = Instance.new("Folder")
 	made.Name = name
@@ -108,6 +127,7 @@ function ZoneGuards.start()
 		anchor:SetAttribute("Zone", place.id)
 		anchor:SetAttribute("ZoneName", place.name)
 		anchor:SetAttribute("Level", ZoneFights.level(place.id))
+		anchors[place.id] = anchor
 		local prompt = Instance.new("ProximityPrompt")
 		prompt.Name = "ZonePrompt"
 		prompt.ActionText = "Fight"

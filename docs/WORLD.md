@@ -248,8 +248,14 @@ A finished model replaces its interim by one line in `tools/world/build_sites.lu
     mega 8000-12000 at level 0, are raised by the zone's level as a pack monster's are, x `1 + level x 0.05`: m1 pays
     1300-2080, m9 8400-13440, b3 20550-30825, the Heart 68000-102000 (the owner, 2026-11-14; they were 10-120 x a
     tier factor before); a boss zone adds two of its region's trophy) in place of its own drops; every other monster pays its own drops.
-  - A won zone **rests** for the player who won it: mini 300 s, boss 900 s, mega 1800 s (the prompt reads
-    "Resting m:ss"). No Next Level; Replay only after a defeat.
+  - **A zone's guard is the whole server's** (the owner, 2026-11-16: whoever beats it takes it, and when it dies
+    everyone waits until it is back). Several players may fight it at once; the first to beat it takes it (its reward,
+    its win), every other run at that zone ends lost ("Too late!", a toast "<name> beat the guard first!", no Replay),
+    and it is down for everyone while it **rests**: mini 300 s, boss 900 s, mega 1800 s (`server/ZoneGuards.fall`, the
+    anchor's `FellAt` and `TakenBy`; held in memory, a new server starts with every guard up). The winner's own rest
+    holds on any server too (`ZoneFights.backIn`). Its crowd is seen by everyone while it is up, away while it is down,
+    and away only for the one fighting it during that fight. The prompt reads "Resting m:ss". No Next Level; Replay only
+    after a defeat while the guard is up.
   - Wins are saved: `farm.world.beaten[zoneId]` = the time of the last win (**save schema 15**; a publish must shut
     down all old servers), shown to the client as the player's `Zone_<id>` attributes.
   - Gates: an unseen wall stands in each gate of the Heart (`workspace.ZoneGates`) with a lock picture; each client

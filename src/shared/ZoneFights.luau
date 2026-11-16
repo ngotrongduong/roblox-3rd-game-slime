@@ -105,7 +105,7 @@ function ZoneFights.dropDef(id: string, wave: number, def: any): any
 	return def
 end
 
--- Seconds the zone still rests for a player who won it at `beatenAt` (0 or nil: never), 0 when it may be fought.
+-- Seconds the zone still rests after its guard was beaten at `beatenAt` (0 or nil: never), 0 when it is back.
 function ZoneFights.restLeft(id: string, beatenAt: number?, now: number): number
 	local _, place = ZoneFights.zone(id)
 	if not beatenAt or beatenAt <= 0 then
@@ -114,9 +114,17 @@ function ZoneFights.restLeft(id: string, beatenAt: number?, now: number): number
 	return math.max(0, beatenAt + (W.Rest :: any)[place.kind] - now)
 end
 
+-- Seconds before a player may fight the zone again. Its guard is the whole server's (the owner, 2026-11-16: whoever beats
+-- it takes it, and everyone waits until it is back), so it rests for everyone from the last time anyone beat it on this
+-- server (`fellAt`, nil when nobody has since the server began); and for the player from their own last win, wherever
+-- it was (a win is not taken again at once on another server).
+function ZoneFights.backIn(beaten: Beaten, id: string, now: number, fellAt: number?): number
+	return math.max(ZoneFights.restLeft(id, fellAt, now), ZoneFights.restLeft(id, beaten[id], now))
+end
+
 -- Why the zone may not be fought now: "ZONE_UNKNOWN" (no such zone), "ZONE_LOCKED" (a zone it needs is not won yet) or
--- "ZONE_RESTING"; nil when it may.
-function ZoneFights.block(beaten: Beaten, id: any, now: number): string?
+-- "ZONE_RESTING" (backIn); nil when it may.
+function ZoneFights.block(beaten: Beaten, id: any, now: number, fellAt: number?): string?
 	local numbers = ZoneFights.zone(id)
 	if not numbers then
 		return "ZONE_UNKNOWN"
@@ -126,7 +134,7 @@ function ZoneFights.block(beaten: Beaten, id: any, now: number): string?
 			return "ZONE_LOCKED"
 		end
 	end
-	if ZoneFights.restLeft(id, beaten[id], now) > 0 then
+	if ZoneFights.backIn(beaten, id, now, fellAt) > 0 then
 		return "ZONE_RESTING"
 	end
 	return nil
