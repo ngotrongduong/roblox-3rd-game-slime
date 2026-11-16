@@ -851,16 +851,13 @@ function Garden.build(m: Instance, frame: CFrame, level: number)
 	end
 
 	if f >= 9 then
-		-- 9 a rose arch over the path where it reaches the house (the owner's Meshy arch, made thinner front to
-		-- back so it stands clear of the palm house's steps)
-		if not painted("RoseArch_Garden", b.at(0, FLOOR, HZ - 4.2), 0.9, 0.55) then
-			for _, s in { -1, 1 } do
-				b.trim("RoseArchPost", 0.4, 4.2, 0.4, b.at(s * 3.2, FLOOR + 2.1, HZ - 3.6), LEAF)
-			end
-			archRing("RoseArch", 3.2, FLOOR + 4.2, 2.6, HZ - 3.6, 0.6, 0.6, LEAF)
-			for k = 1, 7 do
-				local x, y = arc(3.2, FLOOR + 4.2, 2.6, k)
-				b.ball("Rose", 0.35, b.at(x, y + 0.2, HZ - 3.9), BLOOMS[k % 3 + 1])
+		-- 9 two round clipped bushes in pots where the path reaches the house (the owner's Meshy bush pot; the
+		-- rose arch that stood here went at his word, 2026-11-17: it did not fit this garden)
+		for _, s in { -1, 1 } do
+			local cf = b.at(s * 3.2, FLOOR, HZ - 3.6)
+			if not painted("BushPot_Round", cf, 1.1) then
+				b.cyl("BushPot", 0.8, 1.1, cf * CFrame.new(0, 0.55, 0), POT, nil, false)
+				b.ball("Bush", 1.2, cf * CFrame.new(0, 2.2, 0), LEAF, M.Grass)
 			end
 		end
 	end

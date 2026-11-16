@@ -61,7 +61,7 @@ U an ornament upgraded, M a material moved on, S a part swapped for the next one
 | 16 | 6 | N | Flower boxes along the front fence on both sides of the gate and under the gable window |
 | 17 | 7 | N | A dormer with a lit window on the house roof |
 | 18 | 8 | N | A brick basin at the tower's foot, filled with water from a spout |
-| 19 | 9 | N | A rose arch over the path where it reaches the house |
+| 19 | 9 | N | Two round clipped bushes in pots where the path reaches the house (the rose arch first built here was taken out at the owner's word, 2026-11-17: it did not fit the garden) |
 | 20 | 10 | S | **The wheel becomes a windmill: four big cream cloth sails** |
 | 21 | | M S | Era 3: a low stone wall with timber rails, stone gate pillars, the house a stone orangery with tall arched windows, the tower a round stone drum under a red cone cap with lattice sails |
 | 22 | | U | Hand pump |
@@ -111,7 +111,7 @@ Looked in the owner's sheet kit first (`src/shared/ConfigMeshyKit.luau`): the Ga
 | Parts (`Architecture`) | fences (wattle as posts and woven rails, pickets, stone wall and rails, steel bars), bed frames, house walls, posts and piers, slab roofs, thatch with rolls, the trestle's beams, the brick foot, the round stone drum, the gallery, sails as thin frames and cloths on a hub, basin, chute and water, the pergola's beams, the glass vault as flat panes between ribs, column shafts, the pediment, grapes as small balls |
 | Blender, reused | cone roof with tile rows (the mill's cap), glass-and-iron dome (the goo tank's cap), royal dome (the three domes), column capital and base, balustrade run with urn (the era-5 fence), copper pipe elbow, brass gear wheel, gold crown (the tower's top) |
 | Blender, new (in `tools/blender/granary_pieces.py`) | `WindWheel_Blades`: a many-bladed wind wheel, timber at era 1 and steel at era 4; `IrrigationArch_Copper`: a copper hoop with a sprinkler head |
-| Meshy, from the owner's sheets | `WallLantern_Iron` (shed posts, gate), `FlowerBox_Trough`, `FlowerBox_Pink`, `FlowerBox_Yellow` (fence, gable), `RoseArch_Garden` (19), `Trellis_Ivy`, `Ivy_Corner`, `PlanterBox_Vines` (pergola, piers), `Window_Shutters`, `Window_Arched`, `Dormer_RedRoof` (house), `GooTank_Glass`, `PipeValve_Copper` (40), `Banner_SlimeBlue` (39), `ConePot_Topiary`, `FlowerUrn_Gold` (46), `SlimeCrest_Laurel` or the game's gold slime with `Laurel_Gold` (48), `Finial_GoldStone` |
+| Meshy, from the owner's sheets | `WallLantern_Iron` (shed posts, gate), `FlowerBox_Trough`, `FlowerBox_Pink`, `FlowerBox_Yellow` (fence, gable), `BushPot_Round` (19), `Trellis_Ivy`, `Ivy_Corner`, `PlanterBox_Vines` (pergola, piers), `Window_Shutters`, `Window_Arched`, `Dormer_RedRoof` (house), `GooTank_Glass`, `PipeValve_Copper` (40), `Banner_SlimeBlue` (39), `ConePot_Topiary`, `FlowerUrn_Gold` (46), `SlimeCrest_Laurel` or the game's gold slime with `Laurel_Gold` (48), `Finial_GoldStone` |
 
 Every one of the sheet pieces is already uploaded (2026-11-17); only the two new Blender pieces will need an upload
 through the owner's cloud place.

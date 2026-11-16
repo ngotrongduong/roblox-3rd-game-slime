@@ -26,8 +26,13 @@
   crown at era 5, bigger gold urns on the balustrade. **Left**: a new floor an era (his stud look, the map's soil
   floor), new goo tanks and bed pipes (outside the ladder), and four points that are already built but hidden behind
   the rose arch and the ivy.
-- **Not verified**: the last edit was seen in the Edit preview only (`review/garden-final-l*.jpg`), not in a second
-  play test; the 50 steps were seen at each era's last level, not pair by pair; nobody has played it on a phone.
+- **The owner's note, the same day**: "cái cổng hoa này có thể bỏ đi, trông nó không hợp với khu vườn này". The
+  rose arch (step 19) is gone; step 19 is now two round clipped bushes in pots where the path reaches the house
+  (`BushPot_Round` from his sheets), so the level still has its change. Seen in a play test at levels 30 and 50
+  (`review/garden-door-l30.jpg`, `-l50.jpg`); CHECK OK, TYPES OK. The `garden-final-*` and `garden-play-*` shots
+  still show the arch.
+- **Not verified**: the rest of the last edit was seen in the Edit preview only (`review/garden-final-l*.jpg`); the
+  50 steps were seen at each era's last level, not pair by pair; nobody has played it on a phone.
 - **Next** (his to choose): the breeding pen, the training ground or the dock by the same skill; the village's
   layout; the Granary's 50 steps against the step test (postponed by him).
 

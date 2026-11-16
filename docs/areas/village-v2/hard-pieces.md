@@ -126,7 +126,7 @@ village layout).
 ## The Garden (built 2026-11-17; B10 and B11 built in Blender, uploaded and worn)
 
 The sorting and the 50 steps are in `garden-ladder.md`. No new Meshy piece: everything organic comes from the sheets
-he already sent (`RoseArch_Garden`, `Trellis_Ivy`, `Ivy_Corner`, `PlanterBox_Vines`, the flower boxes, topiaries and
+he already sent (`BushPot_Round`, `Trellis_Ivy`, `Ivy_Corner`, `PlanterBox_Vines`, the flower boxes, topiaries and
 urns, `SlimeCrest_Laurel`, `GooTank_Glass`, `Banner_SlimeBlue`, `WallLantern_Iron`, windows and the dormer).
 
 | # | Piece (Blender, new) | Era | Replaces | Shown from |

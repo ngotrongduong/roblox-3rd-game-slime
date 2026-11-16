@@ -1066,6 +1066,10 @@ The Garden, the third landmark (2026-11-17, `src/server/Garden.luau`, `src/clien
   points, four asked for what was built but hidden (era 3 pilasters and arch stones behind the rose arch and the ivy,
   the bed's gold trim, the header pipe, the goo tank). An ornament that covers the architecture hides the work the
   reviewer wants to see: say so in the brief, or shoot once without it.
+- **The owner took the Meshy rose arch out the same day** ("không hợp với khu vườn này"): big cartoon blooms on a
+  brown arch in front of a finished entrance fought the architecture. An ornament never stands across a building's
+  best face; a step that goes is replaced at once so its level keeps a change (two clipped bushes in pots beside
+  the door).
 - **A request for a new floor an era was not taken**: the owner chose the stud look for floors, the map owns the
   soil floor, and the path already changes per tier. A review point against a standing rule of his is dropped and
   named in the report.
