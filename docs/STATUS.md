@@ -1,5 +1,27 @@
 # Status
 
+## 2026-11-16 — village rework ("village v2"): audit and concept pictures, nothing built yet
+
+The owner is not happy with the village's buildings through its levels: he wants them taller, more detailed, better
+finished and structured, and the whole village better laid out per level; the present buildings are "only a first
+suggestion", a new system is allowed.
+- **Audit** (StudioTest play, by day, levels 1/15/25/35/50): `docs/areas/upgrades/review/village-audit-*.jpg`. About
+  80% of the 228-stud plot is lawn at every level; the six areas are small far-apart pads; levels add fences and lamps,
+  no mass; no skyline. Pantry = a 12 x 9 box that stacks floors, kitchen = a thin canopy, breeding = a small frame
+  hut, training = no building, garden and pond low; rustic leftovers at the marble era.
+- **Assets**: the owner's Meshy library is `C:\Ai kiem tien\products\lowpoly-library` (3664 CC0 models: weapons and
+  monsters, 4 buildings); look at it only through `tools\lowpoly_sheets.ps1` (contact sheets). Usable here: cute slimes
+  as statues, weapons for the training armoury, a tower, a sawmill, a workbench. Buildings come from
+  `art/library` (Quaternius Medieval Village MegaKit, Ultimate Fantasy RTS; Kenney fantasy-town, castle) and from
+  ChatGPT concept -> Meshy for what no kit has.
+- **Concept** (ChatGPT chat `/c/6afa8838-60bc-83ec-9e7c-e90e412ffcf0`): `docs/areas/village-v2/concept-era1-hamlet.jpg`,
+  `concept-era3-town.jpg`, `concept-era5-capital.jpg`: one layout growing; each area a district with one landmark
+  (granary with clock tower at the back centre, boathouse and lighthouse, conservatory and windmill, restaurant with a
+  big chimney, hatchery with an egg dome, dojo hall with banner towers), slime houses and a market quarter (front
+  right) filling the lawn, paved streets, a monument fountain.
+- **Next**: the owner's word on the concept; then eras 2 and 4 pictures, a turnaround per landmark, and the pantry
+  district as the pilot through all five eras (keep every work spot; an area may grow, never shrink).
+
 ## 2026-11-16 — the owner's two play-test notes: lamps far, chests, crowds, dungeon skies
 
 Two lists of notes from the owner's own play. All in code, most seen in a Studio play test (StudioTest).
