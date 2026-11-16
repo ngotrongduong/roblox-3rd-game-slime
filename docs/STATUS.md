@@ -1,5 +1,24 @@
 # Status
 
+## 2026-11-17 — the Garden, the third landmark: reference drawn, ladder and shape sorting written, nothing built
+
+- The owner chose it ("Dựng Garden"). **Reference** (ChatGPT chat `/c/6afb4b95-2914-83ec-b096-95f99182ce68`):
+  `docs/areas/village-v2/garden-ref-sheet.jpg`, cut into `garden-ref-era1..5.jpg`. The first sheet used the Kitchen's
+  sheet alone as the style lock; the owner asked for the other buildings as references too, so the second (the one
+  kept) was drawn with the three village concept paintings, the Granary at eras 2 and 4 and the Kitchen's sheet:
+  taller house and mill, more detail. Sent to him; **he has not said yes yet: nothing is built before it.**
+- **The plan** (`garden-ladder.md`): one garden at every era: the two open beds (crops, work spots and markers stay),
+  the gate in the front fence, the garden house across the back with an open front (potting shed, orangery,
+  greenhouse, palm house), the water tower with a turning wheel in the back left corner (well, windmill). 50 steps
+  walked on paper against the step test; 25 features.
+- **Shapes** (`hard-pieces.md`): no new Meshy piece (his sheets cover it); two new Blender pieces
+  (`WindWheel_Blades`, `IrrigationArch_Copper`), eight reused.
+- **Verified**: nothing in the game; these are pictures and a plan. No code changed.
+- **Next**: on his yes, build `src/server/Garden.luau` on `Architecture` by skill `landmark-build` from step 4 (the
+  area grows once at the back for the house and the tower; the compost corner moves), the two Blender pieces, the
+  Edit preview, one play test, ChatGPT's one review, the upload of the two new pieces through "Slime". Still open:
+  the Granary's 50 steps against the step test (postponed by him), breeding pen, training ground, dock, the layout.
+
 ## 2026-11-17 — the Kitchen landmark built, reviewed once and locked; the owner's 80 sheet pieces cut and fitted
 
 - The owner approved the sheet ("Duyệt") and sent two deliveries of Meshy sheet models (many props in one GLB; "take

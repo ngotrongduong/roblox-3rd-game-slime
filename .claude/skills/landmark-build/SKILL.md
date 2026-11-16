@@ -26,6 +26,10 @@ Each step has its gate. Do not start a step before the gate of the one before it
    attached, "ONE new sheet in exactly the same style, layout and camera as picture 1" (three on top, two below, the
    same farmer figure for scale, grey studded ground, no text), then each era in one clause, then the rules that
    make it ONE building (what stays on which side at every era, what is always open, each era taller and richer).
+   The owner's rule (2026-11-17, the Garden: "cho nó thêm cả các hình của những tòa nhà khác nữa"): the request
+   always carries the village's concept paintings (`concept-era1-hamlet`, `era3-town`, `era5-capital`: the district
+   is in them) AND the earlier landmarks' sheets, five pictures a message; one sheet alone as the style lock gave a
+   garden lower and plainer than its village, and a second request.
    With the pane hidden, carry the pictures by script (skill `meshy-multiview`, "With the pane hidden"). Cut the
    sheet into the five era files with a small PIL script; send the whole sheet to the owner.
 2. **Ladder.** Write the building's 50 steps as a table in `docs/areas/village-v2/<name>-ladder.md` BEFORE any code
@@ -156,4 +160,5 @@ keeps its stand-in and is named in the review brief as "not to be judged".
 |----------|--------|-----------|--------|-------|
 | Pantry -> Granary | `Granary.luau` | `granary-ref-era*.jpg` | in the module's `build` (25 features + 4 store props an era; not yet walked against section 2's step test) | locked 2026-11-16; every piece uploaded and worn 2026-11-17 |
 | Kitchen (cookhouse to grand restaurant) | `Kitchen.luau` | `kitchen-ref-sheet.jpg`, `kitchen-ref-era*.jpg` | `kitchen-ladder.md` (walked on paper; seen at each era's last level, not pair by pair) | locked 2026-11-17 (ChatGPT: likeness 78-88, finish 74-83, before the last edit); every piece uploaded and worn 2026-11-17 |
-| Garden, breeding pen, training ground, dock, village pieces | - | - | - | not started |
+| Garden (potting shed to royal palm house, with its windmill) | `Garden.luau` (not written) | `garden-ref-sheet.jpg`, `garden-ref-era*.jpg` | `garden-ladder.md` (on paper) | sheet drawn 2026-11-17, waits for the owner's yes; nothing built |
+| Breeding pen, training ground, dock, village pieces | - | - | - | not started |

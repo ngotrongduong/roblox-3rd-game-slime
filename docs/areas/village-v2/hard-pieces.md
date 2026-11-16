@@ -123,6 +123,20 @@ twice the better one won: the village sheet's wall lantern, hoist sack and ivy c
 wait for the districts they belong to (stalls and shelves for the Market, lamp posts, fences and the fountain for the
 village layout).
 
+## The Garden (sheet drawn 2026-11-17, waiting for the owner's yes; nothing built)
+
+The sorting and the 50 steps are in `garden-ladder.md`. No new Meshy piece: everything organic comes from the sheets
+he already sent (`RoseArch_Garden`, `Trellis_Ivy`, `Ivy_Corner`, `PlanterBox_Vines`, the flower boxes, topiaries and
+urns, `SlimeCrest_Laurel`, `GooTank_Glass`, `Banner_SlimeBlue`, `WallLantern_Iron`, windows and the dormer).
+
+| # | Piece (Blender, new) | Era | Replaces | Shown from |
+|---|----------------------|-----|----------|------------|
+| B10 | `WindWheel_Blades`: a many-bladed wind wheel on a hub | 1 (timber), 4 (steel) | flat blade parts | the tower's wheel (5) |
+| B11 | `IrrigationArch_Copper`: a copper hoop with a sprinkler head | 4-5 | straight rods | the arches over the beds (16) |
+
+Reused: B1 (the mill's cap), B2 (the goo tank's cap), B3 (the three domes), B4 and B5 (columns, the balustrade
+fence), B6 (pipes), B7 (the gate's gear), B8 (the tower's crown).
+
 ## Other districts
 
 Listed when each district is rebuilt.
