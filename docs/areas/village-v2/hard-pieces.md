@@ -137,6 +137,19 @@ urns, `SlimeCrest_Laurel`, `GooTank_Glass`, `Banner_SlimeBlue`, `WallLantern_Iro
 Reused: B1 (the mill's cap), B2 (the goo tank's cap), B3 (the three domes), B4 and B5 (columns, the balustrade
 fence), B6 (pipes), B7 (the gate's gear), B8 (the tower's crown).
 
+## The Breeding House (planned 2026-11-17; the sheet waits for the owner's word, nothing built)
+
+The sorting and the 50 steps are in `breeding-ladder.md`. No new Meshy piece: lanterns, flower boxes, the dormer,
+windows, ivy, the goo tank and its valve, banners, urns and the laurel all come from the sheets he already sent.
+
+| # | Piece (Blender, new) | Era | Replaces | Shown from |
+|---|----------------------|-----|----------|------------|
+| B12 | `EggDome`: a tall ovoid half shell (`_Shell`), its spots standing proud (`_Spots`), meridian ribs with two bands (`_Ribs`) | 1-5 (ribs: black steel at 4, gold at 5) | a stretched `ball` with flat discs | the egg on the hall's roof (5, 10, 15, 20, 25) |
+| B13 | `HeartEmblem`: a puffy heart (`_Heart`) in a raised rim (`_Rim`) with an egg on it (`_Egg`) | 1-5 | a heart of two balls and a wedge | the gate's heart (1), the hall's emblem (2) |
+
+To be reused: B1 (the turret's cap, the egg's tile collar), B2 (the boiler's cap), B3 (the two wing domes), B4 and
+B5 (columns, the balustrade fence), B6 (pipes), B7 (the gate's gear), B8 (the egg's crown).
+
 ## Other districts
 
 Listed when each district is rebuilt.
