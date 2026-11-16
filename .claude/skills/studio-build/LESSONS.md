@@ -916,3 +916,32 @@ What went wrong
 - **`beam_fade` as a soft light shaft drew a hard-edged box**; the ray streaks of `beam_light_shafts` were kept.
 - **A re-run does not undo an earlier carve**: moving the tunnel left the first try's air behind (harmless here,
   hidden behind the curtain). Move carved things only where the old hole stays hidden, or rebuild the terrain.
+
+## The Granary, a landmark built from parts against a reference sheet (2026-11-16, src/server/Granary.luau)
+
+What worked
+- **Hard shapes are not forced out of parts** (the owner's rule): regular ones go to Blender, sculpted ones to his
+  Meshy with a ChatGPT reference picture; the list is `docs/areas/village-v2/hard-pieces.md`.
+- **A slime statue is the game's slime**: clone `ClientKit.SlimeBody`, put it in a Model and `ScaleTo` (setting
+  `Size` on a skinned mesh squashes it), tint a clone of `Looks.PlainFine` (`Mirror` shows a dark horizon band and
+  hides the mouth); the face is the owner's sprites as Decals on invisible plates at `SlimeShape.frontPoint`.
+- **A door about 0.45 of the front's width, an elliptical arch in three cuts, a stout tower without a belfry and a
+  roof that outweighs the walls** read closest to the reference (ChatGPT round 1 said the same).
+- **A tower stands on tie beams across the hall**, not on legs to the floor: the doorway and the hollow inside stay
+  clear.
+- **The 3/4 review camera** for the pantry cell: eye (-32, 17, -47), target (1, 12.5, 6), FoV 50; lean-to close-up
+  eye (-26, 13, -14), target (-11, 7, 6).
+
+What went wrong
+- **A lean-to roof sloped up away from the wall at every era** and went unseen through three review rounds; the
+  owner found it. After `Angles(0, pi/2, 0)` the slab's +Z points at the wall, so the tilt is `-atan(slope)`.
+  Measure both ends of every sloped slab (`CFrame * (0, 0, ±Size.Z / 2)` in the area frame) instead of trusting a
+  far shot, and look at the rafters: they crossed the slab.
+- **Timber rails and tie beams at the top of a wall stand out of the roof slope** (a dark line on the thatch): stop
+  the top storey's side bands 0.45 below the eaves and keep a front tie beam 0.4 short of each corner.
+- **Syncing one module is not enough in Play**: `require` keeps the old copy inside the module that already loaded
+  it. Sync every module of the chain (Architecture, Granary, PantryStages) each time.
+- **`tools/chatgpt/shoot_setup.luau` and `shoot_camera.luau` expect Plot5**; after a restart the player had plot 1
+  and they hung for 120 s. Read the player's `Plot` attribute and build the frame from it.
+- **After a crash the browser pane's ChatGPT is signed out**: only the owner can sign in; keep the request text in
+  the repo so nothing is lost.

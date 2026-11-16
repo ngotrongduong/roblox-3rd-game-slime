@@ -9,7 +9,7 @@
 --                        2 containers (barrel rack > crate wall > grain silo > shipping container >
 --                        goo tank)   3 lifting (ladder > pulley hoist > crane > conveyor > robot arm)
 --                        4 stock (sack pallet > shelf > metal rack > plastic crates > vault)
---   levels 6-10          the granary gains one feature a level (silos, dormers, a belfry, turrets...);
+--   levels 6-10          the granary gains one feature a level (silos, dormers, tower dials, turrets...);
 --                        the yard's floor and the store hut still move up a material tier
 -- Tiers: rustic wood, painted timber, brick, steel and glass, slime tech, marble and gold.
 -- The granary is built from parts (`Granary`, `Architecture`); props are kit models
@@ -199,8 +199,11 @@ local SPOT: { { { any } } } = {
 		-- 4.2 m (boom up) crane truck across the front of the silo, 4 clear of it, its boom swung in
 		-- over the paving so its load hangs well inside the yard
 		{ -20.2, -6.2, -90, 12, 13 },
-		{ 8.6, 6.4, 0, 3, 6 }, -- 1.05 m conveyor along the left wall, behind the forklift
-		{ 9.6, -1.4, 0, 8, 6.1 }, -- 2.8 m robot arm (twice the first try) between the dock and the cart
+		-- 1.05 m conveyor along the wing's outer wall, on the paved strip the granary lays there (the wing
+		-- stands where it used to run, along the hall's left wall)
+		{ 22.3, 6.6, 0, 3, 6 },
+		-- 2.8 m robot arm (twice the first try) between the dock and the cart, clear of the wing's front
+		{ 9.6, -3.4, 0, 8, 6.1 },
 	},
 	{
 		{ -8.5, -6.5, 0, 3, 3.5, "pallet" }, -- 1.05 m sacks waiting on a pallet
@@ -242,7 +245,7 @@ local SURROUND: { { any } } = {
 -- Village v2 (2026-11-16): the house is the great granary (`Granary`), wider and deeper with every era. Every
 -- position above is still written for a house x -6..6; `grow` is how much farther out the hall's side walls
 -- stand, and what leans against them moves out with them. The hay store that stood behind the house stands
--- behind the yard on the hall's left (past the engine house's ground from the slime-tech hall on).
+-- behind the yard on the hall's left (past the boiler's ground from the slime-tech hall on).
 local YARD_X, YARD_FRONT = 16.8, 14
 local SERVICE_SHIFT, SERVICE_X0, SERVICE_X1 = -5, -32.5, -16
 local function spread(x: number, z: number, grow: number): (number, number)
@@ -254,9 +257,12 @@ local function spread(x: number, z: number, grow: number): (number, number)
 		if math.abs(x) >= 9 then -- (beside the hall's front corner)
 			return x + math.sign(x) * grow, z
 		end
-		return x, z - 0.4 -- goods waiting by the dock, clear of the front windows' flower boxes
+		-- goods waiting by the dock: clear of the front windows' flower boxes, and out with the dock as the
+		-- door (its leaves stand open on the dock) grows wider
+		return x + math.sign(x) * grow * 0.4, z - 0.4
 	elseif z > 9.5 then
-		return x + grow + (if grow >= 3.5 then 5.5 else 0), z
+		-- (past the boiler's ground from slime tech on; a step back from the wing's end wall once it stands)
+		return x + grow + (if grow >= 5.3 then 4 else 0), z + (if grow >= 3 then 1 else 0)
 	elseif math.abs(x) >= 5.5 and math.abs(x) <= 12.5 then
 		return x + math.sign(x) * grow, z
 	end

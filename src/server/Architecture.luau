@@ -6,11 +6,15 @@
 -- the wall, its X runs along it, its Y is up.
 -- Solid pieces (walls, roofs, drums) collide; trim (beams, frames, cloth, ticks) does not and casts no shadow,
 -- so a building costs a phone little more than its few big blocks.
+-- Real surfaces (the owner, 2026-11-16: "paste textures so the building looks more real"): `skins` names the
+-- material every colour of the building stands for (the wall colour is plaster, the beam colour is wood, the
+-- roof colour is clay tiles), keyed by the colour's hex, so every helper below textures its parts without being
+-- told. A colour with no skin keeps the stud look. `seeThrough` is how see-through every Glass part is.
 local PondStages = require(script.Parent.PondStages)
 
 local Architecture = {}
 
-function Architecture.new(m: Instance, frame: CFrame)
+function Architecture.new(m: Instance, frame: CFrame, skins: { [string]: Enum.Material }?, seeThrough: number?)
 	local b = {}
 
 	local function make(
@@ -28,7 +32,15 @@ function Architecture.new(m: Instance, frame: CFrame)
 		p.CFrame = cf
 		p.Color = colour
 		p.Anchored = true
-		PondStages.studLook(p, material)
+		local skin = material or (skins and skins[colour:ToHex()])
+		if skin then
+			p.Material = skin
+			if skin == Enum.Material.Glass and seeThrough then
+				p.Transparency = seeThrough
+			end
+		else
+			PondStages.studLook(p, nil)
+		end
 		p.CastShadow = solid and size.Magnitude > 4
 		if not solid then
 			p.CanCollide = false
@@ -173,8 +185,8 @@ function Architecture.new(m: Instance, frame: CFrame)
 	-- A gable roof over a rectangle `len` long (the ridge, along `cf`'s X) and `span` across, `cf` at the middle
 	-- of the walls' top. It rises `rise` over the walls and hangs `over` past them all round; the two gable ends
 	-- are filled in `gableColour`. The roof is two slabs `thick` deep, their top on the roof's line, so the gable
-	-- walls stand back under a real overhang (a solid roof hid them and everything on them). Returns the
-	-- ridge's height over `cf`.
+	-- walls stand back under a real overhang (a solid roof hid them and everything on them). `only` (-1 or 1)
+	-- fills and boards that end alone: the other runs into a wall. Returns the ridge's height over `cf`.
 	function b.gable(
 		cf: CFrame,
 		len: number,
@@ -185,7 +197,8 @@ function Architecture.new(m: Instance, frame: CFrame)
 		gableColour: Color3,
 		boardColour: Color3,
 		material: Enum.Material?,
-		thick: number?
+		thick: number?,
+		only: number?
 	): number
 		local half = span / 2
 		local pitch = rise / half
@@ -195,12 +208,13 @@ function Architecture.new(m: Instance, frame: CFrame)
 		local slope = math.sqrt(depth ^ 2 + height ^ 2)
 		local t = thick or math.clamp(span * 0.035, 0.25, 0.6)
 		local drop = t / math.cos(angle) -- how far the slab's underside hangs below the roof's line
+		local ends: { number } = if only then { only } else { -1, 1 }
 		for _, s in { -1, 1 } do
 			local turn = if s < 0 then CFrame.identity else CFrame.Angles(0, math.pi, 0)
 			-- (the slab's own Y is the roof's outward normal)
 			local lie = cf * CFrame.new(0, base + height / 2, s * depth / 2) * CFrame.Angles(s * angle, 0, 0)
 			b.trim("Roof", len + over * 2, t, slope, lie * CFrame.new(0, -t / 2, 0), colour, material).CastShadow = true
-			for _, e in { -1, 1 } do
+			for _, e in ends do
 				b.wedge(
 					"Gable",
 					0.5,
@@ -298,13 +312,15 @@ function Architecture.new(m: Instance, frame: CFrame)
 		h: number,
 		frameColour: Color3,
 		glass: Color3,
-		opts: { shutters: Color3?, arch: boolean?, flowers: boolean?, glow: boolean? }?
+		opts: { shutters: Color3?, arch: boolean?, flowers: boolean?, glow: boolean?, through: number? }?
 	)
-		local o: { shutters: Color3?, arch: boolean?, flowers: boolean?, glow: boolean? } = opts or {}
+		local o: { shutters: Color3?, arch: boolean?, flowers: boolean?, glow: boolean?, through: number? } = opts or {}
 		local glassMat = if o.glow then Enum.Material.Neon else nil
+		-- (on a hollow building the pane goes `through` the wall and shows inside too)
+		local deep = if o.through then o.through + 0.1 else 0
 		-- (proud of a wall's timber, which stands 0.25 out)
 		b.trim("WindowFrame", w + 0.5, h + 0.5, 0.3, face * CFrame.new(0, 0, -0.2), frameColour)
-		b.trim("WindowGlass", w, h, 0.36, face * CFrame.new(0, 0, -0.21), glass, glassMat)
+		b.trim("WindowGlass", w, h, 0.36 + deep, face * CFrame.new(0, 0, -0.21 + deep / 2), glass, glassMat)
 		b.trim("WindowBar", 0.14, h, 0.42, face * CFrame.new(0, 0, -0.21), frameColour)
 		b.trim("WindowBar", w, 0.14, 0.42, face * CFrame.new(0, 0, -0.21), frameColour)
 		b.trim("WindowSill", w + 0.9, 0.25, 0.6, face * CFrame.new(0, -h / 2 - 0.3, -0.3), frameColour)

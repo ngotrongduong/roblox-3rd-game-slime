@@ -1,5 +1,28 @@
 # Status
 
+## 2026-11-16 — the Granary, second pass: textures, hollow hall, glasshouse era, the game's own slime as statue
+
+After the owner's notes on the pilot (build 90% like the reference, real textures, a hollow hall, era 4 a steel-frame
+glasshouse, a ChatGPT cross-check loop, "why rebuild the slime when we have the file", "the side roofs face the wrong
+way"). Seen in a StudioTest play test at levels 10/20/30/40/50 (`docs/areas/upgrades/review/granary-r4-*.jpg`);
+`check.ps1` CHECK OK (827 tests), `types.ps1 src/server` TYPES OK.
+- `Granary.luau`: textured walls and roofs, a hall that is hollow inside, a big arched door, a stout clock tower on
+  tie beams (the doorway is clear), the era-4 glass vault and roof pipes, a flat portico at era 5, a catslide lean-to
+  at era 1. Statues are the game's own slime (`ClientKit.SlimeBody` with the owner's face sprites), gold or neon.
+- Fixed from the owner's pictures: the lean-to roof sloped up away from the wall at every era (wrong sign); now high
+  at the wall, low at the posts. The top timber rail and the front tie beam no longer stand out of the roof slope.
+- ChatGPT round 1 (scores 60-74 of 100 per era): taken = bigger arched door, stout tower, dominant roof, more roof
+  volumes; rejected = a barrel-vault main hall at era 4 (the sheet shows a pitched roof) and swapping the approved
+  crane, container and shed props.
+- **The owner's new rule** (memory `hard-shapes-blender-or-meshy`): hard shapes are not forced out of parts. The
+  list is `docs/areas/village-v2/hard-pieces.md`: 8 sculpted pieces for his Meshy (crowned slime statue, crest,
+  thatch roof and caps, lantern, hanging sack, ivy), 7 regular ones for Claude's Blender (cone roofs, domes, column,
+  balustrade, pipes, gear).
+- **Not done**: the ChatGPT reference pictures for his 8 pieces (the browser pane's ChatGPT is signed out since the
+  crash: he signs in, then the request saved in `hard-pieces.md` is sent); the 7 Blender pieces; ChatGPT round 2
+  (waits for those pieces); a phone-frame look; the interior was not shot again after the tie-beam change; prop
+  collisions and `check_village_trees.luau` not re-run; the other five districts and the village layout.
+
 ## 2026-11-16 — village v2 pilot: the pantry is the Granary, built and seen at all five eras
 
 The owner approved the granary reference (`docs/areas/village-v2/granary-ref-era*.jpg`, eras 2 and 4 concepts beside
