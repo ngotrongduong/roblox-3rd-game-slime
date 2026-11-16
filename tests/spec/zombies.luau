@@ -264,6 +264,15 @@ return function(T: any)
 		T.same(farm.storehouse, { carrot = 1 }, "paid from the biggest stock each time")
 		T.eq(select(2, Zombies.revive(farm, "s1", NOW + 60)), "NOT_DEAD")
 
+		-- a revived slime comes home out of its team; the team goes on without it
+		farm.teams[1].members = { "s2", "s3", "s4" }
+		farm.teams[1].formation = { s3 = "back" }
+		Zombies.fall(farm, "s3", NOW)
+		farm.storehouse = { fish = 9 }
+		T.ok(Zombies.revive(farm, "s3", NOW + 60))
+		T.same(farm.teams[1].members, { "s2", "s4" })
+		T.eq(farm.teams[1].formation, nil)
+
 		Zombies.fall(farm, "s1", NOW)
 		local after = VillageSim.step(farm, NOW + Config.Village.GhostSeconds, 1, Rng.new(1), { errands = false })
 		T.eq(#after.slimes, 5, "lost for good")

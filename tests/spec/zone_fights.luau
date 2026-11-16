@@ -7,6 +7,7 @@ local Dungeon = require("../../src/shared/Dungeon")
 local FarmSave = require("../../src/shared/FarmSave")
 local FarmState = require("../../src/shared/FarmState")
 local ProfileLogic = require("../../src/shared/ProfileLogic")
+local Rng = require("../../src/shared/Rng")
 local VillageRequests = require("../../src/shared/VillageRequests")
 local WorldPlan = require("../../src/shared/WorldPlan")
 local ZoneFights = require("../../src/shared/ZoneFights")
@@ -156,6 +157,40 @@ return function(T: any)
 		T.eq(ZoneFights.gateOpen(farm.world.beaten, "no_gate"), false)
 		ZoneFights.recordClear(farm, "b3", NOW)
 		T.eq(ZoneFights.block(farm.world.beaten, "heart", NOW), nil)
+	end)
+
+	T.test("a guard fought together pays every team by the damage it dealt", function()
+		local function count(drops: { any }, item: string): number
+			local total = 0
+			for _, drop in drops do
+				if drop.item == item then
+					total += drop.amount
+				end
+			end
+			return total
+		end
+		-- one team alone takes everything
+		local alone = ZoneFights.split(
+			{ { item = "coins", amount = 1500 }, { item = "core", amount = 2 } },
+			{ 40 },
+			Rng.new(1)
+		)
+		T.eq(count(alone[1], "coins"), 1500)
+		T.eq(count(alone[1], "core"), 2)
+		-- coins by share, what rounding leaves to the team that dealt most, nothing made or lost
+		local three = ZoneFights.split({ { item = "coins", amount = 1001 } }, { 10, 30, 10 }, Rng.new(1))
+		T.eq(count(three[1], "coins"), 200)
+		T.eq(count(three[2], "coins"), 601)
+		T.eq(count(three[3], "coins"), 200)
+		-- every other piece goes to one team, likelier the more it dealt
+		local big, small = 0, 0
+		for seed = 1, 400 do
+			local parts = ZoneFights.split({ { item = "core", amount = 1 } }, { 900, 100 }, Rng.new(seed))
+			big += count(parts[1], "core")
+			small += count(parts[2], "core")
+		end
+		T.eq(big + small, 400)
+		T.ok(big > 300 and small > 10, "the bigger share gets most pieces, the smaller some: " .. big .. "/" .. small)
 	end)
 
 	T.test("every gate of the Heart has its boss zone", function()

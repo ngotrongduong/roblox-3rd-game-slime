@@ -211,7 +211,9 @@ playing). Nothing dies of hunger and no stat is ever lost to hunger.
   help. The owner's design of 2026-11-02 is in `docs/ECONOMY.md` (three camps by level, 4 squads of 4, coins for every death).
 - A slime killed in a fight **dies** and becomes a **ghost** waiting at the village gate; the player has **15 minutes
   of play** to revive it with food, else it is **lost for good** (`Config.Village.GhostSeconds`; the owner, 2026-11-02).
-  A ghost does not eat, work, breed or train. The save has the field (`ghostUntil`).
+  A ghost does not eat, work, breed or train. The save has the field (`ghostUntil`). A revived slime stays in the
+  village, **out of its team**: the team goes on with the members it has left, and the player puts it back if they
+  want (`Zombies.revive`; the owner, 2026-11-16).
 - Spare slimes are **sold at the shop** in the Market; the higher the level, the more coins (`Mutations.sellValue`).
 - In this build: selling at the shop and paying coins for area upgrades; fights and ghosts later.
 

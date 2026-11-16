@@ -5,11 +5,13 @@
 local Config = if script then require(script.Parent.Config) else require("./Config")
 local Dungeon = if script then require(script.Parent.Dungeon) else require("./Dungeon")
 local FarmState = if script then require(script.Parent.FarmState) else require("./FarmState")
+local Rng = if script then require(script.Parent.Rng) else require("./Rng")
 local WorldPacks = if script then require(script.Parent.WorldPacks) else require("./WorldPacks")
 local WorldPlan = if script then require(script.Parent.WorldPlan) else require("./WorldPlan")
 
 type Farm = typeof(FarmState.newFarm(0))
 type Monster = typeof(Dungeon.monster({ attack = 1, defence = 1, speed = 1, hp = 1 }, 1, 1, ""))
+type Drop = { item: string, amount: number }
 -- zone id -> the time of the player's last win (farm.world.beaten on the server, the Zone_ attributes on a client)
 export type Beaten = { [string]: number }
 
@@ -138,6 +140,60 @@ function ZoneFights.block(beaten: Beaten, id: any, now: number, fellAt: number?)
 		return "ZONE_RESTING"
 	end
 	return nil
+end
+
+-- The guard's drops shared among the teams that fought it to the end (the owner, 2026-11-16: the reward is split by the
+-- damage each dealt, so everyone who joins gets something and a strong guard is worth fighting together). `dealt` is each
+-- team's damage; the coins go by share (what rounding leaves, to the team that dealt most), and every other piece to one
+-- team drawn by share, so the more a team dealt, the likelier each piece is theirs. Returns each team's drops, in order.
+function ZoneFights.split(drops: { Drop }, dealt: { number }, rng: typeof(Rng.new(0))): { { Drop } }
+	local total, top = 0, 1
+	local teams: { number } = {}
+	local out: { { Drop } } = {}
+	for index, amount in dealt do
+		total += amount
+		if amount > dealt[top] then
+			top = index
+		end
+		table.insert(teams, index)
+		table.insert(out, {})
+	end
+	local function give(index: number, item: string, amount: number)
+		if amount <= 0 then
+			return
+		end
+		for _, drop in out[index] do
+			if drop.item == item then
+				drop.amount += amount
+				return
+			end
+		end
+		table.insert(out[index], { item = item, amount = amount })
+	end
+	for _, drop in drops do
+		if drop.item == "coins" then
+			local left = drop.amount
+			for index, amount in dealt do
+				local part = if total > 0 then math.floor(drop.amount * amount / total) else 0
+				give(index, "coins", part)
+				left -= part
+			end
+			give(top, "coins", left)
+		else
+			for _ = 1, drop.amount do
+				give(
+					if total > 0
+						then rng:weighted(teams, function(index: number): number
+							return dealt[index]
+						end)
+						else top,
+					drop.item,
+					1
+				)
+			end
+		end
+	end
+	return out
 end
 
 -- The defs a zone's fight can drop from, for the list a screen shows: every common monster of its crowds' map, each

@@ -46,8 +46,9 @@
 -- DungeonEnter { zone = id }: in the open, on the zone's own pad (no arena is built: the run's Model only carries what is
 -- published, and the stand-ins are unseen), with the zone's own few waves; the player is not moved away when it ends, and
 -- a win is written as the zone's (it rests, and a boss's opens its gate). A zone's guard is the whole server's: several
--- players may fight it at once, the first to beat it takes it, every other run at the zone ends lost then, and it is down
--- for everyone while it rests (server/ZoneGuards.fall). Such a run publishes DungeonZone (the zone's id,
+-- players may fight it at once, each squad its own copy with one health they all share (`bosses`); when it falls, the
+-- squads still on it share its drops by the damage each dealt and all win the zone, every other run at the zone ends
+-- lost, and it is down for everyone while it rests (guardDown, server/ZoneGuards.fall). Such a run publishes DungeonZone (the zone's id,
 -- "" otherwise) and DungeonMap = "", shows its guard's level as its Level, and its "start" also carries zone, at (the
 -- middle), spot (where the player stands) and radius.
 local HttpService = game:GetService("HttpService")
@@ -130,8 +131,13 @@ type Run = {
 	publishAt: number,
 }
 
+-- The guard of a zone being fought now (the owner, 2026-11-16: the guards are the whole server's): one health that every
+-- run on it shares, and the damage each player's squad has dealt it.
+type Boss = { hp: number, dealt: { [Player]: number } }
+
 local Dungeon = {}
 local runs: { [Player]: Run } = {}
+local bosses: { [string]: Boss } = {}
 local lastAsk: { [Player]: number } = {}
 local fightRemote: RemoteEvent? = nil
 local serial = 0
@@ -654,6 +660,20 @@ local function startRun(run: Run, farm: any, level: number, ids: { string }, now
 	beginWave(run)
 end
 
+-- The guard of a run that is fighting its zone's guard (the last wave, the guard in the fight and standing), else nil.
+local function guardOf(run: Run): any?
+	local fight = run.fight
+	if not run.zone or run.phase ~= ACTIVE or run.wave < run.waves or not fight then
+		return nil
+	end
+	for _, unit in fight.units do
+		if unit.side == "foe" and unit.hp > 0 then
+			return unit
+		end
+	end
+	return nil
+end
+
 -- A monster comes in at a random point of the edge band.
 local function spawnFoe(run: Run, fight: Fight)
 	local monster = run.plan[run.queued + 1]
@@ -676,6 +696,22 @@ local function spawnFoe(run: Run, fight: Fight)
 	local joined = Combat.add(fight, fighter, "foe")
 	if not joined then
 		return
+	end
+	local zone = run.zone
+	if zone and run.wave >= run.waves then
+		-- (a zone's guard: it comes in at the health it has left while others fight it, whole when nobody does)
+		local busy = false
+		for _, other in runs do
+			if other.player ~= run.player and other.zone == zone and guardOf(other :: any) then
+				busy = true
+			end
+		end
+		local boss = bosses[zone]
+		if boss and busy then
+			joined.hp = boss.hp
+		else
+			bosses[zone] = { hp = joined.hp, dealt = {} }
+		end
 	end
 	run.queued += 1
 	run.alive += 1
@@ -792,19 +828,6 @@ local function clearWave(run: Run, fight: Fight)
 	if last and zone then
 		-- (the win shows at once: the zone rests and a boss's gate opens)
 		ZoneGuards.publish(run.player, PlayerData.get(run.player))
-		-- (the guard is the whole server's: it is down for everyone now, and whoever else was fighting it lost the race)
-		ZoneGuards.fall(zone, run.player, os.time())
-		for _, other in runs do
-			if
-				other.player ~= run.player
-				and other.zone == zone
-				and other.phase ~= VICTORY
-				and other.phase ~= DEFEAT
-			then
-				-- (the cast: the checker reads a run of `runs` and `defeat`'s Run as two types)
-				defeat(other :: any, "the guard was taken by " .. run.player.Name)
-			end
-		end
 		print(Config.LogPrefix, "dungeon:", run.player.Name, "won the zone", zone)
 	end
 	PlayerData.markKeyMoment(run.player, "dungeon wave")
@@ -855,11 +878,80 @@ local function clearWave(run: Run, fight: Fight)
 	end
 end
 
+-- A zone's guard falls to this run's squad, and it is down for everyone on the server (ZoneGuards.fall). The teams still
+-- fighting it share its drops by the damage each dealt (ZoneFights.split): their own guards fall with it and they win the
+-- zone at their next step. Every other run at the zone is too late. Returns this run's share.
+local function guardDown(run: Run, foe: Foe): { any }
+	local zone = run.zone :: string
+	local boss = bosses[zone]
+	bosses[zone] = nil
+	-- (as `any`: the checker reads a run of `runs` and a Run parameter as two types)
+	local takers: { any } = { run }
+	local dealt: { number } = { if boss then boss.dealt[run.player] or 0 else 1 }
+	for _, other in runs do
+		local hurt = if boss then boss.dealt[other.player] or 0 else 0
+		if other.player ~= run.player and other.zone == zone and hurt > 0 and guardOf(other :: any) then
+			table.insert(takers, other)
+			table.insert(dealt, hurt)
+		end
+	end
+	local def = ZoneFights.dropDef(zone, run.wave, foe.def)
+	local rolls = DungeonRules.rollDrops(def, D.FirstLevel, foe.monster.id, run.seed, nil)
+	local parts = ZoneFights.split(rolls, dealt, run.rng)
+	local mine: { any } = {}
+	local top = 1
+	local shares: { string } = {}
+	for index, taker in takers do
+		local drops: { any } = {}
+		for _, roll in parts[index] do
+			if DungeonRules.addDrop(taker.ledger, taker.wave, roll) then
+				table.insert(drops, { item = roll.item, amount = roll.amount })
+			end
+		end
+		if dealt[index] > dealt[top] then
+			top = index
+		end
+		table.insert(shares, taker.player.Name .. " " .. math.floor(dealt[index] + 0.5))
+		if index == 1 then
+			mine = drops
+		else
+			local guard = guardOf(taker)
+			local theirs = if guard then taker.foes[guard.id] else nil
+			if guard and theirs then
+				guard.hp = 0
+				theirs.alive = false
+				taker.alive -= 1
+				fade(theirs)
+				fire(taker, { { kind = "fallen", to = guard.id, drops = drops } })
+			end
+		end
+	end
+	ZoneGuards.fall(zone, takers[top].player, os.time())
+	print(Config.LogPrefix, "dungeon: the guard of", zone, "fell, shared by damage:", table.concat(shares, ", "))
+	for _, other in runs do
+		if
+			other.zone == zone
+			and other.phase ~= VICTORY
+			and other.phase ~= DEFEAT
+			and not table.find(takers, other)
+		then
+			defeat(other :: any, "the guard fell to others")
+		end
+	end
+	return mine
+end
+
 local function stepActive(run: Run, fight: Fight, now: number)
 	local step = Config.Zombies.FightStepSeconds
 	if run.queued < #run.plan and run.alive < D.MaxAlive and run.clock >= run.nextSpawn then
 		spawnFoe(run, fight)
 		run.nextSpawn = run.clock + D.SpawnSeconds
+	end
+	-- (a zone's guard has the health every run on it shares: what this squad takes off is written to its player)
+	local guard = guardOf(run)
+	local boss = if guard and run.zone then bosses[run.zone] else nil
+	if guard and boss then
+		guard.hp = boss.hp
 	end
 	local out: { any } = {}
 	local fallenFoes: { any } = {}
@@ -875,12 +967,19 @@ local function stepActive(run: Run, fight: Fight, now: number)
 			end
 		end
 	end
+	if guard and boss then
+		local taken = boss.hp - guard.hp
+		if taken > 0 then
+			boss.dealt[run.player] = (boss.dealt[run.player] or 0) + taken
+		end
+		boss.hp = guard.hp
+	end
 	for _, entry in fallenFoes do
 		local foe = run.foes[entry.to]
 		if foe.alive then
 			foe.alive = false
 			run.alive -= 1
-			entry.drops = dropsOf(run, foe)
+			entry.drops = if run.zone and run.wave >= run.waves then guardDown(run, foe) else dropsOf(run, foe)
 			fade(foe)
 		end
 	end

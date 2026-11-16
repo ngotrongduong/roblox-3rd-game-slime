@@ -18,12 +18,18 @@ Two lists of notes from the owner's own play. All in code, most seen in a Studio
 - **Sold or deleted slime's gear** already went back to the bag (`FarmState.removeSlime`, test in `gear`).
 - **Zone crowds** (`Config.World.Crowds`, `client/ZoneCrowds`): at every mini-boss and boss zone its guard stands with
   three of its map's monsters, client only, near the camera (seen at m1: 4 bodies).
-- **Zone guards are the whole server's** (the owner's next note: "hidden, how would the others fight it?"): everyone
-  sees a guard while it is up; the first to beat it takes it, every other run at that zone ends "Too late!" with a
-  toast naming the winner, and it is down for everyone for its rest (`server/ZoneGuards.fall`, anchor `FellAt` /
-  `TakenBy`, `ZoneFights.backIn`; docs/WORLD.md §7). The crowd hides only for the one fighting it. Seen at m1: crowd
-  there before, away during the fight, gone after the win with "Resting 4:40", back once the rest was over (FellAt
-  moved back by hand). Not verified: two players racing (a Studio solo test has one player).
+- **Zone guards are the whole server's** (the owner's next notes: "hidden, how would the others fight it?", then "not
+  first-come: split the reward by damage"): everyone sees a guard while it is up; squads fighting it at once share one
+  health, and when it falls they share its drops by the damage each dealt (`ZoneFights.split`) and all win the zone;
+  a run that had not reached the guard ends "Too late!"; then it is down for everyone for its rest
+  (`server/ZoneGuards.fall`, anchor `FellAt` / `TakenBy`, `ZoneFights.backIn`; docs/WORLD.md §7). The crowd hides
+  only for the one fighting it. Seen at m1: crowd there before, away during the fight, gone after the win with
+  "Resting 4:40", back once the rest was over (FellAt moved back by hand); alone, the log reads "the guard of m1 fell,
+  shared by damage: Mue_you 104" and the whole reward is the one player's. Not verified: two players on one guard (a
+  Studio solo test has one player; the split itself is tested in `zone_fights`).
+- **A revived slime leaves its team** (the owner: "it is out of the team and back in the village; the team goes on
+  without it"): `Zombies.revive` takes it out of every line-up and formation (test in `zombies`); a march or a run
+  already went on with the survivors. Not played in Studio (no quick way to kill a slime there).
 - **Bosses and mini-bosses 1.5x** (`Config.Dungeon.LookScale.Big` 1.15 -> 1.725; measured 17.6 studs tall).
 - **Training half as fast** (`Config.Work.CycleSeconds.training` 90 -> 180).
 - **Dungeon skies**: the arenas moved to x 20000 (`ArenaOrigin`), and each map wears its own sky box
@@ -31,7 +37,7 @@ Two lists of notes from the owner's own play. All in code, most seen in a Studio
   after the run (seen: Meadow's day with clouds, Grove's violet dusk with stars, Lava's red, Ice's overcast; nothing
   of the island shows).
 
-**Proved:** CHECK OK (826 passed, `treasure` 2 passed, `zone_fights` with the shared rest), TYPES OK. **Not verified:** the index reward, the hammer
+**Proved:** CHECK OK (827 passed, `treasure` 2 passed, `zone_fights` with the shared rest and the split), TYPES OK. **Not verified:** the index reward, the hammer
 swing, the cooking info and the Deep-Sea lure in Studio; a boss in a real run at the new size (a level-80 squad killed
 it first); a phone frame for the new toasts.
 

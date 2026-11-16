@@ -249,10 +249,15 @@ A finished model replaces its interim by one line in `tools/world/build_sites.lu
     1300-2080, m9 8400-13440, b3 20550-30825, the Heart 68000-102000 (the owner, 2026-11-14; they were 10-120 x a
     tier factor before); a boss zone adds two of its region's trophy) in place of its own drops; every other monster pays its own drops.
   - **A zone's guard is the whole server's** (the owner, 2026-11-16: whoever beats it takes it, and when it dies
-    everyone waits until it is back). Several players may fight it at once; the first to beat it takes it (its reward,
-    its win), every other run at that zone ends lost ("Too late!", a toast "<name> beat the guard first!", no Replay),
-    and it is down for everyone while it **rests**: mini 300 s, boss 900 s, mega 1800 s (`server/ZoneGuards.fall`, the
-    anchor's `FellAt` and `TakenBy`; held in memory, a new server starts with every guard up). The winner's own rest
+    everyone waits until it is back). Several players may fight it at once: each squad fights its own copy, but they all
+    share **one health** (`server/Dungeon` `bosses`: a squad that reaches the guard while others fight it finds it at
+    the health left; with nobody on it, it comes whole). When it falls, the squads still on it **share its drops by
+    the damage each dealt** (the owner, 2026-11-16: everyone who joins gets something, and a strong guard is worth
+    fighting together; `ZoneFights.split`: coins by share, every other piece to one squad drawn by share) and all win
+    the zone; a run that had not reached the guard ends lost ("Too late!", a toast naming the top dealer, no Replay).
+    A squad wiped before the end gets nothing of the guard. It is then down for everyone while it **rests**: mini
+    300 s, boss 900 s, mega 1800 s (`server/ZoneGuards.fall`, the anchor's `FellAt` and `TakenBy`; held in memory, a
+    new server starts with every guard up). The winner's own rest
     holds on any server too (`ZoneFights.backIn`). Its crowd is seen by everyone while it is up, away while it is down,
     and away only for the one fighting it during that fight. The prompt reads "Resting m:ss". No Next Level; Replay only
     after a defeat while the guard is up.

@@ -128,6 +128,20 @@ function Zombies.exploring(farm: Farm, ids: { string }): boolean
 	return false
 end
 
+-- Takes a slime out of a team's line-up and its formation.
+local function leaveTeam(team: any, id: string)
+	local at = table.find(team.members, id)
+	if at then
+		table.remove(team.members, at)
+	end
+	if team.formation then
+		team.formation[id] = nil
+		if next(team.formation) == nil then
+			team.formation = nil
+		end
+	end
+end
+
 -- Sets the line-up of team `teamIndex` to these slimes (none empties it). A slime already in another team moves here.
 -- `isOut` says which slimes are away on a march. Returns whether it was set, else why not; nothing changes on a refusal:
 -- BAD_TEAM, LOCKED (the village is not big enough for it yet; it can still be emptied), BAD_SIZE, DUPLICATE, NO_SLIME,
@@ -169,16 +183,7 @@ function Zombies.setTeam(
 	for _, other in farm.teams do
 		if other ~= team then
 			for _, id in ids do
-				local at = table.find(other.members, id)
-				if at then
-					table.remove(other.members, at)
-					if other.formation then
-						other.formation[id] = nil
-						if next(other.formation) == nil then
-							other.formation = nil
-						end
-					end
-				end
+				leaveTeam(other, id)
 			end
 		end
 	end
@@ -373,7 +378,8 @@ function Zombies.reviveCost(level: number): number
 	return math.ceil(1 + math.max(0, level) / Config.Zombies.ReviveLevelsPerFood)
 end
 
--- Pays with the lowest-rarity raw food first, all or nothing, and brings the slime back.
+-- Pays with the lowest-rarity raw food first, all or nothing, and brings the slime back: to the village, out of its team
+-- (the owner, 2026-11-16: the team goes on without it; the player puts it back if they want).
 function Zombies.revive(farm: Farm, slimeId: string, now: number): (boolean, string?)
 	local slime = FarmState.findSlime(farm, slimeId)
 	if not slime or not slime.ghostUntil or slime.ghostUntil <= now then
@@ -394,6 +400,9 @@ function Zombies.revive(farm: Farm, slimeId: string, now: number): (boolean, str
 	slime.ghostUntil = nil
 	slime.needs.fullness = Config.Needs.Start
 	slime.needs.energy = Config.Needs.Start
+	for _, team in farm.teams do
+		leaveTeam(team, slimeId)
+	end
 	return true, nil
 end
 
