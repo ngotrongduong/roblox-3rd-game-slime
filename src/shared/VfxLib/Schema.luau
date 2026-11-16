@@ -83,8 +83,10 @@
 --             ease = "in": slow, then fast (a fall); head = { texture, length, width, colors | color | role, glow,
 --             zOffset }: the picture on a Beam lying along the flight (its top row behind, its bottom at the front: a
 --             dragon's head, a meteor), in place of the particle; model = { model = statue key, size, color,
---             transparency }: a 3D STATUE (Models.list, `statue = true`) riding the arc, its front (-z) along the way it
---             flies, fading in at the throw and out at the landing (keys over the flight), in place of the particle; path = { { f, x, y, z }, ... }: with a head or a body,
+--             transparency, spin }: a 3D STATUE (Models.list, `statue = true`) riding the arc, its front (-z, turned by
+--             the statue's `facing`) along the way it flies, held at the statue's `hinge` (the orb a sheaf of flame
+--             wisps streams back from) or its middle, fading in at the throw and out at the landing (keys over the
+--             flight), turning `spin` times a second about the line of flight (-4 to 4), in place of the particle; path = { { f, x, y, z }, ... }: with a head or a body,
 --             it flies a curve through these points (studs in the `along` frame at f of the way from the caster to the
 --             spot), even with no `opts.from`; body = { texture | textures, length, width, taper, colors | color |
 --             role, glow, zOffset } (with a path): a serpent's body, a curved Beam laid on the path just flown behind
@@ -101,6 +103,8 @@
 --             facing), size = factor (default 1), delay, life (seconds), emerge = seconds it takes to rise out of the
 --             ground (0: no rise), transparency = keys over its life (0 solid, 1 gone; default fades in and out),
 --             color = { r, g, b } (a hologram statue only: the model has a `look` in Models),
+--             spin = turns a second about up (-3 to 3), grow = keys { share of its life, size factor 0.1-6 } swelling
+--             it about its middle (a cage of rings flung wide); neither on a bloom nor on a body that follows a host,
 --             bloom = rings of PETALS (the statue is one petal with a `hinge`, its foot): a flower put together and
 --             opening, each ring { count (3-16 petals), radius (studs from the middle to their feet), size (of a
 --             petal, 0.3-2), lift (studs its feet sit up, default 0), closed and open (degrees each leans out about
@@ -127,6 +131,8 @@
 --   at        an anchor (Anchors)             box       { x, y, z }: born anywhere in this share of the host's box
 --   radius    studs: born on/in a sphere of this radius (with shape = "Sphere"); on a one-shot the budget's cut of
 --             its pictures shrinks it too
+--   height    studs, with a radius: its part only this tall. A Sphere 0.2-1 high is a level ring, and Surface + Inward
+--             pulls in flat from all round (a Disc or a Cylinder flies along its up axis instead; tested 2026-11-16)
 --   role      a palette role, or "keep" (the picture's own colours)          color  colours of its own (Palette)
 --   rate      particles a second (lasting)    count     particles at once (one-shot), at `delay` seconds
 --   bursts    { { t, n } }: several bursts     stream    { from, to, rate = { a, b }, burst = n }: a rate for a while
@@ -787,6 +793,17 @@ function Schema.pieceProblem(_effect, piece, what, oneShot)
 	if piece.box ~= nil and (type(piece.box) ~= "table" or #piece.box ~= 3) then
 		return `{what}: box is \{ x, y, z \} shares of the host's box`
 	end
+	if
+		piece.height ~= nil
+		and (
+			type(piece.radius) ~= "number"
+			or type(piece.height) ~= "number"
+			or piece.height < 0.05
+			or piece.height > piece.radius * 2
+		)
+	then
+		return `{what}: height is 0.05 studs up to the width, with a radius`
+	end
 	if piece.lift ~= nil and (type(piece.lift) ~= "number" or piece.lift < 0 or piece.lift > 20 or oneShot) then
 		return `{what}: lift is 0 to 20 studs over the anchor, on a lasting effect`
 	end
@@ -1203,7 +1220,7 @@ function Schema.sink(effect, piece)
 	local point = Anchors.Points[piece.at or "body"]
 	local height = effect.refHeight * point[1] + (point[3] or 0) + (piece.lift or 0)
 	if piece.radius and piece.shape == "Sphere" then
-		height -= piece.radius
+		height -= if piece.height then piece.height / 2 else piece.radius
 	elseif piece.box then
 		height -= effect.refHeight * piece.box[2] / 2
 	end
@@ -1530,6 +1547,9 @@ function Schema.problem(effect, variantOf)
 				if flier.color ~= nil and (not statue.look or not isTriple(flier.color)) then
 					return `{label} projectile model: color is three numbers, on a hologram statue only`
 				end
+				if flier.spin ~= nil and (type(flier.spin) ~= "number" or math.abs(flier.spin) > 4) then
+					return `{label} projectile model: spin is -4 to 4 turns a second`
+				end
 				if projectile.head ~= nil or projectile.body ~= nil or projectile.path ~= nil then
 					return `{label} projectile: a model flies its arc alone (no head, body or path)`
 				end
@@ -1803,6 +1823,29 @@ function Schema.problem(effect, variantOf)
 							return `{what}: transparency keys run from 0 to 1 in order, each 0 to 1`
 						end
 						last = key[1]
+					end
+				end
+				if body.spin ~= nil or body.grow ~= nil then
+					if body.bloom ~= nil or fields.follow then
+						return `{what}: spin and grow are for a still body (not a bloom, not one that follows a host)`
+					end
+					if body.spin ~= nil and (type(body.spin) ~= "number" or math.abs(body.spin) > 3) then
+						return `{what}: spin is -3 to 3 turns a second`
+					end
+					if body.grow ~= nil then
+						local last = -1
+						if type(body.grow) ~= "table" or #body.grow == 0 then
+							return `{what}: grow is a list of keys`
+						end
+						for _, key in body.grow do
+							if type(key) ~= "table" or type(key[1]) ~= "number" or type(key[2]) ~= "number" then
+								return `{what}: grow is a list of keys, each a share of its life and a size factor`
+							end
+							if key[1] < last or key[1] < 0 or key[1] > 1 or key[2] < 0.1 or key[2] > 6 then
+								return `{what}: grow keys run from 0 to 1 in order, each factor 0.1 to 6`
+							end
+							last = key[1]
+						end
 					end
 				end
 			end

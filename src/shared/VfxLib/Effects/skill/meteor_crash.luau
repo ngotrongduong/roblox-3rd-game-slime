@@ -103,7 +103,7 @@ return {
 			size = { { 0, 3.5 }, { 0.2, 9.8 }, { 0.5, 13 }, { 1, 14 } },
 			transparency = { { 0, 0.05 }, { 0.5, 0.3 }, { 0.8, 0.66 }, { 1, 1 } },
 			lightEmission = 1,
-			zOffset = -1,
+			zOffset = 0.2,
 		},
 		{
 			name = "wave",
@@ -117,7 +117,7 @@ return {
 			size = { { 0, 5 }, { 0.2, 14 }, { 0.5, 18.6 }, { 1, 20 } },
 			transparency = { { 0, 0.05 }, { 0.5, 0.3 }, { 0.8, 0.66 }, { 1, 1 } },
 			lightEmission = 1,
-			zOffset = -1,
+			zOffset = 0.2,
 		},
 	},
 	light = {

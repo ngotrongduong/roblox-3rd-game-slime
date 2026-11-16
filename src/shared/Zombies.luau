@@ -78,6 +78,18 @@ function Zombies.pay(farm: Farm, amount: number, now: number?): number
 	return paid
 end
 
+-- Coins of a prize (a Dungeon wave's loot, a zone guard's): boosted like a win, but never held by the vault, so a big haul
+-- is never cut by the ceiling (the owner, 2026-11-16). Robux gold, rewards and sales never were.
+function Zombies.payReward(farm: Farm, amount: number, now: number?): number
+	local won = math.max(0, amount)
+	if now then
+		won = Boosts.earn(farm, won, now)
+	end
+	farm.coins += won
+	farm.lifetime.coinsEarned += won
+	return won
+end
+
 -- Whether a team member can march right now: grown up, alive, awake and not tired. (A slime in a team is never at a job
 -- or in a pair, FarmState.teamOf; a team member is not refused for being in its team.)
 function Zombies.canSend(farm: Farm, slime: Slime, now: number): boolean

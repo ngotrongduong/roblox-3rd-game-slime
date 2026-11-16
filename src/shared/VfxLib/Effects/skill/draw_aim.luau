@@ -37,7 +37,8 @@ return {
 			size = { { 0, 1 }, { 1, 0.35 } },
 			transparency = { { 0, 1 }, { 0.3, 0.15 }, { 1, 1 } },
 			speed = { 10, 13 },
-			squash = { { 0, -1.4 }, { 1, -1 } },
+			rotation = { 90, 90 }, -- (streak_lens is drawn upright: turned along its flight, then squashed longer; lesson 363)
+			squash = { { 0, 1.4 }, { 1, 1 } },
 			lightEmission = 0.8,
 			brightness = 2,
 			stream = { from = 0.1, to = 1.05, rate = { 10, 40 }, ease = "in" },

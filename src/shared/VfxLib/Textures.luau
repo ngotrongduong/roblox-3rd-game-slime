@@ -467,6 +467,7 @@ Textures.Images = {
 	cg_aurora_clear = { id = 124575768268489, clear = true, from = SKILL_ART }, -- the aurora curtain, its black clear
 	cg_scifi_grid_paint_clear = { id = 73069102781784, clear = true, from = SKILL_ART }, -- the light grid, its black clear
 	cg_wind_streaks_pink_clear = { id = 99629512123553, clear = true, from = SKILL_ART }, -- the wind streaks in pink (--tint, --gain 2)
+	cg_flame_wisp_strip_clear = { id = 121265068776507, clear = true, from = SKILL_ART }, -- curling flame strands, white-hot at the foot to red at the top, clear between (--cut 1): the flame wisps' paint
 	-- ChatGPT clips, 4 x 4 OneShot (clip_frames.py; --black: light on black turned to alpha, drawn normal, untinted):
 	cg_energy_orb_flip = { id = 87741671916005, from = SKILL_ART }, -- an orange energy ball erodes in holes with pink edges, breaks into wisps (a GIF's frames)
 	cg_flame_crown_flip = { id = 119402574119481, from = SKILL_ART }, -- a ring of flame tongues splaying out round an empty middle, a loop (a GIF's frames)
@@ -490,6 +491,32 @@ Textures.Images = {
 	cg_smoke_plume_flip = { id = 116581474003595, from = SKILL_ART }, -- a white puff swells into a billowing cloud, thins into wisps, gone (tinted)
 	cg_morpho_flip = { id = 127860839921068, from = SKILL_ART }, -- a blue morpho butterfly from above beating its wings shut and open, a loop (untinted)
 	cg_spell_bubble_flip = { id = 87797891521452, from = SKILL_ART }, -- a spark grows into a swirling blue bubble on a ring, cracks, bursts into blue dust (untinted)
+	-- skill.battle_focus redrawn (2026-11-16, the component pilot's fix queue): keyed off magenta (unmixed), greyscale,
+	-- drawn normal so they read on snow as well as on a dark floor:
+	cg_dust_swirl = { id = 134372859785418, from = SKILL_ART }, -- a whirlpool of billowing dust from above, five arms curling into an empty middle
+	cg_stomp_ring = { id = 131875522639426, from = SKILL_ART }, -- a broken ring of billowing dust from above, pebbles thrown outward, an empty middle
+	-- (2 x 2, one stone a cell, a random still frame each)
+	cg_grit_chunks = { id = 133671867627404, from = SKILL_ART }, -- four crisp faceted stones with a dark rim: a slab, a wedge, a block, a shard
+	-- (2 x 2, one streak a cell, white on black, added: each upright, a white-hot needle head at the top, a fading tail)
+	cg_air_streaks = { id = 129369367526478, black = true, from = SKILL_ART }, -- four rushing-air streaks: straight, S-curved, split-tailed, short
+	-- (the component pilot's fix queue item 2: cg_swirl_ring redrawn solid, keyed off magenta, greyscale)
+	cg_wind_ring = { id = 102433403946400, from = SKILL_ART }, -- five billowing arcs of rushing air round an empty middle: white crests, grey bodies, dark trailing edges
+	-- (fix queue item 3: cg_wind_ring's own shading through a navy - cobalt - white ramp, mirrored to turn the other way;
+	-- the gusts drawn by ChatGPT in its style, keyed off magenta, through the same ramp: worn untinted)
+	cg_wind_ring_cobalt = { id = 89738475688024, from = SKILL_ART }, -- cg_wind_ring in colour: white crests, deep cobalt bodies, navy trailing edges, mirrored
+	cg_air_gusts = { id = 93380774311425, from = SKILL_ART }, -- 2 x 2: four wide billowing gusts of air, head up: straight, curling left, curling right, split tail; white crests, cobalt bodies, navy edges
+	-- CGHOW wave 8 (2026-11-16). Beam and spiral strips, rows along the length (prepare_beam.py --turn), on black, added:
+	cg_heal_wisps = { id = 86772073135062, black = true, from = SKILL_ART }, -- soft strands of light braiding over and under each other, veils and tiny sparkles between (seamless, tinted)
+	cg_twist_ribbon = { id = 103261784783607, black = true, from = SKILL_ART }, -- a ribbon of light twisting about its length, two half turns pinched at the ends, ragged eroded edges (seamless, tinted)
+	-- (a projectile's head laid along the flight, cut as cg_meteor_head: prepare_beam.py --turn --flip)
+	cg_flame_orb_head = { id = 82881968285977, black = true, from = SKILL_ART }, -- a white-hot orb of fire at the BOTTOM (a head's front), a sheaf of thin curling flame wisps streaming up from it (colour)
+	-- (one picture, square, white on black: a band of glowing grid squares standing upright, a bright line down its middle)
+	cg_grid_band = { id = 109749687949676, black = true, from = SKILL_ART }, -- an upright band of glowing grid squares, ragged eroded sides, fading at the top and bottom
+	-- (2 x 2, keyed off magenta (unmixed), drawn normal, untinted, a random still frame each)
+	cg_ember_rocks = { id = 88768138208670, from = SKILL_ART }, -- four chunks of black volcanic rock with glowing orange cracks: a slab, a wedge, a block, a shard
+	-- (clips, 4 x 4, clip_frames.py; the cube --black: its light to alpha, worn normal; the smoke unmixed off magenta)
+	cg_cube_flip = { id = 73371530295790, from = SKILL_ART }, -- a glowing wire cube tumbling a quarter turn, pulsing bright twice, a loop (tinted)
+	cg_shadow_swirl_flip = { id = 112279326694770, from = SKILL_ART }, -- a black puff twisting into a smoke swirl, thinning into tendrils, gone
 }
 
 -- The pictures of the packs that the baker met (tools/bake.luau writes them here: `lune run tools/bake.luau`). Each is

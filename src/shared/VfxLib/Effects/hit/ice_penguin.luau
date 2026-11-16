@@ -97,7 +97,7 @@ return {
 						layout = "Grid8x8",
 						mode = "OneShot",
 					},
-					zOffset = -1,
+					zOffset = 0.2,
 				},
 			},
 		},

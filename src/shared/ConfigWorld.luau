@@ -46,6 +46,11 @@ return {
 			WoodLantern = { at = 0.5, size = 0.9, colour = "ffc878" },
 		},
 		LampLight = { Brightness = 1.2, Range = 10 },
+		-- Far off, a lamp's glow (the library's, gone past about 200 studs) gives way to a Bulb: a Neon ball at its head,
+		-- shown only past From studs from the camera, PerStud of that distance wide (at least the glow's size, at most
+		-- Max), so a lit village reads from afar at night for next to nothing; a moving effect only near (the owner,
+		-- 2026-11-16). The lamps themselves stay on every device (tools/build_publish.luau makes them Persistent).
+		Bulb = { From = 170, PerStud = 0.006, Max = 6, Transparency = 0.15 },
 		-- An effect worn day and night by every unseen part of this name the world puts down (Crownfall's foot).
 		Worn = { FallFoot = "aura.waterfall_foam" },
 	},
@@ -131,6 +136,41 @@ return {
 		-- the gate itself would take minutes across the world), and comes back to the same spot.
 		MarchMostStuds = 60,
 	},
+	-- ===== Treasure chests (the owner, 2026-11-16; rules shared/Treasure, server/Treasure) =====
+	-- Count chests lie on the open land at a time, each on a spot picked at random where a pack could stand (a random
+	-- cell of the packs' grid, Tries tries), at least Apart studs from every other chest. The first player to open one
+	-- (its prompt, held HoldSeconds from PromptRangeStuds) gets Coins raised by the spot's level as a pack monster's
+	-- coins are (x 1 + level x Config.Economy.SellLevelStep), past the vault's cap; RespawnSeconds later another lies
+	-- somewhere else. The chest is Quaternius' Pirate Kit chest (CC0) recoloured gold and honey wood, uploaded as model
+	-- Model (art/models/props/treasure_chest), Scale times its file size. Over it stands a pillar of light seen across the
+	-- world: a Beam of the library's light shafts (PillarTexture), PillarHeight studs, PillarWidth wide at the foot and
+	-- the top, in PillarColour, its picture flowing up at PillarSpeed. The chests are kept on every device (Persistent).
+	Chests = {
+		Folder = "TreasureChests",
+		Remote = "Treasure",
+		Count = 12,
+		Apart = 500,
+		Tries = 40,
+		Coins = 1500,
+		RespawnSeconds = 180,
+		PromptRangeStuds = 10,
+		HoldSeconds = 0.5,
+		Model = 88485660368211,
+		Scale = 3.4,
+		PillarTexture = 18837316844,
+		PillarHeight = 160,
+		PillarWidth = { 12, 5 },
+		PillarColour = "ffd25a",
+		PillarSpeed = 0.4,
+		-- the moment it opens, for the player who opened it (client)
+		Burst = "burst.reward_glitter",
+		BurstColour = "ffd25a",
+	},
+	-- ===== The crowds at the zones (the owner, 2026-11-16; client/ZoneCrowds) =====
+	-- Every zone of these Kinds shows its guard standing on the middle of its pad with Count of its map's common monsters
+	-- on a ring Ring studs round it, all facing the zone's waystone: drawn while the camera is within DrawStuds (looked at
+	-- every CheckSeconds), put away while the viewer's own fight runs and while the zone rests for them after a win.
+	Crowds = { Kinds = { "mini", "boss" }, Count = 3, Ring = 18, DrawStuds = 320, CheckSeconds = 0.5 },
 	-- ===== The waystones: teleport points (docs/WORLD.md §8) =====
 	-- One stands beside every zone's pad (OutStuds from the fight's middle, towards the hub) and one inside every
 	-- village's gate (across the path from the team banner, HomeAcross and HomeIn from the gate: a spot clear of the
@@ -165,7 +205,8 @@ return {
 	-- ===== The map (client/UiMap) =====
 	-- Its picture is drawn from WorldPlan by tools/world/map_picture.ps1 (art/map/world_map.png): a square of Size studs
 	-- whose north-west corner is (MinX, MinZ) in the plan's coordinates. Run the tool again after the plan changes.
-	Map = { Image = 110309697818054, MinX = -2300, MinZ = -2500, Size = 4600 },
+	-- (no lines between the level bands since 2026-11-16, the owner)
+	Map = { Image = 130854496202058, MinX = -2300, MinZ = -2500, Size = 4600 },
 	-- What a zone's guard pays when it falls, by the zone's kind, in place of its own drops. Lines as a monster's drops (item,
 	-- chance, min..max). No trophy: those are the Dungeon's own (the owner, 2026-11-15). Coins are what the guard pays at
 	-- level 0, raised by the zone's level as a pack monster's are (x 1 + level x Config.Economy.SellLevelStep): a mini

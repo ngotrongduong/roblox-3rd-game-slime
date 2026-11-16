@@ -121,7 +121,8 @@ function UiRecipes.list(parent: Instance, options: Options): List
 		})
 		local level = UiKit.label(root, "Lv " .. tostring(neededLevel(id)), U.TextSmall, "Red", {
 			AnchorPoint = Vector2.new(1, 0),
-			Position = UDim2.new(1, -U.Pad, 0, 8 + U.IconNormal),
+			-- (under the facts: the stat line and the minutes)
+			Position = UDim2.new(1, -U.Pad, 0, 8 + U.IconNormal + U.TextTiny),
 			Size = UDim2.fromOffset(FACTS_WIDTH, U.TextSmall + 4),
 			TextXAlignment = Enum.TextXAlignment.Center,
 			ZIndex = 7,

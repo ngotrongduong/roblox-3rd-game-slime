@@ -82,6 +82,7 @@ local function pieces(count)
 			color = AIR,
 			caster = { 0.5, 1, -1.4 },
 			orientation = "VelocityParallel",
+			rotation = { 90, 90 }, -- (streak_lens is drawn upright: turned along its flight; lesson 363)
 			life = { 0.12, 0.18 },
 			size = { { 0, 1.6 }, { 1, 0.6 } },
 			transparency = { { 0, 0.2 }, { 1, 1 } },

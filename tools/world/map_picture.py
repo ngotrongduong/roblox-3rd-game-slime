@@ -1,6 +1,6 @@
 """Draws the world map's picture from the plan (the JSON of tools/world/export_plan.luau): the regions' ground, the rim
-mountains, the bay, the Heart, the volcano, the river, the roads, the pads of the places and the lines between the level
-bands. Flat and readable on a phone; what stands on the map (villages, zones, packs, waystones) is drawn by client/UiMap.
+mountains, the bay, the Heart, the volcano, the river, the roads and the pads of the places. Flat and readable on a phone;
+what stands on the map (villages, zones, packs, teams, waystones) is drawn by client/UiMap.
 
     python tools/world/map_picture.py <plan.json> <out.png> [pixels, default 1024]
 """
@@ -224,35 +224,7 @@ for zone in plan["zones"]:
     disc(zone["x"], zone["z"], zone["radius"], pad, (110, 96, 84))
 
 image = np.asarray(canvas, dtype=np.float32).copy()
-
-# ----- the level bands: a light wash of each band's colour and a line where two meet -----
-packs = plan["packs"]
-village_d = np.full((W, W), np.inf, dtype=np.float32)
-for village in plan["villages"]:
-    village_d = np.minimum(village_d, np.hypot(X - village["x"], Z - village["z"]))
-share = np.clip((village_d - packs["nearStuds"]) / (packs["farthest"] - packs["nearStuds"]), 0, 1)
-level = np.round(packs["levelMin"] + (packs["levelMax"] - packs["levelMin"]) * share ** packs["curve"])
-last = math.floor(packs["levelMax"] / packs["bandLevels"])
-band = np.minimum(np.floor(level / packs["bandLevels"]), last).astype(np.int8)
-land = (1 - sea) * (1 - mountain) * smooth(heart["FootRadius"] - 10, heart["FootRadius"] + 10, dh)
-
-
-def grown(mask, pixels):
-    """The mask spread `pixels` each way."""
-    spread = Image.fromarray((mask * 255).astype(np.uint8)).filter(ImageFilter.MaxFilter(2 * pixels + 1))
-    return np.asarray(spread, dtype=np.float32) / 255
-
-
-for index, text in enumerate(packs["bandColours"]):
-    blend(image, hexcolour(text), (band == index) * land * 0.2)
-for index, text in enumerate(packs["bandColours"]):
-    if index == 0:
-        continue
-    # a band's own line is its inner edge, in its colour, with a dark rim so it reads on any ground
-    tint = hexcolour(text)
-    harder, easier = band >= index, band < index
-    blend(image, tuple(c * 0.4 for c in tint), grown(harder, 3 * SUPER) * grown(easier, 3 * SUPER) * land * 0.9)
-    blend(image, tint, grown(harder, 2 * SUPER) * grown(easier, 2 * SUPER) * land)
+# (no lines or washes between the level bands: the owner, 2026-11-16, took them off; a pack's dot carries its band's colour)
 
 result = Image.fromarray(np.clip(image, 0, 255).astype(np.uint8)).resize((PIXELS, PIXELS), Image.LANCZOS)
 result.save(out_path)

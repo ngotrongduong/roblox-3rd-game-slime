@@ -104,7 +104,7 @@ return {
 					-- (Goo Lineage tweens a disc from a quarter to the whole 9 studs, cubic out; the decal fades quad in)
 					size = { { 0, 2.25 }, { 0.2, 6.2 }, { 0.5, 8.4 }, { 1, 9 } },
 					transparency = { { 0, 0.05 }, { 0.5, 0.3 }, { 0.8, 0.66 }, { 1, 1 } },
-					zOffset = -1,
+					zOffset = 0.2,
 				},
 			},
 		},

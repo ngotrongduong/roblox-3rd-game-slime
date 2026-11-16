@@ -867,7 +867,17 @@ return {
 	-- + (n - 1) x ArenaSpacing along X, beyond the hills, so it is never seen from the valley. The frame is the floor's top
 	-- middle. ServerStorage's model named ArenaTemplate, when it exists, is cloned (a model whose pivot is that middle, about ArenaRadius
 	-- wide); until the art step brings it, a greybox of parts is built (round floor, low rim of ArenaRimSegments boxes).
-	ArenaOrigin = { x = 2400, y = 0, z = 0 },
+	-- (x 2400 -> 20000, the owner 2026-11-16: from an arena at the world's edge the island and its other places showed
+	-- behind the scenery; this far the world is out of sight)
+	ArenaOrigin = { x = 20000, y = 0, z = 0 },
+	-- Each map's own sky while a run is on it (the owner, 2026-11-16; client/DungeonLight): picture ids drawn by
+	-- tools/world/dungeon_sky.py (art/sky/<map>/), `side` worn by all four sides, `up`, `down`.
+	Skies = {
+		meadow = { side = 85890099556255, up = 98655868810836, down = 98611504710991 },
+		mushroom = { side = 118730054112832, up = 110995612318752, down = 84233855834420 },
+		lava = { side = 133324505440931, up = 75773782800336, down = 124188432366014 },
+		ice = { side = 79275968660885, up = 106099472989533, down = 75039000318824 },
+	},
 	ArenaSpacing = 400,
 	ArenaRadius = 70,
 	ArenaTemplate = "DungeonArena",
@@ -1805,7 +1815,8 @@ return {
 	-- poison bubbles or smoke on the toxic ones, only where it is needed; docs/MONSTER-SLIMES.md): each a VFX library
 	-- `effect` (and `variant`) on an invisible box of `size` studs as built that rides the `bone`, `at` studs as built from
 	-- the bone's rest point (in the model's axes as built), client/ClipRig.anchor.
-	LookScale = { Normal = 1.35, Big = 1.15 },
+	-- (Big 1.15 -> 1.725, the owner 2026-11-16: the bosses half again as big, to look scary)
+	LookScale = { Normal = 1.35, Big = 1.725 },
 	Looks = {
 		-- Sunny Meadow's
 		green_sprout = { clips = "Burrling", mesh = 137807217575397, texture = 138681763611567, height = 4.4 },

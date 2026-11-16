@@ -8,6 +8,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Config = require(ReplicatedStorage.Shared.Config)
 local SlimeShape = require(ReplicatedStorage.Shared.SlimeShape)
+local VfxLib = require(ReplicatedStorage.Shared.VfxLib)
 
 local W = Config.Wear
 local S = Config.Slime
@@ -30,6 +31,7 @@ type PieceSpec = {
 	clear: number?,
 	turn: { number }?,
 	texture: string?,
+	glow: { at: { number }, size: number, colour: string }?,
 }
 type KitSpec = { texture: string, pieces: { PieceSpec } }
 
@@ -118,6 +120,43 @@ local function load(name: string): { BasePart }?
 	return if ok then parts else nil
 end
 
+-- A piece's glow (W.Glow): an unseen part welded to it at `glow.at`, lit once the model is in the world (a portrait's
+-- copy never is) and only while its body shows (not a ghost).
+local function light(model: Model, body: BasePart, part: BasePart, glow: any, s: number)
+	local bulb = Instance.new("Part")
+	bulb.Name = part.Name .. "Glow"
+	bulb.Size = Vector3.one * glow.size * s
+	bulb.CFrame = part.CFrame * CFrame.new(v3(glow.at) * s)
+	bulb.Transparency = 1
+	bulb.Massless = true
+	bulb.CanCollide = false
+	bulb.CanQuery = false
+	bulb.CanTouch = false
+	bulb.CastShadow = false
+	local weld = Instance.new("WeldConstraint")
+	weld.Part0, weld.Part1 = part, bulb
+	weld.Parent = bulb
+	bulb.Parent = part
+	local c = Color3.fromHex(glow.colour)
+	local function go(): boolean
+		if not bulb.Parent or not model:IsDescendantOf(workspace) then
+			return false
+		end
+		if body.Transparency == 0 then
+			VfxLib.attach(bulb, W.Glow, { palette = { core = { c.R * 255, c.G * 255, c.B * 255 } }, weld = true })
+		end
+		return true
+	end
+	if not go() then
+		local watch: RBXScriptConnection? = nil
+		watch = model.AncestryChanged:Connect(function()
+			if go() and watch then
+				watch:Disconnect()
+			end
+		end)
+	end
+end
+
 -- Clones the kit's pieces into the model where they rest on its body (a still model keeps them there).
 local function dress(model: Model, name: string)
 	local body = model:FindFirstChild("SlimeBody")
@@ -196,6 +235,9 @@ local function dress(model: Model, name: string)
 			part.Parent = model
 		end) then
 			return
+		end
+		if spec.glow then
+			light(model, body, part, spec.glow, s)
 		end
 	end
 	worn[model] = { pieces = pieces, phase = random:NextNumber(0, 10), lastAt = 0 }

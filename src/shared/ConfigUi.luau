@@ -490,6 +490,8 @@ return {
 		HitGap = 0.33,
 		Fall = 0.25,
 		HammerTip = 55,
+		-- (the owner, 2026-11-16: the head turns a quarter about the handle so its face strikes, not its side)
+		HammerRoll = 90,
 		HammerLift = 0.5,
 		RiseDelay = 0.06,
 		Rising = 0.8,
@@ -537,7 +539,8 @@ return {
 		MiniTall = 104,
 		TallHeight = 680,
 		LabelHeight = 19,
-		Mini = { Player = 14, Pack = 6, Zone = 14, Home = 16 },
+		-- (Team: the player's own team that is out, TeamIcon with its number; the owner, 2026-11-16)
+		Mini = { Player = 14, Pack = 6, Zone = 14, Home = 16, Team = 14 },
 		Sheet = {
 			Width = 820,
 			Height = 720,
@@ -554,8 +557,10 @@ return {
 			Stone = 14,
 			Hit = 44,
 			Icon = 28,
+			Team = 24,
 		},
 		ZoneIcons = { mini = "zone_mini", boss = "zone_boss", mega = "zone_heart" },
+		TeamIcon = "slimes",
 	},
 	-- The food panel (UiFood): row height, the model icon size, how wide the count column is.
 	FoodWidth = 420,

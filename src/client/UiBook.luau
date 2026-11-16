@@ -187,8 +187,9 @@ function UiBook.isOpen(): boolean
 	return UiKit.modalId() == "book"
 end
 
-function UiBook.open(context: Context)
-	if UiBook.isOpen() then
+-- Opens the book (or closes it when open); with `slimeId`, straight at that slime's page (and never closes).
+function UiBook.open(context: Context, slimeId: string?)
+	if UiBook.isOpen() and not slimeId then
 		UiKit.closeModal()
 		return
 	end
@@ -196,7 +197,9 @@ function UiBook.open(context: Context)
 	detail = nil
 	-- the Index's intro opens the book on the Index
 	local own = context.own()
-	if own and own:GetAttribute("GuideId") == "index" then
+	if slimeId then
+		page = "slimes"
+	elseif own and own:GetAttribute("GuideId") == "index" then
 		page = "index"
 	end
 	local modal = UiKit.openModal("book", {
@@ -210,7 +213,21 @@ function UiBook.open(context: Context)
 		end,
 	})
 	content, header = modal.content, modal.header
+	-- (after the modal: closing an open book on the way clears `detail`)
+	detail = slimeId
 	render()
+end
+
+-- The book's context, given once at start, so another screen can open a slime's page (a team member's gear, the owner
+-- 2026-11-16).
+function UiBook.start(context: Context)
+	ctx = context
+end
+
+function UiBook.openSlime(slimeId: string)
+	if ctx then
+		UiBook.open(ctx, slimeId)
+	end
 end
 
 return UiBook

@@ -31,6 +31,8 @@ export type Context = {
 	reason: (reason: any) -> string,
 	-- opens the one sheet; `tick` runs about twice a second while it is open and closes it when the player walks off
 	open: (id: string, height: number, tick: () -> (), point: Vector3?, range: number) -> UiKit.Modal,
+	-- opens a slime's own page in the book (UiBook.openSlime; given in, as UiBook's screens lead back here)
+	slimePage: (slimeId: string) -> (),
 }
 type Notice = { team: number, dead: number, coins: number }
 type TeamChip = { root: GuiObject, icon: ImageLabel, track: Frame, fill: Frame, key: string }
@@ -970,11 +972,23 @@ local function openMembers(index: number)
 					UiFood.open(c.own(), slime.Name)
 				end,
 			})
+			-- (the slime's own page, its gear slots there: the owner, 2026-11-16)
+			UiKit.button(body, {
+				Name = "Equip",
+				Icon = "sword",
+				Style = "secondary",
+				Size = UDim2.fromOffset(U.Touch, U.Touch),
+				AnchorPoint = Vector2.new(1, 0.5),
+				Position = UDim2.new(1, -U.Touch - U.Gap, 0.5, 0),
+				OnClick = function()
+					c.slimePage(slime.Name)
+				end,
+			})
 			local info = UiKit.make("Frame", {
 				Name = "Info",
 				BackgroundTransparency = 1,
 				Position = UDim2.fromOffset(left, 0),
-				Size = UDim2.new(1, -left - U.Touch - U.Gap, 1, 0),
+				Size = UDim2.new(1, -left - 2 * (U.Touch + U.Gap), 1, 0),
 			}, body)
 			local name = UiKit.label(info, "", U.TextSmall, "Brown", {
 				Size = UDim2.new(1, 0, 0, 20),

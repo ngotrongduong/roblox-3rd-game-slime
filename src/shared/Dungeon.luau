@@ -411,7 +411,8 @@ function Dungeon.addDrop(ledger: Ledger, wave: number, drop: Drop): boolean
 	return true
 end
 
--- The wave is cleared: its drops reach the farm, once. Coins go to the purse (up to its ceiling, Zombies.pay), food into
+-- The wave is cleared: its drops reach the farm, once. Coins go to the purse (a prize: past its ceiling,
+-- Zombies.payReward), food into
 -- the storehouse (what does not fit is lost), everything else into farm.materials. Nil when the wave was already paid or
 -- lost; a wave with nothing in it pays nothing and is closed all the same. `now` (server seconds) lets VIP and a Gold Potion
 -- multiply the coins; left out, they are paid unboosted.
@@ -431,7 +432,7 @@ function Dungeon.commitWave(farm: Farm, ledger: Ledger, wave: number, now: numbe
 	for item, amount in page.drops do
 		local kind = (D.Materials :: any)[item].kind
 		if kind == "coins" then
-			paid.coins += Zombies.pay(farm, amount, now)
+			paid.coins += Zombies.payReward(farm, amount, now)
 		elseif kind == "food" then
 			local moved =
 				Food.add(farm.storehouse, D.FoodItem, amount, Food.storehouseCapacity(farm.areas.pantry.level))

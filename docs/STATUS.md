@@ -1,5 +1,35 @@
 # Status
 
+## 2026-11-16 — the owner's two play-test notes: lamps far, chests, crowds, dungeon skies
+
+Two lists of notes from the owner's own play. All in code, most seen in a Studio play test (StudioTest).
+- **Night lamps** stay on every device however far (`tools/build_publish.luau` makes the ~90 lamp models Persistent;
+  `Config.World.Lights.Bulb`); seen lit across the fields at night.
+- **Index reward by rarity**, **forge hammer** turned a quarter about its handle (`ConfigUi`), **cooking info** shows the
+  buff's strength, **Deep-Sea Leviathan's lure light** on the lure itself (`ConfigWear`; the library's extra lure layer
+  removed, VfxLib cbf1a30), **coins past the cap** from rewards and Robux (`Zombies.payReward`).
+- **Team tab**: each slime's row opens its equipment panel (seen).
+- **Map**: no lines between the level bands; the player's teams that are out show as their picture and number (seen).
+- **Treasure chests** (`Config.World.Chests`, `shared/Treasure`, `server/Treasure`): 12 in the open world, apart and
+  off the roads, each with a gold light pillar seen from far (Beam, 16 segments so its foot fades); Open pays
+  `Coins` x the level step of where it lies, past the cap, then a new one lies elsewhere 180 s later (seen: pillar from
+  370 studs, toast "Treasure! +1,800", coins fly, chest gone).
+- **A slime falls**: a toast "Revive <name> in m:ss or lose it forever!" (seen; the longer first line was cut).
+- **Sold or deleted slime's gear** already went back to the bag (`FarmState.removeSlime`, test in `gear`).
+- **Zone crowds** (`Config.World.Crowds`, `client/ZoneCrowds`): at every mini-boss and boss zone its guard stands with
+  three of its map's monsters, client only, near the camera, hidden during the viewer's run and while the zone rests
+  (seen at m1: 4 bodies).
+- **Bosses and mini-bosses 1.5x** (`Config.Dungeon.LookScale.Big` 1.15 -> 1.725; measured 17.6 studs tall).
+- **Training half as fast** (`Config.Work.CycleSeconds.training` 90 -> 180).
+- **Dungeon skies**: the arenas moved to x 20000 (`ArenaOrigin`), and each map wears its own sky box
+  (`Config.Dungeon.Skies`, drawn by `tools/world/dungeon_sky.py`, `client/DungeonLight`); the place's sky returns
+  after the run (seen: Meadow's day with clouds, Grove's violet dusk with stars, Lava's red, Ice's overcast; nothing
+  of the island shows).
+
+**Proved:** CHECK OK (826 passed, `treasure` 2 passed), TYPES OK. **Not verified:** the index reward, the hammer
+swing, the cooking info and the Deep-Sea lure in Studio; a boss in a real run at the new size (a level-80 squad killed
+it first); a phone frame for the new toasts.
+
 ## 2026-11-16 — pre-launch audit: CONDITIONAL GO
 
 The owner asked for a full pre-launch audit, cleanup and optimization. Reports: `docs/audit/PRELAUNCH_AUDIT.md` (what was

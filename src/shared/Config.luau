@@ -2036,7 +2036,8 @@ Config.Work = {
 	SlotLevels = { 11, 21, 31 },
 	BaseSlots = 1,
 	BoxCapacity = 10,
-	CycleSeconds = { fishing = 60, garden = 240, kitchen = 120, training = 90 },
+	-- (training 90 -> 180, the owner 2026-11-16: stats rose too fast; half the speed)
+	CycleSeconds = { fishing = 60, garden = 240, kitchen = 120, training = 180 },
 	CycleLevelFactor = 0.99,
 	FishingYield = 1,
 	SpeedBonusPerSpd = 0.05,

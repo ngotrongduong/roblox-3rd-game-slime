@@ -833,8 +833,8 @@ end
 
 -- A short message under the resource strip; a new one replaces the old.
 -- A short line at the top. `icon` (a Config.Ui.Icons name) puts that picture in front of the text: a reward is its picture
--- and a number.
-function UiKit.toast(text: string, icon: string?)
+-- and a number. Returns the toast (coins of a reward fly out of it, UiKit.coinFly).
+function UiKit.toast(text: string, icon: string?): GuiObject?
 	local parent = UiKit.root()
 	if not toastGroup or not toastText then
 		local group = make("CanvasGroup", {
@@ -854,7 +854,7 @@ function UiKit.toast(text: string, icon: string?)
 	end
 	local group, label = toastGroup, toastText
 	if not group or not label then
-		return
+		return nil
 	end
 	label.Text = text
 	-- the picture of the last toast that had one is taken away; a new one is made for this toast
@@ -882,6 +882,7 @@ function UiKit.toast(text: string, icon: string?)
 			UiKit.tween(group, 0.3, { GroupTransparency = 1 })
 		end
 	end)
+	return group
 end
 
 -- Coins that fly from a sale to the coins chip (UiKit.coinTarget, the HUD's): a few burst out of `from`, then each curves

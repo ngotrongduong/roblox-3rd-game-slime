@@ -434,7 +434,7 @@ local function parentFor(handle, piece)
 		local partSize
 		if piece.radius then
 			local across = piece.radius * 2 * scale
-			partSize = Vector3.new(across, across, across)
+			partSize = Vector3.new(across, if piece.height then piece.height * scale else across, across)
 		else
 			partSize = Vector3.new(size.X * share[1], size.Y * share[2], size.Z * share[3])
 		end
@@ -3094,6 +3094,16 @@ local function statueTemplate(live, key)
 			part.Material = Enum.Material.SmoothPlastic
 		end
 		part.Transparency = 1
+		if not statue.look and typeof(game) == "Instance" then
+			-- (a picture not loaded yet shows the mesh grey: the first flame orb after its upload flew grey wisps,
+			-- 2026-11-16; loaded through a Decal as VfxLib.preload does, lesson 359)
+			pcall(function()
+				local decal = Instance.new("Decal")
+				decal.Texture = part.TextureID;
+				(game :: any):GetService("ContentProvider"):PreloadAsync({ decal })
+				decal:Destroy()
+			end)
+		end
 		statueTemplates[key] = part
 		template = part
 	end
@@ -3212,6 +3222,7 @@ local function wearBody(live, body, ctx)
 		data = body,
 		feet = standing,
 		height = part.Size.Y,
+		size0 = part.Size,
 		from = ctx.delay + (body.delay or 0),
 		life = body.life,
 		alpha = 1,
@@ -3259,10 +3270,17 @@ local function stepBody(live, entry, t)
 				petal.part.CFrame = bloomFoot(flower, ring, petal.k, share, entry.factor) * petal.back
 			end
 		elseif not live.follow then
-			local risen = entry.feet * CFrame.new(0, -entry.height * (1 - out), 0)
+			-- (`spin`: turns a second about up; `grow`: its size by keys over its life, about its middle)
+			local risen = entry.feet
+				* CFrame.new(0, -entry.height * (1 - out), 0)
+				* CFrame.Angles(0, math.pi * 2 * (data.spin or 0) * (t - entry.from), 0)
 			entry.part.CFrame = risen
+			if data.grow then
+				entry.part.Size = entry.size0 * Budget.valueAt(data.grow, p)
+			end
 			if entry.fill then
 				entry.fill.part.CFrame = risen
+				entry.fill.part.Size = entry.part.Size
 			end
 		end
 	end
@@ -3280,19 +3298,30 @@ local function stepBody(live, entry, t)
 	end
 end
 
--- A projectile's 3D BODY (`projectile.model`): a statue riding the flight, its middle on the flying part, its front
--- (the model's -z) along the way it flies. It shows from the throw to the landing, fading in and out.
+-- A projectile's 3D BODY (`projectile.model`): a statue riding the flight, its middle on the flying part (or the
+-- statue's `hinge`: the orb a sheaf of flame wisps streams back from), its front (the model's -z once turned by its
+-- `facing`) along the way it flies. It shows from the throw to the landing, fading in and out.
 local function wearFlightModel(live, spec, ctx)
 	local statue = Models.list[spec.model]
 	local template = statueTemplate(live, spec.model)
 	if not template or live.dead or live.flight == nil then
 		return
 	end
-	local part, fill, parts = statueParts(template, statue, (spec.size or 1) * ctx.scale, spec.color)
+	local factor = (spec.size or 1) * ctx.scale
+	local part, fill, parts = statueParts(template, statue, factor, spec.color)
 	for _, each in parts do
 		each.Parent = live.folder
 	end
-	live.flight.model = { part = part, fill = fill, spec = spec, alpha = 1 }
+	local hinge = if statue.hinge then Vector3.new(statue.hinge[1], statue.hinge[2], statue.hinge[3]) else Vector3.zero
+	live.flight.model = {
+		part = part,
+		fill = fill,
+		spec = spec,
+		alpha = 1,
+		back = CFrame.Angles(0, math.rad(statue.facing or 0), 0) * CFrame.new(-hinge * factor),
+		-- (a shell stays a hair see-through, or its clear parts show solid: Builder.ShellClear)
+		least = if statue.clear then Builder.ShellClear else 0,
+	}
 end
 
 -- The flying body at flight share `p` (nil: not flying): its pose from the flying part, its transparency from its keys
@@ -3304,14 +3333,18 @@ local function stepFlightModel(flight, p)
 		alpha = if entry.spec.transparency
 			then Budget.valueAt(entry.spec.transparency, p)
 			else math.max(0, 1 - p * 8, 1 - (1 - p) * 6)
-		entry.part.CFrame = flight.part.CFrame
+		-- (`spin`: turns a second about the line of flight, through its hinge)
+		local pose = flight.part.CFrame
+			* CFrame.Angles(0, 0, math.pi * 2 * (entry.spec.spin or 0) * p * flight.seconds)
+			* entry.back
+		entry.part.CFrame = pose
 		if entry.fill then
-			entry.fill.part.CFrame = flight.part.CFrame
+			entry.fill.part.CFrame = pose
 		end
 	end
 	if math.abs(alpha - entry.alpha) > 0.005 then
 		entry.alpha = alpha
-		entry.part.Transparency = alpha
+		entry.part.Transparency = math.max(alpha, entry.least)
 		if entry.fill then
 			entry.fill.part.Transparency = 1 - (1 - entry.fill.base) * (1 - alpha)
 		end
@@ -3752,7 +3785,8 @@ function Builder.play(effect, at, opts)
 	local function boxSize(piece, shrink)
 		if piece.radius then
 			local across = piece.radius * 2 * scale * (shrink or 1)
-			return Vector3.new(across, across, across)
+			local tall = if piece.height then piece.height * scale * (shrink or 1) else across
+			return Vector3.new(across, tall, across)
 		end
 		return Vector3.new(size.X * piece.box[1], size.Y * piece.box[2], size.Z * piece.box[3])
 	end

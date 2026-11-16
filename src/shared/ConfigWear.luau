@@ -34,6 +34,7 @@ type WearPiece = {
 	wriggle: WearWriggle?,
 	turn: { number }?,
 	texture: string?,
+	glow: { at: { number }, size: number, colour: string }?,
 }
 type WearKit = { texture: string, pieces: { WearPiece } }
 type WearBody = { mesh: number, color: number, normal: number?, rough: number? }
@@ -67,6 +68,10 @@ local Wear = {
 	-- falls: `degrees` at a climb of Rise bodies a second, eased by a spring that goes half way in HalfLife seconds; a
 	-- pause longer than Gap (a far slime) starts it over.
 	Lag = { Rise = 4, HalfLife = 0.07, Gap = 0.5 },
+	-- A piece's `glow` (a lure's bulb): an unseen part `size` wide at `at` (mesh units from the piece's middle, in its own
+	-- frame) welded to it wears this effect in the glow's `colour`, so the light rides the piece as it bobs (the owner,
+	-- 2026-11-16: Deep-Sea Leviathan's light sat beside its lure). Only on a slime in the world, not on a portrait.
+	Glow = "aura.lamp_glow",
 	-- Secret id -> its kit
 	Secrets = {
 		["secret-black-blue"] = "TempestDragon",
@@ -1688,6 +1693,8 @@ local Wear = {
 					turn = { 48.1362, -61.3925, 44.4126 },
 					-- (the lure bobs as the slime hops)
 					lag = { axis = { 1, 0, 0 }, degrees = 14 },
+					-- (its bulb: the far fifth of the mesh's vertices from its foot, measured 2026-11-16)
+					glow = { at = { -0.0588, 0.1193, -0.1014 }, size = 0.14, colour = "6ef0e1" },
 				},
 			},
 		},

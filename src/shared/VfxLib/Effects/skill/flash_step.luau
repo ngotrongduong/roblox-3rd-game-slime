@@ -145,7 +145,8 @@ return {
 				transparency = { { 0, 0.2 }, { 1, 1 } },
 				speed = { 1, 3 },
 				spread = { 180, 180 },
-				squash = { { 0, -1.5 }, { 1, -1 } },
+				rotation = { 90, 90 }, -- (streak_lens is drawn upright: turned along its flight, then squashed longer; lesson 363)
+				squash = { { 0, 1.5 }, { 1, 1 } },
 				lightEmission = 0.8,
 				brightness = 1.5,
 				stream = { from = 0, to = DASH, rate = { 160, 160 } },

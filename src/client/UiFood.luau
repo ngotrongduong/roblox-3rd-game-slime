@@ -240,31 +240,43 @@ function UiFood.ingredientStrip(
 	return strip
 end
 
--- The stat icon and the percent a dish gives, in one small row.
+-- The stat icon and the percent a dish gives, and under them the minutes it lasts (the owner, 2026-11-16: the
+-- kitchen shows how strong and how long the buff is).
 function UiFood.factsRow(parent: Instance?, id: string, props: UiKit.Props?): Frame
-	local stat, percent = UiFood.facts(id)
+	local stat, percent, minutes = UiFood.facts(id)
 	local row = UiKit.make("Frame", {
 		Name = "Facts",
 		BackgroundTransparency = 1,
-		Size = UDim2.fromOffset(FACTS_WIDTH, U.IconNormal),
+		Size = UDim2.fromOffset(FACTS_WIDTH, U.IconNormal + U.TextTiny + 2),
 	}, parent)
 	if props then
 		for key, value in props do
 			row[key] = value
 		end
 	end
+	local line = UiKit.make("Frame", {
+		Name = "Line",
+		BackgroundTransparency = 1,
+		Size = UDim2.new(1, 0, 0, U.IconNormal),
+	}, row)
 	UiKit.make("UIListLayout", {
 		FillDirection = Enum.FillDirection.Horizontal,
 		HorizontalAlignment = Enum.HorizontalAlignment.Center,
 		VerticalAlignment = Enum.VerticalAlignment.Center,
 		Padding = UDim.new(0, 3),
 		SortOrder = Enum.SortOrder.LayoutOrder,
-	}, row)
-	UiKit.statIcon(row, stat, if stat == "all" then U.IconNormal else U.IconSmall, { LayoutOrder = 1 })
-	UiKit.label(row, "+" .. tostring(percent) .. "%", U.TextSmall, "Brown", {
+	}, line)
+	UiKit.statIcon(line, stat, if stat == "all" then U.IconNormal else U.IconSmall, { LayoutOrder = 1 })
+	UiKit.label(line, "+" .. tostring(percent) .. "%", U.TextSmall, "Brown", {
 		LayoutOrder = 2,
 		Size = UDim2.fromScale(0, 1),
 		AutomaticSize = Enum.AutomaticSize.X,
+		TextXAlignment = Enum.TextXAlignment.Center,
+	})
+	UiKit.label(row, tostring(minutes) .. " min", U.TextTiny, "BrownSoft", {
+		Name = "Minutes",
+		Position = UDim2.fromOffset(0, U.IconNormal),
+		Size = UDim2.new(1, 0, 0, U.TextTiny + 2),
 		TextXAlignment = Enum.TextXAlignment.Center,
 	})
 	return row

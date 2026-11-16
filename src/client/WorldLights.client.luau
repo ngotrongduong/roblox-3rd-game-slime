@@ -56,14 +56,18 @@ local function burn(mesh: BasePart)
 	VfxLib.attach(anchor, W.Fire)
 end
 
--- A lamp's head: by night an unseen anchor there wears the glow (and our light, for a lamp with none of its own); by
--- day it goes, with all on it.
+-- A lamp's head: by night an unseen anchor there wears the glow (and our light, for a lamp with none of its own), and a
+-- Neon bulb waits there for when the camera is far (W.Bulb, shown by the loop below); by day all of it goes.
 local function glow(mesh: MeshPart)
 	local anchor = mesh:FindFirstChild("GlowAnchor")
 	if not lit then
 		if anchor then
 			VfxLib.detach(anchor)
 			anchor:Destroy()
+		end
+		local bulb = mesh:FindFirstChild("Bulb")
+		if bulb then
+			bulb:Destroy()
 		end
 		return
 	end
@@ -74,6 +78,12 @@ local function glow(mesh: MeshPart)
 	local lamp = LAMPS[model.Name]
 	local made = anchorAt(mesh, "GlowAnchor", Vector3.one * lamp.size, lamp.at)
 	local c = Color3.fromHex(lamp.colour)
+	local bulb = anchorAt(mesh, "Bulb", Vector3.one * lamp.size, lamp.at)
+	bulb.Shape = Enum.PartType.Ball
+	bulb.Material = Enum.Material.Neon
+	bulb.Color = c
+	bulb.Transparency = W.Bulb.Transparency
+	bulb.LocalTransparencyModifier = 1
 	VfxLib.attach(made, W.Glow, { palette = { core = { c.R * 255, c.G * 255, c.B * 255 } } })
 	if not model:FindFirstChildWhichIsA("Light", true) then
 		local L = W.LampLight
@@ -110,7 +120,7 @@ local function take(inst: Instance)
 		end
 		return
 	end
-	if not inst:IsA("BasePart") or inst.Name == "FireAnchor" or inst.Name == "GlowAnchor" then
+	if not inst:IsA("BasePart") or inst.Name == "FireAnchor" or inst.Name == "GlowAnchor" or inst.Name == "Bulb" then
 		return
 	end
 	local worn = WORN[inst.Name]
@@ -152,6 +162,22 @@ while true do
 				glow(mesh)
 			else
 				glows[mesh] = nil
+			end
+		end
+	end
+	-- (far lamps: the bulb shows, grown with the distance so it stays a few pixels wide; near, the glow takes over)
+	local camera = workspace.CurrentCamera
+	if lit and camera then
+		local eye = camera.CFrame.Position
+		for mesh, model in glows do
+			local bulb = mesh:FindFirstChild("Bulb") :: Part?
+			if bulb then
+				local away = (bulb.Position - eye).Magnitude
+				local far = away > W.Bulb.From
+				bulb.LocalTransparencyModifier = if far then 0 else 1
+				if far then
+					bulb.Size = Vector3.one * math.clamp(away * W.Bulb.PerStud, LAMPS[model.Name].size, W.Bulb.Max)
+				end
 			end
 		end
 	end

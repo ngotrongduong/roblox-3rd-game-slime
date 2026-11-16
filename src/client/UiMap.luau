@@ -14,6 +14,7 @@ local MapView = require(ReplicatedStorage.Shared.MapView)
 local WorldPacks = require(ReplicatedStorage.Shared.WorldPacks)
 local WorldPlan = require(ReplicatedStorage.Shared.WorldPlan)
 local UiKit = require(script.Parent.UiKit)
+local ZombieTeams = require(script.Parent.ZombieTeams)
 
 local C = Config.Ui.Map
 local U = Config.Ui
@@ -34,7 +35,15 @@ type Mark = {
 	stone: GuiObject?,
 	lock: GuiObject?,
 }
-type Layer = { host: GuiObject, player: GuiObject, marks: { Mark }, packs: { GuiObject }, size: any }
+type Layer = {
+	host: GuiObject,
+	player: GuiObject,
+	marks: { Mark },
+	packs: { GuiObject },
+	-- the player's own teams that are out, by team number
+	teams: { [number]: GuiObject },
+	size: any,
+}
 -- plan point -> where it falls in the layer's host, 0..1 across
 type Place = (number, number) -> (number, number)
 
@@ -173,7 +182,7 @@ local function newLayer(host: GuiObject, S: any, onPick: ((Mark) -> ())?): Layer
 	end
 	local arrow = tinted(host, "map_player", S.Player, WHITE, { Name = "Player", AnchorPoint = CENTRE, ZIndex = 6 })
 	arrow.Visible = false
-	return { host = host, player = arrow, marks = marks, packs = {}, size = S }
+	return { host = host, player = arrow, marks = marks, packs = {}, teams = {}, size = S }
 end
 
 local function inside(fx: number, fy: number): boolean
@@ -237,6 +246,40 @@ local function update(layer: Layer, place: Place)
 	end
 	for index = used + 1, #layer.packs do
 		layer.packs[index].Visible = false
+	end
+	-- the player's own teams that are out: each its picture and number where it is now (the owner, 2026-11-16)
+	local now = workspace:GetServerTimeNow()
+	for index, team in ZombieTeams.all() do
+		local at = ZombieTeams.position(team, now)
+		local mark = layer.teams[index]
+		if at and not mark then
+			local made = UiKit.make("Frame", {
+				Name = "Team" .. index,
+				BackgroundTransparency = 1,
+				AnchorPoint = CENTRE,
+				Size = UDim2.fromOffset(layer.size.Team, layer.size.Team),
+				ZIndex = 5,
+			}, layer.host)
+			UiKit.icon(made, C.TeamIcon, layer.size.Team, { Size = FULL, ZIndex = 5 })
+			local number = UiKit.label(made, tostring(index), U.TextTiny, "Cream", {
+				AnchorPoint = Vector2.new(1, 1),
+				Position = UDim2.new(1, 4, 1, 4),
+				Size = UDim2.fromOffset(U.TextTiny, U.TextTiny),
+				TextXAlignment = Enum.TextXAlignment.Center,
+				ZIndex = 6,
+			})
+			UiKit.outline(number, true)
+			layer.teams[index] = made
+			mark = made
+		end
+		if mark then
+			local fx, fy = -1, -1
+			if at then
+				fx, fy = place(MapView.plan(at.X, at.Z))
+			end
+			mark.Visible = inside(fx, fy)
+			mark.Position = UDim2.fromScale(fx, fy)
+		end
 	end
 end
 

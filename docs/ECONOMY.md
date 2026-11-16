@@ -109,6 +109,11 @@ training ground; half the babies and dishes a village could sell are sold. A Stu
 charged and paid (70 an upgrade at level 1, 2,700 at 20, a refusal one coin short; 3,341 coins for a won level-1 Meadow
 run), not the hours: see `docs/STATUS.md`.
 
+**Past the vault (the owner, 2026-11-16).** What a fight or a sale earns stops at the vault's ceiling; a reward, a
+treasure chest and Robux gold never do (`Zombies.payReward`), so a player who pays or opens several rewards at once
+loses nothing. **Treasure chests**: 12 lie in the open world, each pays `Config.World.Chests.Coins` (1,500) raised by
+the level step of where it lies, as a sale is; a new one lies elsewhere `RespawnSeconds` (180) after one is opened.
+
 ## The road before (2026-11-02, history)
 
 | Village level | Upgrades bought (6 a level) | Play time |

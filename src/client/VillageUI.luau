@@ -23,6 +23,7 @@ local UiSlimeList = require(script.Parent.UiSlimeList)
 local UiSlimes = require(script.Parent.UiSlimes)
 local UiSpots = require(script.Parent.UiSpots)
 local UiSquad = require(script.Parent.UiSquad)
+local VfxLib = require(ReplicatedStorage.Shared.VfxLib)
 local ZombieTeams = require(script.Parent.ZombieTeams)
 
 local C = Config.VillageClient
@@ -1100,7 +1101,11 @@ local function bind(root: Folder?)
 			if own == village and n > seen then
 				seen = n
 				if coins > 0 then
-					UiKit.toast("New slime! +" .. UiKit.money(coins), "coins")
+					-- (the owner, 2026-11-16: the find's coins are seen flying home, not only read)
+					local toast = UiKit.toast("New slime! +" .. UiKit.money(coins), "coins")
+					if toast then
+						UiKit.coinFly(toast, coins)
+					end
 				end
 			end
 		end)
@@ -1142,13 +1147,15 @@ function VillageUI.start()
 	gui.Parent = player:WaitForChild("PlayerGui")
 	local root = UiKit.mount(gui)
 
+	local book: UiBook.Context = {
+		own = function()
+			return own
+		end,
+		request = request,
+	}
+	UiBook.start(book)
 	UiHud.start(root, function()
-		UiBook.open({
-			own = function()
-				return own
-			end,
-			request = request,
-		})
+		UiBook.open(book)
 	end, function(place: string)
 		UiMarket.travel(place)
 	end, function()
@@ -1180,6 +1187,34 @@ function VillageUI.start()
 			UiRewards.refresh()
 			task.wait(1)
 		end
+	end)
+
+	-- A treasure chest this player opened (server/Treasure): the burst where it lay, a toast and its coins flying home.
+	task.spawn(function()
+		local remotes = ReplicatedStorage:WaitForChild("Remotes")
+		local chests = remotes:WaitForChild(Config.World.Chests.Remote)
+		if not chests:IsA("RemoteEvent") then
+			return
+		end
+		chests.OnClientEvent:Connect(function(data: any)
+			if type(data) ~= "table" or type(data.coins) ~= "number" then
+				return
+			end
+			if typeof(data.at) == "Vector3" then
+				local colour = Color3.fromHex(Config.World.Chests.BurstColour)
+				local core = { math.floor(colour.R * 255), math.floor(colour.G * 255), math.floor(colour.B * 255) }
+				pcall(
+					VfxLib.play,
+					Config.World.Chests.Burst,
+					data.at,
+					{ palette = { light = core, glow = { { 255, 255, 255 }, core } } }
+				)
+			end
+			local toast = UiKit.toast("Treasure! +" .. UiKit.money(data.coins), "coins")
+			if toast then
+				UiKit.coinFly(toast, data.coins)
+			end
+		end)
 	end)
 
 	UiSpots.start({

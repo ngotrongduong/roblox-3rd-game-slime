@@ -136,6 +136,16 @@ if map then
 	end
 end
 print(string.format("small parts without shadow: %d, meshes to automatic detail: %d", shadowsOff, fidelityAuto))
+-- The lamps stay on every device however far they are (about 70 small models), so a village lit at night is seen from
+-- afar (client/WorldLights, Config.World.Lights.Bulb; the owner, 2026-11-16).
+local kept = 0
+for _, d in workspace:GetDescendants() do
+	if d:IsA("Model") and (Config.World.Lights.Lamps :: any)[d.Name] ~= nil then
+		d.ModelStreamingMode = Enum.ModelStreamingMode.Persistent
+		kept += 1
+	end
+end
+print("lamps kept on every device:", kept)
 local template = if map then map:FindFirstChild("Plot" .. Config.Plots.TemplatePlot) else nil
 local parts = 0
 if template then

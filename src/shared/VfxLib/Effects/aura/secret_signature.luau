@@ -1926,21 +1926,10 @@ local variants = {
 			),
 		},
 	},
-	-- a small cyan lure glowing before its head, glowing specks drifting round it
+	-- glowing specks drifting round it, bubbles rising (its lure's glow is worn on the game's lure piece:
+	-- aura.lamp_glow, 2026-11-16)
 	deep_sea_leviathan = {
 		pieces = {
-			crown("lure", "blob_solid", CYAN, {
-				at = "head",
-				box = { 0.05, 0.05, 0.05 },
-				pose = { at = { 0, 0.35, -1.1 } },
-				rate = 0.5,
-				life = { 4, 4 },
-				-- (a soft glow that flashes bright now and then, 2026-11-11, the owner)
-				size = { { 0, 0.2 }, { 0.45, 0.22 }, { 0.5, 0.55 }, { 0.6, 0.22 }, { 1, 0.2 } },
-				transparency = { { 0, 1 }, { 0.15, 0.1 }, { 0.5, 0 }, { 0.85, 0.1 }, { 1, 1 } },
-				lightEmission = 1,
-				steady = true,
-			}),
 			rise("bubbles", "bubble_gloss", { 150, 235, 255 }, {
 				at = "feet",
 				-- (born on a ring round its feet: under it the body hides them)

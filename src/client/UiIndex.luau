@@ -1,8 +1,9 @@
 --!strict
 -- The Index (docs/GAMEPLAY.md §13): every kind of slime as a card, in four tabs (the 11 colours, the Duals, the Secrets, the
 -- materials). A kind the player has found shows its own picture; one not found yet shows the same picture darkened (the only
--- light on it is Config.Rewards.LockedAmbient), so the player sees what to look for. Secrets have no art of their own yet: a
--- found Secret stays a golden shadow with its name, so the Index never shows art that does not exist. Drawn inside the slime
+-- light on it is Config.Rewards.LockedAmbient), so the player sees what to look for. A Secret is drawn with its own body and
+-- worn pieces (Config.Wear); one with no art of its own yet stays, found, a golden shadow with its name, so the Index never
+-- shows art that does not exist. Drawn inside the slime
 -- book (UiBook); what was found comes from the village folder's Found attribute (server/Rewards).
 --
 -- Opening is cheap on purpose: the cards are made a few a frame, and a card's picture (a ViewportFrame with a clone of the
@@ -24,7 +25,7 @@ local U = Config.Ui
 local R = Config.Rewards
 
 type Kind = { id: string, name: string, look: { [string]: any } }
--- "lit": found, its own picture with the owner's face. "gold": a found Secret (no art yet). "dark": not found.
+-- "lit": found, its own picture with the owner's face. "gold": a found Secret with no art yet. "dark": not found.
 type Mode = "lit" | "gold" | "dark"
 type Slot = { box: Frame, holder: Frame, kind: Kind, mode: Mode, drawn: boolean }
 
@@ -57,8 +58,12 @@ local function kinds(bucket: string): { Kind }
 	elseif bucket == "secret" then
 		for _, recipe in SecretRecipes.List do
 			if recipe.enabled then
-				-- (no Secret art yet: the plain body, only ever drawn as a shadow)
-				table.insert(out, { id = recipe.id, name = recipe.name, look = { Colour = Colours.Fallback } })
+				-- (its own body and worn pieces, as SlimeLook dresses it; the owner, 2026-11-16)
+				table.insert(out, {
+					id = recipe.id,
+					name = recipe.name,
+					look = { Colour = recipe.parentPair[1], SecretId = recipe.id },
+				})
 			end
 		end
 	else
@@ -270,8 +275,10 @@ function UiIndex.draw(host: Frame, own: Folder?)
 				return
 			end
 			local isFound = found[tab][kind.id] == true
-			-- a Secret has no art: found, it is a golden shadow; any kind not found is its picture, darkened
-			local mode: Mode = if not isFound then "dark" elseif tab == "secret" then "gold" else "lit"
+			-- a Secret without its own art yet (no worn kit, no body of its own): found, it is a golden shadow; any kind
+			-- not found is its picture, darkened
+			local bare = tab == "secret" and Config.Wear.Secrets[kind.id] == nil and Config.Wear.Bodies[kind.id] == nil
+			local mode: Mode = if not isFound then "dark" elseif bare then "gold" else "lit"
 			local box, body = UiKit.skin(area, "Wood", if isFound then "Card" else "CardDeep", {
 				Name = kind.id,
 				LayoutOrder = order,

@@ -1,4 +1,4 @@
--- Umbral Growl: The Mushroom bear's wind-up for its leap: play it on its host when the skill is called, cancel it as the leap goes off. Dark violet gloom is drawn into its body, pale violet wisps curl in, a dark eclipse ring pools under it.
+-- Umbral Growl: The Mushroom bear's wind-up for its leap: play it on its host when the skill is called, cancel it as the leap goes off. Glowing violet gloom is drawn into its body, pale violet wisps curl in, a violet eclipse ring spreads on the floor under it (recoloured 2026-11-16 at the owner's word so it reads; the design stays simple, a monster's mutation aura).
 return {
 	id = "skill.umbral_growl",
 	name = "Umbral Growl",
@@ -20,7 +20,8 @@ return {
 			name = "gloom",
 			texture = "smoke_poison",
 			role = "keep",
-			color = { { 0, { 90, 45, 135 } }, { 1, { 25, 15, 40 } } },
+			color = { { 0, { 215, 165, 255 } }, { 1, { 140, 80, 230 } } },
+			lightEmission = 0.5,
 			at = "body",
 			shape = "Sphere",
 			shapeStyle = "Surface",
@@ -43,7 +44,7 @@ return {
 			name = "wisps",
 			texture = "charge_curls_a",
 			role = "keep",
-			color = { { 0, { 210, 170, 255 } }, { 1, { 170, 90, 255 } } },
+			color = { { 0, { 250, 235, 255 } }, { 1, { 215, 160, 255 } } },
 			at = "chest",
 			shape = "Sphere",
 			shapeStyle = "Surface",
@@ -60,19 +61,23 @@ return {
 			transparency = { { 0, 0.5 }, { 0.4, 0 }, { 1, 1 } },
 			speed = { 7, 9 },
 			lightEmission = 1,
+			brightness = 2,
 		},
 		{
 			name = "pool",
 			texture = "ring_eclipse",
 			role = "keep",
-			color = { { 0, { 25, 15, 40 } }, { 1, { 90, 45, 135 } } },
+			color = { { 0, { 215, 160, 255 } }, { 1, { 150, 80, 240 } } },
 			at = "ground",
 			flat = true,
 			count = 1,
 			life = { 0.9, 0.9 },
 			size = { { 0, 2 }, { 0.2, 5.6 }, { 0.5, 7.44 }, { 1, 8 } },
 			transparency = { { 0, 0.05 }, { 0.5, 0.3 }, { 0.8, 0.66 }, { 1, 1 } },
-			zOffset = -1,
+			lightEmission = 1,
+			brightness = 2,
+			-- (on the floor: at -1 it sank under the ground and never showed)
+			zOffset = 0.2,
 		},
 	},
 	source = {
@@ -80,5 +85,5 @@ return {
 		art = "the library's pictures (ASSETS.md families), owner art kept as drawn",
 		licence = "the owner's own and free Creator Store pictures already in the library",
 	},
-	notes = "The Mushroom bear's wind-up for its leap: play it on its host when the skill is called, cancel it as the leap goes off. Dark violet gloom is drawn into its body, pale violet wisps curl in, a dark eclipse ring pools under it.",
+	notes = "The Mushroom bear's wind-up for its leap: play it on its host when the skill is called, cancel it as the leap goes off. Glowing violet gloom is drawn into its body, pale violet wisps curl in, a violet eclipse ring spreads on the floor under it. Recoloured 2026-11-16 at the owner's word (\"only change the colours so it is easier to see\"): it was near black on the dark pen floor, and the ring sat under the floor (zOffset -1).",
 }

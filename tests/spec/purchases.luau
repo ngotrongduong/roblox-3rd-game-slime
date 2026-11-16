@@ -130,12 +130,18 @@ return function(T)
 		local dishPlain = Shop.sellDish(a, "grilledFish", 4, NOW) :: number
 		local dishVip = Shop.sellDish(b, "grilledFish", 4, NOW) :: number
 		T.eq(dishVip, math.floor(dishPlain * 1.5 + 0.5))
-		-- a dungeon wave pays through Zombies.pay
+		-- a dungeon wave pays through Zombies.payReward, past the vault's ceiling (a prize, the owner 2026-11-16)
 		local ledger = Dungeon.newLedger()
 		T.ok(Dungeon.addDrop(ledger, 1, { item = "coins", amount = 100 }), "a drop is written")
 		local waveFarm = farmWith({ "vip" })
 		local paid = Dungeon.commitWave(waveFarm, ledger, 1, NOW) :: any
 		T.eq(paid.coins, 150)
+		local full = farmWith()
+		full.coins = require("../../src/shared/Village").coinCap(full.areas.pantry.level)
+		local big = Dungeon.newLedger()
+		Dungeon.addDrop(big, 1, { item = "coins", amount = 500 })
+		T.eq((Dungeon.commitWave(full, big, 1, NOW) :: any).coins, 500, "a full vault does not cut a prize")
+		T.eq(Zombies.pay(full, 100, NOW), 0, "an ordinary win still stops at the ceiling")
 		-- Robux gold is plain coins: nothing multiplies it
 		local rich = farmWith({ "vip" })
 		rich.boosts.gold = NOW + 1000

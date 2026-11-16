@@ -148,6 +148,7 @@ function ForgeScene.play(gearId: string, tempered: boolean)
 	folder.Parent = workspace
 	local hammer = Instance.new("Model")
 	hammer.Name = "Hammer"
+	local copies: { [BasePart]: BasePart } = {}
 	for _, part in { head, handle } do
 		local copy = part:Clone()
 		copy:ClearAllChildren()
@@ -156,15 +157,34 @@ function ForgeScene.play(gearId: string, tempered: boolean)
 		copy.CanQuery = false
 		copy.CanTouch = false
 		copy.Parent = hammer
+		copies[part] = copy
 		part.LocalTransparencyModifier = 1
 	end
 	hammer.Parent = folder
-	local rest = hammer:GetPivot()
 	local along = head.Position - handle.Position
 	along = Vector3.new(along.X, 0, along.Z)
 	along = if along.Magnitude > 0.01 then along.Unit else handle.CFrame.LookVector
+	-- (the hammer lies on its side on the anvil, so a blow landed on the head's side: the copy's head turns HammerRoll
+	-- about the handle so its face comes down, the owner 2026-11-16, and the whole hammer rises so the head stands on
+	-- the anvil as it lay)
+	local function height(part: BasePart): number
+		local cf = part.CFrame
+		return math.abs(cf.RightVector.Y) * part.Size.X
+			+ math.abs(cf.UpVector.Y) * part.Size.Y
+			+ math.abs(cf.LookVector.Y) * part.Size.Z
+	end
+	local headCopy = copies[head]
+	local before = height(headCopy)
+	headCopy.CFrame = CFrame.new(headCopy.Position)
+		* CFrame.fromAxisAngle(along, math.rad(F.HammerRoll))
+		* (headCopy.CFrame - headCopy.Position)
+	local rise = (height(headCopy) - before) / 2
+	for _, copy in copies do
+		copy.CFrame += Vector3.yAxis * rise
+	end
+	local rest = hammer:GetPivot()
 	local reach = math.max(handle.Size.X, handle.Size.Y, handle.Size.Z)
-	local hinge = handle.Position - along * (reach / 2)
+	local hinge = copies[handle].Position - along * (reach / 2)
 	local axis = along:Cross(Vector3.yAxis)
 	local strikeAt = CFrame.new(Vector3.new(head.Position.X, top.Y, head.Position.Z))
 	local light = Instance.new("PointLight")

@@ -10,6 +10,7 @@ local Config = require(ReplicatedStorage.Shared.Config)
 local Layout = require(ReplicatedStorage.Shared.Layout)
 local Mutations = require(ReplicatedStorage.Shared.Mutations)
 local ZombieRules = require(ReplicatedStorage.Shared.Zombies)
+local UiBook = require(script.Parent.UiBook)
 local UiDishShop = require(script.Parent.UiDishShop)
 local UiDungeon = require(script.Parent.UiDungeon)
 local UiFood = require(script.Parent.UiFood)
@@ -42,6 +43,8 @@ local sheet: Sheet? = nil
 local chip: UiKit.Chip? = nil
 local watchedFolder: Instance? = nil
 local lostConnection: RBXScriptConnection? = nil
+-- the dead the player has been told about (nil until the first look: who was dead before is on the chip, not toasted)
+local toldDead: { [string]: boolean }? = nil
 
 local reasons: { [string]: string } = {
 	TOO_FAR = "Too far away.",
@@ -320,10 +323,25 @@ local function refreshChip()
 		return
 	end
 	local own = ownOf()
-	local dead = if own then deadSlimes() else {}
+	local dead: { Dead } = if own then deadSlimes() else {}
 	-- (not inside the Dungeon: the village's chips are put away for the run)
 	local run = player:GetAttribute("DungeonPhase")
 	item.root.Visible = #dead > 0 and not (type(run) == "string" and run ~= "")
+	-- (the owner, 2026-11-16: a fall is told at once, and that waiting too long loses the slime)
+	if own then
+		local now: { [string]: boolean } = {}
+		for _, entry in dead do
+			now[entry.slime.Name] = true
+			if toldDead and not toldDead[entry.slime.Name] then
+				-- (short: a longer line was cut before "forever" in the toast)
+				UiKit.toast(
+					"Revive " .. UiSlimes.name(entry.slime) .. " in " .. clock(entry.left) .. " or lose it forever!",
+					"skull"
+				)
+			end
+		end
+		toldDead = now
+	end
 	if #dead > 0 then
 		item.set(tostring(#dead) .. "  " .. clock(dead[1].left))
 		local value = item.root:FindFirstChild("Value", true)
@@ -625,10 +643,10 @@ function UiSquad.start(own: () -> Folder?)
 	chip = made
 
 	-- the teams: the gate sheet, the attack sheet, the chips and the notice
-	UiTeams.start({ own = own, ask = ask, reason = reasonText, open = openSheet })
+	UiTeams.start({ own = own, ask = ask, reason = reasonText, open = openSheet, slimePage = UiBook.openSlime })
 
 	-- the Slime Dungeon: the portal's sheet, the arena's plate, the banner and the end card
-	UiDungeon.start({ own = own, ask = ask, reason = reasonText, open = openSheet })
+	UiDungeon.start({ own = own, ask = ask, reason = reasonText, open = openSheet, slimePage = UiBook.openSlime })
 
 	-- the Market: the VIP counter's prompt and sheet (UiMarket), and one prompt where the slime buyer stands
 	UiMarket.start({ open = openSheet, anchor = anchorAt })

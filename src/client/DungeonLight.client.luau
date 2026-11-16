@@ -11,7 +11,11 @@ local TweenService = game:GetService("TweenService")
 local Config = require(ReplicatedStorage.Shared.Config)
 
 local ARENAS: any = Config.Dungeon.Arenas
+local SKIES: any = Config.Dungeon.Skies
 local player = Players.LocalPlayer
+-- the map's own sky (Config.Dungeon.Skies), and the place's sky put aside while it shows
+local dungeonSky: Sky? = nil
+local placeSky: Sky? = nil
 
 -- the place's own look, taken once, the first time a map changes it
 type Baseline = {
@@ -87,11 +91,53 @@ local function ease(seconds: number, instance: Instance, goal: { [string]: any }
 		:Play()
 end
 
+-- A run's map wears its own sky box (the owner, 2026-11-16: the world's sky and lands are not the Dungeon's); back in the
+-- world the place's own sky returns. Its own stars and sun are painted, so the engine's are off.
+local function setSky(mapId: string)
+	local ids = SKIES[mapId]
+	if ids then
+		local sky = dungeonSky
+		if not sky then
+			local made = Instance.new("Sky")
+			made.Name = "DungeonSky"
+			made.CelestialBodiesShown = false
+			made.StarCount = 0
+			dungeonSky = made
+			sky = made
+		end
+		local made = sky :: Sky
+		local side = "rbxassetid://" .. ids.side
+		made.SkyboxBk, made.SkyboxFt, made.SkyboxLf, made.SkyboxRt = side, side, side, side
+		made.SkyboxUp = "rbxassetid://" .. ids.up
+		made.SkyboxDn = "rbxassetid://" .. ids.down
+		if made.Parent ~= Lighting then
+			for _, other in Lighting:GetChildren() do
+				if other:IsA("Sky") then
+					placeSky = other
+					other.Parent = nil
+				end
+			end
+			made.Parent = Lighting
+		end
+	elseif dungeonSky and dungeonSky.Parent then
+		dungeonSky.Parent = nil
+		if placeSky then
+			placeSky.Parent = Lighting
+			placeSky = nil
+		end
+	end
+end
+
 local function apply(mapId: string)
 	if mapId == current then
 		return
 	end
 	current = mapId
+	-- (the place's own look is taken before the map's sky goes up)
+	if SKIES[mapId] then
+		ensure()
+	end
+	setSky(mapId)
 	local map = ARENAS[mapId]
 	local look = if map then map.Lighting else nil
 	if not look and not baseline then

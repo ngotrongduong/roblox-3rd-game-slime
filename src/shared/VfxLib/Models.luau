@@ -100,8 +100,9 @@ Models.list = {
 --             point a petal is turned about: a body's `bloom` clones it round a flower (tools/blender/lotus.py prints it
 --             in the frame Roblox gives the part: Import 3D brings a GLB in turned half round about up, so Blender's
 --             x and depth come in negated, lesson 358); a bloom turns each petal by `facing` about this foot, so the
---             petal's inside faces the flower's middle
---   statue    true: no bones, no `area` (Schema's serpents refuse it)
+--             petal's inside faces the flower's middle. A projectile's `model` is held by it on the flying point (the
+--             orb its flame wisps stream back from, tools/blender/flame_wisps.py)
+--   statue   true: no bones, no `area` (Schema's serpents refuse it)
 Models.list.guardian_knight = {
 	mesh = 85240162598491,
 	texture = 81879877784190,
@@ -203,6 +204,28 @@ Models.list.crack_rays_mint = {
 	mesh = 136676610637392,
 	clear = "cg_rays_mint_paint_clear",
 	size = { 6.004, 1.599, 2.681 },
+	facing = 0,
+	statue = true,
+}
+-- CGHOW wave 8 (2026-11-16). His Energy Burst's cage (F4p7Tf8Jv_0): five rough rings at their own tilts round one
+-- middle, the tube thicker and thinner round each ring (tools/blender/ring_cage.py, models/ring_cage.glb, Studio Import
+-- 3D), in a ChatGPT picture of charred rock with a few glowing cracks (textures/fx/cg_char_ring.png); a body that
+-- spins and swells (`spin`, `grow`)
+Models.list.ring_cage = {
+	mesh = 94160462561388,
+	texture = 127106549669177,
+	size = { 1.966, 2.011, 1.917 },
+	facing = 0,
+	statue = true,
+}
+-- His Orb Trails' swooshes (Ulf_k8w_bBA, Maya meshes): seven half-twisted strips streaming back round the orb's line
+-- (tools/blender/flame_wisps.py, models/flame_wisps.glb, Studio Import 3D), a see-through shell wearing a ChatGPT strip
+-- of curling flame, white-hot at the head; held at the orb (its hinge), front -z; a projectile's `model`
+Models.list.flame_wisps = {
+	mesh = 82136989369113,
+	clear = "cg_flame_wisp_strip_clear",
+	size = { 1.929, 2.13, 6.06 },
+	hinge = { -0.0866, 0.0231, -2.5375 },
 	facing = 0,
 	statue = true,
 }
