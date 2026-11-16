@@ -891,6 +891,11 @@ Config.LibraryKit = {
 		-- the Kitchen's two, painted by server/Kitchen
 		ChimneyCrown_Gold = { { mesh = 102649343939594, tex = "", size = { 2.14, 1.136, 2.14 }, at = { 0, 0.568, 0 } } },
 		VentHood_Copper = { { mesh = 110062836024957, tex = "", size = { 2.08, 0.75, 2.08 }, at = { 0, 0.375, 0 } } },
+		-- the Garden's two (the wheel is held at its hub, the hoop at the middle of its foot)
+		WindWheel_Blades = { { mesh = 130921108933275, tex = "", size = { 1.96, 1.96, 0.192 }, at = { 0, 0, 0.004 } } },
+		IrrigationArch_Copper = {
+			{ mesh = 117821427646952, tex = "", size = { 2.17, 1.042, 0.19 }, at = { 0, 0.521, 0 } },
+		},
 	},
 	-- how long a stage waits for the meshes before it leaves a library prop out (seconds)
 	WaitSeconds = 15,

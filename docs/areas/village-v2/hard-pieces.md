@@ -123,7 +123,7 @@ twice the better one won: the village sheet's wall lantern, hoist sack and ivy c
 wait for the districts they belong to (stalls and shelves for the Market, lamp posts, fences and the fountain for the
 village layout).
 
-## The Garden (sheet drawn 2026-11-17, waiting for the owner's yes; nothing built)
+## The Garden (built 2026-11-17; B10 and B11 built in Blender, uploaded and worn)
 
 The sorting and the 50 steps are in `garden-ladder.md`. No new Meshy piece: everything organic comes from the sheets
 he already sent (`RoseArch_Garden`, `Trellis_Ivy`, `Ivy_Corner`, `PlanterBox_Vines`, the flower boxes, topiaries and

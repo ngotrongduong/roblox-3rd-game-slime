@@ -140,6 +140,14 @@ keeps its stand-in and is named in the review brief as "not to be judged".
   0.9 behind its steel; a portal with a lining deeper than the wall; covers at least 0.3 thick with a valance or a
   roll. Cloth is SmoothPlastic, never Fabric. A plate behind an emblem is dark on glass, the era's cloth on marble.
 - Shoot the flank the review camera hides once, and send it with the five: the reviewer asks for what stands there.
+- Colour in the game's daylight (the Garden's review): lit Neon panes wash out to white, so window gold is deep
+  (about 250, 200, 105); copper under Metal darkens to brown wood, so it starts bright (226, 132, 78); at the marble
+  era every metal ornament is gold, copper beside marble reads rustic.
+- A gate's roof never outweighs the house behind it (3 deep was enough); thatch gets a darker course half way up
+  each slope or it reads as a lid; a vine canopy is a few light clumps with the rafters showing, not a hedge.
+- A new piece of mine is uploaded BEFORE the play test when the owner's cloud place is open, so the one play test
+  judges the real mesh. Play runs on the server's clock (often night): shoot in daylight through a client RenderStep
+  that writes the day's Lighting values, never by setting ClockTime once.
 
 ## 6. Do not
 
@@ -160,5 +168,5 @@ keeps its stand-in and is named in the review brief as "not to be judged".
 |----------|--------|-----------|--------|-------|
 | Pantry -> Granary | `Granary.luau` | `granary-ref-era*.jpg` | in the module's `build` (25 features + 4 store props an era; not yet walked against section 2's step test) | locked 2026-11-16; every piece uploaded and worn 2026-11-17 |
 | Kitchen (cookhouse to grand restaurant) | `Kitchen.luau` | `kitchen-ref-sheet.jpg`, `kitchen-ref-era*.jpg` | `kitchen-ladder.md` (walked on paper; seen at each era's last level, not pair by pair) | locked 2026-11-17 (ChatGPT: likeness 78-88, finish 74-83, before the last edit); every piece uploaded and worn 2026-11-17 |
-| Garden (potting shed to royal palm house, with its windmill) | `Garden.luau` (not written) | `garden-ref-sheet.jpg`, `garden-ref-era*.jpg` | `garden-ladder.md` (on paper) | sheet drawn 2026-11-17, waits for the owner's yes; nothing built |
+| Garden (potting shed to royal palm house, with its windmill) | `Garden.luau` | `garden-ref-sheet.jpg`, `garden-ref-era*.jpg` | `garden-ladder.md` (walked on paper; seen at each era's last level, not pair by pair) | locked 2026-11-17 (ChatGPT: 78-84 an era, 81 overall, before the last edit; the last edit seen in the Edit preview only); B10 and B11 uploaded and worn |
 | Breeding pen, training ground, dock, village pieces | - | - | - | not started |

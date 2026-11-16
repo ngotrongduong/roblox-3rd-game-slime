@@ -1037,3 +1037,42 @@ The village's meshes uploaded and worn for real (2026-11-17, `tools/kit/upload_v
 - **The owner's veto: Meshy straw laid over a slab roof** ("xấu lắm", it showed in patches). Thatch on a slab roof
   is the part-built one (0.9 thick, rolls at the eave and the ridge); a whole Meshy cap on a round tower or silo
   stays.
+
+The Garden, the third landmark (2026-11-17, `src/server/Garden.luau`, `src/client/WindTurn.client.luau`)
+- **Upload the new Blender pieces BEFORE the play test when the owner's cloud place is already open**
+  (`list_roblox_studios` shows it): `upload_village_pieces.js` skips what `village_ids.json` has, so two new FBX files
+  go up in a minute and the one play test shows the real meshes, not stand-ins.
+- **A play test at night proves nothing about colour**: `client/DayNight` sets the light ten times a second from the
+  server's clock, so setting `Lighting.ClockTime` once does not hold. For the shots, read the place's own day from the
+  Server datamodel (`ClockTime`, `Brightness`, both ambients, the Atmosphere's `Color` and `Decay`) and write them on
+  the Client in a `BindToRenderStep` at `RenderPriority.Last + 5`; it ends with the play test.
+- **A later era must not stand lower than the one before it**: the era 4 greenhouse (top 13.9) was lower than the
+  era 3 house. Measure each era's top in the preview before any review; a clerestory (glass between the aisle's roof
+  and the vault) gives height without a wider footprint.
+- **A Meshy dormer is held at its back and is deeper than a steep roof allows**: place it by the roof's pitch (its
+  foot on the slope, its ridge meeting the slope) and squeeze its depth to that run, or it is buried to the window.
+- **Leaf slabs with the LeafyGrass skin read as a mossy lid** from the play camera (and show autumn leaves): a canopy
+  is round clumps (`b.ball`) in `Grass`, two greens, heights staggered.
+- **Light cloth is never `Fabric`** (again: cream sails came out slate grey): `SmoothPlastic`.
+- **The map's own scenery stands inside the landmark's rows**: the garden's sign (map scenery at x -9 outside the
+  front fence) stood in a flower box. In the play test, list what the area holds besides `AreaStage` and measure it
+  against the row (`PointToObjectSpace`), then leave its place free.
+- **A thing that turns is a sub-Model tagged "Turn" with `TurnSpeed`** (degrees a second round its pivot's z); one
+  client script turns every one within 150 studs at 30 Hz. Prove it in Play by reading the pivot twice half a second
+  apart (13.5 degrees at speed 28), not by two screenshots.
+- **One camera for all five eras, set once**: `_G.ShotAt(1, 1, (-9, 24, -38), (2, 5, 9))` for the garden cell; the
+  first shot from farther off had to be taken again.
+- **ChatGPT's one review (81 of 100 overall; 79, 84, 78, 81, 84 by era) and what held against the code**: of its
+  points, four asked for what was built but hidden (era 3 pilasters and arch stones behind the rose arch and the ivy,
+  the bed's gold trim, the header pipe, the goo tank). An ornament that covers the architecture hides the work the
+  reviewer wants to see: say so in the brief, or shoot once without it.
+- **A request for a new floor an era was not taken**: the owner chose the stud look for floors, the map owns the
+  soil floor, and the path already changes per tier. A review point against a standing rule of his is dropped and
+  named in the report.
+- **Lit window gold washes out to white in daylight**: the Kitchen's pale Neon panes read white here;
+  (250, 200, 105) keeps the gold, with the room's own light dimmed (0.9 to 0.6).
+- **Copper under `Metal` reads as brown wood** when it starts dull; (226, 132, 78) reads copper. At the marble era the
+  same hoops in copper looked rustic: every metal ornament there is gold.
+- **A gate roof as deep as 3.6 outweighed the first house**: 3 deep, and the era-5 crown at 0.85, leave the eye on
+  the house. Thatch slabs got a darker `Sand` roll half way up each slope (a flat slab reads as a lid), bare sail
+  cloths got laths, and nine dark canopy balls became six lighter ones with gaps so the rafters show.

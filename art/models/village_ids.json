@@ -204,5 +204,19 @@
 		"pieces": {
 			"VentHood_Copper": 110062836024957
 		}
+	},
+	"IrrigationArch": {
+		"model": 136165005300713,
+		"texture": 0,
+		"pieces": {
+			"IrrigationArch_Copper": 117821427646952
+		}
+	},
+	"WindWheel": {
+		"model": 122010207310829,
+		"texture": 0,
+		"pieces": {
+			"WindWheel_Blades": 130921108933275
+		}
 	}
 }

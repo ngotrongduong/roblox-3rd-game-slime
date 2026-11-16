@@ -3,9 +3,10 @@
 Skill `landmark-build`, steps 2 and 3. Reference: `garden-ref-sheet.jpg` and `garden-ref-era1.jpg` ... `era5.jpg` in
 this folder (ChatGPT chat `/c/6afb4b95-2914-83ec-b096-95f99182ce68`, 2026-11-17; its second sheet, drawn with the
 village's three concept paintings, the Granary at eras 2 and 4 and the Kitchen's sheet as references, at the owner's
-word; the first, from the Kitchen's sheet alone, is `art/inbox/garden_ref_sheet.webp`). **Waiting for the owner's
-yes on the sheet; nothing is built before it.** It will be built as `src/server/Garden.luau`, called from
-`GardenStages.build`.
+word; the first, from the Kitchen's sheet alone, is `art/inbox/garden_ref_sheet.webp`). The owner approved the
+sheet on 2026-11-17 ("Duyệt, dựng đi"); it is built as `src/server/Garden.luau`, called from `GardenStages.build`,
+and was seen in a play test at levels 10, 20, 30, 40 and 50 (`review/garden-play-l*.jpg`); after ChatGPT's one
+review and the last edit it was seen in the Edit preview (`review/garden-final-l*.jpg`).
 
 ## The place
 
@@ -28,9 +29,10 @@ places, so it reads as one garden:
 | 4 slime tech | 31-40 | black steel and teal glass, a vaulted greenhouse, copper pipes, green goo, a steel wind wheel |
 | 5 capital | 41-50 | white marble and gold, columns and a pediment, blue glass domes, blue and gold sails |
 
-The fence today is x -18..18, z -12..21, the beds x -13..13, z -3..14.5. The house and the tower stand behind the
-beds: the area grows once at the back when they need it (an area may grow, never shrink); the size is measured at
-the build. The compost corner (back left) gives way to the tower and moves along the fence.
+The fence was x -18..18, z -12..21, the beds x -13..13, z -3..14.5. The house and the tower stand behind the
+beds, so the area grew once at the back, for every level (an area may grow, never shrink): the fence is now
+x -18..18, z -12..28.5. The compost corner (back left) gave way to the tower and moved along the fence. The map's
+own garden sign stands outside the front fence at x -9, so the row of flower boxes there leaves its place free.
 
 ## The ladder
 

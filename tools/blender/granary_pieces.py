@@ -1,5 +1,5 @@
-# The Granary's regular hard pieces (docs/areas/village-v2/hard-pieces.md, B1-B7) and the Kitchen's two (B8, B9), built
-# by script, no textures.
+# The Granary's regular hard pieces (docs/areas/village-v2/hard-pieces.md, B1-B7), the Kitchen's two (B8, B9) and the
+# Garden's two (B10, B11), built by script, no textures.
 # Owner 2026-11-16: "những khối và hình mà khó dựng thì hoặc là bạn tự dựng trên blender rồi ghép vào, hoặc để tôi tự dựng".
 # 1 Blender unit = 1 stud, Z up (Roblox +Y after export). Every object of a piece is one colour slot (the game paints it);
 # the preview paints the slots flat. Run: tools/blender/granary_pieces.ps1. Out: art/models/granary/blender/.
@@ -20,7 +20,7 @@ COL = {
 	"Tiles": (0.75, 0.25, 0.2), "Finial": (0.9, 0.68, 0.2), "Glass": (0.45, 0.8, 0.85), "Frame": (0.25, 0.3, 0.33),
 	"Shell": (0.2, 0.35, 0.8), "Gold": (0.9, 0.68, 0.2), "Shaft": (0.93, 0.9, 0.82), "Base": (0.9, 0.68, 0.2),
 	"Capital": (0.9, 0.68, 0.2), "Run": (0.93, 0.9, 0.82), "Post": (0.93, 0.9, 0.82), "Urn": (0.9, 0.68, 0.2),
-	"Elbow": (0.78, 0.45, 0.25), "Flange": (0.9, 0.68, 0.2), "Wheel": (0.9, 0.68, 0.2),
+	"Elbow": (0.78, 0.45, 0.25), "Flange": (0.9, 0.68, 0.2), "Wheel": (0.9, 0.68, 0.2), "Blades": (0.6, 0.42, 0.26),
 }
 
 
@@ -315,8 +315,61 @@ def vent_hood():
 	return [("VentHood_Copper", m, (0, 0, 0), "Elbow", 40)]
 
 
+def wind_wheel():
+	# the Garden's (ladder step 10): a many-bladed farm wind wheel of radius 1, held at its hub, its face to the front.
+	# Twelve pitched blades that widen outward, two hoops through them, six spokes behind, a short hub.
+	m = M()
+	blades, r0, r1, pitch, ht = 12, 0.24, 0.98, math.radians(24), 0.012
+	for k in range(blades):
+		a = TAU * k / blades
+		rad, tan = Vector((math.cos(a), math.sin(a), 0)), Vector((-math.sin(a), math.cos(a), 0))
+		secs = []
+		for r, hw in ((r0, 0.045), (r1, 0.2)):
+			sec = []
+			for w, t in ((-hw, -ht), (hw, -ht), (hw, ht), (-hw, ht)):
+				w2, t2 = w * math.cos(pitch) - t * math.sin(pitch), w * math.sin(pitch) + t * math.cos(pitch)
+				sec.append(tuple(rad * r + tan * w2 + Vector((0, 0, t2))))
+			secs.append(sec)
+		sweep(m, secs)
+	for r in (0.36, 0.8):
+		lathe(m, [(r - 0.022, -0.025), (r + 0.022, -0.025), (r + 0.022, 0.025), (r - 0.022, 0.025)], 24, loop=True)
+	for j in range(6):
+		a = TAU * (j + 0.5) / 6
+		box(m, (0.44 * math.cos(a), 0.44 * math.sin(a), -0.07), (0.74, 0.05, 0.04), a)
+	lathe(m, [(0.13, -0.1), (0.13, 0.06)], 12, cap_bottom=True, cap_top=True)
+	xform(m, (0, len(m.v)), lambda p: (p[0], p[2], p[1]))  # stand it up: face towards the front, thickness along Y
+	return [("WindWheel_Blades", m, (0, 0, 0), "Blades", 40)]
+
+
+def irrigation_arch():
+	# the Garden's (ladder step 36): a copper hoop over a bed, half a span of 1 and 1 high (the game stretches it), held
+	# at the middle of its foot: a tube, a collar at each foot, three sprinkler heads that point at the bed
+	m = M()
+	pr, seg, sides = 0.042, 14, 6
+	idx = []
+	for k in range(seg + 1):
+		th = math.pi * k / seg
+		nn = Vector((math.cos(th), 0, math.sin(th)))
+		i0 = m.add([tuple(nn + pr * (math.cos(TAU * i / sides) * nn + math.sin(TAU * i / sides) * Vector((0, 1, 0))))
+			for i in range(sides)])
+		idx.append(list(range(i0, i0 + sides)))
+	for a, b in zip(idx, idx[1:]):
+		bridge(m, a, b, sides)
+	for s in (-1, 1):
+		rng = lathe(m, [(0.085, 0.0), (0.085, 0.07), (0.05, 0.1)], 8, cap_bottom=True, cap_top=True)
+		xform(m, rng, lambda p: (p[0] + s, p[1], p[2]))
+	for deg in (48, 90, 132):
+		th = math.radians(deg)
+		base = Vector((math.cos(th), 0, math.sin(th))) * (1 - pr * 0.5)
+		d, e = Vector((-math.cos(th), 0, -math.sin(th))), Vector((-math.sin(th), 0, math.cos(th)))
+		rng = lathe(m, [(0.03, 0.0), (0.03, 0.07), (0.095, 0.13), (0.095, 0.16)], 8, cap_bottom=True, cap_top=True)
+		xform(m, rng, lambda p: tuple(base + d * p[2] + e * p[0] + Vector((0, p[1], 0))))
+	return [("IrrigationArch_Copper", m, (0, 0, 0), "Elbow", 50)]
+
+
 PIECES = [("ConeRoof", cone_roof), ("GlassDome", glass_dome), ("RoyalDome", royal_dome), ("Column", column),
-	("Balustrade", balustrade), ("Pipe", pipe), ("Gear", gear), ("ChimneyCrown", chimney_crown), ("VentHood", vent_hood)]
+	("Balustrade", balustrade), ("Pipe", pipe), ("Gear", gear), ("ChimneyCrown", chimney_crown), ("VentHood", vent_hood),
+	("WindWheel", wind_wheel), ("IrrigationArch", irrigation_arch)]
 
 
 # ---------------------------------------------------------------- Blender side

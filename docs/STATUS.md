@@ -1,23 +1,35 @@
 # Status
 
-## 2026-11-17 — the Garden, the third landmark: reference drawn, ladder and shape sorting written, nothing built
+## 2026-11-17 — the Garden landmark built, play-tested, reviewed once and locked
 
-- The owner chose it ("Dựng Garden"). **Reference** (ChatGPT chat `/c/6afb4b95-2914-83ec-b096-95f99182ce68`):
-  `docs/areas/village-v2/garden-ref-sheet.jpg`, cut into `garden-ref-era1..5.jpg`. The first sheet used the Kitchen's
-  sheet alone as the style lock; the owner asked for the other buildings as references too, so the second (the one
-  kept) was drawn with the three village concept paintings, the Granary at eras 2 and 4 and the Kitchen's sheet:
-  taller house and mill, more detail. Sent to him; **he has not said yes yet: nothing is built before it.**
-- **The plan** (`garden-ladder.md`): one garden at every era: the two open beds (crops, work spots and markers stay),
-  the gate in the front fence, the garden house across the back with an open front (potting shed, orangery,
-  greenhouse, palm house), the water tower with a turning wheel in the back left corner (well, windmill). 50 steps
-  walked on paper against the step test; 25 features.
-- **Shapes** (`hard-pieces.md`): no new Meshy piece (his sheets cover it); two new Blender pieces
-  (`WindWheel_Blades`, `IrrigationArch_Copper`), eight reused.
-- **Verified**: nothing in the game; these are pictures and a plan. No code changed.
-- **Next**: on his yes, build `src/server/Garden.luau` on `Architecture` by skill `landmark-build` from step 4 (the
-  area grows once at the back for the house and the tower; the compost corner moves), the two Blender pieces, the
-  Edit preview, one play test, ChatGPT's one review, the upload of the two new pieces through "Slime". Still open:
-  the Granary's 50 steps against the step test (postponed by him), breeding pen, training ground, dock, the layout.
+- The owner approved the sheet ("Duyệt, dựng đi"; reference `docs/areas/village-v2/garden-ref-sheet.jpg`,
+  `garden-ref-era1..5.jpg`, ChatGPT chat `/c/6afb4b95-2914-83ec-b096-95f99182ce68`). Built by skill `landmark-build`,
+  steps 4-9.
+- **What is in the game**: `src/server/Garden.luau` on `Architecture`, called from `GardenStages.build` (which keeps
+  the map's floor, the beds, the crops, the work spots and the four prop slots). One garden at every era: the gate in
+  the front fence, the garden house across the back with an open front a player walks into (potting shed, tiled
+  cottage, stone orangery with a half-timbered storey, steel and glass greenhouse, marble palm house under a blue
+  dome), the water tower in the back left corner (well, trestle, windmill) with a wheel that turns
+  (`src/client/WindTurn.client.luau`: any sub-Model tagged "Turn"). The area grew once at the back, for every level:
+  the fence is x -18..18, z -12..28.5. 50 steps as in `garden-ladder.md`.
+- **Pieces**: two new Blender pieces, `WindWheel_Blades` (B10) and `IrrigationArch_Copper` (B11), built by
+  `tools/blender/granary_pieces.py`, uploaded through the owner's cloud place and worn (ids in `Config` and
+  `art/models/village_ids.json`); eight Blender pieces reused; the rest from the owner's Meshy sheets. No new Meshy
+  piece.
+- **Verified**: `tools\check.ps1` CHECK OK (827 tests), `tools\types.ps1 src/server` TYPES OK. One play test in
+  StudioTest at levels 10, 20, 30, 40, 50 with the real meshes: no Garden error in the console, the rotor turns
+  (13.5 degrees in half a second at speed 28), `review/garden-play-l*.jpg`.
+- **ChatGPT's one review**: 81 of 100 overall (79, 84, 78, 81, 84 by era), "approve the overall design, targeted
+  polish". **Taken** in the one last edit: a darker course on the era-1 thatch (gate and house), the gate's roof 3
+  deep instead of 3.6, laths on the era-2 sails, a darker brick red at era 3, a lighter pergola canopy with gaps,
+  deeper window gold and a dimmer house light, brighter copper at era 4, gold irrigation hoops and a smaller gate
+  crown at era 5, bigger gold urns on the balustrade. **Left**: a new floor an era (his stud look, the map's soil
+  floor), new goo tanks and bed pipes (outside the ladder), and four points that are already built but hidden behind
+  the rose arch and the ivy.
+- **Not verified**: the last edit was seen in the Edit preview only (`review/garden-final-l*.jpg`), not in a second
+  play test; the 50 steps were seen at each era's last level, not pair by pair; nobody has played it on a phone.
+- **Next** (his to choose): the breeding pen, the training ground or the dock by the same skill; the village's
+  layout; the Granary's 50 steps against the step test (postponed by him).
 
 ## 2026-11-17 — the Kitchen landmark built, reviewed once and locked; the owner's 80 sheet pieces cut and fitted
 
