@@ -1,5 +1,21 @@
 # Status
 
+## 2026-11-17 — the Dock: the five-era sheet and the ladder; nothing built, the sheet waits for the owner's word
+
+- The owner chose the dock as the next landmark ("Bến tàu"). Skill `landmark-build`, steps 1-3: ChatGPT's first
+  sheet (new chat `/c/6afb9646-8c94-83ec-883d-ece4941c74f5`, with the Training Hall's and the Garden's sheets and
+  the village's three concept paintings) is `docs/areas/village-v2/dock-ref-sheet.jpg`, cut into
+  `dock-ref-era1..5.jpg`, and was sent to him.
+- His note on it, the same hour: the pond is drawn small, in the village it must be bigger, "không phải chỉ là cái
+  hồ bé tí". So the sheet is the model for the buildings only: the pond keeps the game's size (about 52 studs
+  across, twice the sheet's) and its two new lobes; the boathouse stands on the back bank, taking no water.
+- The plan, the 50 steps and the shape sorting are in `docs/areas/village-v2/dock-ladder.md`: the boathouse across
+  the back bank with its water side open, the lighthouse at its left end (its five forms carry levels 10, 20, 30,
+  40, 50), the round fish emblem on the gable, the pier and its boat in front. One new Blender piece (B15
+  `FishEmblem`, `hard-pieces.md`), no new Meshy piece.
+- **Next**: his yes on the sheet; then steps 4-9 (module `src/server/Boathouse.luau` on `Architecture`, called from
+  `PondStages.build`; measure the back bank first: it may need the ground grown once at the back).
+
 ## 2026-11-17 — the Training Hall landmark built, play-tested, reviewed once and locked
 
 - The owner approved the sheet ("Duyệt, dựng đi"). Built by skill `landmark-build`, steps 4-9.
