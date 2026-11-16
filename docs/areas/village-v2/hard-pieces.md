@@ -152,6 +152,19 @@ The egg is worn 1.1 times as wide and 0.85 times as tall as it was modelled, the
 Reused: B1 (the turret's cap, the egg's thatch and tile collars), B2 (the boiler's cap), B3 (the two wing domes),
 B4 and B5 (columns, the balustrade fence), B6 (pipes), B7 (the gate's gear), B8 (the egg's crown).
 
+## The Training Hall (planned 2026-11-17; nothing built, the sheet waits for the owner's word)
+
+The sorting and the 50 steps are in `training-ladder.md`. No new Meshy piece: the lookout's thatch cap, lanterns,
+flower boxes, pillars, banners, the goo tank and its valve, urns, the laurel and the finials all come from the
+sheets he already sent.
+
+| # | Piece (Blender, new) | Era | Replaces | Shown from |
+|---|----------------------|-----|----------|------------|
+| B14 | `ShieldEmblem`: a round domed shield with a boss (`_Disc`), its raised rim (`_Rim`), two crossed swords with blades and hilts apart (`_Blades`, `_Hilts`) | 1-5 (wood; blue in a gold rim; iron; steel with a green rim; gold) | a flat disc with two crossed bars | the hall's emblem (2), the gate's small one |
+
+Reused: B1 (the tower's cone caps at eras 2 and 3), B2 (the goo tower's cap), B3 (the tower's dome at 50), B4 and
+B5 (columns, the balustrade fence and roof), B6 (pipes).
+
 ## Other districts
 
 Listed when each district is rebuilt.

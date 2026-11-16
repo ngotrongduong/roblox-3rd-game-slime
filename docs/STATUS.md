@@ -1,5 +1,19 @@
 # Status
 
+## 2026-11-17 — the Training Hall: the five-era sheet and the ladder; nothing built, the sheet waits for the owner
+
+- The owner chose the training ground as the next landmark ("Sân huấn luyện"). Skill `landmark-build`, steps 1-3:
+  ChatGPT's first sheet (new chat `/c/6afb80dc-3ab0-83ec-841b-48264f101756`, with the Breeding House's and the
+  Kitchen's sheets and the village's three concept paintings) is `docs/areas/village-v2/training-ref-sheet.jpg`,
+  cut into `training-ref-era1..5.jpg`, and was sent to him.
+- The plan, the 50 steps and the shape sorting are in `docs/areas/village-v2/training-ladder.md`: the hall across
+  the back with its open front, the banner tower at its right end (its five forms carry levels 10, 20, 30, 40, 50),
+  the round shield with crossed swords as the emblem. One new Blender piece (B14 `ShieldEmblem`, `hard-pieces.md`),
+  no new Meshy piece.
+- **Next: on his yes**, step 4 of the skill: `src/server/TrainingHall.luau` on `Architecture`, called from
+  `TrainingStages.build`; the ground grows once at the back for every level; today's stands, canopy and scoreboard
+  go, the hall takes their job. Nothing is built before his word.
+
 ## 2026-11-17 — the Breeding House landmark built, play-tested, reviewed once and locked
 
 - The owner approved the sheet ("Duyệt, dựng đi"; reference `docs/areas/village-v2/breeding-ref-sheet.jpg`,
