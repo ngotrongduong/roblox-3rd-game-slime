@@ -35,6 +35,14 @@
   50 steps were seen at each era's last level, not pair by pair; nobody has played it on a phone.
 - **Next** (his to choose): the breeding pen, the training ground or the dock by the same skill; the village's
   layout; the Granary's 50 steps against the step test (postponed by him).
+- **Hand-over (the session ended here at his word, 2026-11-17)**: a new session reads this entry, then skill
+  `landmark-build` (it now holds the Garden's lessons, step 12 for his notes on a finished landmark, and the rule
+  "no ornament across an entrance"). Commits `875e2e1` (Garden) and `730f6d7` (rose arch out) plus the hand-over
+  commit are on `main`, not pushed. Uncommitted files of OTHER sessions stay untouched (arena and dungeon code,
+  `art/vfx/*`, `docs/ui/dungeon/*`, `art/models/monsters/*.json`, `art/models/accessories/fantasy_wings/`).
+  StudioTest was left in Play with the garden at level 50 (his session; a restart clears it); both preview folders
+  are destroyed; the cloud place "Slime" was never saved. The picture server (`tools/chatgpt/serve.py`, port 18923)
+  dies with the session: start it again before any ChatGPT job.
 
 ## 2026-11-17 — the Kitchen landmark built, reviewed once and locked; the owner's 80 sheet pieces cut and fitted
 

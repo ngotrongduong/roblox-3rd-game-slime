@@ -1,6 +1,6 @@
 ---
 name: landmark-build
-description: Use when a village building of Goo Lineage V2 that upgrades through its 50 levels is built or rebuilt as a landmark (the Granary is done; kitchen, garden, breeding pen, training ground, dock and the village's own pieces follow), when its upgrade ladder is planned or judged, when a shape is too hard for Roblox parts and must go to Blender or the owner's Meshy, or before changing src/server/Architecture.luau or a landmark module such as Granary.luau.
+description: Use when a village building of Goo Lineage V2 that upgrades through its 50 levels is built or rebuilt as a landmark (the Granary, the Kitchen and the Garden are done; breeding pen, training ground, dock and the village's own pieces follow), when the owner sends a note on a finished landmark, when its upgrade ladder is planned or judged, when a shape is too hard for Roblox parts and must go to Blender or the owner's Meshy, or before changing src/server/Architecture.luau or a landmark module such as Granary.luau.
 ---
 
 # Landmark build: one village building, from reference to locked
@@ -53,7 +53,11 @@ Each step has its gate. Do not start a step before the gate of the one before it
    against the reference (section 5) and fix. Destroy the preview folders at the close.
 7. **One play test** (StudioTest only): `tools\map\sync_all.ps1 -StudioId <id>` (the whole game, so Config and every
    module of the chain are fresh), `_G.AreaShow` at the last level of each era (`task.wait(1.5)` in the same call,
-   then the shot), read the console. It shows the STAND-INS (every `mesh` is 0 until the owner's import).
+   then the shot), read the console. When the owner's cloud place is already open (`list_roblox_studios` shows
+   "Slime"), do step 11's upload of the new Blender pieces FIRST, so this one play test shows the real meshes;
+   otherwise it shows the stand-ins (`mesh = 0`). Play follows the server's clock and is often night: the shots
+   are taken in daylight through a client `BindToRenderStep` that writes the day's Lighting values (LESSONS, "The
+   Garden"), unbound again before the owner gets Studio back. One camera for all five eras, set once.
    *Gate: no error, the look holds in the game's light.*
 8. **ONE ChatGPT review, at the end** (the owner's requirement; my own way first): the five era shots from the Edit
    preview (the pieces on; closer than the self-review shots, the building filling half the frame), sent in the chat
@@ -71,6 +75,13 @@ Each step has its gate. Do not start a step before the gate of the one before it
     `server/LibraryKit` turns it back: look at ONE piece with a front, alone, from both sides, first. Then
     `tools/map/real_kit_preview.luau` + the preview tool, one shot an era (ONE `screen_capture` a message), one
     play test, the checks. Never save the cloud place.
+12. **The owner's notes after the lock** (he plays it and sends a picture with one line): do exactly what the note
+    says, at every level it touches, the same turn. A piece he takes out leaves its ladder row empty: give that row
+    its next-best step at once (the Garden's rose arch became two clipped bushes in pots, a piece of his own
+    sheets) and say so; fix the ladder file, `hard-pieces.md` and STATUS in the same commit. Show it in the game:
+    if Studio is in Play (he is in it), stop it, `sync_all.ps1`, start it, `_G.AreaShow` at the levels the note
+    touches, one shot each, then give the camera back (`CameraType = Custom`, the RenderStep unbound) and leave
+    Play running. Types and check before the commit, as always. No ChatGPT round for a note of his.
 
 ## 2. The upgrade ladder (the owner's rules, 2026-11-16)
 
@@ -145,10 +156,6 @@ keeps its stand-in and is named in the review brief as "not to be judged".
   era every metal ornament is gold, copper beside marble reads rustic.
 - A gate's roof never outweighs the house behind it (3 deep was enough); thatch gets a darker course half way up
   each slope or it reads as a lid; a vine canopy is a few light clumps with the rafters showing, not a hedge.
-- A new piece of mine is uploaded BEFORE the play test when the owner's cloud place is open, so the one play test
-  judges the real mesh. Play runs on the server's clock (often night): shoot in daylight through a client RenderStep
-  that writes the day's Lighting values, never by setting ClockTime once.
-
 ## 6. Do not
 
 - No model, however small, before its reference picture. No whole building from Meshy or Tripo.
@@ -160,6 +167,12 @@ keeps its stand-in and is named in the review brief as "not to be judged".
   place, which he opens (step 11).
 - No Meshy straw laid over a slab roof (the owner, 2026-11-17: "xấu lắm", it shows in patches): slab roofs keep the
   part-built thatch with rolls; a whole Meshy cap on a round tower or silo is fine.
+- No ornament across a building's best face, and no big cartoon piece in front of a finished entrance (the owner
+  took the Meshy rose arch out of the Garden, 2026-11-17: "trông nó không hợp với khu vườn này"; it also hid the
+  arch stones and pilasters the reviewer then asked for). A sheet piece is worn only where it suits the building's
+  own style; ornaments stand beside a door, never over it.
+- No review point taken against a standing rule of his (a new floor an era against the stud look): drop it and
+  name it in the report.
 - No text, numbers or signs on a building unasked; no baked highlights; nothing copied from another game.
 
 ## 7. Ledger
@@ -168,5 +181,5 @@ keeps its stand-in and is named in the review brief as "not to be judged".
 |----------|--------|-----------|--------|-------|
 | Pantry -> Granary | `Granary.luau` | `granary-ref-era*.jpg` | in the module's `build` (25 features + 4 store props an era; not yet walked against section 2's step test) | locked 2026-11-16; every piece uploaded and worn 2026-11-17 |
 | Kitchen (cookhouse to grand restaurant) | `Kitchen.luau` | `kitchen-ref-sheet.jpg`, `kitchen-ref-era*.jpg` | `kitchen-ladder.md` (walked on paper; seen at each era's last level, not pair by pair) | locked 2026-11-17 (ChatGPT: likeness 78-88, finish 74-83, before the last edit); every piece uploaded and worn 2026-11-17 |
-| Garden (potting shed to royal palm house, with its windmill) | `Garden.luau` | `garden-ref-sheet.jpg`, `garden-ref-era*.jpg` | `garden-ladder.md` (walked on paper; seen at each era's last level, not pair by pair) | locked 2026-11-17 (ChatGPT: 78-84 an era, 81 overall, before the last edit; the last edit seen in the Edit preview only); B10 and B11 uploaded and worn |
+| Garden (potting shed to royal palm house, with its windmill) | `Garden.luau` | `garden-ref-sheet.jpg`, `garden-ref-era*.jpg` | `garden-ladder.md` (walked on paper; seen at each era's last level, not pair by pair) | locked 2026-11-17 (ChatGPT: 78-84 an era, 81 overall, before the last edit; the last edit seen in the Edit preview only); B10 and B11 uploaded and worn; the rose arch taken out at the owner's word, step 19 is two bush pots (seen in Play at 30 and 50) |
 | Breeding pen, training ground, dock, village pieces | - | - | - | not started |
