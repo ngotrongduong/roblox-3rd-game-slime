@@ -5,13 +5,16 @@
 local L = require(game.ReplicatedStorage.Shared.Layout)
 local p = game.Players:GetPlayers()[1] or game.Players.PlayerAdded:Wait()
 local char = p.Character or p.CharacterAdded:Wait()
-workspace.Map.Plot5:WaitForChild("PantryL1")
+-- the player's own plot: it is not always 5 (after a restart it was 1 and a fixed Plot5 hung this script)
+local PLOT = p:GetAttribute("Plot") or 5
+local plot = workspace.Map:WaitForChild("Plot" .. PLOT)
+plot:WaitForChild("PantryL1")
 task.wait(1)
-char:PivotTo(L.plotFrame(5) * CFrame.new(0, 5, -110))
+char:PivotTo(L.plotFrame(PLOT) * CFrame.new(0, 5, -110))
 char.Humanoid.WalkSpeed = 0
 _G.AreaShow = function(modName: string, areaName: string, col: number, row: number, level: number)
-	local a = workspace.Map.Plot5[areaName]
-	local f = L.plotAreaFacing(5, col, row) * CFrame.new(0, 2, 0)
+	local a = plot[areaName]
+	local f = L.plotAreaFacing(PLOT, col, row) * CFrame.new(0, 2, 0)
 	local M = require(game.ServerScriptService:FindFirstChild(modName, true))
 	for _, c in a:GetChildren() do
 		if c.Name == "AreaStage" then

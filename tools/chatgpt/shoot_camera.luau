@@ -5,7 +5,8 @@
 local RS = game:GetService("RunService")
 local L = require(game.ReplicatedStorage.Shared.Layout)
 _G.ShotAt = function(col: number, row: number, eye: Vector3, target: Vector3)
-	local f = L.plotAreaFacing(5, col, row) * CFrame.new(0, 2, 0)
+	local plot = game.Players.LocalPlayer:GetAttribute("Plot") or 5
+	local f = L.plotAreaFacing(plot, col, row) * CFrame.new(0, 2, 0)
 	_G.ShotCF = CFrame.lookAt((f * CFrame.new(eye)).Position, (f * CFrame.new(target)).Position)
 end
 _G.ShotCF = workspace.CurrentCamera.CFrame
