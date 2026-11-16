@@ -433,5 +433,148 @@
    }
   },
   "triangles": 456
+ },
+ "EggDome": {
+  "objects": {
+   "EggDome_Shell": {
+    "size_studs_xyz": [
+     2.0,
+     1.9,
+     2.0
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     0.95,
+     0.0
+    ],
+    "triangles": 400,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 4.156
+   },
+   "EggDome_Spots": {
+    "size_studs_xyz": [
+     1.957,
+     1.267,
+     1.948
+    ],
+    "centre_studs_xyz": [
+     -0.003,
+     1.035,
+     -0.004
+    ],
+    "triangles": 384,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 0.038
+   },
+   "EggDome_Ribs": {
+    "size_studs_xyz": [
+     2.1,
+     1.862,
+     2.1
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     0.916,
+     0.0
+    ],
+    "triangles": 528,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 0.061
+   },
+   "EggDome_Bands": {
+    "size_studs_xyz": [
+     2.12,
+     1.65,
+     2.12
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     1.075,
+     0.0
+    ],
+    "triangles": 480,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 0.121
+   }
+  },
+  "triangles": 1792
+ },
+ "HeartEmblem": {
+  "objects": {
+   "HeartEmblem_Rim": {
+    "size_studs_xyz": [
+     2.02,
+     1.845,
+     0.3
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     -0.003,
+     0.0
+    ],
+    "triangles": 480,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 0.205
+   },
+   "HeartEmblem_Heart": {
+    "size_studs_xyz": [
+     1.8,
+     1.625,
+     0.44
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     -0.003,
+     0.0
+    ],
+    "triangles": 640,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 0.553
+   },
+   "HeartEmblem_Egg": {
+    "size_studs_xyz": [
+     0.808,
+     1.0,
+     0.54
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     0.06,
+     0.0
+    ],
+    "triangles": 240,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 0.292
+   }
+  },
+  "triangles": 1360
  }
 }

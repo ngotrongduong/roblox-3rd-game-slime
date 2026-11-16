@@ -66,7 +66,8 @@ AreaStages.Specs = {
 		label = "Breeding Pen",
 		floor = { "PenFloor", "IncubatorPad" },
 		frame = {},
-		-- (the pen of the village scale, BreedingStages: x -17 .. 25, z -19 .. 19)
+		-- (the pen of the village scale, BreedingStages: x -17 .. 25, z -19 .. 19; the Breeding House carries its
+		-- fence back to z 30)
 		benches = { { -12, -16.5, 0 } },
 		lamps = { { -1, -20.4 }, { 9, -20.4 } },
 		crate = { 22.8, -16, 0 },
@@ -74,9 +75,9 @@ AreaStages.Specs = {
 		trim = {
 			{ -17, -19, 0, -19 },
 			{ 8, -19, 25, -19 },
-			{ -17, 19, 25, 19 },
-			{ -17, -19, -17, 19 },
-			{ 25, -19, 25, 19 },
+			{ -17, 30, 25, 30 },
+			{ -17, -19, -17, 30 },
+			{ 25, -19, 25, 30 },
 		},
 		prompt = { 4, -21 },
 	},

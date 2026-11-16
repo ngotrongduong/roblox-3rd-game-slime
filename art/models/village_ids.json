@@ -218,5 +218,24 @@
 		"pieces": {
 			"WindWheel_Blades": 130921108933275
 		}
+	},
+	"EggDome": {
+		"model": 116345348135652,
+		"texture": 0,
+		"pieces": {
+			"EggDome_Bands": 94619901701614,
+			"EggDome_Ribs": 73371878916612,
+			"EggDome_Shell": 94059752117520,
+			"EggDome_Spots": 116017624112093
+		}
+	},
+	"HeartEmblem": {
+		"model": 112960964433763,
+		"texture": 0,
+		"pieces": {
+			"HeartEmblem_Egg": 87029284867655,
+			"HeartEmblem_Heart": 95188600262517,
+			"HeartEmblem_Rim": 82531523818942
+		}
 	}
 }

@@ -1,6 +1,6 @@
 ---
 name: landmark-build
-description: Use when a village building of Goo Lineage V2 that upgrades through its 50 levels is built or rebuilt as a landmark (the Granary, the Kitchen and the Garden are done; breeding pen, training ground, dock and the village's own pieces follow), when the owner sends a note on a finished landmark, when its upgrade ladder is planned or judged, when a shape is too hard for Roblox parts and must go to Blender or the owner's Meshy, or before changing src/server/Architecture.luau or a landmark module such as Granary.luau.
+description: Use when a village building of Goo Lineage V2 that upgrades through its 50 levels is built or rebuilt as a landmark (the Granary, the Kitchen, the Garden and the Breeding House are done; training ground, dock and the village's own pieces follow), when the owner sends a note on a finished landmark, when its upgrade ladder is planned or judged, when a shape is too hard for Roblox parts and must go to Blender or the owner's Meshy, or before changing src/server/Architecture.luau or a landmark module such as Granary.luau.
 ---
 
 # Landmark build: one village building, from reference to locked
@@ -156,6 +156,17 @@ keeps its stand-in and is named in the review brief as "not to be judged".
   era every metal ornament is gold, copper beside marble reads rustic.
 - A gate's roof never outweighs the house behind it (3 deep was enough); thatch gets a darker course half way up
   each slope or it reads as a lid; a vine canopy is a few light clumps with the rafters showing, not a hedge.
+- The roof's big ornament (the Breeding House's egg): measure its width against its height on the sheet before
+  modelling, it is drawn broader than one thinks; a wrong proportion is mended by a non-uniform scale, with no new
+  upload. On a drum it sits sunk to its widest; on a low house it stands in a collar cone of the roof's own cover.
+- A cone on a gabled roof is never wider than the hall is deep (its rim comes out through the gable), and the cone
+  mesh is 1.19 times its nominal height: read a hidden tip's top from the preview.
+- Nothing stands in front of the emblem (a flower box hid the heart); an emblem is wider than tall.
+- Stand-in previews of the new Blender pieces settle size and place BEFORE the upload; then one upload.
+- Pink and violet in the game's light: a warm light rose under Wood (a cool pink turns purple); lit spots a
+  blue-violet Neon (violet glows magenta); marble a shade off white (242, 239, 232).
+- The carry holds five pictures: say the hidden flank in one clause of the brief when a sixth does not fit.
+
 ## 6. Do not
 
 - No model, however small, before its reference picture. No whole building from Meshy or Tripo.
@@ -182,4 +193,5 @@ keeps its stand-in and is named in the review brief as "not to be judged".
 | Pantry -> Granary | `Granary.luau` | `granary-ref-era*.jpg` | in the module's `build` (25 features + 4 store props an era; not yet walked against section 2's step test) | locked 2026-11-16; every piece uploaded and worn 2026-11-17 |
 | Kitchen (cookhouse to grand restaurant) | `Kitchen.luau` | `kitchen-ref-sheet.jpg`, `kitchen-ref-era*.jpg` | `kitchen-ladder.md` (walked on paper; seen at each era's last level, not pair by pair) | locked 2026-11-17 (ChatGPT: likeness 78-88, finish 74-83, before the last edit); every piece uploaded and worn 2026-11-17 |
 | Garden (potting shed to royal palm house, with its windmill) | `Garden.luau` | `garden-ref-sheet.jpg`, `garden-ref-era*.jpg` | `garden-ladder.md` (walked on paper; seen at each era's last level, not pair by pair) | locked 2026-11-17 (ChatGPT: 78-84 an era, 81 overall, before the last edit; the last edit seen in the Edit preview only); B10 and B11 uploaded and worn; the rose arch taken out at the owner's word, step 19 is two bush pots (seen in Play at 30 and 50) |
-| Breeding pen, training ground, dock, village pieces | - | - | - | not started |
+| Breeding pen -> Breeding House (nest hall to royal hatchery, the spotted egg on its roof) | `BreedingHouse.luau` | `breeding-ref-sheet.jpg`, `breeding-ref-era*.jpg` | `breeding-ladder.md` (walked on paper; seen at each era's last level, not pair by pair) | locked 2026-11-17 (ChatGPT: likeness 83-87, finish 77-85 an era, before the last edit; the last edit seen in the Edit preview only); B12 and B13 uploaded and worn |
+| Training ground, dock, village pieces | - | - | - | not started |

@@ -1,5 +1,5 @@
 # The Granary's regular hard pieces (docs/areas/village-v2/hard-pieces.md, B1-B7), the Kitchen's two (B8, B9) and the
-# Garden's two (B10, B11), built by script, no textures.
+# Garden's two (B10, B11) and the Breeding House's two (B12, B13), built by script, no textures.
 # Owner 2026-11-16: "những khối và hình mà khó dựng thì hoặc là bạn tự dựng trên blender rồi ghép vào, hoặc để tôi tự dựng".
 # 1 Blender unit = 1 stud, Z up (Roblox +Y after export). Every object of a piece is one colour slot (the game paints it);
 # the preview paints the slots flat. Run: tools/blender/granary_pieces.ps1. Out: art/models/granary/blender/.
@@ -21,6 +21,8 @@ COL = {
 	"Shell": (0.2, 0.35, 0.8), "Gold": (0.9, 0.68, 0.2), "Shaft": (0.93, 0.9, 0.82), "Base": (0.9, 0.68, 0.2),
 	"Capital": (0.9, 0.68, 0.2), "Run": (0.93, 0.9, 0.82), "Post": (0.93, 0.9, 0.82), "Urn": (0.9, 0.68, 0.2),
 	"Elbow": (0.78, 0.45, 0.25), "Flange": (0.9, 0.68, 0.2), "Wheel": (0.9, 0.68, 0.2), "Blades": (0.6, 0.42, 0.26),
+	"Egg": (0.98, 0.94, 0.84), "Spots": (0.69, 0.57, 0.89), "Ribs": (0.2, 0.2, 0.23), "Rim": (0.84, 0.28, 0.47),
+	"Heart": (1.0, 0.48, 0.64),
 }
 
 
@@ -367,9 +369,121 @@ def irrigation_arch():
 	return [("IrrigationArch_Copper", m, (0, 0, 0), "Elbow", 50)]
 
 
+def egg_r(z):
+	# the egg's outline: widest (radius 1) at 0.3 above its foot, a short round belly below, a tall ovoid above (top at 1.9)
+	a = 1.0 if z < 0.3 else 1.6
+	return math.sqrt(max(0.0, 1 - ((z - 0.3) / a) ** 2))
+
+
+def egg_pt(z, phi, out=0.0):
+	# a point of the egg's skin pushed `out` along its normal, and that normal
+	a = 1.0 if z < 0.3 else 1.6
+	r = egg_r(z)
+	n = Vector((r, (z - 0.3) / (a * a))).normalized()
+	rr = r + out * n.x
+	return (rr * math.cos(phi), rr * math.sin(phi), z + out * n.y), (n.x * math.cos(phi), n.x * math.sin(phi), n.y)
+
+
+def egg_dome():
+	# the Breeding House's (ladder steps 10, 20, 30, 40, 50): the giant egg of radius 1 and 1.9 high, held at the middle of
+	# its foot. Its spots stand proud as their own object (the game lights them), the eight meridian ribs and the three
+	# bands are the last two eras' cage.
+	sides = 20
+	ups = [math.radians(a) for a in (12, 24, 36, 48, 60, 72, 82)]
+	sh = M()
+	lathe(sh, [(egg_r(z), z) for z in (0.0, 0.12, 0.3)] + [(math.cos(a), 0.3 + 1.6 * math.sin(a)) for a in ups] + [(0.0, 1.9)],
+		sides, cap_bottom=True)
+	sp = M()
+	# (height, degrees round, radius, stretch along the meridian): between the ribs and clear of the bands
+	for z0, deg, rs, st in ((0.64, 67.5, 0.2, 1.1), (0.58, 202.5, 0.18, 1.0), (0.66, 337.5, 0.19, 1.2), (1.06, 22.5, 0.16, 1.0),
+		(1.04, 157.5, 0.17, 1.15), (1.0, 292.5, 0.16, 1.0), (0.98, 112.5, 0.15, 1.2), (0.62, 247.5, 0.14, 1.0),
+		(1.56, 247.5, 0.11, 1.0), (1.58, 67.5, 0.1, 1.1), (1.55, 337.5, 0.1, 1.0), (1.02, 337.5, 0.1, 1.0)):
+		phi = math.radians(deg)
+		nz = egg_pt(z0, phi)[1][2]
+		along = math.sqrt(1 - nz * nz)  # how much of a step along the meridian is height
+		top = [sp.add([egg_pt(z0, phi, 0.045)[0]])]
+		rings = []
+		for f, out in ((0.6, 0.038), (1.0, 0.006)):
+			pts = []
+			for k in range(8):
+				t = TAU * k / 8
+				z = z0 + rs * st * f * math.sin(t) * along
+				pts.append(egg_pt(z, phi + rs * f * math.cos(t) / max(egg_r(z), 0.2), out)[0])
+			i0 = sp.add(pts)
+			rings.append(list(range(i0, i0 + 8)))
+		under = [sp.add([egg_pt(z0, phi, -0.06)[0]])]
+		for a, b in zip([top] + rings, rings + [under]):
+			bridge(sp, a, b, 8)
+	rb = M()
+	zs = [0.0, 0.15, 0.3] + [0.3 + 1.6 * math.sin(math.radians(a)) for a in (12, 24, 36, 48, 60, 70)]
+	for k in range(8):
+		phi = TAU * k / 8
+		both = [egg_pt(z, phi, 0.02) for z in zs]
+		rib(rb, [p for p, _ in both], [n for _, n in both], phi, 0.035, 0.03)
+	bd = M()
+	lathe(bd, [(0.97, 0.25), (1.06, 0.25), (1.06, 0.35), (0.97, 0.35)], sides, loop=True)  # the belt
+	lathe(bd, [(0.75, 1.3), (0.84, 1.3), (0.8, 1.38), (0.7, 1.38)], sides, loop=True)  # the upper band
+	lathe(bd, [(0.25, 1.78), (0.4, 1.78), (0.37, 1.86), (0.2, 1.9)], sides, loop=True)  # the ring the ribs end in
+	return [("EggDome_Shell", sh, (0, 0, 0), "Egg", 60), ("EggDome_Spots", sp, (0, 0, 0), "Spots", 50),
+		("EggDome_Ribs", rb, (0, 0, 0), "Ribs", 40), ("EggDome_Bands", bd, (0, 0, 0), "Gold", 40)]
+
+
+def stack(m, ring, centre, layers):
+	# a closed puffy body from one flat outline: `layers` are (scale about the centre, z) from the back pole to the front one
+	cx, cy = centre
+	n = len(ring)
+	rows = []
+	for s, z in layers:
+		if s < 1e-6:
+			rows.append([m.add([(cx, cy, z)])])
+		else:
+			i0 = m.add([(cx + (x - cx) * s, cy + (y - cy) * s, z) for x, y in ring])
+			rows.append(list(range(i0, i0 + n)))
+	for a, b in zip(rows, rows[1:]):
+		bridge(m, a, b, n)
+
+
+def heart_emblem():
+	# the Breeding House's emblem (ladder steps 6 and 7): a puffy heart about 2 wide in a raised rim with an egg on it,
+	# held at its middle, its face to the front, the same on its back
+	n, k = 40, 0.9 / 16
+	line = []
+	for i in range(n):
+		t = TAU * i / n
+		line.append((16 * math.sin(t) ** 3 * k,
+			(13 * math.cos(t) - 5 * math.cos(2 * t) - 2 * math.cos(3 * t) - math.cos(4 * t) + 2.5) * k))
+	puff = lambda s: 0.05 + 0.17 * math.sqrt(1 - s * s)
+	half = [(s, puff(s)) for s in (0.25, 0.55, 0.82, 1.0)]
+	h = M()
+	stack(h, line, (0.0, 0.05), [(0.0, -0.22)] + [(s, -z) for s, z in half] + [(s, z) for s, z in reversed(half)] + [(0.0, 0.22)])
+	r = M()
+	rows = []
+	for i in range(n):
+		a, b, p = line[i - 1], line[(i + 1) % n], line[i]
+		nx, ny = -(b[1] - a[1]), b[0] - a[0]  # the outline runs clockwise: its left is outside
+		d = math.hypot(nx, ny)
+		nx, ny = nx / d, ny / d
+		i0 = r.add([(p[0] + nx * o, p[1] + ny * o, z) for o, z in ((-0.03, -0.11), (0.07, -0.15), (0.11, -0.07), (0.11, 0.07),
+			(0.07, 0.15), (-0.03, 0.11))])
+		rows.append(list(range(i0, i0 + 6)))
+	for i in range(n):
+		bridge(r, rows[i], rows[(i + 1) % n], 6)
+	e = M()
+	egg = []
+	for i in range(20):
+		t = TAU * i / 20
+		egg.append((0.4 * math.sin(t) * (1 - 0.2 * math.cos(t)), 0.06 + 0.5 * math.cos(t)))
+	stack(e, egg, (0.0, 0.03), [(0.0, -0.27), (0.5, -0.265), (0.85, -0.235), (1.0, -0.14), (1.0, 0.14), (0.85, 0.235),
+		(0.5, 0.265), (0.0, 0.27)])
+	for m in (h, r, e):
+		xform(m, (0, len(m.v)), lambda p: (p[0], p[2], p[1]))  # stand it up: face towards the front, thickness along Y
+	return [("HeartEmblem_Rim", r, (0, 0, 0), "Rim", 50), ("HeartEmblem_Heart", h, (0, 0, 0), "Heart", 60),
+		("HeartEmblem_Egg", e, (0, 0, 0), "Egg", 60)]
+
+
 PIECES = [("ConeRoof", cone_roof), ("GlassDome", glass_dome), ("RoyalDome", royal_dome), ("Column", column),
 	("Balustrade", balustrade), ("Pipe", pipe), ("Gear", gear), ("ChimneyCrown", chimney_crown), ("VentHood", vent_hood),
-	("WindWheel", wind_wheel), ("IrrigationArch", irrigation_arch)]
+	("WindWheel", wind_wheel), ("IrrigationArch", irrigation_arch), ("EggDome", egg_dome), ("HeartEmblem", heart_emblem)]
 
 
 # ---------------------------------------------------------------- Blender side

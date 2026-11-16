@@ -1073,6 +1073,40 @@ The Garden, the third landmark (2026-11-17, `src/server/Garden.luau`, `src/clien
 - **A request for a new floor an era was not taken**: the owner chose the stud look for floors, the map owns the
   soil floor, and the path already changes per tier. A review point against a standing rule of his is dropped and
   named in the report.
+
+The Breeding House, the fourth landmark (2026-11-17, `src/server/BreedingHouse.luau`)
+- **Judge the shapes with stand-in previews BEFORE the upload, then upload once**: the Blender pieces were put on the
+  Edit preview from their FBX sizes first; the egg's height and the heart's place were settled there, and the two
+  files went up a single time.
+- **A roof ornament is modelled as broad as the sheet draws it**: the egg was modelled as a tall ovoid (1.9 high on
+  2 wide) and read as "a tall ornament, not the dome" in the one review; it is now worn 1.1 wide and 0.85 tall by
+  scale. Measure the sheet's width against height before modelling; a mesh takes a non-uniform scale, so a wrong
+  proportion needs no new upload.
+- **An egg on a drum's top reads tall and thin**: sink it to its widest (0.2-0.3 of its height into the drum), or,
+  on a low house, stand it in a collar cone of the roof's own cover that rises out of the roof (straw rolls round
+  it at era 1, a painted rim at era 2). Drums start where the house is tall enough (era 3).
+- **A cone on a gabled roof must not be wider than the hall is deep**: its rim came out through the front gable as
+  two dark triangles beside the emblem. Clamp its radius to the hall's half depth and carry it down on a short drum.
+- **The cone roof's mesh stands 1.19 times its nominal height**: a cone hidden inside something needs its tip
+  checked (the part's top against the cover's top, read from the preview), not reasoned.
+- **Decor meshes do not answer raycasts** (`Raycast`, `GetPartBoundsInBox`): to find what shows through a wall,
+  list the parts by their top or their bounds, or reason from the code.
+- **An emblem never has a flower box, a lamp or a beam in front of it**: the box under the gable hid the heart; the
+  boxes went to the gable beam, one each side.
+- **An emblem with a front is wider than tall, with a deep notch**: from the yard's side view the heart's lobes
+  closed into a teardrop; worn 1.12 wide.
+- **Pinks**: a cool pink under `Wood` turns purple, a light warm rose (246, 160, 158) holds; violet `Neon` glows hot
+  magenta in the game's light, a blue-violet (126, 104, 250) stays lavender.
+- **A Meshy dormer at half size reads as a lump**: 0.7 of its size, pushed clear of the egg (the egg's radius plus
+  1.8).
+- **A pipe ends at the thing it feeds**: the incubator pipe stopped on the grass until it was run along the ground
+  to the second incubator's place (the area module's coordinates, read from `BreedingStages`).
+- **Marble at 250 washes out in daylight**: 242, 239, 232 keeps the mouldings' shade.
+- **The carry page holds five pictures**: the flank shot was described in the brief in one clause instead ("the back
+  wall is plain, it stands against the back fence").
+- **ChatGPT's one review (likeness 83-87, finish 77-85 an era) against the code**: three of seven points asked for
+  what was built (arch stones under the ivy, the glass vault behind the brick front, the laurel); two were taken
+  (the egg's proportion, the heart), one in part (marble), two left (thatch fringe, wing braces).
 - **Lit window gold washes out to white in daylight**: the Kitchen's pale Neon panes read white here;
   (250, 200, 105) keeps the gold, with the room's own light dimmed (0.9 to 0.6).
 - **Copper under `Metal` reads as brown wood** when it starts dull; (226, 132, 78) reads copper. At the marble era the

@@ -896,6 +896,17 @@ Config.LibraryKit = {
 		IrrigationArch_Copper = {
 			{ mesh = 117821427646952, tex = "", size = { 2.17, 1.042, 0.19 }, at = { 0, 0.521, 0 } },
 		},
+		-- the Breeding House's two, painted by server/BreedingHouse (the egg is held at the middle of its foot, the
+		-- heart at its middle)
+		EggDome_Shell = { { mesh = 94059752117520, tex = "", size = { 2, 1.9, 2 }, at = { 0, 0.95, 0 } } },
+		EggDome_Spots = {
+			{ mesh = 116017624112093, tex = "", size = { 1.957, 1.267, 1.948 }, at = { -0.003, 1.035, -0.004 } },
+		},
+		EggDome_Ribs = { { mesh = 73371878916612, tex = "", size = { 2.1, 1.862, 2.1 }, at = { 0, 0.916, 0 } } },
+		EggDome_Bands = { { mesh = 94619901701614, tex = "", size = { 2.12, 1.65, 2.12 }, at = { 0, 1.075, 0 } } },
+		HeartEmblem_Rim = { { mesh = 82531523818942, tex = "", size = { 2.02, 1.845, 0.3 }, at = { 0, -0.003, 0 } } },
+		HeartEmblem_Heart = { { mesh = 95188600262517, tex = "", size = { 1.8, 1.625, 0.44 }, at = { 0, -0.003, 0 } } },
+		HeartEmblem_Egg = { { mesh = 87029284867655, tex = "", size = { 0.808, 1, 0.54 }, at = { 0, 0.06, 0 } } },
 	},
 	-- how long a stage waits for the meshes before it leaves a library prop out (seconds)
 	WaitSeconds = 15,

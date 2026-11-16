@@ -1,5 +1,44 @@
 # Status
 
+## 2026-11-17 — the Breeding House landmark built, play-tested, reviewed once and locked
+
+- The owner approved the sheet ("Duyệt, dựng đi"; reference `docs/areas/village-v2/breeding-ref-sheet.jpg`,
+  `breeding-ref-era1..5.jpg`, ChatGPT chat `/c/6afb68c2-6688-83ec-a111-70354f61ff0b`). Built by skill
+  `landmark-build`, steps 4-9.
+- **What is in the game**: `src/server/BreedingHouse.luau` on `Architecture`, called from `BreedingStages.build`
+  (which keeps the map's floor, the nests, the incubators, the work spots and the four prop slots; its old nesting
+  shelter, fence and gate are cut out). One place at every era: the gate in the front fence, the hall across the back
+  with an open front a player walks into (thatched nest hall, rose cottage, half-timbered stone house, brick, steel
+  and glass hatchery, marble and gold royal hatchery), the spotted egg on its roof in five forms (levels 10, 20, 30,
+  40, 50), the pink heart with the egg on the front gable, the warm room with its chimney, the right wing. The area
+  grew once at the back, for every level: the back fence moved from z 19 to z 30 (`AreaStages` trim lines follow).
+  50 steps as in `breeding-ladder.md` (rows 16 and 20 say where the build left the plan).
+- **Pieces**: two new Blender pieces, `EggDome` (B12: shell, spots, ribs, bands) and `HeartEmblem` (B13: rim, heart,
+  egg), built by `tools/blender/granary_pieces.py`, uploaded through the owner's cloud place (never saved) and worn
+  (ids in `Config` and `art/models/village_ids.json`); eight Blender pieces reused; the rest from the owner's Meshy
+  sheets. No new Meshy piece.
+- **Verified**: `tools\check.ps1` CHECK OK (827 tests), `tools\types.ps1 src/server` TYPES OK, both after the last
+  edit. One play test in StudioTest at levels 10, 20, 30, 40, 50 with the real meshes, in daylight: no error in the
+  log (`review/breeding-play-l*.jpg`). That play test was BEFORE the last edit.
+- **ChatGPT's one review** (likeness 84, 87, 83, 86, 84 by era; finish 77, 82, 80, 83, 85; "approve the architecture
+  with targeted polish, no structural rebuild"). **Taken** in the one last edit: the egg worn 1.1 times as wide and
+  0.85 as tall at every era (the sheet's eggs are broad domes; mine read as a tall ornament), the era-5 drum a stud
+  lower, the heart 1.12 times as wide (its lobes closed into a teardrop from the side), the era-5 marble a shade
+  off white. **Left**: shaggier thatch at era 1 (slab thatch with rolls is the owner's way; a fringe of small parts
+  is dear on phones), braces and one more flower box on the era-2 wing (lowest gain; the wing has its frame, round
+  window and box), and three points already built (era 3 arch stones and keystone under the ivy, the era 4 glass
+  vault and brass rivets behind the brick front, the era 5 gold laurel round the heart).
+- **Not verified**: the last edit was seen in the Edit preview only (`review/breeding-final-l*.jpg`, all five eras;
+  the cone under the egg was shortened after the l20, l30 and l50 shots, its tip is inside the egg); the 50 steps
+  were seen at each era's last level, not pair by pair; nobody has played it on a phone. The back wall is plain
+  (`review/breeding-flank.jpg`): it stands against the back fence.
+- **Next** (his to choose): the training ground or the dock by the same skill; the village's layout; the Granary's
+  50 steps against the step test (postponed by him).
+- **State left**: StudioTest is in Edit, both preview folders destroyed; the cloud place "Slime" was never saved.
+  Uncommitted files of OTHER sessions stay untouched (arena and dungeon code, `art/vfx/*`, `docs/ui/dungeon/*`,
+  `art/models/monsters/*.json`, `art/models/accessories/fantasy_wings/`). The picture server
+  (`tools/chatgpt/serve.py`, port 18923) dies with the session.
+
 ## 2026-11-17 — the Garden landmark built, play-tested, reviewed once and locked
 
 - The owner approved the sheet ("Duyệt, dựng đi"; reference `docs/areas/village-v2/garden-ref-sheet.jpg`,

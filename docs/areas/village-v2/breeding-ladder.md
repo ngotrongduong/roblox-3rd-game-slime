@@ -2,10 +2,12 @@
 
 Skill `landmark-build`, steps 2 and 3. Reference: `breeding-ref-sheet.jpg` and `breeding-ref-era1.jpg` ... `era5.jpg`
 in this folder (ChatGPT chat `/c/6afb68c2-6688-83ec-a111-70354f61ff0b`, 2026-11-17, its first sheet, drawn with the
-Garden's and the Kitchen's sheets and the village's three concept paintings as references). **The owner has not
-approved the sheet yet: that is the gate before any build.** Nothing here has been seen in the game: this is the plan.
-The module will be `src/server/BreedingHouse.luau` (the village already has a cell called "hatchery", and
-`shared/Breeding` is the rules), called from `BreedingStages.build`.
+Garden's and the Kitchen's sheets and the village's three concept paintings as references). **The owner approved the
+sheet on 2026-11-17 ("Duyệt, dựng đi") and it is built**: `src/server/BreedingHouse.luau` (the village already has a
+cell called "hatchery", and `shared/Breeding` is the rules), called from `BreedingStages.build`. Seen in the Edit
+preview and in one play test at levels 10, 20, 30, 40 and 50 (`review/breeding-play-l*.jpg`,
+`review/breeding-final-l*.jpg`); the 50 steps were not walked pair by pair in the game. Where the build left the
+plan, the rows below say what stands.
 
 ## The place
 
@@ -62,11 +64,11 @@ material moved on, S a part swapped for the next one.
 | 13 | | U | Egg crate |
 | 14 | | U | Cushion pile |
 | 15 | | U | Heat lamp |
-| 16 | 6 | N | Flower boxes along the front fence on both sides of the gate and under the gable |
+| 16 | 6 | N | Two flower boxes on the hall's gable beam, one each side of the heart (as built: a box under the gable hid the emblem) |
 | 17 | 7 | N | A bread-oven mouth with a glowing fire in the stove room's front, under its own little tiled roof |
 | 18 | 8 | N | A tiled bay on the hall's right side with a round lit window: the right wing |
 | 19 | 9 | N | Two dormers with lit windows on the hall's roof, one each side of the egg |
-| 20 | 10 | U | **The egg grows half again as big and stands on a round tiled drum** |
+| 20 | 10 | U | **The egg grows half again as big, in a taller tile collar with a painted rim** (as built: on a drum this egg read tall and thin; the drums start at era 3) |
 | 21 | | M S | Era 3: a low stone wall with timber rails, a stone gate arch, the hall in stone with one great arch, the stove room a round stone turret under a red cone roof, the right wing half-timbered, copper incubators; a third incubator |
 | 22 | | U | Grain feeder |
 | 23 | | U | Egg cart |
