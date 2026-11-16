@@ -2,9 +2,14 @@
 
 Skill `landmark-build`, steps 2 and 3. Reference: `training-ref-sheet.jpg` and `training-ref-era1.jpg` ... `era5.jpg`
 in this folder (ChatGPT chat `/c/6afb80dc-3ab0-83ec-841b-48264f101756`, 2026-11-17, its first sheet, drawn with the
-Breeding House's and the Kitchen's sheets and the village's three concept paintings as references). **Nothing is
-built yet: the sheet waits for the owner's word.** The module will be `src/server/TrainingHall.luau`, called from
-`TrainingStages.build`.
+Breeding House's and the Kitchen's sheets and the village's three concept paintings as references). **Built and
+locked 2026-11-17** (the owner: "Duyệt, dựng đi"): `src/server/TrainingHall.luau`, called from
+`TrainingStages.build`; the final shots are `review/training-l10.jpg` ... `training-l50.jpg` (the game's daylight,
+after the last edit) and `training-l50-flank.jpg` (the Edit preview). ChatGPT's one review, before the last edit:
+likeness 86 / 82 / 79 / 73 / 86, finish 78 / 73 / 72 / 74 / 80 for eras 1-5. As built, two rows differ from the
+first plan and are written as built below: 36 (the capital hangs lanterns where the steel hall has pipes) and 37
+(the masts stand at the yard's back corners, clear of the tower's banner). The hall spans most of the yard's back
+(20 to 23 wide in the 37.6 yard): at half that width it read as a shed against the sheet.
 
 ## The place
 
@@ -84,8 +89,8 @@ swapped for the next one.
 | 33 | | U | Climbing wall |
 | 34 | | U | Ice bath |
 | 35 | | U | Sparring bot |
-| 36 | 16 | N | Copper pipes from the tower up over the hall's vault |
-| 37 | 17 | N | Two floodlight masts of steel lattice at the hall's front corners, lit |
+| 36 | 16 | N | Copper pipes from the tower up over the hall's vault, one down to a valve at its foot (at the capital: a lit gold lantern hangs in each bay of the portico; pipes do not belong on marble) |
+| 37 | 17 | N | Two floodlight masts of steel lattice at the yard's back corners, each head a lit grid of six lamps (era 5: gold lamp standards) |
 | 38 | 18 | N | Glowing green glass in the fence's panels and the gate's piers, green globe lamps on the piers |
 | 39 | 19 | U | The shield in a great riveted steel ring with a glowing green rim, in front of a round fan window of teal glass |
 | 40 | 20 | U | **The tower's goo core: a tall glowing green tank between steel ribs in its upper half, under a glass-and-iron dome** |
@@ -119,11 +124,11 @@ Looked in the owner's sheet kit first (`src/shared/ConfigMeshyKit.luau`): the Tr
 
 | Goes to | Pieces |
 |---------|--------|
-| Parts (`Architecture`) | fences (rails, palisade logs with wedge points, pickets, stone wall and rails, steel bars with glass), the hall's walls, posts, slab roofs and thatch with rolls, benches and their runner, weapon racks, the lookout's legs, braces and ladder, the tower's square and round drums, battlements and corbels as blocks round a drum, arches with proud voussoirs, the glass vaults as flat panes between ribs, lattice masts and lamp heads, the goo tank (plain glass with a thin Neon slice), column shafts, the pediment, the hanging banners with their stripe, the portcullis |
+| Parts (`Architecture`) | fences (rails, palisade logs with four-sided points (`b.pyramid`; two wedges read as blocks), pickets, stone wall and rails, steel bars with glass), the hall's walls, posts, slab roofs and thatch with rolls, benches and their runner, weapon racks, the lookout's legs, braces and ladder, the tower's square and round drums, battlements and corbels as blocks round a drum, arches with proud voussoirs, the glass vaults as flat panes between ribs, lattice masts and lamp heads, the goo tank (plain glass with a thin Neon slice), column shafts, the pediment, the hanging banners with their stripe, the portcullis |
 | Blender, reused | cone roof with tile rows (the tower's caps at eras 2 and 3), glass-and-iron dome (the goo tower's cap), royal dome (the tower's dome at 50), column capital and base, balustrade run with urn (the era-5 fence and roof), copper pipe elbow |
 | Blender, new (in `tools/blender/granary_pieces.py`) | B14 `ShieldEmblem`: a round domed shield with a boss (`ShieldEmblem_Disc`), its raised rim (`ShieldEmblem_Rim`) and two crossed swords, blades and hilts apart (`ShieldEmblem_Blades`, `ShieldEmblem_Hilts`), so each takes the era's material; modelled broad and shallow from the start (the Breeding House's lesson) |
 | Meshy, from the owner's sheets | `ThatchCap_Tower` (the lookout's cap), `WallLantern_Iron` (gate, hall posts), `FlowerBox_Trough`, `FlowerBox_Pink` (7), `Pillar_GoldCap`, `Pillar_Lantern` (8, era 3's wall, if they fit), `Banner_Blue` or `Banner_SlimeBlue` (6, 12, if their badge suits; else parts), `Window_Arched` (the tower), `GooTank_Glass`, `PipeValve_Copper` (16, 20), `Urn_PinkFlowers`, `FlowerUrn_Gold` (21), `Laurel_Gold` (22), `Finial_GoldStone` (23), `ConePot_Topiary` (era 5) |
 
 The flying banner on the tower is the game's own `WavingFlag`. The dummy's five forms stay the area's own build
-(`TrainingStages`). Every sheet piece is already uploaded; only the one new Blender piece will need an upload
-through the owner's cloud place.
+(`TrainingStages`). Every sheet piece was already uploaded; the one new Blender piece (B14) was uploaded through
+the owner's cloud place on 2026-11-17 and is worn.

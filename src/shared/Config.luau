@@ -907,6 +907,16 @@ Config.LibraryKit = {
 		HeartEmblem_Rim = { { mesh = 82531523818942, tex = "", size = { 2.02, 1.845, 0.3 }, at = { 0, -0.003, 0 } } },
 		HeartEmblem_Heart = { { mesh = 95188600262517, tex = "", size = { 1.8, 1.625, 0.44 }, at = { 0, -0.003, 0 } } },
 		HeartEmblem_Egg = { { mesh = 87029284867655, tex = "", size = { 0.808, 1, 0.54 }, at = { 0, 0.06, 0 } } },
+		-- the Training Hall's one, painted by server/TrainingHall (a shield one stud in radius, held at its middle, the
+		-- crossed swords on its front)
+		ShieldEmblem_Disc = { { mesh = 107244292759568, tex = "", size = { 1.72, 1.72, 0.4 }, at = { 0, 0, 0 } } },
+		ShieldEmblem_Rim = { { mesh = 121852647378034, tex = "", size = { 2, 2, 0.36 }, at = { 0, 0, 0 } } },
+		ShieldEmblem_Blades = {
+			{ mesh = 107735602486578, tex = "", size = { 1.704, 1.283, 0.15 }, at = { 0, 0.21, -0.28 } },
+		},
+		ShieldEmblem_Hilts = {
+			{ mesh = 94017421951329, tex = "", size = { 1.739, 0.732, 0.16 }, at = { 0, -0.504, -0.28 } },
+		},
 	},
 	-- how long a stage waits for the meshes before it leaves a library prop out (seconds)
 	WaitSeconds = 15,

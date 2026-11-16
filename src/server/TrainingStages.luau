@@ -1,27 +1,26 @@
 --!strict
 -- The training ground's 50 levels (the owner, 2026-10-28: "the same as the other areas"). Five eras
 -- of ten levels; in each era:
---   level 1 of the era   the ground grows into a small arena, nothing taken away: era 2 wooden stands
---                        at the back; era 3 a punching bag with a second training spot, and flood-
---                        light masts at the corners; era 4 a canopy over the stands with a scoreboard,
---                        a third training spot facing the archery target; era 5 the slime-tech
---                        equipment and dummy (no trophy: the owner, 2026-10-28). The dummy is built
---                        here and toughens every era.
+--   level 1 of the era   the place takes the era's architecture (TrainingHall, village v2: the fence, the gate,
+--                        the hall across the back with its benches, the tower) and the yard its floor; era 3
+--                        a punching bag with a second training spot; era 4 a third training spot facing the
+--                        archery target; era 5 the slime-tech equipment and dummy (no trophy: the owner,
+--                        2026-10-28). The dummy is built here and toughens every era.
 --   levels 2-5           four training props, one a level, each slot taking its next, better version:
 --                        1 strength (stone weights > log barbell > dumbbell rack > weight bench >
 --                        gravity press)   2 agility (tyre run > hurdles > balance beam > climbing wall
 --                        > holo hoops)   3 recovery (rest bench > water cooler > massage table > ice
 --                        bath > heal pod)   4 gear (sword barrel > shield rack > armour stand >
 --                        sparring bot > holo trainer)
---   levels 6-10          the ground's builds move up one material tier, one a level: floor, floor
---                        border, fence and stands, lamps and masts, the entrance arch and podium
+--   levels 6-10          one feature of the landmark a level (TrainingHall; the ladder is
+--                        docs/areas/village-v2/training-ladder.md)
 -- Tiers and helpers are the pantry's. The dummy, the archery target, the weapon rack and the banner
 -- stay the area's own; the training spots keep their markers (TrainSpotN with an Attachment
 -- WorkSpotN) for the training rules. Positions are in the ground's own frame (x across, z from the
 -- front in); every prop stands against the fence facing in.
 local PantryStages = require(script.Parent.PantryStages)
 local PondStages = require(script.Parent.PondStages)
-local GateArch = require(script.Parent.GateArch)
+local TrainingHall = require(script.Parent.TrainingHall)
 local WavingFlag = require(script.Parent.WavingFlag)
 
 local TrainingStages = {}
@@ -29,20 +28,20 @@ local TrainingStages = {}
 TrainingStages.MaxLevel = 50
 
 local TIERS = PantryStages.Tiers
+-- the yard's material tier an era (the village's eras: rustic, painted, brick, slime tech, marble)
+local ERA_TIER = { 1, 2, 3, 5, 6 }
 local part, wedge, place = PantryStages.part, PantryStages.wedge, PantryStages.place
 
 -- the fence line: x -13.4 .. 13.4, z -12.4 .. 12.4, the entrance x -4 .. 4 at the front
 -- (the village scale, 2026-10-30: 5.4 studs wider each side than the old x +-13.4, the stations along the side
 -- fences moved out with it and the spots spread; every model keeps its size)
 -- (and the owner's "spread the inside too", the same day: 4 studs deeper each way than the old z +-12.4, the
--- spots, stations, dummy and arena spread front to back by DEEP = 1.3, the stands kept against the back fence)
-local XF, ZF, GATE = 18.8, 16.4, 4
+-- spots, stations, dummy and arena spread front to back by DEEP = 1.3)
+-- (the fence itself is TrainingHall's, and stands 12 studs further back: the hall is behind the yard)
+local XF, ZF = 18.8, 16.4
 local WIDER = 5.4 -- how far the side fences and what stands along them moved out
 local DEEP = 1.3
 local LANE_Z = -4 * DEEP + 4 -- how far the side stations' old middle (z -4) moved with the spread
--- From the stands' era the ground grows 6 studs at the back, so the stands sit behind the dummy
--- instead of against it (the owner, 2026-10-28: a cramped area grows, and never shrinks again)
-local GROW, GROW_FROM = 6, 11
 local FLOOR = 0.4 -- the ground's floor stands this far above the lawn; props stand on its top
 
 -- training spots: where, and from which level (the first is the area's own)
@@ -62,9 +61,8 @@ local HEIGHT = {
 	{ 3, 4, 5.5, 5, 5 },
 }
 -- where each slot stands and which way it faces (degrees; 0 to the front, 90 to -x, -90 to +x):
--- strength and agility against the side fences, recovery and gear in the back corners beside the
--- stands, all facing in
--- (recovery and gear move back into the grown strip beside the stands once it is there)
+-- strength and agility against the side fences, recovery and gear further back before the hall, all
+-- facing in
 local SLOT_AT = {
 	{ -11.2 - WIDER, -4 * DEEP, -90 },
 	{ 11.2 + WIDER, -3.5 * DEEP, 90 },
@@ -75,28 +73,24 @@ local FOOT = { 5, 5.6, 3.8, 3.8 }
 -- kit models whose front came out of generate_mesh sideways: the turn (degrees) that brings it to -Z
 local FRONT_TURN: { [string]: number } = {}
 
--- What a level holds: the era, how many training spots, each prop slot's era (0: none), each
--- build's tier (floor, border, fence and stands, lamps and masts, arch and podium).
-function TrainingStages.state(level: number): (number, number, { number }, { number })
+-- What a level holds: the era, how many training spots, each prop slot's era (0: none).
+function TrainingStages.state(level: number): (number, number, { number })
 	local era = math.clamp(math.ceil(level / 10), 1, 5)
 	local s = level - (era - 1) * 10
 	local spots = 0
 	for _, p in SPOTS do
 		spots += if level >= p[3] then 1 else 0
 	end
-	local props, tiers = {}, {}
+	local props = {}
 	for j = 1, 4 do
 		props[j] = if s >= j + 1 then era else era - 1
 	end
-	for k = 1, 5 do
-		tiers[k] = if s >= k + 5 then era + 1 else era
-	end
-	return era, spots, props, tiers
+	return era, spots, props
 end
 
 function TrainingStages.tierName(level: number): string
-	local _, _, _, tiers = TrainingStages.state(level)
-	return TIERS[tiers[1]].name
+	local era = TrainingStages.state(level)
+	return TIERS[ERA_TIER[era]].name
 end
 
 -- A part of the area itself takes a tier's colour; at tier 1 it keeps the look it was built with.
@@ -108,16 +102,6 @@ local function skin(p: BasePart, tier: number, colour: Color3, material: Enum.Ma
 	PondStages.studLook(p, material)
 end
 
-local function glow(m: Model, name: string, size: Vector3, cf: CFrame, colour: Color3, range: number)
-	local p = part(m, name, size, cf, colour, Enum.Material.Neon)
-	p.CastShadow = false
-	local light = Instance.new("PointLight")
-	light.Color = colour
-	light.Range = range
-	light.Brightness = 0.7
-	light.Parent = p
-end
-
 -- A model turned on the spot about its own middle.
 local function turn(model: Model, degrees: number)
 	local box = model:GetBoundingBox()
@@ -125,58 +109,11 @@ local function turn(model: Model, degrees: number)
 	model:PivotTo(centre * CFrame.Angles(0, math.rad(degrees), 0) * centre:ToObjectSpace(model:GetPivot()))
 end
 
--- A ranch fence run: posts every three studs, two rails.
-local function fenceRun(m: Model, frame: CFrame, x0: number, z0: number, x1: number, z1: number, t: any)
-	local a, b = Vector3.new(x0, 0, z0), Vector3.new(x1, 0, z1)
-	local len = (b - a).Magnitude
-	local dir = (b - a).Unit
-	local n = math.max(1, math.round(len / 3))
-	local mid = (a + b) / 2
-	local brick = t.wallMat == Enum.Material.Brick
-	if brick then
-		-- a low brick foundation under the brick era's fence (ChatGPT's 1st training review)
-		part(
-			m,
-			"FenceBase",
-			Vector3.new(0.9, 0.6, len + 0.9),
-			frame * CFrame.new(mid.X, 0.3, mid.Z) * CFrame.lookAt(Vector3.zero, dir),
-			t.walls,
-			t.wallMat
-		)
-	end
-	for k = 0, n do
-		local p = a + dir * (len * k / n)
-		local w = if brick then 0.95 else 0.7
-		part(m, "FencePost", Vector3.new(w, 3.2, w), frame * CFrame.new(p.X, 1.6, p.Z), t.frame, t.frameMat)
-		-- (a glowing trim lights every other cap only, so the fence frames the ground and no more)
-		local dim = t.trimMat == Enum.Material.Neon and k % 2 == 1
-		part(
-			m,
-			"FenceCap",
-			Vector3.new(w + 0.25, 0.3, w + 0.25),
-			frame * CFrame.new(p.X, 3.3, p.Z),
-			if dim then t.frame else t.trim,
-			if dim then t.frameMat else t.trimMat
-		)
-	end
-	for _, y in { 1.1, 2.5 } do
-		part(
-			m,
-			"FenceRail",
-			Vector3.new(0.3, 0.4, len),
-			frame * CFrame.new(mid.X, y, mid.Z) * CFrame.lookAt(Vector3.zero, dir),
-			t.walls,
-			t.wallMat
-		)
-	end
-end
-
 -- Training equipment built from parts at a player's real size where the kit models came out as toys
 -- (ChatGPT's 2nd training review): along the left fence the agility course (hurdles across a running
 -- lane, a raised balance beam, a tall climbing wall with a landing mat, three upright glowing hoop
 -- gates); on the right the log barbell on its rests and the slime-tech gravity press.
-local function equipment(m: Model, frame: CFrame, j: number, e: number, tiers: { number })
-	local t = TIERS[tiers[1]]
+local function equipment(m: Model, frame: CFrame, j: number, e: number, t: any)
 	local wood, woodMat = Color3.fromRGB(150, 104, 62), Enum.Material.Wood
 	-- (built round the old station middle z -4, moved with the spread station)
 	local function at(px: number, y: number, pz: number): CFrame
@@ -311,11 +248,12 @@ local function equipment(m: Model, frame: CFrame, j: number, e: number, tiers: {
 end
 
 -- The ground's layer for a level. `area` is the training ground: its kit fence goes (the layer
--- stands in for it), its floor and border take their tiers, its weapon rack stands against the
+-- stands in for it), its floor and border take the era's tier, its weapon rack stands against the
 -- left fence facing in.
 function TrainingStages.build(area: Instance, frame: CFrame, level: number): Model
-	local era, spots, props, tiers = TrainingStages.state(level)
-	local tf, tl = TIERS[tiers[3]], TIERS[tiers[4]]
+	local era, spots, props = TrainingStages.state(level)
+	local pt = ERA_TIER[era]
+	local tier = TIERS[pt]
 	local m = Instance.new("Model")
 	m.Name = "AreaStage"
 	m:SetAttribute("Level", level)
@@ -323,7 +261,8 @@ function TrainingStages.build(area: Instance, frame: CFrame, level: number): Mod
 		return frame * CFrame.new(x, y, z)
 	end
 
-	local back = if level >= GROW_FROM then ZF + GROW else ZF
+	-- the floor is carried to the landmark's back fence, behind the yard: the hall stands there
+	local _, _, _, back = TrainingHall.fence()
 	local dz = back - ZF
 	local oldFlag: Model? = nil
 	for _, d in area:GetChildren() do
@@ -332,9 +271,9 @@ function TrainingStages.build(area: Instance, frame: CFrame, level: number): Mod
 		if kitGone then
 			d.Parent = nil
 		elseif d.Name == "Floor" and d:IsA("BasePart") then
-			skin(d, tiers[1], TIERS[tiers[1]].yard, TIERS[tiers[1]].yardMat)
+			skin(d, pt, tier.yard, tier.yardMat)
 		elseif d.Name == "FloorEdge" and d:IsA("BasePart") then
-			skin(d, tiers[2], TIERS[tiers[2]].edge, TIERS[tiers[2]].yardMat)
+			skin(d, pt, tier.edge, tier.yardMat)
 			-- (the back edge moves out with the grown floor, the side edges stretch to it)
 			local q = frame:ToObjectSpace(d.CFrame)
 			if d:GetAttribute("HomeZ") == nil then
@@ -372,95 +311,34 @@ function TrainingStages.build(area: Instance, frame: CFrame, level: number): Mod
 		task.spawn(WavingFlag.stand, area, base.CFrame * CFrame.new(0, base.Size.Y / 2, 0), WavingFlag.TrainingHeight)
 	end
 
-	if dz > 0 then
-		local floor = area:FindFirstChild("Floor")
-		local ext = part(
-			m,
-			"FloorExt",
-			Vector3.new(XF * 2 - 0.8, 0.4, dz),
-			at(0, 0.2, ZF - 0.4 + dz / 2),
-			if floor and floor:IsA("BasePart") then floor.Color else TIERS[tiers[1]].yard
-		)
-		if floor and floor:IsA("BasePart") then
-			ext.Material, ext.MaterialVariant, ext.TopSurface = floor.Material, floor.MaterialVariant, floor.TopSurface
-		end
-	end
-
-	-- 3 the fence, open at the entrance
-	fenceRun(m, frame, -XF, back, XF, back, tf)
-	fenceRun(m, frame, -XF, -ZF, -XF, back, tf)
-	fenceRun(m, frame, XF, -ZF, XF, back, tf)
-	fenceRun(m, frame, -XF, -ZF, -GATE, -ZF, tf)
-	fenceRun(m, frame, GATE, -ZF, XF, -ZF, tf)
-
-	-- 4 lamps either side of the entrance
-	for _, s in { -1, 1 } do
-		part(m, "LampPost", Vector3.new(0.5, 4.6, 0.5), at(s * 6.4, 2.3, -ZF + 0.8), tl.frame, tl.frameMat)
-		glow(m, "Lamp", Vector3.new(0.9, 0.9, 0.9), at(s * 6.4, 5, -ZF + 0.8), tl.glass, 10)
-	end
-
-	-- 5 the entrance arch (GateArch): red, the shield-and-swords emblem on top
-	GateArch.build(m, frame, 0, GATE * 2, -ZF, tiers[5], Color3.fromRGB(220, 70, 70), "EmblemTraining")
-
-	-- era 2: wooden stands along the back, two steps behind the dummy
-	if era >= 2 then
-		-- (against the back fence, wherever it stands)
-		for k, step in { { back - 2.8, 1.2 }, { back - 1.2, 2.4 } } do
-			part(m, "Stand", Vector3.new(18, step[2], 1.6), at(0, step[2] / 2, step[1]), tf.walls, tf.wallMat)
-			part(m, "Seat", Vector3.new(18.2, 0.25, 0.7), at(0, step[2] + 0.12, step[1] - 0.45), tf.trim, tf.trimMat)
-			if k == 2 then
-				part(m, "StandBack", Vector3.new(18, 1.4, 0.3), at(0, 3.1, back - 0.45), tf.frame, tf.frameMat)
+	-- where the landmark stands, any tree or bush goes
+	local sx0, sx1, sz0, sz1 = TrainingHall.footprint(level)
+	for _, d in (area.Parent or area):GetDescendants() do
+		if d:IsA("Model") and d.Parent and d.Parent.Name == "Nature" then
+			local p = frame:PointToObjectSpace(d:GetPivot().Position)
+			if p.X > sx0 and p.X < sx1 and p.Z > sz0 and p.Z < sz1 then
+				d.Parent = nil
 			end
 		end
 	end
-	-- era 3: the punching bag with its spot, and floodlight masts at the corners
+	local floor = area:FindFirstChild("Floor")
+	local ext = part(
+		m,
+		"FloorExt",
+		Vector3.new(XF * 2 - 0.8, 0.4, dz),
+		at(0, 0.2, ZF - 0.4 + dz / 2),
+		if floor and floor:IsA("BasePart") then floor.Color else tier.yard
+	)
+	if floor and floor:IsA("BasePart") then
+		ext.Material, ext.MaterialVariant, ext.TopSurface = floor.Material, floor.MaterialVariant, floor.TopSurface
+	end
+
+	-- the fence, the gate, the hall across the back, the tower, the shield
+	TrainingHall.build(m, frame, level)
+
+	-- era 3: the punching bag with its spot
 	if era >= 3 then
 		place(m, frame, "PunchingBag", -9.1, 5.5 * DEEP, 5.5, 2.4, FLOOR)
-		for _, s in { -1, 1 } do
-			for _, z in { -ZF - 0.5, back + 0.5 } do
-				local x = s * (XF - 0.5)
-				part(m, "Mast", Vector3.new(0.6, 11, 0.6), at(x, 5.5, z), tl.frame, tl.frameMat)
-				local face = CFrame.lookAt(at(x, 11.2, z).Position, at(0, 0, 0).Position)
-				part(m, "MastHead", Vector3.new(2, 1.2, 0.5), face, tl.frame, tl.frameMat)
-				local lamp = part(
-					m,
-					"MastLamp",
-					Vector3.new(1.7, 0.9, 0.2),
-					face * CFrame.new(0, 0, -0.3),
-					tl.glass,
-					Enum.Material.Neon
-				)
-				lamp.CastShadow = false
-			end
-		end
-	end
-	-- era 4: a canopy over the stands, a scoreboard on top
-	if era >= 4 then
-		for _, x in { -9, 9 } do
-			for _, z in { back - 3.5, back - 0.5 } do
-				part(m, "CanopyPost", Vector3.new(0.5, 7, 0.5), at(x, 3.5, z), tl.frame, tl.frameMat)
-			end
-		end
-		part(
-			m,
-			"Canopy",
-			Vector3.new(19.4, 0.5, 4.4),
-			at(0, 7.2, back - 2) * CFrame.Angles(math.rad(-6), 0, 0),
-			tl.roof,
-			tl.roofMat
-		)
-		part(m, "Scoreboard", Vector3.new(8, 3.6, 0.5), at(0, 9.6, back - 1), tl.frame, tl.frameMat)
-		for _, s in { -1, 1 } do
-			local score = part(
-				m,
-				"ScoreLight",
-				Vector3.new(2.2, 1.6, 0.2),
-				at(s * 1.5, 9.2, back - 1.3),
-				if s < 0 then Color3.fromRGB(255, 120, 90) else Color3.fromRGB(110, 200, 255),
-				Enum.Material.Neon
-			)
-			score.CastShadow = false
-		end
 	end
 
 	-- the training spots beyond the area's own: a straw mat each, with its marker
@@ -471,8 +349,8 @@ function TrainingStages.build(area: Instance, frame: CFrame, level: number): Mod
 			"TrainSpot" .. i,
 			Vector3.new(0.1, 3.6, 3.6),
 			at(p[1], 0.45, p[2]) * CFrame.Angles(0, 0, math.rad(90)),
-			TIERS[tiers[1]].base,
-			TIERS[tiers[1]].baseMat
+			tier.base,
+			tier.baseMat
 		) :: Part
 		mat.Shape = Enum.PartType.Cylinder
 		mat.CanCollide = false
@@ -482,7 +360,7 @@ function TrainingStages.build(area: Instance, frame: CFrame, level: number): Mod
 			"SpotRing",
 			Vector3.new(0.06, 4.2, 4.2),
 			at(p[1], 0.43, p[2]) * CFrame.Angles(0, 0, math.rad(90)),
-			TIERS[tiers[1]].edge
+			tier.edge
 		) :: Part
 		ring.Shape = Enum.PartType.Cylinder
 		ring.CanCollide = false
@@ -493,7 +371,6 @@ function TrainingStages.build(area: Instance, frame: CFrame, level: number): Mod
 
 	-- the practice arena in the middle: a low outline round the three training spots, worn patches
 	-- before the dummy, straw fallen from it (ChatGPT's 1st training review)
-	local tb = TIERS[tiers[1]]
 	local ax0, ax1, az0, az1 = -12.6, 12.6, -5.5 * DEEP, 8 * DEEP
 	local nearDummy = 6 * DEEP - 6 -- (the patches before the dummy moved with it)
 	for _, e in
@@ -504,7 +381,7 @@ function TrainingStages.build(area: Instance, frame: CFrame, level: number): Mod
 			{ ax1, (az0 + az1) / 2, 0.3, az1 - az0 },
 		}
 	do
-		part(m, "ArenaLine", Vector3.new(e[3], 0.1, e[4]), at(e[1], FLOOR + 0.05, e[2]), tb.edge, tb.yardMat).CastShadow =
+		part(m, "ArenaLine", Vector3.new(e[3], 0.1, e[4]), at(e[1], FLOOR + 0.05, e[2]), tier.edge, tier.yardMat).CastShadow =
 			false
 	end
 	for k, o in { { -0.8, 2.6, 2.2 }, { 1.1, 3.4, 1.6 } } do
@@ -724,19 +601,19 @@ function TrainingStages.build(area: Instance, frame: CFrame, level: number): Mod
 		local e = props[j]
 		if e > 0 then
 			local slot = SLOT_AT[j]
-			local z = if j >= 3 and dz > 0 then back - 3.4 else slot[2]
+			local z = slot[2]
 			-- each station on its own pad (ChatGPT's 1st training review)
 			part(
 				m,
 				"StationPad",
 				Vector3.new(FOOT[j] + 0.8, 0.08, FOOT[j] + 0.8),
 				at(slot[1] + (if slot[1] > 0 then -0.4 else 0.4), FLOOR + 0.04, z),
-				TIERS[tiers[1]].base,
-				TIERS[tiers[1]].baseMat
+				tier.base,
+				tier.baseMat
 			)
 			local built = (j == 2 and e >= 2) or (j == 1 and (e == 2 or e == 5))
 			if built then
-				equipment(m, frame, j, e, tiers)
+				equipment(m, frame, j, e, tier)
 			else
 				local prop = place(m, frame, PROPS[j][e], slot[1], z, HEIGHT[j][e], FOOT[j], FLOOR + 0.08)
 				local yaw = slot[3] + (FRONT_TURN[PROPS[j][e]] or 0)

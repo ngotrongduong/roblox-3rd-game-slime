@@ -1114,3 +1114,31 @@ The Breeding House, the fourth landmark (2026-11-17, `src/server/BreedingHouse.l
 - **A gate roof as deep as 3.6 outweighed the first house**: 3 deep, and the era-5 crown at 0.85, leave the eye on
   the house. Thatch slabs got a darker `Sand` roll half way up each slope (a flat slab reads as a lid), bare sail
   cloths got laths, and nine dark canopy balls became six lighter ones with gaps so the rafters show.
+
+The Training Hall, the fifth landmark (2026-11-17, `src/server/TrainingHall.luau`)
+- **Measure the hall against the yard's width before the play test**: at 15-18 wide in a 37.6 yard it read as a
+  shed (the sheet's hall spans the yard's back). Widened to 20-23 inside the same fence; every placement was
+  parametric (`hw`, `rise`), so nothing else moved.
+- **Glass at transparency 0.4 vanishes in the game's daylight** (0.25 too): a glass vault was an empty steel cage.
+  0.08 reads as coloured glass (`Architecture.new(..., 0.08)`); and the glass is a teal DARKER than the sky
+  (84, 190, 180), a paler one read as "one pale sheet".
+- **A glass front is panes in a frame**: lunette bars 0.1 thick did not show; 0.26 beams and a second ring half way
+  out made it a window (the reviewer's first point).
+- **Lit panes: a deep amber (238, 158, 60)**, deeper than the Garden's (250, 200, 105), which still washed out to
+  white here and hid the window's bars. With the deep one the bars read in daylight.
+- **A later era swaps an ornament that does not suit its material**: copper pipes over the vault are era 4's; on
+  marble they became gold lanterns hanging in the portico (the same ladder row, written as built).
+- **Masts and lamp standards never stand in front of a banner or an emblem**: the floodlight mast hid the tower's
+  banner until it moved to the yard's back corner. A lamp head is a grid of lamps, not a blank glowing board.
+- **Steel blades do not read on a gold disc**: the capital's shield has the squad's blue disc in a gold rim.
+- **A point on a round log is four corner wedges** (`b.pyramid`): two wedges make a ridge that reads as a block from
+  the side.
+- **The flank the play camera hides still wants a shot**: the capital's wing end was a blank slab; three panels of
+  warmer marble between pilasters, a plinth and a gold cornice, all within 0.25 of the wall.
+- **Once the meshes are uploaded, the play-test shots are the review shots**: daylight, the real floor and
+  stations, nothing to explain away in the brief.
+- **The carry's attach readout said "files 0" and the six thumbnails were in the form**: the app takes the files and
+  empties the input. Count the thumbnails, do not carry again.
+- **ChatGPT's one review (likeness 73-86, finish 72-80 an era) against the code**: three of eight points asked for
+  what was built (the era-2 tower's bands and posts, the era-4 pipes, the era-3 timber frame) and were only made
+  stronger; five were taken (lunette, flank, panes, palisade points, thatch edge).

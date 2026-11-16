@@ -18,11 +18,15 @@ comes back to recover. Built directly in Studio in the classic stud look. No sli
 
 ## Upgrades, levels 1-50 (`src/server/TrainingStages.luau`, pictures `upgrades/training-l35.jpg`, `training-l50.jpg`)
 
-The pantry's pattern: five eras of ten levels, nothing taken away. The kit fence is replaced by a
-part-built ranch fence with an entrance arch (crossed swords on a shield); the weapon rack stands
-against the left fence facing in.
+**Since 2026-11-17 the ground is the Training Hall landmark** (`src/server/TrainingHall.luau`, called from
+`TrainingStages.build`; the 50 steps are in `village-v2/training-ladder.md`, the pictures
+`village-v2/review/training-l10.jpg` ... `training-l50.jpg`): the fence, the gate, the open hall across the back
+with its racks and benches, the banner tower at its right end and the shield with crossed swords are the
+landmark's; the stands, their canopy, the scoreboard and the podium with its trophy are gone. `TrainingStages`
+keeps the floor, the dummy, the target, the weapon rack, the banner pole, the training spots and the four
+station slots. What is below about era starts and levels 6-10 is the earlier build, kept for the stations' order.
 
-- Era start (1 / 11 / 21 / 31 / 41): 1 the yard, lamps by the entrance; 11 two-step stands at the
+- Era start (1 / 11 / 21 / 31 / 41), earlier build: 1 the yard, lamps by the entrance; 11 two-step stands at the
   back; 21 a punching bag with training spot 2, floodlight masts at the corners; 31 a canopy over the
   stands with a scoreboard, training spot 3 facing the archery target; 41 a podium with a golden
   trophy by the entrance.

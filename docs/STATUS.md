@@ -1,6 +1,42 @@
 # Status
 
-## 2026-11-17 — the Training Hall: the five-era sheet and the ladder; nothing built, the sheet waits for the owner
+## 2026-11-17 — the Training Hall landmark built, play-tested, reviewed once and locked
+
+- The owner approved the sheet ("Duyệt, dựng đi"). Built by skill `landmark-build`, steps 4-9.
+- **What is in the game**: `src/server/TrainingHall.luau` on `Architecture`, called from `TrainingStages.build`
+  (which keeps the floor, the dummy, the target, the weapon rack, the banner pole, the training spots and the four
+  station slots; its stands, canopy, scoreboard, podium and trophy are cut out). One place at every era: the gate in
+  the front fence, the hall across the back with an open front a player walks into (thatched drill shed, painted
+  dojo, stone barracks with a half-timbered storey, steel and teal glass vault, marble hall with columns, arcade
+  wings and a blue glass vault), the banner tower at its right end in five forms (levels 10, 20, 30, 40, 50), the
+  round shield with crossed swords over the open front. The ground grew once at the back, for every level. 50 steps
+  as in `docs/areas/village-v2/training-ladder.md` (rows 36 and 37 say where the build left the plan).
+- **Pieces**: one new Blender piece, `ShieldEmblem` (B14: disc, rim, blades, hilts), built by
+  `tools/blender/granary_pieces.py`, uploaded through the owner's cloud place (never saved) and worn (ids in
+  `Config` and `art/models/village_ids.json`); six Blender pieces reused; the rest from the owner's Meshy sheets.
+  No new Meshy piece.
+- **Found while building**: the first play test showed the hall at half the yard's width, a shed against the sheet;
+  it now spans 20 to 23 of the yard's 37.6 inside the same fence. Glass at the other landmarks' 0.4 (and at 0.25)
+  all but vanished in the game's daylight: this module builds its glass at 0.08.
+- **ChatGPT's one review** (likeness 86, 82, 79, 73, 86 by era; finish 78, 73, 72, 74, 80; "approve the architecture
+  and progression, with a focused finishing pass rather than a redesign"). **Taken** in the one last edit: era 4's
+  lunette as panes in a steel frame (thick bars, a second ring) with teal darker than the sky, thicker purlins and
+  pipes, a steel hoop across the goo tank; the capital's blank wing end walls panelled between marble pilasters on a
+  plinth under a gold cornice, its four columns a quarter thicker; every lit pane a deep amber (238, 158, 60) so the
+  window's bars read in daylight; a post where each gable strut lands (eras 1-3); a cross brace in the foot bay of
+  the era-2 tower; the palisade's points as four-sided pyramids; a verge roll and a second eave course on the
+  thatch. **Left**: new bands and corner posts on the era-2 tower and more copper pipes at era 4 (both already
+  built, now only made stronger), a stone edge band and bigger battlements at era 3 (lowest gain), a narrower
+  thatch cap on the lookout (the owner's own Meshy piece).
+- **Verified**: `tools\check.ps1` CHECK OK (827 tests) and `tools\types.ps1 src/server` TYPES OK, both after the
+  last edit. Two play tests in StudioTest with the real meshes, in daylight, the second AFTER the last edit at
+  levels 10, 20, 30, 40, 50: no error in the log (`docs/areas/village-v2/review/training-l*.jpg`).
+- **Not verified**: the capital's panelled wing end was seen in the Edit preview only (`training-l50-flank.jpg`);
+  the 50 steps were seen at each era's last level, not pair by pair; nobody has played it on a phone.
+- **Next** (his to choose): the dock by the same skill; the village's layout; the Granary's 50 steps against the
+  step test (postponed by him).
+
+## 2026-11-17 — the Training Hall: the five-era sheet and the ladder (the plan this build followed)
 
 - The owner chose the training ground as the next landmark ("Sân huấn luyện"). Skill `landmark-build`, steps 1-3:
   ChatGPT's first sheet (new chat `/c/6afb80dc-3ab0-83ec-841b-48264f101756`, with the Breeding House's and the
@@ -10,9 +46,7 @@
   the back with its open front, the banner tower at its right end (its five forms carry levels 10, 20, 30, 40, 50),
   the round shield with crossed swords as the emblem. One new Blender piece (B14 `ShieldEmblem`, `hard-pieces.md`),
   no new Meshy piece.
-- **Next: on his yes**, step 4 of the skill: `src/server/TrainingHall.luau` on `Architecture`, called from
-  `TrainingStages.build`; the ground grows once at the back for every level; today's stands, canopy and scoreboard
-  go, the hall takes their job. Nothing is built before his word.
+- He said yes the same day; the build is the entry above.
 
 ## 2026-11-17 — the Breeding House landmark built, play-tested, reviewed once and locked
 

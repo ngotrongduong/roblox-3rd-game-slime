@@ -576,5 +576,86 @@
    }
   },
   "triangles": 1360
+ },
+ "ShieldEmblem": {
+  "objects": {
+   "ShieldEmblem_Disc": {
+    "size_studs_xyz": [
+     1.72,
+     1.72,
+     0.4
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "triangles": 192,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 0.681
+   },
+   "ShieldEmblem_Rim": {
+    "size_studs_xyz": [
+     2.0,
+     2.0,
+     0.36
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "triangles": 288,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 0.311
+   },
+   "ShieldEmblem_Blades": {
+    "size_studs_xyz": [
+     1.704,
+     1.283,
+     0.15
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     0.21,
+     -0.28
+    ],
+    "triangles": 40,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 0.026
+   },
+   "ShieldEmblem_Hilts": {
+    "size_studs_xyz": [
+     1.739,
+     0.732,
+     0.16
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     -0.504,
+     -0.28
+    ],
+    "triangles": 72,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 0.027
+   }
+  },
+  "triangles": 592
  }
 }

@@ -1,6 +1,6 @@
 ---
 name: landmark-build
-description: Use when a village building of Goo Lineage V2 that upgrades through its 50 levels is built or rebuilt as a landmark (the Granary, the Kitchen, the Garden and the Breeding House are done; training ground, dock and the village's own pieces follow), when the owner sends a note on a finished landmark, when its upgrade ladder is planned or judged, when a shape is too hard for Roblox parts and must go to Blender or the owner's Meshy, or before changing src/server/Architecture.luau or a landmark module such as Granary.luau.
+description: Use when a village building of Goo Lineage V2 that upgrades through its 50 levels is built or rebuilt as a landmark (the Granary, the Kitchen, the Garden, the Breeding House and the Training Hall are done; dock and the village's own pieces follow), when the owner sends a note on a finished landmark, when its upgrade ladder is planned or judged, when a shape is too hard for Roblox parts and must go to Blender or the owner's Meshy, or before changing src/server/Architecture.luau or a landmark module such as Granary.luau.
 ---
 
 # Landmark build: one village building, from reference to locked
@@ -59,11 +59,14 @@ Each step has its gate. Do not start a step before the gate of the one before it
    are taken in daylight through a client `BindToRenderStep` that writes the day's Lighting values (LESSONS, "The
    Garden"), unbound again before the owner gets Studio back. One camera for all five eras, set once.
    *Gate: no error, the look holds in the game's light.*
-8. **ONE ChatGPT review, at the end** (the owner's requirement; my own way first): the five era shots from the Edit
-   preview (the pieces on; closer than the self-review shots, the building filling half the frame), sent in the chat
-   that drew the reference sheet, one paragraph saying what must not be judged (the preview's empty hall and lawn:
-   the stations and floor are the area module's), scores per era and the 5-8 best fixes. Check
-   every point against the code and the reference, then ONE last edit. No second round.
+8. **ONE ChatGPT review, at the end** (the owner's requirement; my own way first): the five era shots, sent in the
+   chat that drew the reference sheet, with scores per era and the 5-8 best fixes asked for. Once the meshes are
+   uploaded, step 7's play-test shots ARE the review shots (daylight, the real floor and stations: the Training
+   Hall); otherwise the Edit preview's (the pieces on; closer than the self-review shots, the building filling half
+   the frame), with one paragraph saying what must not be judged (the preview's empty hall and lawn). Check
+   every point against the code and the reference, then ONE last edit. No second round. When that edit changes
+   colours or glass, shoot the five levels once more in Play (the camera and `_G.AreaShow` are already known:
+   about ten calls) so the pictures the owner gets are the final state.
 9. **Close.** `tools\check.ps1` (CHECK OK), `tools\types.ps1 src/server` (TYPES OK), the final shots in
    `docs/areas/village-v2/review/`, `docs/STATUS.md`, new lessons into `LESSONS.md` and INTO THIS SKILL in the same
    commit, commit only the job's own paths.
@@ -154,6 +157,13 @@ keeps its stand-in and is named in the review brief as "not to be judged".
 - Colour in the game's daylight (the Garden's review): lit Neon panes wash out to white, so window gold is deep
   (about 250, 200, 105); copper under Metal darkens to brown wood, so it starts bright (226, 132, 78); at the marble
   era every metal ornament is gold, copper beside marble reads rustic.
+- Width before the play test (the Training Hall): measure the building against its yard as the sheet draws it; a
+  hall half the yard wide read as a shed. Size by parameters (`hw`, `rise`) so a wider hall moves nothing else.
+- Glass (the Training Hall): `Architecture.new`'s see-through at 0.4 vanishes in the game's daylight, 0.08 reads
+  as coloured glass, in a colour darker than the sky; a glass front needs bars at least 0.25 thick to read as
+  panes. Lit panes are a deep amber (238, 158, 60) so the window's bars still show.
+- Masts, lamp standards and pipes never stand in front of a banner or an emblem; an ornament that does not suit a
+  later era's material is swapped there (pipes on steel, hanging lanterns on marble), the ladder row written as built.
 - A gate's roof never outweighs the house behind it (3 deep was enough); thatch gets a darker course half way up
   each slope or it reads as a lid; a vine canopy is a few light clumps with the rafters showing, not a hedge.
 - The roof's big ornament (the Breeding House's egg): measure its width against its height on the sheet before
@@ -194,5 +204,5 @@ keeps its stand-in and is named in the review brief as "not to be judged".
 | Kitchen (cookhouse to grand restaurant) | `Kitchen.luau` | `kitchen-ref-sheet.jpg`, `kitchen-ref-era*.jpg` | `kitchen-ladder.md` (walked on paper; seen at each era's last level, not pair by pair) | locked 2026-11-17 (ChatGPT: likeness 78-88, finish 74-83, before the last edit); every piece uploaded and worn 2026-11-17 |
 | Garden (potting shed to royal palm house, with its windmill) | `Garden.luau` | `garden-ref-sheet.jpg`, `garden-ref-era*.jpg` | `garden-ladder.md` (walked on paper; seen at each era's last level, not pair by pair) | locked 2026-11-17 (ChatGPT: 78-84 an era, 81 overall, before the last edit; the last edit seen in the Edit preview only); B10 and B11 uploaded and worn; the rose arch taken out at the owner's word, step 19 is two bush pots (seen in Play at 30 and 50) |
 | Breeding pen -> Breeding House (nest hall to royal hatchery, the spotted egg on its roof) | `BreedingHouse.luau` | `breeding-ref-sheet.jpg`, `breeding-ref-era*.jpg` | `breeding-ladder.md` (walked on paper; seen at each era's last level, not pair by pair) | locked 2026-11-17 (ChatGPT: likeness 83-87, finish 77-85 an era, before the last edit; the last edit seen in the Edit preview only); B12 and B13 uploaded and worn |
-| Training ground -> Training Hall (drill shed to marble arena, the banner tower at its right end) | `TrainingHall.luau` (to come) | `training-ref-sheet.jpg`, `training-ref-era*.jpg` | `training-ladder.md` (walked on paper) | sheet drawn at the first try and ladder written 2026-11-17; waits for the owner's yes, nothing built |
+| Training ground -> Training Hall (drill shed to marble arena, the banner tower at its right end) | `TrainingHall.luau` | `training-ref-sheet.jpg`, `training-ref-era*.jpg` | `training-ladder.md` (walked on paper; seen at each era's last level, not pair by pair) | locked 2026-11-17 (ChatGPT: likeness 73-86, finish 72-80 an era, before the last edit; the last edit seen in Play at all five eras, the capital's flank in the Edit preview only); B14 uploaded and worn |
 | Dock, village pieces | - | - | - | not started |

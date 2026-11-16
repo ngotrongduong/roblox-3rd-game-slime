@@ -1,5 +1,6 @@
 # The Granary's regular hard pieces (docs/areas/village-v2/hard-pieces.md, B1-B7), the Kitchen's two (B8, B9) and the
-# Garden's two (B10, B11) and the Breeding House's two (B12, B13), built by script, no textures.
+# Garden's two (B10, B11), the Breeding House's two (B12, B13) and the Training Hall's one (B14), built by script, no
+# textures.
 # Owner 2026-11-16: "những khối và hình mà khó dựng thì hoặc là bạn tự dựng trên blender rồi ghép vào, hoặc để tôi tự dựng".
 # 1 Blender unit = 1 stud, Z up (Roblox +Y after export). Every object of a piece is one colour slot (the game paints it);
 # the preview paints the slots flat. Run: tools/blender/granary_pieces.ps1. Out: art/models/granary/blender/.
@@ -22,7 +23,7 @@ COL = {
 	"Capital": (0.9, 0.68, 0.2), "Run": (0.93, 0.9, 0.82), "Post": (0.93, 0.9, 0.82), "Urn": (0.9, 0.68, 0.2),
 	"Elbow": (0.78, 0.45, 0.25), "Flange": (0.9, 0.68, 0.2), "Wheel": (0.9, 0.68, 0.2), "Blades": (0.6, 0.42, 0.26),
 	"Egg": (0.98, 0.94, 0.84), "Spots": (0.69, 0.57, 0.89), "Ribs": (0.2, 0.2, 0.23), "Rim": (0.84, 0.28, 0.47),
-	"Heart": (1.0, 0.48, 0.64),
+	"Heart": (1.0, 0.48, 0.64), "Disc": (0.69, 0.5, 0.31), "Steel": (0.82, 0.83, 0.86),
 }
 
 
@@ -481,9 +482,37 @@ def heart_emblem():
 		("HeartEmblem_Egg", e, (0, 0, 0), "Egg", 60)]
 
 
+def shield_emblem():
+	# the Training Hall's emblem (ladder step 2): a round shield 2 wide with a raised rim and two crossed swords on its
+	# face, points up; held at its middle, its face to the front, its back plain (it hangs on a wall)
+	sides = 24
+	d = M()
+	lathe(d, [(0.0, -0.2), (0.5, -0.17), (0.86, -0.1), (0.86, 0.1), (0.5, 0.17), (0.0, 0.2)], sides)
+	r = M()
+	lathe(r, [(0.82, -0.12), (0.9, -0.18), (1.0, -0.13), (1.0, 0.13), (0.9, 0.18), (0.82, 0.12)], sides, loop=True)
+	bl, hl = M(), M()
+	for s, z in ((1, 0.25), (-1, 0.31)):
+		a = s * math.pi / 4  # the sword leans this far from upright
+		ux, uy = math.sin(a), math.cos(a)  # along the sword
+		vx, vy = math.cos(a), -math.sin(a)  # across it
+		secs = []
+		for u, half, thick in ((-0.5, 0.11, 0.045), (0.92, 0.09, 0.04), (1.2, 0.005, 0.005)):
+			cx, cy = ux * u, uy * u
+			secs.append([(cx - vx * half, cy - vy * half, z), (cx, cy, z + thick), (cx + vx * half, cy + vy * half, z),
+				(cx, cy, z - thick)])
+		sweep(bl, secs)
+		for u, su, sv in ((-0.55, 0.11, 0.6), (-0.8, 0.4, 0.1), (-1.06, 0.17, 0.17)):  # the guard, the grip, the pommel
+			box(hl, (ux * u, uy * u, z), (sv, su, 0.1), -a)
+	for m in (d, r, bl, hl):
+		xform(m, (0, len(m.v)), lambda p: (p[0], p[2], p[1]))  # stand it up: face towards the front, thickness along Y
+	return [("ShieldEmblem_Disc", d, (0, 0, 0), "Disc", 40), ("ShieldEmblem_Rim", r, (0, 0, 0), "Gold", 50),
+		("ShieldEmblem_Blades", bl, (0, 0, 0), "Steel", 30), ("ShieldEmblem_Hilts", hl, (0, 0, 0), "Gold", 30)]
+
+
 PIECES = [("ConeRoof", cone_roof), ("GlassDome", glass_dome), ("RoyalDome", royal_dome), ("Column", column),
 	("Balustrade", balustrade), ("Pipe", pipe), ("Gear", gear), ("ChimneyCrown", chimney_crown), ("VentHood", vent_hood),
-	("WindWheel", wind_wheel), ("IrrigationArch", irrigation_arch), ("EggDome", egg_dome), ("HeartEmblem", heart_emblem)]
+	("WindWheel", wind_wheel), ("IrrigationArch", irrigation_arch), ("EggDome", egg_dome), ("HeartEmblem", heart_emblem),
+	("ShieldEmblem", shield_emblem)]
 
 
 # ---------------------------------------------------------------- Blender side

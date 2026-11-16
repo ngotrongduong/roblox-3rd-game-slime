@@ -152,7 +152,7 @@ The egg is worn 1.1 times as wide and 0.85 times as tall as it was modelled, the
 Reused: B1 (the turret's cap, the egg's thatch and tile collars), B2 (the boiler's cap), B3 (the two wing domes),
 B4 and B5 (columns, the balustrade fence), B6 (pipes), B7 (the gate's gear), B8 (the egg's crown).
 
-## The Training Hall (planned 2026-11-17; nothing built, the sheet waits for the owner's word)
+## The Training Hall (built 2026-11-17; B14 built in Blender, uploaded and worn)
 
 The sorting and the 50 steps are in `training-ladder.md`. No new Meshy piece: the lookout's thatch cap, lanterns,
 flower boxes, pillars, banners, the goo tank and its valve, urns, the laurel and the finials all come from the

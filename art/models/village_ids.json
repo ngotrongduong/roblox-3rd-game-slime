@@ -237,5 +237,15 @@
 			"HeartEmblem_Heart": 95188600262517,
 			"HeartEmblem_Rim": 82531523818942
 		}
+	},
+	"ShieldEmblem": {
+		"model": 92765028048040,
+		"texture": 0,
+		"pieces": {
+			"ShieldEmblem_Blades": 107735602486578,
+			"ShieldEmblem_Disc": 107244292759568,
+			"ShieldEmblem_Hilts": 94017421951329,
+			"ShieldEmblem_Rim": 121852647378034
+		}
 	}
 }
