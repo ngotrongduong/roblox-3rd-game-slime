@@ -9,7 +9,8 @@ The owner set this process on 2026-10-28 and it carried all seven areas through 
 kitchen, training ground, fishing pond, village with its fence, gates and fountain). Replies to the owner are in
 Vietnamese; every word in the game is English. Read first: `.claude/skills/studio-build/LESSONS.md` ("Buildings that
 upgrade" and the notes under it) and skill `prop-craft` (how each prop is made to the owner's quality bar and placed
-with a purpose). Sending to ChatGPT: skill `chatgpt-review`.
+with a purpose). Sending to ChatGPT: skill `chatgpt-review`. The building itself, rebuilt as a landmark through its 50 levels
+(village v2, from 2026-11-16), is skill `landmark-build`; this skill stays the way for the props round it.
 
 ## The owner's rules for an area
 

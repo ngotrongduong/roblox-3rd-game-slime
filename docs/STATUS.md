@@ -1,5 +1,20 @@
 # Status
 
+## 2026-11-16 — the landmark process written down: skill `landmark-build`
+
+- The owner, after the Granary: roughly fine, he will make some decoration props later; the whole road is to be kept
+  as a finished process so the next buildings meet the least trouble and cost the least time and tokens.
+- `.claude/skills/landmark-build/SKILL.md`: the ten steps with their gates (reference -> ladder -> sort the shapes
+  -> parts -> Blender pieces -> Edit preview -> one play test -> ONE ChatGPT review -> close -> the owner's part),
+  which shapes go to parts, Blender or his Meshy, the self-review list, the token savers, the don'ts, a ledger.
+- **The owner's upgrade-step rule (new)**: a step is a new ornament, an ornament upgraded, a material moved to the
+  next, or one part swapped for the next level's part; small but seen at once, a clear change of shape, colour or
+  material, never a count alone ("2 flowers, now 3"). It is section 2 of the skill and the memory
+  `upgrade-steps-small-part`.
+- **Not done**: the Granary's own 50 steps have not been walked against that test (its 25 features are mostly new
+  shapes; the store props of levels 2-5 of each era are the likeliest to be count-only). No code changed.
+- **Next**: when the owner names the next district, start at step 1 of the skill.
+
 ## 2026-11-16 — the Granary: ChatGPT's final review and the last edit; the architecture is locked
 
 - The owner's process: my own way first, the finished version to ChatGPT once, one last edit. Sent: the five eras with

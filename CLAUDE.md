@@ -67,7 +67,9 @@ a script file, run with one command.
   publish, robux-products, store-page); both carried over from Egg Heist, see `docs/inherited-from-game-2.md`.
   Made here: `slime-wear` (a Secret slime's own horns, ears, wings and tail from the owner's 3D file: the standard
   way, set by the owner 2026-11-10; a better method or a new rule of his found while doing it goes into the skill in
-  the same commit).
+  the same commit); `landmark-build` (a village building rebuilt as a landmark through its 50 levels: the road from
+  reference to locked, the owner's upgrade-step rule, which shapes go to Blender or to his Meshy, how to spend the
+  least tokens; set by the owner 2026-11-16 after the Granary, kept current the same way).
   Also `ponytail`, `ponytail-review`, `ponytail-audit`, `ponytail-debt`, `ponytail-gain`, `ponytail-help`
   (from github.com/DietrichGebert/ponytail, MIT, commit 09c434a, installed 2026-10-27 at the owner's
   request): the smallest change that fully solves a task, and plain-English reviews and audits. This
