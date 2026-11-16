@@ -264,6 +264,29 @@ function Architecture.new(m: Instance, frame: CFrame, skins: { [string]: Enum.Ma
 		end
 	end
 
+	-- A mesh piece of the library kit (`src`: one MeshPart, the model's pivot where the piece is held) with that pivot
+	-- at `cf`, stretched by `scale` and painted `colour`. It wears its colour's skin like a part; nothing collides with it.
+	function b.mesh(src: Model, cf: CFrame, scale: Vector3, colour: Color3, material: Enum.Material?): BasePart?
+		local source = src:FindFirstChildWhichIsA("BasePart")
+		if not source then
+			return nil
+		end
+		local p = source:Clone()
+		p.Size = source.Size * scale
+		p.CFrame = cf * CFrame.new(source.Position * scale)
+		p.Color = colour
+		p.Material = material or (skins and skins[colour:ToHex()]) or Enum.Material.SmoothPlastic
+		if p.Material == Enum.Material.Glass and seeThrough then
+			p.Transparency = seeThrough
+		end
+		p.CastShadow = p.Size.Magnitude > 4
+		p.CanCollide = false
+		p.CanTouch = false
+		p.CanQuery = false
+		p.Parent = m
+		return p
+	end
+
 	-- A cone roof of `steps` rings, each smaller, `cf` at the middle of its foot; a ball on its tip.
 	function b.cone(cf: CFrame, radius: number, rise: number, steps: number, colour: Color3, tip: Color3?)
 		local h = rise / steps
@@ -469,7 +492,8 @@ function Architecture.new(m: Instance, frame: CFrame, skins: { [string]: Enum.Ma
 	end
 
 	-- A round store silo standing at (x, z) from `y0`: a foot, a drum with hoops, and a cap ("cone", "dome" or
-	-- "flat"). With `goo` the drum is glass with glowing goo inside (slime tech).
+	-- "flat"; anything else leaves it open for the caller's own cap). With `goo` the drum is glass with glowing goo
+	-- inside (slime tech).
 	function b.silo(
 		x: number,
 		y0: number,
@@ -501,7 +525,7 @@ function Architecture.new(m: Instance, frame: CFrame, skins: { [string]: Enum.Ma
 			b.cyl("SiloEave", r + 0.3, 0.4, top * CFrame.new(0, 0.2, 0), hoop, nil, false)
 			b.ball("SiloDome", r, top * CFrame.new(0, 0.3, 0), capColour)
 			b.ball("Finial", r * 0.16, top * CFrame.new(0, r + 0.4, 0), hoop)
-		else
+		elseif cap == "flat" then
 			b.cyl("SiloLid", r + 0.3, 0.5, top * CFrame.new(0, 0.25, 0), capColour, nil, false)
 		end
 	end

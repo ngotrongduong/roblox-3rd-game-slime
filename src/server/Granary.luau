@@ -21,6 +21,7 @@ local Config = require(ReplicatedStorage.Shared.Config)
 local FaceArt = require(ReplicatedStorage.Shared.FaceArt)
 local SlimeShape = require(ReplicatedStorage.Shared.SlimeShape)
 local Architecture = require(script.Parent.Architecture)
+local LibraryKit = require(script.Parent.LibraryKit)
 
 local Granary = {}
 
@@ -532,6 +533,47 @@ function Granary.build(m: Instance, frame: CFrame, level: number)
 			)
 		end
 	end
+	-- THE BLENDER PIECES (docs/areas/village-v2/hard-pieces.md): the shapes parts cannot reach, as meshes of the library
+	-- kit, each scaled from its drawing of one stud. `piece` is nil while a mesh is not there (not uploaded yet, or it
+	-- did not load): the caller then builds its stand-in from parts.
+	local function piece(
+		name: string,
+		cf: CFrame,
+		sx: number,
+		sy: number,
+		sz: number,
+		colour: Color3,
+		material: Enum.Material?
+	): BasePart?
+		local src = LibraryKit.find(name)
+		return if src then b.mesh(src, cf, Vector3.new(sx, sy, sz), colour, material) else nil
+	end
+	-- a tiled cone roof `r` round at the eave and `rise` high, the middle of its foot at `cf`: its height, finial and all
+	local function coneRoof(cf: CFrame, r: number, rise: number, colour: Color3): number?
+		if not piece("ConeRoof_Tiles", cf, r, rise / 1.3, r, colour) then
+			return nil
+		end
+		local s = r * 1.3
+		piece("ConeRoof_Finial", cf * CFrame.new(0, rise - 0.04 * s, 0), s, s, s, L.gold)
+		return rise + 0.2 * s
+	end
+	-- a dome of panes in a ribbed frame, `r` round: its height
+	local function ribDome(cf: CFrame, r: number, panes: Color3): number?
+		if not piece("GlassDome_Frame", cf, r, r, r, L.beam) then
+			return nil
+		end
+		piece("GlassDome_Glass", cf, r, r, r, panes)
+		piece("GlassDome_Finial", cf * CFrame.new(0, 0.99 * r, 0), r, r, r, L.gold)
+		return 1.36 * r
+	end
+	-- the capital's dome, `r` round: a shell under golden ribs, a lantern (its cap 1.53-1.68 up) and a finial: its height
+	local function royalDome(cf: CFrame, r: number, shell: Color3): number?
+		if not piece("RoyalDome_Gold", cf, r, r, r, L.gold) then
+			return nil
+		end
+		piece("RoyalDome_Shell", cf, r, r, r, shell)
+		return 1.95 * r
+	end
 	-- a band round the outside of the hall's walls
 	local function girdle(name: string, y: number, h: number, off: number, proud: number, colour: Color3)
 		local X, z0, z1 = hw + off, -off, d + off
@@ -767,18 +809,24 @@ function Granary.build(m: Instance, frame: CFrame, level: number)
 	if f >= 16 and era == 4 then
 		-- the gear over the door
 		local face, r = b.face(0, doorTop + 1.3, 0, FRONT), 1.1
-		b.disc("Gear", r, 0.3, face * CFrame.new(0, 0, -0.3), L.gold)
-		for k = 0, 7 do
-			b.trim(
-				"GearTooth",
-				r * 0.34,
-				r * 0.4,
-				0.3,
-				face * CFrame.Angles(0, 0, k * math.pi / 4) * CFrame.new(0, r * 1.05, -0.3),
-				L.gold
-			)
+		local s = r * 2.5 / 1.994 -- (its teeth as far out as the stand-in's)
+		if piece("Gear_Wheel", face * CFrame.new(0, 0, -0.35), s, s, 0.8, L.gold) then
+			-- (the goo glows between its spokes)
+			b.disc("GearEye", r * 0.95, 0.16, face * CFrame.new(0, 0, -0.08), L.glass, M.Neon)
+		else
+			b.disc("Gear", r, 0.3, face * CFrame.new(0, 0, -0.3), L.gold)
+			for k = 0, 7 do
+				b.trim(
+					"GearTooth",
+					r * 0.34,
+					r * 0.4,
+					0.3,
+					face * CFrame.Angles(0, 0, k * math.pi / 4) * CFrame.new(0, r * 1.05, -0.3),
+					L.gold
+				)
+			end
+			b.disc("GearEye", r * 0.45, 0.4, face * CFrame.new(0, 0, -0.32), L.glass, M.Neon)
 		end
-		b.disc("GearEye", r * 0.45, 0.4, face * CFrame.new(0, 0, -0.32), L.glass, M.Neon)
 	end
 
 	-- THE GREAT DOOR, its leaves open -----------------------------------------------------------------------
@@ -989,6 +1037,7 @@ function Granary.build(m: Instance, frame: CFrame, level: number)
 		end
 	end
 	local tip: number
+	local seat: number? -- where the slime of the last level sits, if not on the very tip
 	if L.towerRoof == "pyramid" then
 		b.trim("TowerEave", tw + 1.7, 0.3, tw + 1.7, b.at(0, top + 0.15, zT), L.board)
 		b.pyramid(b.at(0, top + 0.3, zT), tw + 1.5, tw + 1.5, L.spire, L.towerCap)
@@ -996,47 +1045,59 @@ function Granary.build(m: Instance, frame: CFrame, level: number)
 	elseif L.towerRoof == "glass" then
 		local rd = tw / 2
 		b.cyl("DomeRing", rd + 0.4, 0.5, b.at(0, top + 0.25, zT), L.gold, nil, false)
-		b.ball("Dome", rd, b.at(0, top + 0.5, zT), L.towerCap)
 		b.ball("DomeGoo", rd * 0.45, b.at(0, top + 0.9, zT), L.goo or L.glass, M.Neon)
-		for k = 0, 3 do
-			-- the dome's steel ribs
-			b.cyl(
-				"DomeRib",
-				rd + 0.06,
-				0.2,
-				b.at(0, top + 0.5, zT) * CFrame.Angles(0, k * math.pi / 4, 0) * CFrame.Angles(math.pi / 2, 0, 0),
-				L.beam,
-				nil,
-				false
-			)
+		local high = ribDome(b.at(0, top + 0.5, zT), rd, L.towerCap)
+		if high then
+			tip = top + 0.5 + high
+		else
+			b.ball("Dome", rd, b.at(0, top + 0.5, zT), L.towerCap)
+			for k = 0, 3 do
+				-- the dome's steel ribs
+				b.cyl(
+					"DomeRib",
+					rd + 0.06,
+					0.2,
+					b.at(0, top + 0.5, zT) * CFrame.Angles(0, k * math.pi / 4, 0) * CFrame.Angles(math.pi / 2, 0, 0),
+					L.beam,
+					nil,
+					false
+				)
+			end
+			b.cyl("DomeCap", 0.9, 0.8, b.at(0, top + 0.5 + rd + 0.1, zT), L.gold, nil, false)
+			tip = top + 0.5 + rd + 0.5
 		end
-		b.cyl("DomeCap", 0.9, 0.8, b.at(0, top + 0.5 + rd + 0.1, zT), L.gold, nil, false)
-		tip = top + 0.5 + rd + 0.5
 	else
 		local rd = tw / 2 + 0.2
 		b.cyl("DomeDrum", rd, 1.6, b.at(0, top + 0.8, zT), L.towerWall, nil, false)
 		b.cyl("DomeRing", rd + 0.3, 0.4, b.at(0, top + 1.6, zT), L.gold, nil, false)
-		b.ball("Dome", rd, b.at(0, top + 1.7, zT), L.towerCap)
-		for k = 0, 3 do
-			-- golden ribs over the blue
-			b.cyl(
-				"DomeRib",
-				rd + 0.08,
-				0.25,
-				b.at(0, top + 1.7, zT) * CFrame.Angles(0, k * math.pi / 4, 0) * CFrame.Angles(math.pi / 2, 0, 0),
-				L.gold,
-				nil,
-				false
-			)
+		local high = royalDome(b.at(0, top + 1.8, zT), rd, L.towerCap)
+		if high then
+			tip = top + 1.8 + high
+			seat = top + 1.8 + 1.58 * rd -- (in the lantern's cap: the finial stands hidden in the slime)
+		else
+			b.ball("Dome", rd, b.at(0, top + 1.7, zT), L.towerCap)
+			for k = 0, 3 do
+				-- golden ribs over the blue
+				b.cyl(
+					"DomeRib",
+					rd + 0.08,
+					0.25,
+					b.at(0, top + 1.7, zT) * CFrame.Angles(0, k * math.pi / 4, 0) * CFrame.Angles(math.pi / 2, 0, 0),
+					L.gold,
+					nil,
+					false
+				)
+			end
+			b.cyl("DomeLantern", 0.9, 1.6, b.at(0, top + 1.7 + rd + 0.5, zT), L.towerWall, nil, false)
+			b.ball("LanternCap", 1, b.at(0, top + 1.7 + rd + 1.3, zT), L.gold)
+			tip = top + 1.7 + rd + 2.3
 		end
-		b.cyl("DomeLantern", 0.9, 1.6, b.at(0, top + 1.7 + rd + 0.5, zT), L.towerWall, nil, false)
-		b.ball("LanternCap", 1, b.at(0, top + 1.7 + rd + 1.3, zT), L.gold)
-		tip = top + 1.7 + rd + 2.3
 	end
 	if f >= 25 then
 		-- the crowned golden slime on the very top
-		local tall = slime(b.at(0, tip - 0.2, zT), 1.4)
-		crown(b.at(0, tip - 0.2 + tall * 0.8, zT), 0.7)
+		local sit = seat or tip - 0.2
+		local tall = slime(b.at(0, sit, zT), 1.4)
+		crown(b.at(0, sit + tall * 0.8, zT), 0.7)
 	elseif f >= 4 then
 		b.flag(Vector3.new(0, tip - 0.2, zT), 3.4, L.cloth, L.gold)
 	else
@@ -1426,11 +1487,26 @@ function Granary.build(m: Instance, frame: CFrame, level: number)
 		for i, s in spots do
 			local x, z, h = s[1], s[2], s[3]
 			b.cyl("SiloPad", sr + 1.1, 0.4, b.at(x, 0.2, z), L.stone)
-			b.silo(x, 0.4, z, sr, h, L.siloDrum, L.siloHoop, L.siloCap, L.siloCapColour, L.goo)
-			local capTop = 0.4 + 0.8 + h + (if L.siloCap == "cone" then 0.3 + sr * 1.3 + 0.5 else sr + 0.7)
+			local drumTop = 0.4 + 0.8 + h
+			local high: number? -- the cap as a mesh, in the era's manner
+			if L.siloCap == "cone" then
+				high = coneRoof(b.at(x, drumTop, z), sr + 0.6, sr * 1.3 + 0.3, L.siloCapColour)
+			elseif era == 4 then
+				high = ribDome(b.at(x, drumTop, z), sr + 0.15, L.siloCapColour)
+			else
+				high = royalDome(b.at(x, drumTop, z), sr + 0.15, L.siloCapColour)
+			end
+			local capKind = if high then "none" else L.siloCap
+			b.silo(x, 0.4, z, sr, h, L.siloDrum, L.siloHoop, capKind, L.siloCapColour, L.goo)
+			local capTop = drumTop + (high or (if L.siloCap == "cone" then 0.3 + sr * 1.3 + 0.5 else sr + 0.7))
 			if f >= 22 and L.siloCap == "dome" then
-				crown(b.at(x, capTop - 0.5, z), 0.8)
-				capTop += 0.5
+				if high then
+					-- (round the dome's lantern, its finial through the middle)
+					crown(b.at(x, drumTop + 1.48 * (sr + 0.15), z), 0.8)
+				else
+					crown(b.at(x, capTop - 0.5, z), 0.8)
+					capTop += 0.5
+				end
 			end
 			table.insert(tips, Vector3.new(x, capTop, z))
 			if era == 4 and i > 1 then
@@ -1447,12 +1523,26 @@ function Granary.build(m: Instance, frame: CFrame, level: number)
 			-- and two climb from the first silo's shoulder over the eave and up the roof to the tower's foot
 			local lift = 0.45 -- (how far a pipe rides over the slates)
 			local ue = half + L.over * 0.5
-			for i, zTo in { zT + tw / 4, zT - tw / 4 } do
+			-- (side by side to the tower's back half: the second one used to cut through the big dormer)
+			for i, zTo in { zT + tw / 4 + 1.1, zT + tw / 4 } do
 				local z0 = z1 - (i - 1) * 1.1
 				local from = Vector3.new(x1 + sr * 0.6, 0.4 + 0.8 + sh - 0.3, z0)
 				local eave = Vector3.new(-ue, roofY(ue) + lift, z0)
 				local to = Vector3.new(-tw / 2, roofY(tw / 2) + lift, zTo)
-				b.rod("RoofPipe", 0.3, from, eave, L.accent)
+				-- out of the silo level, then straight up or down to the eave through a fitter's elbow (its mouths 0.7
+				-- from its corner in the mesh, drawn for a pipe 0.25 round)
+				local climb, port = eave.Y - from.Y, 0.7 * 1.2
+				local turn = if climb > 0 then CFrame.Angles(0, math.pi, 0) else CFrame.Angles(0, 0, math.pi)
+				if
+					math.abs(climb) > port + 0.2
+					and eave.X - from.X > port + 0.2
+					and piece("Pipe_Elbow", b.at(eave.X, from.Y, z0) * turn, 1.2, 1.2, 1.2, L.accent)
+				then
+					b.rod("RoofPipe", 0.3, from, Vector3.new(eave.X - port, from.Y, z0), L.accent)
+					b.rod("RoofPipe", 0.3, Vector3.new(eave.X, from.Y + math.sign(climb) * port, z0), eave, L.accent)
+				else
+					b.rod("RoofPipe", 0.3, from, eave, L.accent)
+				end
 				b.rod("RoofPipe", 0.3, eave, to, L.accent)
 				b.ball("PipeElbow", 0.42, b.at(eave.X, eave.Y, eave.Z), L.gold)
 				b.ball("PipeElbow", 0.42, b.at(to.X, to.Y, to.Z), L.gold)
@@ -1489,7 +1579,17 @@ function Granary.build(m: Instance, frame: CFrame, level: number)
 			{ glow = L.glow } :: WindowOpts
 		)
 		local tTip: number
+		local high: number? -- the roof as a mesh, in the era's manner
 		if era == 3 then
+			high = coneRoof(b.at(tx, tTop, tz), tr + 0.5, 3.6, L.roof)
+		elseif era == 4 then
+			high = ribDome(b.at(tx, tTop, tz), tr + 0.1, L.gold)
+		else
+			high = royalDome(b.at(tx, tTop, tz), tr + 0.1, L.towerCap)
+		end
+		if high then
+			tTip = tTop + high
+		elseif era == 3 then
 			b.cone(b.at(tx, tTop, tz), tr + 0.5, 3.6, 5, L.roof, L.gold)
 			tTip = tTop + 4.1
 		else
@@ -1535,16 +1635,38 @@ function Granary.build(m: Instance, frame: CFrame, level: number)
 	if f >= 21 then
 		local colTop = doorTop + 1.2
 		for _, x in { -(dockHW - 0.6), -(dockHW - 1.85), dockHW - 1.85, dockHW - 0.6 } do
-			b.cyl("Column", 0.55, colTop - BASE - 0.8, b.at(x, (BASE + 0.4 + colTop - 0.4) / 2, -3), L.wall)
-			b.cyl("ColumnFoot", 0.75, 0.4, b.at(x, BASE + 0.2, -3), L.beam, nil, false)
-			b.cyl("ColumnHead", 0.75, 0.4, b.at(x, colTop - 0.2, -3), L.gold, nil, false)
+			local foot, head = 0.4, 0.4
+			local s = 1.1 -- (the meshes are drawn for a shaft one stud through)
+			if piece("Column_Base", b.at(x, BASE, -3), s, s, s, L.gold) then
+				foot, head = 0.45 * s, 0.7 * s
+				piece("Column_Capital", b.at(x, colTop - head, -3), s, s, s, L.gold)
+			else
+				b.cyl("ColumnFoot", 0.75, 0.4, b.at(x, BASE + 0.2, -3), L.beam, nil, false)
+				b.cyl("ColumnHead", 0.75, 0.4, b.at(x, colTop - 0.2, -3), L.gold, nil, false)
+			end
+			b.cyl("Column", 0.55, colTop - BASE - foot - head, b.at(x, (BASE + foot + colTop - head) / 2, -3), L.wall)
 		end
-		-- (a flat top with a golden rail: a roof of its own hid the pediment's slime behind it)
+		-- (a flat top with a rail: a roof of its own hid the pediment's slime behind it)
 		b.box("PorticoBeam", dockHW * 2 + 0.6, 0.9, 3.9, b.at(0, colTop + 0.45, -1.75), L.wall)
 		b.trim("PorticoLine", dockHW * 2 + 0.8, 0.2, 4.1, b.at(0, colTop + 0.2, -1.75), L.gold)
-		b.trim("PorticoRail", dockHW * 2 + 0.4, 0.15, 0.15, b.at(0, colTop + 1.7, -3.5), L.gold)
-		for x = -dockHW, dockHW, dockHW / 3 do
-			b.trim("PorticoBaluster", 0.2, 0.75, 0.2, b.at(x, colTop + 1.27, -3.5), L.gold)
+		local railW, railY = dockHW * 2 + 0.4, colTop + 0.9
+		if LibraryKit.find("Balustrade_Run") then
+			-- a marble balustrade between posts, an urn on each
+			local bays = math.max(1, math.round(railW / 4))
+			local step = (railW - 0.6) / bays
+			for i = 0, bays do
+				local x = -railW / 2 + 0.3 + i * step
+				piece("Balustrade_Post", b.at(x, railY, -3.5), 1, 1, 1, L.wall)
+				piece("Balustrade_Urn", b.at(x, railY + 1.3, -3.5), 1.3, 1.3, 1.3, L.gold)
+				if i < bays then
+					piece("Balustrade_Run", b.at(x + step / 2, railY, -3.5), (step - 0.5) / 4, 1, 1, L.wall)
+				end
+			end
+		else
+			b.trim("PorticoRail", railW, 0.15, 0.15, b.at(0, colTop + 1.7, -3.5), L.gold)
+			for x = -dockHW, dockHW, dockHW / 3 do
+				b.trim("PorticoBaluster", 0.2, 0.75, 0.2, b.at(x, colTop + 1.27, -3.5), L.gold)
+			end
 		end
 		if f >= 23 then
 			-- golden slimes on pedestals either side of the steps

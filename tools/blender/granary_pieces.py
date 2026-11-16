@@ -5,6 +5,7 @@
 import json
 import math
 import os
+import sys
 
 import bpy
 import bmesh
@@ -373,6 +374,63 @@ def export(objs, path):
 	bpy.ops.export_scene.fbx(**kw)
 
 
+PREVIEW_HEAD = """local AssetService = game:GetService('AssetService')
+local SS = game:GetService('ServerStorage')
+local folder = SS:FindFirstChild('GranaryPreview') or Instance.new('Folder')
+folder.Name = 'GranaryPreview'
+folder.Parent = SS
+local made = {}
+local function make(name, size, at, v, t)
+	local old = folder:FindFirstChild(name) if old then old:Destroy() end
+	local em = AssetService:CreateEditableMesh()
+	local ids = {}
+	for k = 0, #v / 3 - 1 do ids[k + 1] = em:AddVertex(Vector3.new(v[k * 3 + 1], v[k * 3 + 2], v[k * 3 + 3])) end
+	for k = 0, #t / 3 - 1 do em:AddTriangle(ids[t[k * 3 + 1]], ids[t[k * 3 + 2]], ids[t[k * 3 + 3]]) end
+	local part = AssetService:CreateMeshPartAsync(Content.fromObject(em))
+	part.Name = name .. 'Part' part.Anchored = true part.Material = Enum.Material.SmoothPlastic
+	part.Size = Vector3.new(size[1], size[2], size[3]) part.CFrame = CFrame.new(at[1], at[2], at[3])
+	local model = Instance.new('Model') model.Name = name part.Parent = model model.Parent = folder
+	table.insert(made, name)
+end
+"""
+
+
+def bounds(ob):
+	# size and centre from the piece's foot, in Roblox axes (x, y up, z = -Blender y)
+	w = [ob.matrix_world @ v.co for v in ob.data.vertices]
+	pts = [(p.x, p.z, -p.y) for p in w]
+	lo = [min(p[i] for p in pts) for i in range(3)]
+	hi = [max(p[i] for p in pts) for i in range(3)]
+	return pts, [hi[i] - lo[i] for i in range(3)], [(hi[i] + lo[i]) / 2 for i in range(3)]
+
+
+def preview(objs, path):
+	# A Luau script that builds the same objects in an open Studio place with EditableMesh (ServerStorage.GranaryPreview),
+	# so a piece is judged on the building before it is uploaded (tools/map/granary_preview.luau). A vertex is split where
+	# its corners' normals differ, so Studio's own normals keep the sharp edges.
+	lines = [PREVIEW_HEAD]
+	for ob in objs:
+		me = ob.data
+		me.calc_loop_triangles()
+		pts, size, ctr = bounds(ob)
+		index, v, t = {}, [], []
+		for lt in me.loop_triangles:
+			for li, vi in zip(lt.loops, lt.vertices):
+				n = me.corner_normals[li].vector
+				key = (vi, round(n.x, 2), round(n.y, 2), round(n.z, 2))
+				if key not in index:
+					index[key] = len(index) + 1
+					v.append("%.3f,%.3f,%.3f" % tuple(pts[vi][i] - ctr[i] for i in range(3)))
+				t.append(str(index[key]))
+		lines.append("make('%s', {%.3f,%.3f,%.3f}, {%.3f,%.3f,%.3f}, {%s}, {%s})" % (ob.name, *size, *ctr, ",".join(v), ",".join(t)))
+		lines.append("task.wait()")
+	lines.append("return table.concat(made, ', ')")
+	with open(path, "w") as fh:
+		fh.write("\n".join(lines))
+
+
+# `-- <folder>` after Blender's own arguments also writes the Studio preview scripts there
+PREVIEW = sys.argv[sys.argv.index("--") + 1] if "--" in sys.argv else None
 os.makedirs(OUT, exist_ok=True)
 report = {}
 for pname, fn in PIECES:
@@ -385,11 +443,15 @@ for pname, fn in PIECES:
 		mx = [max(c[i] for c in mm) for i in range(3)]
 		sz = [mx[i] - mn[i] for i in range(3)]
 		info[ob.name] = {"size_studs_xyz": [round(sz[0], 3), round(sz[2], 3), round(sz[1], 3)],  # Roblox axes: X, Y (up), Z
+			"centre_studs_xyz": [round(c, 3) for c in bounds(ob)[2]],  # from the piece's foot: Config.LibraryKit's `at`
 			"triangles": sum(len(p.vertices) - 2 for p in ob.data.polygons), "origin_location_blender": list(ob.location),
 			"signed_volume": round(volume(ob), 3)}
 	report[pname] = {"objects": info, "triangles": sum(o["triangles"] for o in info.values())}
 	render(objs, OUT + pname + ".png")
 	export(objs, OUT + pname + ".fbx")
+	if PREVIEW:
+		os.makedirs(PREVIEW, exist_ok=True)
+		preview(objs, os.path.join(PREVIEW, pname + ".luau"))
 with open(OUT + "pieces.json", "w") as fh:
 	json.dump(report, fh, indent=1)
 for k, v in report.items():

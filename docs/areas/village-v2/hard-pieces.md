@@ -25,17 +25,24 @@ Reference pictures: `art/models/granary/refs/` (cut from the ChatGPT sheets; the
 
 ### For Claude, in Blender (regular shapes, exact sizes, lowest triangle count)
 
-| # | Piece | Era | Replaces |
-|---|-------|-----|----------|
-| B1 | Cone roof with tile rows and a finial (turrets, silos) | 2-3 | stacked discs |
-| B2 | Glass-and-iron dome with a brass finial (tower, goo tanks) | 4 | `ball` halves |
-| B3 | Royal dome: blue shell, gold ribs, lantern and finial (tower, silos, turrets) | 5 | `ball` halves |
-| B4 | Column with gold capital and base | 5 | cylinders |
-| B5 | Balustrade run with a corner urn | 5 | none yet |
-| B6 | Copper pipe elbows with flanges | 4 | `RoofPipe` rods |
-| B7 | Brass gear-wheel emblem | 4 | `Gear*` parts |
+All seven are built (`tools/blender/granary_pieces.py` -> `art/models/granary/blender/<Piece>.fbx`, sizes in
+`pieces.json`) and fitted in `Granary.luau` through `Config.LibraryKit.Props` (`<Piece>_<Slot>`). Seen on the building
+at levels 20/30/40/50 in a Studio preview (`review/granary-pieces-*.jpg`, made with `tools/map/granary_preview.luau`).
+**Not uploaded yet**: every `mesh` id is 0, so the game still shows the part stand-ins. The upload needs a Studio whose
+place is saved to Roblox (the test place answers "Scope 'asset:read' has not been granted"), or the owner's one
+File > Import 3D; then the ids go into Config and each step below shows the mesh instead.
 
-### The request to ChatGPT (not sent yet: the browser pane's ChatGPT was signed out on 2026-11-16)
+| # | Piece | Era | Replaces | Shown from (feature step, unchanged) |
+|---|-------|-----|----------|--------------------------------------|
+| B1 | Cone roof with tile rows and a finial | 2-3 | stacked discs | silo caps (features 1, 2, 11), turret roofs at era 3 (12, 13) |
+| B2 | Glass-and-iron dome with a brass finial | 4 | `ball` halves | tower roof, goo-tank caps, turret caps at era 4 |
+| B3 | Royal dome: blue shell, gold ribs, lantern and finial | 5 | `ball` halves | tower, silos, turrets at era 5; silo crowns (22) round its lantern, the crowned slime (25) on it |
+| B4 | Column: gold capital and base (the shaft stays a cylinder part) | 5 | cylinders | portico (21) |
+| B5 | Balustrade run, post and urn | 5 | the gold rail and balusters | portico (21) |
+| B6 | Copper pipe elbow with flanges | 4 | the diagonal `RoofPipe` rod | roof pipes of era 4 |
+| B7 | Brass gear-wheel emblem | 4 | `Gear*` parts | gear over the door (16) |
+
+### The request to ChatGPT (sent 2026-11-16 once the owner signed in: chat `/c/6afac2fc-bd18-83ec-9c57-b1e78298967f`)
 
 Attach `granary-ref-era5.jpg` and `granary-ref-era1.jpg`, thinking effort High, a new chat, one paragraph:
 

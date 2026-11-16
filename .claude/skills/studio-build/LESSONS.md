@@ -945,3 +945,25 @@ What went wrong
   and they hung for 120 s. Read the player's `Plot` attribute and build the frame from it.
 - **After a crash the browser pane's ChatGPT is signed out**: only the owner can sign in; keep the request text in
   the repo so nothing is lost.
+
+Blender pieces on a part-built building (2026-11-16, `tools/blender/granary_pieces.py`, `tools/map/granary_preview.luau`)
+- **Each Blender object is its own `Config.LibraryKit` prop** (`<Piece>_<Slot>`, `mesh = 0` until uploaded) and the
+  building asks for it by name (`piece(...)` -> `b.mesh`): with no mesh it gets nil and builds the old part stand-in,
+  so the same feature step shows either. The upgrade ladder never changes, and the code ships before the upload.
+- **See the pieces on the building BEFORE any upload**: the Blender script also writes one Luau script a piece
+  (EditableMesh, vertices split per corner normal); run them in the Edit datamodel, then `granary_preview.luau` builds
+  the building at four levels with a stub kit that serves those meshes at the size and place Config gives them.
+  Preview meshes do not survive a save: destroy both `GranaryPreview` folders when done.
+- **`at` of a prop is from where the building HOLDS the piece** (a roof's eave centre, a column base's foot, an
+  elbow's corner), not the exporter's bounding-box centre: write it by hand once in Config.
+- **A fitter's elbow needs only its own port length of straight pipe each side** (0.7 x scale), not twice it: the
+  first guard was too strict and the elbow never showed.
+- **Count the mesh pieces a level** (the preview prints it): 4 / 10 / 21 / 31 at levels 20 / 30 / 40 / 50 told at
+  once that the elbows were missing at 40.
+- A helper named `box` in a Blender script that already has a `box` shadows it silently until the first call fails.
+- A roof pipe that crosses a dormer went unseen in the far shots: route pipes side by side on the dormer-free part of
+  the slope and look along the roof from the eave.
+- **With the browser pane hidden `carry.html` hangs**: fetch the pictures on the local server's own page
+  (`createImageBitmap` + `OffscreenCanvas` to base64), go to `chatgpt.com/robots.txt#to=/&review=...` yourself, then
+  the usual sessionStorage step. Text goes in with `execCommand('insertText')`; the effort slider still needs a real
+  click on its right end.

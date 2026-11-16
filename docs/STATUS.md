@@ -1,5 +1,23 @@
 # Status
 
+## 2026-11-16 — the Granary's seven Blender pieces: built, fitted, seen in a preview, not uploaded
+
+- Built by `tools/blender/granary_pieces.py` (cone roof, glass dome, royal dome, column base and capital, balustrade,
+  pipe elbow, gear): 14 mesh parts, each a `Config.LibraryKit` prop with `mesh = 0`. `Granary.luau` asks for them by
+  name and keeps the part stand-in when one is missing, so the upgrade ladder is unchanged (one small part a level,
+  the grandest at level 50). `Architecture.b.mesh` places a kit piece; `LibraryKit` skips a prop of id 0.
+- **Verified**: seen on the building at levels 20/30/40/50 in the test place's Edit datamodel through EditableMesh
+  previews (`tools/map/granary_preview.luau`; shots `docs/areas/village-v2/review/granary-pieces-*.jpg`); the stand-in
+  build ran in a play test at levels 10-50 without error; `check.ps1` CHECK OK (827 tests), `types.ps1 src/server`
+  TYPES OK. Also fixed there: the two roof pipes of era 4 ran through the big dormer, now side by side beside it.
+- **Not verified**: the real uploaded meshes in a play test (orientation of the gear and the elbow after an upload),
+  a phone-frame look, the interior, prop collisions, `check_village_trees.luau`.
+- **Waits for the owner**: the mesh upload (open a place saved to Roblox in Studio, e.g. "Slime", or one
+  File > Import 3D of `art/models/granary/blender/*.fbx`). ChatGPT is signed in again: the request for his 8 Meshy
+  reference pictures was sent (`docs/areas/village-v2/hard-pieces.md`).
+- **Next**: the reference pictures into `art/models/granary/refs/`; his Meshy models; the upload; then the ONE final
+  ChatGPT review of the Granary and the last edit; after that the other five districts and the village layout.
+
 ## 2026-11-16 — the Granary, second pass: textures, hollow hall, glasshouse era, the game's own slime as statue
 
 After the owner's notes on the pilot (build 90% like the reference, real textures, a hollow hall, era 4 a steel-frame

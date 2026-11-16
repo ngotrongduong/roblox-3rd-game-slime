@@ -33,6 +33,9 @@ local function build(): Folder
 		model.WorldPivot = CFrame.identity
 		model.Parent = out
 		for _, p in parts do
+			if p.mesh == 0 then
+				continue -- (not uploaded yet: the prop is left out below, and what uses it builds a stand-in)
+			end
 			pending += 1
 			-- (every mesh loads at once: one at a time held the first plot several seconds)
 			task.spawn(function()

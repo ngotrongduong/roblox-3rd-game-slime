@@ -870,6 +870,24 @@ Config.LibraryKit = {
 		WoodLog_Snow_Ice = {
 			{ mesh = 118142207603457, tex = "P", size = { 0.627, 0.586, 2.494 }, at = { 0, 0.293, 0 } },
 		},
+		-- The Granary's hard shapes (tools/blender/granary_pieces.py, art/models/granary/blender; the list is
+		-- docs/areas/village-v2/hard-pieces.md): one colour slot a prop, no picture, painted by server/Granary. A mesh of 0
+		-- is not uploaded yet: the Granary then keeps its stand-in of parts. `at` is from where the Granary holds the piece
+		-- (the middle of its own foot; the elbow by its corner, the gear by its middle).
+		ConeRoof_Tiles = { { mesh = 0, tex = "", size = { 2, 1.3, 2 }, at = { 0, 0.65, 0 } } },
+		ConeRoof_Finial = { { mesh = 0, tex = "", size = { 0.22, 0.24, 0.22 }, at = { 0, 0.12, 0 } } },
+		GlassDome_Glass = { { mesh = 0, tex = "", size = { 2, 1, 2 }, at = { 0, 0.5, 0 } } },
+		GlassDome_Frame = { { mesh = 0, tex = "", size = { 2.12, 1.045, 2.12 }, at = { 0, 0.522, 0 } } },
+		GlassDome_Finial = { { mesh = 0, tex = "", size = { 0.2, 0.37, 0.2 }, at = { 0, 0.185, 0 } } },
+		RoyalDome_Shell = { { mesh = 0, tex = "", size = { 2, 1.17, 2 }, at = { 0, 0.635, 0 } } },
+		RoyalDome_Gold = { { mesh = 0, tex = "", size = { 2.14, 1.95, 2.14 }, at = { 0, 0.975, 0 } } },
+		Column_Base = { { mesh = 0, tex = "", size = { 1.3, 0.45, 1.3 }, at = { 0, 0.225, 0 } } },
+		Column_Capital = { { mesh = 0, tex = "", size = { 1.42, 0.7, 1.42 }, at = { 0, 0.35, 0 } } },
+		Balustrade_Run = { { mesh = 0, tex = "", size = { 4, 1.1, 0.35 }, at = { 0, 0.55, 0 } } },
+		Balustrade_Post = { { mesh = 0, tex = "", size = { 0.6, 1.3, 0.6 }, at = { 0, 0.65, 0 } } },
+		Balustrade_Urn = { { mesh = 0, tex = "", size = { 0.4, 0.5, 0.4 }, at = { 0, 0.25, 0 } } },
+		Pipe_Elbow = { { mesh = 0, tex = "", size = { 1.06, 1.06, 0.685 }, at = { 0.17, 0.17, 0 } } },
+		Gear_Wheel = { { mesh = 0, tex = "", size = { 1.994, 1.994, 0.46 }, at = { 0, 0, 0 } } },
 	},
 	-- how long a stage waits for the meshes before it leaves a library prop out (seconds)
 	WaitSeconds = 15,
