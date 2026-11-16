@@ -417,6 +417,24 @@ was left there (this game has none); read it there if a cave is ever wanted.
 - A greenhouse reads when its ridge runs toward the camera (a glass gable at the front), with few
   slim bars and matte transparent glass (Reflectance 0).
 
+### Landmark buildings from parts (village v2, the granary, 2026-11-16, src/server/Architecture.luau, Granary.luau)
+
+- A landmark is a list of features, not a set of whole models: an era gives the body (size, colours, roof), and
+  each level past the era's fifth adds one feature (silo, bell, dormer, banners, turret, portico...), kept in every
+  later era. So every level shows a change and nothing is ever taken away.
+- A gable roof is two thin slabs with their top on the roof's line, never two solid wedges: a solid roof that hangs
+  over the gable hides the gable wall and everything on it (timber, round window). The slabs do not collide, so
+  the camera is not pushed in by a roof.
+- Height reads from a tower behind the ridge, not from taller walls: a 7-stud wall with a 26-stud clock tower looks
+  bigger and friendlier than a 3-floor box.
+- A dark era needs one warm wall colour: steel-blue walls in a steel-blue frame read as one navy block; brick in
+  the dark frame (as the reference had it) reads at once. Compare with the reference picture before judging colours.
+- Goo behind glass: Neon goo inside a Glass drum at Transparency 0.65; at 0.45 the goo washes out to pale mint.
+- The play test's day and night clock is a client script (`PlayerScripts.DayNight`): for shots by day, disable it on
+  the client and set the day's own Lighting values there (the server still holds them).
+- In the StudioTest play test the player's plot is not always Plot5: look for the plot that has `PantryL1` before
+  building a stage by hand.
+
 ## Bringing a built map into the game
 
 - 2026-10-23. A map went into the game as files, no Studio at build time: in Studio, `CopyRegion` in 128-cell blocks

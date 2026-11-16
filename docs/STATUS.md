@@ -1,5 +1,25 @@
 # Status
 
+## 2026-11-16 — village v2 pilot: the pantry is the Granary, built and seen at all five eras
+
+The owner approved the granary reference (`docs/areas/village-v2/granary-ref-era*.jpg`, eras 2 and 4 concepts beside
+them). Built from parts in the stud look, seen by day in a StudioTest play test at levels 10/20/30/40/50
+(`docs/areas/upgrades/review/granary-v2-l*.jpg`); `check.ps1` CHECK OK (827 tests), `types.ps1` TYPES OK.
+- `src/server/Architecture.luau`: the builder every landmark will use (walls, slab gable roofs, towers, silos,
+  windows, clocks, banners, awnings). `src/server/Granary.luau`: the hall per era (thatched cottage, painted
+  half-timber, stone and turrets, brick and steel with glass roof and goo tanks, marble and gold), a clock tower,
+  lean-to and silos; `Granary.features(level)` adds one feature at each of levels 6-10 of an era, kept afterwards
+  (25 features), so with the four store props of levels 2-5 every one of the 50 levels shows a change.
+  182 parts at level 1, 655 at level 50; 26 to 47 studs tall (the old pantry: a 12 x 9 box).
+- `PantryStages.luau` lost its old house (about 700 lines) and calls the Granary; props spread with the hall's width.
+- **Not done**: no phone-frame look, no ChatGPT review round, the hall's wing from the reference (a second volume),
+  thatch layering; the other five districts and the village layout; `check_village_trees.luau` not re-run against the
+  bigger footprint.
+- **The owner's open question** (2026-11-16): split buildings into parts made on Meshy/Tripo, and 100 small levels
+  instead of 50. My advice given to him: structure stays parts (changes every level, recolours per era, stud look,
+  cheap); Meshy/Tripo for hero ornaments (statues, bell, gear, weathervane, fountain pieces); 100 levels is his call
+  on pace: it needs about 50 more visible steps a building, new costs and a save migration.
+
 ## 2026-11-16 — village rework ("village v2"): audit and concept pictures, nothing built yet
 
 The owner is not happy with the village's buildings through its levels: he wants them taller, more detailed, better
