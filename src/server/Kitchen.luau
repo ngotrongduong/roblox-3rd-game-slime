@@ -377,7 +377,6 @@ function Kitchen.build(m: Instance, frame: CFrame, level: number)
 	local function painted(name: string, cf: CFrame, s: number, deep: number?): BasePart?
 		return piece(name, cf, s, s, deep or s, Color3.new(1, 1, 1), M.SmoothPlastic)
 	end
-	local straw = if era == 1 then LibraryKit.find("ThatchRoof_Gable") else nil
 	-- a tiled cone roof `r` round at the eave and `up` high, the middle of its foot at `cf`
 	local function coneRoof(cf: CFrame, r: number, up: number, colour: Color3)
 		if piece("ConeRoof_Tiles", cf, r, up / 1.3, r, colour) then
@@ -790,11 +789,9 @@ function Kitchen.build(m: Instance, frame: CFrame, level: number)
 				flowerBox(b.face(0, wy - ww / 2 - 0.75, Z0, FRONT), ww + 0.9, true) -- 6 (under the gable window)
 			end
 		end
-		if era == 1 and straw then
-			-- thatch: the owner's shaggy straw over the slabs
-			b.thatch(straw, b.at(0, wallH, ZC) * turn, LEN, HW * 2, rise, L.over)
-		elseif era == 1 then
-			-- (until it comes: a roll along each eave and over the ridge)
+		if era == 1 then
+			-- thatch: a roll along each eave and over the ridge (the owner's choice, 2026-11-17: the Meshy straw laid
+			-- over the slabs showed in patches, "xấu lắm")
 			for _, s in { -1, 1 } do
 				local ex, ey = s * (HW + L.over), wallH - pitch * L.over - 0.25
 				b.rod("EaveRoll", 0.55, Vector3.new(ex, ey, Z0 - L.over), Vector3.new(ex, ey, Z1 + L.over), L.roof)
@@ -1187,9 +1184,6 @@ function Kitchen.build(m: Instance, frame: CFrame, level: number)
 		slab("WingWall", WING_X, WING_X + T, 0, wh, WING_Z + T, Z1, wallColour)
 		slab("WingWall", WING_X + T, -HW, 0, wh, Z1 - T, Z1, wallColour)
 		b.gable(b.at(wx, wh, (WING_Z + Z1) / 2) * turn, Z1 - WING_Z, wide, wr, 0.6, L.roof, wallColour, L.board)
-		if straw then
-			b.thatch(straw, b.at(wx, wh, (WING_Z + Z1) / 2) * turn, Z1 - WING_Z, wide, wr, 0.6)
-		end
 		if era == 2 then
 			b.timber(b.face(wx, wh / 2, WING_Z, FRONT), wide, wh, L.beam)
 		elseif era == 3 then

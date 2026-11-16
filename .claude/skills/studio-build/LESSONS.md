@@ -1013,3 +1013,27 @@ The Kitchen, the second landmark (2026-11-17, `src/server/Kitchen.luau`; ChatGPT
   merged into `Config.LibraryKit`; the preview tool takes it as its own argument.
 - An owner's sheet of many props in one GLB is cut by `tools/blender/meshy_sheet_split.py` (names in
   `meshy_sheets.json`); where a piece came twice, both were looked at on one contact sheet and the better one kept.
+
+The village's meshes uploaded and worn for real (2026-11-17, `tools/kit/upload_village_pieces.js`)
+- **The upload is one command, through a place saved to Roblox**: the owner opens his cloud place ("Slime") in Studio,
+  then `node tools/kit/upload_village_pieces.js <that studio's id>` sends every `<key>_pieces.glb` and Blender `.fbx`
+  under `art/models` as ONE Model a file (Open Cloud `/assets/v1/assets` by `open_cloud_invoke`), reads each
+  MeshPart's name, mesh id and picture back with `InsertService:LoadAsset`, keeps `art/models/village_ids.json` (a key
+  there is skipped next time) and writes the ids into `ConfigMeshyKit.luau` and `Config.luau`. A local place file
+  answers "Scope 'asset:read' has not been granted"; screen control of Studio is not needed. A GLB of many objects
+  keeps their names as the MeshParts' names and shares one picture. Never save the cloud place.
+- **An uploaded GLB or FBX comes in half a turn round** (Blender front +Y -> Roblox front +Z, not -Z): a wall plaque
+  showed its bare back, and only that told, because most pieces look the same from both sides. The proof without
+  eyes: an FBX piece off the axis (`Pipe_Elbow`, `at` x 0.17) loads at x -0.17. `server/LibraryKit` turns every
+  uploaded-file piece back half a turn round its own middle; `Architecture.b.mesh` must keep the source part's turn
+  (it copied the place only, so the first fix showed nothing).
+- **Look at one piece that has a front, alone, from both sides, the moment the meshes are up**
+  (a clone at y 800, a shot from -Z and from +Z), before any building shot.
+- **Real meshes in the Edit preview**: `tools/map/real_kit_preview.luau` fills `ServerStorage.GranaryPreview` from the
+  uploaded ids ("96 pieces; failed: "), then `landmark_preview.luau` as before. The play test then proves the game's
+  own kit: count the kit's MeshParts and how many are turned, preload the nine pictures (one "HttpError: Unknown" in
+  the console was a passing fetch, `PreloadAsync` said Success).
+- **One `screen_capture` a message**: four sent together came back with two pictures swapped for their neighbours'.
+- **The owner's veto: Meshy straw laid over a slab roof** ("xấu lắm", it showed in patches). Thatch on a slab roof
+  is the part-built one (0.9 thick, rolls at the eave and the ridge); a whole Meshy cap on a round tower or silo
+  stays.

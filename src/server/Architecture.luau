@@ -250,28 +250,6 @@ function Architecture.new(m: Instance, frame: CFrame, skins: { [string]: Enum.Ma
 		return rise
 	end
 
-	-- The owner's shaggy thatch (kit ThatchRoof_Gable: one roof 2 across, 1.387 high and 2.13 along its ridge, which is
-	-- its own Z, held by the middle of its foot) laid over a `b.gable` roof of the same `cf`, `len`, `span`, `rise` and
-	-- `over`: as many copies along the ridge as keep the straw near its own shape. It wears its own picture.
-	function b.thatch(src: Model, cf: CFrame, len: number, span: number, rise: number, over: number)
-		local pitch = rise / (span / 2)
-		local across = span + over * 2 + 0.6
-		local total = len + over * 2 + 0.4
-		local n = math.max(1, math.round(total / (across * 1.065)))
-		local scale = Vector3.new(across / 2, (pitch * (span / 2 + over) + 0.7) / 1.387, total / n / 2.13)
-		for i = 1, n do
-			b.mesh(
-				src,
-				cf
-					* CFrame.new((i - (n + 1) / 2) * total / n, -pitch * over - 0.1, 0)
-					* CFrame.Angles(0, math.pi / 2, 0),
-				scale,
-				Color3.new(1, 1, 1),
-				Enum.Material.SmoothPlastic
-			)
-		end
-	end
-
 	-- A pyramid roof over a rectangle `w` by `d`, `cf` at the middle of its foot (four corner wedges; a tall
 	-- `rise` makes a spire).
 	function b.pyramid(cf: CFrame, w: number, d: number, rise: number, colour: Color3, material: Enum.Material?)
@@ -300,7 +278,8 @@ function Architecture.new(m: Instance, frame: CFrame, skins: { [string]: Enum.Ma
 		end
 		local p = source:Clone()
 		p.Size = source.Size * scale
-		p.CFrame = cf * CFrame.new(source.Position * scale)
+		-- (the kit's own turn stays: LibraryKit turns an uploaded file's mesh back to its front)
+		p.CFrame = cf * CFrame.new(source.Position * scale) * source.CFrame.Rotation
 		p.Color = colour
 		p.Material = material or (skins and skins[colour:ToHex()]) or Enum.Material.SmoothPlastic
 		if p.Material == Enum.Material.Glass and seeThrough then

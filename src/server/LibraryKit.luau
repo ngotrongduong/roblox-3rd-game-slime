@@ -45,7 +45,11 @@ local function build(): Folder
 				if ok then
 					mesh.Name = name .. "Part"
 					mesh.Size = v3(p.size)
-					mesh.CFrame = CFrame.new(v3(p.at))
+					-- (the village's pieces went up as files, tools/kit/upload_village_pieces.js, and Roblox brings a
+					-- GLB or FBX in half a turn round, its front to +Z: the sheet pieces wear a "Meshy..." picture, the
+					-- Blender ones none)
+					local file = p.tex == "" or string.sub(p.tex, 1, 5) == "Meshy"
+					mesh.CFrame = CFrame.new(v3(p.at)) * CFrame.Angles(0, if file then math.pi else 0, 0)
 					mesh.TextureID = TEXTURES[p.tex] or ""
 					mesh.Color = Color3.new(1, 1, 1)
 					mesh.Material = Enum.Material.SmoothPlastic

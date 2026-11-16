@@ -30,9 +30,27 @@
   stand-ins, no error in the console; `check.ps1` CHECK OK (827 tests), `types.ps1 src/server` TYPES OK.
 - **Not verified**: the look of the last edit in Play (only that it builds; the play shots
   `review/kitchen-play-l*.jpg` are from before it); the ten levels of an era pair by pair against the step test; a
-  phone frame; the real meshes after an upload (their facing); the Granary's new fits and flag in Play.
-- **Waits for the owner**: File > Import 3D of the nine `<key>_pieces.glb` and of `art/models/granary/blender/*.fbx`
-  (the test place refuses mesh uploads); then the ids go into `ConfigMeshyKit.luau` and `Config.luau`.
+  phone frame (the real meshes and the Granary's fits in Play: done, below).
+- **The meshes are uploaded (2026-11-17, "use the computer and import it yourself")**: he opened the cloud place
+  "Slime" in Studio and `node tools/kit/upload_village_pieces.js <that studio's id>` put all 18 files on his account
+  (nine `<key>_pieces.glb`, nine Blender `.fbx`; one Model a file, ids in `art/models/village_ids.json`) and wrote
+  the 96 mesh ids and nine sheet pictures into `ConfigMeshyKit.luau` and `Config.luau`. Not in a row and unused:
+  `Column_Shaft`, `Pipe_Flange`. Screen control of Studio was refused twice and was not needed; StudioTest (a local
+  file) still answers "Scope 'asset:read' has not been granted", so uploads only go through a place saved to Roblox.
+- **Facing**: Roblox brings a GLB or FBX in half a turn round (its front to +Z; the chef plaque showed its bare
+  back). `server/LibraryKit` turns every such piece back (a "Meshy..." picture or none) and `Architecture.b.mesh`
+  keeps the kit's turn; `tools/map/landmark_preview.luau` does the same for uploaded meshes, and
+  `tools/map/real_kit_preview.luau` (run before it) fills the preview folder with the real meshes.
+- **The owner's veto (2026-11-17)**: the Meshy straw laid over the roof slabs (`ThatchRoof_Gable`) "xấu lắm, use
+  your own way": it is no longer worn by the Kitchen or the Granary (part-built thatch with rolls), and `b.thatch`
+  is gone. The Granary's whole straw caps (`ThatchCap_Tower`, `ThatchCap_Silo`) stay; he has seen them only in my
+  shots.
+- **Verified with the real meshes**: both landmarks at the last level of every era in the Edit preview
+  (`review/kitchen-real-l30..l50*.jpg`, `review/granary-real-l10..l50.jpg`); a StudioTest play test (Kitchen 30 and
+  50, Granary 10 and 40: `review/*-realplay-*.jpg`) with 96 kit meshes loaded and turned, all nine pictures loading,
+  no error or "mesh did not load" in the console; `check.ps1` CHECK OK (827 tests), `types.ps1 src/server` TYPES OK.
+  **Not verified**: a phone frame; the sheet pieces no landmark wears yet (stalls, stall goods, windows, signs,
+  environment), seen only as loading, not placed.
 - **Next**: the Granary's 50 steps against the step test (he postponed it), then the next district by skill
   `landmark-build` (garden, breeding pen, training ground, dock) and the village layout.
 

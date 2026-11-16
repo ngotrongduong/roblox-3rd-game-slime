@@ -59,8 +59,14 @@ Each step has its gate. Do not start a step before the gate of the one before it
 9. **Close.** `tools\check.ps1` (CHECK OK), `tools\types.ps1 src/server` (TYPES OK), the final shots in
    `docs/areas/village-v2/review/`, `docs/STATUS.md`, new lessons into `LESSONS.md` and INTO THIS SKILL in the same
    commit, commit only the job's own paths.
-10. **The owner's part**, asked in the closing box and never waited for: the mesh upload (a Studio place saved to
-    Roblox, or his File > Import 3D of the FBX files), his Meshy pieces (Smart topology), any ChatGPT sign-in.
+10. **The owner's part**, asked in the closing box and never waited for: his Meshy pieces (Smart topology), any
+    ChatGPT sign-in, and opening his cloud place ("Slime") in Studio for the mesh upload.
+11. **Upload and wear the real meshes** (once that place is open; done for the Granary and the Kitchen, 2026-11-17):
+    `node tools/kit/upload_village_pieces.js <the cloud place's studio id>` uploads every new file under
+    `art/models` and writes the ids into both configs. An uploaded file comes in half a turn round and
+    `server/LibraryKit` turns it back: look at ONE piece with a front, alone, from both sides, first. Then
+    `tools/map/real_kit_preview.luau` + the preview tool, one shot an era (ONE `screen_capture` a message), one
+    play test, the checks. Never save the cloud place.
 
 ## 2. The upgrade ladder (the owner's rules, 2026-11-16)
 
@@ -138,13 +144,16 @@ keeps its stand-in and is named in the review brief as "not to be judged".
   says so for the village's layout.
 - No second ChatGPT round on a finished building, and no fix built from its answer without checking the code:
   nine of its 25 last points asked for what the Granary already had.
-- No upload worked round: the test place refuses mesh uploads ("asset:read"); that is the owner's click.
+- No upload worked round: the test place refuses mesh uploads ("asset:read"); they go through the owner's cloud
+  place, which he opens (step 11).
+- No Meshy straw laid over a slab roof (the owner, 2026-11-17: "xấu lắm", it shows in patches): slab roofs keep the
+  part-built thatch with rolls; a whole Meshy cap on a round tower or silo is fine.
 - No text, numbers or signs on a building unasked; no baked highlights; nothing copied from another game.
 
 ## 7. Ledger
 
 | Building | Module | Reference | Ladder | State |
 |----------|--------|-----------|--------|-------|
-| Pantry -> Granary | `Granary.luau` | `granary-ref-era*.jpg` | in the module's `build` (25 features + 4 store props an era; not yet walked against section 2's step test) | locked 2026-11-16; 7 Blender pieces wait for upload, 8 Meshy pieces for the owner |
-| Kitchen (cookhouse to grand restaurant) | `Kitchen.luau` | `kitchen-ref-sheet.jpg`, `kitchen-ref-era*.jpg` | `kitchen-ladder.md` (walked on paper; seen at each era's last level, not pair by pair) | locked 2026-11-17 (ChatGPT: likeness 78-88, finish 74-83, before the last edit); 2 new Blender pieces and the owner's sheet pieces wait for his import |
+| Pantry -> Granary | `Granary.luau` | `granary-ref-era*.jpg` | in the module's `build` (25 features + 4 store props an era; not yet walked against section 2's step test) | locked 2026-11-16; every piece uploaded and worn 2026-11-17 |
+| Kitchen (cookhouse to grand restaurant) | `Kitchen.luau` | `kitchen-ref-sheet.jpg`, `kitchen-ref-era*.jpg` | `kitchen-ladder.md` (walked on paper; seen at each era's last level, not pair by pair) | locked 2026-11-17 (ChatGPT: likeness 78-88, finish 74-83, before the last edit); every piece uploaded and worn 2026-11-17 |
 | Garden, breeding pen, training ground, dock, village pieces | - | - | - | not started |

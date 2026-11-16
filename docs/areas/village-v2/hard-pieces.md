@@ -31,9 +31,10 @@ sent to the owner; each Meshy generation uses Smart topology (his rule).
 All seven are built (`tools/blender/granary_pieces.py` -> `art/models/granary/blender/<Piece>.fbx`, sizes in
 `pieces.json`) and fitted in `Granary.luau` through `Config.LibraryKit.Props` (`<Piece>_<Slot>`). Seen on the building
 at levels 20/30/40/50 in a Studio preview (`review/granary-pieces-*.jpg`, made with `tools/map/landmark_preview.luau`).
-**Not uploaded yet**: every `mesh` id is 0, so the game still shows the part stand-ins. The upload needs a Studio whose
-place is saved to Roblox (the test place answers "Scope 'asset:read' has not been granted"), or the owner's one
-File > Import 3D; then the ids go into Config and each step below shows the mesh instead.
+**Uploaded 2026-11-17** through the owner's cloud place "Slime" (`node tools/kit/upload_village_pieces.js <studio id>`;
+the test place answers "Scope 'asset:read' has not been granted"): the ids are in Config and
+`art/models/village_ids.json`, and the game shows the meshes (`review/granary-real-l*.jpg`). An uploaded file comes in
+half a turn round; `server/LibraryKit` turns it back.
 
 | # | Piece | Era | Replaces | Shown from (feature step, unchanged) |
 |---|-------|-----|----------|--------------------------------------|
@@ -78,8 +79,9 @@ Then: bring the two sheets back (skill `chatgpt-art`, section 2), cut each cell 
 
 The sorting and the 50 steps are in `kitchen-ladder.md`. Seen with every piece on in a Studio preview
 (`review/kitchen-final-l*.jpg` after ChatGPT's review and the last edit, `kitchen-pieces-l*.jpg` before it; made with
-`tools/map/landmark_preview.luau`) and with its stand-ins in a play test (`review/kitchen-play-l*.jpg`). As for the Granary, every `mesh` id is still 0: the game shows the stand-ins until the
-owner's File > Import 3D.
+`tools/map/landmark_preview.luau`) and with its stand-ins in a play test (`review/kitchen-play-l*.jpg`). As for the
+Granary, every piece was uploaded on 2026-11-17 and the game shows the meshes (`review/kitchen-real-l*.jpg`,
+`review/kitchen-realplay-l*.jpg`).
 
 ### The owner's Meshy pieces it wears (kit names in `src/shared/ConfigMeshyKit.luau`)
 
@@ -89,7 +91,7 @@ owner's File > Import 3D.
 | `ChefHat_White` | 5 (on the game's gold slime, 23) | a hat of parts | kitchen |
 | `Laurel_Gold` | 5 (pediment, 23) | gold trims | kitchen |
 | `PotRack_Iron` | 4-5 (over the cooking line) | nothing (new) | kitchen |
-| `ThatchRoof_Gable` | 1 | thatch slabs | granary |
+| `ThatchRoof_Gable` | not worn | - (the owner's veto, 2026-11-17: straw laid over the slabs showed in patches; the part-built thatch stays) | granary |
 | `WallLantern_Iron` | 1-5 (front posts, piers, columns) | box lanterns | granary |
 | `FlowerBox_Pink`, `FlowerBox_Yellow` | 2-5 (16) | box planters | flowerpots |
 | `Oven_Brick`, `Oven_Stone` | 2, 3-5 (10) | the oven of parts | kitchenkit |

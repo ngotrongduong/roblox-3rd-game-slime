@@ -41,7 +41,9 @@ _G.GranaryPreviewKit = {
 		end
 		local part = src:FindFirstChildWhichIsA("BasePart")
 		part.Size = Vector3.new(table.unpack(p[1].size))
-		part.CFrame = CFrame.new(table.unpack(p[1].at))
+		-- (an uploaded mesh came in half a turn round, as server/LibraryKit turns it back; a preview script's did not)
+		local uploaded = part:IsA("MeshPart") and part.MeshId ~= ""
+		part.CFrame = CFrame.new(table.unpack(p[1].at)) * CFrame.Angles(0, if uploaded then math.pi else 0, 0)
 		return src
 	end,
 }

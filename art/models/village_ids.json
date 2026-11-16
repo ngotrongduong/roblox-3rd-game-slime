@@ -1,0 +1,208 @@
+{
+	"granary": {
+		"model": 129111616711726,
+		"texture": 90548806658369,
+		"pieces": {
+			"ThatchRoof_Gable": 119978609850134,
+			"ThatchCap_Tower": 133260008399407,
+			"ThatchCap_Silo": 112869686444086,
+			"WallLantern_Iron": 101141764729404,
+			"SlimeStatue_Gold": 104265732980655,
+			"Ivy_Corner": 118368205630333,
+			"HangingSack_Beam": 98247736016515,
+			"Crest_Gold": 107860058069548
+		}
+	},
+	"kitchen": {
+		"model": 129600169858278,
+		"texture": 80581701858895,
+		"pieces": {
+			"PotRack_Iron": 111990820052564,
+			"Laurel_Gold": 73472089506854,
+			"ChefHat_White": 131099791206267,
+			"ChefEmblem_Plaque": 118970894093128
+		}
+	},
+	"environment": {
+		"model": 140542392221153,
+		"texture": 74604300726824,
+		"pieces": {
+			"Wall_StonePosts": 79995891286630,
+			"Pillar_GoldCap": 115869448833066,
+			"LampPost_Single": 125886228764779,
+			"Fountain_Tiered": 125339876375496,
+			"LampPost_Triple": 103321161270152,
+			"Fence_WoodX": 74922221897615,
+			"Bunting_Posts": 77618588309324,
+			"Pillar_Lantern": 96982758101075,
+			"Brazier_Fire": 122676103087072
+		}
+	},
+	"flowerpots": {
+		"model": 94534296732200,
+		"texture": 120822580306566,
+		"pieces": {
+			"Urn_MixedFlowers": 77829193061944,
+			"PlanterBox_Vines": 136912029331155,
+			"FlowerBox_Yellow": 88477411418307,
+			"Urn_WhiteFlowers": 136390377066723,
+			"Urn_PinkFlowers": 107164202633551,
+			"BushPot_Round": 97333315098635,
+			"HangingBasket_Pink": 98559679922309,
+			"ConePot_Topiary": 88020327370899,
+			"Urn_BlueFlowers": 133186333693186,
+			"FlowerBox_Pink": 118280081785885
+		}
+	},
+	"kitchenkit": {
+		"model": 107402591615908,
+		"texture": 138673981222555,
+		"pieces": {
+			"Stove_IronRack": 100429478048668,
+			"Oven_Brick": 93825525272178,
+			"Counter_Bottles": 86223747265210,
+			"PanRack_Copper": 140626198871973,
+			"PlateTable_Wood": 125459949167047,
+			"Oven_Stone": 118161059657906,
+			"CauldronFrame_Fire": 94344830490065
+		}
+	},
+	"restaurant": {
+		"model": 82096990534131,
+		"texture": 101810638561973,
+		"pieces": {
+			"Window_Plain": 82017221291558,
+			"Window_Shutters": 108904435396619,
+			"Window_Arched": 87381471674360,
+			"Sign_ChefShield": 79777727626921,
+			"Finial_GoldStone": 139502653787484,
+			"Sign_OvalBlank": 102943997284469,
+			"ChefCrest_Ribbon": 72334803128436,
+			"ChefCrest_Slime": 124990619891752,
+			"Banner_ChefRed": 99095473831240,
+			"Dormer_RedRoof": 79618188809926,
+			"Banner_Blue": 134338934051779
+		}
+	},
+	"stall": {
+		"model": 105823960735514,
+		"texture": 85643328564965,
+		"pieces": {
+			"Stall_Thatch": 113023670430756,
+			"Stall_RedStripe": 125860524054664,
+			"Stall_BlueStripe": 96440877791766,
+			"Trellis_Ivy": 72933604383811,
+			"RoseArch_Garden": 133359804541139,
+			"ParasolTable_Red": 80855009195407,
+			"ParasolTable_Cream": 134478945124420,
+			"ParasolTable_Blue": 128632583534805,
+			"Canopy_Glass": 129504988230657
+		}
+	},
+	"stallitems": {
+		"model": 79336535681818,
+		"texture": 76236683987791,
+		"pieces": {
+			"SausageRack_Wood": 104069984086473,
+			"RoundTable_Lantern": 82045052193354,
+			"FishRack_Wood": 109664546886587,
+			"PicnicTable_Checked": 75938715684428,
+			"Shelf_Vegetables": 93855170251453,
+			"GrainSacks_Open": 90551102085632,
+			"Shelf_Jars": 128169712919989,
+			"BarrelStack_Three": 121491708206172,
+			"AppleCrate_Full": 85633537847460
+		}
+	},
+	"village": {
+		"model": 138654466416969,
+		"texture": 112456004124087,
+		"pieces": {
+			"Topiary_StonePlanter": 91700417008598,
+			"SlimeCrest_Laurel": 136478769072337,
+			"RopeHook_Coil": 100059307546459,
+			"HangingSign_Blank": 80167563067091,
+			"FlowerUrn_Gold": 123008958876878,
+			"GrainSacks_Pair": 124285007536478,
+			"PipeValve_Copper": 82361216314241,
+			"FlowerBox_Trough": 104139036562981,
+			"Barrel_Oak": 105934255568869,
+			"HayBales_Stack": 109788055060467,
+			"GooTank_Glass": 87582617413262,
+			"CrateStack_Wood": 101790021457331,
+			"Banner_SlimeBlue": 103113095973790
+		}
+	},
+	"Balustrade": {
+		"model": 79325589817772,
+		"texture": 0,
+		"pieces": {
+			"Balustrade_Post": 97676975648105,
+			"Balustrade_Run": 134564110139883,
+			"Balustrade_Urn": 137628397632669
+		}
+	},
+	"ChimneyCrown": {
+		"model": 118389750519091,
+		"texture": 0,
+		"pieces": {
+			"ChimneyCrown_Gold": 102649343939594
+		}
+	},
+	"Column": {
+		"model": 93760166349141,
+		"texture": 0,
+		"pieces": {
+			"Column_Base": 116795160851499,
+			"Column_Capital": 127228979168042,
+			"Column_Shaft": 124758878616171
+		}
+	},
+	"ConeRoof": {
+		"model": 102089920606139,
+		"texture": 0,
+		"pieces": {
+			"ConeRoof_Finial": 98546825835580,
+			"ConeRoof_Tiles": 130017263319172
+		}
+	},
+	"Gear": {
+		"model": 119662472756901,
+		"texture": 0,
+		"pieces": {
+			"Gear_Wheel": 79217322052881
+		}
+	},
+	"GlassDome": {
+		"model": 109797628702187,
+		"texture": 0,
+		"pieces": {
+			"GlassDome_Finial": 98529564553237,
+			"GlassDome_Frame": 110962289134561,
+			"GlassDome_Glass": 136352181387433
+		}
+	},
+	"Pipe": {
+		"model": 91908564280024,
+		"texture": 0,
+		"pieces": {
+			"Pipe_Elbow": 92598710660955,
+			"Pipe_Flange": 106508821787187
+		}
+	},
+	"RoyalDome": {
+		"model": 125970060456624,
+		"texture": 0,
+		"pieces": {
+			"RoyalDome_Gold": 95917356110227,
+			"RoyalDome_Shell": 87256337293453
+		}
+	},
+	"VentHood": {
+		"model": 76928409547517,
+		"texture": 0,
+		"pieces": {
+			"VentHood_Copper": 110062836024957
+		}
+	}
+}

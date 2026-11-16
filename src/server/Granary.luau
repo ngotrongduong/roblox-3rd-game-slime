@@ -682,12 +682,9 @@ function Granary.build(m: Instance, frame: CFrame, level: number)
 		nil,
 		if era == 1 then 1.1 else nil -- thatch is thick
 	)
-	local straw = if era == 1 then LibraryKit.find("ThatchRoof_Gable") else nil
-	if straw then
-		-- the owner's shaggy straw over the slabs
-		b.thatch(straw, roofAt, d + jet * 2, half * 2, L.rise, L.over)
-	elseif era == 1 then
-		-- (until it comes: thatch ends in a thick roll along each eave)
+	if era == 1 then
+		-- thatch ends in a thick roll along each eave (the owner's choice, 2026-11-17: the Meshy straw laid over the
+		-- slabs showed in patches)
 		for _, s in { -1, 1 } do
 			local u = half + L.over - 0.3
 			b.trim("EaveRoll", 0.9, 0.7, d + L.over * 2, b.at(s * u, roofY(u) - 0.15, d / 2), L.accent)
