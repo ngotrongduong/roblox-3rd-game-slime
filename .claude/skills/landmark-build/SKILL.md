@@ -22,10 +22,18 @@ Each step has its gate. Do not start a step before the gate of the one before it
 1. **Reference.** One ChatGPT concept sheet of the ONE building at its five eras (skill `chatgpt-art`, the village's
    earlier sheets as the style lock), saved as `docs/areas/village-v2/<name>-ref-era<N>.jpg`. *Gate: the owner says
    the sheet is the model.* This is the only thing he must approve before building; nothing is built without it.
+   What gave a usable sheet at the first try (the Kitchen): a new chat, the Granary's sheet and the village concept
+   attached, "ONE new sheet in exactly the same style, layout and camera as picture 1" (three on top, two below, the
+   same farmer figure for scale, grey studded ground, no text), then each era in one clause, then the rules that
+   make it ONE building (what stays on which side at every era, what is always open, each era taller and richer).
+   With the pane hidden, carry the pictures by script (skill `meshy-multiview`, "With the pane hidden"). Cut the
+   sheet into the five era files with a small PIL script; send the whole sheet to the owner.
 2. **Ladder.** Write the building's 50 steps as a table in `docs/areas/village-v2/<name>-ladder.md` BEFORE any code
    (section 2). *Gate: every row passes the step test.*
-3. **Sort the shapes** (section 3) into parts, Blender and Meshy, and fill `hard-pieces.md`. Send ONE request to
-   ChatGPT for the Meshy pieces' reference pictures now (two 2 x 2 sheets hold eight pieces; the request text of the
+3. **Sort the shapes** (section 3) into parts, Blender and Meshy, and fill `hard-pieces.md`; look first at what the
+   earlier landmarks' pieces already give (domes, cone roofs, columns, balustrades, pipes, gears are shared). Steps 2
+   and 3 are paper and are done while the owner looks at the sheet. Once he has approved it, send ONE request to
+   ChatGPT for the Meshy pieces' reference pictures (two 2 x 2 sheets hold eight pieces; the request text of the
    Granary is in `hard-pieces.md`), cut them into `art/models/<name>/refs/` and send them to the owner, so he builds
    while the rest goes on.
 4. **Build from parts.** One module a landmark on `Architecture.new(...)`: a palette and sizes per era,
@@ -127,4 +135,5 @@ keeps its stand-in and is named in the review brief as "not to be judged".
 | Building | Module | Reference | Ladder | State |
 |----------|--------|-----------|--------|-------|
 | Pantry -> Granary | `Granary.luau` | `granary-ref-era*.jpg` | in the module's `build` (25 features + 4 store props an era; not yet walked against section 2's step test) | locked 2026-11-16; 7 Blender pieces wait for upload, 8 Meshy pieces for the owner |
-| Kitchen, garden, breeding pen, training ground, dock, village pieces | - | - | - | not started |
+| Kitchen (cookhouse to grand restaurant) | - | `kitchen-ref-sheet.jpg`, `kitchen-ref-era*.jpg` | `kitchen-ladder.md` (walked on paper) | steps 1-3 done 2026-11-16; waits for the owner's word on the sheet, then the Meshy reference request and the build |
+| Garden, breeding pen, training ground, dock, village pieces | - | - | - | not started |

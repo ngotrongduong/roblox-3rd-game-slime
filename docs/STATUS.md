@@ -1,5 +1,21 @@
 # Status
 
+## 2026-11-16 — the Kitchen, the second landmark: reference drawn, ladder and shape sorting written, nothing built
+
+- The owner: check the Granary's ladder against the new rule later; build the next building now. My choice: the
+  Kitchen (the village concept's restaurant with the big chimney), by skill `landmark-build`.
+- **Reference** (step 1): `docs/areas/village-v2/kitchen-ref-sheet.jpg` and `kitchen-ref-era1..5.jpg`, ChatGPT chat
+  `/c/6afae216-2974-83ec-a85c-e5b5281ae5b3`, first try: an open-fronted cookhouse, the great chimney always on the
+  left, the terrace always on the right; thatch shed -> painted with a bread oven and awning -> stone arches with a
+  smokehouse turret and parasols -> steel and glass with copper pipes and goo kettles -> marble with two blue domes
+  and a golden chef slime. Sent to the owner. **He has not answered yet: that is the gate before any build.**
+- **Ladder and sorting** (steps 2-3): `docs/areas/village-v2/kitchen-ladder.md` (50 rows, each a new part, an
+  upgrade, a material or a swap; walked on paper against the step test) and the Kitchen's section of
+  `hard-pieces.md` (3 pieces for his Meshy, 6 new Blender pieces, 7 reused from the Granary).
+- **Not done / not verified**: no code, no Blender piece, no Studio look; the ladder has not been seen side by side.
+- **Next, on his yes**: the request for the three Meshy reference pictures, then `src/server/Kitchen.luau` on
+  `Architecture` (the cooking spots, stove, counter and props of `KitchenStages` stay), Blender pieces, preview.
+
 ## 2026-11-16 — the landmark process written down: skill `landmark-build`
 
 - The owner, after the Granary: roughly fine, he will make some decoration props later; the whole road is to be kept

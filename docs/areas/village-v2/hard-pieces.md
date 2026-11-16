@@ -74,6 +74,26 @@ Attach `granary-ref-era5.jpg` and `granary-ref-era1.jpg`, thinking effort High, 
 Then: bring the two sheets back (skill `chatgpt-art`, section 2), cut each cell square with the grey as padding into
 `art/models/granary/refs/<piece>.png`, fill the table above.
 
+## The Kitchen (planned 2026-11-16; waits for the owner's word on `kitchen-ref-sheet.jpg`)
+
+The whole sorting, with what is reused from the Granary, is in `kitchen-ladder.md`. Nothing is built yet.
+
+### For the owner, in Meshy (reference pictures are asked from ChatGPT once he approves the sheet)
+
+| # | Piece | Era | Replaces | Reference | Model |
+|---|-------|-----|----------|-----------|-------|
+| K1 | Chef-hat emblem with wheat ears, a carved plaque | 3-4 (gable, feature 14) | a part stand-in | - | - |
+| K2 | A chef's hat alone | 5 (on the game's gold slime, feature 23) | a part stand-in | - | - |
+| K3 | A pair of gold laurel branches | 5 (pediment, feature 23) | a part stand-in | - | - |
+
+The Granary's thatched gable roof (3), wall lantern (6) and ivy corner (8) fit the Kitchen too.
+
+### For Claude, in Blender (`tools/blender/kitchen_pieces.py`, not written yet)
+
+Oven dome with its arched mouth (feature 10), parasol (12), steel vault rib and copper vent hood (era 4), cauldron
+(era 1), chimney crown (22). Reused from the Granary: B1 (the smokehouse turret, 15), B2 (the kettles' caps, 20),
+B3 (both domes, 24 and 25), B4 and B5 (columns, balustrades), B6 (pipes, 17), B7 (gear, 18).
+
 ## Other districts
 
 Listed when each district is rebuilt.
