@@ -1,0 +1,30 @@
+{
+ "Oven_Stone": {
+  "tris": 1693,
+  "config": "Oven_Stone = { { mesh = 0, tex = \"MeshyKitchenKit\", size = { 6.570, 8.000, 5.122 }, at = { 0.000, 4.000, 0.000 } } },"
+ },
+ "Oven_Brick": {
+  "tris": 719,
+  "config": "Oven_Brick = { { mesh = 0, tex = \"MeshyKitchenKit\", size = { 4.532, 7.000, 4.396 }, at = { 0.000, 3.500, 0.000 } } },"
+ },
+ "CauldronFrame_Fire": {
+  "tris": 1994,
+  "config": "CauldronFrame_Fire = { { mesh = 0, tex = \"MeshyKitchenKit\", size = { 6.555, 5.500, 2.686 }, at = { 0.000, 2.750, 0.000 } } },"
+ },
+ "Stove_IronRack": {
+  "tris": 3147,
+  "config": "Stove_IronRack = { { mesh = 0, tex = \"MeshyKitchenKit\", size = { 7.524, 7.000, 3.667 }, at = { 0.000, 3.500, 0.000 } } },"
+ },
+ "Counter_Bottles": {
+  "tris": 2769,
+  "config": "Counter_Bottles = { { mesh = 0, tex = \"MeshyKitchenKit\", size = { 7.000, 5.148, 4.739 }, at = { 0.000, 2.574, 0.000 } } },"
+ },
+ "PanRack_Copper": {
+  "tris": 2550,
+  "config": "PanRack_Copper = { { mesh = 0, tex = \"MeshyKitchenKit\", size = { 5.000, 2.457, 1.523 }, at = { 0.000, -1.229, 0.000 } } },"
+ },
+ "PlateTable_Wood": {
+  "tris": 2504,
+  "config": "PlateTable_Wood = { { mesh = 0, tex = \"MeshyKitchenKit\", size = { 6.000, 2.143, 4.238 }, at = { 0.000, 1.072, 0.000 } } },"
+ }
+}

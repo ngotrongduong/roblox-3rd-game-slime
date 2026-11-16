@@ -1,4 +1,5 @@
-# The Granary's regular hard pieces (docs/areas/village-v2/hard-pieces.md, B1-B7), built by script, no textures.
+# The Granary's regular hard pieces (docs/areas/village-v2/hard-pieces.md, B1-B7) and the Kitchen's two (B8, B9), built
+# by script, no textures.
 # Owner 2026-11-16: "những khối và hình mà khó dựng thì hoặc là bạn tự dựng trên blender rồi ghép vào, hoặc để tôi tự dựng".
 # 1 Blender unit = 1 stud, Z up (Roblox +Y after export). Every object of a piece is one colour slot (the game paints it);
 # the preview paints the slots flat. Run: tools/blender/granary_pieces.ps1. Out: art/models/granary/blender/.
@@ -290,8 +291,32 @@ def gear():
 	return [("Gear_Wheel", m, (0, 0, 0), "Wheel", 40)]
 
 
+def chimney_crown():
+	# the Kitchen's (ladder step 22): a hollow band of radius 1 with a rolled foot, twelve points and a ball on each
+	sides, ro, ri, band, tip = 24, 1.0, 0.9, 0.5, 0.5
+	m = M()
+	prof = [(ro, 0.0), (ro + 0.07, 0.06), (ro, 0.12), (ro, band - 0.1), (ro + 0.05, band - 0.05), (ro, band, tip),
+		(ri, band, tip), (ri, 0.0)]
+	lathe(m, prof, sides, loop=True)
+	r, mid = 0.085, (ro + ri) / 2
+	for k in range(1, sides, 2):
+		a = TAU * k / sides
+		rng = lathe(m, [(0.0, -r), (r * 0.7, -r * 0.7), (r, 0.0), (r * 0.7, r * 0.7), (0.0, r)], 6)
+		xform(m, rng, lambda p: (p[0] + mid * math.cos(a), p[1] + mid * math.sin(a), p[2] + band + tip + r * 0.6))
+	return [("ChimneyCrown_Gold", m, (0, 0, 0), "Gold", 40)]
+
+
+def vent_hood():
+	# the Kitchen's cooking line: a hollow copper hood of radius 1, a rolled rim, a cone and a collar for its stem
+	m = M()
+	prof = [(0.98, 0.0), (1.04, 0.05), (0.98, 0.1), (0.94, 0.13), (0.36, 0.62), (0.36, 0.66), (0.31, 0.68), (0.31, 0.75),
+		(0.26, 0.75), (0.26, 0.6), (0.9, 0.08), (0.9, 0.0)]
+	lathe(m, prof, 16, loop=True)
+	return [("VentHood_Copper", m, (0, 0, 0), "Elbow", 40)]
+
+
 PIECES = [("ConeRoof", cone_roof), ("GlassDome", glass_dome), ("RoyalDome", royal_dome), ("Column", column),
-	("Balustrade", balustrade), ("Pipe", pipe), ("Gear", gear)]
+	("Balustrade", balustrade), ("Pipe", pipe), ("Gear", gear), ("ChimneyCrown", chimney_crown), ("VentHood", vent_hood)]
 
 
 # ---------------------------------------------------------------- Blender side
@@ -406,7 +431,7 @@ def bounds(ob):
 
 def preview(objs, path):
 	# A Luau script that builds the same objects in an open Studio place with EditableMesh (ServerStorage.GranaryPreview),
-	# so a piece is judged on the building before it is uploaded (tools/map/granary_preview.luau). A vertex is split where
+	# so a piece is judged on the building before it is uploaded (tools/map/landmark_preview.luau). A vertex is split where
 	# its corners' normals differ, so Studio's own normals keep the sharp edges.
 	lines = [PREVIEW_HEAD]
 	for ob in objs:

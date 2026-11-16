@@ -1,5 +1,41 @@
 # Status
 
+## 2026-11-17 — the Kitchen landmark built, reviewed once and locked; the owner's 80 sheet pieces cut and fitted
+
+- The owner approved the sheet ("Duyệt") and sent two deliveries of Meshy sheet models (many props in one GLB; "take
+  the better of a duplicate, repair open faces and smeared colour or leave a piece out").
+- **Built**: `src/server/Kitchen.luau` on `Architecture` (`KitchenStages.build` calls it; cooking spots, stove,
+  counter and the kit props stay): the hall with its open front, the great chimney on the left, the terrace on the
+  right, 25 features over five eras as `docs/areas/village-v2/kitchen-ladder.md` has them.
+- **The owner's sheets**: `tools/blender/meshy_sheet_split.py` cut nine sheets into 80 pieces (granary 8, kitchen 4,
+  village 13, stall 9, stallitems 9, kitchenkit 7, flowerpots 10, environment 9, restaurant 11), repaired open faces
+  and smears, and wrote one `<key>_pieces.glb` a sheet under `art/models/.../meshy/`; their rows are
+  `src/shared/ConfigMeshyKit.luau` (merged into `Config.LibraryKit`, every `mesh = 0`). Duplicates: the village
+  sheet's wall lantern, hoist sack and ivy corner lost to the granary sheet's. The Kitchen wears 15 of them, the
+  Granary two (`GooTank_Glass`; `Banner_SlimeBlue` at the door and the wing); the table is in `hard-pieces.md`.
+- **Blender**: two new pieces in `tools/blender/granary_pieces.py` (`ChimneyCrown_Gold`, `VentHood_Copper`); six of
+  the Granary's reused. The preview tool is now `tools/map/landmark_preview.luau` (any landmark module).
+- **ChatGPT's one review** (chat `/c/6afae216-2974-83ec-a85c-e5b5281ae5b3`, the five Edit-preview shots): likeness
+  85 / 85 / 79 / 78 / 88, finish 74 / 77 / 79 / 76 / 83; keep all five designs, no more volume, no more ornaments;
+  the weakness is depth, not decoration. **Taken** (inside existing steps, the ladder unchanged): thick straw with
+  rolls on the era-1 lean-to; the awning 0.3 thick with a valance on struts; the era-3 arch with a lower spring, a
+  higher crown and proud two-tone voussoirs, corbels moved off it; the era-4 glass set 0.9 behind the steel fan,
+  a half ring through the spokes; a marble lining and gold imposts in the era-5 portal. **Rejected**: an oven at
+  the chimney's foot and a second goo kettle (both there, on the flank its camera could not see:
+  `review/kitchen-final-l40-left.jpg`); a jetty beam with corbels at era 3 (there since the first build).
+- Also: `Architecture.b.flag` is SmoothPlastic (Fabric's weave turned flags navy-black), the era-5 emblem's plate is
+  royal blue (a dark plate was a black blob on marble).
+- **Verified**: every era's last level in the Edit preview with the pieces on, after the last edit
+  (`review/kitchen-final-l10..l50.jpg`); a StudioTest play test building levels 10, 18, 20, 30, 40 and 50 with the
+  stand-ins, no error in the console; `check.ps1` CHECK OK (827 tests), `types.ps1 src/server` TYPES OK.
+- **Not verified**: the look of the last edit in Play (only that it builds; the play shots
+  `review/kitchen-play-l*.jpg` are from before it); the ten levels of an era pair by pair against the step test; a
+  phone frame; the real meshes after an upload (their facing); the Granary's new fits and flag in Play.
+- **Waits for the owner**: File > Import 3D of the nine `<key>_pieces.glb` and of `art/models/granary/blender/*.fbx`
+  (the test place refuses mesh uploads); then the ids go into `ConfigMeshyKit.luau` and `Config.luau`.
+- **Next**: the Granary's 50 steps against the step test (he postponed it), then the next district by skill
+  `landmark-build` (garden, breeding pen, training ground, dock) and the village layout.
+
 ## 2026-11-16 — the Kitchen, the second landmark: reference drawn, ladder and shape sorting written, nothing built
 
 - The owner: check the Granary's ladder against the new rule later; build the next building now. My choice: the
@@ -61,7 +97,7 @@
   name and keeps the part stand-in when one is missing, so the upgrade ladder is unchanged (one small part a level,
   the grandest at level 50). `Architecture.b.mesh` places a kit piece; `LibraryKit` skips a prop of id 0.
 - **Verified**: seen on the building at levels 20/30/40/50 in the test place's Edit datamodel through EditableMesh
-  previews (`tools/map/granary_preview.luau`; shots `docs/areas/village-v2/review/granary-pieces-*.jpg`); the stand-in
+  previews (`tools/map/landmark_preview.luau`; shots `docs/areas/village-v2/review/granary-pieces-*.jpg`); the stand-in
   build ran in a play test at levels 10-50 without error; `check.ps1` CHECK OK (827 tests), `types.ps1 src/server`
   TYPES OK. Also fixed there: the two roof pipes of era 4 ran through the big dormer, now side by side beside it.
 - **Not verified**: the real uploaded meshes in a play test (orientation of the gear and the elbow after an upload),

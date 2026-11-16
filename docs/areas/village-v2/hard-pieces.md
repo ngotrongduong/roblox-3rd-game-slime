@@ -30,7 +30,7 @@ sent to the owner; each Meshy generation uses Smart topology (his rule).
 
 All seven are built (`tools/blender/granary_pieces.py` -> `art/models/granary/blender/<Piece>.fbx`, sizes in
 `pieces.json`) and fitted in `Granary.luau` through `Config.LibraryKit.Props` (`<Piece>_<Slot>`). Seen on the building
-at levels 20/30/40/50 in a Studio preview (`review/granary-pieces-*.jpg`, made with `tools/map/granary_preview.luau`).
+at levels 20/30/40/50 in a Studio preview (`review/granary-pieces-*.jpg`, made with `tools/map/landmark_preview.luau`).
 **Not uploaded yet**: every `mesh` id is 0, so the game still shows the part stand-ins. The upload needs a Studio whose
 place is saved to Roblox (the test place answers "Scope 'asset:read' has not been granted"), or the owner's one
 File > Import 3D; then the ids go into Config and each step below shows the mesh instead.
@@ -74,25 +74,52 @@ Attach `granary-ref-era5.jpg` and `granary-ref-era1.jpg`, thinking effort High, 
 Then: bring the two sheets back (skill `chatgpt-art`, section 2), cut each cell square with the grey as padding into
 `art/models/granary/refs/<piece>.png`, fill the table above.
 
-## The Kitchen (planned 2026-11-16; waits for the owner's word on `kitchen-ref-sheet.jpg`)
+## The Kitchen (sheet approved and built 2026-11-16, `src/server/Kitchen.luau`)
 
-The whole sorting, with what is reused from the Granary, is in `kitchen-ladder.md`. Nothing is built yet.
+The sorting and the 50 steps are in `kitchen-ladder.md`. Seen with every piece on in a Studio preview
+(`review/kitchen-final-l*.jpg` after ChatGPT's review and the last edit, `kitchen-pieces-l*.jpg` before it; made with
+`tools/map/landmark_preview.luau`) and with its stand-ins in a play test (`review/kitchen-play-l*.jpg`). As for the Granary, every `mesh` id is still 0: the game shows the stand-ins until the
+owner's File > Import 3D.
 
-### For the owner, in Meshy (reference pictures are asked from ChatGPT once he approves the sheet)
+### The owner's Meshy pieces it wears (kit names in `src/shared/ConfigMeshyKit.luau`)
 
-| # | Piece | Era | Replaces | Reference | Model |
-|---|-------|-----|----------|-----------|-------|
-| K1 | Chef-hat emblem with wheat ears, a carved plaque | 3-4 (gable, feature 14) | a part stand-in | - | - |
-| K2 | A chef's hat alone | 5 (on the game's gold slime, feature 23) | a part stand-in | - | - |
-| K3 | A pair of gold laurel branches | 5 (pediment, feature 23) | a part stand-in | - | - |
+| Piece (kit name) | Era | Replaces | Sheet |
+|------------------|-----|----------|-------|
+| `ChefEmblem_Plaque` | 3-4 (gable, feature 14) | hat and plate of parts | kitchen |
+| `ChefHat_White` | 5 (on the game's gold slime, 23) | a hat of parts | kitchen |
+| `Laurel_Gold` | 5 (pediment, 23) | gold trims | kitchen |
+| `PotRack_Iron` | 4-5 (over the cooking line) | nothing (new) | kitchen |
+| `ThatchRoof_Gable` | 1 | thatch slabs | granary |
+| `WallLantern_Iron` | 1-5 (front posts, piers, columns) | box lanterns | granary |
+| `FlowerBox_Pink`, `FlowerBox_Yellow` | 2-5 (16) | box planters | flowerpots |
+| `Oven_Brick`, `Oven_Stone` | 2, 3-5 (10) | the oven of parts | kitchenkit |
+| `CauldronFrame_Fire` | 1-3 | tripod and ball cauldron | kitchenkit |
+| `ParasolTable_Red`, `ParasolTable_Blue` | 3-5 (12) | cone parasols | stall |
+| `Banner_SlimeBlue` | 4-5 (16) | flat banners | village |
+| `Finial_GoldStone` | 1-4 (ridge, 4) | a gold ball | restaurant |
 
-The Granary's thatched gable roof (3), wall lantern (6) and ivy corner (8) fit the Kitchen too.
+The Granary took two from the same sheets: `GooTank_Glass` (its era-4 vats) and `Banner_SlimeBlue` (door and wing).
 
-### For Claude, in Blender (`tools/blender/kitchen_pieces.py`, not written yet)
+### Claude's Blender pieces (the village's one script, `tools/blender/granary_pieces.py`)
 
-Oven dome with its arched mouth (feature 10), parasol (12), steel vault rib and copper vent hood (era 4), cauldron
-(era 1), chimney crown (22). Reused from the Granary: B1 (the smokehouse turret, 15), B2 (the kettles' caps, 20),
-B3 (both domes, 24 and 25), B4 and B5 (columns, balustrades), B6 (pipes, 17), B7 (gear, 18).
+| # | Piece | Era | Replaces | Shown from |
+|---|-------|-----|----------|------------|
+| B8 | `ChimneyCrown_Gold`: a gold band, twelve points with balls | 5 | a ring of wedges | the chimney's crown (22) |
+| B9 | `VentHood_Copper`: a hollow copper hood with a rolled rim | 4-5 | cones | the three hoods over the cooking line |
+
+Reused from the Granary: B1 (the smokehouse turret, 15), B2 (the kettles' caps, 20), B3 (both domes, 24 and 25), B4
+and B5 (columns, balustrades), B7 (gear, 18). The vault's ribs stay straight beams, pane by pane: a curved model
+would stand off the flat glass. Oven, parasols and cauldron came from the owner's sheets instead of Blender.
+
+## The owner's sheet models (Meshy, many props in one file)
+
+He sends whole sheets; `tools/blender/meshy_sheet_split.py` cuts each into its pieces (names in
+`tools/blender/meshy_sheets.json`), repairs open faces and smeared colour, and writes `<key>_pieces.glb`, the file he
+imports, beside `pieces.json`. 80 pieces so far: granary 8 and kitchen 4 (first delivery), then village 13, stall 9,
+stallitems 9, kitchenkit 7, flowerpots 10, environment 9, restaurant 11 (second delivery, 68 kept; where a piece came
+twice the better one won: the village sheet's wall lantern, hoist sack and ivy corner lost to the granary's). Most
+wait for the districts they belong to (stalls and shelves for the Market, lamp posts, fences and the fountain for the
+village layout).
 
 ## Other districts
 

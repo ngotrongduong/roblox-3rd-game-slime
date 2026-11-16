@@ -1,0 +1,18 @@
+{
+ "ChefEmblem_Plaque": {
+  "tris": 1541,
+  "config": "ChefEmblem_Plaque = { { mesh = 0, tex = \"MeshyKitchen\", size = { 4.605, 4.800, 1.621 }, at = { 0.000, 0.000, -0.811 } } },"
+ },
+ "ChefHat_White": {
+  "tris": 814,
+  "config": "ChefHat_White = { { mesh = 0, tex = \"MeshyKitchen\", size = { 2.067, 1.900, 0.944 }, at = { 0.000, 0.950, 0.000 } } },"
+ },
+ "Laurel_Gold": {
+  "tris": 1284,
+  "config": "Laurel_Gold = { { mesh = 0, tex = \"MeshyKitchen\", size = { 5.273, 4.400, 0.684 }, at = { 0.000, 0.000, -0.342 } } },"
+ },
+ "PotRack_Iron": {
+  "tris": 2426,
+  "config": "PotRack_Iron = { { mesh = 0, tex = \"MeshyKitchen\", size = { 4.543, 3.000, 1.011 }, at = { 0.000, -1.500, 0.000 } } },"
+ }
+}

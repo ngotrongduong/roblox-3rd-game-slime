@@ -888,10 +888,21 @@ Config.LibraryKit = {
 		Balustrade_Urn = { { mesh = 0, tex = "", size = { 0.4, 0.5, 0.4 }, at = { 0, 0.25, 0 } } },
 		Pipe_Elbow = { { mesh = 0, tex = "", size = { 1.06, 1.06, 0.685 }, at = { 0.17, 0.17, 0 } } },
 		Gear_Wheel = { { mesh = 0, tex = "", size = { 1.994, 1.994, 0.46 }, at = { 0, 0, 0 } } },
+		-- the Kitchen's two, painted by server/Kitchen
+		ChimneyCrown_Gold = { { mesh = 0, tex = "", size = { 2.14, 1.136, 2.14 }, at = { 0, 0.568, 0 } } },
+		VentHood_Copper = { { mesh = 0, tex = "", size = { 2.08, 0.75, 2.08 }, at = { 0, 0.375, 0 } } },
 	},
 	-- how long a stage waits for the meshes before it leaves a library prop out (seconds)
 	WaitSeconds = 15,
 }
+-- The owner's Meshy pieces are props of this kit too; they grow with every sheet he sends, so they live in ConfigMeshyKit.
+local meshyKit = if script then require(script.Parent.ConfigMeshyKit) else require("./ConfigMeshyKit")
+for key, id in meshyKit.Textures do
+	(Config.LibraryKit.Textures :: any)[key] = id
+end
+for name, parts in meshyKit.Props do
+	(Config.LibraryKit.Props :: any)[name] = parts
+end
 
 -- The waving flag (the owner, 2026-11-03: "thin, flying softly like a real flag"): tools/blender/flag.py, imported by the
 -- owner; the server puts it together from these meshes (server/WavingFlag) and the client waves it (client/FlagWave).

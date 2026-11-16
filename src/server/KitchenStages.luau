@@ -1,41 +1,38 @@
 --!strict
 -- The kitchen's 50 levels (the owner, 2026-10-28: "the same as the pantry, the garden and the pen").
 -- Five eras of ten levels; in each era:
---   level 1 of the era   the kitchen grows, nothing taken away: era 2 a gable roof on posts over the
---                        cooking line, with hanging lanterns; era 3 a back wall with windows, half
---                        walls at the sides, a brick bread oven and a second cooking spot; era 4 a
---                        chimney stack from the stove through the roof, a pot rack and a third
---                        cooking spot; era 5 a vent lantern on the ridge with a weather vane
+--   level 1 of the era   the cookhouse takes its next architecture (module `Kitchen`, village v2,
+--                        2026-11-16: the hall, its great chimney and its terrace); era 3 brings a brick
+--                        bread oven and a second cooking spot, era 4 a third
 --   levels 2-5           four kitchen props, one a level, each slot taking its next, better version:
 --                        1 ingredients (veggie crates > pickle barrels > spice cabinet > ice box >
 --                        goo fridge)   2 grill (camp grill > stone grill > brick BBQ > steel grill >
 --                        plasma grill)   3 water (rain barrel > hand pump > stone sink > steel sink >
 --                        goo tap)   4 dishes (dish rack > plate shelf > serving cart > buffet warmer >
 --                        food dispenser)
---   levels 6-10          the kitchen's builds move up one material tier, one a level: floor, floor
---                        border, rails and walls, lamps and roof, the entrance arch
+--   levels 6-10          the cookhouse gains one feature a level (lanterns, a lean-to, a wing, dormers,
+--                        domes...); the floor, its border, the yard's lamps and the entrance arch still
+--                        move up a material tier
 -- Tiers and helpers are the pantry's. The kit stove, counter and firewood stay the area's own; the
 -- cooking spots keep their markers (CookingSpotN with an Attachment WorkSpotN) for the work rules.
 -- Positions are in the kitchen's own frame (x across, z from the front in).
 local PantryStages = require(script.Parent.PantryStages)
 local PondStages = require(script.Parent.PondStages)
 local GateArch = require(script.Parent.GateArch)
+local Kitchen = require(script.Parent.Kitchen)
 
 local KitchenStages = {}
 
 KitchenStages.MaxLevel = 50
 
 local TIERS = PantryStages.Tiers
-local part, wedge, place = PantryStages.part, PantryStages.wedge, PantryStages.place
+local part, place = PantryStages.part, PantryStages.place
 
 -- The village scale (the owner, 2026-10-30: "spread the inside of the kitchen too"): the whole kitchen is
 -- laid out 1.3 times wider than before about its middle (pad, walls, roof span, spots, props against the
 -- walls), every model and piece keeping its own size. The positions below are the spread ones.
--- the pad: x -14.3 .. 14.3, z -11.7 .. 11.7, the entrance at the front middle; the shelter over z -3.2 .. 12
-local XW, ZF, ZB = 14, -3.2, 12
--- (eaves low enough that the camera sees the cooking line under them, still well over a player; the
--- rise grows with the span so the roof keeps its pitch)
-local EAVE, RISE = 7.6, 5.7 -- eave height, ridge above the eaves
+-- the pad: x -14.3 .. 14.3, z -11.7 .. 11.7, the entrance at the front middle; the hall over z -5 .. 12.3
+local XW = 14 -- the inside of the hall's side walls
 local FLOOR = 0.4 -- the pad's floor stands this far above the lawn; props stand on its top
 
 -- cooking spots: where, and from which level (the first is the area's own)
@@ -105,34 +102,11 @@ local function glow(m: Model, name: string, size: Vector3, cf: CFrame, colour: C
 	light.Parent = p
 end
 
--- A low rail run (eras 1-2) along a side or the back: posts every three studs and two rails.
-local function railRun(m: Model, frame: CFrame, x0: number, z0: number, x1: number, z1: number, t: any)
-	local a, b = Vector3.new(x0, 0, z0), Vector3.new(x1, 0, z1)
-	local len = (b - a).Magnitude
-	local dir = (b - a).Unit
-	local n = math.max(1, math.round(len / 3))
-	for k = 0, n do
-		local p = a + dir * (len * k / n)
-		part(m, "RailPost", Vector3.new(0.6, 3, 0.6), frame * CFrame.new(p.X, 1.5, p.Z), t.frame, t.frameMat)
-	end
-	local mid = (a + b) / 2
-	for _, y in { 1.2, 2.6 } do
-		part(
-			m,
-			"Rail",
-			Vector3.new(0.3, 0.4, len),
-			frame * CFrame.new(mid.X, y, mid.Z) * CFrame.lookAt(Vector3.zero, dir),
-			t.walls,
-			t.wallMat
-		)
-	end
-end
-
 -- The kitchen's layer for a level. `area` is the kitchen model: its floor and border take their
 -- tiers, its firewood moves aside when the bread oven comes.
 function KitchenStages.build(area: Instance, frame: CFrame, level: number): Model
 	local era, spots, props, tiers = KitchenStages.state(level)
-	local tw, tl, ta = TIERS[tiers[3]], TIERS[tiers[4]], TIERS[tiers[5]]
+	local tw, tl = TIERS[tiers[3]], TIERS[tiers[4]]
 	local m = Instance.new("Model")
 	m.Name = "AreaStage"
 	m:SetAttribute("Level", level)
@@ -156,149 +130,31 @@ function KitchenStages.build(area: Instance, frame: CFrame, level: number): Mode
 		end
 	end
 
-	-- 3 rails, then walls: the back and both sides
-	if era < 3 then
-		railRun(m, frame, -XW, ZB, XW, ZB, tw)
-		railRun(m, frame, -XW, -5, -XW, ZB, tw)
-		railRun(m, frame, XW, -5, XW, ZB, tw)
-	else
-		local h = EAVE
-		part(m, "WallBack", Vector3.new(XW * 2, h, 0.6), at(0, h / 2, ZB), tw.walls, tw.wallMat)
-		for _, wx in { -6.1, 5.7 } do -- either side of the stove, clear of the bread oven
-			part(m, "WindowFrame", Vector3.new(2.6, 2.2, 0.3), at(wx, 6, ZB - 0.35), tw.trim, tw.trimMat)
-			part(m, "Window", Vector3.new(2, 1.6, 0.32), at(wx, 6, ZB - 0.36), tw.glass, Enum.Material.Neon).CastShadow =
-				false
-		end
-		for _, s in { -1, 1 } do
-			local len = ZB - ZF
-			part(m, "HalfWall", Vector3.new(0.6, 3.4, len), at(s * XW, 1.7, (ZF + ZB) / 2), tw.walls, tw.wallMat)
-			part(m, "WallCap", Vector3.new(0.9, 0.3, len + 0.3), at(s * XW, 3.55, (ZF + ZB) / 2), tw.trim, tw.trimMat)
+	-- the cookhouse: its hall, great chimney and terrace (the pot rack, the herbs and the roof lanterns are its own).
+	-- The chimney, the terrace and the wing stand on the lawn beside the pad: any tree or bush of the scenery
+	-- there goes.
+	Kitchen.build(m, frame, level)
+	do
+		local x0, x1, z0, z1 = Kitchen.footprint(level)
+		for _, d in (area.Parent or area):GetDescendants() do
+			if d:IsA("Model") and d.Parent and d.Parent.Name == "Nature" then
+				local p = frame:PointToObjectSpace(d:GetPivot().Position)
+				if p.X > x0 and p.X < x1 and p.Z > z0 and p.Z < z1 then
+					d.Parent = nil
+				end
+			end
 		end
 	end
 
-	-- 4 lamps at the front corners (and, from era 2, the roof on its posts)
+	-- 4 lamps at the yard's front corners
 	for _, s in { -1, 1 } do
 		part(m, "LampPost", Vector3.new(0.5, 5, 0.5), at(s * 13.5, 2.5, -10.9), tl.frame, tl.frameMat)
 		glow(m, "Lamp", Vector3.new(0.9, 0.9, 0.9), at(s * 13.5, 5.4, -10.9), tl.glass, 10)
-	end
-	if era >= 2 then
-		for _, s in { -1, 1 } do
-			for _, z in { ZF, ZB } do
-				part(m, "RoofPost", Vector3.new(0.8, EAVE, 0.8), at(s * XW, EAVE / 2, z), tl.frame, tl.frameMat)
-			end
-			part(
-				m,
-				"EaveBeam",
-				Vector3.new(0.6, 0.6, ZB - ZF + 0.8),
-				at(s * XW, EAVE - 0.3, (ZF + ZB) / 2),
-				tl.frame,
-				tl.frameMat
-			)
-			-- lanterns hanging under the roof
-			part(m, "LanternChain", Vector3.new(0.12, 1.6, 0.12), at(s * 7.8, EAVE + 0.4, 4.4), tl.frame, tl.frameMat)
-			glow(m, "Lantern", Vector3.new(0.8, 1, 0.8), at(s * 7.8, EAVE - 0.9, 4.4), tl.glass, 12)
-		end
-		for _, z in { ZF, ZB } do
-			part(m, "PlateBeam", Vector3.new(XW * 2 + 0.8, 0.6, 0.6), at(0, EAVE - 0.3, z), tl.frame, tl.frameMat)
-		end
-		-- the gable roof, its ridge running front to back so the front is an open truss the camera
-		-- looks in through (ChatGPT's 1st kitchen review: a slope to the front hid the whole kitchen);
-		-- a light fascia on the slopes' front edges, a ridge cap, a king post; the back gable closed
-		-- once the back wall stands
-		local zc = (ZF + ZB) / 2
-		local reach = XW + 0.8
-		-- (on slime tech the trim glows: the roof edges keep the frame colour so the kitchen is not lit
-		-- cyan all over; ChatGPT's 1st kitchen review)
-		local edge, edgeMat = tl.trim, tl.trimMat
-		if edgeMat == Enum.Material.Neon then
-			edge, edgeMat = tl.frame, tl.frameMat
-		end
-		local pitch = math.atan2(RISE, XW)
-		local slope = reach / math.cos(pitch)
-		for _, sx in { -1, 1 } do
-			local slab = at(sx * reach / 2, EAVE + RISE - reach * math.tan(pitch) / 2 + 0.2, zc)
-				* CFrame.Angles(0, 0, -sx * pitch)
-			part(m, "Roof", Vector3.new(slope, 0.45, ZB - ZF + 1.4), slab, tl.roof, tl.roofMat)
-			part(
-				m,
-				"Fascia",
-				Vector3.new(slope, 0.5, 0.35),
-				slab * CFrame.new(0, 0, -(ZB - ZF + 1.4) / 2),
-				edge,
-				edgeMat
-			)
-			if era >= 3 then
-				-- (a wedge's tall face is its +Z; turned so it rises toward the ridge)
-				wedge(
-					m,
-					"BackGable",
-					Vector3.new(0.3, RISE, XW),
-					at(sx * XW / 2, EAVE + RISE / 2, ZB) * CFrame.Angles(0, -sx * math.pi / 2, 0),
-					tw.walls,
-					tw.wallMat
-				)
-			end
-		end
-		part(m, "Ridge", Vector3.new(0.6, 0.5, ZB - ZF + 1.6), at(0, EAVE + RISE + 0.25, zc), edge, edgeMat)
-		part(m, "KingPost", Vector3.new(0.45, RISE, 0.45), at(0, EAVE + RISE / 2, ZF), tl.frame, tl.frameMat)
 	end
 
 	-- era 3: the bread oven at the back right
 	if era >= 3 then
 		place(m, frame, "BrickOven", 9.4, 8.1, 6, 4.6, FLOOR)
-	end
-	-- era 4: a chimney stack from the stove's own chimney up through the roof, and a pot rack
-	if era >= 4 then
-		part(m, "Chimney", Vector3.new(1.8, 7.4, 1.8), at(2.3, 11.6, 7.25), tw.walls, tw.wallMat)
-		part(m, "ChimneyTop", Vector3.new(2.3, 0.5, 2.3), at(2.3, 15.5, 7.25), tw.trim, tw.trimMat)
-		part(m, "PotRack", Vector3.new(4.6, 0.3, 0.3), at(-9.1, EAVE - 1.4, 4.7), tl.frame, tl.frameMat)
-		for k, dx in { -1.6, 0, 1.6 } do
-			part(
-				m,
-				"RackChain",
-				Vector3.new(0.1, 1.9, 0.1),
-				at(-9.1 + dx * 1.3, EAVE - 0.4, 4.7),
-				tl.frame,
-				tl.frameMat
-			)
-			local pot = part(
-				m,
-				"HangingPot",
-				Vector3.new(0.9, 0.5 + k * 0.15, 0.9),
-				at(-9.1 + dx, EAVE - 2, 4.7) * CFrame.Angles(0, 0, math.rad(90)),
-				Color3.fromRGB(196, 112, 64),
-				Enum.Material.Metal
-			) :: Part
-			pot.Shape = Enum.PartType.Cylinder
-		end
-	end
-	-- era 5: a vent lantern on the ridge with a pan weather vane
-	if era >= 5 then
-		local ry, zc = EAVE + RISE, (ZF + ZB) / 2
-		part(m, "VentBase", Vector3.new(3, 1.6, 5), at(0, ry + 0.8, zc), tw.walls, tw.wallMat)
-		part(m, "VentGlass", Vector3.new(2.4, 1, 4.2), at(0, ry + 2.1, zc), tw.glass, Enum.Material.Neon).CastShadow =
-			false
-		for _, s in { -1, 1 } do
-			part(
-				m,
-				"VentRoof",
-				Vector3.new(1.9, 0.3, 5.6),
-				at(s * 0.8, ry + 2.85, zc) * CFrame.Angles(0, 0, -s * 0.5),
-				tl.roof,
-				tl.roofMat
-			)
-		end
-		part(m, "VaneRod", Vector3.new(0.15, 2.2, 0.15), at(0, ry + 4, zc), ta.trim, ta.trimMat)
-		local pan = part(
-			m,
-			"VanePan",
-			Vector3.new(0.2, 1.3, 1.3),
-			at(-0.5, ry + 4.6, zc) * CFrame.Angles(0, math.rad(90), 0),
-			ta.trim,
-			ta.trimMat
-		) :: Part
-		pan.Shape = Enum.PartType.Cylinder
-		part(m, "VaneHandle", Vector3.new(1.2, 0.2, 0.2), at(0.6, ry + 4.6, zc), ta.trim, ta.trimMat)
 	end
 
 	-- 5 the entrance arch (GateArch): warm orange, the chef's hat emblem on top
@@ -333,18 +189,19 @@ function KitchenStages.build(area: Instance, frame: CFrame, level: number): Mode
 		p.CastShadow = false
 		return p
 	end
-	-- the dining table, out on the lawn beside the kitchen's right as a big outdoor table on its own
-	-- deck (the owner, 2026-10-28: bigger, and outside), the grill on its heatproof slab in the yard
-	-- (the village scale: 7 studs of lawn between the pad and the deck)
-	local tx, tz, DY = -26, -8.6, 0.12
-	part(
-		m,
-		"DiningDeck",
-		Vector3.new(8.4, 0.12, 6.6),
-		at(tx, 0.06, tz),
-		Color3.fromRGB(214, 176, 124),
-		Enum.Material.WoodPlanks
-	)
+	-- the dining table, outside on the cookhouse's terrace at the right (the owner, 2026-10-28: bigger, and
+	-- outside): on its own deck until the terrace is raised on stone; the grill on its heatproof slab in the yard
+	local tx, tz, DY = Kitchen.terrace(level)
+	if DY < 0.5 then
+		part(
+			m,
+			"DiningDeck",
+			Vector3.new(8.4, 0.12, 6.6),
+			at(tx, 0.06, tz),
+			Color3.fromRGB(214, 176, 124),
+			Enum.Material.WoodPlanks
+		)
+	end
 	part(
 		m,
 		"GrillSlab",
@@ -414,23 +271,12 @@ function KitchenStages.build(area: Instance, frame: CFrame, level: number): Mode
 		) :: Part
 		fruit.Shape = Enum.PartType.Ball
 	end
-	if era >= 2 then
-		for k, hx in { -10.6, -9.7, -8.8 } do
-			bit("HerbString", Vector3.new(0.08, 0.8, 0.08), at(hx, EAVE - 1, ZF + 0.2), Color3.fromRGB(226, 196, 140))
-			bit(
-				"HerbBundle",
-				Vector3.new(0.45, 0.85, 0.45),
-				at(hx, EAVE - 1.8, ZF + 0.2),
-				if k == 2 then Color3.fromRGB(240, 236, 220) else Color3.fromRGB(110, 170, 80)
-			)
-		end
-	end
 	bit("FlourSack", Vector3.new(0.9, 1.2, 0.8), at(-13, FLOOR + 0.6, 3.5), Color3.fromRGB(240, 232, 210))
 	bit("SackTie", Vector3.new(0.5, 0.2, 0.45), at(-13, FLOOR + 1.25, 3.5), Color3.fromRGB(196, 150, 90))
 	local bucket = bit(
 		"Bucket",
 		Vector3.new(0.9, 0.9, 0.9),
-		at(-12.7, FLOOR + 0.45, -5.7) * CFrame.Angles(0, 0, math.pi / 2),
+		at(-12.7, FLOOR + 0.45, -6.4) * CFrame.Angles(0, 0, math.pi / 2),
 		if era >= 3 then Color3.fromRGB(150, 156, 166) else Color3.fromRGB(150, 104, 62),
 		if era >= 3 then Enum.Material.Metal else Enum.Material.Wood
 	) :: Part
@@ -513,13 +359,6 @@ function KitchenStages.build(area: Instance, frame: CFrame, level: number): Mode
 			Color3.fromRGB(240, 170, 80)
 		) :: Part
 		soup.Shape = Enum.PartType.Cylinder
-		bit(
-			"Ladle",
-			Vector3.new(0.12, 1.6, 0.12),
-			at(-9.1, EAVE - 2.3, 5.3),
-			Color3.fromRGB(150, 156, 166),
-			Enum.Material.Metal
-		)
 	end
 	local basket = bit(
 		"BreadBasket",
@@ -542,73 +381,9 @@ function KitchenStages.build(area: Instance, frame: CFrame, level: number): Mode
 	) :: Part
 	pie.Shape = Enum.PartType.Cylinder
 
-	-- one construction signature per era (ChatGPT's 2nd kitchen review): brick plinths at the posts,
-	-- metal seams on the steel roof, a goo pipe from the vent down the back corner
-	if era == 3 then
-		for _, sx in { -1, 1 } do
-			for _, z in { ZF, ZB } do
-				part(
-					m,
-					"Plinth",
-					Vector3.new(1.5, 1.3, 1.5),
-					at(sx * XW, FLOOR + 0.65, z),
-					TIERS[3].walls,
-					TIERS[3].wallMat
-				)
-				part(
-					m,
-					"PlinthCap",
-					Vector3.new(1.7, 0.2, 1.7),
-					at(sx * XW, FLOOR + 1.4, z),
-					TIERS[3].base,
-					TIERS[3].baseMat
-				)
-			end
-		end
-	elseif era == 4 then
-		local pitch = math.atan2(RISE, XW)
-		local reach = XW + 0.8
-		for _, sx in { -1, 1 } do
-			local slab = at(sx * reach / 2, EAVE + RISE - reach * math.tan(pitch) / 2 + 0.2, (ZF + ZB) / 2)
-				* CFrame.Angles(0, 0, -sx * pitch)
-			for _, dz in { -5.2, 0, 5.2 } do
-				part(
-					m,
-					"RoofSeam",
-					Vector3.new(reach / math.cos(pitch), 0.14, 0.3),
-					slab * CFrame.new(0, 0.28, dz),
-					Color3.fromRGB(150, 158, 170),
-					Enum.Material.Metal
-				)
-			end
-		end
-	elseif era == 5 then
-		local mint = Color3.fromRGB(120, 230, 200)
-		part(
-			m,
-			"GooPipe",
-			Vector3.new(0.55, EAVE - 0.8, 0.55),
-			at(-(XW - 0.7), FLOOR + (EAVE - 0.8) / 2, ZB - 0.9),
-			Color3.fromRGB(70, 150, 140),
-			Enum.Material.Metal
-		)
-		part(
-			m,
-			"GooPipe",
-			Vector3.new(XW - 0.7, 0.55, 0.55),
-			at(-(XW - 0.7) / 2, EAVE - 0.8, ZB - 0.9),
-			Color3.fromRGB(70, 150, 140),
-			Enum.Material.Metal
-		)
-		for _, y in { 1.6, 4.2 } do
-			bit("PipeRing", Vector3.new(0.7, 0.18, 0.7), at(-(XW - 0.7), FLOOR + y, ZB - 0.9), mint, Enum.Material.Neon)
-		end
-	end
-
-	-- outdoor dining on the lawn round the kitchen (the owner, 2026-10-28: the lawn round an area is
-	-- there to use; picnic and outdoor tables), growing each era and never taken away: on the right
-	-- (by the dining nook) a picnic blanket, then picnic tables with sunshades, string lights, and a
-	-- deck under them on slime tech; on the left (by the grill) a blanket and a table later on
+	-- outdoor dining on the lawn at the kitchen's left, past the great chimney (the owner, 2026-10-28: the lawn
+	-- round an area is there to use), growing each era and never taken away: a picnic blanket, a second one, then
+	-- a picnic table under a sunshade. The right side is the cookhouse's own terrace.
 	local function picnicTable(x: number, z: number, shade: Color3?)
 		part(m, "PicnicTop", Vector3.new(4.8, 0.3, 2), at(x, 2.5, z), tt.walls, tt.wallMat)
 		for _, bz in { -1.35, 1.35 } do
@@ -684,57 +459,13 @@ function KitchenStages.build(area: Instance, frame: CFrame, level: number): Mode
 		local apple = bit("Apple", Vector3.one * 0.45, at(x - 0.5, 0.28, z + 0.4), Color3.fromRGB(230, 70, 70)) :: Part
 		apple.Shape = Enum.PartType.Ball
 	end
-	local red, pinkShade, cream =
-		Color3.fromRGB(220, 80, 80), Color3.fromRGB(240, 150, 180), Color3.fromRGB(250, 236, 200)
-	-- (the village scale: 7 studs of lawn from the pad; the right-hand tables stand one behind the other
-	-- behind the dining deck instead of side by side, so they keep clear of the fishing shed next door)
-	blanket(25, -5, red)
+	-- (the village scale: 7 studs of lawn from the pad, clear of the chimney, its oven and its kettles)
+	blanket(25, -5, Color3.fromRGB(220, 80, 80))
 	if era >= 2 then
-		picnicTable(-25, 3.5)
 		blanket(27, -12, Color3.fromRGB(90, 140, 220))
 	end
-	if era >= 3 then
-		picnicTable(-25, 14.5, pinkShade)
-	end
 	if era >= 4 then
-		picnicTable(25.5, 3, cream)
-		-- string lights over the right-hand tables
-		local corners =
-			{ Vector3.new(-21, 0, 0.6), Vector3.new(-29, 0, 0.6), Vector3.new(-29, 0, 17.4), Vector3.new(-21, 0, 17.4) }
-		for _, c in corners do
-			part(m, "LightPost", Vector3.new(0.3, 6, 0.3), at(c.X, 3, c.Z), tt.frame, tt.frameMat)
-		end
-		for k = 1, 4 do
-			local a, b = corners[k], corners[k % 4 + 1]
-			local mid = (a + b) / 2
-			bit(
-				"LightLine",
-				Vector3.new(0.06, 0.06, (b - a).Magnitude),
-				at(mid.X, 5.7, mid.Z) * CFrame.lookAt(Vector3.zero, (b - a).Unit),
-				Color3.fromRGB(60, 60, 66)
-			)
-			for t = 1, 3 do
-				local p = a + (b - a) * (t / 4)
-				local bulb = bit(
-					"Bulb",
-					Vector3.one * 0.3,
-					at(p.X, 5.55, p.Z),
-					Color3.fromRGB(255, 220, 140),
-					Enum.Material.Neon
-				) :: Part
-				bulb.Shape = Enum.PartType.Ball
-			end
-		end
-	end
-	if era >= 5 then
-		part(
-			m,
-			"PicnicDeck",
-			Vector3.new(9, 0.12, 17.6),
-			at(-25, 0.06, 9),
-			Color3.fromRGB(214, 176, 124),
-			Enum.Material.WoodPlanks
-		)
+		picnicTable(27.5, 4, Color3.fromRGB(250, 236, 200))
 	end
 
 	-- the kitchen props

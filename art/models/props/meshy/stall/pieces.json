@@ -1,0 +1,38 @@
+{
+ "Stall_Thatch": {
+  "tris": 2382,
+  "config": "Stall_Thatch = { { mesh = 0, tex = \"MeshyStall\", size = { 9.177, 7.000, 6.738 }, at = { 0.000, 3.500, 0.000 } } },"
+ },
+ "Stall_RedStripe": {
+  "tris": 724,
+  "config": "Stall_RedStripe = { { mesh = 0, tex = \"MeshyStall\", size = { 9.808, 6.500, 6.158 }, at = { 0.000, 3.250, 0.000 } } },"
+ },
+ "Stall_BlueStripe": {
+  "tris": 658,
+  "config": "Stall_BlueStripe = { { mesh = 0, tex = \"MeshyStall\", size = { 8.497, 6.500, 6.141 }, at = { 0.000, 3.250, 0.000 } } },"
+ },
+ "Canopy_Glass": {
+  "tris": 1309,
+  "config": "Canopy_Glass = { { mesh = 0, tex = \"MeshyStall\", size = { 8.305, 6.500, 5.493 }, at = { 0.000, 3.250, 0.000 } } },"
+ },
+ "ParasolTable_Red": {
+  "tris": 927,
+  "config": "ParasolTable_Red = { { mesh = 0, tex = \"MeshyStall\", size = { 6.676, 8.000, 6.464 }, at = { 0.000, 4.000, 0.000 } } },"
+ },
+ "ParasolTable_Blue": {
+  "tris": 1559,
+  "config": "ParasolTable_Blue = { { mesh = 0, tex = \"MeshyStall\", size = { 6.520, 8.000, 6.876 }, at = { 0.000, 4.000, 0.000 } } },"
+ },
+ "ParasolTable_Cream": {
+  "tris": 908,
+  "config": "ParasolTable_Cream = { { mesh = 0, tex = \"MeshyStall\", size = { 6.707, 8.000, 6.928 }, at = { 0.000, 4.000, 0.000 } } },"
+ },
+ "RoseArch_Garden": {
+  "tris": 3183,
+  "config": "RoseArch_Garden = { { mesh = 0, tex = \"MeshyStall\", size = { 8.701, 8.000, 3.352 }, at = { 0.000, 4.000, 0.000 } } },"
+ },
+ "Trellis_Ivy": {
+  "tris": 2054,
+  "config": "Trellis_Ivy = { { mesh = 0, tex = \"MeshyStall\", size = { 4.473, 6.000, 2.107 }, at = { 0.000, 0.000, -1.054 } } },"
+ }
+}

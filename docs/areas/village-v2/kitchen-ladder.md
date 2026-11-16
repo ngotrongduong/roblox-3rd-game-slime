@@ -1,8 +1,8 @@
 # The Kitchen as a landmark: plan and upgrade ladder
 
 Skill `landmark-build`, steps 2 and 3. Reference: `kitchen-ref-sheet.jpg` and `kitchen-ref-era1.jpg` ... `era5.jpg` in
-this folder (ChatGPT chat `/c/6afae216-2974-83ec-a85c-e5b5281ae5b3`, 2026-11-16). **The owner has not yet said the
-sheet is the model: nothing is built before he does.**
+this folder (ChatGPT chat `/c/6afae216-2974-83ec-a85c-e5b5281ae5b3`, 2026-11-16). The owner approved the sheet the
+same day ("Duyệt"); it is built as `src/server/Kitchen.luau`.
 
 ## The building
 
@@ -88,7 +88,10 @@ Walked against the step test (section 2 of the skill): no row is a count alone (
 that arrive together, two kettles together); every row is outside or in the open front; nothing is taken away (the
 awning becomes the canopy, then the colonnade: the same part in its next form). The weakest rows, to be made big
 enough at the build: 6 (lanterns of 1.6 studs with real light), 9 (finial and a 2.6-stud flag), 16 (boxes 3 studs
-wide, bright flowers). Not yet seen side by side in a preview: that is step 6.
+wide, bright flowers). Seen at the last level of each era in the preview and in a play test (2026-11-16); the ten
+levels of an era have not been walked pair by pair yet. ChatGPT's one review (2026-11-17) changed no row: its fixes
+gave depth to parts the rows already name (the lean-to's straw, the awning, the stone arch, the glass vault's
+face, the capital's portal).
 
 ## Which shapes go where
 
@@ -96,10 +99,9 @@ wide, bright flowers). Not yet seen side by side in a preview: that is step 6.
 |---------|--------|
 | Parts (`Architecture`) | hall walls, posts, arches' piers, slab roofs, the chimney's shafts and bands, the oven's base, the wing, the dormer, awning slabs in stripes, tables and benches, banners, flower boxes, the terrace floor, the glass vault as flat panes between the ribs |
 | Blender, reused from the Granary | cone roof with tile rows (the smokehouse turret), royal dome (both domes), column capital and base, balustrade run with urn (terrace wall, roof edge), copper pipe elbow, brass gear wheel, glass-and-iron dome (the kettles' caps) |
-| Blender, new (`tools/blender/kitchen_pieces.py`) | oven dome with its arched mouth; parasol (eight gores, two colour slots); steel vault rib; copper vent hood; cauldron; chimney crown |
-| Meshy, the owner | chef-hat emblem with wheat ears (carved plaque, eras 3-4); a chef's hat alone (worn by the game's own slime, gold, at era 5); a pair of gold laurel branches (era 5 pediment) |
-| Meshy, already asked for the Granary | the thatched gable roof (era 1 roof), the wall lantern, the ivy corner: the same models fit here |
+| Blender, new (in `tools/blender/granary_pieces.py`) | chimney crown, copper vent hood. The vault ribs stayed straight beams (a curved model stands off flat panes); oven, parasols and cauldron came from the owner's sheets instead |
+| Meshy, the owner | chef-hat emblem with wheat ears (carved plaque, eras 3-4); a chef's hat alone (worn by the game's own slime, gold, at era 5); a pair of gold laurel branches (era 5 pediment); a pot rack; and from his sheet models: brick and stone ovens, the cauldron on its frame, parasol tables, flower boxes, the slime banner, the ridge finial |
+| Meshy, already asked for the Granary | the thatched gable roof (era 1 roof), the wall lantern: the same models fit here |
 
 The golden chef slime is the game's own slime body in gold with the owner's chef hat on it, as the Granary's statue.
-The request for the three new Meshy reference pictures goes to ChatGPT once the owner has approved the sheet, so no
-Meshy credits are spent on a design he might change.
+The kit names of every piece are in `hard-pieces.md`.

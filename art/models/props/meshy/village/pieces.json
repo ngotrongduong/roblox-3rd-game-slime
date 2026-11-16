@@ -1,0 +1,54 @@
+{
+ "CrateStack_Wood": {
+  "tris": 805,
+  "config": "CrateStack_Wood = { { mesh = 0, tex = \"MeshyVillage\", size = { 4.483, 4.200, 3.007 }, at = { 0.000, 2.100, 0.000 } } },"
+ },
+ "Barrel_Oak": {
+  "tris": 1088,
+  "config": "Barrel_Oak = { { mesh = 0, tex = \"MeshyVillage\", size = { 2.965, 3.200, 2.999 }, at = { 0.000, 1.600, 0.000 } } },"
+ },
+ "HayBales_Stack": {
+  "tris": 4711,
+  "config": "HayBales_Stack = { { mesh = 0, tex = \"MeshyVillage\", size = { 3.917, 3.600, 3.516 }, at = { 0.000, 1.800, 0.000 } } },"
+ },
+ "GrainSacks_Pair": {
+  "tris": 3050,
+  "config": "GrainSacks_Pair = { { mesh = 0, tex = \"MeshyVillage\", size = { 3.691, 3.000, 3.110 }, at = { 0.000, 1.500, 0.000 } } },"
+ },
+ "Banner_SlimeBlue": {
+  "tris": 641,
+  "config": "Banner_SlimeBlue = { { mesh = 0, tex = \"MeshyVillage\", size = { 3.618, 5.000, 1.326 }, at = { 0.000, 0.000, -0.663 } } },"
+ },
+ "FlowerBox_Trough": {
+  "tris": 3028,
+  "config": "FlowerBox_Trough = { { mesh = 0, tex = \"MeshyVillage\", size = { 4.000, 2.785, 2.131 }, at = { 0.000, 1.393, 0.000 } } },"
+ },
+ "RopeHook_Coil": {
+  "tris": 3054,
+  "config": "RopeHook_Coil = { { mesh = 0, tex = \"MeshyVillage\", size = { 1.681, 3.000, 2.194 }, at = { 0.000, 0.000, -1.097 } } },"
+ },
+ "HangingSign_Blank": {
+  "tris": 1868,
+  "config": "HangingSign_Blank = { { mesh = 0, tex = \"MeshyVillage\", size = { 0.774, 3.600, 3.536 }, at = { 0.000, 0.000, -1.768 } } },"
+ },
+ "Topiary_StonePlanter": {
+  "tris": 2520,
+  "config": "Topiary_StonePlanter = { { mesh = 0, tex = \"MeshyVillage\", size = { 2.620, 5.000, 2.692 }, at = { 0.000, 2.500, 0.000 } } },"
+ },
+ "GooTank_Glass": {
+  "tris": 3088,
+  "config": "GooTank_Glass = { { mesh = 0, tex = \"MeshyVillage\", size = { 2.770, 4.500, 2.815 }, at = { 0.000, 2.250, 0.000 } } },"
+ },
+ "PipeValve_Copper": {
+  "tris": 1807,
+  "config": "PipeValve_Copper = { { mesh = 0, tex = \"MeshyVillage\", size = { 3.513, 3.500, 1.534 }, at = { 0.000, 0.000, -0.767 } } },"
+ },
+ "FlowerUrn_Gold": {
+  "tris": 4304,
+  "config": "FlowerUrn_Gold = { { mesh = 0, tex = \"MeshyVillage\", size = { 3.097, 3.600, 2.916 }, at = { 0.000, 1.800, 0.000 } } },"
+ },
+ "SlimeCrest_Laurel": {
+  "tris": 4423,
+  "config": "SlimeCrest_Laurel = { { mesh = 0, tex = \"MeshyVillage\", size = { 3.404, 4.000, 1.192 }, at = { 0.000, 0.000, -0.596 } } },"
+ }
+}

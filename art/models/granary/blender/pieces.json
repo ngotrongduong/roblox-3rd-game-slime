@@ -337,5 +337,53 @@
    }
   },
   "triangles": 416
+ },
+ "ChimneyCrown": {
+  "objects": {
+   "ChimneyCrown_Gold": {
+    "size_studs_xyz": [
+     2.14,
+     1.136,
+     2.14
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     0.568,
+     0.0
+    ],
+    "triangles": 816,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 0.546
+   }
+  },
+  "triangles": 816
+ },
+ "VentHood": {
+  "objects": {
+   "VentHood_Copper": {
+    "size_studs_xyz": [
+     2.08,
+     0.75,
+     2.08
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     0.375,
+     0.0
+    ],
+    "triangles": 384,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 0.297
+   }
+  },
+  "triangles": 384
  }
 }

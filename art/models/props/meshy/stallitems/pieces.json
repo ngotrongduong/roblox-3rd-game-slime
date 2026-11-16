@@ -1,0 +1,38 @@
+{
+ "Shelf_Jars": {
+  "tris": 2118,
+  "config": "Shelf_Jars = { { mesh = 0, tex = \"MeshyStallItems\", size = { 4.517, 4.500, 2.554 }, at = { 0.000, 2.250, 0.000 } } },"
+ },
+ "Shelf_Vegetables": {
+  "tris": 4704,
+  "config": "Shelf_Vegetables = { { mesh = 0, tex = \"MeshyStallItems\", size = { 4.837, 4.500, 4.013 }, at = { 0.000, 2.250, 0.000 } } },"
+ },
+ "PicnicTable_Checked": {
+  "tris": 934,
+  "config": "PicnicTable_Checked = { { mesh = 0, tex = \"MeshyStallItems\", size = { 5.971, 4.200, 6.911 }, at = { 0.000, 2.100, 0.000 } } },"
+ },
+ "RoundTable_Lantern": {
+  "tris": 602,
+  "config": "RoundTable_Lantern = { { mesh = 0, tex = \"MeshyStallItems\", size = { 5.537, 4.400, 4.694 }, at = { 0.000, 2.200, 0.000 } } },"
+ },
+ "BarrelStack_Three": {
+  "tris": 1472,
+  "config": "BarrelStack_Three = { { mesh = 0, tex = \"MeshyStallItems\", size = { 5.269, 4.600, 7.552 }, at = { 0.000, 2.300, 0.000 } } },"
+ },
+ "GrainSacks_Open": {
+  "tris": 1806,
+  "config": "GrainSacks_Open = { { mesh = 0, tex = \"MeshyStallItems\", size = { 4.574, 3.000, 3.480 }, at = { 0.000, 1.500, 0.000 } } },"
+ },
+ "AppleCrate_Full": {
+  "tris": 875,
+  "config": "AppleCrate_Full = { { mesh = 0, tex = \"MeshyStallItems\", size = { 2.051, 2.200, 2.099 }, at = { 0.000, 1.100, 0.000 } } },"
+ },
+ "SausageRack_Wood": {
+  "tris": 1186,
+  "config": "SausageRack_Wood = { { mesh = 0, tex = \"MeshyStallItems\", size = { 5.116, 4.500, 1.485 }, at = { 0.000, 2.250, 0.000 } } },"
+ },
+ "FishRack_Wood": {
+  "tris": 674,
+  "config": "FishRack_Wood = { { mesh = 0, tex = \"MeshyStallItems\", size = { 3.992, 4.500, 1.280 }, at = { 0.000, 2.250, 0.000 } } },"
+ }
+}

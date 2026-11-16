@@ -946,12 +946,12 @@ What went wrong
 - **After a crash the browser pane's ChatGPT is signed out**: only the owner can sign in; keep the request text in
   the repo so nothing is lost.
 
-Blender pieces on a part-built building (2026-11-16, `tools/blender/granary_pieces.py`, `tools/map/granary_preview.luau`)
+Blender pieces on a part-built building (2026-11-16, `tools/blender/granary_pieces.py`, `tools/map/landmark_preview.luau`)
 - **Each Blender object is its own `Config.LibraryKit` prop** (`<Piece>_<Slot>`, `mesh = 0` until uploaded) and the
   building asks for it by name (`piece(...)` -> `b.mesh`): with no mesh it gets nil and builds the old part stand-in,
   so the same feature step shows either. The upgrade ladder never changes, and the code ships before the upload.
 - **See the pieces on the building BEFORE any upload**: the Blender script also writes one Luau script a piece
-  (EditableMesh, vertices split per corner normal); run them in the Edit datamodel, then `granary_preview.luau` builds
+  (EditableMesh, vertices split per corner normal); run them in the Edit datamodel, then `landmark_preview.luau` builds
   the building at four levels with a stub kit that serves those meshes at the size and place Config gives them.
   Preview meshes do not survive a save: destroy both `GranaryPreview` folders when done.
 - **`at` of a prop is from where the building HOLDS the piece** (a roof's eave centre, a column base's foot, an
@@ -983,3 +983,33 @@ The final review of a landmark (2026-11-16, the Granary: 60-74 -> 80-86 of 100)
 - `for _, v in if a then {..} else {..} do` fails Studio's type checker ("cannot call a value of type {number} in
   union"): give the list a typed local first.
 - When the owner is using the ChatGPT tab, read the answer in a second background tab; text needs no fronted tab.
+
+The Kitchen, the second landmark (2026-11-17, `src/server/Kitchen.luau`; ChatGPT: likeness 78-88, finish 74-83)
+- **Look in the owner's sheet kit BEFORE sorting a shape to Blender** (`src/shared/ConfigMeshyKit.luau`, 80 pieces):
+  the oven, the parasol tables, the cauldron, the flower boxes, the banner and the ridge finial were all there, so
+  three planned Blender pieces were never built. A piece is asked for with `painted(name, cf, scale)`; nil keeps the
+  part stand-in.
+- **`Enum.Material.Fabric` draws a dark weave**: a blue flag read navy-black against the sky and an awning's white
+  stripes grey. Flags, pennants and awnings are `SmoothPlastic` (`Architecture.b.flag` too).
+- **A dark plate behind a gold emblem is right on glass and wrong on white marble** (a black blob): on marble the
+  plate takes the era's cloth colour.
+- **A flat arch reads as a square opening**: half-width 9.5 with a rise of 3.2 under a jetty beam showed no curve from
+  the player's height. Lower the spring and raise the crown (4.4 + 3.8), make the voussoirs prouder than the wall
+  (0.7) and every other one darker, and keep corbels off the stones of the arch.
+- **A glazed end flush with its steel reads as a drawn window**: set the glass 0.9 behind the fan on a deeper tie
+  beam and run a half ring through the spokes. One recessed pane, never a second glass layer (transparent overdraw).
+- **A cover 0.16 thick reads as paper**: an awning is 0.3 with a 0.7 valance on struts; thatch is 0.9 with a fat
+  roll along the eave and one down each edge.
+- **A portal wants a lining**: a marble jamb and soffit 0.6 inside the gold ring, deeper than the wall (T + 1), turn
+  a hole in a wall into a doorway. Lanterns on the jamb move in with it.
+- **A Meshy finial never sits over a dome's own lantern**; two parasol tables stand staggered (one nearer the house)
+  so both show from the front; ribs on flat glass panes stay straight beams (a curved model stands off the panes).
+- **The review camera hides one flank**: ChatGPT asked for the bread oven and the second kettle, both standing on
+  the chimney's side. Shoot that flank once (`review/kitchen-final-l40-left.jpg`) before believing "missing", and
+  send that shot too next time.
+- **The review gets the Edit-preview shots** (the real pieces on); the play test shows stand-ins and proves only
+  that it builds. `tools/map/sync_server.luau` does not list a new landmark module: `tools\map\sync_all.ps1` does.
+- **`Config.luau` nears Studio's 200000-character limit**: the owner's sheet rows live in `ConfigMeshyKit.luau`,
+  merged into `Config.LibraryKit`; the preview tool takes it as its own argument.
+- An owner's sheet of many props in one GLB is cut by `tools/blender/meshy_sheet_split.py` (names in
+  `meshy_sheets.json`); where a piece came twice, both were looked at on one contact sheet and the better one kept.

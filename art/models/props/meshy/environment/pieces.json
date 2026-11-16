@@ -1,0 +1,38 @@
+{
+ "LampPost_Single": {
+  "tris": 836,
+  "config": "LampPost_Single = { { mesh = 0, tex = \"MeshyEnvironment\", size = { 5.430, 9.000, 2.604 }, at = { 0.000, 4.500, 0.000 } } },"
+ },
+ "Fence_WoodX": {
+  "tris": 360,
+  "config": "Fence_WoodX = { { mesh = 0, tex = \"MeshyEnvironment\", size = { 5.470, 3.200, 0.903 }, at = { 0.000, 1.600, 0.000 } } },"
+ },
+ "LampPost_Triple": {
+  "tris": 1630,
+  "config": "LampPost_Triple = { { mesh = 0, tex = \"MeshyEnvironment\", size = { 6.909, 9.500, 2.217 }, at = { 0.000, 4.750, 0.000 } } },"
+ },
+ "Pillar_Lantern": {
+  "tris": 634,
+  "config": "Pillar_Lantern = { { mesh = 0, tex = \"MeshyEnvironment\", size = { 1.973, 5.400, 2.044 }, at = { 0.000, 2.700, 0.000 } } },"
+ },
+ "Pillar_GoldCap": {
+  "tris": 480,
+  "config": "Pillar_GoldCap = { { mesh = 0, tex = \"MeshyEnvironment\", size = { 1.728, 4.500, 1.737 }, at = { 0.000, 2.250, 0.000 } } },"
+ },
+ "Wall_StonePosts": {
+  "tris": 904,
+  "config": "Wall_StonePosts = { { mesh = 0, tex = \"MeshyEnvironment\", size = { 6.782, 3.600, 1.598 }, at = { 0.000, 1.800, 0.000 } } },"
+ },
+ "Brazier_Fire": {
+  "tris": 982,
+  "config": "Brazier_Fire = { { mesh = 0, tex = \"MeshyEnvironment\", size = { 2.819, 4.000, 2.819 }, at = { 0.000, 2.000, 0.000 } } },"
+ },
+ "Fountain_Tiered": {
+  "tris": 1922,
+  "config": "Fountain_Tiered = { { mesh = 0, tex = \"MeshyEnvironment\", size = { 7.606, 6.500, 7.629 }, at = { 0.000, 3.250, 0.000 } } },"
+ },
+ "Bunting_Posts": {
+  "tris": 802,
+  "config": "Bunting_Posts = { { mesh = 0, tex = \"MeshyEnvironment\", size = { 8.075, 4.600, 1.318 }, at = { 0.000, 2.300, 0.000 } } },"
+ }
+}

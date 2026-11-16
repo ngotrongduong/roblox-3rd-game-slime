@@ -15,11 +15,6 @@
 -- (+x) from the second era; an open lean-to shed runs along the right wall (-x) and the silos stand behind it.
 -- An era's first level changes the architecture; levels 6-10 of each era add one feature each, and a feature
 -- once added stays in every later era (25 in all, listed in `build`).
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-
-local Config = require(ReplicatedStorage.Shared.Config)
-local FaceArt = require(ReplicatedStorage.Shared.FaceArt)
-local SlimeShape = require(ReplicatedStorage.Shared.SlimeShape)
 local Architecture = require(script.Parent.Architecture)
 local LibraryKit = require(script.Parent.LibraryKit)
 
@@ -460,65 +455,7 @@ function Granary.build(m: Instance, frame: CFrame, level: number)
 	-- with the owner's own face pictures standing on its skin, as SlimeFace does for the living ones. `cf` at its
 	-- foot, looking along -Z; `r` is half its width. Returns its height (the tip is thin: a crown sits at 0.8 of it).
 	local function slime(cf: CFrame, r: number, colour: Color3?, material: Enum.Material?): number
-		local kit = ReplicatedStorage:FindFirstChild("ClientKit")
-		local source = if kit then kit:FindFirstChild("SlimeBody") else nil
-		if not (kit and source and source:IsA("MeshPart")) then
-			warn(Config.LogPrefix, "missing ClientKit/SlimeBody: a statue is left out")
-			return r * 1.9
-		end
-		local s = 2 * r / source.Size.X -- studs for one body height
-		-- (a skinned body is scaled as a model, bones and all, as SlimeLook does: its Size alone squashes it)
-		local statue = Instance.new("Model")
-		statue.Name = "SlimeStatue"
-		local body = source:Clone()
-		body.Name = "SlimeBody"
-		body.PivotOffset = CFrame.new()
-		body.CFrame = CFrame.new(0, Config.Slime.MeshCentre, 0)
-		body.Anchored = true
-		body.CanCollide = false
-		body.CanTouch = false
-		body.CanQuery = false
-		body.CastShadow = false
-		body.Color = colour or L.gold
-		body.Material = material or M.Metal
-		local looks = kit:FindFirstChild("Looks")
-		-- (the living slimes' fine glossy skin, tinted gold: their Mirror look showed the dark horizon across a
-		-- statue this big and hid its mouth)
-		local fine = if looks and not material then looks:FindFirstChild("PlainFine") else nil
-		if fine and fine:IsA("SurfaceAppearance") then
-			local look = fine:Clone()
-			look.Color = body.Color
-			look.Parent = body
-		end
-		body.Parent = statue
-		statue.WorldPivot = CFrame.new()
-		statue:ScaleTo(s)
-		statue:PivotTo(cf)
-		statue.Parent = m
-		for _, key in { "normal_eyeL", "normal_eyeR", "normal_mouth" } do
-			local sp = (FaceArt.Sprites :: any)[key]
-			local x, y, z = SlimeShape.frontPoint(sp.cx, sp.cy)
-			local rad = SlimeShape.radius(y)
-			local slope = (SlimeShape.radius(y + 0.02) - SlimeShape.radius(y - 0.02)) / 0.04
-			local n = Vector3.new(x / rad, -slope, z / rad).Unit
-			local p = cf * (Vector3.new(x, y, z) * s + n * (0.012 * s - 0.025))
-			local plate = Instance.new("Part")
-			plate.Name = "SlimeStatueFace"
-			plate.Size = Vector3.new(sp.w * s, sp.h * s, 0.05)
-			plate.CFrame = CFrame.lookAt(p, p + cf:VectorToWorldSpace(n), cf.UpVector)
-			plate.Transparency = 1
-			plate.Anchored = true
-			plate.CanCollide = false
-			plate.CanTouch = false
-			plate.CanQuery = false
-			plate.CastShadow = false
-			local picture = Instance.new("Decal")
-			picture.Face = Enum.NormalId.Front
-			picture.Texture = "rbxassetid://" .. tostring(sp.id)
-			picture.Parent = plate
-			plate.Parent = m
-		end
-		return s * Config.Slime.MeshHeight
+		return b.slime(cf, r, colour or L.gold, material)
 	end
 	local function crown(cf: CFrame, r: number)
 		b.cyl("Crown", r, r * 0.5, cf * CFrame.new(0, r * 0.25, 0), L.gold, nil, false)
@@ -547,6 +484,20 @@ function Granary.build(m: Instance, frame: CFrame, level: number)
 	): BasePart?
 		local src = LibraryKit.find(name)
 		return if src then b.mesh(src, cf, Vector3.new(sx, sy, sz), colour, material) else nil
+	end
+	-- THE OWNER'S MESHY PIECES wear their own picture: unpainted, stretched from their size in Config.LibraryKit
+	local function painted(name: string, cf: CFrame, sx: number, sy: number?, sz: number?): BasePart?
+		return piece(name, cf, sx, sy or sx, sz or sx, Color3.new(1, 1, 1), M.SmoothPlastic)
+	end
+	-- the crowned golden slime, `r` half its width, its foot at `cf`: the owner's statue on its plinth, and until it
+	-- comes the game's own slime (under a crown of parts `crownR` round)
+	local function statue(cf: CFrame, r: number, crownR: number?)
+		if not painted("SlimeStatue_Gold", cf, r) then
+			local tall = slime(cf, r)
+			if crownR then
+				crown(cf * CFrame.new(0, tall * 0.8, 0), crownR)
+			end
+		end
 	end
 	-- a tiled cone roof `r` round at the eave and `rise` high, the middle of its foot at `cf`: its height, finial and all
 	local function coneRoof(cf: CFrame, r: number, rise: number, colour: Color3): number?
@@ -718,8 +669,9 @@ function Granary.build(m: Instance, frame: CFrame, level: number)
 	end
 
 	-- the roof, its ridge front to back
+	local roofAt = b.at(0, wallH, d / 2) * CFrame.Angles(0, math.pi / 2, 0)
 	b.gable(
-		b.at(0, wallH, d / 2) * CFrame.Angles(0, math.pi / 2, 0),
+		roofAt,
 		d + jet * 2,
 		half * 2,
 		L.rise,
@@ -730,8 +682,12 @@ function Granary.build(m: Instance, frame: CFrame, level: number)
 		nil,
 		if era == 1 then 1.1 else nil -- thatch is thick
 	)
-	if era == 1 then
-		-- thatch ends in a thick roll along each eave
+	local straw = if era == 1 then LibraryKit.find("ThatchRoof_Gable") else nil
+	if straw then
+		-- the owner's shaggy straw over the slabs
+		b.thatch(straw, roofAt, d + jet * 2, half * 2, L.rise, L.over)
+	elseif era == 1 then
+		-- (until it comes: thatch ends in a thick roll along each eave)
 		for _, s in { -1, 1 } do
 			local u = half + L.over - 0.3
 			b.trim("EaveRoll", 0.9, 0.7, d + L.over * 2, b.at(s * u, roofY(u) - 0.15, d / 2), L.accent)
@@ -766,12 +722,19 @@ function Granary.build(m: Instance, frame: CFrame, level: number)
 		end
 	end
 	local gableY = wallH + L.rise * 0.36
+	if era <= 3 then
+		-- ivy up the front's left corner and along under the eave (the owner's Meshy piece, modelled thick: flattened)
+		painted("Ivy_Corner", b.face(half - 2.9, wallH - 3.1, -jet, FRONT), 1, 1, 0.4)
+	end
 	if era == 5 then
-		-- the golden slime of the pediment, on a blue round with a golden rim
-		b.disc("CrestRim", 3, 0.2, gf(0, wallH + 2.9) * CFrame.new(0, 0, -0.1), L.gold)
-		b.disc("CrestField", 2.75, 0.26, gf(0, wallH + 2.9) * CFrame.new(0, 0, -0.1), L.roof)
-		local tall = slime(b.at(0, wallH + 0.7, -jet - 0.1), 2.2)
-		crown(b.at(0, wallH + 0.7 + tall * 0.8, -jet - 0.1), 0.8)
+		-- the golden slime of the pediment, on a blue round with a golden rim: the owner's crest behind his statue
+		if painted("Crest_Gold", gf(0, wallH + 2.9), 3) then
+			statue(b.at(0, wallH + 0.7, -jet - 0.1), 1.6, 0.6)
+		else
+			b.disc("CrestRim", 3, 0.2, gf(0, wallH + 2.9) * CFrame.new(0, 0, -0.1), L.gold)
+			b.disc("CrestField", 2.75, 0.26, gf(0, wallH + 2.9) * CFrame.new(0, 0, -0.1), L.roof)
+			statue(b.at(0, wallH + 0.7, -jet - 0.1), 2.2, 0.8)
+		end
 	elseif era == 4 then
 		-- the glowing slime in the glass gable
 		slime(b.at(0, wallH + 0.6, -jet + 0.15), 2, L.goo, M.Neon)
@@ -916,7 +879,10 @@ function Granary.build(m: Instance, frame: CFrame, level: number)
 			local top = math.min(wallH - 0.5, doorTop + 1.4)
 			local z = if top > lowerTop then -jet else 0
 			-- (short enough to end above the lantern under it)
-			b.banner(b.face(s * (sideX + 0.1), top, z, FRONT), 1.1, math.min(2.6, top - BASE - 4), L.cloth, L.gold)
+			local h = math.min(2.6, top - BASE - 4)
+			if not painted("Banner_SlimeBlue", b.face(s * (sideX + 0.1), top - h / 2, z, FRONT), h / 5) then
+				b.banner(b.face(s * (sideX + 0.1), top, z, FRONT), 1.1, h, L.cloth, L.gold)
+			end
 		end
 	end
 
@@ -1044,8 +1010,14 @@ function Granary.build(m: Instance, frame: CFrame, level: number)
 	local seat: number? -- where the slime of the last level sits, if not on the very tip
 	if L.towerRoof == "pyramid" then
 		b.trim("TowerEave", tw + 1.7, 0.3, tw + 1.7, b.at(0, top + 0.15, zT), L.board)
-		b.pyramid(b.at(0, top + 0.3, zT), tw + 1.5, tw + 1.5, L.spire, L.towerCap)
-		tip = top + 0.3 + L.spire
+		local w = (tw + 1.5) * 1.1 -- (the straw cap hangs a little over the eave board)
+		local up = L.spire + 0.5 -- (and ends in a knot)
+		if era == 1 and painted("ThatchCap_Tower", b.at(0, top + 0.3, zT), w / 2, up / 1.772, w / 1.962) then
+			tip = top + 0.3 + up
+		else
+			b.pyramid(b.at(0, top + 0.3, zT), tw + 1.5, tw + 1.5, L.spire, L.towerCap)
+			tip = top + 0.3 + L.spire
+		end
 	elseif L.towerRoof == "glass" then
 		local rd = tw / 2
 		b.cyl("DomeRing", rd + 0.4, 0.5, b.at(0, top + 0.25, zT), L.gold, nil, false)
@@ -1099,9 +1071,7 @@ function Granary.build(m: Instance, frame: CFrame, level: number)
 	end
 	if f >= 25 then
 		-- the crowned golden slime on the very top
-		local sit = seat or tip - 0.2
-		local tall = slime(b.at(0, sit, zT), 1.4)
-		crown(b.at(0, sit + tall * 0.8, zT), 0.7)
+		statue(b.at(0, seat or tip - 0.2, zT), 1.4, 0.7)
 	elseif f >= 4 then
 		b.flag(Vector3.new(0, tip - 0.2, zT), 3.4, L.cloth, L.gold)
 	else
@@ -1275,6 +1245,10 @@ function Granary.build(m: Instance, frame: CFrame, level: number)
 		else
 			for i = 0, 1 do
 				local x = hx + 0.2 + i * 2.6
+				-- (the owner's Meshy goo tank in the glasshouse, when it is there)
+				if era == 4 and painted("GooTank_Glass", b.at(x, BASE, hz + 0.3), 0.83) then
+					continue
+				end
 				b.cyl("VatFoot", 1.2, 0.5, b.at(x, BASE + 0.25, hz + 0.3), L.board)
 				if era == 4 then
 					local vat = b.cyl("VatGlass", 1.05, 3, b.at(x, BASE + 2, hz + 0.3), L.siloDrum, M.Glass)
@@ -1418,7 +1392,10 @@ function Granary.build(m: Instance, frame: CFrame, level: number)
 		if f >= 14 then
 			-- banners on the wing's front
 			for _, t in { 0.14, 0.86 } do
-				b.banner(b.face(x0 + W.out * t, W.wallH - 0.5, WING_Z0, FRONT), 1, 2.4, L.cloth, L.gold)
+				local at = b.face(x0 + W.out * t, W.wallH - 0.5, WING_Z0, FRONT)
+				if not painted("Banner_SlimeBlue", at * CFrame.new(0, -1.2, 0), 0.48) then
+					b.banner(at, 1, 2.4, L.cloth, L.gold)
+				end
 			end
 		end
 		-- its store: sacks and crates along the outer wall
@@ -1480,10 +1457,29 @@ function Granary.build(m: Instance, frame: CFrame, level: number)
 			b.beam("LeanRafter", 0.3, 0.3, Vector3.new(px, beamY + 0.2, z), Vector3.new(-hw, leanHi - 0.5, z), L.board)
 		end
 		if f >= 8 then
-			for _, z in { zc - len / 4, zc + len / 4 } do
-				b.rod("LeanLampChain", 0.05, Vector3.new(px, beamY - 0.2, z), Vector3.new(px, beamY - 0.8, z), IRON)
-				b.trim("LeanLamp", 0.5, 0.7, 0.5, b.at(px, beamY - 1.15, z), L.glass, M.Neon)
+			-- lamps: the owner's iron wall lanterns on the end posts' outer faces, a lit pane in each; until they
+			-- come, two lamps hanging under the beam
+			local out = if era == 5 then 0.35 else 0.25
+			for i, z in { LEAN_Z0 + 0.3, LEAN_Z1 - 0.3 } do
+				local on = b.face(px - out, beamY - 1.5, z, RIGHT)
+				if painted("WallLantern_Iron", on, 1) then
+					b.trim("LeanLamp", 0.3, 0.45, 0.3, on * CFrame.new(0, -0.3, -1.5), L.glass, M.Neon)
+				else
+					local hz = zc + (i * 2 - 3) * len / 4
+					b.rod(
+						"LeanLampChain",
+						0.05,
+						Vector3.new(px, beamY - 0.2, hz),
+						Vector3.new(px, beamY - 0.8, hz),
+						IRON
+					)
+					b.trim("LeanLamp", 0.5, 0.7, 0.5, b.at(px, beamY - 1.15, hz), L.glass, M.Neon)
+				end
 			end
+		end
+		if era <= 3 then
+			-- a grain sack on a pulley beam at the shed's front post (the owner's Meshy piece; nothing until it comes)
+			painted("HangingSack_Beam", b.face(px, beamY - 1.9, LEAN_Z0 + 0.05, FRONT), 1)
 		end
 	end
 
@@ -1507,7 +1503,12 @@ function Granary.build(m: Instance, frame: CFrame, level: number)
 			local drumTop = 0.4 + 0.8 + h
 			local high: number? -- the cap as a mesh, in the era's manner
 			if L.siloCap == "cone" then
-				high = coneRoof(b.at(x, drumTop, z), sr + 0.6, sr * 1.3 + 0.3, L.siloCapColour)
+				local capR, up = sr + 0.6, sr * 1.3 + 0.3
+				if era == 1 and painted("ThatchCap_Silo", b.at(x, drumTop, z), capR, up / 1.389, capR) then
+					high = up
+				else
+					high = coneRoof(b.at(x, drumTop, z), capR, up, L.siloCapColour)
+				end
 			elseif era == 4 then
 				high = ribDome(b.at(x, drumTop, z), sr + 0.15, L.siloCapColour)
 			else
@@ -1691,7 +1692,7 @@ function Granary.build(m: Instance, frame: CFrame, level: number)
 				local x = s * (dockHW + 1.3)
 				b.box("Pedestal", 1.5, 1.6, 1.5, b.at(x, FLOOR + 0.8, -3.6), L.wall)
 				b.trim("PedestalCap", 1.8, 0.25, 1.8, b.at(x, FLOOR + 1.7, -3.6), L.gold)
-				slime(b.at(x, FLOOR + 1.8, -3.6), 0.85)
+				statue(b.at(x, FLOOR + 1.8, -3.6), 0.85)
 			end
 		end
 	end

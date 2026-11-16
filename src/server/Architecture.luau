@@ -10,6 +10,11 @@
 -- material every colour of the building stands for (the wall colour is plaster, the beam colour is wood, the
 -- roof colour is clay tiles), keyed by the colour's hex, so every helper below textures its parts without being
 -- told. A colour with no skin keeps the stud look. `seeThrough` is how see-through every Glass part is.
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local Config = require(ReplicatedStorage.Shared.Config)
+local FaceArt = require(ReplicatedStorage.Shared.FaceArt)
+local SlimeShape = require(ReplicatedStorage.Shared.SlimeShape)
 local PondStages = require(script.Parent.PondStages)
 
 local Architecture = {}
@@ -245,6 +250,28 @@ function Architecture.new(m: Instance, frame: CFrame, skins: { [string]: Enum.Ma
 		return rise
 	end
 
+	-- The owner's shaggy thatch (kit ThatchRoof_Gable: one roof 2 across, 1.387 high and 2.13 along its ridge, which is
+	-- its own Z, held by the middle of its foot) laid over a `b.gable` roof of the same `cf`, `len`, `span`, `rise` and
+	-- `over`: as many copies along the ridge as keep the straw near its own shape. It wears its own picture.
+	function b.thatch(src: Model, cf: CFrame, len: number, span: number, rise: number, over: number)
+		local pitch = rise / (span / 2)
+		local across = span + over * 2 + 0.6
+		local total = len + over * 2 + 0.4
+		local n = math.max(1, math.round(total / (across * 1.065)))
+		local scale = Vector3.new(across / 2, (pitch * (span / 2 + over) + 0.7) / 1.387, total / n / 2.13)
+		for i = 1, n do
+			b.mesh(
+				src,
+				cf
+					* CFrame.new((i - (n + 1) / 2) * total / n, -pitch * over - 0.1, 0)
+					* CFrame.Angles(0, math.pi / 2, 0),
+				scale,
+				Color3.new(1, 1, 1),
+				Enum.Material.SmoothPlastic
+			)
+		end
+	end
+
 	-- A pyramid roof over a rectangle `w` by `d`, `cf` at the middle of its foot (four corner wedges; a tall
 	-- `rise` makes a spire).
 	function b.pyramid(cf: CFrame, w: number, d: number, rise: number, colour: Color3, material: Enum.Material?)
@@ -444,7 +471,16 @@ function Architecture.new(m: Instance, frame: CFrame, skins: { [string]: Enum.Ma
 	function b.flag(foot: Vector3, height: number, cloth: Color3, pole: Color3)
 		b.rod("FlagPole", 0.12, foot, foot + Vector3.new(0, height, 0), pole)
 		b.ball("FlagKnob", 0.22, b.at(foot.X, foot.Y + height + 0.15, foot.Z), pole)
-		b.trim("Flag", 1.7, 1, 0.08, b.at(foot.X + 0.95, foot.Y + height - 0.6, foot.Z), cloth, Enum.Material.Fabric)
+		-- (smooth, not Fabric: Fabric's dark weave turns a flag navy-black against the sky)
+		b.trim(
+			"Flag",
+			1.7,
+			1,
+			0.08,
+			b.at(foot.X + 0.95, foot.Y + height - 0.6, foot.Z),
+			cloth,
+			Enum.Material.SmoothPlastic
+		)
 	end
 
 	-- A wall lantern on a bracket, the face where the bracket meets the wall; `lit` gives it a real light (keep
@@ -531,6 +567,72 @@ function Architecture.new(m: Instance, frame: CFrame, skins: { [string]: Enum.Ma
 		elseif cap == "flat" then
 			b.cyl("SiloLid", r + 0.3, 0.5, top * CFrame.new(0, 0.25, 0), capColour, nil, false)
 		end
+	end
+
+	-- A statue of a slime: the game's own body (ClientKit.SlimeBody, in the living slimes' glossy skin, tinted
+	-- `colour`) with the owner's own face pictures standing on its skin, as SlimeFace does for the living ones. `cf`
+	-- at its foot, looking along -Z; `r` is half its width. Returns its height (the tip is thin: a crown or a hat
+	-- sits at 0.8 of it).
+	function b.slime(cf: CFrame, r: number, colour: Color3, material: Enum.Material?): number
+		local kit = ReplicatedStorage:FindFirstChild("ClientKit")
+		local source = if kit then kit:FindFirstChild("SlimeBody") else nil
+		if not (kit and source and source:IsA("MeshPart")) then
+			warn(Config.LogPrefix, "missing ClientKit/SlimeBody: a statue is left out")
+			return r * 1.9
+		end
+		local s = 2 * r / source.Size.X -- studs for one body height
+		-- (a skinned body is scaled as a model, bones and all, as SlimeLook does: its Size alone squashes it)
+		local statue = Instance.new("Model")
+		statue.Name = "SlimeStatue"
+		local body = source:Clone()
+		body.Name = "SlimeBody"
+		body.PivotOffset = CFrame.new()
+		body.CFrame = CFrame.new(0, Config.Slime.MeshCentre, 0)
+		body.Anchored = true
+		body.CanCollide = false
+		body.CanTouch = false
+		body.CanQuery = false
+		body.CastShadow = false
+		body.Color = colour
+		body.Material = material or Enum.Material.Metal
+		local looks = kit:FindFirstChild("Looks")
+		-- (the living slimes' fine glossy skin, tinted: their Mirror look showed the dark horizon across a statue
+		-- this big and hid its mouth)
+		local fine = if looks and not material then looks:FindFirstChild("PlainFine") else nil
+		if fine and fine:IsA("SurfaceAppearance") then
+			local look = fine:Clone()
+			look.Color = body.Color
+			look.Parent = body
+		end
+		body.Parent = statue
+		statue.WorldPivot = CFrame.new()
+		statue:ScaleTo(s)
+		statue:PivotTo(cf)
+		statue.Parent = m
+		for _, key in { "normal_eyeL", "normal_eyeR", "normal_mouth" } do
+			local sp = (FaceArt.Sprites :: any)[key]
+			local x, y, z = SlimeShape.frontPoint(sp.cx, sp.cy)
+			local rad = SlimeShape.radius(y)
+			local slope = (SlimeShape.radius(y + 0.02) - SlimeShape.radius(y - 0.02)) / 0.04
+			local n = Vector3.new(x / rad, -slope, z / rad).Unit
+			local p = cf * (Vector3.new(x, y, z) * s + n * (0.012 * s - 0.025))
+			local plate = Instance.new("Part")
+			plate.Name = "SlimeStatueFace"
+			plate.Size = Vector3.new(sp.w * s, sp.h * s, 0.05)
+			plate.CFrame = CFrame.lookAt(p, p + cf:VectorToWorldSpace(n), cf.UpVector)
+			plate.Transparency = 1
+			plate.Anchored = true
+			plate.CanCollide = false
+			plate.CanTouch = false
+			plate.CanQuery = false
+			plate.CastShadow = false
+			local picture = Instance.new("Decal")
+			picture.Face = Enum.NormalId.Front
+			picture.Texture = "rbxassetid://" .. tostring(sp.id)
+			picture.Parent = plate
+			plate.Parent = m
+		end
+		return s * Config.Slime.MeshHeight
 	end
 
 	return b

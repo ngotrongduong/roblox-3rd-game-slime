@@ -31,23 +31,30 @@ Each step has its gate. Do not start a step before the gate of the one before it
 2. **Ladder.** Write the building's 50 steps as a table in `docs/areas/village-v2/<name>-ladder.md` BEFORE any code
    (section 2). *Gate: every row passes the step test.*
 3. **Sort the shapes** (section 3) into parts, Blender and Meshy, and fill `hard-pieces.md`; look first at what the
-   earlier landmarks' pieces already give (domes, cone roofs, columns, balustrades, pipes, gears are shared). Steps 2
+   earlier landmarks' pieces already give (domes, cone roofs, columns, balustrades, pipes, gears are shared) and at
+   the owner's sheet kit (`src/shared/ConfigMeshyKit.luau`: ovens, parasol tables, banners, flower boxes, lanterns,
+   finials, stalls; a piece is worn with `painted(name, cf, scale)` over its part stand-in). Steps 2
    and 3 are paper and are done while the owner looks at the sheet. Once he has approved it, send ONE request to
    ChatGPT for the Meshy pieces' reference pictures (two 2 x 2 sheets hold eight pieces; the request text of the
    Granary is in `hard-pieces.md`), cut them into `art/models/<name>/refs/` and send them to the owner, so he builds
    while the rest goes on.
 4. **Build from parts.** One module a landmark on `Architecture.new(...)`: a palette and sizes per era,
    `features(level)`, a part stand-in for every hard piece. Hollow hall, tower on tie beams, roofs as two thin slabs.
-5. **Blender pieces.** One script (`tools/blender/<name>_pieces.py`, as `granary_pieces.py`), every object its own
+5. **Blender pieces.** Added to the village's one script (`tools/blender/granary_pieces.py`), every object its own
    `Config.LibraryKit.Props` entry `<Piece>_<Slot>` with `mesh = 0`; the module asks by name and keeps the stand-in
    when it gets nil. So the code ships before any upload and the ladder never changes.
-6. **Look, in Edit, without a play test.** The preview tool (`tools/map/granary_preview.luau`: copy it for the new
-   module) builds the levels in its `LEVELS` list side by side with the Blender pieces on; `screen_capture` with a
-   camera position shoots them. Self-review against the reference (section 5) and fix. Destroy both preview folders.
-7. **One play test** (StudioTest only): sync EVERY module of the chain, `_G.AreaShow` at the last level of each era,
-   one shot each. *Gate: no error, the look holds in the game's light.*
-8. **ONE ChatGPT review, at the end** (the owner's requirement; my own way first): the five era shots, one
-   paragraph saying what is still a stand-in and must not be judged, scores per era and the 5-8 best fixes. Check
+6. **Look, in Edit, without a play test.** The preview tool (`tools/map/landmark_preview.luau`, the module passed as
+   `Landmark=src/server/<Name>.luau`; its header has the command) builds the levels in its `LEVELS` list side by
+   side with the Blender AND Meshy pieces on; `screen_capture` with a camera position shoots them. Self-review
+   against the reference (section 5) and fix. Destroy the preview folders at the close.
+7. **One play test** (StudioTest only): `tools\map\sync_all.ps1 -StudioId <id>` (the whole game, so Config and every
+   module of the chain are fresh), `_G.AreaShow` at the last level of each era (`task.wait(1.5)` in the same call,
+   then the shot), read the console. It shows the STAND-INS (every `mesh` is 0 until the owner's import).
+   *Gate: no error, the look holds in the game's light.*
+8. **ONE ChatGPT review, at the end** (the owner's requirement; my own way first): the five era shots from the Edit
+   preview (the pieces on; closer than the self-review shots, the building filling half the frame), sent in the chat
+   that drew the reference sheet, one paragraph saying what must not be judged (the preview's empty hall and lawn:
+   the stations and floor are the area module's), scores per era and the 5-8 best fixes. Check
    every point against the code and the reference, then ONE last edit. No second round.
 9. **Close.** `tools\check.ps1` (CHECK OK), `tools\types.ps1 src/server` (TYPES OK), the final shots in
    `docs/areas/village-v2/review/`, `docs/STATUS.md`, new lessons into `LESSONS.md` and INTO THIS SKILL in the same
@@ -119,6 +126,10 @@ keeps its stand-in and is named in the review brief as "not to be judged".
 - A dark era has one warm wall colour; compare colours with the reference picture, not from memory.
 - Nothing timber stands out of a roof slope; pipes run beside dormers, not through them.
 - Count the mesh pieces a level (the preview prints it): a wrong count names the missing piece at once.
+- Depth before decoration (the Kitchen's review): an arch with a real rise and proud, two-tone voussoirs; glass set
+  0.9 behind its steel; a portal with a lining deeper than the wall; covers at least 0.3 thick with a valance or a
+  roll. Cloth is SmoothPlastic, never Fabric. A plate behind an emblem is dark on glass, the era's cloth on marble.
+- Shoot the flank the review camera hides once, and send it with the five: the reviewer asks for what stands there.
 
 ## 6. Do not
 
@@ -135,5 +146,5 @@ keeps its stand-in and is named in the review brief as "not to be judged".
 | Building | Module | Reference | Ladder | State |
 |----------|--------|-----------|--------|-------|
 | Pantry -> Granary | `Granary.luau` | `granary-ref-era*.jpg` | in the module's `build` (25 features + 4 store props an era; not yet walked against section 2's step test) | locked 2026-11-16; 7 Blender pieces wait for upload, 8 Meshy pieces for the owner |
-| Kitchen (cookhouse to grand restaurant) | - | `kitchen-ref-sheet.jpg`, `kitchen-ref-era*.jpg` | `kitchen-ladder.md` (walked on paper) | steps 1-3 done 2026-11-16; waits for the owner's word on the sheet, then the Meshy reference request and the build |
+| Kitchen (cookhouse to grand restaurant) | `Kitchen.luau` | `kitchen-ref-sheet.jpg`, `kitchen-ref-era*.jpg` | `kitchen-ladder.md` (walked on paper; seen at each era's last level, not pair by pair) | locked 2026-11-17 (ChatGPT: likeness 78-88, finish 74-83, before the last edit); 2 new Blender pieces and the owner's sheet pieces wait for his import |
 | Garden, breeding pen, training ground, dock, village pieces | - | - | - | not started |

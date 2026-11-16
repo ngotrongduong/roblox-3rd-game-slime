@@ -1,0 +1,46 @@
+{
+ "Sign_ChefShield": {
+  "tris": 1900,
+  "config": "Sign_ChefShield = { { mesh = 0, tex = \"MeshyRestaurant\", size = { 6.639, 5.000, 0.941 }, at = { 0.000, 0.000, -0.470 } } },"
+ },
+ "Sign_OvalBlank": {
+  "tris": 1758,
+  "config": "Sign_OvalBlank = { { mesh = 0, tex = \"MeshyRestaurant\", size = { 5.370, 5.000, 0.883 }, at = { 0.000, 0.000, -0.441 } } },"
+ },
+ "Banner_ChefRed": {
+  "tris": 878,
+  "config": "Banner_ChefRed = { { mesh = 0, tex = \"MeshyRestaurant\", size = { 3.273, 5.000, 0.818 }, at = { 0.000, 0.000, -0.409 } } },"
+ },
+ "Banner_Blue": {
+  "tris": 746,
+  "config": "Banner_Blue = { { mesh = 0, tex = \"MeshyRestaurant\", size = { 3.198, 5.000, 0.775 }, at = { 0.000, 0.000, -0.387 } } },"
+ },
+ "ChefCrest_Slime": {
+  "tris": 2006,
+  "config": "ChefCrest_Slime = { { mesh = 0, tex = \"MeshyRestaurant\", size = { 5.189, 4.400, 1.411 }, at = { 0.000, 0.000, -0.706 } } },"
+ },
+ "ChefCrest_Ribbon": {
+  "tris": 1282,
+  "config": "ChefCrest_Ribbon = { { mesh = 0, tex = \"MeshyRestaurant\", size = { 5.891, 3.400, 1.638 }, at = { 0.000, 0.000, -0.819 } } },"
+ },
+ "Finial_GoldStone": {
+  "tris": 904,
+  "config": "Finial_GoldStone = { { mesh = 0, tex = \"MeshyRestaurant\", size = { 1.889, 2.600, 1.889 }, at = { 0.000, 1.300, 0.000 } } },"
+ },
+ "Dormer_RedRoof": {
+  "tris": 1935,
+  "config": "Dormer_RedRoof = { { mesh = 0, tex = \"MeshyRestaurant\", size = { 5.357, 5.000, 5.619 }, at = { 0.000, 0.000, -2.810 } } },"
+ },
+ "Window_Arched": {
+  "tris": 1622,
+  "config": "Window_Arched = { { mesh = 0, tex = \"MeshyRestaurant\", size = { 3.969, 4.400, 3.335 }, at = { 0.000, 0.000, -1.668 } } },"
+ },
+ "Window_Shutters": {
+  "tris": 1704,
+  "config": "Window_Shutters = { { mesh = 0, tex = \"MeshyRestaurant\", size = { 4.229, 4.200, 2.929 }, at = { 0.000, 0.000, -1.464 } } },"
+ },
+ "Window_Plain": {
+  "tris": 341,
+  "config": "Window_Plain = { { mesh = 0, tex = \"MeshyRestaurant\", size = { 3.095, 3.600, 1.283 }, at = { 0.000, 0.000, -0.642 } } },"
+ }
+}

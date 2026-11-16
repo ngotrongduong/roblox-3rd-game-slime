@@ -1,0 +1,42 @@
+{
+ "FlowerBox_Pink": {
+  "tris": 1465,
+  "config": "FlowerBox_Pink = { { mesh = 0, tex = \"MeshyFlowerPots\", size = { 3.600, 2.357, 3.011 }, at = { 0.000, 1.178, 0.000 } } },"
+ },
+ "FlowerBox_Yellow": {
+  "tris": 1143,
+  "config": "FlowerBox_Yellow = { { mesh = 0, tex = \"MeshyFlowerPots\", size = { 3.600, 2.639, 3.028 }, at = { 0.000, 1.319, 0.000 } } },"
+ },
+ "PlanterBox_Vines": {
+  "tris": 1310,
+  "config": "PlanterBox_Vines = { { mesh = 0, tex = \"MeshyFlowerPots\", size = { 3.600, 2.911, 4.141 }, at = { 0.000, 1.456, 0.000 } } },"
+ },
+ "HangingBasket_Pink": {
+  "tris": 2079,
+  "config": "HangingBasket_Pink = { { mesh = 0, tex = \"MeshyFlowerPots\", size = { 3.137, 4.000, 3.235 }, at = { 0.000, -2.000, 0.000 } } },"
+ },
+ "BushPot_Round": {
+  "tris": 1284,
+  "config": "BushPot_Round = { { mesh = 0, tex = \"MeshyFlowerPots\", size = { 2.556, 3.200, 2.546 }, at = { 0.000, 1.600, 0.000 } } },"
+ },
+ "ConePot_Topiary": {
+  "tris": 1042,
+  "config": "ConePot_Topiary = { { mesh = 0, tex = \"MeshyFlowerPots\", size = { 2.252, 4.400, 2.252 }, at = { 0.000, 2.200, 0.000 } } },"
+ },
+ "Urn_WhiteFlowers": {
+  "tris": 1434,
+  "config": "Urn_WhiteFlowers = { { mesh = 0, tex = \"MeshyFlowerPots\", size = { 2.936, 3.200, 3.164 }, at = { 0.000, 1.600, 0.000 } } },"
+ },
+ "Urn_BlueFlowers": {
+  "tris": 1440,
+  "config": "Urn_BlueFlowers = { { mesh = 0, tex = \"MeshyFlowerPots\", size = { 3.230, 3.200, 3.220 }, at = { 0.000, 1.600, 0.000 } } },"
+ },
+ "Urn_PinkFlowers": {
+  "tris": 1649,
+  "config": "Urn_PinkFlowers = { { mesh = 0, tex = \"MeshyFlowerPots\", size = { 2.895, 3.600, 2.958 }, at = { 0.000, 1.800, 0.000 } } },"
+ },
+ "Urn_MixedFlowers": {
+  "tris": 1485,
+  "config": "Urn_MixedFlowers = { { mesh = 0, tex = \"MeshyFlowerPots\", size = { 3.725, 3.200, 3.735 }, at = { 0.000, 1.600, 0.000 } } },"
+ }
+}
