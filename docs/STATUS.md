@@ -1,5 +1,28 @@
 # Status
 
+## 2026-11-16 — the Granary: ChatGPT's final review and the last edit; the architecture is locked
+
+- The owner's process: my own way first, the finished version to ChatGPT once, one last edit. Sent: the five eras with
+  the Blender pieces on (`docs/areas/village-v2/review/granary-final-l*.jpg`, now the shots AFTER the last edit), chat
+  `/c/6afa8838-60bc-83ec-9e7c-e90e412ffcf0`. Its verdict: architecture approved at all five eras, 80 / 86 / 84 / 80 /
+  84 of 100 (round 1: 60-74); no bigger footprint, no taller tower, no more structures, keep the seven pieces.
+- **Taken** (all inside existing steps, the upgrade ladder is unchanged): the goo tanks' drum is plain material with
+  only the surface Neon (`Architecture.b.silo`: one flat Neon shape drowned the hall); the era-5 silo drums are
+  brushed metal, not foil; knee braces along the lean-to's beam at eras 1-4 (its braces hid under the roof); a dark
+  plate behind the era-4 gear, and no keystone under it (a gold block hid the gear's lower half: found in my own
+  close-up, not by ChatGPT).
+- **Rejected, with the reason**: silo hoops and masonry bands (already there: three hoops a silo), front buttresses
+  at era 3 (the corners carry quoins), ivory plaster at era 2 (it is `244, 238, 224` already), cross-ribs on the
+  era-4 roof (that roof is blue slate, as the approved reference has it), grain hatches and a silo plinth (the yard
+  props and the owner's hanging sack carry the function).
+- **Verified**: the last edit seen in the Edit preview at all five eras and in a StudioTest play test at levels 40
+  and 46 (stand-ins, no error); `check.ps1` CHECK OK (827 tests), `types.ps1 src/server` TYPES OK.
+- **Not verified**: the hall's inside from the player's camera (ChatGPT's last point), a phone-frame look, low-end
+  phone cost, the uploaded meshes in a play test, prop collisions, `check_village_trees.luau`.
+- The 8 reference pictures for the owner's Meshy pieces are drawn (`art/models/granary/refs/`) and were sent to him.
+- **Next**: the owner uploads the seven FBX (below) and builds his eight pieces in Meshy; then the other five
+  districts and the village layout, each landmark by the same road (reference, parts, Blender pieces, one review).
+
 ## 2026-11-16 — the Granary's seven Blender pieces: built, fitted, seen in a preview, not uploaded
 
 - Built by `tools/blender/granary_pieces.py` (cone roof, glass dome, royal dome, column base and capital, balustrade,

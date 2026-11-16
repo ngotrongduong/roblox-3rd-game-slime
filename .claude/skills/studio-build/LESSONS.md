@@ -967,3 +967,19 @@ Blender pieces on a part-built building (2026-11-16, `tools/blender/granary_piec
   (`createImageBitmap` + `OffscreenCanvas` to base64), go to `chatgpt.com/robots.txt#to=/&review=...` yourself, then
   the usual sessionStorage step. Text goes in with `execCommand('insertText')`; the effort slider still needs a real
   click on its right end.
+
+The final review of a landmark (2026-11-16, the Granary: 60-74 -> 80-86 of 100)
+- **Check every point of the review against the code before building it**: of 25 points, 9 asked for what was already
+  there (silo hoops, quoins, lean-to braces, ivory plaster) or went against the approved reference (ribs on a slate
+  roof). What it cannot SEE is still a finding: braces hidden under a roof do nothing; put structure where the
+  player's side shows it (knee braces along the beam, in the plane of the posts).
+- **A big volume of Neon is one flat shape**: Neon takes no shading, so a tank of goo read as a green rectangle. The
+  body in plain material (it shades round), a thin Neon slice for the surface.
+- **Foil on a big surface blows out in the sun** (a silo drum looked self-lit); keep Foil for thin trims and use
+  Metal with a brighter colour for big gold (Metal darkens: `246, 204, 96` reads as calm gold).
+- **Shoot every ornament once from close**: the keystone stood in front of the gear's lower half at every far shot
+  and nobody saw it, the reviewer included. An ornament over an arch takes the keystone's place.
+- An ornament on glass needs a dark plate behind it (brass teeth on cyan glass could not be read).
+- `for _, v in if a then {..} else {..} do` fails Studio's type checker ("cannot call a value of type {number} in
+  union"): give the list a typed local first.
+- When the owner is using the ChatGPT tab, read the answer in a second background tab; text needs no fronted tab.

@@ -2,15 +2,15 @@
 --   1. tools/blender/granary_pieces.py with `-- <folder>` after Blender's arguments writes one Luau script a piece; run
 --      each in Edit (node tools/studio_mcp.js run <folder>/<Piece>.luau <studio_id> Edit): ServerStorage.GranaryPreview
 --   2. node tools/studio_mcp.js run tools/map/granary_preview.luau <studio_id> Edit Granary=src/server/Granary.luau Architecture=src/server/Architecture.luau Config=src/shared/Config.luau
--- It builds workspace.GranaryPreview: the Granary at levels 20, 30, 40 and 50, 100 studs apart at y 500, front to -z,
+-- It builds workspace.GranaryPreview: the Granary at the last level of each era, 100 studs apart at y 500, front to -z,
 -- taking each piece from the preview meshes at the size and place Config.LibraryKit gives it. Fresh copies of the
 -- modules every run (the Edit VM keeps a module's first run). Delete both GranaryPreview folders when done: preview
--- meshes do not survive a save.
+-- meshes do not survive a save. Shots: screen_capture from (x - 22, 516, -32) to (x + 2, 508, 4), x = 100 * its place.
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
 local ServerStorage = game:GetService("ServerStorage")
 
-local LEVELS = { 20, 30, 40, 50 }
+local LEVELS = { 10, 20, 30, 40, 50 }
 local server = ServerScriptService.Server
 local kit = ServerStorage:FindFirstChild("GranaryPreview")
 local stamp = tostring(math.floor(os.clock() * 1000))

@@ -14,14 +14,17 @@ Reference pictures: `art/models/granary/refs/` (cut from the ChatGPT sheets; the
 
 | # | Piece | Era | Replaces | Reference | Model |
 |---|-------|-----|----------|-----------|-------|
-| 1 | Crowned gold slime statue on a small plinth | 5 (crest, tower top, door pedestals) | `SlimeStatue` (the game's slime body, gold) | - | - |
-| 2 | Gold crest cartouche: round frame, scrolls and laurel, empty middle | 5 (pediment) | `Crest*` parts | - | - |
-| 3 | Thatched gable roof: shaggy straw, thick rounded eaves, bound ridge | 1 (main roof) | `Roof` slabs | - | - |
-| 4 | Thatched four-sided tower cap with a straw knot | 1 (clock tower) | tower cap slabs | - | - |
-| 5 | Thatched cone cap for a round silo | 1 (silos) | stacked discs | - | - |
-| 6 | Wall lantern: iron bracket, glass lamp | all (door, lean-to) | `LeanLamp` boxes | - | - |
-| 7 | Grain sack hanging from a pulley hook on a short beam | 1-3 (lean-to) | none yet | - | - |
-| 8 | Ivy climbing a wall corner | 1-3 (front wall) | none yet | - | - |
+| 1 | Crowned gold slime statue on a small plinth | 5 (crest, tower top, door pedestals) | `SlimeStatue` (the game's slime body, gold) | `slime_statue.png` | - |
+| 2 | Gold crest cartouche: round frame, scrolls and laurel, empty middle | 5 (pediment) | `Crest*` parts | `crest.png` | - |
+| 3 | Thatched gable roof: shaggy straw, thick rounded eaves, bound ridge | 1 (main roof) | `Roof` slabs | `thatch_gable_roof.png` | - |
+| 4 | Thatched four-sided tower cap with a straw knot | 1 (clock tower) | tower cap slabs | `thatch_tower_cap.png` (drawn rounder than four-sided: it overhangs the square tower) | - |
+| 5 | Thatched cone cap for a round silo | 1 (silos) | the tiled cone (B1) in straw colour | `thatch_silo_cap.png` | - |
+| 6 | Wall lantern: iron bracket, glass lamp | all (door, lean-to) | `LeanLamp` boxes | `wall_lantern.png` | - |
+| 7 | Grain sack hanging from a pulley hook on a short beam | 1-3 (lean-to) | none yet | `hanging_sack.png` | - |
+| 8 | Ivy climbing a wall corner | 1-3 (front wall) | none yet | `ivy_corner.png` | - |
+
+The eight pictures were drawn on 2026-11-16 (two 2 x 2 sheets, kept as `art/inbox/granary_refs_1.webp` and `_2.webp`) and
+sent to the owner; each Meshy generation uses Smart topology (his rule).
 
 ### For Claude, in Blender (regular shapes, exact sizes, lowest triangle count)
 

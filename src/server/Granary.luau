@@ -349,7 +349,7 @@ local LOOKS: { Look } = {
 		spire = 0,
 		siloR = 3,
 		siloH = 14.5,
-		siloDrum = C(240, 198, 84),
+		siloDrum = C(246, 204, 96), -- (brushed metal, which darkens it: as bright foil the drums outshone the hall)
 		siloHoop = C(250, 249, 245),
 		siloCap = "dome",
 		siloCapColour = C(46, 88, 176),
@@ -362,7 +362,7 @@ local LOOKS: { Look } = {
 			door = M.WoodPlanks,
 			accent = M.Metal,
 			towerCap = M.Metal,
-			siloDrum = M.Foil,
+			siloDrum = M.Metal,
 		},
 	},
 }
@@ -810,6 +810,8 @@ function Granary.build(m: Instance, frame: CFrame, level: number)
 		-- the gear over the door
 		local face, r = b.face(0, doorTop + 1.3, 0, FRONT), 1.1
 		local s = r * 2.5 / 1.994 -- (its teeth as far out as the stand-in's)
+		-- (a dark plate behind it: brass teeth on pale glass could not be read)
+		b.disc("GearBack", r * 1.35, 0.1, face * CFrame.new(0, 0, -0.05), L.beam)
 		if piece("Gear_Wheel", face * CFrame.new(0, 0, -0.35), s, s, 0.8, L.gold) then
 			-- (the goo glows between its spokes)
 			b.disc("GearEye", r * 0.95, 0.16, face * CFrame.new(0, 0, -0.08), L.glass, M.Neon)
@@ -896,9 +898,11 @@ function Granary.build(m: Instance, frame: CFrame, level: number)
 			b.trim("DoorImpost", jw + 0.4, 0.35, T + 0.7, b.at(s * (dw / 2 + jw / 2), spring, zc), L.surround)
 		end
 	end
-	if arched then
+	-- (the gear sits over the arch in the keystone's place: the gold block hid its lower half)
+	local geared = f >= 16 and era == 4
+	if arched and not geared then
 		b.trim("Keystone", 1, 1.3, T + 0.7, b.at(0, doorTop + 0.3, T / 2 - 0.15), if era == 3 then L.stone else L.gold)
-	else
+	elseif not arched then
 		b.trim("DoorLintel", dw + 1.7, 0.6, T + 0.5, b.at(0, doorTop + 0.3, T / 2 - 0.15), L.surround)
 	end
 	-- (the threshold: the marker the slimes carry to)
@@ -1459,6 +1463,19 @@ function Granary.build(m: Instance, frame: CFrame, level: number)
 					Vector3.new(px + 1.3, beamY + 0.1, z),
 					L.board
 				)
+				-- knee braces along the beam, towards the next post: the ones above hide under the roof, and from
+				-- the yard the shed stood on three bare sticks
+				local knees: { number } = if z == zc then { -1.3, 1.3 } elseif z < zc then { 1.3 } else { -1.3 }
+				for _, dz in knees do
+					b.beam(
+						"LeanKnee",
+						0.3,
+						0.3,
+						Vector3.new(px, beamY - 1.5, z),
+						Vector3.new(px, beamY - 0.1, z + dz),
+						L.board
+					)
+				end
 			end
 			b.beam("LeanRafter", 0.3, 0.3, Vector3.new(px, beamY + 0.2, z), Vector3.new(-hw, leanHi - 0.5, z), L.board)
 		end

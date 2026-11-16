@@ -510,7 +510,10 @@ function Architecture.new(m: Instance, frame: CFrame, skins: { [string]: Enum.Ma
 		if goo then
 			local glass = b.cyl("SiloGlass", r, h, b.at(x, y0 + 0.8 + h / 2, z), drum, Enum.Material.Glass)
 			glass.Transparency = 0.65
-			b.cyl("SiloGoo", r - 0.35, h * 0.72, b.at(x, y0 + 0.8 + h * 0.36, z), goo, Enum.Material.Neon, false)
+			-- (the body takes the game's light and reads round; only its surface glows: a whole drum of Neon was one
+			-- flat green shape that drowned the hall)
+			b.cyl("SiloGoo", r - 0.35, h * 0.72 - 0.3, b.at(x, y0 + 0.8 + h * 0.36 - 0.15, z), goo, nil, false)
+			b.cyl("SiloGooTop", r - 0.35, 0.3, b.at(x, y0 + 0.8 + h * 0.72 - 0.15, z), goo, Enum.Material.Neon, false)
 		else
 			b.cyl("SiloDrum", r, h, b.at(x, y0 + 0.8 + h / 2, z), drum)
 		end
