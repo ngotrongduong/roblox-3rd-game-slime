@@ -25,6 +25,16 @@ khung và kết cấu của căn nhà thôi, những phụ kiện kiểu như đ
   `review/granary-body-l20.jpg`, `-l30`, `-l40`, `-l50`. CHECK OK (829 passed), TYPES OK.
 - **Next, in order**: Kitchen, Garden, Breeding House, Training Hall, Dock the same way (concept sheet cut,
   four-side sheets asked, body, upload, ghost); an era-1 silo piece for the Granary.
+- **Kitchen, started (hand-over, the session's usage limit was reached)**: `tools/chatgpt/views.py` has the Kitchen's
+  five rows; the five four-side requests were SENT to ChatGPT (High) and are not yet brought back. Chats, eras 1-5:
+  `/c/6afc4df5-10a0-83ec-8570-26d026e2485c`, `/c/6afc4e2d-34d8-83ec-9045-25310a59ff3b`,
+  `/c/6afc4e42-3c74-83ec-a91b-e695d75389a5`, `/c/6afc4e57-9f44-83ec-982c-7a78b876e89a`,
+  `/c/6afc4e6c-1b08-83ec-9a80-6a76f8a0ef3c`; save them as `docs/areas/village-v2/views/kitchen_views_era<N>.webp`.
+  Nothing of `kitchen(era)` is written in `tools/blender/landmark_bodies.py` and `src/server/Kitchen.luau` is
+  untouched. Plan: the body is the hall shell and the chimney on the module's numbers (front wall at z -5, open
+  front, no door); era 1's open truss / closed gable and the tall stack are separate pieces (they switch with the
+  level); the wing its own model; "Flue" is never ghosted (it holds the smoke); every level-switched fixture stays
+  the game's.
 - **Not verified / open**: the phone view; the house on its real plot (the open StudioTest held a map older than
   `Layout`, the stage stood on wild lawn that was cleared in Play: reopen StudioTest); the Granary's side and back
   walls at eras 2-5 were seen in the Edit preview only, not walked against in Play.

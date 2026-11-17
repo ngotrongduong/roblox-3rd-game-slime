@@ -47,6 +47,32 @@ BUILDINGS = {
 			"lean-to shed along the right wall, golden silos under blue domes behind the shed)",
 			"the pediment with the great arched door", ": the marble wing", ": the lean-to shed and the golden silos"),
 	],
+	"kitchen": [
+		("the village kitchen at its first era (an open-fronted cookhouse: thatch on brown posts, a cream plaster "
+			"gable, plank half walls, a tall fieldstone chimney standing outside its left wall, a small thatched lean-to "
+			"on posts on the right)", "the gable over the one wide open front, with no door",
+			": the great chimney", ": the lean-to"),
+		("the village kitchen at its second era (cream plaster on teal-painted beams, red clay tiles, a wide open front "
+			"on posts, a tall red brick chimney with a cream cap and a domed bread oven at its foot outside the left wall, "
+			"a small gabled wing and a striped awning on posts on the right)",
+			"the gable over the one wide open front, with no door", ": the great chimney and the oven",
+			": the wing and the awning"),
+		("the village kitchen at its third era (a pale stone ground storey with ONE wide stone arch across the front "
+			"under a jettied half-timbered gable, red clay tiles, a tall stone chimney with a small round turret outside "
+			"the left wall, a small gabled wing and a raised stone terrace with a balustrade on the right)",
+			"the timber gable over the one wide open stone arch, with no door", ": the great chimney and its turret",
+			": the wing and the terrace"),
+		("the village kitchen at its fourth era (brick piers and a black riveted steel frame, a barrel vault roof with "
+			"a glazed steel fan in its front end over one wide arch, copper pipes, a tall stone chimney with brass bands "
+			"outside the left wall, two glass kettles of glowing green goo beside it, a glass canopy and a small wing on "
+			"the right)", "the glazed end of the vault over the one wide open arch, with no door",
+			": the great chimney and the goo kettles", ": the wing and the glass canopy"),
+		("the village kitchen at its fifth era (white marble and gold: columns and an entablature across the front, a "
+			"pediment over one wide arched portal, blue tiled roofs and a great blue dome with gold ribs, a round marble "
+			"chimney with gold bands and a crown outside the left wall, a small marble wing and a round domed colonnade "
+			"on the right)", "the pediment over the one wide open arched portal, with no door",
+			": the great chimney", ": the wing and the round colonnade"),
+	],
 }
 
 name = sys.argv[1]
@@ -55,4 +81,8 @@ for n, (what, front, left, right) in enumerate(BUILDINGS[name], 1):
 	rel = f"art/inbox/prompts/{name}_era{n}.txt"
 	with open(os.path.join(ROOT, rel), "w", encoding="utf-8") as fh:
 		fh.write(ASK.format(what=what, front=front, left=left, right=right))
-	print(f"http://127.0.0.1:18923/tools/chatgpt/carry.html?f=art/inbox/{name}_era{n}.jpg&w=1000&p={rel}")
+	# (the era's panel: the cut in art/inbox, else the reference file a later landmark already has)
+	panel = f"art/inbox/{name}_era{n}.jpg"
+	if not os.path.exists(os.path.join(ROOT, panel)):
+		panel = f"docs/areas/village-v2/{name}-ref-era{n}.jpg"
+	print(f"http://127.0.0.1:18923/tools/chatgpt/carry.html?f={panel}&w=1000&p={rel}")
