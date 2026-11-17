@@ -21,6 +21,10 @@
   `WallLantern_Iron` (the Blender one and the `_Glow` mesh are gone). The stores have their own colours where the
   picture differs from the big house (`STORE` in `Garden.luau`); the roof stays the era's. 6970 and 5844 triangles.
   Seen in the MapWork play test at 40 and 50 (`review/toolstore2-*.jpg`). TYPES OK, CHECK OK (829 passed).
+- The owner on the second round: "dựng hình tốt đấy, lưu lại bài học đi". The recipe is in
+  `.claude/skills/studio-build/LESSONS.md` ("Whole small buildings from Blender", second round) and skill
+  `landmark-build` §3. **Next session**: the owner picks the job; nothing is half done. Open offers he has not
+  answered: the garden house's facade rebuilt in Blender; the village layout.
 - **Not verified / open**: the phone view; no ChatGPT review of the stores (two small side works); the marble store's
   laurel is still scripted leaves (a sculpted one would be the owner's Meshy); the landmarks' own facades are still
   parts; the era-5 roof material (ClayRoofTiles, the era's) draws curved tiles where the picture has flat slates.

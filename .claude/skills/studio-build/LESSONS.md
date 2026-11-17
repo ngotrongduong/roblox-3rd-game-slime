@@ -461,7 +461,8 @@ convenience (no upload, hollow shells, pieces a level). What the two stores show
 - Scripted Blender suits regular shapes. Sculpted ones (statues, vines, laurels with real leaves) are still the
   owner's Meshy; my laurel of flat diamonds is the weakest part of the marble store.
 
-The second round (the owner: "not much like it yet, improve once more"), what closed the gap:
+The second round (the owner: "not much like it yet, improve once more"; after it: "dựng hình tốt đấy", so this
+list is the standard for every Blender building), what closed the gap:
 
 - MEASURE the picture before modelling: at the footprint's width read off the plinth, the brick foot, the eave, the
   roof's cap, the finial, the door's top and each opening's share of the front. The first stores were a third too
