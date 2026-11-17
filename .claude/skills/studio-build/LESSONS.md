@@ -358,6 +358,9 @@ was left there (this game has none); read it there if a cave is ever wanted.
   retries (`tools/studio_mcp_client.js`).
 - 2026-10-21. One plan file read by every step, and one runner that sends the steps in one session: a whole rebuild is
   one command and takes about 15 s.
+- 2026-11-17. White captures in Play: the MapWork window was minimised (two other Studios were open). `ShowWindow 9`
+  or `3` followed by `SetForegroundWindow` left it minimised again two seconds later, three times; `ShowWindow(h, 4)`
+  alone, with no foreground call, kept it up and the next capture was real. `tools\studio_front.ps1` does this now.
 
 ## Buildings that upgrade (the pantry's detail review with ChatGPT, 2026-10-28)
 
@@ -434,6 +437,29 @@ was left there (this game has none); read it there if a cave is ever wanted.
   the client and set the day's own Lighting values there (the server still holds them).
 - In the StudioTest play test the player's plot is not always Plot5: look for the plot that has `PantryL1` before
   building a stage by hand.
+
+### Whole small buildings from Blender (2026-11-17, the garden's tool stores, tools/blender/granary_pieces.py)
+
+The owner, looking at a part-built yard beside ChatGPT's picture: "why is what you build not as beautiful as the
+picture?", then "Blender models better than Roblox parts, why don't you use it?". He is right; parts had been my
+convenience (no upload, hollow shells, pieces a level). What the two stores showed:
+
+- A building nobody walks into is ONE Blender piece: every edge chamfered (`cbox`), real arches (`arch_band`,
+  `arch_slab`), lathe-turned columns and finials (`lat`), rivets, mullions, tile courses. 3300-4000 triangles for a
+  10 x 8 x 9 store, against the flat boxes parts give.
+- One mesh object a MATERIAL, not a part of the building (`ToolStoreTech_Frame`, `_Glass`, `_Roof`, `_Gold`...):
+  the game paints each with the era's colour and a real material (Metal, Glass, Brick, Marble, the era's roof), so
+  light does the shading and the store matches the houses beside it with no texture. Nine objects were not too many.
+- Blender +Y is the front; a lantern "left of the door as one faces it" is at +X. Check left and right against the
+  reference before the upload: the first build had lantern and pipe mirrored.
+- `PIECES_ONLY=Name,Name` builds only those pieces (the others' files and rows in `pieces.json` stay); the render of
+  a building is taken from its door's side (`FRONT`).
+- The rows go into `Config.LibraryKit.Props` with `mesh = 0` BEFORE the upload; `upload_village_pieces.js` then
+  fills the ids. The game side is twenty lines: `Garden.toolStore` (a table of mesh, colour, material; `b.mesh` at
+  one CFrame; one invisible box to collide).
+- Glass at 0.2 see-through showed an empty room: 0.05. Roof tile courses with a lip under 0.25 do not read.
+- Scripted Blender suits regular shapes. Sculpted ones (statues, vines, laurels with real leaves) are still the
+  owner's Meshy; my laurel of flat diamonds is the weakest part of the marble store.
 
 ## Bringing a built map into the game
 

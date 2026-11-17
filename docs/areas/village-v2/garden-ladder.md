@@ -54,6 +54,7 @@ positions; sizes as the village's own benches, lamps and flower beds):
 | Wing | What | Where (x, z) | Size | Eras |
 |------|------|--------------|------|------|
 | +x, the tower's side: the work yard | the kit's tool shed, door to the beds | 40.5, 3 | 10 x 8, 9 tall | 2-3 only: timber under red tiles sits right by the red-tiled houses, wrong by steel-and-glass and marble |
+| | the era's own tool store, door to the beds: `ToolStoreTech` (riveted steel frame, teal glass, brick foot, shingle roof, gear, copper pipe, lantern), `ToolStoreRoyal` (marble courses, gold-capped columns, pediment, arched gold door, the era's blue roof with gold hips) | 40.5, 3 | 10.4 x 8.4; 9 and 10.5 tall | 4, 5 (built in Blender 2026-11-17, `Garden.toolStore`; reference `garden-toolstore-ref.jpg`) |
 | | the machines' bay (the tools slot of eras 2-5) before the shed, beside its door | 33, -4 | as before | 2-5 |
 | -x: the seat | a bench looking over the beds (park, iron, modern, marble) | -44.4, 6 | 4.4 wide | 2-5 |
 | | its lamp beside it (lantern, iron, modern, golden) | -45, 9.25 | 4 to 9.6 tall | 2-5 |
@@ -63,7 +64,7 @@ The two log benches outside the front fence went: the garden has its own seat no
 the water pieces and the harvest crates keep their places among the beds, where they work.
 
 Proposed for the open soil, NOT built (each needs its reference picture first, then Blender or the owner's Meshy):
-1. A tool store for era 4 (steel and glass) and one for era 5 (marble, the era's blue roof), at the shed's spot.
+1. BUILT 2026-11-17 (the owner chose it): a tool store for era 4 and one for era 5, in the table above.
 2. A potting bench with seedling trays, against the shed's side (about 5 wide, 3.5 tall).
 3. A cold frame or small seedling glasshouse behind the shed, by the tower's basin (about 8 x 5, 3 tall).
 4. Two or three beehives in the far back corner of the seat's wing, away from the bench (each about 2 x 2, 3 tall).

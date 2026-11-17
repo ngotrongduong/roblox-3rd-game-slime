@@ -133,6 +133,8 @@ urns, `SlimeCrest_Laurel`, `GooTank_Glass`, `Banner_SlimeBlue`, `WallLantern_Iro
 |---|----------------------|-----|----------|------------|
 | B10 | `WindWheel_Blades`: a many-bladed wind wheel on a hub | 1 (timber), 4 (steel) | flat blade parts | the tower's wheel (5) |
 | B11 | `IrrigationArch_Copper`: a copper hoop with a sprinkler head | 4-5 | straight rods | the arches over the beds (16) |
+| B16 | `ToolStoreTech`: a whole tool store, one mesh a material (`_Plinth`, `_Brick`, `_Glass`, `_Frame`, `_Roof`, `_Gold`, `_Copper`, `_Door`, `_Glow`); 4004 triangles | 4 | nothing (the timber shed stood only at eras 2-3) | the work yard, door to the beds |
+| B17 | `ToolStoreRoyal`: the marble tool store (`_Marble`, `_Gold`, `_Roof`, `_Glass`); 3524 triangles | 5 | nothing | the work yard, door to the beds |
 
 Reused: B1 (the mill's cap), B2 (the goo tank's cap), B3 (the three domes), B4 and B5 (columns, the balustrade
 fence), B6 (pipes), B7 (the gate's gear), B8 (the tower's crown).

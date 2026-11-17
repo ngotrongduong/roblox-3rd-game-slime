@@ -255,6 +255,61 @@ function Garden.fence(): (number, number, number)
 	return WX, FZ0, ZB
 end
 
+-- The work yard's tool store of the eras 4 and 5, its foot's middle at `cf`, its door toward the frame's front.
+-- A whole small building from Blender (the owner, 2026-11-17: "Blender models better than Roblox parts, why not
+-- use it?"): one mesh a material, so the game's own materials and light finish it. Nothing when a mesh is missing.
+-- (each mesh: its name's end, the look's colour it takes, its material)
+type StorePart = { part: string, colour: string, mat: Enum.Material }
+local STORE: { { name: string, parts: { StorePart } } } = {
+	{
+		name = "ToolStoreTech",
+		parts = {
+			{ part = "Plinth", colour = "frame", mat = M.Limestone },
+			{ part = "Brick", colour = "lower", mat = M.Brick },
+			{ part = "Glass", colour = "wall", mat = M.Glass },
+			{ part = "Frame", colour = "beam", mat = M.Metal },
+			{ part = "Roof", colour = "roof", mat = M.RoofShingles },
+			{ part = "Gold", colour = "gold", mat = M.Metal },
+			{ part = "Copper", colour = "accent", mat = M.Metal },
+			{ part = "Door", colour = "board", mat = M.Metal },
+			{ part = "Glow", colour = "glass", mat = M.Neon },
+		},
+	},
+	{
+		name = "ToolStoreRoyal",
+		parts = {
+			{ part = "Marble", colour = "wall", mat = M.Marble },
+			{ part = "Gold", colour = "gold", mat = M.Metal },
+			{ part = "Roof", colour = "roof", mat = M.ClayRoofTiles },
+			{ part = "Glass", colour = "glaze", mat = M.Glass }, -- (not the look's: the pale panes of a cold frame)
+		},
+	},
+}
+function Garden.toolStore(m: Instance, cf: CFrame, era: number)
+	local set = STORE[era - 3]
+	if not set then
+		return
+	end
+	local L = LOOKS[era]
+	local b = Architecture.new(m, cf, {}, 0.05) -- (clearer glass shows an empty room)
+	for _, s in set.parts do
+		local src = LibraryKit.find(`{set.name}_{s.part}`)
+		if not src then
+			return
+		end
+		local p = b.mesh(src, cf, Vector3.one, if s.colour == "glaze" then GLAZE else (L :: any)[s.colour], s.mat)
+		if p and s.mat == M.Neon then
+			local light = Instance.new("PointLight")
+			light.Color, light.Brightness, light.Range = p.Color, 1, 10
+			light.Parent = p
+		end
+	end
+	-- (meshes do not collide: one box stands for the walls)
+	local wall = b.box("StoreWall", 9.4, 6, 7.4, cf * CFrame.new(0, 3, 0), L.wall)
+	wall.Transparency = 1
+	wall.CastShadow = false
+end
+
 -- (`had`: what Architecture.grow leaves alone; the fence joins it)
 local function raise(m: Instance, frame: CFrame, level: number, had: { Instance })
 	local era, f = Garden.features(level)

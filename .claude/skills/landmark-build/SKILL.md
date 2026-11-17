@@ -121,9 +121,16 @@ Hard shapes are never faked from parts (the owner's rule). Decide at step 3, not
 
 | Goes to | Shapes | How |
 |---------|--------|-----|
-| Parts (`Architecture`) | walls, slab roofs, beams, posts, round drums, flat discs, windows, awnings, steps | the builder `b`; materials carry the texture |
-| Blender, by me | regular curved or repeated shapes with exact sizes: cone roofs with tile rows, ribbed domes, capitals and bases, balustrades, pipe elbows, gears, arches with mouldings | one script, lowest triangle count, a kit prop with a stand-in |
+| Parts (`Architecture`) | only what must be hollow or flat: the shell of a hall a player walks into, floors, slab roofs over it, the pieces a level switches on one by one | the builder `b`; materials carry the texture |
+| Blender, by me (the default for what is SEEN) | every regular shape, whole small buildings included (sheds, stores, kiosks, gate houses nobody enters): chamfered blocks, arches with mouldings, columns, tile courses, rivets, mullions, cone roofs, ribbed domes, balustrades, pipes, gears | one script, one mesh object a MATERIAL, lowest triangle count, a kit prop; the game paints colour and material |
 | Meshy, by the owner | organic or sculpted: statues, crests and cartouches, shaggy thatch, ivy, sacks, lanterns with fine iron, animals | a row in `hard-pieces.md` and a ChatGPT reference picture of the piece alone; Smart topology |
+
+Blender first (the owner, 2026-11-17: "blender dựng hình tốt hơn là dùng roblox tại sao bạn không dùng cách đó?",
+after part-built yards looked poor beside ChatGPT's pictures). Parts were my convenience, not the better look. The
+garden's tool stores of eras 4 and 5 are the worked example (`tool_store_tech`, `tool_store_royal` in
+`tools/blender/granary_pieces.py`, `Garden.toolStore`; how in `studio-build/LESSONS.md`, "Whole small buildings from
+Blender"). When a landmark's own visible face is next reworked, its facade pieces (door surrounds, window frames,
+cornices, roofs) go the same way, over the part shell.
 
 A slime statue is neither: it is the game's own slime (`ClientKit.SlimeBody` in a Model, `ScaleTo`).
 `hard-pieces.md` is the ledger: piece, era, what it replaces, reference file, model. A piece nobody has built yet

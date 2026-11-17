@@ -134,7 +134,7 @@ local SURROUND: { { any } } = {
 local FLOWER_BEDS = { "FlowerBedWood", "FlowerBedBrick", "FlowerBedSteel2", "FlowerBedMarble" }
 local WINGS: { { any } } = {
 	-- (the kit's shed is timber under red tiles: right beside the red-tiled houses of the eras 2 and 3, wrong beside
-	-- steel and glass or marble, so the last two eras have none until a shed of their own is made)
+	-- steel and glass or marble, so the last two eras have a tool store of their own: Garden.toolStore)
 	{ 40.5, 3, 90, 10, { "StorageShed", "StorageShed" }, { 9, 9 } },
 	{ -44.4, 6, -90, 4.4, { "ParkBench", "IronBench", "ModernBench", "MarbleBench" }, { 2.7, 2.7, 1.5, 2.8 } },
 	{
@@ -338,6 +338,13 @@ function GardenStages.build(area: Instance, frame: CFrame, level: number): Model
 				stand(key, w[1], w[2], w[6][era - 1], w[4], w[3])
 			end
 		end
+		-- (the shed's spot at the eras 4 and 5: the era's own tool store, its door to the beds)
+		local shed = WINGS[1]
+		Garden.toolStore(
+			m,
+			frame * CFrame.new(shed[1], floorAt(shed[1], shed[2]), shed[2]) * CFrame.Angles(0, math.rad(shed[3]), 0),
+			era
+		)
 	end
 
 	-- the garden props

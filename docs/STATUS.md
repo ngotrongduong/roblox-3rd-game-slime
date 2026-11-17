@@ -1,5 +1,22 @@
 # Status
 
+## 2026-11-17 (night) — the garden's tool stores of eras 4 and 5, built in Blender; Blender first from now on
+
+- The owner chose proposal 1 of `garden-ladder.md` ("Nhà kho thời kỳ 4-5"), then asked why part-built things are not
+  as beautiful as ChatGPT's pictures and why Blender is not used ("blender dựng hình tốt hơn là dùng roblox"). Both
+  stores are whole Blender buildings, one mesh a material (`tools/blender/granary_pieces.py` `tool_store_tech`,
+  `tool_store_royal`; reference `docs/areas/village-v2/garden-toolstore-ref.jpg`, ChatGPT chat
+  `/c/6afc0c66-1cb0-83ec-98e6-f69476698b95`), uploaded (13 meshes, ids in `Config.LibraryKit.Props`) and stood at
+  the shed's spot by `Garden.toolStore` from `GardenStages.build`, door to the beds.
+- Seen in the MapWork play test at 40 and 50, close from two sides and from above the gate
+  (`docs/areas/village-v2/review/toolstore-*.jpg`). TYPES OK, CHECK OK (829 passed). MapWork saved, StudioTest rebuilt.
+- The new default (skill `landmark-build` §3): Blender for every visible regular shape, parts only for hollow shells
+  and floors, Meshy for sculpted ornaments.
+- **Not verified / open**: the phone view; no ChatGPT review of the stores (two small side works); the marble store's
+  laurel is flat diamonds (a sculpted one would be the owner's Meshy); the landmarks' own facades are still parts.
+  The play test's log shows one error that is not this job's: `SlimeFaceStage` (a test stage left in MapWork's
+  player scripts by `tools/slime`) cannot find `CreatureRig`.
+
 ## 2026-11-17 (evening) — the big village is in the saved place: plots, pond 3x, piers per era, the four yards
 
 The section below this one is done: MapWork was regridded (`tools/map/regrid_plot.luau`, not built again), saved

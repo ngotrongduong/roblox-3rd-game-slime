@@ -738,5 +738,262 @@
    }
   },
   "triangles": 734
+ },
+ "ToolStoreTech": {
+  "objects": {
+   "ToolStoreTech_Plinth": {
+    "size_studs_xyz": [
+     10.4,
+     0.6,
+     8.4
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     0.3,
+     0.0
+    ],
+    "triangles": 44,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 51.866
+   },
+   "ToolStoreTech_Brick": {
+    "size_studs_xyz": [
+     9.4,
+     1.7,
+     7.4
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     1.45,
+     0.0
+    ],
+    "triangles": 12,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 118.252
+   },
+   "ToolStoreTech_Glass": {
+    "size_studs_xyz": [
+     9.2,
+     5.52,
+     7.4
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     4.96,
+     -0.1
+    ],
+    "triangles": 124,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 207.315
+   },
+   "ToolStoreTech_Frame": {
+    "size_studs_xyz": [
+     10.898,
+     7.9,
+     9.32
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     4.55,
+     -0.208
+    ],
+    "triangles": 1440,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 43.801
+   },
+   "ToolStoreTech_Roof": {
+    "size_studs_xyz": [
+     10.6,
+     2.5,
+     8.6
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     6.85,
+     0.0
+    ],
+    "triangles": 104,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 148.419
+   },
+   "ToolStoreTech_Gold": {
+    "size_studs_xyz": [
+     10.408,
+     8.413,
+     8.604
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     5.294,
+     -0.198
+    ],
+    "triangles": 1560,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 1.578
+   },
+   "ToolStoreTech_Copper": {
+    "size_studs_xyz": [
+     4.91,
+     7.45,
+     5.89
+    ],
+    "centre_studs_xyz": [
+     -2.065,
+     5.275,
+     -1.125
+    ],
+    "triangles": 440,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 1.676
+   },
+   "ToolStoreTech_Door": {
+    "size_studs_xyz": [
+     3.6,
+     4.7,
+     0.33
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     2.95,
+     -3.715
+    ],
+    "triangles": 268,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 3.767
+   },
+   "ToolStoreTech_Glow": {
+    "size_studs_xyz": [
+     0.44,
+     0.6,
+     0.44
+    ],
+    "centre_studs_xyz": [
+     3.3,
+     3.95,
+     -4.55
+    ],
+    "triangles": 12,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 0.116
+   }
+  },
+  "triangles": 4004
+ },
+ "ToolStoreRoyal": {
+  "objects": {
+   "ToolStoreRoyal_Marble": {
+    "size_studs_xyz": [
+     10.4,
+     8.5,
+     8.65
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     4.25,
+     -0.125
+    ],
+    "triangles": 1328,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 407.99
+   },
+   "ToolStoreRoyal_Gold": {
+    "size_studs_xyz": [
+     10.849,
+     9.85,
+     9.289
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     5.625,
+     -0.206
+    ],
+    "triangles": 1964,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 41.316
+   },
+   "ToolStoreRoyal_Roof": {
+    "size_studs_xyz": [
+     10.6,
+     2.0,
+     8.6
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     7.7,
+     0.0
+    ],
+    "triangles": 56,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 109.32
+   },
+   "ToolStoreRoyal_Glass": {
+    "size_studs_xyz": [
+     7.18,
+     4.75,
+     0.14
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     3.075,
+     -3.29
+    ],
+    "triangles": 176,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 2.032
+   }
+  },
+  "triangles": 3524
  }
 }

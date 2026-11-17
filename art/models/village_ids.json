@@ -257,5 +257,30 @@
 			"FishEmblem_Fish": 104108967528532,
 			"FishEmblem_Rim": 121852647378034
 		}
+	},
+	"ToolStoreRoyal": {
+		"model": 94132173572612,
+		"texture": 0,
+		"pieces": {
+			"ToolStoreRoyal_Glass": 76189111386197,
+			"ToolStoreRoyal_Gold": 106506745379721,
+			"ToolStoreRoyal_Marble": 105409466697019,
+			"ToolStoreRoyal_Roof": 94751486777341
+		}
+	},
+	"ToolStoreTech": {
+		"model": 94506642773057,
+		"texture": 0,
+		"pieces": {
+			"ToolStoreTech_Brick": 99168994620118,
+			"ToolStoreTech_Copper": 72020444866620,
+			"ToolStoreTech_Door": 137148308593707,
+			"ToolStoreTech_Frame": 123152274016289,
+			"ToolStoreTech_Glass": 129352810078959,
+			"ToolStoreTech_Glow": 133458620645929,
+			"ToolStoreTech_Gold": 77831478432479,
+			"ToolStoreTech_Plinth": 123166904337396,
+			"ToolStoreTech_Roof": 70931248411587
+		}
 	}
 }

@@ -30,7 +30,12 @@ public static class StudioWin {
 "@
 $h = [StudioWin]::Find($Title)
 if ($h -eq [IntPtr]::Zero) { "no Studio window with $Title"; exit 1 }
-if ([StudioWin]::IsIconic($h)) { [void][StudioWin]::ShowWindow($h, 9) }
+# A minimised window is only shown (4, no activation): restored and then brought to the foreground, it was minimised
+# again two seconds later (2026-11-17, three Studios open), and shown without activation it draws for a capture.
+if ([StudioWin]::IsIconic($h)) {
+	"shown: " + [StudioWin]::ShowWindow($h, 4)
+	exit 0
+}
 # An Alt tap lets a background process take the foreground.
 [StudioWin]::keybd_event(0x12, 0, 0, 0)
 [StudioWin]::keybd_event(0x12, 0, 2, 0)
