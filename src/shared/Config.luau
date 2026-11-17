@@ -1515,7 +1515,8 @@ Config.Village = {
 	MaxLevel = 50,
 	-- How many times each landmark's house grows over the size it is drawn at (the owner, 2026-11-17: a house body
 	-- at least 1.5 fishing piers wide and one pier deep, the Granary the largest; he approved these from the top-down
-	-- line-up). Yards, fences and pens keep their size. docs/VILLAGE_SCALE.md §6.
+	-- line-up). A fence keeps its own size and stands round the grown house, the yard before it as wide as that fence
+	-- (the owner, 2026-11-17). docs/VILLAGE_SCALE.md §6.
 	HouseScale = {
 		Granary = 2.2,
 		Kitchen = 1.45,
@@ -1523,6 +1524,29 @@ Config.Village = {
 		BreedingHouse = 2.3,
 		TrainingHall = 1.9,
 		Boathouse = 2.45,
+	},
+	-- The garden's beds by era (the owner, 2026-11-17: "more garden beds ... after the upgrades"): the map's two, then
+	-- pairs outside them BedPitch studs apart, ten crop plots a bed (Work.GardenMaxPlotCount is 60). The soil is the
+	-- whole fenced garden at every level (his word the same day).
+	GardenYard = { Beds = { 2, 4, 6, 6, 6 }, BedPitch = 12 },
+	-- The fishing pond: its water is these circles (the fishing area's own x, z, radius). Lobes is the level-1 pond:
+	-- the first three are the old pond, whose front bank the pier, the shed and the fishing places stand on; the last
+	-- three are the water behind it (the owner, 2026-11-17: "three times the water's area"; measured 3.04 times).
+	-- Grow adds a lobe on each side at 21 and at 41 (x, z, radius, from which level): three times the old grown pond
+	-- too. Read by PondStages and by tools/map (stud_floor, pond_water_l1, prepare_plots).
+	Pond = {
+		Lobes = {
+			{ 0, 6.5, 20.8 },
+			{ 11.7, 14.3, 14.3 },
+			{ -11.7, 2.6, 14.3 },
+			{ 0, 34, 25 },
+			{ -25, 34, 23 },
+			{ 27, 35, 23 },
+		},
+		Grow = { { 19.5, 1.3, 9.75, 21 }, { 46, 44, 12, 21 }, { -18.2, -6.5, 9.1, 41 }, { -44, 42, 12, 41 } },
+		-- The Boathouse's bank (house, landing, lighthouse) stands this far behind where it is drawn: on the back shore
+		-- of the grown pond.
+		BoathouseBack = 34,
 	},
 	-- Smooth capacity progression: interpolate between these checkpoints. Every village level adds 1 or 2 slimes,
 	-- never a sudden 15-slime jump (the owner, 2026-11-04: "my village is level 6 and the slime limit did not grow";
@@ -2296,6 +2320,11 @@ Config.Map = {
 	-- A home plot is a square this wide (a 3x3 grid of areas, 130 a cell). It was 160, then 228; the owner,
 	-- 2026-11-17: the houses grew about twice as big and "the plot grows with its house" (docs/VILLAGE_SCALE.md §6).
 	PlotSize = 390,
+	-- How far (studs) an area stands from the middle of its cell toward the plot's middle (Layout.plotAreaFacing). A
+	-- corner cell closes to the fence's corner behind it, so a grown house there needs its room in front (the owner,
+	-- 2026-11-17: no big house squeezed into its old ground): the pond with the Boathouse behind it, and the Garden.
+	-- Areas not named stand at the middle of their cell.
+	AreaPull = { fishing = 60, garden = 12 },
 	-- The Market's footprint (across the rim, along the radius).
 	MarketWidth = 200,
 	MarketDepth = 160,

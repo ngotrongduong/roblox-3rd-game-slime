@@ -59,7 +59,7 @@ U an ornament upgraded, M a material moved on, S a part swapped for the next one
 | 24 | | U | Stone sink |
 | 25 | | U | Serving cart |
 | 26 | 11 | S | The terrace is raised on stone with a balustrade wall |
-| 27 | 12 | N | Two striped parasols over new tables: the terrace reaches further out |
+| 27 | 12 | N | Striped parasols over new tables: the terrace reaches further out and, since the owner's note of 2026-11-17 ("mở rộng ra phía sau"), back past the wing to z 17.5 with four parasol tables there |
 | 28 | 13 | S | The blank side bays of the stone storey become lit arched windows |
 | 29 | 14 | N | The chef-hat emblem with wheat ears on the gable |
 | 30 | 15 | N | **A smokehouse turret on the chimney: a timber lantern room under a red cone roof** |

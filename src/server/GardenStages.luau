@@ -29,12 +29,18 @@ GardenStages.MaxLevel = 50
 local TIERS = PantryStages.Tiers
 local part, place = PantryStages.part, PantryStages.place
 
--- the fence (inside the area's frame; it is Garden's): x from -18 to 18, z from -12 (front, the gate in its middle)
--- to 28.5. The area's own floor ends at z 21: a strip of floor carries it to the fence.
+-- the fence (inside the area's frame; it is Garden's) stands round the grown house: x from -WX to WX, z from FZ0
+-- (front, the gate in its middle) back. The map's own soil is x -FX..FX and ends at z 21: a strip carries it to
+-- z 28.5 under the house. The soil is laid on to the whole fence at every level (the owner, 2026-11-17: "why is the
+-- back half green? make the whole area earth") and pairs of beds join the map's two era by era
+-- (Config.Village.GardenYard; the owner, the same day: "the brown ground is small ... more garden beds and more area
+-- after the upgrades").
 -- (the village scale, 2026-10-30: the layout spread by about 1.4 from x +-13, z -9..15; the beds stand 11 studs
 -- apart, every prop keeps its size; SPOT and SURROUND are written in the old layout, the numbers below in the new)
-local FX, FZ0, FZ1 = Garden.fence()
-local FLOOR_END = 21
+local WX, FZ0, ZB = Garden.fence()
+local FX, FLOOR_END = 18, 21
+local EDGE = 0.2 -- the soil runs this far under the fence, so no grass shows inside it
+local YARD = Config.Village.GardenYard
 local K = 1.4 -- the spread of every position written in the old layout
 -- an era's material tier (PantryStages.Tiers) for the bed frames and the path
 local ERA_TIER = { 1, 2, 3, 5, 6 }
@@ -69,7 +75,7 @@ local SPOT = {
 		{ 0, 4, 0, 1.4, 2.4, 6.6 }, -- watering drone over the work path, well above a player's head
 	},
 	{
-		{ 11.6, 4, -90, 4.6, 3.6 }, -- 1.6 m tool rack against the left fence, facing the beds
+		{ 10.36, 4, -90, 4.6, 3.6 }, -- 1.6 m tool rack beside the left bed, facing it (clear of the next bed out)
 		-- (the machines' bay: the front-left corner, handles toward the gate path, 3 studs clear to
 		-- pull them out; ChatGPT's 5th garden review)
 		{ 8.8, -5.6, -120, 2.6, 2.6 }, -- 0.9 m soil cart
@@ -97,28 +103,30 @@ local SPOT = {
 -- Farm life round the garden that grows with the eras and is never taken away (kit model, x, z,
 -- real height, the widest it may be, turn, from which era): flowers at the gate, harvest crates
 -- waiting inside by the path, a wheelbarrow of produce by the gate outside, benches along the
--- path outside, shrubs on the outside corners and behind.
+-- path outside, shrubs along the front fence outside, out to its corners.
+-- (2026-11-17: the grown house stands where the shrubs behind the old fence were; they line the wide front instead)
 local SURROUND: { { any } } = {
 	{ "WildflowersGrass", 7.5, -11.5, 1.6, 4, 0, 1 },
 	{ "FlowerShrub", -10.5, -11, 2.4, 3, 0, 1 },
 	{ "FlowerShrub", 14.5, -10.5, 2.2, 3, 0, 1 },
-	{ "PineBerryBush", 11, 22, 2.4, 3, 0, 1 },
-	{ "FernCluster", -11, 22, 2.2, 3, 0, 1 },
+	{ "PineBerryBush", 30.7, -11.1, 2.4, 3, 0, 1 },
+	{ "FernCluster", -30.7, -11.1, 2.2, 3, 0, 1 },
 	{ "CrateStack", -5.6, -7.4, 2, 2.2, 20, 2 }, -- harvest waiting beside the gate, low, off the path
 	{ "Wheelbarrow", 6.8, -11.6, 2.2, 3, -30, 2 },
-	{ "FlowerShrub", 16.5, 18.5, 2.2, 3, 0, 2 },
-	{ "WildflowersGrass", 3, 22, 1.4, 3.5, 0, 2 },
+	{ "FlowerShrub", 21.4, -11.1, 2.2, 3, 0, 2 },
+	{ "WildflowersGrass", -21.4, -11.1, 1.4, 3.5, 0, 2 },
 	{ "LogBench", 9.5, -14, 1.8, 4.6, 0, 3 },
-	{ "HayBale", 16.5, 13, 1.6, 2.8, 90, 3 }, -- straw for mulch, outside by the compost corner
-	{ "HayBale", 16.5, 15.6, 1.6, 2.8, 90, 3 },
+	{ "HayBale", 8.2, 9.6, 1.6, 2.8, 90, 3 }, -- straw for mulch, by the compost behind the beds
+	{ "HayBale", 8.2, 11.4, 1.6, 2.8, 90, 3 },
 	{ "Planter", 13, -11.5, 1.6, 3, 0, 4 },
 	{ "Planter", -13.5, -11.5, 1.6, 3, 0, 4 },
-	{ "FlowerShrub", 6, 22, 2.4, 3, 0, 5 },
-	{ "FlowerShrub", -6, 22, 2.4, 3, 0, 5 },
+	{ "FlowerShrub", 26.1, -11.1, 2.4, 3, 0, 5 },
+	{ "FlowerShrub", -26.1, -11.1, 2.4, 3, 0, 5 },
 	{ "LogBench", -9.5, -14, 1.8, 4.6, 0, 5 },
 }
--- the scenery's two sunflowers stand in the left strip beside the beds (the house took their place at the back)
-local SUNFLOWERS = { { 16.6, 8.6 }, { 16.6, 10.4 } }
+-- the scenery's two sunflowers stand at the front of the soil, left of the gate (the house took their place at the
+-- back, the third bed their place beside the beds)
+local SUNFLOWERS = { { 20, -9.5 }, { 22, -9.5 } }
 
 -- What a level holds: its era, and each prop slot's era (0: none).
 function GardenStages.state(level: number): (number, { number })
@@ -153,19 +161,41 @@ function GardenStages.build(area: Instance, frame: CFrame, level: number): Model
 			d.Parent = nil
 		end
 	end
+	local function gild(plank: BasePart)
+		if era == 5 then
+			part(
+				m,
+				"BedGold",
+				Vector3.new(plank.Size.X + 0.06, 0.12, plank.Size.Z + 0.06),
+				plank.CFrame * CFrame.new(0, plank.Size.Y / 2 + 0.06, 0),
+				gold,
+				Enum.Material.Foil
+			)
+		end
+	end
 	for _, d in area:GetDescendants() do
 		if d:IsA("BasePart") and d.Name == "BedPlank" then
 			d.Color = tier.walls
 			PondStages.studLook(d, tier.wallMat)
-			if era == 5 then
-				part(
-					m,
-					"BedGold",
-					Vector3.new(d.Size.X + 0.06, 0.12, d.Size.Z + 0.06),
-					d.CFrame * CFrame.new(0, d.Size.Y / 2 + 0.06, 0),
-					gold,
-					Enum.Material.Foil
-				)
+			gild(d)
+		end
+	end
+	-- the beds beyond the map's two: a pair at a time, outside the ones before (copies of the map's, so they wear
+	-- the era's frames too)
+	local more = (YARD.Beds[era] - 2) / 2
+	local beds = area:FindFirstChild("Beds")
+	if beds then
+		for k = 1, more do
+			for _, d in beds:GetDescendants() do
+				if d:IsA("BasePart") then
+					local side = if frame:PointToObjectSpace(d.Position).X < 0 then -1 else 1
+					local copy = d:Clone()
+					copy.CFrame = d.CFrame + frame:VectorToWorldSpace(Vector3.new(side * k * YARD.BedPitch, 0, 0))
+					copy.Parent = m
+					if d.Name == "BedPlank" then
+						gild(copy)
+					end
+				end
 			end
 		end
 	end
@@ -187,18 +217,23 @@ function GardenStages.build(area: Instance, frame: CFrame, level: number): Model
 		end
 	end
 
-	-- the floor, carried to the fence at the back
+	-- the soil: the whole fenced garden, behind the map's floor and on both sides of it
 	local floor = area:FindFirstChild("Floor")
-	local ext = part(
-		m,
-		"FloorExt",
-		Vector3.new(FX * 2, 0.2, FZ1 - FLOOR_END),
-		frame * CFrame.new(0, 0.1, (FLOOR_END + FZ1) / 2),
-		if floor and floor:IsA("BasePart") then floor.Color else Color3.fromRGB(196, 134, 82)
-	)
-	if floor and floor:IsA("BasePart") then
-		ext.Material, ext.TopSurface = floor.Material, floor.TopSurface
+	local function soil(name: string, xFrom: number, xTo: number, zFrom: number, zTo: number)
+		local p = part(
+			m,
+			name,
+			Vector3.new(xTo - xFrom, 0.2, zTo - zFrom),
+			frame * CFrame.new((xFrom + xTo) / 2, 0.1, (zFrom + zTo) / 2),
+			if floor and floor:IsA("BasePart") then floor.Color else Color3.fromRGB(196, 134, 82)
+		)
+		if floor and floor:IsA("BasePart") then
+			p.Material, p.TopSurface = floor.Material, floor.TopSurface
+		end
 	end
+	soil("FloorExt", -FX, FX, FLOOR_END, ZB + EDGE)
+	soil("SoilWing", FX, WX + EDGE, FZ0, ZB + EDGE)
+	soil("SoilWing", -WX - EDGE, -FX, FZ0, ZB + EDGE)
 
 	-- the fence, the gate, the garden house and the water tower
 	Garden.build(m, frame, level)
@@ -253,9 +288,9 @@ function GardenStages.build(area: Instance, frame: CFrame, level: number): Model
 	end
 
 	-- the farm life round the outside
-	-- (the garden's floor stands 0.2 above the lawn: what is inside the fence stands on it)
+	-- (the garden's soil stands 0.2 above the lawn: what is on it stands on its top)
 	local function floorAt(x: number, z: number): number
-		return if math.abs(x) <= FX and z >= FZ0 and z <= FZ1 then 0.2 else 0
+		return if math.abs(x) <= WX and z >= FZ0 and z <= ZB then 0.2 else 0
 	end
 	for _, s in SURROUND do
 		if era >= s[7] then
@@ -366,7 +401,6 @@ function GardenStages.build(area: Instance, frame: CFrame, level: number): Model
 		mk.CastShadow = false
 		return mk
 	end
-	local beds = area:FindFirstChild("Beds")
 	if beds and beds:IsA("Model") then
 		local box, size = beds:GetBoundingBox()
 		local c = frame:PointToObjectSpace(box.Position)
@@ -374,9 +408,9 @@ function GardenStages.build(area: Instance, frame: CFrame, level: number): Model
 		local gap, shift = W.GardenGap, W.GardenSideShift
 		local places = {
 			Vector3.new(c.X, 0, c.Z - hz - gap), -- front, on the path from the gate
-			Vector3.new(math.min(c.X + hx + gap, FX - 1.5), 0, c.Z + shift),
+			Vector3.new(math.min(c.X + hx + gap, WX - 1.5), 0, c.Z + shift),
 			Vector3.new(c.X, 0, c.Z + hz + gap), -- back
-			Vector3.new(math.max(c.X - hx - gap, -FX + 1.5), 0, c.Z + shift),
+			Vector3.new(math.max(c.X - hx - gap, -WX + 1.5), 0, c.Z + shift),
 		}
 		for k, p in places do
 			marker("WorkSpot" .. k, frame * CFrame.new(p.X, 0.35, p.Z), Vector3.new(1.6, 0.2, 1.6))
@@ -395,11 +429,28 @@ function GardenStages.build(area: Instance, frame: CFrame, level: number): Model
 		end
 		return a.z < b.z
 	end)
-	for i, p in plots do
-		local mk = marker("CropPlot" .. i, frame * CFrame.new(p.x, p.y, p.z), Vector3.new(1.2, 0.2, 1.2))
-		mk:SetAttribute("Bed", if p.x < 0 then 1 else 2)
+	local count = 0
+	local function plot(x: number, y: number, z: number, bed: number)
+		if count < Config.Work.GardenMaxPlotCount then
+			count += 1
+			local mk = marker("CropPlot" .. count, frame * CFrame.new(x, y, z), Vector3.new(1.2, 0.2, 1.2))
+			mk:SetAttribute("Bed", bed)
+		end
 	end
-	m:SetAttribute("CropPlots", #plots)
+	for _, p in plots do
+		plot(p.x, p.y, p.z, if p.x < 0 then 1 else 2)
+	end
+	-- (the added beds' plots are numbered after the map's, a bed at a time: a saved plot keeps its place)
+	for k = 1, more do
+		for _, side in { -1, 1 } do
+			for _, p in plots do
+				if (p.x < 0) == (side < 0) then
+					plot(p.x + side * k * YARD.BedPitch, p.y, p.z, k * 2 + (if side < 0 then 1 else 2))
+				end
+			end
+		end
+	end
+	m:SetAttribute("CropPlots", count)
 
 	local V = W.VegBin
 	WorkProps.bin(

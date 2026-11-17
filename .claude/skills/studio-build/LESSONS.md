@@ -1142,3 +1142,26 @@ The Training Hall, the fifth landmark (2026-11-17, `src/server/TrainingHall.luau
 - **ChatGPT's one review (likeness 73-86, finish 72-80 an era) against the code**: three of eight points asked for
   what was built (the era-2 tower's bands and posts, the era-4 pipes, the era-3 timber frame) and were only made
   stronger; five were taken (lunette, flank, panes, palisade points, thatch edge).
+
+The village's second scale-up: houses K times, plots 390, the yards (2026-11-17, `docs/VILLAGE_SCALE.md` §6)
+- **Grow the room before the house** (the owner: "bạn vẫn cứ cố nhét nó vào không gian chật hẹp cũ"): when a
+  building grows, its plot, yard, fence and pond grow in the same job. Sizes are judged from straight above with
+  all six side by side, against the one thing whose size he fixed (the pier).
+- **A fence is built at its own size round the GROWN house**, never scaled with it (scaled pickets are giants):
+  `Architecture.grown` gives where the lot's corner went, the runs are kept out of `grow` with
+  `Architecture.keep`, and `X.fence()` hands the box to the `*Stages` module.
+- **A fenced yard has one ground, edge to edge** (the owner on the garden: "tại sao nửa đằng sau ... lại để màu
+  xanh?"): I laid soil only where the beds were and by era; he asked for the whole fenced box, at every level.
+  The floor follows the fence, also beside and behind the house.
+- **A piece that joins a grown part to an unscaled one** (the pipe from the grown wing to the incubators' pad) is
+  laid at grown coordinates and kept out of `grow`; left in, it stuck 11 studs out through the fence.
+- **Stations move with the fence they stand against**, the middle stays open (the training ground); things that
+  stood outside a fence (the incubators) come inside when the yard has the room (his note).
+- **`_G.AreaShow` takes the area's own cell**, read from `AreaUpgrade.AREAS` (fishing -1,1; garden 1,1; pantry 0,1;
+  kitchen -1,0; breeding 1,0; training -1,-1): a wrong cell built a Granary in the plaza. The pond's `PondStage`
+  is not replaced by AreaShow: destroy a stray one by hand (play test only).
+- **`save_place` answered "Target is not reachable" three times and saved each time**: read the file's time before
+  trying again.
+- **A hand-built village is moved, not built again**, when the plot's size changes: `tools/map/regrid_plot.luau`
+  (old frames kept on the village as attributes first), then `stud_floor`, `pond_water_l1`, `tidy_plot`,
+  `prepare_plots`. The pond's water is circles in `Config.Village.Pond`, read by the code and the map tools alike.

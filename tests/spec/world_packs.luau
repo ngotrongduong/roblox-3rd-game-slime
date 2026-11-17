@@ -31,8 +31,8 @@ return function(T)
 		"levels by the plan alone: LevelMin at a village, never above LevelMax, a far place is deep in the bands",
 		function()
 			T.ok(WorldPacks.farthest() > P.NearStuds, "farthest " .. WorldPacks.farthest())
-			-- (the farthest pack of the play test, 2026-11-14: cell p5x3)
-			T.eq(WorldPacks.levelAt(-1078, -1747), P.LevelMax)
+			-- (the farthest pack of the play test, 2026-11-17, after the villages moved: cell p10x3)
+			T.eq(WorldPacks.levelAt(371.76, -1786.7), P.LevelMax)
 			local v = WorldPlan.Villages[1]
 			T.eq(WorldPacks.levelAt(v.x, v.z), P.LevelMin)
 			for x = -2300, 2300, 100 do

@@ -235,12 +235,17 @@ function TrainingHall.footprint(_level: number): (number, number, number, number
 	)
 end
 
+-- The fence stands round the GROWN hall at its own size (the owner, 2026-11-17: the yard out to both sides of the
+-- hall): half its width and its back, where Architecture.grow puts the drawn fence's corner.
+local WX, ZB = Architecture.grown("TrainingHall", 0, PIVOT_Z, XF, FZ1)
+
 -- The fence in the area's frame (x0, x1, z0, z1): TrainingStages lays the floor to it.
 function TrainingHall.fence(): (number, number, number, number)
-	return OX - XF, OX + XF, -ZF, FZ1
+	return OX - WX, OX + WX, -ZF, ZB
 end
 
-local function raise(m: Instance, area: CFrame, level: number)
+-- (`had`: what Architecture.grow leaves alone; the fence and its corners join it)
+local function raise(m: Instance, area: CFrame, level: number, had: { Instance })
 	local era, f = TrainingHall.features(level)
 	local L = LOOKS[era]
 	local frame = area * CFrame.new(OX, 0, 0)
@@ -777,16 +782,17 @@ local function raise(m: Instance, area: CFrame, level: number)
 		end
 	end
 	local gx = if era >= 3 then PX + 1.2 else PX + 0.45 -- where the fence meets the gate
-	fence(gx, -ZF, XF, -ZF, false, true, true)
-	fence(XF, -ZF, XF, FZ1, false, true, false)
-	fence(XF, FZ1, -XF, FZ1, false, true, false)
-	fence(-XF, FZ1, -XF, -ZF, false, true, false)
-	fence(-XF, -ZF, -gx, -ZF, false, false, true)
+	local fenceFrom = #m:GetChildren()
+	fence(gx, -ZF, WX, -ZF, false, true, true)
+	fence(WX, -ZF, WX, ZB, false, true, false)
+	fence(WX, ZB, -WX, ZB, false, true, false)
+	fence(-WX, ZB, -WX, -ZF, false, true, false)
+	fence(-WX, -ZF, -gx, -ZF, false, false, true)
 	-- the four corners: a pier at the capital (the balustrade is low), and what the features stand on
 	local cornerTop = FLOOR + (if palisade then 3.3 else ({ 2.7, 3.5, 3, 3.95, 3 })[era])
 	local cornerHalf = ({ 0.3, 0.3, 0.75, 0.28, 0.6 })[era]
-	for _, c in { { -1, -ZF }, { 1, -ZF }, { -1, FZ1 }, { 1, FZ1 } } do
-		local x, z = c[1] * XF, c[2]
+	for _, c in { { -1, -ZF }, { 1, -ZF }, { -1, ZB }, { 1, ZB } } do
+		local x, z = c[1] * WX, c[2]
 		if era == 5 then
 			b.box("CornerPier", 1.2, 2.8, 1.2, b.at(x, FLOOR + 1.4, z), L.wall)
 			b.trim("CornerPierCap", 1.5, 0.2, 1.5, b.at(x, FLOOR + 2.9, z), L.gold)
@@ -799,6 +805,7 @@ local function raise(m: Instance, area: CFrame, level: number)
 			end
 		end
 	end
+	Architecture.keep(m, fenceFrom, had)
 	if f >= 7 then
 		-- 7 flower boxes along the front fence on both sides of the gate (the owner's Meshy trough)
 		for _, x in { -14.6, -8.6, 8.6, 14.6 } do
@@ -810,14 +817,14 @@ local function raise(m: Instance, area: CFrame, level: number)
 	if era == 5 then
 		-- clipped cone bushes in pots inside the front corners (the owner's sheet piece)
 		for _, s in { -1, 1 } do
-			if not painted("ConePot_Topiary", b.at(s * (XF - 1.9), FLOOR, -ZF + 1.9), 0.85) then
-				b.cone(b.at(s * (XF - 1.9), FLOOR, -ZF + 1.9), 0.9, 3.4, 4, LEAF)
+			if not painted("ConePot_Topiary", b.at(s * (WX - 1.9), FLOOR, -ZF + 1.9), 0.85) then
+				b.cone(b.at(s * (WX - 1.9), FLOOR, -ZF + 1.9), 0.9, 3.4, 4, LEAF)
 			end
 		end
 	end
 	if f >= 21 then
 		-- 21 gold urns of pink flowers at the fence's front corners and beside the hall's portico
-		for _, p in { { -(XF + 0.4), -ZF - 2 }, { XF + 0.4, -ZF - 2 }, { -(hw + 1.3), HZ - 3 }, { hw + 1.3, HZ - 3 } } do
+		for _, p in { { -(WX + 0.4), -ZF - 2 }, { WX + 0.4, -ZF - 2 }, { -(hw + 1.3), HZ - 3 }, { hw + 1.3, HZ - 3 } } do
 			local cf = b.at(p[1], if p[2] < 0 then 0 else FLOOR, p[2])
 			if not painted("FlowerUrn_Gold", cf, 0.95) then
 				b.cyl("FlowerUrn", 0.9, 1.6, cf * CFrame.new(0, 0.8, 0), L.gold, bigGold, false)
@@ -1637,7 +1644,7 @@ end
 -- The Training Hall at its drawn size, then its house grown (Config.Village.HouseScale).
 function TrainingHall.build(m: Instance, area: CFrame, level: number)
 	local had = m:GetChildren()
-	raise(m, area, level)
+	raise(m, area, level, had)
 	Architecture.grow(m, had, area, "TrainingHall", SPLIT_Z, PIVOT_X, PIVOT_Z)
 end
 

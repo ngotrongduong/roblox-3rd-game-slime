@@ -34,6 +34,15 @@ beds, so the area grew once at the back, for every level (an area may grow, neve
 x -18..18, z -12..28.5. The compost corner (back left) gave way to the tower and moved along the fence. The map's
 own garden sign stands outside the front fence at x -9, so the row of flower boxes there leaves its place free.
 
+**The second scale-up (2026-11-17).** The house grew 2.6 times, so the fence now stands at its own size round the
+grown lot: x -46.8..46.8, z -12..44.5 (`Garden.fence()`). Two notes of the owner on it:
+- "khoảng đất màu nâu ở khu làm vườn hơi nhỏ ... có thể tăng số lượng garden bed và diện tích sau những lần
+  upgrade": the beds grow with the era, 2 / 4 / 6 / 6 / 6, pairs 12 apart outside the first two
+  (`Config.Village.GardenYard`; `GardenStages` clones the map's beds and makes 20 / 40 / 60 crop plots).
+- "tại sao nửa đằng sau của khu làm vườn lại để màu xanh? hãy cho cả khu này thành màu đất": the soil is the WHOLE
+  fenced garden at every level, beside and behind the house too (no lawn inside the fence, ever).
+The props that stood round the old fence follow the wide one.
+
 ## The ladder
 
 As the Kitchen's: an era's first level changes the architecture; levels 2-5 bring the four garden props, each slot

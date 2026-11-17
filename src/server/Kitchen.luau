@@ -44,6 +44,9 @@ local TZ0, TZ1 = -4.6, 5.6 -- the terrace's cover, front to back
 local TX = -22.9 -- and how far out it reaches
 local TCX, TCZ = -19.5, 0.5 -- the dining table's place under it
 local WING_X, WING_Z = -22.3, 6.2 -- the wing's outer wall and its front
+-- how far back the wide terrace runs past the wing's side (the owner, 2026-11-17: "the picnic tables' ground can
+-- reach further back"): two more parasol tables stand there
+local TERRACE_BACK = 17.5
 local KETTLES = { { 22.4, -1 }, { 20.8, 3.4 } }
 
 type Look = {
@@ -289,7 +292,16 @@ function Kitchen.footprint(level: number): (number, number, number, number)
 	local _, f = Kitchen.features(level)
 	local x0 = if f >= 12 then -34 elseif f >= 5 then -25.5 else -15.5
 	local x1 = if f >= 20 then 25 else 19.6
-	return Architecture.grownBox("Kitchen", SPLIT_Z, PIVOT_X, PIVOT_Z, x0, x1, -7, 13.6)
+	return Architecture.grownBox(
+		"Kitchen",
+		SPLIT_Z,
+		PIVOT_X,
+		PIVOT_Z,
+		x0,
+		x1,
+		-7,
+		if f >= 12 then TERRACE_BACK + 0.7 else 13.6
+	)
 end
 
 -- Where the dining table stands (x, z) and the top of the ground under it (a stud towards the hall while the
@@ -1069,7 +1081,8 @@ local function raise(m: Instance, frame: CFrame, level: number)
 	-- THE TERRACE ----------------------------------------------------------------------------------------------
 	local tY = if f >= 11 then 0.7 else 0.12 -- its floor's top
 	if f >= 11 then
-		-- 11 raised on stone, a balustrade round it; 12 it reaches further out, two parasols over new tables
+		-- 11 raised on stone, a balustrade round it; 12 it reaches further out and back past the wing's side, four
+		-- parasols over new tables
 		local edge = if f >= 12 then -33 else TX - 1.2 -- how far out the raised floor reaches
 		local rail = if era == 5 then L.wall else L.frame
 		local zr = Z0 + 0.15
@@ -1082,14 +1095,25 @@ local function raise(m: Instance, frame: CFrame, level: number)
 		end
 		balustrade(-HW - 0.4, zr, TCX + 2.4, zr, tY, rail, false)
 		balustrade(TCX - 2.4, zr, edge + 0.35, zr, tY, rail, false)
-		balustrade(edge + 0.35, zr, edge + 0.35, WING_Z - 0.35, tY, rail, false)
-		balustrade(edge + 0.35, WING_Z - 0.35, WING_X - 0.4, WING_Z - 0.35, tY, rail, false)
 		if f >= 12 then
-			for i, z in { -2.2, 3.1 } do
-				-- (one nearer the house, one further out: both show from the front and neither touches the other)
-				local x = if i == 1 then -26.4 else -30
-				-- (the owner's Meshy parasol tables, stools and all: a red one and a blue one)
-				if painted(if i == 1 then "ParasolTable_Red" else "ParasolTable_Blue", b.at(x, tY, z), 0.75) then
+			-- (the back part: beside the wing and a little behind it, railed on its three open sides)
+			local back, inner = TERRACE_BACK, WING_X - 0.4
+			slab("Terrace", edge, inner, 0, tY, WING_Z, back, L.stone)
+			local paved2 = b.at((edge + inner) / 2, tY + 0.03, (WING_Z + back) / 2 - 0.4)
+			b.trim("TerracePaving", inner - edge - 0.8, 0.06, back - WING_Z, paved2, rail)
+			balustrade(edge + 0.35, zr, edge + 0.35, back - 0.35, tY, rail, false)
+			balustrade(edge + 0.35, back - 0.35, inner - 0.35, back - 0.35, tY, rail, false)
+			balustrade(inner - 0.35, back - 0.35, inner - 0.35, Z1 + 0.9, tY, rail, false)
+		else
+			balustrade(edge + 0.35, zr, edge + 0.35, WING_Z - 0.35, tY, rail, false)
+			balustrade(edge + 0.35, WING_Z - 0.35, WING_X - 0.4, WING_Z - 0.35, tY, rail, false)
+		end
+		if f >= 12 then
+			for i, z in { -2.2, 3.1, 8.6, 13.9 } do
+				-- (in a zigzag, one nearer the house, one further out: all show from the front and none touches another)
+				local x = if i % 2 == 1 then -26.4 else -30
+				-- (the owner's Meshy parasol tables, stools and all: red ones and blue ones)
+				if painted(if i % 2 == 1 then "ParasolTable_Red" else "ParasolTable_Blue", b.at(x, tY, z), 0.75) then
 					continue
 				end
 				b.cyl("ParasolTable", 1.3, 0.25, b.at(x, tY + 2.2, z), PLANK, nil, false)

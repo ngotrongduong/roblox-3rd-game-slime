@@ -30,6 +30,7 @@ reads as one place:
 | Era | Levels | Look |
 |-----|--------|------|
 | 1 hamlet | 1-10 | a palisade of pointed logs bound with rope, brown timber under shaggy thatch, a braced log lookout with a thatch cap, a straw dummy |
+<!-- The second scale-up, 2026-11-17 (the owner: "khu vực sân tập cũng có thể mở rộng ra cả 2 bên của nhà thi đấu để có khoảng trống rộng hơn"): the hall grew 1.9 times; the fence stands at its own size round the grown lot, x -35.72..35.72, z -16.4..38.3 (`TrainingHall.fence()`); the floor and kerbs run to it, also beside the hall; the four stations moved out with the side fences (16.92), the middle stays open. The ground numbers in the paragraph below are the drawn ones. -->
 | 2 painted | 11-20 | cream pickets on royal-blue posts with gold caps, cream plaster on royal-blue beams, red clay tiles, the tower boarded in cream and blue under a red cone cap, a wooden dummy with a painted chest plate |
 | 3 town | 21-30 | a low stone wall with timber rails, a stone hall with a great arch under a half-timbered gable and a blue slate roof, battlements, a round stone tower with a blue slate cone, a dummy in an iron helmet |
 | 4 slime tech | 31-40 | black riveted steel and teal glass vaults, copper pipes, floodlight masts, a glowing green goo core in the steel tower, a steel fence with green glass, a sparring machine as the dummy |

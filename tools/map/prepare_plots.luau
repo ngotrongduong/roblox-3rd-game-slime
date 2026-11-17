@@ -22,8 +22,8 @@ local Layout = require(ReplicatedStorage.Shared.Layout)
 local TEMPLATE = Config.Plots.TemplatePlot
 local GROUND = Config.Map.GroundY or 2
 local RING = 16
--- the pond, fishing-area local x, z, r (src/server/PondStages LOBES, the village scale)
-local LOBES = { { 0, 6.5, 20.8 }, { 11.7, 14.3, 14.3 }, { -11.7, 2.6, 14.3 } }
+-- the pond, fishing-area local x, z, r
+local LOBES = Config.Village.Pond.Lobes
 local terrain = workspace.Terrain
 local half = Config.Map.PlotSize / 2
 

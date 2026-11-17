@@ -46,9 +46,12 @@ local INC_TIER = { 1, 2, 3, 4, 6 }
 -- shelter, the 3rd and 4th straight in front of them; the owner, 2026-10-28: "put it in order")
 -- (the first two of each match tools/map/build_breeding_l1, which lays their markers)
 local NESTS = { { -8, 1.5, 1 }, { 16, 1.5, 1 }, { -8, -10.5, 11 }, { 16, -10.5, 31 } }
-local INC_X = X0 - 8 -- the incubators' line, outside the right fence
-local INCUBATORS = { { INC_X, -4.5, 1 }, { INC_X, 7.5, 1 }, { INC_X, -16.5, 21 }, { INC_X, 19.5, 41 } }
-local INC_PAD_EXT = 10 -- the depth of the pad piece added under the 3rd and 4th
+-- the incubators stand inside the yard, in its right wing (the owner, 2026-11-17; the fence is BreedingHouse's, out
+-- round the grown house): the map's two on their pad, the 3rd and 4th in a second row behind them
+local INC_X = X0 - 8
+local INC_X2 = INC_X - 11
+local INCUBATORS = { { INC_X, -4.5, 1 }, { INC_X, 7.5, 1 }, { INC_X2, -4.5, 21 }, { INC_X2, 7.5, 41 } }
+local PAD_Z = { [3] = { -11.5, 1.5 }, [4] = { 1.5, 14.5 } } -- the pad piece under each: half the map pad's depth
 
 local PROPS = {
 	{ "FeedBucket", "HayFeeder", "GrainFeeder", "AutoFeeder", "GooFeeder" },
@@ -66,9 +69,9 @@ local HEIGHT = {
 -- The pen in order (the owner, 2026-10-28: the props stood about with no order): a paved lane from
 -- the gate to the shelter; the nests in two rows either side of it; the two back corners beside the
 -- shelter are its working corners, each on its own mat. +x is the pen's left as one walks in, the
--- incubators stand outside its right fence.
+-- incubators stand in the yard's right wing.
 --   feed     back-left, the feed and rest corner, beside the hay store
---   egg care back-right, the water and egg corner, just inside the side gate to the incubators
+--   egg care back-right, the water and egg corner, on the way to the incubators
 --   comfort  back-left at the front of the straw mat, facing the nests (the hay store and the
 --            feeder behind it against the back fence; ChatGPT's 3rd breeding review)
 --   warmth   against the right fence between the two right-hand nests, warming them (a flower box
@@ -78,7 +81,7 @@ local FOOT = { 2.6, 3, 3.6, 2.2 }
 local HAY = Vector3.new(19.5, 0, 17.2) -- the hay store, against the back fence
 local LIFT = { [3] = { [5] = 1 } } -- the cloud bed floats
 local FLOOR = 0.4 -- the pen's floor stands this far above the lawn; what is on it stands on its top
--- the side gate in the right fence, toward the incubators
+-- the paved way from the pen to the incubators' pad (where the side gate was)
 local SIDE0, SIDE1 = -1.5, 3.5
 
 -- What a level holds: the era, how many nests and incubators, each prop slot's era (0: none).
@@ -374,6 +377,8 @@ function BreedingStages.build(area: Instance, frame: CFrame, level: number): Mod
 			skin(d, pt, tier.yard, tier.yardMat)
 		elseif d.Name == "IncubatorPad" and d:IsA("BasePart") then
 			skin(d, pt, tier.base, tier.baseMat)
+			-- (the yard's floor runs under it now: its top stands a little proud, like the lane's)
+			d.Size = Vector3.new(d.Size.X, FLOOR + 0.12, d.Size.Z)
 		elseif d.Name == "HayBale" and d:IsA("Model") then
 			-- the hay store stands against the back fence, the bed in front of it
 			local hp = frame:PointToObjectSpace(d:GetPivot().Position)
@@ -381,40 +386,50 @@ function BreedingStages.build(area: Instance, frame: CFrame, level: number): Mod
 		end
 	end
 
-	-- the strip behind the yard, where the house stands: any tree or bush there goes, and the floor is carried to
-	-- the back fence
+	-- the lot inside the fence: any tree or bush there goes, and the floor is carried to the fence: behind the pen,
+	-- where the house stands, and out to both sides of it (the owner, 2026-11-17: the play yard wider on both sides)
 	local fx0, fx1, _, fz1 = BreedingHouse.fence()
-	local sx0, sx1, _, sz1 = BreedingHouse.footprint(level)
+	local sx0, sx1, sz0, sz1 = BreedingHouse.footprint(level)
 	for _, d in (area.Parent or area):GetDescendants() do
 		if d:IsA("Model") and d.Parent and d.Parent.Name == "Nature" then
 			local p = frame:PointToObjectSpace(d:GetPivot().Position)
-			if p.X > sx0 and p.X < sx1 and p.Z > Z1 - 0.5 and p.Z < sz1 then
+			if p.X > sx0 and p.X < sx1 and p.Z > sz0 and p.Z < sz1 then
 				d.Parent = nil
 			end
 		end
 	end
 	local floor = area:FindFirstChild("PenFloor")
-	local ext = part(
-		m,
-		"FloorExt",
-		Vector3.new(fx1 - fx0, FLOOR, fz1 - Z1),
-		frame * CFrame.new((fx0 + fx1) / 2, FLOOR / 2, (Z1 + fz1) / 2),
-		if floor and floor:IsA("BasePart") then floor.Color else tier.yard
-	)
-	PondStages.studLook(ext, tier.yardMat)
+	local function ground(name: string, x0: number, x1: number, z0: number, z1: number)
+		local p = part(
+			m,
+			name,
+			Vector3.new(x1 - x0, FLOOR, z1 - z0),
+			frame * CFrame.new((x0 + x1) / 2, FLOOR / 2, (z0 + z1) / 2),
+			if floor and floor:IsA("BasePart") then floor.Color else tier.yard
+		)
+		PondStages.studLook(p, tier.yardMat)
+	end
+	ground("FloorExt", fx0, fx1, Z1, fz1)
+	ground("FloorWing", fx0, X0, Z0, Z1)
+	ground("FloorWing", X1, fx1, Z0, Z1)
 
 	-- the fence, the gate, the hall with its warm room and wing, the egg on its roof
 	BreedingHouse.build(m, frame, level)
 
-	-- (the right fence opens at a side gate toward the incubators, a paved step across the grass)
-	part(
-		m,
-		"SidePath",
-		Vector3.new(X0 - (INC_X + 3.5), 0.4, SIDE1 - SIDE0), -- (right across to the pad's edge, no grass between)
-		frame * CFrame.new((X0 + INC_X + 3.5) / 2, 0.2, (SIDE0 + SIDE1) / 2),
-		tier.base,
-		tier.baseMat
-	)
+	-- what lies on the floor: the lane, the mats, the incubators' pads
+	local tfl = tier
+	local function flat(name: string, x0: number, x1z: number, z0: number, z1: number, col: Color3, mat: Enum.Material)
+		part(
+			m,
+			name,
+			Vector3.new(x1z - x0, 0.06, z1 - z0),
+			frame * CFrame.new((x0 + x1z) / 2, FLOOR + 0.03, (z0 + z1) / 2),
+			col,
+			mat
+		)
+	end
+	-- (the paved way from the pen to the incubators' pad)
+	flat("SidePath", INC_X + 3.5, X0, SIDE0, SIDE1, tier.base, tier.baseMat)
 
 	-- nests (the first two are the area's own), each on a round platform
 	for i = 1, nests do
@@ -448,15 +463,17 @@ function BreedingStages.build(area: Instance, frame: CFrame, level: number): Mod
 	end
 
 	-- incubators, built here with a clear glass dome so the egg inside shows (the owner, 2026-10-28:
-	-- the kit model's dome was solid); those beyond the first two stand on the pad made longer
+	-- the kit model's dome was solid); those beyond the first two stand on the pad made wider
 	for i = 1, incubators do
 		local n = INCUBATORS[i]
-		if i > 2 then
-			part(
-				m,
+		local z = PAD_Z[i]
+		if z then
+			flat(
 				"IncubatorPadExt",
-				Vector3.new(7, 0.4, INC_PAD_EXT),
-				frame * CFrame.new(n[1], 0.2, n[2]),
+				INC_X2 - 3.5,
+				INC_X - 3.5,
+				z[1],
+				z[2],
 				if pt <= 1 then Color3.fromRGB(255, 244, 228) else tier.base,
 				tier.baseMat
 			)
@@ -479,17 +496,6 @@ function BreedingStages.build(area: Instance, frame: CFrame, level: number): Mod
 	end
 
 	-- the order of the pen: the lane, the two corner mats, and the life round them
-	local tfl = tier
-	local function flat(name: string, x0: number, x1z: number, z0: number, z1: number, col: Color3, mat: Enum.Material)
-		part(
-			m,
-			name,
-			Vector3.new(x1z - x0, 0.06, z1 - z0),
-			frame * CFrame.new((x0 + x1z) / 2, FLOOR + 0.03, (z0 + z1) / 2),
-			col,
-			mat
-		)
-	end
 	-- the lane from the gate to the hall's door, paved and edged
 	flat("Lane", 1.8, 6.2, Z0 + 0.4, Z1 + 0.2, tfl.base, tfl.baseMat)
 	for _, x in { 1.65, 6.35 } do
@@ -547,8 +553,16 @@ function BreedingStages.build(area: Instance, frame: CFrame, level: number): Mod
 		wood,
 		woodMat
 	)
-	bit("BroomStick", Vector3.new(0.15, 3.2, 0.15), on(X1 - 0.6, 1.55, 8) * CFrame.Angles(0, 0, -0.22), wood, woodMat)
-	bit("BroomHead", Vector3.new(0.4, 0.7, 1.1), on(X1 - 1, 0.35, 8), hay)
+	-- (the broom leans on the hay store: the fence it leant on is far out now)
+	local bx = HAY.X + 1.75
+	bit(
+		"BroomStick",
+		Vector3.new(0.15, 3.2, 0.15),
+		on(bx, 1.55, HAY.Z - 0.4) * CFrame.Angles(0, 0, 0.22),
+		wood,
+		woodMat
+	)
+	bit("BroomHead", Vector3.new(0.4, 0.7, 1.1), on(bx + 0.4, 0.35, HAY.Z - 0.4), hay)
 	-- the water side: a bucket by the trough, a damp patch before it; the egg side dry, on a slab,
 	-- and a sign with an egg and an arrow by the side gate, pointing out to the incubators
 	local bucket = bit(

@@ -90,9 +90,8 @@ return {
 		LevelMin = 4,
 		LevelMax = 150,
 		NearStuds = 300,
-		-- (2420 before the villages moved, 2026-11-17; 2310 is the same farthest pack, at -1078, -1747, from Hillfoot's
-		-- new place, worked out from the plan: read the server's line in the next play test and set it again.)
-		FarStuds = 2310,
+		-- (2420 before the villages moved, 2026-11-17; 2394 is the server's line in the play test after they moved.)
+		FarStuds = 2394,
 		Curve = 1.6,
 		BandLevels = 20,
 		BandColours = { "#7ee06a", "#c9e04c", "#ffd23c", "#ffa63c", "#ff7a4a", "#f2507a", "#c05cf0", "#7a6cff" },
@@ -208,7 +207,7 @@ return {
 	-- Its picture is drawn from WorldPlan by tools/world/map_picture.ps1 (art/map/world_map.png): a square of Size studs
 	-- whose north-west corner is (MinX, MinZ) in the plan's coordinates. Run the tool again after the plan changes.
 	-- (no lines between the level bands since 2026-11-16, the owner)
-	Map = { Image = 130854496202058, MinX = -2300, MinZ = -2500, Size = 4600 },
+	Map = { Image = 109325531236165, MinX = -2300, MinZ = -2500, Size = 4600 },
 	-- What a zone's guard pays when it falls, by the zone's kind, in place of its own drops. Lines as a monster's drops (item,
 	-- chance, min..max). No trophy: those are the Dungeon's own (the owner, 2026-11-15). Coins are what the guard pays at
 	-- level 0, raised by the zone's level as a pack monster's are (x 1 + level x Config.Economy.SellLevelStep): a mini

@@ -93,13 +93,28 @@ return function(T)
 		for col = -1, 1 do
 			for row = -1, 1 do
 				local f = Layout.plotAreaFacing(4, col, row)
-				T.near((f.Position - Layout.plotAreaFrame(4, col, row).Position).Magnitude, 0, 1e-4)
+				-- (it stands at its cell's middle, or Config.Map.AreaPull nearer the plot's middle)
+				local pull = 0
+				for _, a in Layout.PlotAreas do
+					if a.col == col and a.row == row then
+						pull = M.AreaPull[a.id] or 0
+					end
+				end
+				local cell = Layout.plotAreaFrame(4, col, row).Position
+				T.near((f.Position - cell).Magnitude, pull, 1e-3, col .. "," .. row)
 				if col ~= 0 or row ~= 0 then
 					local d = (centre - f.Position) * FLAT
 					T.near(f.LookVector:Dot(d.Unit), 1, 1e-4, col .. "," .. row)
+					T.near(
+						(centre - cell).Magnitude - d.Magnitude,
+						pull,
+						1e-3,
+						col .. "," .. row .. " toward the middle"
+					)
 				end
 			end
 		end
+		T.ok(M.AreaPull.fishing > 0, "the pond stands forward of its corner")
 		local corner = Layout.plotAreaFacing(4, 1, 1).LookVector
 		local side = Layout.plotAreaFacing(4, 1, 0).LookVector
 		T.near(math.deg(math.acos(math.clamp(corner:Dot(side), -1, 1))), 45, 1e-3)

@@ -23,11 +23,14 @@ Interaction (to build with gameplay): tap the mat (or a ProximityPrompt there) t
 tap the sign to open the small upgrade card. No text in the world: icons only, in English when text
 is needed.
 
-## The Dock landmark (planned 2026-11-17, not built)
+## The Dock landmark (built and locked 2026-11-17)
 
-The pond becomes the village's harbour by skill `landmark-build`: a boathouse across the back bank, a lighthouse at
-its left end, the pier in five eras. The plan and its 50 steps are in `village-v2/dock-ladder.md`; until it is
-built, what is below is what the game has. The owner's note: the pond stays big.
+The pond is the village's harbour by skill `landmark-build`: a boathouse across the back bank, a lighthouse (ONE
+window, the owner) at its left end, the pier in five eras. The plan and its 50 steps are in
+`village-v2/dock-ladder.md`. After the owner's second scale-up the Boathouse stands 2.45 times its drawn size, the
+pond's water is 3 times its old area (`Config.Village.Pond`, measured 3.04), and the pier keeps its 6 x 24.7 and is
+restyled per era (`PondStages` `DOCK`, `dockParts`); seen in the MapWork play test at level 50. Not done: the
+pier's bait stall and tubs do not change with the era. What is below is the older history of the area.
 
 ## 50 levels, second pass (the owner, 2026-10-27; replaces the eras table below)
 

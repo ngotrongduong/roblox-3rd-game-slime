@@ -146,10 +146,40 @@ In the code (2026-11-17):
 - The villages moved: 390-stud plots need 600 between two villages and the Home Vale is some 900 deep, so they
   stand in two tiers round the hub (`WorldPlan.Villages`); the lane runs through two new junctions, West Cross
   and East Cross, and Bramble Way bends north of Hillfoot. Tests: no road through a plot, every pad dry land.
-  `Config.World.Packs.FarStuds` 2420 to 2310 (worked out; to be read again from a play test).
+  `Config.World.Packs.FarStuds` 2420 to 2394 (read from the play test's "zombies: ... the farthest F studs" line).
+- A corner cell closes to the fence's corner behind it, so a grown house there is pulled toward the plot's middle:
+  `Config.Map.AreaPull` (fishing 60, garden 12; `Layout.plotAreaFacing`).
+- The pond: `Config.Village.Pond` (`Lobes`, `Grow`: circles in the fishing area's own x, z, radius), read by
+  `PondStages` and by `tools/map` (`stud_floor`, `pond_water_l1`, `prepare_plots`). Level 1 is 3.04 times the old
+  water area (measured); the old three lobes keep the front bank the pier and the fishing places stand on, the new
+  water lies behind them. The pier keeps 6 x 24.7 and is restyled per era (`PondStages` `DOCK`, `dockParts`).
+- The saved place followed without being built again: `tools/map/regrid_plot.luau` moves the hand-built village to
+  the new frames (its header has the order: then `stud_floor`, `pond_water_l1`, `tidy_plot`, `prepare_plots`).
 
-Still to do, in order (until then the saved place and the code disagree: no publish, no play test worth
-judging): MapWork's ground for the new plots (phases B-E above: terrain, sites, scatter, the Plot5 template,
-`prepare_plots`, the map picture); each `*Stages` module's yard and stations for the 130 cell and the grown
-houses (a corner cell is a diamond: its house is pulled forward); `VillageStages` and `VillageWalls` hand-typed
-offsets; the pond 3 times its water area; the piers per era; the Dock's lock.
+The yards (the owner's four notes on the level-50 top-down, 2026-11-17: garden soil bigger with more beds by
+upgrade, the training ground out to both sides of the hall, the picnic tables on behind, the breeding yard out to
+both sides with the incubators inside the fence):
+
+- **A fenced landmark builds its fence at its OWN size round the GROWN lot.** `WX, ZB = Architecture.grown(name,
+  pivotX, pivotZ, halfWidth, backZ)` are the fence's half width and back; the runs and corner posts are parented
+  after `local from = #m:GetChildren()` and kept out of `grow` with `Architecture.keep(m, from, had)`. `X.fence()`
+  returns that box and the `*Stages` module lays the yard's floor to it. A piece that joins a grown part to an
+  unscaled one (the breeding pipe's run to the incubators' pad) is laid at grown coordinates and kept the same way.
+
+| Yard | Fence (area's x, z) | What fills it |
+|---|---|---|
+| Garden | x -46.8..46.8, z -12..44.5 | soil over the whole fenced box at every level (the owner: "cho cả khu này thành màu đất"), 2 / 4 / 6 / 6 / 6 beds 12 apart by era (`Config.Village.GardenYard`), 20 / 40 / 60 crop plots |
+| Training | x -35.72..35.72, z -16.4..38.3 | floor and kerbs to the fence, also beside the hall; the stations along the side fences (16.92 further out), the middle open |
+| Kitchen | (no fence) terrace back to z 17.5 from level 27 | four parasol tables past the wing (`TERRACE_BACK`) |
+| Breeding | x -44.3..52.3, z -19..43 | floor to the fence both sides; four incubators in two rows inside, on the -x side; the +x wing is open play space |
+
+Seen in the MapWork play test at level 50 from above and from the side (garden also at 10 and 20, kitchen at 30,
+breeding at 40). Not seen on a phone; part counts and the food balance of 60 crop plots not measured.
+
+Still open: `VillageStages` / `VillageWalls` hand-typed offsets, `Config.Pads.Spots` and `Guide.HomeShare` were not
+re-checked against the 390 plot (the log warns "village path failed: flowers > player - using plaza route");
+`AreaStages`' generic BreedingL1 entry still has the old pen box (unused: `AreaUpgrade` sends BreedingL1 to
+`BreedingStages`).
+
+**A fenced yard has ONE ground, edge to edge** (the owner on the garden, 2026-11-17: "tại sao nửa đằng sau ... lại
+để màu xanh?"): no lawn inside a landmark's fence, at any level; the floor follows `X.fence()`, not the house.

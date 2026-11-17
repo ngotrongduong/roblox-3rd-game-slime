@@ -621,6 +621,8 @@ end
 -- and then grown Config.Village.HouseScale[name] times round (pivotX, 0, pivotZ) of the area's frame. The house is
 -- every new child of `m` (one not in `had`) that stands at or behind splitZ; what stands before it keeps its size.
 -- The children go back into `m` afterwards: an area's model stays flat (pieces are found by name).
+-- `back` then moves the grown house that many studs behind where it is drawn (the Boathouse, onto the grown pond's
+-- back shore).
 function Architecture.grow(
 	m: Instance,
 	had: { Instance },
@@ -628,10 +630,11 @@ function Architecture.grow(
 	name: string,
 	splitZ: number,
 	pivotX: number,
-	pivotZ: number
+	pivotZ: number,
+	back: number?
 )
 	local k = Config.Village.HouseScale[name]
-	if k == 1 then
+	if k == 1 and not back then
 		return
 	end
 	local old = {}
@@ -648,10 +651,22 @@ function Architecture.grow(
 	end
 	house.WorldPivot = frame * CFrame.new(pivotX, 0, pivotZ)
 	house:ScaleTo(k)
+	if back then
+		house:PivotTo(frame * CFrame.new(pivotX, 0, pivotZ + back))
+	end
 	for _, c in moved do
 		c.Parent = m
 	end
 	house:Destroy()
+end
+
+-- What `m` got since it had `count` children joins `had`, so Architecture.grow leaves it alone: a fence stands round
+-- the grown house at its own size. (GetChildren keeps the order the children were parented in.)
+function Architecture.keep(m: Instance, count: number, had: { Instance })
+	local kids = m:GetChildren()
+	for i = count + 1, #kids do
+		table.insert(had, kids[i])
+	end
 end
 
 -- A point of the drawn house (the area's frame) where Architecture.grow puts it.

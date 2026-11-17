@@ -289,9 +289,11 @@ end
 -- The pond grows as well as the dock (the owner, 2026-10-28: "the fishing area is more than the dock;
 -- the lawn round the pond may be used, and the pond may grow"), never smaller again: a lobe on its
 -- left at 21 and one on its right at 41 (area-local x, z, radius, from which level), carved out of the
--- stud floor and filled with real water like the level-1 pond (tools/map/pond_water_l1).
-local LOBES = { { 0, 6.5, 20.8 }, { 11.7, 14.3, 14.3 }, { -11.7, 2.6, 14.3 } }
-local GROW = { { 19.5, 1.3, 9.75, 21 }, { -18.2, -6.5, 9.1, 41 } }
+-- stud floor and filled with real water like the level-1 pond (tools/map/pond_water_l1). The circles are
+-- Config.Village.Pond's (three times the old water, the owner 2026-11-17: the new water lies BEHIND the old pond, so
+-- everything placed on the front bank below keeps its numbers).
+local LOBES = Config.Village.Pond.Lobes
+local GROW = Config.Village.Pond.Grow
 local DOCK_X = -3 -- the dock's line in the area (AreaUpgrade's DOCK_X)
 local WATER_Y = -2.3 -- the water's surface in the area's frame
 local JETTY_Y = -1 -- the small jetty's planks, down on the sand step (the owner: touching the ground)
@@ -523,6 +525,74 @@ function PondStages.build(level: number, cell: CFrame, showcase: boolean?): Mode
 				r.frame,
 				r.frameMat
 			)
+			-- The rail's filling, an era its own way of building (the owner, 2026-11-17: the pier keeps its size and is
+			-- built again in each era's materials, finer where it can be): the rustic one stays two bare rails; painted
+			-- pickets; an iron bar under stone caps; two steel bars on brass shoes; marble balusters under gold balls.
+			local era = at[2]
+			local mid = cell * CFrame.new(x, DECK_Y + 1.6, (zr0 + zr1) / 2)
+			if era == 2 or era == 5 then
+				local n = math.floor((zr1 - zr0) / 1.1)
+				for k = 1, n - 1 do
+					-- (none where a post stands: the posts are at every quarter)
+					if math.abs((k / n * 4 + 0.5) % 1 - 0.5) > 0.3 / (n / 4) then
+						local cf = cell * CFrame.new(x, DECK_Y + 1.6, zr0 + (zr1 - zr0) * k / n)
+						if era == 2 then
+							part(m, "Picket", Vector3.new(0.14, 0.9, 0.34), cf, r.frame, r.frameMat)
+						else
+							pole(m, "Baluster", cf, 0.9, 0.32, r.frame, r.frameMat)
+						end
+					end
+				end
+			elseif era == 3 then
+				local bar = part(m, "RailBar", Vector3.new(0.14, 0.14, zr1 - zr0), mid, r.accent, r.accentMat)
+				bar.CastShadow = false
+			elseif era == 4 then
+				for _, dy in { -0.2, 0.2 } do
+					local bar = part(
+						m,
+						"RailBar",
+						Vector3.new(0.12, 0.12, zr1 - zr0),
+						mid * CFrame.new(0, dy, 0),
+						r.frame,
+						r.frameMat
+					)
+					bar.CastShadow = false
+				end
+			end
+			if era >= 3 then
+				for k = 0, 4 do
+					local pz = zr0 + (zr1 - zr0) * k / 4
+					if era == 3 then
+						part(
+							m,
+							"PostCap",
+							Vector3.new(0.7, 0.22, 0.7),
+							cell * CFrame.new(x, DECK_Y + 2.36, pz),
+							r.frame,
+							r.frameMat
+						)
+					elseif era == 4 then
+						part(
+							m,
+							"PostShoe",
+							Vector3.new(0.62, 0.22, 0.62),
+							cell * CFrame.new(x, DECK_Y + 0.36, pz),
+							r.accent,
+							r.accentMat
+						)
+					else
+						part(
+							m,
+							"PostBall",
+							Vector3.new(0.62, 0.62, 0.62),
+							cell * CFrame.new(x, DECK_Y + 2.56, pz),
+							r.accent,
+							r.accentMat,
+							Enum.PartType.Ball
+						)
+					end
+				end
+			end
 		end
 	end
 
@@ -899,11 +969,13 @@ function PondStages.build(level: number, cell: CFrame, showcase: boolean?): Mode
 	if place and level < 41 then
 		place(m, area, "FishBucket", fx * PK + face.Z * 2.4, fz * PK - face.X * 2.4, 1.8, 1.5, 0)
 	end
-	-- the back bank, left natural: reeds, round stones at the water's edge, a log half sunk
+	-- the side banks, left natural: reeds, round stones at the water's edge, a log half sunk
 	if level >= 31 then
 		local reedGreen, cattail = Color3.fromRGB(96, 150, 70), Color3.fromRGB(120, 76, 46)
-		-- (two clumps and two stones stood where the boathouse's landing is now: they moved to the bank's right end)
-		for c, r in { { -10, 16.6 }, { -8.3, 17.9 }, { 15.5, 19.5 } } do
+		-- (they stood on the old pond's back bank, open water since the pond grew: now at the water's edge on the back
+		-- lobes' outer sides, clear of the lobes that come at 21 and 41. Real studs: at2 spreads by PK, so they are
+		-- written divided by it.)
+		for c, r in { { -35, 20.3 }, { -33.1, 16.5 }, { 36.7, 21.1 } } do
 			for k = 0, 4 do
 				local ang = k * 1.3 + c
 				local px, pz = r[1] + math.cos(ang) * 0.6, r[2] + math.sin(ang) * 0.5
@@ -930,7 +1002,7 @@ function PondStages.build(level: number, cell: CFrame, showcase: boolean?): Mode
 				end
 			end
 		end
-		for k, st in { { -11.2, 15.6, 0.9 }, { -9.4, 17, 0.6 }, { 11.5, 21.6, 0.8 } } do
+		for k, st in { { -36.3, 21.5, 0.9 }, { -31.8, 13.6, 0.6 }, { 35.8, 17.5, 0.8 } } do
 			local stone = part(
 				m,
 				"BankStone",
@@ -946,7 +1018,7 @@ function PondStages.build(level: number, cell: CFrame, showcase: boolean?): Mode
 			m,
 			"SunkLog",
 			Vector3.new(5, 1.1, 1.1),
-			at2(11.4, WATER_Y + 0.1, 18.6) * CFrame.Angles(0, 0.5, 0.12),
+			at2(32, WATER_Y + 0.1, 13.7) * CFrame.Angles(0, 0.5, 0.12),
 			Color3.fromRGB(130, 92, 58),
 			woodMat
 		) :: Part

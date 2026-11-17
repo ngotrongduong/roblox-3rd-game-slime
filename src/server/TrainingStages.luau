@@ -38,8 +38,13 @@ local part, wedge, place = PantryStages.part, PantryStages.wedge, PantryStages.p
 -- (and the owner's "spread the inside too", the same day: 4 studs deeper each way than the old z +-12.4, the
 -- spots, stations, dummy and arena spread front to back by DEEP = 1.3)
 -- (the fence itself is TrainingHall's, and stands 12 studs further back: the hall is behind the yard)
+-- (the owner, 2026-11-17: "the yard out to both sides of the hall, for more open ground": the fence stands round the
+-- grown hall, OUT studs further out on each side than the map's floor; the floor and its kerbs follow it, and so
+-- does what stands along the side fences, which leaves the middle open)
 local XF, ZF = 18.8, 16.4
-local WIDER = 5.4 -- how far the side fences and what stands along them moved out
+local FX0, FX1 = TrainingHall.fence()
+local OUT = (FX1 - FX0) / 2 - XF
+local WIDER = 5.4 + OUT -- how far the side fences and what stands along them moved out
 local DEEP = 1.3
 local LANE_Z = -4 * DEEP + 4 -- how far the side stations' old middle (z -4) moved with the spread
 local FLOOR = 0.4 -- the ground's floor stands this far above the lawn; props stand on its top
@@ -274,19 +279,26 @@ function TrainingStages.build(area: Instance, frame: CFrame, level: number): Mod
 			skin(d, pt, tier.yard, tier.yardMat)
 		elseif d.Name == "FloorEdge" and d:IsA("BasePart") then
 			skin(d, pt, tier.edge, tier.yardMat)
-			-- (the back edge moves out with the grown floor, the side edges stretch to it)
+			-- (the kerbs follow the fence: the back one moves out with the grown floor, the side ones move out and
+			-- stretch to it, the front and back ones grow as wide)
 			local q = frame:ToObjectSpace(d.CFrame)
 			if d:GetAttribute("HomeZ") == nil then
 				d:SetAttribute("HomeZ", q.Z)
 				d:SetAttribute("HomeLen", d.Size.Z)
+				d:SetAttribute("HomeX", q.X)
+				d:SetAttribute("HomeWide", d.Size.X)
 			end
 			local hz, hl = d:GetAttribute("HomeZ") :: number, d:GetAttribute("HomeLen") :: number
-			if hz > ZF then
-				d.CFrame = d.CFrame + frame:VectorToWorldSpace(Vector3.new(0, 0, hz + dz - q.Z))
-			elseif math.abs(hz) < 1 then
+			local hx, hw = d:GetAttribute("HomeX") :: number, d:GetAttribute("HomeWide") :: number
+			local tx, tz = hx, hz
+			if math.abs(hz) < 1 then
 				d.Size = Vector3.new(d.Size.X, d.Size.Y, hl + dz)
-				d.CFrame = d.CFrame + frame:VectorToWorldSpace(Vector3.new(0, 0, dz / 2 - q.Z))
+				tx, tz = hx + math.sign(hx) * OUT, dz / 2
+			else
+				d.Size = Vector3.new(hw + OUT * 2, d.Size.Y, d.Size.Z)
+				tz = if hz > ZF then hz + dz else hz
 			end
+			d.CFrame = d.CFrame + frame:VectorToWorldSpace(Vector3.new(tx - q.X, 0, tz - q.Z))
 		elseif (d.Name == "BannerFlag" and d:IsA("Model")) or (d.Name == "FlagBase" and d:IsA("BasePart")) then
 			-- the banner stands outside the front fence beside the gate, not in the entrance where it hid
 			-- the dummy (ChatGPT's 1st training review)
@@ -321,16 +333,23 @@ function TrainingStages.build(area: Instance, frame: CFrame, level: number): Mod
 			end
 		end
 	end
+	-- the floor behind the map's own, as wide as the fence, and a wing of floor on each side of the map's
 	local floor = area:FindFirstChild("Floor")
-	local ext = part(
-		m,
-		"FloorExt",
-		Vector3.new(XF * 2 - 0.8, 0.4, dz),
-		at(0, 0.2, ZF - 0.4 + dz / 2),
-		if floor and floor:IsA("BasePart") then floor.Color else tier.yard
-	)
-	if floor and floor:IsA("BasePart") then
-		ext.Material, ext.MaterialVariant, ext.TopSurface = floor.Material, floor.MaterialVariant, floor.TopSurface
+	local function ground(name: string, wide: number, deep: number, x: number, z: number)
+		local p = part(
+			m,
+			name,
+			Vector3.new(wide, 0.4, deep),
+			at(x, 0.2, z),
+			if floor and floor:IsA("BasePart") then floor.Color else tier.yard
+		)
+		if floor and floor:IsA("BasePart") then
+			p.Material, p.MaterialVariant, p.TopSurface = floor.Material, floor.MaterialVariant, floor.TopSurface
+		end
+	end
+	ground("FloorExt", (XF + OUT) * 2 - 1, dz, 0, ZF - 0.4 + dz / 2)
+	for _, s in { -1, 1 } do
+		ground("FloorWing", OUT, ZF * 2 - 0.8, s * (XF - 0.5 + OUT / 2), 0)
 	end
 
 	-- the fence, the gate, the hall across the back, the tower, the shield

@@ -246,12 +246,17 @@ function Garden.footprint(_level: number): (number, number, number, number)
 	return Architecture.grownBox("Garden", SPLIT_Z, PIVOT_X, PIVOT_Z, -FX - 1.5, FX + 6.5, FZ0 - 3, FZ1 + 1.5)
 end
 
--- The garden's fence (half its width, its front, its back): GardenStages lays the floor to it.
+-- The fence stands round the GROWN house at its own size (the owner, 2026-11-17: a yard as wide as the house behind
+-- it): half its width and its back, where Architecture.grow puts the drawn fence's corner.
+local WX, ZB = Architecture.grown("Garden", PIVOT_X, PIVOT_Z, FX, FZ1)
+
+-- The garden's fence (half its width, its front, its back): GardenStages lays the soil inside it.
 function Garden.fence(): (number, number, number)
-	return FX, FZ0, FZ1
+	return WX, FZ0, ZB
 end
 
-local function raise(m: Instance, frame: CFrame, level: number)
+-- (`had`: what Architecture.grow leaves alone; the fence joins it)
+local function raise(m: Instance, frame: CFrame, level: number, had: { Instance })
 	local era, f = Garden.features(level)
 	local L = LOOKS[era]
 	local skins: { [string]: Enum.Material } = {
@@ -634,11 +639,13 @@ local function raise(m: Instance, frame: CFrame, level: number)
 		end
 	end
 	local gx = if era >= 3 then PX + 1.2 else PX + 0.45 -- where the fence meets the gate
-	fence(gx, FZ0, FX, FZ0, false, true, true)
-	fence(FX, FZ0, FX, FZ1, false, true, false)
-	fence(FX, FZ1, -FX, FZ1, false, true, false)
-	fence(-FX, FZ1, -FX, FZ0, false, true, false)
-	fence(-FX, FZ0, -gx, FZ0, false, false, true)
+	local fenceFrom = #m:GetChildren()
+	fence(gx, FZ0, WX, FZ0, false, true, true)
+	fence(WX, FZ0, WX, ZB, false, true, false)
+	fence(WX, ZB, -WX, ZB, false, true, false)
+	fence(-WX, ZB, -WX, FZ0, false, true, false)
+	fence(-WX, FZ0, -gx, FZ0, false, false, true)
+	Architecture.keep(m, fenceFrom, had)
 	if f >= 6 then
 		-- 6 flower boxes along the front fence on both sides of the gate (the owner's Meshy trough; gold urns of
 		-- flowers at the capital); the map's own garden sign stands at x -9 in this row, where a fourth would be
@@ -1956,7 +1963,7 @@ end
 -- The Garden at its drawn size, then its house grown (Config.Village.HouseScale).
 function Garden.build(m: Instance, frame: CFrame, level: number)
 	local had = m:GetChildren()
-	raise(m, frame, level)
+	raise(m, frame, level, had)
 	Architecture.grow(m, had, frame, "Garden", SPLIT_Z, PIVOT_X, PIVOT_Z)
 end
 

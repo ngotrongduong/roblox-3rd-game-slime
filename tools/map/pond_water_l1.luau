@@ -13,9 +13,8 @@ local GROUND = Config.Map.GroundY or 2
 local TOP = GROUND - 0.3 -- the water's surface, just under the floor (the owner: hide the grass below)
 local area = Layout.plotAreaFacing(PLOT, -1, 1)
 local pond = workspace.Map["Plot" .. PLOT].FishingPondL1
--- The pond's lobes as the builder carved them: local x, z, radius.
--- (the village scale: 1.3 times the old, src/server/PondStages LOBES)
-local LOBES = { { 0, 6.5, 20.8 }, { 11.7, 14.3, 14.3 }, { -11.7, 2.6, 14.3 } }
+-- The pond's lobes as stud_floor left them open: local x, z, radius.
+local LOBES = Config.Village.Pond.Lobes
 
 local terrain = workspace.Terrain
 terrain.WaterColor = Color3.fromRGB(70, 175, 205)
@@ -71,6 +70,10 @@ if fishKit then
 		{ "BlueFish", -1, 4, 11, 3, 1 },
 		{ "BlueFish", 9, 11, 5, 2.2, -1 },
 		{ "KoiFish", -9, 2, 5, 1.6, 1 },
+		-- (the water behind the old pond, since it grew to three times its area)
+		{ "KoiFish", 0, 26, 12, 2.2, 1 },
+		{ "BlueFish", -18, 26, 8, 2.6, -1 },
+		{ "BlueFish", 20, 27, 8, 2, 1 },
 	}
 	for i, f in FISH do
 		local m = (fishKit:FindFirstChild(f[1]) :: Model):Clone()

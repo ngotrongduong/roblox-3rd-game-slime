@@ -39,6 +39,14 @@ so the area grows once at the back, for every level (as the Garden did; an area 
 fence moves from z 19 to z 30, and the hall, the warm room and the right wing stand in that strip, the lane carried
 on to the hall's door. The old open nesting shelter in front of them goes: the hall takes its job.
 
+**The second scale-up (2026-11-17, the owner: "khu vực sân chơi phía trước của nhà sinh sản cũng mở rộng ra 2 bên,
+những máy ấp trứng có thể chuyển vào trong khu sân thay vì ở bên ngoài hàng rào").** The hall grew 2.3 times, so the
+fence stands at its own size round the grown lot: x -44.3..52.3, z -19..43 (`BreedingHouse.fence()`), with no side
+gate. The yard's floor runs to it on both sides. The four incubators stand INSIDE, on the -x side, in two rows
+(`BreedingStages` `INCUBATORS`: x -25 and -36, z -4.5 and 7.5; levels 1, 1, 21, 41 as before), on a pad a little
+proud of the floor; the copper pipe of step 17 comes down the wing's outer wall and runs along the ground to that
+pad. The +x wing of the yard is open play space. Where the text above says "outside the right fence", this holds.
+
 ## The ladder
 
 As the Garden's and the Kitchen's: an era's first level changes the architecture (and brings the nest or the

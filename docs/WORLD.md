@@ -288,7 +288,7 @@ A finished model replaces its interim by one line in `tools/world/build_sites.lu
   - **Packs replace the camps in front of the gates** (`Config.World.Packs`, rules `shared/WorldPacks`, the server is
     still `server/ZombieFights`, the folder still `workspace.ZombieCamps/<band>/<id>`). One pack to a 280-stud cell of
     the whole world (the same every time), dropped where the spot is water, a slope, something built or too near a
-    place. A pack's level never changes: 4 within 300 studs of a village's middle, 150 from `FarStuds` (2420: how far
+    place. A pack's level never changes: 4 within 300 studs of a village's middle, 150 from `FarStuds` (2394: how far
     the farthest pack that really stands is from every village; the server's start line says it, set it again when
     the plan or the ground changes), by `(share of the way) ^ 1.6` between (so the first twenty levels lie within
     about 900 studs of home).

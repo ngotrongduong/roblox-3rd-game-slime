@@ -193,6 +193,16 @@ keeps its stand-in and is named in the review brief as "not to be judged".
   roofs a hall or a tower wears `L.roof` with no material of its own; glass is for windows, end fans and goo
   lanterns. A new roof colour must not equal another field's colour of that era (skins are keyed by colour).
 - The lighthouse has ONE window.
+- **How a house is K times bigger**: the module builds at its drawn size (`raise`), then `Architecture.grow` scales
+  what stands at or behind the split (`Config.Village.HouseScale`). The fence is NOT scaled: it is built at its
+  own size round the grown lot (`Architecture.grown` for its half width and back, `Architecture.keep` to leave it
+  out of `grow`), `X.fence()` returns the box. A piece joining a grown part to an unscaled one (a pipe to the
+  yard's machines) is laid at grown coordinates and kept the same way.
+- **The yard fills the fence** (his notes on the level-50 top-down, 2026-11-17): ONE ground from fence to fence at
+  every level, beside and behind the house too ("tại sao nửa đằng sau ... lại để màu xanh? hãy cho cả khu này thành
+  màu đất": never lawn inside a landmark's fence); the working things spread with it (more beds by era, stations
+  along the side fences with the middle open, tables on behind, machines inside the fence, not outside it). Look
+  at each yard from straight above at level 1 and at level 50 before showing it.
 
 ## 6. Do not
 
@@ -222,5 +232,5 @@ keeps its stand-in and is named in the review brief as "not to be judged".
 | Garden (potting shed to royal palm house, with its windmill) | `Garden.luau` | `garden-ref-sheet.jpg`, `garden-ref-era*.jpg` | `garden-ladder.md` (walked on paper; seen at each era's last level, not pair by pair) | locked 2026-11-17 (ChatGPT: 78-84 an era, 81 overall, before the last edit; the last edit seen in the Edit preview only); B10 and B11 uploaded and worn; the rose arch taken out at the owner's word, step 19 is two bush pots (seen in Play at 30 and 50) |
 | Breeding pen -> Breeding House (nest hall to royal hatchery, the spotted egg on its roof) | `BreedingHouse.luau` | `breeding-ref-sheet.jpg`, `breeding-ref-era*.jpg` | `breeding-ladder.md` (walked on paper; seen at each era's last level, not pair by pair) | locked 2026-11-17 (ChatGPT: likeness 83-87, finish 77-85 an era, before the last edit; the last edit seen in the Edit preview only); B12 and B13 uploaded and worn |
 | Training ground -> Training Hall (drill shed to marble arena, the banner tower at its right end) | `TrainingHall.luau` | `training-ref-sheet.jpg`, `training-ref-era*.jpg` | `training-ladder.md` (walked on paper; seen at each era's last level, not pair by pair) | locked 2026-11-17 (ChatGPT: likeness 73-86, finish 72-80 an era, before the last edit; the last edit seen in Play at all five eras, the capital's flank in the Edit preview only); B14 uploaded and worn |
-| Fishing pond -> Dock (fishing shack to marble boathouse, the lighthouse at its left end; the pond stays big: the owner's note) | `Boathouse.luau` | `dock-ref-sheet.jpg`, `dock-ref-era*.jpg` | `dock-ladder.md` (walked on paper) | built, reviewed once, checkpoint `4d99066` 2026-11-17, NOT locked: too small against the pier (section 5a); deeper hall and the era roofs in the code, the K 2.45 house only in the line-up; waits for the plots to grow |
+| Fishing pond -> Dock (fishing shack to marble boathouse, the lighthouse at its left end; the pond stays big: the owner's note) | `Boathouse.luau` | `dock-ref-sheet.jpg`, `dock-ref-era*.jpg` | `dock-ladder.md` (walked on paper) | locked 2026-11-17 at K 2.45 on the 390 plot: pond 3 times its water, the pier restyled per era at its size (seen in the MapWork play test at 50; the bait stall and tubs do not change with the era) |
 | Village pieces and layout | - | - | - | not started |

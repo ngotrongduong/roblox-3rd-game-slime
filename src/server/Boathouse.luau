@@ -15,9 +15,14 @@
 -- over the open front; THE FENCE on the near bank in two short runs either side of the pier's foot (the pond is never
 -- closed in); THE BOAT tied to the pier. The pier, the fishing places, the bin and the banks' life are PondStages'.
 -- `build` takes the AREA's frame: the lawn's top is y 0, the water's surface WATER.
+-- (Since the pond grew to three times its water, 2026-11-17: everything here is still drawn round the old pond's back
+-- bank, and `build` then grows the house and sets it back on the new far shore: BACK, Config.Village.Pond.)
 -- An era's first level changes the architecture; levels 4 and 5 of each bring the boat and one piece on the bank;
 -- levels 6-10 add one feature each, and a feature once added stays in every later era in that era's materials (25 in
 -- all, numbered in `build` as in the ladder).
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local Config = require(ReplicatedStorage.Shared.Config)
 local Architecture = require(script.Parent.Architecture)
 local LibraryKit = require(script.Parent.LibraryKit)
 
@@ -242,8 +247,12 @@ end
 -- goes.
 -- (What Architecture.grow takes as the house: what stands at or behind SPLIT_Z; and the point it grows round.)
 local SPLIT_Z, PIVOT_X, PIVOT_Z = 21, -2, 24.4
+-- (the whole back bank stands BACK studs behind where it is drawn: the pond grew to three times its water, behind
+-- the old one, and the house went back with the shore)
+local BACK = Config.Village.Pond.BoathouseBack
 function Boathouse.footprint(_level: number): (number, number, number, number)
-	return Architecture.grownBox("Boathouse", SPLIT_Z, PIVOT_X, PIVOT_Z, -16, 18.5, 24.5, 38)
+	local x0, x1, z0, z1 = Architecture.grownBox("Boathouse", SPLIT_Z, PIVOT_X, PIVOT_Z, -16, 18.5, 24.5, 38)
+	return x0, x1, z0 + BACK, z1 + BACK
 end
 
 local function raise(m: Instance, area: CFrame, level: number)
@@ -1505,11 +1514,12 @@ local function raise(m: Instance, area: CFrame, level: number)
 	end
 end
 
--- The Boathouse at its drawn size, then its house grown (Config.Village.HouseScale).
+-- The Boathouse at its drawn size, then its house grown (Config.Village.HouseScale) and set back on the pond's far
+-- shore (BACK). The fence and the boat by the pier, before SPLIT_Z, stay where they are drawn.
 function Boathouse.build(m: Instance, area: CFrame, level: number)
 	local had = m:GetChildren()
 	raise(m, area, level)
-	Architecture.grow(m, had, area, "Boathouse", SPLIT_Z, PIVOT_X, PIVOT_Z)
+	Architecture.grow(m, had, area, "Boathouse", SPLIT_Z, PIVOT_X, PIVOT_Z, BACK)
 end
 
 return Boathouse

@@ -50,8 +50,8 @@ local OX = 4 -- the lane's middle line in the area's frame
 local FLOOR = 0.4 -- the pen floor's top
 local HX, FZ0, FZ1 = 21, -19, 30 -- the fence: x -HX..HX, z FZ0..FZ1
 local PX = 4 -- the gate's posts stand at x -PX and PX
-local SIDE0, SIDE1 = -1.5, 3.5 -- the side gate to the incubators, in the fence at x -HX
 local HZ = 20 -- the hall's front wall
+local INC_PAD_Z = 14.2 -- just onto the back edge of the incubators' pad (BreedingStages: the pad ends at z 14.5)
 local T = 0.6 -- a wall's thickness
 local EGG_R = { 2.1, 2.9, 3.4, 3.9, 4.4 } -- half the egg's width at its five forms
 -- (the egg's mesh is worn wider and lower than it was modelled: the sheet's eggs are broad domes, and the final
@@ -255,12 +255,17 @@ function BreedingHouse.footprint(_level: number): (number, number, number, numbe
 	)
 end
 
+-- The fence stands round the GROWN house at its own size (the owner, 2026-11-17: the play yard out to both sides,
+-- the incubators inside it): half its width and its back, where Architecture.grow puts the drawn fence's corner.
+local WX, ZB = Architecture.grown("BreedingHouse", 0, PIVOT_Z, HX, FZ1)
+
 -- The fence in the area's frame (x0, x1, z0, z1): BreedingStages lays the floor to it.
 function BreedingHouse.fence(): (number, number, number, number)
-	return OX - HX, OX + HX, FZ0, FZ1
+	return OX - WX, OX + WX, FZ0, ZB
 end
 
-local function raise(m: Instance, area: CFrame, level: number)
+-- (`had`: what Architecture.grow leaves alone; the fence and its corners join it)
+local function raise(m: Instance, area: CFrame, level: number, had: { Instance })
 	local era, f = BreedingHouse.features(level)
 	local L = LOOKS[era]
 	local frame = area * CFrame.new(OX, 0, 0)
@@ -777,16 +782,17 @@ local function raise(m: Instance, area: CFrame, level: number)
 		end
 	end
 	local gx = if era >= 3 then PX + 1.2 else PX + 0.45 -- where the fence meets the gate
-	fence(gx, FZ0, HX, FZ0, false, true, true)
-	fence(HX, FZ0, HX, FZ1, false, true, false)
-	fence(HX, FZ1, -HX, FZ1, false, true, false)
-	fence(-HX, FZ1, -HX, SIDE1, false, true, false)
-	fence(-HX, SIDE0, -HX, FZ0, true, true, false)
-	fence(-HX, FZ0, -gx, FZ0, false, false, true)
+	-- (no side gate: the incubators stand inside the wide yard)
+	local fenceFrom = #m:GetChildren()
+	fence(gx, FZ0, WX, FZ0, false, true, true)
+	fence(WX, FZ0, WX, ZB, false, true, false)
+	fence(WX, ZB, -WX, ZB, false, true, false)
+	fence(-WX, ZB, -WX, FZ0, false, true, false)
+	fence(-WX, FZ0, -gx, FZ0, false, false, true)
 	-- the four corners: a pier at the capital (the balustrade is low), and what the features stand on
 	local cornerTop = FLOOR + ({ 2.9, 3.5, 3, 3.95, 3 })[era]
-	for _, c in { { -1, FZ0 }, { 1, FZ0 }, { -1, FZ1 }, { 1, FZ1 } } do
-		local x, z = c[1] * HX, c[2]
+	for _, c in { { -1, FZ0 }, { 1, FZ0 }, { -1, ZB }, { 1, ZB } } do
+		local x, z = c[1] * WX, c[2]
 		if era == 5 then
 			b.box("CornerPier", 1.2, 2.8, 1.2, b.at(x, FLOOR + 1.4, z), L.wall)
 			b.trim("CornerPierCap", 1.5, 0.2, 1.5, b.at(x, FLOOR + 2.9, z), L.gold)
@@ -800,6 +806,7 @@ local function raise(m: Instance, area: CFrame, level: number)
 			gooTube(x - c[1] * 0.85, FLOOR, z - 0.85, 3.2)
 		end
 	end
+	Architecture.keep(m, fenceFrom, had)
 	if f >= 6 then
 		-- 6 flower boxes along the front fence on both sides of the gate (the owner's Meshy trough)
 		for _, x in { -15.5, -9.6, 9.6, 15.5 } do
@@ -811,7 +818,7 @@ local function raise(m: Instance, area: CFrame, level: number)
 	if f >= 21 then
 		-- 21 gold urns of pink flowers at the fence's front corners (and beside the hall's door, below)
 		for _, s in { -1, 1 } do
-			local cf = b.at(s * (HX + 0.4), 0, FZ0 - 2)
+			local cf = b.at(s * (WX + 0.4), 0, FZ0 - 2)
 			if not painted("FlowerUrn_Gold", cf, 0.95) then
 				b.cyl("FlowerUrn", 0.9, 1.6, cf * CFrame.new(0, 0.8, 0), L.gold, bigGold, false)
 				b.ball("Flower", 1, cf * CFrame.new(0, 2.2, 0), BLOOMS[1])
@@ -1684,14 +1691,17 @@ local function raise(m: Instance, area: CFrame, level: number)
 			table.insert(points, V(-side, wy, zr))
 			table.insert(points, V(-side, wy, zw))
 			table.insert(points, V(-out - 0.1, wy, zw))
-			table.insert(points, V(-out - 0.1, FLOOR + 4.6, zw))
-			table.insert(points, V(-HX - 5, FLOOR + 4.6, zw))
-			table.insert(points, V(-HX - 5, FLOOR + 0.3, zw))
-			-- (and along the ground to the second incubator: the line must not end on the grass)
-			table.insert(points, V(-HX - 5, FLOOR + 0.3, 9.5))
-			table.insert(points, V(-HX - 7, FLOOR + 0.3, 9.5))
+			-- (down the wing's outer wall: the incubators stand inside the yard now, in front of this corner)
+			table.insert(points, V(-out - 0.1, FLOOR + 0.3, zw))
 			pipe(points, r, L.accent)
-			painted("PipeValve_Copper", b.face(-HX - 5, FLOOR + 2.4, zw - r, FRONT), 0.4)
+			painted("PipeValve_Copper", b.face(-out - 0.1, FLOOR + 2.4, zw - r, FRONT), 0.4)
+			-- (and along the yard's floor to the incubators' pad, laid where the grown pipe lands and kept out of
+			-- Architecture.grow: the line must not end short of them)
+			local px, pz = Architecture.grown("BreedingHouse", 0, PIVOT_Z, -out - 0.1, zw)
+			local rk, foot = Architecture.grown("BreedingHouse", 0, 0, r, FLOOR + 0.3) -- (its radius and foot, grown)
+			local runFrom = #m:GetChildren()
+			pipe({ V(px, foot, pz), V(px, FLOOR + rk, pz), V(px, FLOOR + rk, INC_PAD_Z) }, rk, L.accent)
+			Architecture.keep(m, runFrom, had)
 		end
 		if f >= 19 then
 			-- 19 a second, smaller goo tank on the right wing, piped into the line to the incubators
@@ -1744,7 +1754,7 @@ end
 -- The Breeding House at its drawn size, then its house grown (Config.Village.HouseScale).
 function BreedingHouse.build(m: Instance, area: CFrame, level: number)
 	local had = m:GetChildren()
-	raise(m, area, level)
+	raise(m, area, level, had)
 	Architecture.grow(m, had, area, "BreedingHouse", SPLIT_Z, PIVOT_X, PIVOT_Z)
 end
 

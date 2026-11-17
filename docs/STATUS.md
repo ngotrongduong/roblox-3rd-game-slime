@@ -1,9 +1,36 @@
 # Status
 
+## 2026-11-17 (evening) — the big village is in the saved place: plots, pond 3x, piers per era, the four yards
+
+The section below this one is done: MapWork was regridded (`tools/map/regrid_plot.luau`, not built again), saved
+(4:35 PM) and `assets/raw/StudioTest.rbxl` rebuilt from it. TYPES OK, CHECK OK (829 passed). Numbers and the
+fence rule: `docs/VILLAGE_SCALE.md` §6.
+
+- Pond 3.04 times its water (`Config.Village.Pond`), the Boathouse pulled forward (`Config.Map.AreaPull`), the pier
+  restyled per era at its size, the Dock locked (`docs/areas/fishing.md`). `Packs.FarStuds` 2394 (from the log).
+- The owner's notes on the level-50 top-down, all built and seen in the MapWork play test (from above and from the
+  side; not on a phone):
+  - Garden: the fence round the grown house (x +-46.8, z -12..44.5), 2 / 4 / 6 beds by era (20 / 40 / 60 crop
+    plots), and, his second note ("tại sao nửa đằng sau ... lại để màu xanh? hãy cho cả khu này thành màu đất"),
+    soil over the WHOLE fenced garden at every level. Seen at 1 and 50.
+  - Training: fence x +-35.72, z -16.4..38.3; floor to it, also beside the hall; stations along the side fences.
+  - Kitchen: the terrace goes back past the wing with four parasol tables from level 27 (a modest step; an L round
+    the back of the house was thought of and not built).
+  - Breeding: fence x -44.3..52.3, z -19..43; floor to it; the four incubators inside, in two rows on the -x side;
+    the pipe lands on their pad.
+- **Not verified / open**: the phone view; the food balance with up to 60 crop plots; part counts of the bigger
+  fences; `VillageStages` / `VillageWalls` hand-typed offsets, `Config.Pads.Spots`, `Guide.HomeShare` against the
+  390 plot (the log warns "village path failed: flowers > player - using plaza route"); village Nature is sparse
+  on the bigger lawn; the breeding yard's +x wing is empty; era-5 marble floors are very bright at noon; the
+  pier's bait stall and tubs do not change with the era. Seen in the log and NOT this job's: `CreatureRig is not
+  a valid member of ... SlimeFaceStage` (SlimeActor line 28).
+- **Next (the owner picks)**: the village's own layout and pieces for the 390 plot (plaza, stalls, paths, lamps,
+  trees), then a publish with a shutdown of old servers if the save shape changed (it did not in this job).
+
 ## 2026-11-17 (later) — the grown houses and the 390 plot are in the code; the saved place is NOT rebuilt yet
 
-**Do not publish and do not judge a play test until MapWork's ground is rebuilt**: the code now puts the plots
-and villages where the saved place has no pads, and Plot5's static content is still laid out for the 76 cell.
+(Superseded by the section above: the place is rebuilt.) The code put the plots and villages where the saved
+place had no pads, and Plot5's static content was still laid out for the 76 cell.
 
 - The owner approved the six sizes from the line-up ("Được, làm tiếp"). Done in the code (TYPES OK, CHECK OK
   829 passed; seen in the Edit line-up at level 50 with the spec's K at 1: the same sizes as the approved

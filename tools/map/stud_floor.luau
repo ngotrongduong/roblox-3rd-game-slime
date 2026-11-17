@@ -2,8 +2,9 @@
 -- Roblox's stud texture"). The whole plot is floored with Plastic tiles whose top surface is the
 -- legacy Studs surface (it still renders; an image Texture from a stud decal id did not):
 --   * 8 x 8 grass tiles over the open lawn,
---   * a 2 x 2 grid over the fishing cell, leaving the pond's lobes open as a sunken pool with a
---     ring of sand-coloured tiles at its edge (stepped stud edges, the classic look),
+--   * a 2 x 2 grid round the pond (wherever its water is or will come as it grows), leaving the pond's
+--     lobes open as a sunken pool with a ring of sand-coloured tiles at its edge (stepped stud edges,
+--     the classic look),
 --   (areas lay their own floors on top of it)
 -- The terrain under the plot is flattened to y = 0 so nothing pokes through; the real
 -- terrain water of the pond fills the pool (pond_water_l1, run after this). Run after the area builders,
@@ -19,8 +20,9 @@ local THICK = 2 -- tiles reach down to GROUND - THICK, so the pool shows green w
 local COARSE, FINE = 8, 2
 local GRASS = Color3.fromRGB(104, 178, 62)
 local SAND = Color3.fromRGB(232, 206, 142)
--- the pond, fishing-area local x, z, r (the village scale: 1.3 times the old; src/server/PondStages LOBES)
-local LOBES = { { 0, 6.5, 20.8 }, { 11.7, 14.3, 14.3 }, { -11.7, 2.6, 14.3 } }
+-- the pond, fishing-area local x, z, r: the level-1 water, and the lobes that come as it grows
+local LOBES = Config.Village.Pond.Lobes
+local GROW = Config.Village.Pond.Grow
 
 local half = Config.Map.PlotSize / 2
 local plotFrame = Layout.plotFrame(PLOT)
@@ -71,22 +73,34 @@ local function tile(cf: CFrame, size: number, colour: Color3, drop: number?)
 	count += 1
 end
 
--- How far outside the pond a point (fishing-area local) is; negative = in the water.
-local function pondDistance(x: number, z: number): number
+-- How far outside the pond a point (fishing-area local) is; negative = in the water. `grown` counts the lobes of
+-- later levels too.
+local function pondDistance(x: number, z: number, grown: boolean?): number
 	local best = math.huge
 	for _, l in LOBES do
 		best = math.min(best, Vector2.new(x - l[1], z - l[2]).Magnitude - l[3])
 	end
+	if grown then
+		for _, l in GROW do
+			best = math.min(best, Vector2.new(x - l[1], z - l[2]).Magnitude - l[3])
+		end
+	end
 	return best
 end
 
--- The fishing cell in plot coordinates (col -1 = +x, row 1 = +z): coarse tiles whose centre is
--- at 28 or more on both axes are replaced by the fine grid over [24, 80].
--- (on a coarse tile's edge nearest the cell's inner side: 24 on the old 160 plot, 38 on 228)
-local FISH_MIN = COARSE * math.floor((half + Config.Map.PlotSize / 6) / COARSE + 0.5) - half
-for x = -half + COARSE / 2, half - COARSE / 2, COARSE do
-	for z = -half + COARSE / 2, half - COARSE / 2, COARSE do
-		if not (x > FISH_MIN and z > FISH_MIN) then
+-- Coarse tiles everywhere but round the pond: a coarse tile the water, its sand steps or a later lobe's can reach
+-- (its corner is 5.7 from its middle; PondStages.grow reworks the fine tiles up to 3 studs from a new lobe) is laid
+-- as 16 fine ones instead. (The fishing area is turned to face the plot's middle and stands forward of its corner,
+-- so every tile is measured in its frame.)
+local fineAt: { { number } } = {}
+-- (one tile past the far edges when the plot is not a whole number of tiles: the trim below cuts it at the fence)
+local LAST = half + COARSE / 2 - 0.01
+for x = -half + COARSE / 2, LAST, COARSE do
+	for z = -half + COARSE / 2, LAST, COARSE do
+		local p = fishing:PointToObjectSpace((plotFrame * CFrame.new(x, 0, z)).Position)
+		if pondDistance(p.X, p.Z, true) < COARSE * 0.71 + 3 then
+			table.insert(fineAt, { x, z })
+		else
 			-- (areas lay their own floors on top: the garden its earth, the village its plaza and paths)
 			tile(plotFrame * CFrame.new(x, 0, z), COARSE, GRASS)
 		end
@@ -94,20 +108,21 @@ for x = -half + COARSE / 2, half - COARSE / 2, COARSE do
 end
 task.wait()
 
--- (the fishing area is turned to face the plot's middle, so each fine tile is measured in its frame)
-for x = FISH_MIN + FINE / 2, half - FINE / 2, FINE do
-	for z = FISH_MIN + FINE / 2, half - FINE / 2, FINE do
-		local p = fishing:PointToObjectSpace((plotFrame * CFrame.new(x, 0, z)).Position)
-		local d = pondDistance(p.X, p.Z)
-		-- the bank steps down to the water in two sand steps: terrain water fills whole 4-stud voxels,
-		-- so its surface sits near y = 0, two studs under the floor (the owner: hide the grass walls)
-		if d > 0 then
-			if d < 1.2 then
-				tile(plotFrame * CFrame.new(x, 0, z), FINE, SAND, 1.6)
-			elseif d < 2.4 then
-				tile(plotFrame * CFrame.new(x, 0, z), FINE, SAND, 0.8)
-			else
-				tile(plotFrame * CFrame.new(x, 0, z), FINE, GRASS)
+for _, c in fineAt do
+	for x = c[1] - COARSE / 2 + FINE / 2, c[1] + COARSE / 2, FINE do
+		for z = c[2] - COARSE / 2 + FINE / 2, c[2] + COARSE / 2, FINE do
+			local p = fishing:PointToObjectSpace((plotFrame * CFrame.new(x, 0, z)).Position)
+			local d = pondDistance(p.X, p.Z)
+			-- the bank steps down to the water in two sand steps: terrain water fills whole 4-stud voxels,
+			-- so its surface sits near y = 0, two studs under the floor (the owner: hide the grass walls)
+			if d > 0 then
+				if d < 1.2 then
+					tile(plotFrame * CFrame.new(x, 0, z), FINE, SAND, 1.6)
+				elseif d < 2.4 then
+					tile(plotFrame * CFrame.new(x, 0, z), FINE, SAND, 0.8)
+				else
+					tile(plotFrame * CFrame.new(x, 0, z), FINE, GRASS)
+				end
 			end
 		end
 	end

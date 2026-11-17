@@ -91,17 +91,24 @@ function Layout.plotAreaFrame(plot: number, col: number, row: number): CFrame
 end
 
 -- An area of a plot turned to face the plot's middle (the owner, 2026-10-27: "all of them turned in
--- toward the player's middle area, like a small village"). Same centre as plotAreaFrame; its -Z
--- (LookVector, the area's front) points at the plot's centre, so corner areas face it diagonally.
--- The middle cell itself keeps the plot's own frame.
+-- toward the player's middle area, like a small village"). Its -Z (LookVector, the area's front) points
+-- at the plot's centre, so corner areas face it diagonally. It stands at the middle of its cell
+-- (plotAreaFrame), or Config.Map.AreaPull studs nearer the plot's middle for the areas named there.
+-- The middle cell itself keeps the plot's own frame. This is the frame every area is built in.
 function Layout.plotAreaFacing(plot: number, col: number, row: number): CFrame
 	local frame = Layout.plotAreaFrame(plot, col, row)
 	if col == 0 and row == 0 then
 		return frame
 	end
+	local pull = 0
+	for _, a in Layout.PlotAreas do
+		if a.col == col and a.row == row then
+			pull = M.AreaPull[a.id] or 0
+		end
+	end
 	local d = Layout.plotFrame(plot).Position - frame.Position
 	-- A yaw's LookVector is (-sin, 0, -cos): yaw = atan2(-dx, -dz) looks along d.
-	return CFrame.new(frame.Position) * CFrame.Angles(0, math.atan2(-d.X, -d.Z), 0)
+	return CFrame.new(frame.Position) * CFrame.Angles(0, math.atan2(-d.X, -d.Z), 0) * CFrame.new(0, 0, -pull)
 end
 
 -- The move that carries everything of plot `from` onto plot `plot` (a clone of the hand-built village is moved by it):
