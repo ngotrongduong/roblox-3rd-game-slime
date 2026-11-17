@@ -17,11 +17,17 @@ khung và kết cấu của căn nhà thôi, những phụ kiện kiểu như đ
 - **Proved** in the StudioTest play test at levels 1 and 10 (`review/granary-body-l1.jpg`, `-l10.jpg`): the
   character walked in through the great door, the walls stopped it from inside and outside, no error of this job
   in the console. TYPES OK, CHECK OK (829 passed).
-- **Next, in order**: Granary eras 2-5 (each sheet looked at first), an era-1 silo piece, then Kitchen, Garden,
-  Breeding House, Training Hall, Dock the same way (concept sheet cut, four-side sheets asked, body, upload, ghost).
+- **Granary eras 2-5 done** (same night): one builder `granary(era)` on the module's `LOOKS` gives `GranaryBody2`
+  to `GranaryBody5` (17988, 21416, 19016, 22932 triangles; a mesh a colour field of the Look, 33 rows in
+  `ConfigMeshyKit.luau`, uploaded); `Granary.luau` wears them (`SHELL_LATER`, `SHELL_GLASS`: the glasshouse keeps
+  its own glass walls). Proved in the StudioTest play test: "level 20: stands at x -0.0 y 8.7 z 19.3 after 3.1 s",
+  level 30 z 18.0, level 40 z 19.1, level 50 z 19.2 (door at z 0), console clean; shots
+  `review/granary-body-l20.jpg`, `-l30`, `-l40`, `-l50`. CHECK OK (829 passed), TYPES OK.
+- **Next, in order**: Kitchen, Garden, Breeding House, Training Hall, Dock the same way (concept sheet cut,
+  four-side sheets asked, body, upload, ghost); an era-1 silo piece for the Granary.
 - **Not verified / open**: the phone view; the house on its real plot (the open StudioTest held a map older than
-  `Layout`, the stage stood on wild lawn that was cleared in Play: reopen StudioTest); eras 2-5 still show the part
-  shell; `LeanRailStop` is made at every bodied era and needs a condition when a later era has no lean-to rails.
+  `Layout`, the stage stood on wild lawn that was cleared in Play: reopen StudioTest); the Granary's side and back
+  walls at eras 2-5 were seen in the Edit preview only, not walked against in Play.
 
 ## 2026-11-17 (night) — the garden's tool stores of eras 4 and 5, built in Blender; Blender first from now on
 

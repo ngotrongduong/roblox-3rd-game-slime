@@ -460,6 +460,25 @@ the house walk-in, only frame and structure modelled (lamps, flowers, pots and t
 - The open StudioTest held a map older than `Layout`: `_G.AreaShow` built the stage on wild lawn 4 studs too high;
   cleared with `Terrain:FillBlock` in Play. Reopen the test place after it is rebuilt from MapWork.
 
+Eras 2-5 of the Granary, one builder for four eras (`granary(era)`, 2026-11-17):
+
+- **What worked**: the module's `LOOKS` copied into `LOOK` (sizes) and `PAINT` (colours), one function reading
+  only those; meshes named by the Look's colour FIELD so the module paints each with `L.<field>` and no per-era
+  code; two fields of one colour merged into one mesh (the skin is keyed by colour, so they would take one
+  material anyway). Built (6 s for all five), uploaded, previewed and walked into at the first try: 17988, 21416,
+  19016 and 22932 triangles, 6 to 10 meshes an era.
+- **A glass era keeps the game's glass**: the glasshouse's walls, gables, tower and wing wall stay parts (their
+  see-through and glow are the game's); its body is the steel frame with rivets, the roof, the stone foot, the door.
+- **Round as Luau does** (`floor(x + 0.5)`): Python's `round` goes to even, so a count the module rounds (tile
+  rows, bays) could differ by one.
+- **Tile roofs**: stepped courses about 1.15 a row with a 0.13 lip, a ridge roll and barge boards: reads as tiles
+  from the play camera.
+- **Seen, left as is**: the module's gold "Keystone" part reads as a small square over the arch at era 2; the
+  four-side sheets draw richer shapes (dormers, cross gables) than the module's fixed sizes hold: the dormers are
+  the ladder's own steps, so they are not in the body.
+- **Walk-in proof**: door at z 0 in the area's frame; levels 20, 30, 40, 50 stood at z 19.3, 18.0, 19.1, 19.2
+  after 2.5-3.1 s; console clean.
+
 ### Whole small buildings from Blender (2026-11-17, the garden's tool stores, tools/blender/granary_pieces.py)
 
 The owner, looking at a part-built yard beside ChatGPT's picture: "why is what you build not as beautiful as the

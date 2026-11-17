@@ -148,7 +148,8 @@ keeps its stand-in and is named in the review brief as "not to be judged".
 "dựng lại tất cả các công trình bằng blender ... với mỗi tòa nhà bạn hãy yêu cầu chatgpt cho xem hình tham chiếu ở
 các mặt khác nhau"; "cánh cửa chính mở nhé, và có thể đi vào bên trong nhà"; "chủ yếu là dựng phần khung và kết cấu
 của căn nhà thôi, những phụ kiện kiểu như đèn, hoa, chậu hoa, các thứ khác đều có sẵn rồi". The Granary's era 1 is
-the worked example (`tools/blender/landmark_bodies.py` `granary1`, `Granary.luau` `SHELL`).
+the worked example (`tools/blender/landmark_bodies.py` `granary1`, `Granary.luau` `SHELL`); its eras 2-5 are the
+worked example of one builder for several eras (`granary(era)`, `SHELL_LATER`, `SHELL_GLASS`).
 
 - **Four sides first.** One ChatGPT request an era: the era's cut of the concept sheet attached, "ONE sheet, 2 x 2,
   the same building seen straight on from the front, the left, the back and the right, same scale, flat light, the
@@ -174,6 +175,25 @@ the worked example (`tools/blender/landmark_bodies.py` `granary1`, `Granary.luau
 - `sync_all.ps1` BEFORE the Edit preview when Config changed (the preview failed on an old Config in the test
   place). When the open test place holds an older map than `Layout`, `_G.AreaShow` builds on wild lawn: clear the
   terrain there in Play (never saved) and say so.
+- **Eras that share one shape get ONE builder** (the Granary's eras 2-5, `granary(era)`: all four built, uploaded,
+  wired and proved in one sitting). Copy the module's `LOOKS[era]` into a `LOOK` dict (sizes) and a `PAINT` dict
+  (each colour field); the builder reads only those. What made it work at the first try:
+  - A mesh is one of the Look's colour FIELDS (`Stone`, `Wall`, `Lower`, `Beam`, `Board`, `Surround`, `Frame`,
+    `Roof`, `Door`, `Band`, `Glass`, `TowerWall`, `TowerCap`, `Gold`), not a material name: the module then paints
+    it `L.<field>` and the skin gives the material. Two fields of ONE colour at an era share one mesh under the
+    first field's name (skins are keyed by colour), an empty field has no mesh; `piece` returns nil for a mesh the
+    kit has not, so the module lists every field once and nothing else changes per era.
+  - The ghost set differs by era: era 1's own (no wing, a part pyramid cap), the later eras' (plus jetty, quoins,
+    pilasters, entablature, arch, oculus, wing, vault ribs), and the glasshouse's, which KEEPS the game's glass
+    "Wall", "Gable", "Tower", "WingWall" (its body is frame, roof, stone and door only).
+  - Luau's `math.round` rounds a half away from zero, Python's `round` to even: use `floor(x + 0.5)` wherever the
+    module rounds (tile rows, bays), or a course count differs by one.
+  - A part of the module that reuses shell names but must show (the wing's store) sits between `shell(false)` and
+    `shell(true)`; a stand-in made only for era 1 (`LeanRailStop`) is under that era's condition.
+  - `LANDMARK_BODIES=GranaryBody2,GranaryBody3` in the environment (set in a scratchpad `.ps1`) builds only those.
+- **Proof in Play, one call a level**: `_G.AreaShow(...)`, the character pivoted 18 studs before the door,
+  `MoveTo` 20 studs inside repeated every half second, the position printed in the area's frame (door at z 0);
+  "level 50: stands at x 0.0 y 8.7 z 19.2 after 3.1 s" is the proof line. Then one daylight shot of the whole house.
 
 ## 4. Least time, least tokens
 

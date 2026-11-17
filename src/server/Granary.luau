@@ -38,18 +38,29 @@ local LEAN_Z0, LEAN_Z1, LEAN_OUT = 1.6, 10.2, 6.2
 local LEAN_SLOPE = 1.6 / LEAN_OUT
 local WING_Z0 = 1.6
 -- the shell's parts that an era's Blender body stands for (see THE BODY FROM BLENDER in `raise`)
-local SHELL: { [string]: boolean } = {}
-for name in
-	string.gmatch(
-		"Plinth Wall Rail Post Brace Roof Gable BargeBoard Ridge EaveRoll TieBeam KingPost Strut WindowFrame WindowGlass "
-			.. "WindowBar WindowSill WindowHead WindowHeadGlass Shutter Dock DockStep DoorLeaf DoorBand DoorBrace DoorJamb "
-			.. "DoorLintel Tower TowerTie TowerPost TowerLeg TowerString TowerCornice TowerEave LeanRoof LeanPlate LeanBeam "
-			.. "LeanPost LeanBrace LeanKnee LeanRafter",
-		"%a+"
-	)
-do
-	SHELL[name] = true
+local function names(list: string, less: string?): { [string]: boolean }
+	local set: { [string]: boolean } = {}
+	for name in string.gmatch(list, "%a+") do
+		set[name] = true
+	end
+	for name in string.gmatch(less or "", "%a+") do
+		set[name] = nil
+	end
+	return set
 end
+local SHELL_NAMES = "Plinth Wall Rail Post Brace Roof Gable BargeBoard Ridge EaveRoll TieBeam KingPost Strut WindowFrame "
+	.. "WindowGlass WindowBar WindowSill WindowHead WindowHeadGlass Shutter Dock DockStep DoorLeaf DoorBand DoorBrace "
+	.. "DoorJamb DoorLintel Tower TowerTie TowerPost TowerLeg TowerString TowerCornice TowerEave LeanRoof LeanPlate "
+	.. "LeanBeam LeanPost LeanBrace LeanKnee LeanRafter"
+-- (eras 2 to 5: their body also holds the wing, the door's arch, the tower's cap and each era's own structure)
+local LATER_NAMES = SHELL_NAMES
+	.. " Jetty Quoin PierCap FootCap Pilaster PilasterFoot PilasterHead Entablature EntablatureLine DoorArch DoorImpost "
+	.. "OculusRim OculusGlass OculusBar Spire WingPlinth WingWall WingLine WingBand WingEye WingEyeGlass VaultRib VaultFan "
+	.. "VaultRidge VaultSill"
+local SHELL = names(SHELL_NAMES)
+local SHELL_LATER = names(LATER_NAMES)
+-- (the glasshouse's walls stay the game's own glass and brick: its body is the frame, the roof and the stone)
+local SHELL_GLASS = names(LATER_NAMES, "Wall Gable Tower WingWall")
 
 type WindowOpts = { shutters: Color3?, arch: boolean?, flowers: boolean?, glow: boolean?, through: number? }
 type Wing = { out: number, len: number, wallH: number, rise: number }
@@ -564,11 +575,14 @@ local function raise(m: Instance, frame: CFrame, level: number)
 	-- is still built but as a ghost (Architecture's `b.ghost`): its solid parts are the collision inside the model,
 	-- its trim is left out. Everything a level switches on stays as it is.
 	local body = "GranaryBody" .. era
-	local bodied = LibraryKit.find(body .. "_Plaster") ~= nil
+	local bodied = LibraryKit.find(body .. "_Stone") ~= nil
+	local ghosts = if era == 1 then SHELL elseif L.glassWalls then SHELL_GLASS else SHELL_LATER
 	local function shell(on: boolean)
-		b.ghost(if on and bodied then SHELL else nil)
+		b.ghost(if on and bodied then ghosts else nil)
 	end
 	if bodied then
+		-- (the hamlet's body names its meshes by material; from the village on a mesh is one of the Look's colour
+		-- fields, and two fields of one colour share the first one's mesh. A mesh the era has not is skipped.)
 		local slots: { { any } } = {
 			{ "Stone", L.stone },
 			{ "Plaster", L.wall },
@@ -577,10 +591,25 @@ local function raise(m: Instance, frame: CFrame, level: number)
 			{ "Planks", L.door },
 			{ "Iron", IRON },
 			{ "Pane", L.glass, glowMat },
+			{ "Wall", L.wall },
+			{ "Lower", L.lower },
+			{ "Beam", L.beam },
+			{ "Board", L.board },
+			{ "Surround", L.surround },
+			{ "Frame", L.frame },
+			{ "Roof", L.roof },
+			{ "Door", L.door },
+			{ "Band", L.band },
+			{ "Glass", L.glass, glowMat },
+			{ "TowerWall", L.towerWall },
+			{ "TowerCap", L.towerCap },
+			{ "Gold", L.gold },
 		}
 		for _, slot in slots do
 			piece(body .. "_" .. slot[1], b.at(0, 0, 0), 1, 1, 1, slot[2], slot[3])
 		end
+	end
+	if bodied and era == 1 then
 		-- (the model's low rails along the lean-to's open side: nothing walks through them)
 		local railZ0, railZ1 = LEAN_Z0 + 0.3, LEAN_Z1 - 0.3
 		b.box(
@@ -1353,6 +1382,7 @@ local function raise(m: Instance, frame: CFrame, level: number)
 
 	-- THE WING on the left: a hollow side store under a roof of its own, open to the hall ----------------------
 	if W then
+		shell(true)
 		local x0, x1, zc = hw, hw + W.out, (WING_Z0 + wz1) / 2
 		slab("WingPlinth", x0, x1 + 0.3, 0, BASE, WING_Z0 - 0.3, wz1 + 0.3, L.stone)
 		-- a paved walk along its outer wall (thin, on the lawn: the slime-tech conveyor stands on it)
@@ -1458,6 +1488,7 @@ local function raise(m: Instance, frame: CFrame, level: number)
 				end
 			end
 		end
+		shell(false)
 		-- its store: sacks and crates along the outer wall
 		sacks(x1 - T - 1.1, BASE, zc + 1.4, 3)
 		crate(x1 - T - 1.2, BASE, WING_Z0 + T + 1.3, 1.8, 4)

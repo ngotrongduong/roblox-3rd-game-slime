@@ -618,5 +618,95 @@ return {
 			{ mesh = 88620871192380, tex = "", size = { 9.295, 3.732, 15.925 }, at = { 0, 3.666, 4.247 } },
 		},
 		GranaryBody1_Pane = { { mesh = 76295309709634, tex = "", size = { 16.16, 2, 12.12 }, at = { 0.48, 4.6, 6 } } },
+		-- (eras 2 to 5: a mesh is one colour field of the module's Look; two fields of one colour share a mesh)
+		GranaryBody2_Stone = {
+			{ mesh = 101712107919374, tex = "", size = { 34.7, 1.2, 21.54 }, at = { 0.95, 0.6, 4.73 } },
+		},
+		GranaryBody2_Wall = { { mesh = 100916398130861, tex = "", size = { 28, 23.72, 14 }, at = { 4, 13.06, 7 } } },
+		GranaryBody2_Beam = {
+			{ mesh = 81570287878251, tex = "", size = { 28.48, 16.672, 14.8 }, at = { 4, 9.536, 6.9 } },
+		},
+		GranaryBody2_Board = {
+			{ mesh = 135005136304354, tex = "", size = { 35.496, 25.02, 16.94 }, at = { 1.322, 13.21, 7 } },
+		},
+		GranaryBody2_Frame = {
+			{ mesh = 78847741330620, tex = "", size = { 27.44, 11.79, 14.88 }, at = { 4.7, 8.525, 7 } },
+		},
+		GranaryBody2_Roof = {
+			{ mesh = 80887973137061, tex = "", size = { 35.978, 14.38, 16.9 }, at = { 1.011, 12.21, 7 } },
+		},
+		GranaryBody2_Door = {
+			{ mesh = 131372337031862, tex = "", size = { 10.323, 6.85, 18.483 }, at = { 0, 4.655, 4.858 } },
+		},
+		GranaryBody2_Band = {
+			{ mesh = 117205355448029, tex = "", size = { 10.469, 2.721, 18.417 }, at = { 0, 3.161, 5 } },
+		},
+		GranaryBody2_Glass = {
+			{ mesh = 81821379143746, tex = "", size = { 26.8, 11.23, 14.68 }, at = { 4.8, 8.505, 7 } },
+		},
+		GranaryBody2_TowerCap = {
+			{ mesh = 115788684950585, tex = "", size = { 8.4, 6.62, 8.4 }, at = { 0, 29.03, 7.7 } },
+		},
+		GranaryBody3_Stone = {
+			{ mesh = 112322058758276, tex = "", size = { 37.2, 1.2, 24.04 }, at = { 1.2, 0.6, 5.48 } },
+		},
+		GranaryBody3_Wall = {
+			{ mesh = 90736667379072, tex = "", size = { 30.8, 13.999, 16.6 }, at = { 4.1, 13.999, 8 } },
+		},
+		GranaryBody3_Lower = { { mesh = 89452095793826, tex = "", size = { 30.5, 8.4, 16 }, at = { 4.25, 5.4, 8 } } },
+		GranaryBody3_Beam = {
+			{ mesh = 103893432097760, tex = "", size = { 37.996, 28.6, 19.54 }, at = { 1.572, 15, 8 } },
+		},
+		GranaryBody3_Surround = {
+			{ mesh = 73565798473251, tex = "", size = { 22.24, 8.725, 16.62 }, at = { 0, 5.562, 7.81 } },
+		},
+		GranaryBody3_Roof = {
+			{ mesh = 81543849695245, tex = "", size = { 38.478, 30.941, 19.5 }, at = { 1.261, 21.45, 8 } },
+		},
+		GranaryBody3_Door = {
+			{ mesh = 101782892513598, tex = "", size = { 11.497, 7.85, 20.976 }, at = { 0, 5.155, 5.612 } },
+		},
+		GranaryBody3_Band = {
+			{ mesh = 96759337569961, tex = "", size = { 11.643, 3.22, 20.91 }, at = { 0, 3.41, 5.754 } },
+		},
+		GranaryBody3_Glass = {
+			{ mesh = 86324408503560, tex = "", size = { 31.06, 13.46, 17.28 }, at = { 4.17, 10.12, 8 } },
+		},
+		GranaryBody3_TowerWall = {
+			{ mesh = 95320896779159, tex = "", size = { 7.5, 10.819, 7.5 }, at = { 0, 23.091, 8.8 } },
+		},
+		GranaryBody4_Stone = {
+			{ mesh = 120262379712752, tex = "", size = { 38.2, 6.35, 25.24 }, at = { 1.2, 3.175, 5.88 } },
+		},
+		GranaryBody4_Lower = {
+			{ mesh = 140348793787737, tex = "", size = { 12.6, 4.62, 1.1 }, at = { 0, 3.51, 0.15 } },
+		},
+		GranaryBody4_Beam = {
+			{ mesh = 137598987718735, tex = "", size = { 38.526, 27.84, 23.168 }, at = { 1.337, 14.62, 6.686 } },
+		},
+		GranaryBody4_Roof = {
+			{ mesh = 117401893745823, tex = "", size = { 31.176, 15.251, 19.5 }, at = { -2.89, 13.874, 8.5 } },
+		},
+		GranaryBody4_Door = {
+			{ mesh = 89338145041140, tex = "", size = { 11.966, 8.05, 22.173 }, at = { 0, 5.255, 6.014 } },
+		},
+		GranaryBody4_Glass = { { mesh = 80065286351182, tex = "", size = { 19.5, 2, 17.12 }, at = { 0, 3.6, 8.5 } } },
+		GranaryBody5_Stone = {
+			{ mesh = 138247988475325, tex = "", size = { 39.7, 1.2, 24.3 }, at = { 1.45, 0.6, 7.35 } },
+		},
+		GranaryBody5_Wall = { { mesh = 126018844219259, tex = "", size = { 33, 25.48, 18 }, at = { 4.5, 13.94, 9 } } },
+		GranaryBody5_Beam = { { mesh = 88032145048563, tex = "", size = { 30.8, 12.1, 18.8 }, at = { -3, 6.75, 9 } } },
+		GranaryBody5_Board = {
+			{ mesh = 99085353941991, tex = "", size = { 40.496, 25.98, 20.54 }, at = { 1.822, 14.19, 9 } },
+		},
+		GranaryBody5_Roof = {
+			{ mesh = 77296476146988, tex = "", size = { 40.978, 13.551, 20.5 }, at = { 1.511, 13.024, 9 } },
+		},
+		GranaryBody5_Door = {
+			{ mesh = 77004123819082, tex = "", size = { 11.966, 8.25, 17.308 }, at = { 0, 5.355, 9.446 } },
+		},
+		GranaryBody5_Glass = {
+			{ mesh = 77888356830769, tex = "", size = { 33.26, 8.5, 18.12 }, at = { 4.57, 7.65, 9 } },
+		},
 	},
 }

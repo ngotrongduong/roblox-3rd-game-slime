@@ -1114,5 +1114,652 @@
    }
   },
   "triangles": 14088
+ },
+ "GranaryBody2": {
+  "objects": {
+   "GranaryBody2_Stone": {
+    "size_studs_xyz": [
+     34.7,
+     1.2,
+     21.54
+    ],
+    "centre_studs_xyz": [
+     0.95,
+     0.6,
+     4.73
+    ],
+    "triangles": 6020,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 594.683
+   },
+   "GranaryBody2_Wall": {
+    "size_studs_xyz": [
+     28.0,
+     23.72,
+     14.0
+    ],
+    "centre_studs_xyz": [
+     4.0,
+     13.06,
+     7.0
+    ],
+    "triangles": 200,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 860.677
+   },
+   "GranaryBody2_Beam": {
+    "size_studs_xyz": [
+     28.48,
+     16.672,
+     14.8
+    ],
+    "centre_studs_xyz": [
+     4.0,
+     9.536,
+     6.9
+    ],
+    "triangles": 4160,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 74.149
+   },
+   "GranaryBody2_Board": {
+    "size_studs_xyz": [
+     35.496,
+     25.02,
+     16.94
+    ],
+    "centre_studs_xyz": [
+     1.322,
+     13.21,
+     7.0
+    ],
+    "triangles": 1072,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 134.129
+   },
+   "GranaryBody2_Frame": {
+    "size_studs_xyz": [
+     27.44,
+     11.79,
+     14.88
+    ],
+    "centre_studs_xyz": [
+     4.7,
+     8.525,
+     7.0
+    ],
+    "triangles": 3472,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 30.44
+   },
+   "GranaryBody2_Roof": {
+    "size_studs_xyz": [
+     35.978,
+     14.38,
+     16.9
+    ],
+    "centre_studs_xyz": [
+     1.011,
+     12.21,
+     7.0
+    ],
+    "triangles": 644,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 455.409
+   },
+   "GranaryBody2_Door": {
+    "size_studs_xyz": [
+     10.323,
+     6.85,
+     18.483
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     4.655,
+     4.858
+    ],
+    "triangles": 168,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 13.586
+   },
+   "GranaryBody2_Band": {
+    "size_studs_xyz": [
+     10.469,
+     2.721,
+     18.417
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     3.161,
+     5.0
+    ],
+    "triangles": 888,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 2.469
+   },
+   "GranaryBody2_Glass": {
+    "size_studs_xyz": [
+     26.8,
+     11.23,
+     14.68
+    ],
+    "centre_studs_xyz": [
+     4.8,
+     8.505,
+     7.0
+    ],
+    "triangles": 1252,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 7.322
+   },
+   "GranaryBody2_TowerCap": {
+    "size_studs_xyz": [
+     8.4,
+     6.62,
+     8.4
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     29.03,
+     7.7
+    ],
+    "triangles": 112,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 151.973
+   }
+  },
+  "triangles": 17988
+ },
+ "GranaryBody3": {
+  "objects": {
+   "GranaryBody3_Stone": {
+    "size_studs_xyz": [
+     37.2,
+     1.2,
+     24.04
+    ],
+    "centre_studs_xyz": [
+     1.2,
+     0.6,
+     5.48
+    ],
+    "triangles": 6636,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 715.476
+   },
+   "GranaryBody3_Wall": {
+    "size_studs_xyz": [
+     30.8,
+     13.999,
+     16.6
+    ],
+    "centre_studs_xyz": [
+     4.1,
+     13.999,
+     8.0
+    ],
+    "triangles": 96,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 224.2
+   },
+   "GranaryBody3_Lower": {
+    "size_studs_xyz": [
+     30.5,
+     8.4,
+     16.0
+    ],
+    "centre_studs_xyz": [
+     4.25,
+     5.4,
+     8.0
+    ],
+    "triangles": 164,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 391.881
+   },
+   "GranaryBody3_Beam": {
+    "size_studs_xyz": [
+     37.996,
+     28.6,
+     19.54
+    ],
+    "centre_studs_xyz": [
+     1.572,
+     15.0,
+     8.0
+    ],
+    "triangles": 8816,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 246.2
+   },
+   "GranaryBody3_Surround": {
+    "size_studs_xyz": [
+     22.24,
+     8.725,
+     16.62
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     5.562,
+     7.81
+    ],
+    "triangles": 1916,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 47.198
+   },
+   "GranaryBody3_Roof": {
+    "size_studs_xyz": [
+     38.478,
+     30.941,
+     19.5
+    ],
+    "centre_studs_xyz": [
+     1.261,
+     21.45,
+     8.0
+    ],
+    "triangles": 804,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 775.331
+   },
+   "GranaryBody3_Door": {
+    "size_studs_xyz": [
+     11.497,
+     7.85,
+     20.976
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     5.155,
+     5.612
+    ],
+    "triangles": 192,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 17.261
+   },
+   "GranaryBody3_Band": {
+    "size_studs_xyz": [
+     11.643,
+     3.22,
+     20.91
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     3.41,
+     5.754
+    ],
+    "triangles": 888,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 2.789
+   },
+   "GranaryBody3_Glass": {
+    "size_studs_xyz": [
+     31.06,
+     13.46,
+     17.28
+    ],
+    "centre_studs_xyz": [
+     4.17,
+     10.12,
+     8.0
+    ],
+    "triangles": 1892,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 11.215
+   },
+   "GranaryBody3_TowerWall": {
+    "size_studs_xyz": [
+     7.5,
+     10.819,
+     7.5
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     23.091,
+     8.8
+    ],
+    "triangles": 12,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 608.545
+   }
+  },
+  "triangles": 21416
+ },
+ "GranaryBody4": {
+  "objects": {
+   "GranaryBody4_Stone": {
+    "size_studs_xyz": [
+     38.2,
+     6.35,
+     25.24
+    ],
+    "centre_studs_xyz": [
+     1.2,
+     3.175,
+     5.88
+    ],
+    "triangles": 7252,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 787.901
+   },
+   "GranaryBody4_Lower": {
+    "size_studs_xyz": [
+     12.6,
+     4.62,
+     1.1
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     3.51,
+     0.15
+    ],
+    "triangles": 792,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 13.685
+   },
+   "GranaryBody4_Beam": {
+    "size_studs_xyz": [
+     38.526,
+     27.84,
+     23.168
+    ],
+    "centre_studs_xyz": [
+     1.337,
+     14.62,
+     6.686
+    ],
+    "triangles": 9828,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 228.755
+   },
+   "GranaryBody4_Roof": {
+    "size_studs_xyz": [
+     31.176,
+     15.251,
+     19.5
+    ],
+    "centre_studs_xyz": [
+     -2.89,
+     13.874,
+     8.5
+    ],
+    "triangles": 472,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 469.376
+   },
+   "GranaryBody4_Door": {
+    "size_studs_xyz": [
+     11.966,
+     8.05,
+     22.173
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     5.255,
+     6.014
+    ],
+    "triangles": 192,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 18.402
+   },
+   "GranaryBody4_Glass": {
+    "size_studs_xyz": [
+     19.5,
+     2.0,
+     17.12
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     3.6,
+     8.5
+    ],
+    "triangles": 480,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 2.191
+   }
+  },
+  "triangles": 19016
+ },
+ "GranaryBody5": {
+  "objects": {
+   "GranaryBody5_Stone": {
+    "size_studs_xyz": [
+     39.7,
+     1.2,
+     24.3
+    ],
+    "centre_studs_xyz": [
+     1.45,
+     0.6,
+     7.35
+    ],
+    "triangles": 6900,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 803.124
+   },
+   "GranaryBody5_Wall": {
+    "size_studs_xyz": [
+     33.0,
+     25.48,
+     18.0
+    ],
+    "centre_studs_xyz": [
+     4.5,
+     13.94,
+     9.0
+    ],
+    "triangles": 200,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 1433.003
+   },
+   "GranaryBody5_Beam": {
+    "size_studs_xyz": [
+     30.8,
+     12.1,
+     18.8
+    ],
+    "centre_studs_xyz": [
+     -3.0,
+     6.75,
+     9.0
+    ],
+    "triangles": 2116,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 82.72
+   },
+   "GranaryBody5_Board": {
+    "size_studs_xyz": [
+     40.496,
+     25.98,
+     20.54
+    ],
+    "centre_studs_xyz": [
+     1.822,
+     14.19,
+     9.0
+    ],
+    "triangles": 10340,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 254.53
+   },
+   "GranaryBody5_Roof": {
+    "size_studs_xyz": [
+     40.978,
+     13.551,
+     20.5
+    ],
+    "centre_studs_xyz": [
+     1.511,
+     13.024,
+     9.0
+    ],
+    "triangles": 644,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 526.508
+   },
+   "GranaryBody5_Door": {
+    "size_studs_xyz": [
+     11.966,
+     8.25,
+     17.308
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     5.355,
+     9.446
+    ],
+    "triangles": 192,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 18.897
+   },
+   "GranaryBody5_Glass": {
+    "size_studs_xyz": [
+     33.26,
+     8.5,
+     18.12
+    ],
+    "centre_studs_xyz": [
+     4.57,
+     7.65,
+     9.0
+    ],
+    "triangles": 2540,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 12.249
+   }
+  },
+  "triangles": 22932
  }
 }
