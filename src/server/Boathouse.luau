@@ -240,11 +240,13 @@ end
 
 -- The back bank the house, the lighthouse and the crane stand on, in the area's frame (x0, x1, z0, z1): scenery there
 -- goes.
+-- (What Architecture.grow takes as the house: what stands at or behind SPLIT_Z; and the point it grows round.)
+local SPLIT_Z, PIVOT_X, PIVOT_Z = 21, -2, 24.4
 function Boathouse.footprint(_level: number): (number, number, number, number)
-	return -16, 18.5, 24.5, 38
+	return Architecture.grownBox("Boathouse", SPLIT_Z, PIVOT_X, PIVOT_Z, -16, 18.5, 24.5, 38)
 end
 
-function Boathouse.build(m: Instance, area: CFrame, level: number)
+local function raise(m: Instance, area: CFrame, level: number)
 	local era, f = Boathouse.features(level)
 	local step = level - (era - 1) * 10
 	local boatForm = if step >= 4 then era else era - 1 -- (the boat is each era's fourth level)
@@ -1501,6 +1503,13 @@ function Boathouse.build(m: Instance, area: CFrame, level: number)
 		boat(b.at(BOAT_X, WATER + 0.32, BOAT_Z) * CFrame.Angles(0, math.rad(172), 0), boatForm)
 		b.rod("Mooring", 0.05, V(BOAT_X + 1.1, WATER + 1.15, BOAT_Z - 1), V(PIER_X - 2.6, 0.6, BOAT_Z - 0.65), ROPE)
 	end
+end
+
+-- The Boathouse at its drawn size, then its house grown (Config.Village.HouseScale).
+function Boathouse.build(m: Instance, area: CFrame, level: number)
+	local had = m:GetChildren()
+	raise(m, area, level)
+	Architecture.grow(m, had, area, "Boathouse", SPLIT_Z, PIVOT_X, PIVOT_Z)
 end
 
 return Boathouse

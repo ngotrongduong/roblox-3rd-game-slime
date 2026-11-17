@@ -3,6 +3,8 @@
 -- node tools/studio_mcp.js run <this> <studio_id> Edit Architecture=src/server/Architecture.luau Config=src/shared/Config.luau ConfigMeshyKit=src/shared/ConfigMeshyKit.luau Pond=src/server/PondStages.luau Granary=src/server/Granary.luau Kitchen=src/server/Kitchen.luau Garden=src/server/Garden.luau BreedingHouse=src/server/BreedingHouse.luau TrainingHall=src/server/TrainingHall.luau Boathouse=src/server/Boathouse.luau Spec=<file>
 -- Spec: first line `<folder name> <row z>`, then a line a landmark: `<Module> <level> <K> <splitZ> <pivotX> <pivotZ>`:
 -- what stands at or behind splitZ (the area's frame) is the house and grows K times round (pivotX, 0, pivotZ).
+-- (The modules grow their houses themselves now, by Config.Village.HouseScale: K here is 1, unless a size on top of
+-- that is being tried; the House group is still made, for the report of its size.)
 -- Run tools/map/real_kit_preview.luau first (the pieces). Every building gets the fishing pier's size as a brown slab
 -- (6 x 24.7) and a red 5-stud player before its front, at x -GAP/2 + 12.
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -49,7 +51,12 @@ _G.GranaryPreviewKit = {
 		return src
 	end,
 }
-module(server, "ArchitecturePreview", Architecture)
+-- (Architecture reads the working tree's Config too: the houses grow by its Village.HouseScale.)
+module(
+	server,
+	"ArchitecturePreview",
+	(Architecture:gsub("ReplicatedStorage%.Shared%.Config%)", "ReplicatedStorage.Shared.ConfigPreview" .. stamp .. ")"))
+)
 local pond = (require :: any)(module(server, "PondPreview", Pond))
 
 local lines = {}

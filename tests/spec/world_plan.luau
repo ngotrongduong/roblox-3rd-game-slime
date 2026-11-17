@@ -62,14 +62,45 @@ return function(T)
 		end
 	end)
 
-	T.test("no village is much further from the hub than another", function()
+	T.test("the villages stand in two tiers round the hub, none lost in the wilds", function()
+		-- (390-stud plots need 600 between two villages and the Vale is only some 900 deep, so four stand near the
+		-- hub and four behind them; quick travel makes the walk even.)
 		local near, far = math.huge, 0
 		for _, v in WorldPlan.Villages do
 			local d = dist(v.x, v.z, WorldPlan.Hub.x, WorldPlan.Hub.z)
 			near, far = math.min(near, d), math.max(far, d)
 		end
-		T.ok(near >= 520, "nearest " .. near)
-		T.ok(far <= 800 and far / near <= 1.35, "furthest " .. far .. ", nearest " .. near)
+		T.ok(near >= 480, "nearest " .. near)
+		T.ok(far <= 1250, "furthest " .. far)
+	end)
+
+	T.test("no road runs through a plot", function()
+		local half = M.PlotSize / 2 + 12 -- the fence, and the road's own half width
+		for _, road in WorldPlan.Roads do
+			for _, p in WorldPlan.curve(WorldPlan.roadPoints(road), 6) do
+				for _, v in WorldPlan.Villages do
+					local fx, fz = WorldPlan.villageFacing(v)
+					local dx, dz = p[1] - v.x, p[2] - v.z
+					local along, across = dx * fx + dz * fz, dx * fz - dz * fx
+					T.ok(
+						math.abs(along) > half or math.abs(across) > half,
+						`{road.id} crosses {v.id}'s plot at {math.round(p[1])}, {math.round(p[2])}`
+					)
+				end
+			end
+		end
+	end)
+
+	T.test("every village's pad is dry land", function()
+		-- The bay's shore as tools/world/build_terrain.luau draws it, less its widest noise.
+		for _, v in WorldPlan.Villages do
+			for step = 0, 15 do
+				local a = step / 16 * 2 * math.pi
+				local x, z = v.x + v.radius * math.cos(a), v.z + v.radius * math.sin(a)
+				local shore = WorldPlan.SeaZ + 380 * (math.abs(x) / 1000) ^ 3 - 71
+				T.ok(z < shore, `{v.id}'s pad reaches the bay at {math.round(x)}, {math.round(z)}`)
+			end
+		end
 	end)
 
 	T.test("pads do not overlap", function()

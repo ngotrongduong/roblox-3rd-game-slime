@@ -617,4 +617,64 @@ function Architecture.new(m: Instance, frame: CFrame, skins: { [string]: Enum.Ma
 	return b
 end
 
+-- The owner's second scale-up (2026-11-17, docs/VILLAGE_SCALE.md §6): a landmark's house is built at its drawn size
+-- and then grown Config.Village.HouseScale[name] times round (pivotX, 0, pivotZ) of the area's frame. The house is
+-- every new child of `m` (one not in `had`) that stands at or behind splitZ; what stands before it keeps its size.
+-- The children go back into `m` afterwards: an area's model stays flat (pieces are found by name).
+function Architecture.grow(
+	m: Instance,
+	had: { Instance },
+	frame: CFrame,
+	name: string,
+	splitZ: number,
+	pivotX: number,
+	pivotZ: number
+)
+	local k = Config.Village.HouseScale[name]
+	if k == 1 then
+		return
+	end
+	local old = {}
+	for _, c in had do
+		old[c] = true
+	end
+	local house = Instance.new("Model")
+	local moved = {}
+	for _, c in m:GetChildren() do
+		if not old[c] and c:IsA("PVInstance") and frame:PointToObjectSpace(c:GetPivot().Position).Z >= splitZ then
+			c.Parent = house
+			table.insert(moved, c)
+		end
+	end
+	house.WorldPivot = frame * CFrame.new(pivotX, 0, pivotZ)
+	house:ScaleTo(k)
+	for _, c in moved do
+		c.Parent = m
+	end
+	house:Destroy()
+end
+
+-- A point of the drawn house (the area's frame) where Architecture.grow puts it.
+function Architecture.grown(name: string, pivotX: number, pivotZ: number, x: number, z: number): (number, number)
+	local k = Config.Village.HouseScale[name]
+	return pivotX + (x - pivotX) * k, pivotZ + (z - pivotZ) * k
+end
+
+-- The ground a grown house takes (x0, x1, z0, z1), from the box of the drawn one: the part at or behind splitZ grows,
+-- the yard before it stays.
+function Architecture.grownBox(
+	name: string,
+	splitZ: number,
+	pivotX: number,
+	pivotZ: number,
+	x0: number,
+	x1: number,
+	z0: number,
+	z1: number
+): (number, number, number, number)
+	local gx0, gz0 = Architecture.grown(name, pivotX, pivotZ, x0, math.max(z0, splitZ))
+	local gx1, gz1 = Architecture.grown(name, pivotX, pivotZ, x1, z1)
+	return math.min(x0, gx0), math.max(x1, gx1), math.min(z0, gz0), gz1
+end
+
 return Architecture

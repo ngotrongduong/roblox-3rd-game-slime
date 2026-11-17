@@ -240,8 +240,19 @@ function BreedingHouse.features(level: number): (number, number)
 end
 
 -- The ground the place stands on, in the area's frame (x0, x1, z0, z1): scenery there goes.
+-- (What Architecture.grow takes as the house: what stands at or behind SPLIT_Z; and the point it grows round.)
+local SPLIT_Z, PIVOT_X, PIVOT_Z = 19, 4, 20
 function BreedingHouse.footprint(_level: number): (number, number, number, number)
-	return OX - HX - 1.5, OX + HX + 1.5, FZ0 - 3, FZ1 + 1.5
+	return Architecture.grownBox(
+		"BreedingHouse",
+		SPLIT_Z,
+		PIVOT_X,
+		PIVOT_Z,
+		OX - HX - 1.5,
+		OX + HX + 1.5,
+		FZ0 - 3,
+		FZ1 + 1.5
+	)
 end
 
 -- The fence in the area's frame (x0, x1, z0, z1): BreedingStages lays the floor to it.
@@ -249,7 +260,7 @@ function BreedingHouse.fence(): (number, number, number, number)
 	return OX - HX, OX + HX, FZ0, FZ1
 end
 
-function BreedingHouse.build(m: Instance, area: CFrame, level: number)
+local function raise(m: Instance, area: CFrame, level: number)
 	local era, f = BreedingHouse.features(level)
 	local L = LOOKS[era]
 	local frame = area * CFrame.new(OX, 0, 0)
@@ -1728,6 +1739,13 @@ function BreedingHouse.build(m: Instance, area: CFrame, level: number)
 			b.slime(b.at(x, FLOOR + 2, z), 0.95, L.gold, M.Metal)
 		end
 	end
+end
+
+-- The Breeding House at its drawn size, then its house grown (Config.Village.HouseScale).
+function BreedingHouse.build(m: Instance, area: CFrame, level: number)
+	local had = m:GetChildren()
+	raise(m, area, level)
+	Architecture.grow(m, had, area, "BreedingHouse", SPLIT_Z, PIVOT_X, PIVOT_Z)
 end
 
 return BreedingHouse

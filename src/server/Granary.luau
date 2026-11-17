@@ -368,6 +368,9 @@ function Granary.features(level: number): (number, number)
 	return era, (era - 1) * 5 + math.max(0, s - 5)
 end
 
+-- What Architecture.grow takes as the house (all of it: hall, wing and silos) and the point it grows round.
+local SPLIT_Z, PIVOT_X, PIVOT_Z = -100, 0, 0
+
 function Granary.halfWidth(level: number): number
 	return LOOKS[(Granary.features(level))].hw
 end
@@ -376,7 +379,16 @@ end
 -- silos and the hay store on the left may stand on (x0, x1, z0, z1): scenery there goes.
 function Granary.footprint(level: number): (number, number, number, number)
 	local L = LOOKS[(Granary.features(level))]
-	return -(L.hw + 4 * L.siloR + 4), L.hw + 17, 0, math.max(L.d, 12.4 + L.siloR * 4.5) + 2
+	return Architecture.grownBox(
+		"Granary",
+		SPLIT_Z,
+		PIVOT_X,
+		PIVOT_Z,
+		-(L.hw + 4 * L.siloR + 4),
+		L.hw + 17,
+		0,
+		math.max(L.d, 12.4 + L.siloR * 4.5) + 2
+	)
 end
 
 -- where a wall's bays fall (as Architecture.timber sets its posts), so windows sit between posts
@@ -390,7 +402,7 @@ local function bayCentres(len: number): { number }
 	return out
 end
 
-function Granary.build(m: Instance, frame: CFrame, level: number)
+local function raise(m: Instance, frame: CFrame, level: number)
 	local era, f = Granary.features(level)
 	local L = LOOKS[era]
 	local skins: { [string]: Enum.Material } = {
@@ -1702,6 +1714,13 @@ function Granary.build(m: Instance, frame: CFrame, level: number)
 			b.ball("Beacon", 0.4, b.at(p.X, p.Y + 0.1, p.Z), L.goo or L.glass, M.Neon)
 		end
 	end
+end
+
+-- The Granary at its drawn size, then grown (Config.Village.HouseScale).
+function Granary.build(m: Instance, frame: CFrame, level: number)
+	local had = m:GetChildren()
+	raise(m, frame, level)
+	Architecture.grow(m, had, frame, "Granary", SPLIT_Z, PIVOT_X, PIVOT_Z)
 end
 
 return Granary

@@ -220,8 +220,19 @@ function TrainingHall.features(level: number): (number, number)
 end
 
 -- The ground the place stands on, in the area's frame (x0, x1, z0, z1): scenery there goes.
+-- (What Architecture.grow takes as the house: what stands at or behind SPLIT_Z; and the point it grows round.)
+local SPLIT_Z, PIVOT_X, PIVOT_Z = 16.5, 0, 17.4
 function TrainingHall.footprint(_level: number): (number, number, number, number)
-	return OX - XF - 1.5, OX + XF + 1.5, -ZF - 3, FZ1 + 1.5
+	return Architecture.grownBox(
+		"TrainingHall",
+		SPLIT_Z,
+		PIVOT_X,
+		PIVOT_Z,
+		OX - XF - 1.5,
+		OX + XF + 1.5,
+		-ZF - 3,
+		FZ1 + 1.5
+	)
 end
 
 -- The fence in the area's frame (x0, x1, z0, z1): TrainingStages lays the floor to it.
@@ -229,7 +240,7 @@ function TrainingHall.fence(): (number, number, number, number)
 	return OX - XF, OX + XF, -ZF, FZ1
 end
 
-function TrainingHall.build(m: Instance, area: CFrame, level: number)
+local function raise(m: Instance, area: CFrame, level: number)
 	local era, f = TrainingHall.features(level)
 	local L = LOOKS[era]
 	local frame = area * CFrame.new(OX, 0, 0)
@@ -1621,6 +1632,13 @@ function TrainingHall.build(m: Instance, area: CFrame, level: number)
 			end
 		end
 	end
+end
+
+-- The Training Hall at its drawn size, then its house grown (Config.Village.HouseScale).
+function TrainingHall.build(m: Instance, area: CFrame, level: number)
+	local had = m:GetChildren()
+	raise(m, area, level)
+	Architecture.grow(m, had, area, "TrainingHall", SPLIT_Z, PIVOT_X, PIVOT_Z)
 end
 
 return TrainingHall

@@ -77,7 +77,7 @@ return function(T)
 		end
 		T.ok(not WorldPacks.clear(WorldPlan.Rim.x + WorldPlan.Rim.radius, WorldPlan.Rim.z), "on the rim")
 		T.ok(not WorldPacks.clear(WorldPlan.Bounds.maxX, 0), "outside")
-		T.ok(WorldPacks.clear(-300, 320), "open meadow")
+		T.ok(WorldPacks.clear(300, 150), "open meadow")
 	end)
 
 	T.test("candidates are the same every time, differ between tries and stay within JitterStuds", function()

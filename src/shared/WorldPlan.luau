@@ -16,7 +16,7 @@ WorldPlan.SeaZ = 1640 -- the South Bay opens beyond this line
 
 -- A home plot is Config.Map.PlotSize square; the ground is flat within PadRadius of its middle. GateOut is how far
 -- in front of the plot's middle the Village Lane passes (the gate is PlotSize / 2 out).
-WorldPlan.Village = { PadRadius = 176, GateOut = 150 }
+WorldPlan.Village = { PadRadius = 290, GateOut = 232 }
 
 export type Place = { id: string, name: string, kind: string, x: number, z: number, radius: number }
 
@@ -26,17 +26,20 @@ WorldPlan.Hub = { id = "hub", name = "Goo Market", kind = "hub", x = 0, z = 980,
 -- centred the Market's whole model on the hub, which leaves its square here (measured in the work place).
 WorldPlan.Market = { x = -0.87, z = 1002.78 }
 
--- The 8 villages: a loose ring round the hub, open to the north where the King's Road leaves and to the south where
--- the river runs to the bay. Not on a clock face: each sits in its own fold of the land.
+-- The 8 villages, four on each side of the river, open to the north where the King's Road leaves and to the south
+-- where the river runs to the bay. Not on a clock face: each sits in its own fold of the land.
+-- (The owner, 2026-11-17: the houses grew about twice as big and "the plot grows with its house", so a plot is 390
+-- across and two villages stand at least 600 apart. The Vale is only some 900 deep between the meadow's fights and
+-- the bay, so they stand in two tiers: v1, v4, v5, v8 near the hub, v2, v3, v6, v7 behind them to the west and east.)
 WorldPlan.Villages = {
-	{ id = "v1", name = "Hillfoot", kind = "village", x = -520, z = 610, radius = 176 },
-	{ id = "v2", name = "Westmeadow", kind = "village", x = -760, z = 930, radius = 176 },
-	{ id = "v3", name = "Orchard End", kind = "village", x = -620, z = 1300, radius = 176 },
-	{ id = "v4", name = "Reedbank", kind = "village", x = -270, z = 1500, radius = 176 },
-	{ id = "v5", name = "Baywatch", kind = "village", x = 300, z = 1520, radius = 176 },
-	{ id = "v6", name = "Sunny Rise", kind = "village", x = 640, z = 1290, radius = 176 },
-	{ id = "v7", name = "Eastfield", kind = "village", x = 770, z = 920, radius = 176 },
-	{ id = "v8", name = "Millbrook", kind = "village", x = 510, z = 590, radius = 176 },
+	{ id = "v1", name = "Hillfoot", kind = "village", x = -430, z = 470, radius = 290 },
+	{ id = "v2", name = "Westmeadow", kind = "village", x = -980, z = 720, radius = 290 },
+	{ id = "v3", name = "Orchard End", kind = "village", x = -1030, z = 1340, radius = 290 },
+	{ id = "v4", name = "Reedbank", kind = "village", x = -420, z = 1250, radius = 290 },
+	{ id = "v5", name = "Baywatch", kind = "village", x = 500, z = 1300, radius = 290 },
+	{ id = "v6", name = "Sunny Rise", kind = "village", x = 1090, z = 1420, radius = 290 },
+	{ id = "v7", name = "Eastfield", kind = "village", x = 1110, z = 815, radius = 290 },
+	{ id = "v8", name = "Millbrook", kind = "village", x = 520, z = 620, radius = 290 },
 }
 
 -- The regions. `at` are the seeds the builder grows each region's ground from (nearest seed wins, frayed by noise);
@@ -264,6 +267,9 @@ WorldPlan.Sites = {
 	{ id = "cross", name = "Wayfarers' Cross", kind = "landmark", x = -10, z = 250, radius = 46 },
 	{ id = "vale_north", name = "North Gate", kind = "junction", x = -50, z = 705, radius = 24 },
 	{ id = "vale_south", name = "South Gate", kind = "junction", x = -60, z = 1372, radius = 20 },
+	-- Where the lane to the outer villages leaves the inner ones, beside Reedbank's and Millbrook's plots.
+	{ id = "west_cross", name = "West Cross", kind = "junction", x = -390, z = 880, radius = 20 },
+	{ id = "east_cross", name = "East Cross", kind = "junction", x = 450, z = 960, radius = 20 },
 	{ id = "quay", name = "South Quay", kind = "landmark", x = -100, z = 1700, radius = 50 },
 	{ id = "lookout", name = "Crownfall Lookout", kind = "landmark", x = -90, z = -110, radius = 30 },
 	{ id = "fork_w", name = "Grove Fork", kind = "junction", x = -1250, z = -340, radius = 20 },
@@ -308,29 +314,35 @@ WorldPlan.Roads = {
 		name = "Village Lane",
 		kind = "lane",
 		width = 10,
+		-- (It goes round the plots, never through one: out to the outer villages and back by the two crosses.)
 		path = {
 			"vale_north",
 			"v1",
+			"west_cross",
 			"v2",
 			"v3",
+			"west_cross",
 			"v4",
 			"vale_south",
 			"br_south",
 			"v5",
+			"east_cross",
+			{ 824, 1211 },
 			"v6",
 			"v7",
+			"east_cross",
 			"v8",
 			"br_north",
 			"vale_north",
 		},
 	},
-	{ id = "spoke_west", name = "West Row", kind = "lane", width = 10, path = { "hub", { -320, 1000 }, "v2" } },
+	{ id = "spoke_west", name = "West Row", kind = "lane", width = 10, path = { "hub", "west_cross" } },
 	{
 		id = "spoke_east",
 		name = "East Row",
 		kind = "lane",
 		width = 10,
-		path = { "hub", "br_market", { 420, 950 }, "v7" },
+		path = { "hub", "br_market", "east_cross" },
 	},
 	{
 		id = "spoke_south",
@@ -339,7 +351,7 @@ WorldPlan.Roads = {
 		width = 10,
 		path = { "vale_south", { -70, 1560 }, "quay" },
 	}, -- (from the lane: the Market's back wall faces south)
-	{ id = "meadow_west", name = "Bramble Way", kind = "trail", width = 10, path = { "cross", { -360, 310 }, "m1" } },
+	{ id = "meadow_west", name = "Bramble Way", kind = "trail", width = 10, path = { "cross", { -380, 140 }, "m1" } }, -- (north of Hillfoot's plot)
 	{
 		id = "meadow_east",
 		name = "Pond Way",
@@ -456,6 +468,34 @@ function WorldPlan.roadPoints(road: { path: { any } }): { { number } }
 		end
 	end
 	return points
+end
+
+-- The line a road or the river really takes: Catmull-Rom through a list of { x, z } points, a sample about every
+-- `step` studs (the terrain builder draws with the same curve).
+function WorldPlan.curve(points: { { number } }, step: number): { { number } }
+	local out = {}
+	local n = #points
+	for i = 1, n - 1 do
+		local p0, p1, p2, p3 = points[math.max(i - 1, 1)], points[i], points[i + 1], points[math.min(i + 2, n)]
+		local length = math.sqrt((p2[1] - p1[1]) ^ 2 + (p2[2] - p1[2]) ^ 2)
+		local count = math.max(1, math.ceil(length / step))
+		for k = 0, count - 1 do
+			local t = k / count
+			local t2, t3 = t * t, t * t * t
+			local function at(c: number): number
+				return 0.5
+					* (
+						2 * p1[c]
+						+ (p2[c] - p0[c]) * t
+						+ (2 * p0[c] - 5 * p1[c] + 4 * p2[c] - p3[c]) * t2
+						+ (3 * p1[c] - p0[c] - 3 * p2[c] + p3[c]) * t3
+					)
+			end
+			table.insert(out, { at(1), at(2) })
+		end
+	end
+	table.insert(out, { points[n][1], points[n][2] })
+	return out
 end
 
 -- The road graph: for each place id, the ids one road leg away.

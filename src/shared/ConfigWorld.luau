@@ -90,7 +90,9 @@ return {
 		LevelMin = 4,
 		LevelMax = 150,
 		NearStuds = 300,
-		FarStuds = 2420,
+		-- (2420 before the villages moved, 2026-11-17; 2310 is the same farthest pack, at -1078, -1747, from Hillfoot's
+		-- new place, worked out from the plan: read the server's line in the next play test and set it again.)
+		FarStuds = 2310,
 		Curve = 1.6,
 		BandLevels = 20,
 		BandColours = { "#7ee06a", "#c9e04c", "#ffd23c", "#ffa63c", "#ff7a4a", "#f2507a", "#c05cf0", "#7a6cff" },

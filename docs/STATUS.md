@@ -1,5 +1,29 @@
 # Status
 
+## 2026-11-17 (later) — the grown houses and the 390 plot are in the code; the saved place is NOT rebuilt yet
+
+**Do not publish and do not judge a play test until MapWork's ground is rebuilt**: the code now puts the plots
+and villages where the saved place has no pads, and Plot5's static content is still laid out for the 76 cell.
+
+- The owner approved the six sizes from the line-up ("Được, làm tiếp"). Done in the code (TYPES OK, CHECK OK
+  829 passed; seen in the Edit line-up at level 50 with the spec's K at 1: the same sizes as the approved
+  picture; NOT in Play, not on a phone):
+  - `Config.Village.HouseScale`; `Architecture.grow / grown / grownBox`; each landmark's `build` is `raise` then
+    `grow`; each `footprint` is the grown box. Details in `docs/VILLAGE_SCALE.md` §6.
+  - `Config.Map.PlotSize` 390; `WorldPlan.Village` PadRadius 290, GateOut 232; the eight villages in two tiers,
+    West Cross and East Cross, the lane and spokes re-routed, `WorldPlan.curve`; `Packs.FarStuds` 2310.
+- **Next, in this order**: (1) MapWork: back it up (`C:\tmp\MapWork.before-scale2.rbxlx`), open it, terrain rows
+  0-34 and `sea` (`tools/world/build_terrain.luau`), `build_sites`, `build_scatter`, then the Plot5 template
+  (`tools/map/build_*_l1`, `build_village`, `stud_floor`, `pond_water_l1`, `polish_plot`, `tidy_plot`,
+  `dress_village_trees`, `dress_village_rocks`: several carry hand-typed numbers of the 228 plot), `prepare_plots`,
+  the map picture (`tools/world/map_picture.ps1`, upload, `Config.World.Map.Image`), `lune run
+  tools/build_publish.luau studio`. (2) yards and stations in each `*Stages` module for the 130 cell
+  (`Architecture.grown` gives where a drawn point of the house went); `VillageStages` / `VillageWalls`
+  hand-typed offsets (`GATE_X`, `CENTRE_FOOT`, stalls, the area "front" points in `PATHS`), `Config` `Pads.Spots`,
+  `AreaUpgrade`'s pond entrance. (3) the pond 3 times its water area (`PondStages` `LOBES`, `GROW`), the piers
+  per era at their present size, the Dock's lock, `docs/areas/fishing.md`. (4) one play test: read the server's
+  "zombies: ... the farthest F studs" line into `Packs.FarStuds`.
+
 ## 2026-11-17 — the village grows: one roof an era, deeper halls, the six houses enlarged in a line-up; plots next
 
 - The Dock was built after the owner's yes and committed as a checkpoint (`4d99066`: `Boathouse.luau` on

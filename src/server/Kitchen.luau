@@ -283,11 +283,13 @@ function Kitchen.features(level: number): (number, number)
 end
 
 -- The lawn beside the pad that the chimney, the oven, the kettles, the terrace and the wing stand on (x0, x1, z0,
--- z1): scenery there goes.
+-- z1): scenery there goes. (SPLIT_Z: what Architecture.grow takes as the house, all of it; the point it grows round.)
+local SPLIT_Z, PIVOT_X, PIVOT_Z = -100, 0, -5
 function Kitchen.footprint(level: number): (number, number, number, number)
 	local _, f = Kitchen.features(level)
 	local x0 = if f >= 12 then -34 elseif f >= 5 then -25.5 else -15.5
-	return x0, if f >= 20 then 25 else 19.6, -7, 13.6
+	local x1 = if f >= 20 then 25 else 19.6
+	return Architecture.grownBox("Kitchen", SPLIT_Z, PIVOT_X, PIVOT_Z, x0, x1, -7, 13.6)
 end
 
 -- Where the dining table stands (x, z) and the top of the ground under it (a stud towards the hall while the
@@ -308,7 +310,7 @@ local function bayCentres(len: number): { number }
 	return out
 end
 
-function Kitchen.build(m: Instance, frame: CFrame, level: number)
+local function raise(m: Instance, frame: CFrame, level: number)
 	local era, f = Kitchen.features(level)
 	local L = LOOKS[era]
 	local skins: { [string]: Enum.Material } = {
@@ -1402,6 +1404,13 @@ function Kitchen.build(m: Instance, frame: CFrame, level: number)
 			end
 		end
 	end
+end
+
+-- The Kitchen at its drawn size, then grown (Config.Village.HouseScale).
+function Kitchen.build(m: Instance, frame: CFrame, level: number)
+	local had = m:GetChildren()
+	raise(m, frame, level)
+	Architecture.grow(m, had, frame, "Kitchen", SPLIT_Z, PIVOT_X, PIVOT_Z)
 end
 
 return Kitchen

@@ -1513,6 +1513,17 @@ Config.Village = {
 	-- simulation steps once a second; this stops a running clock from rewriting its attributes every tick).
 	ClockKeepSeconds = 0.6,
 	MaxLevel = 50,
+	-- How many times each landmark's house grows over the size it is drawn at (the owner, 2026-11-17: a house body
+	-- at least 1.5 fishing piers wide and one pier deep, the Granary the largest; he approved these from the top-down
+	-- line-up). Yards, fences and pens keep their size. docs/VILLAGE_SCALE.md §6.
+	HouseScale = {
+		Granary = 2.2,
+		Kitchen = 1.45,
+		Garden = 2.6,
+		BreedingHouse = 2.3,
+		TrainingHall = 1.9,
+		Boathouse = 2.45,
+	},
 	-- Smooth capacity progression: interpolate between these checkpoints. Every village level adds 1 or 2 slimes,
 	-- never a sudden 15-slime jump (the owner, 2026-11-04: "my village is level 6 and the slime limit did not grow";
 	-- levels 1-6 used to stay at 12). Keep all old-save slimes.
@@ -2282,8 +2293,9 @@ Config.Map = {
 	PlotLane = 40,
 	-- Distance from the centre to the middle of each rim slot.
 	RimRadius = 500,
-	-- A home plot is a square this wide (a 3x3 grid of areas): 2.03x the area of the old 160.
-	PlotSize = 228,
+	-- A home plot is a square this wide (a 3x3 grid of areas, 130 a cell). It was 160, then 228; the owner,
+	-- 2026-11-17: the houses grew about twice as big and "the plot grows with its house" (docs/VILLAGE_SCALE.md §6).
+	PlotSize = 390,
 	-- The Market's footprint (across the rim, along the radius).
 	MarketWidth = 200,
 	MarketDepth = 160,

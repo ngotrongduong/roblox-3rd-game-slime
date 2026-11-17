@@ -116,8 +116,8 @@ water grows to 3 times its AREA (x1.73 across); every plot grows with its house 
 space"); judge sizes from above with all six side by side. Rule 4's "models keep their present size" no longer
 holds for the six landmark houses.
 
-How the houses grow (seen only in the Edit line-up, `tools/map/lineup_preview.luau` with
-`tools/map/lineup_spec.txt`; NOT in the game yet):
+How the houses grow (the owner approved these sizes from the line-up, 2026-11-17: "Được, làm tiếp"; in the
+code since, seen in the Edit line-up `tools/map/lineup_preview.luau` with `tools/map/lineup_spec.txt`):
 
 1. Deeper halls in the modules' own `LOOKS.depth` (done, in the code): Boathouse 10.4, Training Hall 13.2,
    Breeding House 11, Garden 10.
@@ -133,12 +133,23 @@ How the houses grow (seen only in the Edit line-up, `tools/map/lineup_preview.lu
 | Training Hall | 1.9 | 16.5 / (0, 17.4) | 74 x 30 | about 43 x 25 |
 | Boathouse | 2.45 | 21 / (-2, 24.4) | 81 x 44 with the lighthouse | about 41 x 25 |
 
-What this asks of the plot (my estimate, nothing changed yet): a cell of about 130 (now 76), so `PlotSize`
-about 390 (now 228), the plot's corner at about 276 from its middle, `WorldPlan.Village.PadRadius` (176) at
-least 290, village centres at least 620 apart (now about 400): the villages move, MapWork's ground is rebuilt
-by phases B-E above, each `*Stages` module re-spaces its yard and stations, and the Granary goes to the middle
-cell. 288 is the most `PlotSize` can be without moving villages (40-stud lanes kept), which is too small.
+In the code (2026-11-17):
 
-To build it in the game: K as named numbers in `Config`, each module builds its house sections into a child
-Model and scales it (check stud `Texture` tiles and lights after `ScaleTo`; people-scale props inside are
-re-placed by the `*Stages` module at their own size), each `footprint` grows, then the plots.
+- K is `Config.Village.HouseScale`. Each landmark module builds at its drawn size (`raise`), then
+  `Architecture.grow` takes its new children at or behind the split into a temporary Model, `ScaleTo(K)` round
+  the pivot, and puts them back (an area's model stays flat). `Architecture.grown` maps a drawn point to where it
+  ends up; each `footprint` is the grown box (`Architecture.grownBox`). Studs keep their size (surface studs and
+  materials tile in world space).
+- The plot: `Config.Map.PlotSize` 390 (a cell of 130), `WorldPlan.Village.PadRadius` 290, `GateOut` 232.
+  `Layout.PlotAreas` is unchanged: the Granary stays in the back-centre cell, at the head of the gate-plaza axis
+  (that is its "central" place; the middle cell stays the plaza and meadow).
+- The villages moved: 390-stud plots need 600 between two villages and the Home Vale is some 900 deep, so they
+  stand in two tiers round the hub (`WorldPlan.Villages`); the lane runs through two new junctions, West Cross
+  and East Cross, and Bramble Way bends north of Hillfoot. Tests: no road through a plot, every pad dry land.
+  `Config.World.Packs.FarStuds` 2420 to 2310 (worked out; to be read again from a play test).
+
+Still to do, in order (until then the saved place and the code disagree: no publish, no play test worth
+judging): MapWork's ground for the new plots (phases B-E above: terrain, sites, scatter, the Plot5 template,
+`prepare_plots`, the map picture); each `*Stages` module's yard and stations for the 130 cell and the grown
+houses (a corner cell is a diamond: its house is pulled forward); `VillageStages` and `VillageWalls` hand-typed
+offsets; the pond 3 times its water area; the piers per era; the Dock's lock.

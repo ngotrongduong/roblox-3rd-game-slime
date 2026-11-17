@@ -240,8 +240,10 @@ function Garden.features(level: number): (number, number)
 end
 
 -- The ground the garden stands on and its sails sweep over (x0, x1, z0, z1): scenery there goes.
+-- (What Architecture.grow takes as the house: what stands at or behind SPLIT_Z; and the point it grows round.)
+local SPLIT_Z, PIVOT_X, PIVOT_Z = 17, 0, 18.5
 function Garden.footprint(_level: number): (number, number, number, number)
-	return -FX - 1.5, FX + 6.5, FZ0 - 3, FZ1 + 1.5
+	return Architecture.grownBox("Garden", SPLIT_Z, PIVOT_X, PIVOT_Z, -FX - 1.5, FX + 6.5, FZ0 - 3, FZ1 + 1.5)
 end
 
 -- The garden's fence (half its width, its front, its back): GardenStages lays the floor to it.
@@ -249,7 +251,7 @@ function Garden.fence(): (number, number, number)
 	return FX, FZ0, FZ1
 end
 
-function Garden.build(m: Instance, frame: CFrame, level: number)
+local function raise(m: Instance, frame: CFrame, level: number)
 	local era, f = Garden.features(level)
 	local L = LOOKS[era]
 	local skins: { [string]: Enum.Material } = {
@@ -1949,6 +1951,13 @@ function Garden.build(m: Instance, frame: CFrame, level: number)
 			end
 		end
 	end
+end
+
+-- The Garden at its drawn size, then its house grown (Config.Village.HouseScale).
+function Garden.build(m: Instance, frame: CFrame, level: number)
+	local had = m:GetChildren()
+	raise(m, frame, level)
+	Architecture.grow(m, had, frame, "Garden", SPLIT_Z, PIVOT_X, PIVOT_Z)
 end
 
 return Garden

@@ -67,8 +67,9 @@ return function(T)
 		end
 	end)
 
-	T.test("the village scale: about twice the old area, paths sized to the slime", function()
-		T.ok(M.PlotSize * M.PlotSize >= 2 * 160 * 160, "plot area doubled")
+	T.test("the village scale: a 130-stud cell for the big houses, paths sized to the slime", function()
+		-- (The widest house, the Granary, is 115 across with its wing and silos: docs/VILLAGE_SCALE.md §6.)
+		T.ok(Layout.cellSize() >= 125, "a cell holds the widest house")
 		T.near(Layout.cellSize() * 3, M.PlotSize, 1e-9)
 		T.ok(M.PlazaRadius > M.MainPathWidth and M.PlazaRadius * 2 < Layout.cellSize(), "the plaza fits its cell")
 		T.ok(M.MainPathWidth >= M.PathWidth)
