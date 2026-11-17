@@ -73,6 +73,35 @@ BUILDINGS = {
 			"on the right)", "the pediment over the one wide open arched portal, with no door",
 			": the great chimney", ": the wing and the round colonnade"),
 	],
+	# (the picture is the whole fenced garden: only the house across its back is asked for)
+	"garden": [
+		("the GARDEN HOUSE that stands across the back of this fenced vegetable garden, at its first era (a small "
+			"potting shed: shaggy thatch on brown posts, a cream plaster gable with brown beams and a small window, plank "
+			"half walls). Draw ONLY that house: leave out the fence, the gate, the vegetable beds, the scarecrow and the "
+			"well with its wind wheel", "the gable over the one wide open front, with no door", "", ""),
+		("the GARDEN HOUSE that stands across the back of this fenced vegetable garden, at its second era (cream "
+			"plaster on teal-painted beams, red clay tiles, a gable window with a flower box, a small dormer, a wide open "
+			"front under a flat timber arch, a small glass cold frame leaning on its right wall). Draw ONLY that house: "
+			"leave out the fence, the gate, the vegetable beds and the windmill on its brick foot",
+			"the gable over the one wide open front, with no door", "", ": the glass cold frame"),
+		("the GARDEN HOUSE that stands across the back of this fenced vegetable garden, at its third era (a stone "
+			"orangery: ONE wide stone arch in the middle between two tall arched glazed windows, under a half-timbered "
+			"upper storey with a gable and two dormers, red clay tiles, ivy on the stone). Draw ONLY that house: leave out "
+			"the fence, the gate, the vegetable beds, the grape arbour and the round stone windmill",
+			"the timber gable over the one wide open stone arch, with no door", "", ""),
+		("the GARDEN HOUSE that stands across the back of this fenced vegetable garden, at its fourth era (a vaulted "
+			"greenhouse of black riveted steel and teal glass: a tall barrel-vaulted nave between two lower vaulted "
+			"aisles, glazed fan ends, copper pipes over the vault, one wide open arch in the front). Draw ONLY that "
+			"greenhouse: leave out the fence, the gate, the vegetable beds, the sprinklers, the goo tanks and the steel "
+			"wind wheel tower", "the glazed end of the nave over the one wide open arch, with no door",
+			": the left aisle", ": the right aisle"),
+		("the GARDEN HOUSE that stands across the back of this fenced vegetable garden, at its fifth era (a palm house "
+			"of white marble and gold: columns and a pediment with a golden laurel crest over one wide open portal, a tall "
+			"arched glazed window on each side of it, a great blue glass dome with gold ribs over the middle and a small "
+			"blue dome over each end). Draw ONLY that palm house: leave out the balustrade, the gate, the vegetable beds, "
+			"the urns, the water stairs and the marble windmill",
+			"the pediment over the one wide open portal, with no door", ": the left small dome", ": the right small dome"),
+	],
 }
 
 name = sys.argv[1]

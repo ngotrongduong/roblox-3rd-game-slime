@@ -36,11 +36,27 @@ khung và kết cấu của căn nhà thôi, những phụ kiện kiểu như đ
   2.6 s" (front wall at z -5), the back wall stopped the character from outside at z 20.6, the side wall from
   inside at x 19.1 (eras 1-2), console clean; shots `review/kitchen-body-l01.jpg`, `-l10` to `-l50`.
   CHECK OK (829 passed), TYPES OK.
-- **Next, in order**: Garden, Breeding House, Training Hall, Dock the same way (four-side sheets asked, body,
-  upload, ghost); an era-1 silo piece for the Granary.
+- **Garden done (2026-11-18)**: four-side sheets of the house's five eras (`views/garden_views_era1..5.webp`, rows
+  in `views.py`: the sheet shows the whole fenced garden, only the house is asked for); `garden_set(era)` gives
+  `GardenBody1` to `GardenBody5` (4188, 3332, 4288, 4528, 3960 triangles) and five switched pieces: era 1's open
+  truss (`GardenTruss1`, levels 1-6), the gable that closes it (`GardenGable1`, from level 7), the lean-to
+  (`GardenLean1`, from level 8), era 3's low roof over the stone storey (`GardenRoof3`, levels 21-29) or the
+  timber storey under its roof (`GardenStorey3`, level 30); 47 rows in `ConfigMeshyKit.luau`, uploaded; `Garden.luau` wears them
+  (`SHELL`, `shell(on)`; dormers, the water tower, the yard and every fixture stay the game's). From here on the
+  era clusters are SHARED moulds in `landmark_bodies.py` (`arch_at`, `ring_band`, `arch_wall`, `rafter_pair`,
+  `cross_roof`, `barrel`): the three houses left call them with their own numbers. Seen in the Edit preview at
+  levels 1, 8, 10, 20, 25, 30, 40, 50; proved in the StudioTest play test at levels 10, 20, 30, 40, 50: "L10: from
+  y 4.2 z 6.0 to x 0.0 y 5.2 z 37.2" and the same at the other four (yard at y 0, the house floor 1.04 higher, the
+  open front at z 18.5, the back wall at z 44.5), no Garden error in the console; shots
+  `review/garden-body-l01.jpg`, `-l10`, `-l20`, `-l25`, `-l30`, `-l40`, `-l50`. CHECK OK, TYPES OK.
+- **Next, in order**: Breeding House, Training Hall, Dock the same way (four-side sheets asked, body, upload,
+  ghost); an era-1 silo piece for the Granary.
 - **Not verified / open**: the phone view; the houses on their real plot (the open StudioTest holds a map older
-  than `Layout`: reopen it after a rebuild from MapWork); the Granary's side and back walls at eras 2-5 were seen in
-  the Edit preview only; the Kitchen's side wall at eras 3-5 was not reached in Play (a stove stood in the way).
+  than `Layout`: reopen it after a rebuild from MapWork; for the Garden's proof the wild rocks and trees on its
+  cell were hidden and the terrain cleared in Play, with a test pad as the yard's ground); the Granary's side and
+  back walls at eras 2-5 were seen in the Edit preview only; the Kitchen's side wall at eras 3-5 was not reached in
+  Play (a stove stood in the way); the Garden's side and back walls were not walked against; the yellow flower
+  box under the Garden's cross gable hides most of that window at eras 2 and 3 (the game's own, as before).
 
 ## 2026-11-17 (night) — the garden's tool stores of eras 4 and 5, built in Blender; Blender first from now on
 

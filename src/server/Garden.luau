@@ -49,6 +49,23 @@ local TX, TZ = 14.6, 24 -- the water tower's middle
 local BEDX = 8.5 -- the middle of a bed (they lie at x -BEDX and BEDX, z -0.3..11.7)
 local T = 0.6 -- a wall's thickness
 
+-- THE SHELL AN ERA'S BLENDER BODY STANDS FOR (see `raise`, the garden house): these parts become ghosts under it.
+-- The floor, the glass walls and fans, the windows, the lanterns and every feature keep their parts.
+local SHELL: { [string]: boolean } = {}
+for name in
+	string.gmatch(
+		"SideWall PostPad Post Rail Brace BackWall TieBeam Roof Gable BargeBoard Ridge EaveRoll ThatchCourse "
+			.. "RidgeRoll Rafter KingPost Collar GableRail LeanRoof LeanPost LeanPlate FrontWall FramePost ArchRing "
+			.. "FrameRail GablePost Quoin Plinth Keystone Cornice BayWall BayRoof Bressummer JettyBracket UpperWall "
+			.. "PlinthCap SteelPost NavePlate AislePlate AisleRoof AisleRib Bracket Vault Purlin VaultRib FanBar "
+			.. "FanHub VaultRidge Stylobate WingWall WingRoof WingCornice WingPlinth Pilaster ArchGold Entablature "
+			.. "Frieze",
+		"%a+"
+	)
+do
+	SHELL[name] = true
+end
+
 type Look = {
 	hw: number, -- half the house's width (its nave at era 4, its hall at era 5)
 	depth: number,
@@ -936,6 +953,49 @@ local function raise(m: Instance, frame: CFrame, level: number, had: { Instance 
 	end
 
 	-- THE GARDEN HOUSE -----------------------------------------------------------------------------------------
+	-- ITS BODY FROM BLENDER (the owner, 2026-11-17: "dựng lại tất cả các công trình bằng blender", "chủ yếu là dựng
+	-- phần khung và kết cấu của căn nhà thôi"): tools/blender/landmark_bodies.py models an era's frame and structure
+	-- on this module's own numbers, hollow, its front open, one mesh a colour field of the Look. Where an era's model
+	-- has come, the shell below is still built but as a ghost (Architecture's `b.ghost`): its solid parts are the
+	-- collision inside the model, its trim is left out. The glass, the lanterns and every feature stay.
+	local bodyName = "GardenBody" .. era
+	local bodied = LibraryKit.find(bodyName .. "_Roof") ~= nil
+	local function shell(on: boolean)
+		b.ghost(if on and bodied then SHELL else nil)
+	end
+	-- (a mesh a model has not is skipped)
+	local slots: { { any } } = {
+		{ "Stone", L.stone },
+		{ "Wall", L.wall },
+		{ "Lower", L.lower },
+		{ "Beam", L.beam },
+		{ "Gold", L.gold, bigGold },
+		{ "Board", L.board },
+		{ "Roof", L.roof },
+		{ "Frame", L.frame },
+		{ "Glass", L.glass, M.Neon },
+		{ "Shutters", L.shutters },
+	}
+	local function worn(model: string)
+		for _, slot in slots do
+			piece(model .. "_" .. slot[1], b.at(0, 0, 0), 1, 1, 1, slot[2], slot[3])
+		end
+	end
+	if bodied then
+		worn(bodyName)
+		if era == 1 then
+			-- the hamlet's parts a level switches: the open truss, then (2) the plaster gable that closes it; (3) the
+			-- straw lean-to
+			worn(if f < 2 then "GardenTruss1" else "GardenGable1")
+			if f >= 3 then
+				worn("GardenLean1")
+			end
+		elseif era == 3 then
+			-- the town's roof stands on the stone storey, or (15) on the jettied storey that lifts it
+			worn(if f >= 15 then "GardenStorey3" else "GardenRoof3")
+		end
+	end
+	shell(true)
 	-- what is seen through the open front, against the back wall at `zBack` on the floor `y`: shelves of pots over
 	-- a potting bench, the tools on their board, seed sacks, a warm light at `lightY`
 	local function interior(half: number, zBack: number, y: number, lightY: number)
@@ -1023,6 +1083,7 @@ local function raise(m: Instance, frame: CFrame, level: number, had: { Instance 
 		local zk = z0 + (yb + 2 - y) / pitch
 		local lit = painted("Dormer_RedRoof", b.face(x, yb + 1.25, zk, FRONT), 0.5, (zk - zf) / 5.619)
 		if not lit then
+			shell(false) -- (its little roof is its own)
 			b.box("Dormer", 2.2, 1.6, zk - zf, b.at(x, yb + 0.8, (zf + zk) / 2), L.wall)
 			b.gable(
 				b.at(x, yb + 1.6, (zf + zk) / 2) * turn,
@@ -1038,6 +1099,7 @@ local function raise(m: Instance, frame: CFrame, level: number, had: { Instance 
 				1
 			)
 			b.window(b.face(x, yb + 0.9, zf, FRONT), 1.2, 1.2, L.frame, L.glass, { glow = true })
+			shell(true)
 		else
 			light(lit, L.glass, 10, 0.5)
 		end
@@ -1077,7 +1139,8 @@ local function raise(m: Instance, frame: CFrame, level: number, had: { Instance 
 		slab("BackWall", -hw, hw, FLOOR, sill, zb - T, zb, L.lower)
 		slab("BackWall", -hw, hw, sill, top, zb - T, zb, L.wall)
 		b.timber(b.face(0, (FLOOR + top) / 2, zb, BACK), hw * 2, wallH, L.beam)
-		b.box("TieBeam", hw * 2 + 1, 0.7, 0.8, b.at(0, top - 0.35, HZ + 0.4), L.beam)
+		-- (under the model it ends inside the posts: a ghost longer than the model's beam would stand out of the thatch)
+		b.box("TieBeam", if bodied then hw * 2 - 0.2 else hw * 2 + 1, 0.7, 0.8, b.at(0, top - 0.35, HZ + 0.4), L.beam)
 		-- the roof: its gable faces the front, open as a truss until 2 closes it
 		local open = f < 2
 		local over = 1
@@ -1138,7 +1201,7 @@ local function raise(m: Instance, frame: CFrame, level: number, had: { Instance 
 				)
 			end
 			b.box("KingPost", 0.5, rise - 0.7, 0.5, b.at(0, top + (rise - 0.7) / 2, HZ + 0.3), L.beam)
-			b.box("Collar", hw, 0.4, 0.4, b.at(0, top + rise * 0.5, HZ + 0.3), L.beam)
+			b.box("Collar", if bodied then hw - 1.6 else hw, 0.4, 0.4, b.at(0, top + rise * 0.5, HZ + 0.3), L.beam)
 		else
 			-- 2 the gable closed with cream plaster and a shuttered window, big lanterns on the two front posts
 			local face = b.face(0, top + 1.5, HZ, FRONT)
@@ -1642,6 +1705,7 @@ local function raise(m: Instance, frame: CFrame, level: number, had: { Instance 
 		end
 		interior(hw - T, zb - T, FLOOR + 0.25, 7.4)
 	end
+	shell(false)
 
 	-- THE WATER TOWER ------------------------------------------------------------------------------------------
 	-- a trestle of four legs leaning in from `h0` out at `y0` to `h1` out at `y1`, girts and a brace a face a tier

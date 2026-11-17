@@ -848,5 +848,145 @@ return {
 		KitchenStack1_Cap = {
 			{ mesh = 133891675567109, tex = "", size = { 3.7, 0.7, 3.7 }, at = { 16.5, 24.65, 6.2 } },
 		},
+		-- The Garden's house as Blender bodies (tools/blender/landmark_bodies.py): one body an era, and the pieces a
+		-- level switches (era 1's open truss, closed gable and lean-to; era 3's roof, or its upper storey under it).
+		GardenBody1_Stone = {
+			{ mesh = 74389604545504, tex = "", size = { 11.36, 0.52, 1.36 }, at = { 0, 0.46, 18.9 } },
+		},
+		GardenBody1_Wall = {
+			{ mesh = 100736655495207, tex = "", size = { 10.8, 9.64, 9.2 }, at = { 0, 5.02, 23.9 } },
+		},
+		GardenBody1_Lower = {
+			{ mesh = 83836526818951, tex = "", size = { 10.9, 2.42, 9.25 }, at = { 0, 1.41, 23.925 } },
+		},
+		GardenBody1_Beam = {
+			{ mesh = 75205063542886, tex = "", size = { 11.32, 9.498, 10.35 }, at = { 0, 4.949, 23.625 } },
+		},
+		GardenBody1_Board = {
+			{ mesh = 85411929124796, tex = "", size = { 13.583, 7.816, 12.54 }, at = { 0, 6.687, 23.5 } },
+		},
+		GardenBody1_Roof = {
+			{ mesh = 107055616725051, tex = "", size = { 14.649, 6.212, 12.5 }, at = { 0, 8.144, 23.5 } },
+		},
+		GardenBody1_Frame = {
+			{ mesh = 75222172643391, tex = "", size = { 1.22, 1.96, 2.14 }, at = { 5.21, 4.57, 23.9 } },
+		},
+		GardenBody1_Glass = {
+			{ mesh = 120713753230689, tex = "", size = { 0.72, 1.5, 1.3 }, at = { 5.1, 4.6, 23.9 } },
+		},
+		GardenBody1_Shutters = {
+			{ mesh = 115239808209648, tex = "", size = { 2.4, 3.4, 0.18 }, at = { 0, 1.9, 28.57 } },
+		},
+		GardenBody2_Wall = {
+			{ mesh = 115752695567212, tex = "", size = { 13, 11.115, 10 }, at = { 0, 5.757, 23.5 } },
+		},
+		GardenBody2_Beam = {
+			{ mesh = 117518801821260, tex = "", size = { 13.48, 10.959, 10.6 }, at = { 0, 5.68, 23.5 } },
+		},
+		GardenBody2_Board = {
+			{ mesh = 113165017045944, tex = "", size = { 15.3, 6.265, 12.485 }, at = { 0, 8.677, 23.5 } },
+		},
+		GardenBody2_Roof = {
+			{ mesh = 108363320977600, tex = "", size = { 15.1, 6.296, 11.98 }, at = { 0, 9.032, 23.5 } },
+		},
+		GardenBody2_Frame = {
+			{ mesh = 114916288470626, tex = "", size = { 10.54, 2.38, 1.22 }, at = { 0, 3.88, 28.31 } },
+		},
+		GardenBody2_Glass = {
+			{ mesh = 135675393500068, tex = "", size = { 9.7, 1.9, 0.72 }, at = { 0, 3.9, 28.2 } },
+		},
+		GardenBody2_Shutters = {
+			{ mesh = 79543534178639, tex = "", size = { 1.8, 3.4, 0.18 }, at = { 0, 1.9, 28.57 } },
+		},
+		GardenBody3_Stone = {
+			{ mesh = 100258497194113, tex = "", size = { 18.14, 6.677, 10.36 }, at = { -1.69, 3.539, 23.5 } },
+		},
+		GardenBody3_Lower = {
+			{ mesh = 138407623041045, tex = "", size = { 17.8, 6.8, 10 }, at = { -1.7, 3.6, 23.5 } },
+		},
+		GardenBody3_Roof = {
+			{ mesh = 95395004337872, tex = "", size = { 4.323, 2.289, 8.7 }, at = { -9.193, 5.002, 23.9 } },
+		},
+		GardenBody3_Frame = {
+			{ mesh = 108117943981742, tex = "", size = { 15, 6.715, 10.84 }, at = { 0, 3.557, 23.5 } },
+		},
+		GardenBody3_Glass = {
+			{ mesh = 137370820471416, tex = "", size = { 10.1, 2.9, 0.72 }, at = { 0, 4, 28.2 } },
+		},
+		GardenBody3_Shutters = {
+			{ mesh = 105431716633948, tex = "", size = { 2, 3.6, 0.18 }, at = { 0, 2, 28.57 } },
+		},
+		GardenBody4_Lower = {
+			{ mesh = 106917024323738, tex = "", size = { 18, 1.3, 9.1 }, at = { 0, 0.85, 23.95 } },
+		},
+		GardenBody4_Beam = {
+			{ mesh = 133160732620682, tex = "", size = { 18.73, 16.53, 10.74 }, at = { 0, 8.465, 23.46 } },
+		},
+		GardenBody4_Gold = {
+			{ mesh = 134751628633975, tex = "", size = { 0.892, 7.452, 9.3 }, at = { 0, 13.18, 22.45 } },
+		},
+		GardenBody4_Roof = {
+			{ mesh = 75460222071413, tex = "", size = { 18.674, 11.774, 10.05 }, at = { 0, 10.678, 23.525 } },
+		},
+		GardenBody4_Frame = {
+			{ mesh = 139971063054883, tex = "", size = { 18.2, 0.2, 9.3 }, at = { 0, 1.6, 23.95 } },
+		},
+		GardenBody5_Stone = {
+			{ mesh = 135178785954180, tex = "", size = { 20.6, 6.8, 12.8 }, at = { 0, 3.6, 22 } },
+		},
+		GardenBody5_Wall = {
+			{ mesh = 134326055838864, tex = "", size = { 20, 12.318, 12.55 }, at = { 0, 6.359, 22.375 } },
+		},
+		GardenBody5_Beam = {
+			{ mesh = 139481083427214, tex = "", size = { 20.2, 7.75, 10.6 }, at = { 0, 4.075, 23.5 } },
+		},
+		GardenBody5_Gold = {
+			{ mesh = 135580260810596, tex = "", size = { 20.84, 12.881, 13.44 }, at = { 0, 6.64, 22.55 } },
+		},
+		GardenBody5_Roof = {
+			{ mesh = 93604227840945, tex = "", size = { 13.321, 3.868, 13 }, at = { 0, 11.093, 22.55 } },
+		},
+		GardenBody5_Glass = {
+			{ mesh = 121084331684782, tex = "", size = { 20.12, 3.2, 5.21 }, at = { 0, 3.9, 25.555 } },
+		},
+		GardenTruss1_Beam = {
+			{ mesh = 87714472500708, tex = "", size = { 8.098, 3.677, 0.6 }, at = { 0, 8.091, 18.8 } },
+		},
+		GardenGable1_Wall = {
+			{ mesh = 72471070398859, tex = "", size = { 8.845, 3.44, 0.6 }, at = { 0, 8.12, 18.8 } },
+		},
+		GardenGable1_Beam = {
+			{ mesh = 97887906597706, tex = "", size = { 9, 3.318, 0.31 }, at = { 0, 8.039, 18.395 } },
+		},
+		GardenLean1_Beam = {
+			{ mesh = 72762501398499, tex = "", size = { 0.58, 3.75, 9.2 }, at = { -9, 2.075, 23.8 } },
+		},
+		GardenLean1_Roof = {
+			{ mesh = 133640407438048, tex = "", size = { 5.403, 2.026, 9.7 }, at = { -7.892, 4.362, 23.8 } },
+		},
+		GardenRoof3_Wall = {
+			{ mesh = 86590292865342, tex = "", size = { 14.4, 4.124, 9.483 }, at = { 0, 9.062, 23.242 } },
+		},
+		GardenRoof3_Beam = {
+			{ mesh = 138547936907626, tex = "", size = { 14.92, 4.142, 9.64 }, at = { 0, 8.901, 23.08 } },
+		},
+		GardenRoof3_Board = {
+			{ mesh = 71633359302010, tex = "", size = { 16.7, 6.035, 12.474 }, at = { 0, 8.602, 23.5 } },
+		},
+		GardenRoof3_Roof = {
+			{ mesh = 95203597009899, tex = "", size = { 16.5, 6.066, 11.976 }, at = { 0, 8.947, 23.5 } },
+		},
+		GardenStorey3_Wall = {
+			{ mesh = 87699328211914, tex = "", size = { 15, 7.785, 10.8 }, at = { 0, 11.392, 23.3 } },
+		},
+		GardenStorey3_Beam = {
+			{ mesh = 103602975627762, tex = "", size = { 15.48, 8.162, 11.28 }, at = { 0, 11.051, 23.3 } },
+		},
+		GardenStorey3_Board = {
+			{ mesh = 123030168915077, tex = "", size = { 17.3, 9.968, 13.295 }, at = { 0, 10.826, 23.3 } },
+		},
+		GardenStorey3_Roof = {
+			{ mesh = 96901842143312, tex = "", size = { 17.1, 6.491, 12.777 }, at = { 0, 12.935, 23.3 } },
+		},
 	},
 }

@@ -199,8 +199,27 @@ worked example of one builder for several eras (`granary(era)`, `SHELL_LATER`, `
 - **A part a level switches inside one era is its own small model** (`KitchenTruss1`, `KitchenGable1`,
   `KitchenStack1`), placed under the module's own `features(level)` test; a hole the model has and the old part
   had not gets a new invisible stop (`BayStop`). An arch's ring starts inside the arch line.
+- **Era clusters are shared moulds** (the owner asked, 2026-11-18, whether each building is drawn afresh or put
+  together from pieces already made: put together). `landmark_bodies.py` holds them after the Kitchen: `arch_at`,
+  `ring_band` (a voussoir or steel ring), `arch_wall` (a wall over an arch, the module's `archWall` in prisms),
+  `rafter_pair`, `cross_roof` (a main gabled roof with a cross gable over the front, valleys clipped by `tiled`'s
+  `a_from` and `cut`), `barrel` (a vault of courses, ribs and purlins). A new house calls them with its own
+  numbers; a cluster two houses share is moved into a mould before the second house uses it, never copied.
+- **A roof that moves with a level is its own model** (`GardenRoof3` low over the stone storey, `GardenStorey3`
+  the timber storey under the same roof): the body holds only what stays for the whole era.
+- **`b.gable` under a ghost**: its two roof slabs, barge boards and ridge are trim (left out); only its "Gable"
+  wedges stay as ghosts, so the model needs a gable prism 0..T deep at each end and no special roof case. On an
+  EAVE-side face, cornices and rails stay under `top - pitch * n`.
+- **A level that changes the house inside one era is looked at in the Edit preview** by putting it in the
+  preview's `LEVELS` (the Garden: 1, 8, 25), then the list is put back.
 - **Four-side sheets back from ChatGPT**: `main img` with `naturalWidth > 500` AND `alt` starting "Generated
-  image" (a chat holds the attached references too).
+  image" (a chat holds the attached references too). Sending: the composer is `div.ProseMirror`; clear a leftover
+  draft, paste once with a ClipboardEvent (not `insertText`), send by `form button[aria-label="Send"]`. Fetching:
+  one `browser_batch` a chat (wait, navigate, canvas to `receive.html`).
+- **Proof on a cell the old test map covers with forest** (the Garden, plot 1 cell 1 1): server
+  `Terrain:FillBlock` to Air from 4 under the stage frame up, a test pad 2 thick with its top at the frame's y 0,
+  and on the CLIENT every `workspace.World` part over the cell made transparent (the scenery is drawn by the
+  client: hiding it on the server changes nothing on screen). All of it in Play only.
 - **Proof in Play, one call a level**: `_G.AreaShow(...)`, the character pivoted 18 studs before the door,
   `MoveTo` 20 studs inside repeated every half second, the position printed in the area's frame (door at z 0);
   "level 50: stands at x 0.0 y 8.7 z 19.2 after 3.1 s" is the proof line. Then one daylight shot of the whole house.

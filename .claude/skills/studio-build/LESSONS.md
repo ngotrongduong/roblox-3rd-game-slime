@@ -503,6 +503,29 @@ The Kitchen, the second landmark as bodies (`kitchen_set(era)`, 2026-11-18): fiv
   server held 14.6: the day's values written in a `BindToRenderStep` at `Last + 5`, as for the Garden.
 - 12724, 7564, 13108, 13804 and 7396 triangles for the five bodies; 136, 188 and 1024 for the three pieces.
 
+The Garden's house, the third landmark as bodies (`garden_set(era)`, 2026-11-18): five bodies, five switched pieces.
+
+- **The era clusters became shared moulds** (the owner's question: is each building drawn afresh, or put together
+  from pieces already made?): `arch_at`, `ring_band`, `arch_wall`, `rafter_pair`, `cross_roof`, `barrel` sit
+  above the Garden in `landmark_bodies.py` and take numbers only. The Garden's ten models were written, built and
+  right in the game at the first upload but one (the glasshouse's aisle fronts had no glazing bars).
+- **A cross gable over a main roof**: the main slope's courses are laid in three strips (two outer, one behind the
+  cross gable starting higher: `tiled(..., a_from=...)`), the cross slopes are cut where they meet the main slope
+  (`cut=lambda x: ...`); tiny triangles at the cross gable's eave feet and a small jag in the valley stay.
+- **A roof a level raises is two models** (`GardenRoof3`, `GardenStorey3`), not one body an era: the body would
+  have needed the roof at two heights.
+- **`b.gable` needs no special case under a ghost**: its slabs, barge boards and ridge are trim; only the gable
+  wedges stay, and a prism in the model covers them. A solid tie beam or collar longer than the model's is
+  shortened `if bodied` (`hw * 2 - 0.2`, `hw - 1.6`).
+- **The preview's `LEVELS`** set to 1, 8, 25, 40, 50 showed the open truss, the lean-to and the low roof in three
+  shots; put back to 10, 20, 30, 40, 50 after.
+- **Play proof on a forest cell** (plot 1, cell 1 1, K 2.6, front at z 18.5, back wall at z 44.5): the old test
+  map's terrain stood 2 studs over the stage frame and rocks lay in the house. `Terrain:FillBlock` to Air, a test
+  pad as the yard's ground, and the scenery hidden on the CLIENT (`workspace.World`: it is drawn there, a server
+  change does not show). Then levels 10, 20, 30, 40, 50 each walked from z 6 to z 37.2, 1.04 up onto the floor;
+  console clean. `GetPartBoundsInBox` did not find the scenery (it does not answer queries): walk the folder.
+- 4188, 3332, 4288, 4528 and 3960 triangles for the five bodies; 112, 120, 484, 1048 and 2404 for the pieces.
+
 ### Whole small buildings from Blender (2026-11-17, the garden's tool stores, tools/blender/granary_pieces.py)
 
 The owner, looking at a part-built yard beside ChatGPT's picture: "why is what you build not as beautiful as the
