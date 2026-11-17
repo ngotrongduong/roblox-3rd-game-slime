@@ -5,7 +5,7 @@
 --   1 hamlet       woven wattle, brown timber and cream plaster under thatch, a fieldstone chimney
 --   2 painted      cream pickets on rose-pink posts, cream plaster on rose-pink beams, red clay tiles, a brick stove room
 --   3 town         a low stone wall with timber rails, a stone hall with one great arch, a round turret under a cone roof
---   4 slime tech   black steel and teal glass vaults, copper pipes, a glowing green goo boiler with a steel stack
+--   4 slime tech   black steel and blue slate vaults, copper pipes, a glowing green goo boiler with a steel stack
 --   5 capital      white marble and gold, columns and a pediment, blue glass domes on the wings, a marble tower
 -- The same five things at every era, in the same places, so it stays one place: THE FENCE round the pen with THE GATE
 -- in the middle of its front (-z); THE HALL across the back (front wall at HZ), hollow, its front wide open on the
@@ -33,7 +33,6 @@ local IVY = C(124, 190, 92)
 local STRAW = C(204, 156, 62) -- the darker course half way up a thatch
 local HAY = C(236, 204, 104)
 local GOO = C(96, 232, 70)
-local DOME = C(70, 124, 214) -- the capital's blue glass
 local EGG = C(250, 240, 214) -- the great egg's cream shell
 local SPOT = C(176, 146, 228) -- its lavender spots, and the town's banners
 local SPOT_LIT = C(126, 104, 250) -- (blue-violet: a redder one glowed hot magenta in the game's light)
@@ -84,7 +83,7 @@ type Look = {
 local LOOKS: { Look } = {
 	{ -- 1 hamlet
 		hw = 7.2,
-		depth = 8,
+		depth = 11, -- (the owner, 2026-11-17: the houses lacked depth; as deep as the pier is long once grown)
 		wallH = 6.6,
 		rise = 5,
 		wall = C(236, 220, 180),
@@ -116,7 +115,7 @@ local LOOKS: { Look } = {
 	},
 	{ -- 2 painted
 		hw = 8.2,
-		depth = 8.5,
+		depth = 11,
 		wallH = 7.2,
 		rise = 5.4,
 		wall = C(244, 238, 224),
@@ -147,7 +146,7 @@ local LOOKS: { Look } = {
 	},
 	{ -- 3 town
 		hw = 8.6,
-		depth = 8.5,
+		depth = 11,
 		wallH = 8,
 		rise = 4.8,
 		wall = C(240, 230, 206),
@@ -155,7 +154,7 @@ local LOOKS: { Look } = {
 		stone = C(128, 124, 118),
 		beam = C(112, 72, 44),
 		board = C(92, 60, 38),
-		roof = C(172, 64, 52),
+		roof = C(190, 62, 50), -- (the owner, 2026-11-17: one roof an era for every landmark, the Granary's)
 		frame = C(222, 216, 202),
 		glass = C(250, 198, 100),
 		shutters = C(150, 110, 150),
@@ -177,7 +176,7 @@ local LOOKS: { Look } = {
 	},
 	{ -- 4 slime tech
 		hw = 8,
-		depth = 9,
+		depth = 11,
 		wallH = 10,
 		rise = 6.6,
 		wall = C(150, 225, 215),
@@ -185,7 +184,7 @@ local LOOKS: { Look } = {
 		stone = C(74, 80, 92),
 		beam = C(52, 56, 64),
 		board = C(40, 44, 50),
-		roof = C(120, 222, 205),
+		roof = C(62, 96, 160),
 		frame = C(214, 208, 196),
 		glass = C(250, 202, 108),
 		shutters = C(40, 44, 50),
@@ -199,7 +198,7 @@ local LOOKS: { Look } = {
 			stone = M.Slate,
 			beam = M.Metal,
 			board = M.Metal,
-			roof = M.Glass,
+			roof = M.RoofShingles,
 			frame = M.Limestone,
 			gold = M.Metal,
 			accent = M.Metal,
@@ -207,7 +206,7 @@ local LOOKS: { Look } = {
 	},
 	{ -- 5 capital
 		hw = 9.6,
-		depth = 9,
+		depth = 11,
 		wallH = 10.5,
 		rise = 3.6,
 		wall = C(242, 239, 232), -- (not whiter: the facade's mouldings washed out in daylight)
@@ -227,7 +226,7 @@ local LOOKS: { Look } = {
 			wall = M.Marble,
 			stone = M.Marble,
 			beam = M.Marble,
-			roof = M.Slate,
+			roof = M.ClayRoofTiles,
 			gold = M.Foil,
 		},
 	},
@@ -335,12 +334,12 @@ function BreedingHouse.build(m: Instance, area: CFrame, level: number)
 			b.cone(cf, r, up, if tip then 5 else 3, colour, if tip then L.gold else nil)
 		end
 	end
-	-- the capital's dome of blue glass, `r` round, on its drum's top at `cf`: golden ribs, a lantern and a finial
+	-- the capital's dome in the era's roof tiles (the owner, 2026-11-17: a dome wears its era's roof), `r` round, on its drum's top at `cf`: golden ribs, a lantern and a finial
 	local function dome(cf: CFrame, r: number)
 		if piece("RoyalDome_Gold", cf, r, r, r, L.gold, M.Metal) then
-			piece("RoyalDome_Shell", cf, r, r, r, DOME, M.Glass)
+			piece("RoyalDome_Shell", cf, r, r, r, L.roof)
 		else
-			b.ball("Dome", r, cf, DOME, M.Glass)
+			b.ball("Dome", r, cf, L.roof)
 			b.cyl("DomeLantern", r * 0.2, r * 0.5, cf * CFrame.new(0, r * 1.2, 0), L.gold, M.Metal, false)
 			b.ball("Finial", r * 0.14, cf * CFrame.new(0, r * 1.55, 0), L.gold, M.Metal)
 		end

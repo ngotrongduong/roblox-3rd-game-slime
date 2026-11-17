@@ -37,7 +37,6 @@ local WATER = C(96, 170, 220)
 local GRAPE = C(126, 78, 160)
 local GLAZE = C(190, 232, 226) -- a cold frame's panes
 local GOO = C(96, 232, 70)
-local DOME = C(70, 124, 214) -- the capital's blue glass
 local BLOOMS = { C(255, 120, 150), C(255, 214, 80), C(240, 90, 80) }
 local FRONT, BACK = Vector3.new(0, 0, -1), Vector3.new(0, 0, 1)
 local LEFT, RIGHT = Vector3.new(1, 0, 0), Vector3.new(-1, 0, 0) -- (+x is the garden's left as one walks in)
@@ -75,7 +74,7 @@ type Look = {
 local LOOKS: { Look } = {
 	{ -- 1 hamlet
 		hw = 5.4,
-		depth = 6.8,
+		depth = 10, -- (the owner, 2026-11-17: the houses lacked depth; as deep as the pier is long once grown)
 		wallH = 6.2,
 		rise = 4.2,
 		wall = C(236, 220, 180),
@@ -109,7 +108,7 @@ local LOOKS: { Look } = {
 	},
 	{ -- 2 painted
 		hw = 6.5,
-		depth = 7,
+		depth = 10,
 		wallH = 6.8,
 		rise = 4.8,
 		wall = C(244, 238, 224),
@@ -142,7 +141,7 @@ local LOOKS: { Look } = {
 	},
 	{ -- 3 town
 		hw = 7.2,
-		depth = 8,
+		depth = 10,
 		wallH = 6.8,
 		rise = 4.6,
 		wall = C(240, 230, 206),
@@ -150,7 +149,7 @@ local LOOKS: { Look } = {
 		stone = C(128, 124, 118),
 		beam = C(112, 72, 44),
 		board = C(92, 60, 38),
-		roof = C(172, 64, 52),
+		roof = C(190, 62, 50), -- (the owner, 2026-11-17: one roof an era for every landmark, the Granary's)
 		frame = C(222, 216, 202),
 		glass = C(250, 198, 100),
 		shutters = C(120, 150, 96),
@@ -173,7 +172,7 @@ local LOOKS: { Look } = {
 	},
 	{ -- 4 slime tech
 		hw = 5.4,
-		depth = 8.5,
+		depth = 10,
 		wallH = 9.4,
 		rise = 5.4,
 		wall = C(150, 225, 215),
@@ -181,7 +180,7 @@ local LOOKS: { Look } = {
 		stone = C(74, 80, 92),
 		beam = C(52, 56, 64),
 		board = C(40, 44, 50),
-		roof = C(120, 222, 205),
+		roof = C(62, 96, 160),
 		frame = C(214, 208, 196),
 		glass = C(250, 202, 108),
 		shutters = C(40, 44, 50),
@@ -196,7 +195,7 @@ local LOOKS: { Look } = {
 			stone = M.Slate,
 			beam = M.Metal,
 			board = M.Metal,
-			roof = M.Glass,
+			roof = M.RoofShingles,
 			frame = M.Limestone,
 			gold = M.Metal,
 			accent = M.Metal,
@@ -205,7 +204,7 @@ local LOOKS: { Look } = {
 	},
 	{ -- 5 capital
 		hw = 5.5,
-		depth = 9,
+		depth = 10,
 		wallH = 9,
 		rise = 3.2,
 		wall = C(250, 249, 245),
@@ -226,7 +225,7 @@ local LOOKS: { Look } = {
 			wall = M.Marble,
 			stone = M.Marble,
 			beam = M.Marble,
-			roof = M.Slate,
+			roof = M.ClayRoofTiles,
 			gold = M.Foil,
 			accent = M.Metal,
 		},
@@ -325,12 +324,12 @@ function Garden.build(m: Instance, frame: CFrame, level: number)
 			b.cone(cf, r, up, 5, colour, L.gold)
 		end
 	end
-	-- the capital's dome of blue glass, `r` round, on its drum's top at `cf`: golden ribs, a lantern and a finial
+	-- the capital's dome in the era's roof tiles (the owner, 2026-11-17: a dome wears its era's roof), `r` round, on its drum's top at `cf`: golden ribs, a lantern and a finial
 	local function dome(cf: CFrame, r: number)
 		if piece("RoyalDome_Gold", cf, r, r, r, L.gold, M.Metal) then
-			piece("RoyalDome_Shell", cf, r, r, r, DOME, M.Glass)
+			piece("RoyalDome_Shell", cf, r, r, r, L.roof)
 		else
-			b.ball("Dome", r, cf, DOME, M.Glass)
+			b.ball("Dome", r, cf, L.roof)
 			b.cyl("DomeLantern", r * 0.2, r * 0.5, cf * CFrame.new(0, r * 1.2, 0), L.gold, M.Metal, false)
 			b.ball("Finial", r * 0.14, cf * CFrame.new(0, r * 1.55, 0), L.gold, M.Metal)
 		end

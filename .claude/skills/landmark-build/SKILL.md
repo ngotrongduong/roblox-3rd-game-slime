@@ -177,11 +177,28 @@ keeps its stand-in and is named in the review brief as "not to be judged".
   blue-violet Neon (violet glows magenta); marble a shade off white (242, 239, 232).
 - The carry holds five pictures: say the hidden flank in one clause of the brief when a sixth does not fit.
 
+## 5a. Size and roofs (the owner, 2026-11-17, after the Dock)
+
+- **Size first, from above.** Before a module is written, stand the planned house beside the fishing pier (6 x
+  24.7, the standard, never resized) and a 5-stud player in `tools/map/lineup_preview.luau` (all landmarks in one
+  row, a `<Module> <level> <K> <splitZ> <pivotX> <pivotZ>` line each) and shoot it straight down (camera field of
+  view 14 from 1800 up) and from the front. A house BODY, without silos, chimneys or towers, is at least 1.5 pier
+  lengths wide (37) and one pier length deep (25); the lakeside house is the reference, the Granary is the central
+  building and larger. The Dock was built 16 wide into its old cell and had to be redone: "tôi đã nói từ trước là
+  phải tăng kích thước lên nhưng mà bạn vẫn cứ cố nhét nó vào không gian chật hẹp cũ".
+- **The plot grows with the house**, never the house squeezed into the plot (`docs/VILLAGE_SCALE.md` §6 has the
+  numbers and the K of every house).
+- **One roof an era, the Granary's**, on every landmark: 1 thatch (232, 190, 84) Sand; 2 clay tiles (198, 70, 58);
+  3 clay tiles (190, 62, 50); 4 roof shingles (62, 96, 160); 5 clay tiles (44, 84, 170). A dome or a vault that
+  roofs a hall or a tower wears `L.roof` with no material of its own; glass is for windows, end fans and goo
+  lanterns. A new roof colour must not equal another field's colour of that era (skins are keyed by colour).
+- The lighthouse has ONE window.
+
 ## 6. Do not
 
 - No model, however small, before its reference picture. No whole building from Meshy or Tripo.
-- No bigger footprint, taller tower or extra volume to chase a review score; the plot may grow only when the owner
-  says so for the village's layout.
+- No bigger footprint, taller tower or extra volume to chase a review score; size comes from the owner's rule in
+  section 5a, and the plot grows with it.
 - No second ChatGPT round on a finished building, and no fix built from its answer without checking the code:
   nine of its 25 last points asked for what the Granary already had.
 - No upload worked round: the test place refuses mesh uploads ("asset:read"); they go through the owner's cloud
@@ -205,5 +222,5 @@ keeps its stand-in and is named in the review brief as "not to be judged".
 | Garden (potting shed to royal palm house, with its windmill) | `Garden.luau` | `garden-ref-sheet.jpg`, `garden-ref-era*.jpg` | `garden-ladder.md` (walked on paper; seen at each era's last level, not pair by pair) | locked 2026-11-17 (ChatGPT: 78-84 an era, 81 overall, before the last edit; the last edit seen in the Edit preview only); B10 and B11 uploaded and worn; the rose arch taken out at the owner's word, step 19 is two bush pots (seen in Play at 30 and 50) |
 | Breeding pen -> Breeding House (nest hall to royal hatchery, the spotted egg on its roof) | `BreedingHouse.luau` | `breeding-ref-sheet.jpg`, `breeding-ref-era*.jpg` | `breeding-ladder.md` (walked on paper; seen at each era's last level, not pair by pair) | locked 2026-11-17 (ChatGPT: likeness 83-87, finish 77-85 an era, before the last edit; the last edit seen in the Edit preview only); B12 and B13 uploaded and worn |
 | Training ground -> Training Hall (drill shed to marble arena, the banner tower at its right end) | `TrainingHall.luau` | `training-ref-sheet.jpg`, `training-ref-era*.jpg` | `training-ladder.md` (walked on paper; seen at each era's last level, not pair by pair) | locked 2026-11-17 (ChatGPT: likeness 73-86, finish 72-80 an era, before the last edit; the last edit seen in Play at all five eras, the capital's flank in the Edit preview only); B14 uploaded and worn |
-| Fishing pond -> Dock (fishing shack to marble boathouse, the lighthouse at its left end; the pond stays big: the owner's note) | `Boathouse.luau` (to come) | `dock-ref-sheet.jpg`, `dock-ref-era*.jpg` | `dock-ladder.md` (walked on paper) | sheet drawn at the first try and ladder written 2026-11-17; waits for the owner's yes, nothing built |
+| Fishing pond -> Dock (fishing shack to marble boathouse, the lighthouse at its left end; the pond stays big: the owner's note) | `Boathouse.luau` | `dock-ref-sheet.jpg`, `dock-ref-era*.jpg` | `dock-ladder.md` (walked on paper) | built, reviewed once, checkpoint `4d99066` 2026-11-17, NOT locked: too small against the pier (section 5a); deeper hall and the era roofs in the code, the K 2.45 house only in the line-up; waits for the plots to grow |
 | Village pieces and layout | - | - | - | not started |

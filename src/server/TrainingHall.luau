@@ -5,7 +5,7 @@
 --   1 hamlet       a palisade of pointed logs, brown timber under thatch, a braced log lookout
 --   2 painted      cream pickets on royal-blue posts, cream plaster on blue beams, red clay tiles, a boarded watchtower
 --   3 town         a low stone wall with timber rails, a stone hall with one great arch, a round stone keep
---   4 slime tech   black steel and teal glass vaults, copper pipes, floodlights, a goo core in the steel tower
+--   4 slime tech   black steel and blue slate vaults, copper pipes, floodlights, a goo core in the steel tower
 --   5 capital      white marble and gold, columns, arcade wings and a pediment, the tower under a blue and gold dome
 -- The same five things at every era, in the same places, so it stays one place: THE FENCE round the yard with THE GATE
 -- in the middle of its front (-z); THE HALL across the back (front wall at HZ), hollow, its front wide open on the
@@ -71,7 +71,7 @@ type Look = {
 local LOOKS: { Look } = {
 	{ -- 1 hamlet
 		hw = 10,
-		depth = 8.4,
+		depth = 13.2, -- (the owner, 2026-11-17: the houses lacked depth; as deep as the pier is long once grown)
 		wallH = 6.2,
 		rise = 6,
 		wall = C(196, 150, 98),
@@ -101,7 +101,7 @@ local LOOKS: { Look } = {
 	},
 	{ -- 2 painted
 		hw = 10.6,
-		depth = 8.6,
+		depth = 13.2,
 		wallH = 6.8,
 		rise = 6.4,
 		wall = C(244, 238, 224),
@@ -130,7 +130,7 @@ local LOOKS: { Look } = {
 	},
 	{ -- 3 town
 		hw = 11,
-		depth = 8.8,
+		depth = 13.2,
 		wallH = 7.4,
 		rise = 5.6,
 		wall = C(240, 230, 206),
@@ -138,7 +138,7 @@ local LOOKS: { Look } = {
 		stone = C(132, 128, 122),
 		beam = C(112, 72, 44),
 		board = C(92, 60, 38),
-		roof = C(64, 94, 176),
+		roof = C(190, 62, 50), -- (the owner, 2026-11-17: one roof an era for every landmark, the Granary's)
 		frame = C(224, 218, 204),
 		glass = C(238, 158, 60),
 		cloth = C(52, 96, 204),
@@ -151,14 +151,14 @@ local LOOKS: { Look } = {
 			stone = M.Cobblestone,
 			beam = M.Wood,
 			board = M.Wood,
-			roof = M.Slate,
+			roof = M.ClayRoofTiles,
 			frame = M.Limestone,
 			gold = M.Foil,
 		},
 	},
 	{ -- 4 slime tech
 		hw = 11.4,
-		depth = 9,
+		depth = 13.2,
 		wallH = 6,
 		rise = 8.4,
 		wall = C(84, 190, 180), -- (teal darker than the sky: a paler pane read as one pale sheet)
@@ -166,7 +166,7 @@ local LOOKS: { Look } = {
 		stone = C(86, 90, 100),
 		beam = C(52, 56, 64),
 		board = C(40, 44, 50),
-		roof = C(70, 184, 172),
+		roof = C(62, 96, 160),
 		frame = C(104, 110, 122),
 		glass = C(238, 158, 60),
 		cloth = C(52, 96, 204),
@@ -179,7 +179,7 @@ local LOOKS: { Look } = {
 			stone = M.Slate,
 			beam = M.Metal,
 			board = M.Metal,
-			roof = M.Glass,
+			roof = M.RoofShingles,
 			frame = M.Metal,
 			gold = M.Metal,
 			accent = M.Metal,
@@ -187,7 +187,7 @@ local LOOKS: { Look } = {
 	},
 	{ -- 5 capital
 		hw = 9.2,
-		depth = 9,
+		depth = 13.2,
 		wallH = 9.5,
 		rise = 3.9,
 		wall = C(242, 239, 232), -- (not whiter: mouldings wash out in daylight)
@@ -206,7 +206,7 @@ local LOOKS: { Look } = {
 			wall = M.Marble,
 			stone = M.Marble,
 			beam = M.Marble,
-			roof = M.Slate,
+			roof = M.ClayRoofTiles,
 			gold = M.Foil,
 		},
 	},
@@ -316,12 +316,12 @@ function TrainingHall.build(m: Instance, area: CFrame, level: number)
 			b.cone(cf, r, up, if tip then 5 else 3, colour, if tip then L.gold else nil)
 		end
 	end
-	-- the capital's dome of blue glass, `r` round, on its drum's top at `cf`: golden ribs, a lantern and a finial
+	-- the capital's dome in the era's roof tiles (the owner, 2026-11-17: a dome wears its era's roof), `r` round, on its drum's top at `cf`: golden ribs, a lantern and a finial
 	local function dome(cf: CFrame, r: number)
 		if piece("RoyalDome_Gold", cf, r, r, r, L.gold, M.Metal) then
-			piece("RoyalDome_Shell", cf, r, r, r, DOME, M.Glass)
+			piece("RoyalDome_Shell", cf, r, r, r, L.roof)
 		else
-			b.ball("Dome", r, cf, DOME, M.Glass)
+			b.ball("Dome", r, cf, L.roof)
 			b.cyl("DomeLantern", r * 0.2, r * 0.5, cf * CFrame.new(0, r * 1.2, 0), L.gold, M.Metal, false)
 			b.ball("Finial", r * 0.14, cf * CFrame.new(0, r * 1.55, 0), L.gold, M.Metal)
 		end
@@ -1243,13 +1243,13 @@ function TrainingHall.build(m: Instance, area: CFrame, level: number)
 			b.ball("LanternDrop", 0.18, b.at(x, y - 1.95, pz), L.gold, M.Metal)
 		end
 		if vault then
-			-- 23 a blue glass vault with gold ribs behind a marble balustrade with gold finials; the pediment
+			-- 23 a vault in the era's blue tiles (its end fans stay glass) with gold ribs behind a marble balustrade with gold finials; the pediment
 			-- keeps its own short roof
 			local hv, R = hw - 1.5, rise + 1.7
 			local za = HZ + 1.4
 			frontGable(0, hw + 0.2, top, ez, za, rise, 0.6, L.wall)
 			slab("RoofDeck", -hw, hw, top, top + 0.25, za, zb, L.stone)
-			archRing("VaultGlass", 0, hv, top + 0.25, R, (za + zb) / 2 + 0.2, zb - za - 0.6, 0.18, DOME, M.Glass)
+			archRing("VaultGlass", 0, hv, top + 0.25, R, (za + zb) / 2 + 0.2, zb - za - 0.6, 0.18, L.roof)
 			for k = 0, 3 do
 				local z = za + 0.5 + k * (zb - za - 0.8) / 3
 				archRing("VaultRib", 0, hv + 0.1, top + 0.25, R + 0.1, z, 0.4, 0.4, L.gold, M.Metal)
@@ -1510,7 +1510,7 @@ function TrainingHall.build(m: Instance, area: CFrame, level: number)
 			capTop = H + 0.15 + 1.36 * r
 		else
 			b.cyl("TowerCapRing", tr - 0.5, 0.4, cap * CFrame.new(0, 0.2, 0), L.beam, nil, false)
-			b.ball("TowerCap", tr - 0.7, cap * CFrame.new(0, 0.3, 0), L.roof, M.Glass)
+			b.ball("TowerCap", tr - 0.7, cap * CFrame.new(0, 0.3, 0), L.roof)
 			capTop = H + tr - 0.3
 		end
 		bannerTop = y0 - 0.5

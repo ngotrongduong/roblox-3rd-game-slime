@@ -5,8 +5,8 @@
 --   1 hamlet       a timber fishing shack on log stilts under thatch, a log rail fence, a whitewashed lighthouse
 --   2 painted      cream plaster on royal-blue beams under red tiles, white pickets, the lighthouse under a red cone
 --   3 town         a stone boathouse with one great boat arch, a quay wall with iron rails, a round stone lighthouse
---   4 slime tech   black steel and a teal glass vault, copper pipes, a quay crane, the lighthouse's green goo lamp
---   5 capital      white marble and gold, columns and a pediment, a blue glass vault, the lighthouse under its dome
+--   4 slime tech   black steel and a blue slate vault, copper pipes, a quay crane, the lighthouse's green goo lamp
+--   5 capital      white marble and gold, columns and a pediment, a blue tiled vault, the lighthouse under its dome
 -- The owner's note on the sheet: the pond stays big. Nothing here takes water away: the house stands on the back bank
 -- (a corner of lawn between the village's walls, 40 studs wide at the water and closing to a point), its landing out
 -- over the water's edge on stilts. The same things at every era, in the same places: THE BOATHOUSE across the back
@@ -82,7 +82,7 @@ type Look = {
 local LOOKS: { Look } = {
 	{ -- 1 hamlet
 		hw = 7.6,
-		depth = 7.6,
+		depth = 10.4, -- (the owner, 2026-11-17: the house at least as deep as the pier is long, once it has grown)
 		wallH = 5.6,
 		rise = 5.4,
 		wall = C(196, 150, 98),
@@ -113,7 +113,7 @@ local LOOKS: { Look } = {
 	},
 	{ -- 2 painted
 		hw = 8,
-		depth = 7.8,
+		depth = 10.4,
 		wallH = 6,
 		rise = 5.6,
 		wall = C(244, 238, 224),
@@ -143,7 +143,7 @@ local LOOKS: { Look } = {
 	},
 	{ -- 3 town
 		hw = 8.2,
-		depth = 8,
+		depth = 10.4,
 		wallH = 6.8,
 		rise = 5.4,
 		wall = C(240, 230, 206),
@@ -151,7 +151,7 @@ local LOOKS: { Look } = {
 		stone = C(132, 128, 122),
 		beam = C(112, 72, 44),
 		board = C(92, 60, 38),
-		roof = C(64, 94, 176),
+		roof = C(190, 62, 50), -- (the owner, 2026-11-17: one roof an era for every landmark, the Granary's)
 		frame = C(224, 218, 204),
 		cloth = C(52, 96, 204),
 		gold = C(236, 190, 70),
@@ -164,7 +164,7 @@ local LOOKS: { Look } = {
 			stone = M.Cobblestone,
 			beam = M.Wood,
 			board = M.Wood,
-			roof = M.Slate,
+			roof = M.ClayRoofTiles,
 			frame = M.Limestone,
 			gold = M.Foil,
 			accent = M.Metal,
@@ -174,7 +174,7 @@ local LOOKS: { Look } = {
 	},
 	{ -- 4 slime tech
 		hw = 8.4,
-		depth = 8,
+		depth = 10.4,
 		wallH = 7,
 		rise = 8.4,
 		wall = C(84, 190, 180), -- (teal darker than the sky: a paler pane read as one pale sheet)
@@ -182,7 +182,7 @@ local LOOKS: { Look } = {
 		stone = C(86, 90, 100),
 		beam = C(52, 56, 64),
 		board = C(40, 44, 50),
-		roof = C(70, 184, 172),
+		roof = C(62, 96, 160),
 		frame = C(104, 110, 122),
 		cloth = C(52, 96, 204),
 		gold = C(224, 170, 70),
@@ -195,7 +195,7 @@ local LOOKS: { Look } = {
 			stone = M.Slate,
 			beam = M.Metal,
 			board = M.Metal,
-			roof = M.Glass,
+			roof = M.RoofShingles,
 			frame = M.Metal,
 			gold = M.Metal,
 			accent = M.Metal,
@@ -204,7 +204,7 @@ local LOOKS: { Look } = {
 	},
 	{ -- 5 capital
 		hw = 8.4,
-		depth = 8,
+		depth = 10.4,
 		wallH = 11,
 		rise = 5,
 		wall = C(242, 239, 232), -- (not whiter: mouldings wash out in daylight)
@@ -223,7 +223,7 @@ local LOOKS: { Look } = {
 			wall = M.Marble,
 			stone = M.Marble,
 			beam = M.Marble,
-			roof = M.Slate,
+			roof = M.ClayRoofTiles,
 			gold = M.Foil,
 			fence = M.Marble,
 			deck = M.Marble,
@@ -339,12 +339,12 @@ function Boathouse.build(m: Instance, area: CFrame, level: number)
 			b.cone(cf, r, up, if tip then 5 else 3, colour, if tip then L.gold else nil)
 		end
 	end
-	-- the capital's dome of blue glass, `r` round, on its drum's top at `cf`: golden ribs, a lantern and a finial
+	-- the capital's dome in the era's roof tiles (the owner, 2026-11-17: a dome wears its era's roof), `r` round, on its drum's top at `cf`: golden ribs, a lantern and a finial
 	local function dome(cf: CFrame, r: number)
 		if piece("RoyalDome_Gold", cf, r, r, r, L.gold, M.Metal) then
-			piece("RoyalDome_Shell", cf, r, r, r, DOME, M.Glass)
+			piece("RoyalDome_Shell", cf, r, r, r, L.roof)
 		else
-			b.ball("Dome", r, cf, DOME, M.Glass)
+			b.ball("Dome", r, cf, L.roof)
 			b.cyl("DomeLantern", r * 0.2, r * 0.5, cf * CFrame.new(0, r * 1.2, 0), L.gold, M.Metal, false)
 			b.ball("Finial", r * 0.14, cf * CFrame.new(0, r * 1.55, 0), L.gold, M.Metal)
 		end
@@ -536,7 +536,7 @@ function Boathouse.build(m: Instance, area: CFrame, level: number)
 			for k = 0, 3 do
 				local px, py = arc(half, spring, R, k)
 				local qx, qy = arc(half, spring, R, k + 1)
-				b.beam("VaultPane", zb2 - za, 0.2, V(cx + s * px, py, zm), V(cx + s * qx, qy, zm), glass, M.Glass)
+				b.beam("VaultPane", zb2 - za, 0.2, V(cx + s * px, py, zm), V(cx + s * qx, qy, zm), glass)
 				for _, z in { za + 0.2, zm, zb2 - 0.2 } do
 					b.beam("VaultRib", 0.4, 0.42, V(cx + s * px, py, z), V(cx + s * qx, qy, z), rib, M.Metal)
 				end
@@ -964,7 +964,7 @@ function Boathouse.build(m: Instance, area: CFrame, level: number)
 		slab("HouseBack", x0, x1, FLOOR, top, zb - T, zb, L.lower)
 		b.box("FrontTie", hw * 2 - 2, 0.7, 0.7, b.at(BX, top - 0.35, HZ + 0.35), L.board)
 		vault(BX, hw, top, rise, HZ, zb, L.roof, L.board)
-		fan(BX, hw - 0.3, top, rise - 0.3, zb - 0.3, L.roof)
+		fan(BX, hw - 0.3, top, rise - 0.3, zb - 0.3, L.wall)
 		fan(BX, hw - 0.3, top, rise - 0.3, HZ + 0.35, L.wall)
 		-- the lunette's bars: three, and from f19 a round fan window (seven bars and a ring half way out)
 		local bars: { number } = if f >= 19 then { 1, 2, 3, 4, 5, 6, 7 } else { 2, 4, 6 }
@@ -1000,9 +1000,9 @@ function Boathouse.build(m: Instance, area: CFrame, level: number)
 		b.trim("Frieze", hw * 2 + 0.5, 0.3, 2.1, b.at(BX, ph + 0.85, HZ + 0.9), L.gold)
 		b.trim("Cornice", hw * 2 + 1.3, 0.3, 2.7, b.at(BX, top - 0.15, HZ + 0.9), L.wall)
 		if f >= 23 then
-			-- f23: the roof is a blue glass vault with gold ribs, behind the pediment
+			-- f23: the roof is a vault in the era's blue tiles with gold ribs, behind the pediment (its end fans stay glass)
 			frontGable(BX, hw, top, HZ - 0.3, HZ + 2.3, rise, 0.6, L.wall)
-			vault(BX, hw - 0.5, top, rise + 0.8, HZ + 2.3, zb, DOME, L.gold)
+			vault(BX, hw - 0.5, top, rise + 0.8, HZ + 2.3, zb, L.roof, L.gold)
 			fan(BX, hw - 0.7, top, rise + 0.6, HZ + 2.5, DOME)
 			fan(BX, hw - 0.7, top, rise + 0.6, zb - 0.3, DOME)
 		else

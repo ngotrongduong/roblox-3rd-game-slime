@@ -81,7 +81,7 @@ for the next one.
 | 16 | 6 | N | A blue and white striped awning over the landing at the house's right |
 | 17 | 7 | N | Flower boxes on the fence, one each side of the pier's foot |
 | 18 | 8 | N | Gold ball caps on the fence's posts, a lit lantern on the two by the pier |
-| 19 | 9 | N | A railed blue gallery round the lighthouse under its cap, with lit windows |
+| 19 | 9 | N | A railed blue gallery round the lighthouse under its cap (the tower keeps its ONE lit window: the owner, 2026-11-17) |
 | 20 | 10 | U | **The lighthouse a storey taller with a second red band, under a tall red cone roof of tile rows with a gold finial** |
 | 21 | | M S | Era 3: a stone quay wall with iron rails along the near bank, the house's ground floor in stone with one great boat arch under a blue slate roof, the fish in iron, the lighthouse round and in stone under a blue slate cone; the pond's left lobe with its jetty and the third fishing place |
 | 22 | | M | The pier's rails: iron bars between stone-grey posts |
@@ -92,7 +92,7 @@ for the next one.
 | 27 | 12 | S | The plank landing becomes a stone quay apron with steps down to the water and iron mooring rings |
 | 28 | 13 | U | The fish in a great riveted iron ring |
 | 29 | 14 | N | A half-timbered gable storey on the house under a higher blue slate roof: the house stands a floor taller |
-| 30 | 15 | U | **The lighthouse a floor taller, an iron gallery on corbels under a tall blue slate cone, lit windows all the way up** |
+| 30 | 15 | U | **The lighthouse a floor taller, an iron gallery on corbels under a tall red tile cone (one roof an era, the Granary's), its one lit window** |
 | 31 | | M S | Era 4: a black steel fence with brass caps, the house a steel and teal glass vault, the fish in steel, the lighthouse in riveted black steel under a small glass cap; the fourth fishing place |
 | 32 | | M | The pier's rails: black steel with brass caps |
 | 33 | | U | The pier's lamps: green globe lamps, and light strips along the deck's edges |
@@ -130,6 +130,13 @@ level) become the five eras above; the bait box and the bollards come with the r
 material with them; the bait shed moves from 11 to 15, the fish cooler from 21 to 25, the lighthouse from 41 to 10.
 The net rack (11), the bank path (11, longer at 21), the bench, the fishing stool on the right bank, the crystal
 buoy and the beacon of 41 stay as they are.
+
+## As built (checkpoint `4d99066`, 2026-11-17; not locked)
+
+`src/server/Boathouse.luau`, called from `DockStages`; the lighthouse has one window at every era. The owner found
+the house and the pond too small against the pier: the hall is now 10.4 deep, the roofs are the era's shared
+roofs (red tiles at era 3, blue shingles at 4, blue tiles at 5, the vaults too), and the house grows 2.45 times
+once the plots have grown (`docs/VILLAGE_SCALE.md` §6). The pond's water goes to 3 times its area then.
 
 ## Which shapes go where
 

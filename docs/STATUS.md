@@ -1,5 +1,31 @@
 # Status
 
+## 2026-11-17 — the village grows: one roof an era, deeper halls, the six houses enlarged in a line-up; plots next
+
+- The Dock was built after the owner's yes and committed as a checkpoint (`4d99066`: `Boathouse.luau` on
+  `Architecture` through five eras, the fish emblem B15, ChatGPT's one review and the last edit, ONE lighthouse
+  window at his word). It is NOT locked: he found the house and the pond far too small against the pier.
+- His rules since (all in `docs/VILLAGE_SCALE.md` §6 and memory `village-bigger-pier-standard`): the pier keeps
+  its size and is the standard; a house body at least 1.5 pier lengths wide and one deep; the lakeside house is
+  the reference, the Granary central and larger; pond water 3 times its area; plots grow with the houses; judge
+  from above, all six side by side; roofs of one era alike, the Granary's, domes and vaults too.
+- **In the code now** (types OK, check OK 827, seen in the Edit line-up at levels 10, 20, 30, 40, 50; not in
+  Play, not on a phone): (1) one roof an era in all six modules - thatch, red clay tiles, red clay tiles, blue
+  roof shingles, blue clay tiles (`LOOKS[era].roof` and `mats.roof`); the era-4 and era-5 vaults and every royal
+  dome wear `L.roof` (the Granary's era-5 domes too); end fans stay glass; the Breeding House keeps its egg and
+  goo lanterns stay glass. (2) deeper halls: `depth` 10.4 Boathouse, 13.2 Training Hall, 11 Breeding House, 10
+  Garden; their side walls are long and plain (one window): detail to add.
+- **Only in the line-up** (`tools/map/lineup_preview.luau`, spec `tools/map/lineup_spec.txt`, run
+  `real_kit_preview.luau` first): the house groups scaled K = 2.2 Granary, 1.45 Kitchen, 2.6 Garden, 2.3 Breeding
+  House, 1.9 Training Hall, 2.45 Boathouse; bodies then about 37-44 wide and 25 deep, the Granary 53 x 40. The
+  pictures went to the owner. The game still builds every house at K 1 in its 76 cell.
+- **Next, in this order** (waits for his word on the sizes): K into `Config` and the modules (house sections in a
+  child Model, `ScaleTo`), each `footprint`; the plot grid (`PlotSize` 228 to about 390, villages apart, MapWork
+  ground by `VILLAGE_SCALE.md` phases B-E: MapWork must be opened); yards and stations re-spaced; the pond 3 times
+  its water area; the piers checked era by era against the houses' materials; then the Dock's lock.
+- Not updated: `docs/areas/fishing.md` still describes the old dock. The line-up folders and previews in
+  StudioTest's Edit datamodel are destroyed, the camera's field of view is back at 70.
+
 ## 2026-11-17 — the Dock: the five-era sheet and the ladder; nothing built, the sheet waits for the owner's word
 
 - The owner chose the dock as the next landmark ("Bến tàu"). Skill `landmark-build`, steps 1-3: ChatGPT's first

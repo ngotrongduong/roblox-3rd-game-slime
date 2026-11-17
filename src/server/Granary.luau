@@ -340,14 +340,14 @@ local LOOKS: { Look } = {
 		tower = 8.5,
 		towerWall = C(250, 249, 245),
 		towerRoof = "dome",
-		towerCap = C(46, 88, 176),
+		towerCap = C(44, 84, 170), -- (the owner, 2026-11-17: a dome wears its era's roof, colour and tiles)
 		spire = 0,
 		siloR = 3,
 		siloH = 14.5,
 		siloDrum = C(246, 204, 96), -- (brushed metal, which darkens it: as bright foil the drums outshone the hall)
 		siloHoop = C(250, 249, 245),
 		siloCap = "dome",
-		siloCapColour = C(46, 88, 176),
+		siloCapColour = C(44, 84, 170),
 		mats = {
 			wall = M.Marble,
 			stone = M.Marble,
@@ -356,7 +356,6 @@ local LOOKS: { Look } = {
 			roof = M.ClayRoofTiles,
 			door = M.WoodPlanks,
 			accent = M.Metal,
-			towerCap = M.Metal,
 			siloDrum = M.Metal,
 		},
 	},

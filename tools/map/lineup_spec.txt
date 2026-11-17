@@ -1,0 +1,7 @@
+LineupNew 1500
+Granary 50 2.2 -100 0 0
+Kitchen 50 1.45 -100 0 -5
+Garden 50 2.6 17 0 18.5
+BreedingHouse 50 2.3 19 4 20
+TrainingHall 50 1.9 16.5 0 17.4
+Boathouse 50 2.45 21 -2 24.4

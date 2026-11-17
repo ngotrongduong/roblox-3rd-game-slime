@@ -106,3 +106,39 @@ radii while the saved terrain and plot sit at the old ones): do not publish phas
 - **D** valley: Market on the new rim, ring road, Wild Garden quarters, Heart, Duel Rings, hills.
 - **E** `probe_paths` all green, play test with 20 slimes per plot: nobody stuck for 2 minutes in
   breeding and garden; re-measure the slime width.
+
+## 6. The second scale-up: houses sized from the fishing pier (owner, 2026-11-17)
+
+His rules, in his order: the fishing pier (6 x 24.7) is the standard and keeps its size; a house BODY (not its
+silos, chimneys, towers) is at least 1.5 pier lengths wide (37) and one pier length deep (25); the lakeside house
+is the reference, the other houses about its size, the Granary is the central building and larger; the pond's
+water grows to 3 times its AREA (x1.73 across); every plot grows with its house ("do not cram it into the old
+space"); judge sizes from above with all six side by side. Rule 4's "models keep their present size" no longer
+holds for the six landmark houses.
+
+How the houses grow (seen only in the Edit line-up, `tools/map/lineup_preview.luau` with
+`tools/map/lineup_spec.txt`; NOT in the game yet):
+
+1. Deeper halls in the modules' own `LOOKS.depth` (done, in the code): Boathouse 10.4, Training Hall 13.2,
+   Breeding House 11, Garden 10.
+2. The house group scaled K times round its front-centre foot (`Model:ScaleTo`); yards, fences, gates and the
+   pier are not scaled:
+
+| Landmark | K | split z / pivot (x, z) | house group at L50, K applied (wide x deep) | body (wide x deep) |
+|---|---|---|---|---|
+| Granary | 2.2 | all / (0, 0) | 115 x 66 with wing and silos | about 53 x 40 |
+| Kitchen | 1.45 | all / (0, -5) | 83 x 29 | about 41 x 25 |
+| Garden | 2.6 | 17 / (0, 18.5) | 99 x 35 | about 37 x 26 |
+| Breeding House | 2.3 | 19 / (4, 20) | 111 x 33 | about 44 x 25 |
+| Training Hall | 1.9 | 16.5 / (0, 17.4) | 74 x 30 | about 43 x 25 |
+| Boathouse | 2.45 | 21 / (-2, 24.4) | 81 x 44 with the lighthouse | about 41 x 25 |
+
+What this asks of the plot (my estimate, nothing changed yet): a cell of about 130 (now 76), so `PlotSize`
+about 390 (now 228), the plot's corner at about 276 from its middle, `WorldPlan.Village.PadRadius` (176) at
+least 290, village centres at least 620 apart (now about 400): the villages move, MapWork's ground is rebuilt
+by phases B-E above, each `*Stages` module re-spaces its yard and stations, and the Granary goes to the middle
+cell. 288 is the most `PlotSize` can be without moving villages (40-stud lanes kept), which is too small.
+
+To build it in the game: K as named numbers in `Config`, each module builds its house sections into a child
+Model and scales it (check stud `Texture` tiles and lights after `ScaleTo`; people-scale props inside are
+re-placed by the `*Stages` module at their own size), each `footprint` grows, then the plots.
