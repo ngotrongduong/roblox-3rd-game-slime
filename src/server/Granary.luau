@@ -37,6 +37,19 @@ local LEFT, RIGHT = Vector3.new(1, 0, 0), Vector3.new(-1, 0, 0) -- (as one walks
 local LEAN_Z0, LEAN_Z1, LEAN_OUT = 1.6, 10.2, 6.2
 local LEAN_SLOPE = 1.6 / LEAN_OUT
 local WING_Z0 = 1.6
+-- the shell's parts that an era's Blender body stands for (see THE BODY FROM BLENDER in `raise`)
+local SHELL: { [string]: boolean } = {}
+for name in
+	string.gmatch(
+		"Plinth Wall Rail Post Brace Roof Gable BargeBoard Ridge EaveRoll TieBeam KingPost Strut WindowFrame WindowGlass "
+			.. "WindowBar WindowSill WindowHead WindowHeadGlass Shutter Dock DockStep DoorLeaf DoorBand DoorBrace DoorJamb "
+			.. "DoorLintel Tower TowerTie TowerPost TowerLeg TowerString TowerCornice TowerEave LeanRoof LeanPlate LeanBeam "
+			.. "LeanPost LeanBrace LeanKnee LeanRafter",
+		"%a+"
+	)
+do
+	SHELL[name] = true
+end
 
 type WindowOpts = { shutters: Color3?, arch: boolean?, flowers: boolean?, glow: boolean?, through: number? }
 type Wing = { out: number, len: number, wallH: number, rise: number }
@@ -544,6 +557,43 @@ local function raise(m: Instance, frame: CFrame, level: number)
 		b.trim(name, proud, h, z1 - z0, b.at(X + proud / 2, y, (z0 + z1) / 2), colour)
 		b.trim(name, proud, h, z1 - z0, b.at(-X - proud / 2, y, (z0 + z1) / 2), colour)
 	end
+
+	-- THE BODY FROM BLENDER (the owner, 2026-11-17: "dựng lại tất cả các công trình bằng blender", "cánh cửa chính mở
+	-- nhé, và có thể đi vào bên trong nhà"): tools/blender/landmark_bodies.py models an era's whole shell on this
+	-- module's own numbers, hollow, its door open, one mesh a material. Where an era's model has come, the shell below
+	-- is still built but as a ghost (Architecture's `b.ghost`): its solid parts are the collision inside the model,
+	-- its trim is left out. Everything a level switches on stays as it is.
+	local body = "GranaryBody" .. era
+	local bodied = LibraryKit.find(body .. "_Plaster") ~= nil
+	local function shell(on: boolean)
+		b.ghost(if on and bodied then SHELL else nil)
+	end
+	if bodied then
+		local slots: { { any } } = {
+			{ "Stone", L.stone },
+			{ "Plaster", L.wall },
+			{ "Timber", L.beam },
+			{ "Thatch", L.roof },
+			{ "Planks", L.door },
+			{ "Iron", IRON },
+			{ "Pane", L.glass, glowMat },
+		}
+		for _, slot in slots do
+			piece(body .. "_" .. slot[1], b.at(0, 0, 0), 1, 1, 1, slot[2], slot[3])
+		end
+		-- (the model's low rails along the lean-to's open side: nothing walks through them)
+		local railZ0, railZ1 = LEAN_Z0 + 0.3, LEAN_Z1 - 0.3
+		b.box(
+			"LeanRailStop",
+			0.3,
+			2.2,
+			railZ1 - railZ0,
+			b.at(-(hw + LEAN_OUT - 0.3), FLOOR + 1.1, (railZ0 + railZ1) / 2),
+			L.board
+		).Transparency =
+			1
+	end
+	shell(true)
 
 	-- THE HALL'S SHELL -----------------------------------------------------------------------------------
 	b.box("Plinth", hw * 2 + 0.6, BASE, d + 0.6, b.at(0, BASE / 2, d / 2), L.stone)
@@ -1087,6 +1137,8 @@ local function raise(m: Instance, frame: CFrame, level: number)
 		b.ball("TowerFinial", 0.35, b.at(0, tip + 0.2, zT), L.gold)
 	end
 
+	shell(false) -- (dormers, the store and the wing are built of the shell's helpers, and are no part of the model)
+
 	-- DORMERS --------------------------------------------------------------------------------------------
 	-- a dormer on the slope `s` at `z`, its front `uF` from the ridge line: a box out of the roof under a
 	-- small gable of its own
@@ -1414,6 +1466,7 @@ local function raise(m: Instance, frame: CFrame, level: number)
 	end
 
 	-- THE LEAN-TO SHED along the right wall --------------------------------------------------------------
+	shell(true)
 	do
 		local slope = LEAN_SLOPE
 		local run = LEAN_OUT + 0.6
@@ -1490,6 +1543,7 @@ local function raise(m: Instance, frame: CFrame, level: number)
 			painted("HangingSack_Beam", b.face(px, beamY - 1.9, LEAN_Z0 + 0.05, FRONT), 1)
 		end
 	end
+	shell(false)
 
 	-- THE SILOS behind the lean-to -----------------------------------------------------------------------
 	do

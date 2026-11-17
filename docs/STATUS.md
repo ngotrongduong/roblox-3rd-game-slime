@@ -1,5 +1,28 @@
 # Status
 
+## 2026-11-17 (late night) — all six landmarks rebuilt in Blender: the method proved on the Granary's era 1
+
+The owner: "dựng lại tất cả các công trình bằng blender ... với mỗi tòa nhà bạn hãy yêu cầu chatgpt cho xem hình
+tham chiếu ở các mặt khác nhau", "cánh cửa chính mở nhé, và có thể đi vào bên trong nhà", and "chủ yếu là dựng phần
+khung và kết cấu của căn nhà thôi, những phụ kiện kiểu như đèn, hoa, chậu hoa, các thứ khác đều có sẵn rồi".
+
+- **Method** (skill `landmark-build` §3a): each era's visible shell is ONE Blender model `<Name>Body<era>`, one mesh
+  a material, on the module's own numbers, held at `b.at(0, 0, 0)`; the old part shell stays hidden inside it as the
+  collider (`b.ghost` in `Architecture.luau`); every fixture a level switches on is untouched (the kit's).
+- **Done**: four-side reference sheets of the Granary's five eras (`docs/areas/village-v2/views/`, request rows in
+  `tools/chatgpt/views.py`; chats era 1 `/c/6afc3a67-50b8-83ec-9bf5-228677a0cbb2`, 2 `/c/6afc3b25-de04-83ec-b3b4-de08fb7a8846`,
+  3 `/c/6afc3b8a-278c-83ec-9d77-612979c2c34e`, 4 `/c/6afc3bb8-7c34-83ec-9ef5-4c57c63d9ecf`, 5 `/c/6afc3bd8-4670-83ec-b3ca-3fe86d7dbcbe`);
+  `GranaryBody1` (`tools/blender/landmark_bodies.py`, 14088 triangles, 7 meshes, uploaded, rows in
+  `src/shared/ConfigMeshyKit.luau`); `Granary.luau` wears it at era 1 (`SHELL`, `shell(on)`).
+- **Proved** in the StudioTest play test at levels 1 and 10 (`review/granary-body-l1.jpg`, `-l10.jpg`): the
+  character walked in through the great door, the walls stopped it from inside and outside, no error of this job
+  in the console. TYPES OK, CHECK OK (829 passed).
+- **Next, in order**: Granary eras 2-5 (each sheet looked at first), an era-1 silo piece, then Kitchen, Garden,
+  Breeding House, Training Hall, Dock the same way (concept sheet cut, four-side sheets asked, body, upload, ghost).
+- **Not verified / open**: the phone view; the house on its real plot (the open StudioTest held a map older than
+  `Layout`, the stage stood on wild lawn that was cleared in Play: reopen StudioTest); eras 2-5 still show the part
+  shell; `LeanRailStop` is made at every bodied era and needs a condition when a later era has no lean-to rails.
+
 ## 2026-11-17 (night) — the garden's tool stores of eras 4 and 5, built in Blender; Blender first from now on
 
 - The owner chose proposal 1 of `garden-ladder.md` ("Nhà kho thời kỳ 4-5"), then asked why part-built things are not

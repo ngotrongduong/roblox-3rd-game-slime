@@ -11,8 +11,8 @@
   const parts = [];
   for (const n of names) {
     const img = new Image();
-    img.src = '/' + n + '?t=' + Date.now();
-    await img.decode();
+    // (the load event, not img.decode(): decode() never settles while the browser pane is hidden)
+    await new Promise((res, rej) => { img.onload = res; img.onerror = rej; img.src = '/' + n + '?t=' + Date.now(); });
     // (a new chat's address takes less than a chat's: &w=1000 makes them smaller)
     const w = Math.min(Number(new URLSearchParams(location.search).get('w')) || 1400, img.naturalWidth);
     const c = document.createElement('canvas');
@@ -24,7 +24,11 @@
   // It lands on chatgpt.com's light static page (robots.txt: the app with a ~1 MB address fails
   // to load); a script there keeps the pictures in sessionStorage and opens the chat: &to=/c/<id>
   // for a follow-up, else a new chat.
+  // &p=<text file> carries the message too (as &prompt= before the pictures), so a long brief never has to be typed
+  // into a javascript call; tools/chatgpt/views.py writes such files.
   const to = new URLSearchParams(location.search).get('to') || '/';
-  location.href = 'https://chatgpt.com/robots.txt#to=' + encodeURIComponent(to) + '&review=' + parts.join('~');
+  const p = new URLSearchParams(location.search).get('p');
+  const prompt = p ? '&prompt=' + encodeURIComponent((await (await fetch('/' + p + '?t=' + Date.now())).text()).trim()) : '';
+  location.href = 'https://chatgpt.com/robots.txt#to=' + encodeURIComponent(to) + prompt + '&review=' + parts.join('~');
 })();
 </script>

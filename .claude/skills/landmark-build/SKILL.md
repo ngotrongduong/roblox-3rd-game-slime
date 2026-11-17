@@ -143,6 +143,38 @@ A slime statue is neither: it is the game's own slime (`ClientKit.SlimeBody` in 
 `hard-pieces.md` is the ledger: piece, era, what it replaces, reference file, model. A piece nobody has built yet
 keeps its stand-in and is named in the review brief as "not to be judged".
 
+## 3a. The house's body from Blender (the owner, 2026-11-17)
+
+"dựng lại tất cả các công trình bằng blender ... với mỗi tòa nhà bạn hãy yêu cầu chatgpt cho xem hình tham chiếu ở
+các mặt khác nhau"; "cánh cửa chính mở nhé, và có thể đi vào bên trong nhà"; "chủ yếu là dựng phần khung và kết cấu
+của căn nhà thôi, những phụ kiện kiểu như đèn, hoa, chậu hoa, các thứ khác đều có sẵn rồi". The Granary's era 1 is
+the worked example (`tools/blender/landmark_bodies.py` `granary1`, `Granary.luau` `SHELL`).
+
+- **Four sides first.** One ChatGPT request an era: the era's cut of the concept sheet attached, "ONE sheet, 2 x 2,
+  the same building seen straight on from the front, the left, the back and the right, same scale, flat light, the
+  main door open". Rows in `tools/chatgpt/views.py`, sheets in `docs/areas/village-v2/views/`. Look at the sheet of
+  the era being modelled, not all five at once.
+- **What the body is**: frame and structure only: plinth, walls with their timber or stone, door frame and open
+  leaves, window frames and panes, roof with its ridge and verges, tower, lean-to or wing. One mesh object a
+  MATERIAL (`<Name>Body<era>_Stone`, `_Plaster`, `_Timber`, `_Thatch`, `_Planks`, `_Iron`, `_Pane`), held at
+  `b.at(0, 0, 0)` (the middle of the front wall's foot), built on the module's own `LOOKS[era]` numbers so every
+  feature of the ladder still lands on it. Lamps, flowers, boxes, banners, clocks, flags, sacks, ivy and every other
+  fixture stay the kit's and the module's, switched on by level as before.
+- **The part shell stays as the collider** (`b.ghost(names)` in `Architecture`): a named part that is not solid is
+  not made; a solid one stays opaque, 0.12 smaller, no shadow, hidden inside the model. Players stand, are stopped
+  and walk in exactly as before, and the camera still stops at the walls. So the model's walls are NOT cut for
+  windows or a back door (the old wall would show through): panes lie on both faces, a shut door lies on the wall;
+  only the great door is a real opening. Ghost is switched off round the parts that reuse the shell's helpers but
+  must show (dormers, the store inside, a part-built wing).
+- **The great door stands open** at every era, leaves swung about 100 degrees against the wall outside, and the
+  floor inside is clear enough to walk in. Prove it in Play: `Humanoid:MoveTo` from 26 studs out to 14 inside, then
+  at a side wall from inside and from outside; print the positions in the area's frame.
+- Rows go into `src/shared/ConfigMeshyKit.luau` (the script prints them as `ROW` lines); upload with
+  `upload_village_pieces.js`; a body changed after its upload is taken out of `art/models/village_ids.json` first.
+- `sync_all.ps1` BEFORE the Edit preview when Config changed (the preview failed on an old Config in the test
+  place). When the open test place holds an older map than `Layout`, `_G.AreaShow` builds on wild lawn: clear the
+  terrain there in Play (never saved) and say so.
+
 ## 4. Least time, least tokens
 
 - Look in Edit (step 6) as often as needed; enter Play once (step 7). A play session costs ten times a preview.

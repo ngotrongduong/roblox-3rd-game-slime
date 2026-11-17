@@ -598,5 +598,25 @@ return {
 				at = { 0.000, 0.000, -0.642 },
 			},
 		},
+		-- THE LANDMARKS' BODIES FROM BLENDER (the owner, 2026-11-17: every building rebuilt in Blender): an era's whole
+		-- shell, one mesh a material, painted by the game. tools/blender/landmark_bodies.py prints these rows; they are
+		-- here because this list, not Config's, is the one with room to grow. Held by the middle of the front wall's foot.
+		GranaryBody1_Stone = {
+			{ mesh = 112948646468915, tex = "", size = { 23.7, 1.2, 19.04 }, at = { -3.05, 0.6, 3.98 } },
+		},
+		GranaryBody1_Plaster = { { mesh = 105235623739664, tex = "", size = { 17, 20.64, 12 }, at = { 0, 11.52, 6 } } },
+		GranaryBody1_Timber = {
+			{ mesh = 134692605030446, tex = "", size = { 24.692, 21.94, 16.936 }, at = { -2.58, 11.67, 4.752 } },
+		},
+		GranaryBody1_Thatch = {
+			{ mesh = 75296677600544, tex = "", size = { 27.219, 11.278, 16.428 }, at = { -2.647, 11.771, 5.786 } },
+		},
+		GranaryBody1_Planks = {
+			{ mesh = 109960499207116, tex = "", size = { 9.15, 11.37, 16.151 }, at = { 0, 6.915, 4.185 } },
+		},
+		GranaryBody1_Iron = {
+			{ mesh = 88620871192380, tex = "", size = { 9.295, 3.732, 15.925 }, at = { 0, 3.666, 4.247 } },
+		},
+		GranaryBody1_Pane = { { mesh = 76295309709634, tex = "", size = { 16.16, 2, 12.12 }, at = { 0.48, 4.6, 6 } } },
 	},
 }

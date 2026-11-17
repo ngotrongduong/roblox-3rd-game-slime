@@ -438,6 +438,28 @@ was left there (this game has none); read it there if a cave is ever wanted.
 - In the StudioTest play test the player's plot is not always Plot5: look for the plot that has `PantryL1` before
   building a stage by hand.
 
+### A landmark's body from Blender over its part shell (2026-11-17, the Granary's era 1, tools/blender/landmark_bodies.py)
+
+The owner: rebuild all six landmarks in Blender, four-side references from ChatGPT for each, the main door open and
+the house walk-in, only frame and structure modelled (lamps, flowers, pots and the rest are the kit's).
+
+- **The parts stay, hidden, as the collider.** `b.ghost(names)`: non-solid named parts are not made, solid ones stay
+  opaque and 0.12 smaller inside the model. A see-through collider would have let the default camera pass through
+  the walls (it only stops at opaque solid parts) and an unshrunk one z-fights the model.
+- **No hole in the model where a kept wall stands behind it.** Windows are panes and frames ON the wall (both faces),
+  the back door lies on it; only the great door, which the part shell also leaves open, is cut.
+- **Build on the module's numbers** (`LOOKS[era]`: half width, depth, wall height, rise, door width) in the module's
+  axes (x, y up, z front to back = Blender x, -z, y), origin at the middle of the front wall's foot. Then the body
+  is one `b.at(0, 0, 0)` and every level feature still lands where it did; `Architecture.grow` scales it with the rest.
+- **Thatch**: a core slab plus stepped courses with one continuous ragged fringe a course (a seeded random), a
+  ridge roll and verge rolls; 3000 triangles read as thatch, flat slabs read as a lid.
+- **Importing `granary_pieces.py` as a module** works once its build loop is a function under `__main__`; the body
+  script reuses its mesh helpers, colours, shots and FBX export, and prints the kit rows.
+- 14088 triangles for era 1 (7 meshes). Seen in Play at levels 1 and 10: walked in through the door (frame z -26
+  to 13), stopped by the side wall from inside (x 16.9) and outside (x -19.2), console clean.
+- The open StudioTest held a map older than `Layout`: `_G.AreaShow` built the stage on wild lawn 4 studs too high;
+  cleared with `Terrain:FillBlock` in Play. Reopen the test place after it is rebuilt from MapWork.
+
 ### Whole small buildings from Blender (2026-11-17, the garden's tool stores, tools/blender/granary_pieces.py)
 
 The owner, looking at a part-built yard beside ChatGPT's picture: "why is what you build not as beautiful as the

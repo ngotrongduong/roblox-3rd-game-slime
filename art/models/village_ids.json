@@ -281,5 +281,18 @@
 			"ToolStoreTech_Plinth": 84599544983246,
 			"ToolStoreTech_Roof": 124890735574936
 		}
+	},
+	"GranaryBody1": {
+		"model": 91492267021486,
+		"texture": 0,
+		"pieces": {
+			"GranaryBody1_Iron": 88620871192380,
+			"GranaryBody1_Pane": 76295309709634,
+			"GranaryBody1_Planks": 109960499207116,
+			"GranaryBody1_Plaster": 105235623739664,
+			"GranaryBody1_Stone": 112948646468915,
+			"GranaryBody1_Thatch": 75296677600544,
+			"GranaryBody1_Timber": 134692605030446
+		}
 	}
 }

@@ -1129,35 +1129,44 @@ def preview(objs, path):
 		fh.write("\n".join(lines))
 
 
-# `-- <folder>` after Blender's own arguments also writes the Studio preview scripts there
-PREVIEW = sys.argv[sys.argv.index("--") + 1] if "--" in sys.argv else None
-os.makedirs(OUT, exist_ok=True)
-report = {}
-if ONLY and os.path.exists(OUT + "pieces.json"):
-	with open(OUT + "pieces.json") as fh:
-		report = json.load(fh)
-for pname, fn in PIECES:
-	clear()
-	objs = [to_object(n, m, loc, slot, ang) for n, m, loc, slot, ang in fn()]
-	info = {}
-	for ob in objs:
-		mm = [ob.matrix_world @ v.co for v in ob.data.vertices]
-		mn = [min(c[i] for c in mm) for i in range(3)]
-		mx = [max(c[i] for c in mm) for i in range(3)]
-		sz = [mx[i] - mn[i] for i in range(3)]
-		info[ob.name] = {"size_studs_xyz": [round(sz[0], 3), round(sz[2], 3), round(sz[1], 3)],  # Roblox axes: X, Y (up), Z
-			"centre_studs_xyz": [round(c, 3) for c in bounds(ob)[2]],  # from the piece's foot: Config.LibraryKit's `at`
-			"triangles": sum(len(p.vertices) - 2 for p in ob.data.polygons), "origin_location_blender": list(ob.location),
-			"signed_volume": round(volume(ob), 3)}
-	report[pname] = {"objects": info, "triangles": sum(o["triangles"] for o in info.values())}
-	render(objs, OUT + pname + ".png", FRONT.get(pname))
-	export(objs, OUT + pname + ".fbx")
-	if PREVIEW:
-		os.makedirs(PREVIEW, exist_ok=True)
-		preview(objs, os.path.join(PREVIEW, pname + ".luau"))
-with open(OUT + "pieces.json", "w") as fh:
-	json.dump(report, fh, indent=1)
-for k, v in report.items():
-	if ONLY and k not in ONLY.split(","):
-		continue
-	print("[granary_pieces]", k, v["triangles"], {n: (o["triangles"], o["size_studs_xyz"], o["signed_volume"]) for n, o in v["objects"].items()})
+def build(pieces, views=None, merge=False):
+	# Builds `pieces` ((name, function) pairs) into OUT: an FBX, a picture and a row of pieces.json each. `views` gives a
+	# piece more pictures ({piece: {tag: camera direction}} -> <Piece>_<tag>.png); `merge` keeps the other pieces' rows of
+	# pieces.json (tools/blender/landmark_bodies.py builds its own pieces through here).
+	# `-- <folder>` after Blender's own arguments also writes the Studio preview scripts there
+	preview_to = sys.argv[sys.argv.index("--") + 1] if "--" in sys.argv else None
+	os.makedirs(OUT, exist_ok=True)
+	report = {}
+	if (ONLY or merge) and os.path.exists(OUT + "pieces.json"):
+		with open(OUT + "pieces.json") as fh:
+			report = json.load(fh)
+	for pname, fn in pieces:
+		clear()
+		objs = [to_object(n, m, loc, slot, ang) for n, m, loc, slot, ang in fn()]
+		info = {}
+		for ob in objs:
+			mm = [ob.matrix_world @ v.co for v in ob.data.vertices]
+			mn = [min(c[i] for c in mm) for i in range(3)]
+			mx = [max(c[i] for c in mm) for i in range(3)]
+			sz = [mx[i] - mn[i] for i in range(3)]
+			info[ob.name] = {"size_studs_xyz": [round(sz[0], 3), round(sz[2], 3), round(sz[1], 3)],  # Roblox axes: X, Y (up), Z
+				"centre_studs_xyz": [round(c, 3) for c in bounds(ob)[2]],  # from the piece's foot: Config.LibraryKit's `at`
+				"triangles": sum(len(p.vertices) - 2 for p in ob.data.polygons), "origin_location_blender": list(ob.location),
+				"signed_volume": round(volume(ob), 3)}
+		report[pname] = {"objects": info, "triangles": sum(o["triangles"] for o in info.values())}
+		render(objs, OUT + pname + ".png", FRONT.get(pname))
+		for tag, view in ((views or {}).get(pname) or {}).items():
+			render(objs, OUT + pname + "_" + tag + ".png", view)
+		export(objs, OUT + pname + ".fbx")
+		if preview_to:
+			os.makedirs(preview_to, exist_ok=True)
+			preview(objs, os.path.join(preview_to, pname + ".luau"))
+	with open(OUT + "pieces.json", "w") as fh:
+		json.dump(report, fh, indent=1)
+	for k, _ in pieces:
+		v = report[k]
+		print("[granary_pieces]", k, v["triangles"], {n: (o["triangles"], o["size_studs_xyz"], o["signed_volume"]) for n, o in v["objects"].items()})
+
+
+if __name__ == "__main__":
+	build(PIECES)

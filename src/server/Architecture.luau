@@ -22,6 +22,15 @@ local Architecture = {}
 function Architecture.new(m: Instance, frame: CFrame, skins: { [string]: Enum.Material }?, seeThrough: number?)
 	local b = {}
 
+	-- A landmark whose seen body is one Blender model (the owner, 2026-11-17: every building rebuilt in Blender,
+	-- its great door open, the hall walked into) still builds its shell of parts, for what a model cannot be. Of
+	-- the parts named here the solid ones stay, a little smaller, inside the model: they are the collision and
+	-- what stops the camera at a wall. The trim is made but never put in the place.
+	local ghost: { [string]: boolean }? = nil
+	function b.ghost(names: { [string]: boolean }?)
+		ghost = names
+	end
+
 	local function make(
 		class: string,
 		name: string,
@@ -51,6 +60,14 @@ function Architecture.new(m: Instance, frame: CFrame, skins: { [string]: Enum.Ma
 			p.CanCollide = false
 			p.CanTouch = false
 			p.CanQuery = false
+		end
+		if ghost and ghost[name] then
+			if not solid then
+				return p
+			end
+			p.Size =
+				Vector3.new(math.max(size.X - 0.12, 0.05), math.max(size.Y - 0.12, 0.05), math.max(size.Z - 0.12, 0.05))
+			p.CastShadow = false
 		end
 		p.Parent = m
 		return p

@@ -976,5 +976,143 @@
    }
   },
   "triangles": 5844
+ },
+ "GranaryBody1": {
+  "objects": {
+   "GranaryBody1_Stone": {
+    "size_studs_xyz": [
+     23.7,
+     1.2,
+     19.04
+    ],
+    "centre_studs_xyz": [
+     -3.05,
+     0.6,
+     3.98
+    ],
+    "triangles": 4468,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 372.598
+   },
+   "GranaryBody1_Plaster": {
+    "size_studs_xyz": [
+     17.0,
+     20.64,
+     12.0
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     11.52,
+     6.0
+    ],
+    "triangles": 100,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 548.252
+   },
+   "GranaryBody1_Timber": {
+    "size_studs_xyz": [
+     24.692,
+     21.94,
+     16.936
+    ],
+    "centre_studs_xyz": [
+     -2.58,
+     11.67,
+     4.752
+    ],
+    "triangles": 4696,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 166.182
+   },
+   "GranaryBody1_Thatch": {
+    "size_studs_xyz": [
+     27.219,
+     11.278,
+     16.428
+    ],
+    "centre_studs_xyz": [
+     -2.647,
+     11.771,
+     5.786
+    ],
+    "triangles": 3088,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 607.743
+   },
+   "GranaryBody1_Planks": {
+    "size_studs_xyz": [
+     9.15,
+     11.37,
+     16.151
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     6.915,
+     4.185
+    ],
+    "triangles": 312,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 12.143
+   },
+   "GranaryBody1_Iron": {
+    "size_studs_xyz": [
+     9.295,
+     3.732,
+     15.925
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     3.666,
+     4.247
+    ],
+    "triangles": 864,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 1.403
+   },
+   "GranaryBody1_Pane": {
+    "size_studs_xyz": [
+     16.16,
+     2.0,
+     12.12
+    ],
+    "centre_studs_xyz": [
+     0.48,
+     4.6,
+     6.0
+    ],
+    "triangles": 560,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 2.386
+   }
+  },
+  "triangles": 14088
  }
 }
