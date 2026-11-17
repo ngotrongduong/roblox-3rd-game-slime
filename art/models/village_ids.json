@@ -351,5 +351,105 @@
 			"GranaryBody5_Stone": 138247988475325,
 			"GranaryBody5_Wall": 126018844219259
 		}
+	},
+	"KitchenBody4": {
+		"model": 132209024054884,
+		"texture": 0,
+		"pieces": {
+			"KitchenBody4_Beam": 109735001469695,
+			"KitchenBody4_Board": 108732556187827,
+			"KitchenBody4_Cap": 80402546685109,
+			"KitchenBody4_Chimney": 138793878837633,
+			"KitchenBody4_Frame": 71433031884288,
+			"KitchenBody4_Glass": 129199597521292,
+			"KitchenBody4_Gold": 112920755765848,
+			"KitchenBody4_Lower": 110666637373296,
+			"KitchenBody4_Roof": 114075015717354,
+			"KitchenBody4_Stone": 92118390732206
+		}
+	},
+	"KitchenBody5": {
+		"model": 75372989500205,
+		"texture": 0,
+		"pieces": {
+			"KitchenBody5_Board": 107910209590004,
+			"KitchenBody5_Cap": 82830590885940,
+			"KitchenBody5_Chimney": 81051565736204,
+			"KitchenBody5_Glass": 79124283248606,
+			"KitchenBody5_Roof": 140584923816353,
+			"KitchenBody5_Stone": 79338205898858,
+			"KitchenBody5_Wall": 70639084760845
+		}
+	},
+	"KitchenStack1": {
+		"model": 118782780836360,
+		"texture": 0,
+		"pieces": {
+			"KitchenStack1_Cap": 133891675567109,
+			"KitchenStack1_Chimney": 86384801249965
+		}
+	},
+	"KitchenBody1": {
+		"model": 83906725513127,
+		"texture": 0,
+		"pieces": {
+			"KitchenBody1_Beam": 103437715635038,
+			"KitchenBody1_Board": 82311912213877,
+			"KitchenBody1_Cap": 76485253829815,
+			"KitchenBody1_Chimney": 140082063739248,
+			"KitchenBody1_Frame": 124686710723449,
+			"KitchenBody1_Glass": 128003266720938,
+			"KitchenBody1_Lower": 73898764296554,
+			"KitchenBody1_Roof": 91142475020140,
+			"KitchenBody1_Stone": 102675995116310,
+			"KitchenBody1_Wall": 126333132721655
+		}
+	},
+	"KitchenBody2": {
+		"model": 107158459283294,
+		"texture": 0,
+		"pieces": {
+			"KitchenBody2_Beam": 72215121226722,
+			"KitchenBody2_Board": 138089990218854,
+			"KitchenBody2_Cap": 95947220346284,
+			"KitchenBody2_Chimney": 94931681059537,
+			"KitchenBody2_Frame": 125851542120437,
+			"KitchenBody2_Glass": 132462971021287,
+			"KitchenBody2_Roof": 139471803211401,
+			"KitchenBody2_Shutters": 76568756998852,
+			"KitchenBody2_Stone": 102675995116310,
+			"KitchenBody2_Wall": 128654530337223
+		}
+	},
+	"KitchenBody3": {
+		"model": 127736807767539,
+		"texture": 0,
+		"pieces": {
+			"KitchenBody3_Beam": 83389442732538,
+			"KitchenBody3_Board": 95837056550430,
+			"KitchenBody3_Cap": 130974388041369,
+			"KitchenBody3_Chimney": 109736821254950,
+			"KitchenBody3_Frame": 139846476957622,
+			"KitchenBody3_Glass": 79124283248606,
+			"KitchenBody3_Lower": 87489902451561,
+			"KitchenBody3_Roof": 84511424839528,
+			"KitchenBody3_Stone": 105722127772277,
+			"KitchenBody3_Wall": 83939593640139
+		}
+	},
+	"KitchenGable1": {
+		"model": 93561948051400,
+		"texture": 0,
+		"pieces": {
+			"KitchenGable1_Beam": 118999105062106,
+			"KitchenGable1_Wall": 112957816765331
+		}
+	},
+	"KitchenTruss1": {
+		"model": 109793033943413,
+		"texture": 0,
+		"pieces": {
+			"KitchenTruss1_Beam": 74053122388694
+		}
 	}
 }

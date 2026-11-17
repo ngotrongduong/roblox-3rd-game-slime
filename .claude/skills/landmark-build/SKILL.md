@@ -191,6 +191,16 @@ worked example of one builder for several eras (`granary(era)`, `SHELL_LATER`, `
   - A part of the module that reuses shell names but must show (the wing's store) sits between `shell(false)` and
     `shell(true)`; a stand-in made only for era 1 (`LeanRailStop`) is under that era's condition.
   - `LANDMARK_BODIES=GranaryBody2,GranaryBody3` in the environment (set in a scratchpad `.ps1`) builds only those.
+- **The roof-line rule** (the Kitchen): `b.gable` puts the roof's TOP on the line through (half width, wall
+  height), so a timber whose end reaches that x near the wall height stands out of the roof (tie beams past the
+  corner posts, rafters' eave ends, wall plates, jetty beams, eave bands). In the body every timber's eave end
+  stays half a stud under that line; a ghosted SOLID beam of the module is shortened when `bodied` (a ghost is only
+  0.06 a face smaller than the old part). Shoot each era's roof from above the eave in the Edit preview.
+- **A part a level switches inside one era is its own small model** (`KitchenTruss1`, `KitchenGable1`,
+  `KitchenStack1`), placed under the module's own `features(level)` test; a hole the model has and the old part
+  had not gets a new invisible stop (`BayStop`). An arch's ring starts inside the arch line.
+- **Four-side sheets back from ChatGPT**: `main img` with `naturalWidth > 500` AND `alt` starting "Generated
+  image" (a chat holds the attached references too).
 - **Proof in Play, one call a level**: `_G.AreaShow(...)`, the character pivoted 18 studs before the door,
   `MoveTo` 20 studs inside repeated every half second, the position printed in the area's frame (door at z 0);
   "level 50: stands at x 0.0 y 8.7 z 19.2 after 3.1 s" is the proof line. Then one daylight shot of the whole house.

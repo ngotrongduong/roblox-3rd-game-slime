@@ -708,5 +708,145 @@ return {
 		GranaryBody5_Glass = {
 			{ mesh = 77888356830769, tex = "", size = { 33.26, 8.5, 18.12 }, at = { 4.57, 7.65, 9 } },
 		},
+		-- The Kitchen's five era bodies (tools/blender/landmark_bodies.py, `kitchen`), and era 1's three parts a level
+		-- switches: the open truss of its first levels, the plaster gable that closes it, the chimney's upper stack.
+		KitchenBody1_Stone = {
+			{ mesh = 102675995116310, tex = "", size = { 29.3, 0.77, 1.6 }, at = { 0, 0.635, -4.55 } },
+		},
+		KitchenBody1_Wall = {
+			{ mesh = 126333132721655, tex = "", size = { 28.6, 16.416, 0.6 }, at = { 0, 8.508, 12 } },
+		},
+		KitchenBody1_Lower = {
+			{ mesh = 73898764296554, tex = "", size = { 28.64, 4.7, 17.14 }, at = { 0, 2.65, 3.87 } },
+		},
+		KitchenBody1_Beam = {
+			{ mesh = 103437715635038, tex = "", size = { 28.94, 16.313, 17.75 }, at = { 0, 8.457, 3.705 } },
+		},
+		KitchenBody1_Board = {
+			{ mesh = 82311912213877, tex = "", size = { 33.097, 11.913, 21.44 }, at = { 0, 11.82, 3.65 } },
+		},
+		KitchenBody1_Roof = {
+			{ mesh = 91142475020140, tex = "", size = { 34.221, 12.456, 21.4 }, at = { 0, 12.372, 3.65 } },
+		},
+		KitchenBody1_Frame = {
+			{ mesh = 124686710723449, tex = "", size = { 14.84, 6.54, 1.22 }, at = { 0, 3.67, 12.11 } },
+		},
+		KitchenBody1_Glass = { { mesh = 128003266720938, tex = "", size = { 14, 2.2, 0.72 }, at = { 0, 5.6, 12 } } },
+		KitchenBody1_Chimney = {
+			{ mesh = 140082063739248, tex = "", size = { 4.5, 19.3, 4.5 }, at = { 16.5, 9.65, 6.2 } },
+		},
+		KitchenBody1_Cap = { { mesh = 76485253829815, tex = "", size = { 4.1, 9.7, 4.1 }, at = { 16.5, 9.85, 6.2 } } },
+		KitchenBody2_Stone = {
+			{ mesh = 102675995116310, tex = "", size = { 29.3, 0.77, 1.6 }, at = { 0, 0.635, -4.55 } },
+		},
+		KitchenBody2_Wall = {
+			{ mesh = 128654530337223, tex = "", size = { 28.6, 17.177, 17.3 }, at = { 0, 8.889, 3.65 } },
+		},
+		KitchenBody2_Beam = {
+			{ mesh = 72215121226722, tex = "", size = { 29.08, 16.911, 17.84 }, at = { 0, 8.855, 3.66 } },
+		},
+		KitchenBody2_Board = {
+			{ mesh = 138089990218854, tex = "", size = { 32.33, 11.463, 20.84 }, at = { 0, 12.502, 3.65 } },
+		},
+		KitchenBody2_Roof = {
+			{ mesh = 139471803211401, tex = "", size = { 31.994, 11.689, 20.8 }, at = { 0, 12.856, 3.65 } },
+		},
+		KitchenBody2_Frame = {
+			{ mesh = 125851542120437, tex = "", size = { 29.44, 6.54, 16.67 }, at = { 0, 3.67, 4.385 } },
+		},
+		KitchenBody2_Glass = {
+			{ mesh = 132462971021287, tex = "", size = { 28.72, 3.8, 15.89 }, at = { 0, 4.8, 4.415 } },
+		},
+		KitchenBody2_Shutters = {
+			{ mesh = 76568756998852, tex = "", size = { 29.4, 4.7, 17.12 }, at = { 0, 2.75, 3.88 } },
+		},
+		KitchenBody2_Chimney = {
+			{ mesh = 94931681059537, tex = "", size = { 4.5, 24.7, 4.5 }, at = { 16.5, 12.35, 6.2 } },
+		},
+		KitchenBody2_Cap = { { mesh = 95947220346284, tex = "", size = { 4.1, 20.4, 4.1 }, at = { 16.5, 15.2, 6.2 } } },
+		KitchenBody3_Stone = {
+			{ mesh = 105722127772277, tex = "", size = { 29, 9.001, 17.77 }, at = { 0, 4.501, 3.615 } },
+		},
+		KitchenBody3_Wall = {
+			{ mesh = 83939593640139, tex = "", size = { 26.56, 9.658, 17.3 }, at = { 0, 14.429, 3.65 } },
+		},
+		KitchenBody3_Lower = { { mesh = 87489902451561, tex = "", size = { 28.6, 9.6, 17.3 }, at = { 0, 4.8, 3.65 } } },
+		KitchenBody3_Beam = {
+			{ mesh = 83389442732538, tex = "", size = { 29.2, 18.705, 18.23 }, at = { 0, 9.753, 3.465 } },
+		},
+		KitchenBody3_Board = {
+			{ mesh = 95837056550430, tex = "", size = { 32.159, 12.259, 20.64 }, at = { 0, 13.884, 3.65 } },
+		},
+		KitchenBody3_Roof = {
+			{ mesh = 84511424839528, tex = "", size = { 31.796, 12.492, 20.6 }, at = { 0, 14.254, 3.65 } },
+		},
+		KitchenBody3_Frame = {
+			{ mesh = 139846476957622, tex = "", size = { 32.795, 19.6, 18.18 }, at = { 1.678, 10.2, 3.63 } },
+		},
+		KitchenBody3_Glass = {
+			{ mesh = 79124283248606, tex = "", size = { 28.72, 4.8, 15.89 }, at = { 0, 5.3, 4.415 } },
+		},
+		KitchenBody3_Chimney = {
+			{ mesh = 109736821254950, tex = "", size = { 4.5, 26.5, 4.5 }, at = { 16.5, 13.25, 6.2 } },
+		},
+		KitchenBody3_Cap = { { mesh = 130974388041369, tex = "", size = { 4.1, 22.2, 4.1 }, at = { 16.5, 16.1, 6.2 } } },
+		KitchenBody4_Stone = { { mesh = 92118390732206, tex = "", size = { 29, 1, 17.7 }, at = { 0, 0.5, 3.65 } } },
+		KitchenBody4_Lower = { { mesh = 110666637373296, tex = "", size = { 28.6, 9.6, 17.3 }, at = { 0, 4.8, 3.65 } } },
+		KitchenBody4_Beam = {
+			{ mesh = 109735001469695, tex = "", size = { 29.7, 15.193, 19.1 }, at = { 0, 11.977, 3.65 } },
+		},
+		KitchenBody4_Board = {
+			{ mesh = 108732556187827, tex = "", size = { 2.56, 4.6, 0.16 }, at = { 0, 2.7, 12.36 } },
+		},
+		KitchenBody4_Roof = {
+			{ mesh = 114075015717354, tex = "", size = { 29.2, 9.57, 18.9 }, at = { 0, 14.385, 3.65 } },
+		},
+		KitchenBody4_Frame = {
+			{ mesh = 71433031884288, tex = "", size = { 21.6, 7.54, 17.94 }, at = { 0, 4.17, 3.75 } },
+		},
+		KitchenBody4_Glass = { { mesh = 129199597521292, tex = "", size = { 14, 3.2, 0.72 }, at = { 0, 6.1, 12 } } },
+		KitchenBody4_Chimney = {
+			{ mesh = 138793878837633, tex = "", size = { 4.5, 25, 4.5 }, at = { 16.5, 12.5, 6.2 } },
+		},
+		KitchenBody4_Cap = { { mesh = 80402546685109, tex = "", size = { 4.1, 20.7, 4.1 }, at = { 16.5, 15.35, 6.2 } } },
+		KitchenBody4_Gold = {
+			{ mesh = 112920755765848, tex = "", size = { 19.543, 16.08, 13.8 }, at = { 8.628, 16.24, 1.2 } },
+		},
+		KitchenBody5_Stone = {
+			{ mesh = 79338205898858, tex = "", size = { 29.52, 12.22, 17.7 }, at = { 0, 6.11, 3.65 } },
+		},
+		KitchenBody5_Wall = {
+			{ mesh = 70639084760845, tex = "", size = { 30.04, 17.915, 19.07 }, at = { 0, 8.957, 2.815 } },
+		},
+		KitchenBody5_Board = {
+			{ mesh = 107910209590004, tex = "", size = { 33.595, 28.17, 19.88 }, at = { 1.838, 14.485, 3.13 } },
+		},
+		KitchenBody5_Roof = {
+			{ mesh = 140584923816353, tex = "", size = { 22.791, 7.809, 18.8 }, at = { 0, 15.096, 3.65 } },
+		},
+		KitchenBody5_Glass = {
+			{ mesh = 79124283248606, tex = "", size = { 28.72, 4.8, 15.89 }, at = { 0, 5.3, 4.415 } },
+		},
+		KitchenBody5_Chimney = {
+			{ mesh = 81051565736204, tex = "", size = { 5.04, 29.5, 5.04 }, at = { 16.5, 14.75, 6.2 } },
+		},
+		KitchenBody5_Cap = {
+			{ mesh = 82830590885940, tex = "", size = { 20.08, 29.8, 8.54 }, at = { 8.76, 15.3, 8.17 } },
+		},
+		KitchenTruss1_Beam = {
+			{ mesh = 74053122388694, tex = "", size = { 26.516, 8.618, 0.6 }, at = { 0, 12.346, -4.55 } },
+		},
+		KitchenGable1_Wall = {
+			{ mesh = 112957816765331, tex = "", size = { 25.371, 8.516, 0.6 }, at = { 0, 12.458, -4.7 } },
+		},
+		KitchenGable1_Beam = {
+			{ mesh = 118999105062106, tex = "", size = { 26.072, 8.165, 0.31 }, at = { 0, 12.283, -5.105 } },
+		},
+		KitchenStack1_Chimney = {
+			{ mesh = 86384801249965, tex = "", size = { 2.9, 5, 2.9 }, at = { 16.5, 21.8, 6.2 } },
+		},
+		KitchenStack1_Cap = {
+			{ mesh = 133891675567109, tex = "", size = { 3.7, 0.7, 3.7 }, at = { 16.5, 24.65, 6.2 } },
+		},
 	},
 }

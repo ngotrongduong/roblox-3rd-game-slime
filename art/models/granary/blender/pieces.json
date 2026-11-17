@@ -1761,5 +1761,1033 @@
    }
   },
   "triangles": 22932
+ },
+ "KitchenBody1": {
+  "objects": {
+   "KitchenBody1_Stone": {
+    "size_studs_xyz": [
+     29.3,
+     0.77,
+     1.6
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     0.635,
+     -4.55
+    ],
+    "triangles": 176,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 7.589
+   },
+   "KitchenBody1_Wall": {
+    "size_studs_xyz": [
+     28.6,
+     16.416,
+     0.6
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     8.508,
+     12.0
+    ],
+    "triangles": 20,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 200.381
+   },
+   "KitchenBody1_Lower": {
+    "size_studs_xyz": [
+     28.64,
+     4.7,
+     17.14
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     2.65,
+     3.87
+    ],
+    "triangles": 600,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 66.883
+   },
+   "KitchenBody1_Beam": {
+    "size_studs_xyz": [
+     28.94,
+     16.313,
+     17.75
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     8.457,
+     3.705
+    ],
+    "triangles": 2716,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 198.293
+   },
+   "KitchenBody1_Board": {
+    "size_studs_xyz": [
+     33.097,
+     11.913,
+     21.44
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     11.82,
+     3.65
+    ],
+    "triangles": 48,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 29.268
+   },
+   "KitchenBody1_Roof": {
+    "size_studs_xyz": [
+     34.221,
+     12.456,
+     21.4
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     12.372,
+     3.65
+    ],
+    "triangles": 3452,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 1098.491
+   },
+   "KitchenBody1_Frame": {
+    "size_studs_xyz": [
+     14.84,
+     6.54,
+     1.22
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     3.67,
+     12.11
+    ],
+    "triangles": 588,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 6.728
+   },
+   "KitchenBody1_Glass": {
+    "size_studs_xyz": [
+     14.0,
+     2.2,
+     0.72
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     5.6,
+     12.0
+    ],
+    "triangles": 160,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 1.008
+   },
+   "KitchenBody1_Chimney": {
+    "size_studs_xyz": [
+     4.5,
+     19.3,
+     4.5
+    ],
+    "centre_studs_xyz": [
+     16.5,
+     9.65,
+     6.2
+    ],
+    "triangles": 4876,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 250.689
+   },
+   "KitchenBody1_Cap": {
+    "size_studs_xyz": [
+     4.1,
+     9.7,
+     4.1
+    ],
+    "centre_studs_xyz": [
+     16.5,
+     9.85,
+     6.2
+    ],
+    "triangles": 88,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 15.333
+   }
+  },
+  "triangles": 12724
+ },
+ "KitchenBody2": {
+  "objects": {
+   "KitchenBody2_Stone": {
+    "size_studs_xyz": [
+     29.3,
+     0.77,
+     1.6
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     0.635,
+     -4.55
+    ],
+    "triangles": 176,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 7.589
+   },
+   "KitchenBody2_Wall": {
+    "size_studs_xyz": [
+     28.6,
+     17.177,
+     17.3
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     8.889,
+     3.65
+    ],
+    "triangles": 76,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 456.022
+   },
+   "KitchenBody2_Beam": {
+    "size_studs_xyz": [
+     29.08,
+     16.911,
+     17.84
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     8.855,
+     3.66
+    ],
+    "triangles": 3104,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 171.979
+   },
+   "KitchenBody2_Board": {
+    "size_studs_xyz": [
+     32.33,
+     11.463,
+     20.84
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     12.502,
+     3.65
+    ],
+    "triangles": 48,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 21.832
+   },
+   "KitchenBody2_Roof": {
+    "size_studs_xyz": [
+     31.994,
+     11.689,
+     20.8
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     12.856,
+     3.65
+    ],
+    "triangles": 460,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 555.171
+   },
+   "KitchenBody2_Frame": {
+    "size_studs_xyz": [
+     29.44,
+     6.54,
+     16.67
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     3.67,
+     4.385
+    ],
+    "triangles": 1500,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 17.244
+   },
+   "KitchenBody2_Glass": {
+    "size_studs_xyz": [
+     28.72,
+     3.8,
+     15.89
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     4.8,
+     4.415
+    ],
+    "triangles": 480,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 2.823
+   },
+   "KitchenBody2_Shutters": {
+    "size_studs_xyz": [
+     29.4,
+     4.7,
+     17.12
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     2.75,
+     3.88
+    ],
+    "triangles": 1456,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 4.213
+   },
+   "KitchenBody2_Chimney": {
+    "size_studs_xyz": [
+     4.5,
+     24.7,
+     4.5
+    ],
+    "centre_studs_xyz": [
+     16.5,
+     12.35,
+     6.2
+    ],
+    "triangles": 132,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 291.663
+   },
+   "KitchenBody2_Cap": {
+    "size_studs_xyz": [
+     4.1,
+     20.4,
+     4.1
+    ],
+    "centre_studs_xyz": [
+     16.5,
+     15.2,
+     6.2
+    ],
+    "triangles": 132,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 24.815
+   }
+  },
+  "triangles": 7564
+ },
+ "KitchenBody3": {
+  "objects": {
+   "KitchenBody3_Stone": {
+    "size_studs_xyz": [
+     29.0,
+     9.001,
+     17.77
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     4.501,
+     3.615
+    ],
+    "triangles": 1704,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 39.582
+   },
+   "KitchenBody3_Wall": {
+    "size_studs_xyz": [
+     26.56,
+     9.658,
+     17.3
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     14.429,
+     3.65
+    ],
+    "triangles": 16,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 153.91
+   },
+   "KitchenBody3_Lower": {
+    "size_studs_xyz": [
+     28.6,
+     9.6,
+     17.3
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     4.8,
+     3.65
+    ],
+    "triangles": 156,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 420.684
+   },
+   "KitchenBody3_Beam": {
+    "size_studs_xyz": [
+     29.2,
+     18.705,
+     18.23
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     9.753,
+     3.465
+    ],
+    "triangles": 1272,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 105.963
+   },
+   "KitchenBody3_Board": {
+    "size_studs_xyz": [
+     32.159,
+     12.259,
+     20.64
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     13.884,
+     3.65
+    ],
+    "triangles": 48,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 22.272
+   },
+   "KitchenBody3_Roof": {
+    "size_studs_xyz": [
+     31.796,
+     12.492,
+     20.6
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     14.254,
+     3.65
+    ],
+    "triangles": 460,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 560.489
+   },
+   "KitchenBody3_Frame": {
+    "size_studs_xyz": [
+     32.795,
+     19.6,
+     18.18
+    ],
+    "centre_studs_xyz": [
+     1.678,
+     10.2,
+     3.63
+    ],
+    "triangles": 2204,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 50.597
+   },
+   "KitchenBody3_Glass": {
+    "size_studs_xyz": [
+     28.72,
+     4.8,
+     15.89
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     5.3,
+     4.415
+    ],
+    "triangles": 480,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 3.919
+   },
+   "KitchenBody3_Chimney": {
+    "size_studs_xyz": [
+     4.5,
+     26.5,
+     4.5
+    ],
+    "centre_studs_xyz": [
+     16.5,
+     13.25,
+     6.2
+    ],
+    "triangles": 6636,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 318.155
+   },
+   "KitchenBody3_Cap": {
+    "size_studs_xyz": [
+     4.1,
+     22.2,
+     4.1
+    ],
+    "centre_studs_xyz": [
+     16.5,
+     16.1,
+     6.2
+    ],
+    "triangles": 132,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 24.815
+   }
+  },
+  "triangles": 13108
+ },
+ "KitchenBody4": {
+  "objects": {
+   "KitchenBody4_Stone": {
+    "size_studs_xyz": [
+     29.0,
+     1.0,
+     17.7
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     0.5,
+     3.65
+    ],
+    "triangles": 1584,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 27.084
+   },
+   "KitchenBody4_Lower": {
+    "size_studs_xyz": [
+     28.6,
+     9.6,
+     17.3
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     4.8,
+     3.65
+    ],
+    "triangles": 156,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 316.871
+   },
+   "KitchenBody4_Beam": {
+    "size_studs_xyz": [
+     29.7,
+     15.193,
+     19.1
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     11.977,
+     3.65
+    ],
+    "triangles": 3728,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 174.785
+   },
+   "KitchenBody4_Board": {
+    "size_studs_xyz": [
+     2.56,
+     4.6,
+     0.16
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     2.7,
+     12.36
+    ],
+    "triangles": 48,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 1.796
+   },
+   "KitchenBody4_Roof": {
+    "size_studs_xyz": [
+     29.2,
+     9.57,
+     18.9
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     14.385,
+     3.65
+    ],
+    "triangles": 192,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 269.399
+   },
+   "KitchenBody4_Frame": {
+    "size_studs_xyz": [
+     21.6,
+     7.54,
+     17.94
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     4.17,
+     3.75
+    ],
+    "triangles": 1028,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 14.051
+   },
+   "KitchenBody4_Glass": {
+    "size_studs_xyz": [
+     14.0,
+     3.2,
+     0.72
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     6.1,
+     12.0
+    ],
+    "triangles": 160,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 1.423
+   },
+   "KitchenBody4_Chimney": {
+    "size_studs_xyz": [
+     4.5,
+     25.0,
+     4.5
+    ],
+    "centre_studs_xyz": [
+     16.5,
+     12.5,
+     6.2
+    ],
+    "triangles": 6372,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 305.187
+   },
+   "KitchenBody4_Cap": {
+    "size_studs_xyz": [
+     4.1,
+     20.7,
+     4.1
+    ],
+    "centre_studs_xyz": [
+     16.5,
+     15.35,
+     6.2
+    ],
+    "triangles": 132,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 24.815
+   },
+   "KitchenBody4_Gold": {
+    "size_studs_xyz": [
+     19.543,
+     16.08,
+     13.8
+    ],
+    "centre_studs_xyz": [
+     8.628,
+     16.24,
+     1.2
+    ],
+    "triangles": 404,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 21.268
+   }
+  },
+  "triangles": 13804
+ },
+ "KitchenBody5": {
+  "objects": {
+   "KitchenBody5_Stone": {
+    "size_studs_xyz": [
+     29.52,
+     12.22,
+     17.7
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     6.11,
+     3.65
+    ],
+    "triangles": 2664,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 128.375
+   },
+   "KitchenBody5_Wall": {
+    "size_studs_xyz": [
+     30.04,
+     17.915,
+     19.07
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     8.957,
+     2.815
+    ],
+    "triangles": 612,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 721.168
+   },
+   "KitchenBody5_Board": {
+    "size_studs_xyz": [
+     33.595,
+     28.17,
+     19.88
+    ],
+    "centre_studs_xyz": [
+     1.838,
+     14.485,
+     3.13
+    ],
+    "triangles": 2892,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 102.866
+   },
+   "KitchenBody5_Roof": {
+    "size_studs_xyz": [
+     22.791,
+     7.809,
+     18.8
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     15.096,
+     3.65
+    ],
+    "triangles": 316,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 302.181
+   },
+   "KitchenBody5_Glass": {
+    "size_studs_xyz": [
+     28.72,
+     4.8,
+     15.89
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     5.3,
+     4.415
+    ],
+    "triangles": 480,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 3.919
+   },
+   "KitchenBody5_Chimney": {
+    "size_studs_xyz": [
+     5.04,
+     29.5,
+     5.04
+    ],
+    "centre_studs_xyz": [
+     16.5,
+     14.75,
+     6.2
+    ],
+    "triangles": 192,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 335.111
+   },
+   "KitchenBody5_Cap": {
+    "size_studs_xyz": [
+     20.08,
+     29.8,
+     8.54
+    ],
+    "centre_studs_xyz": [
+     8.76,
+     15.3,
+     8.17
+    ],
+    "triangles": 240,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 26.08
+   }
+  },
+  "triangles": 7396
+ },
+ "KitchenTruss1": {
+  "objects": {
+   "KitchenTruss1_Beam": {
+    "size_studs_xyz": [
+     26.516,
+     8.618,
+     0.6
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     12.346,
+     -4.55
+    ],
+    "triangles": 136,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 18.8
+   }
+  },
+  "triangles": 136
+ },
+ "KitchenGable1": {
+  "objects": {
+   "KitchenGable1_Wall": {
+    "size_studs_xyz": [
+     25.371,
+     8.516,
+     0.6
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     12.458,
+     -4.7
+    ],
+    "triangles": 8,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 64.817
+   },
+   "KitchenGable1_Beam": {
+    "size_studs_xyz": [
+     26.072,
+     8.165,
+     0.31
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     12.283,
+     -5.105
+    ],
+    "triangles": 180,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 8.215
+   }
+  },
+  "triangles": 188
+ },
+ "KitchenStack1": {
+  "objects": {
+   "KitchenStack1_Chimney": {
+    "size_studs_xyz": [
+     2.9,
+     5.0,
+     2.9
+    ],
+    "centre_studs_xyz": [
+     16.5,
+     21.8,
+     6.2
+    ],
+    "triangles": 980,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 43.171
+   },
+   "KitchenStack1_Cap": {
+    "size_studs_xyz": [
+     3.7,
+     0.7,
+     3.7
+    ],
+    "centre_studs_xyz": [
+     16.5,
+     24.65,
+     6.2
+    ],
+    "triangles": 44,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 9.482
+   }
+  },
+  "triangles": 1024
  }
 }

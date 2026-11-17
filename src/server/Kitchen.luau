@@ -48,6 +48,22 @@ local WING_X, WING_Z = -22.3, 6.2 -- the wing's outer wall and its front
 -- reach further back"): two more parasol tables stand there
 local TERRACE_BACK = 17.5
 local KETTLES = { { 22.4, -1 }, { 20.8, 3.4 } }
+-- THE SHELL AN ERA'S BLENDER BODY STANDS FOR (see `raise`): these parts become ghosts under it. Nothing a level
+-- switches on is here: the flue and its smoke, the vault's end glass, the columns and every feature keep their parts.
+local SHELL: { [string]: boolean } = {}
+for name in
+	string.gmatch(
+		"PostPad Post TieBeam Brace BayRail BayWall BayCap Pier PierFoot Quoin Impost FrontWall ArchRing PortalSoffit "
+			.. "PortalJamb PortalImpost Keystone BackWall Rail HalfWall WallCap SidePost WallPlate SideWall SillRail "
+			.. "Pilaster Roof Gable BargeBoard Ridge EaveRoll RidgeRoll Rafter Strut KingPost Collar GableRafter "
+			.. "GableStrut GablePost GableCollar Truss TrussPost TrussRafter JettyBeam Corbel VaultGlass Purlin VaultRib "
+			.. "Fan FanRing AisleRoof Cornice CorniceLine Entablature EntablatureLine ChimneyFoot ChimneyShoulder Chimney "
+			.. "ChimneyBand ChimneyCap WindowFrame WindowGlass WindowBar WindowSill WindowHead WindowHeadGlass Shutter",
+		"%a+"
+	)
+do
+	SHELL[name] = true
+end
 
 type Look = {
 	wallH: number, -- the eaves
@@ -520,6 +536,58 @@ local function raise(m: Instance, frame: CFrame, level: number)
 		end
 	end
 
+	-- THE BODY FROM BLENDER (the owner, 2026-11-17: "dựng lại tất cả các công trình bằng blender", "chủ yếu là dựng
+	-- phần khung và kết cấu của căn nhà thôi"): tools/blender/landmark_bodies.py models an era's frame and structure
+	-- on this module's own numbers, hollow, its front open, one mesh a colour field of the Look. Where an era's model
+	-- has come, the shell below is still built but as a ghost (Architecture's `b.ghost`): its solid parts are the
+	-- collision inside the model, its trim is left out. Lanterns, flower boxes, banners and every feature stay.
+	local body = "KitchenBody" .. era
+	local bodied = LibraryKit.find(body .. "_Stone") ~= nil
+	local function shell(on: boolean)
+		b.ghost(if on and bodied then SHELL else nil)
+	end
+	if bodied then
+		-- (a mesh the era has not is skipped; the capital's gold is all in its Board mesh)
+		local slots: { { any } } = {
+			{ "Stone", L.stone },
+			{ "Wall", L.wall },
+			{ "Lower", L.lower },
+			{ "Beam", L.beam },
+			{ "Board", L.board, if era == 5 then M.Metal else nil },
+			{ "Roof", L.roof },
+			{ "Frame", L.frame },
+			{ "Glass", L.glass, M.Neon },
+			{ "Shutters", L.shutters or L.frame },
+			{ "Chimney", L.chimney },
+			{ "Cap", L.cap },
+			{ "Gold", L.gold, bigGold },
+		}
+		for _, slot in slots do
+			piece(body .. "_" .. slot[1], b.at(0, 0, 0), 1, 1, 1, slot[2], slot[3])
+		end
+		if era == 1 then
+			-- the hamlet's three parts a level switches: the open truss, then (2) the plaster gable that closes it;
+			-- (3) the chimney's upper stack and capstone
+			if f < 2 then
+				piece("KitchenTruss1_Beam", b.at(0, 0, 0), 1, 1, 1, L.beam)
+			else
+				piece("KitchenGable1_Wall", b.at(0, 0, 0), 1, 1, 1, L.wall)
+				piece("KitchenGable1_Beam", b.at(0, 0, 0), 1, 1, 1, L.beam)
+			end
+			if f >= 3 then
+				piece("KitchenStack1_Chimney", b.at(0, 0, 0), 1, 1, 1, L.chimney)
+				piece("KitchenStack1_Cap", b.at(0, 0, 0), 1, 1, 1, L.cap)
+			end
+			-- (the model's plank panels in the side bays: nothing walks through them)
+			for _, s in { -1, 1 } do
+				local x0, x1 = BAY + 0.45, HW - 0.9
+				b.box("BayStop", x1 - x0, 2.6, 0.3, b.at(s * (x0 + x1) / 2, FLOOR + 1.3, Z0 + 0.45), L.lower).Transparency =
+					1
+			end
+		end
+	end
+	shell(true)
+
 	-- THE FRONT ------------------------------------------------------------------------------------------------
 	local bayX = if era == 5 then (BAY + HW) / 2 else 12.1 -- the middle of a side bay's window
 	if era <= 2 then
@@ -530,7 +598,8 @@ local function raise(m: Instance, frame: CFrame, level: number)
 			b.box("PostPad", 1.5, 0.6, 1.5, b.at(x, FLOOR + 0.3, zp), L.stone)
 			b.box("Post", 0.9, tieY - FLOOR - 0.6, 0.9, b.at(x, (FLOOR + 0.6 + tieY) / 2, zp), L.beam)
 		end
-		b.box("TieBeam", HW * 2 + 1.2, 0.9, 0.9, b.at(0, tieY + 0.45, zp), L.beam)
+		-- (under a body it ends inside the corner posts: its ends past them stood out of the roof's slope)
+		b.box("TieBeam", HW * 2 + (if bodied then -0.6 else 1.2), 0.9, 0.9, b.at(0, tieY + 0.45, zp), L.beam)
 		for _, s in { -1, 1 } do
 			for _, br in { { BAY - 0.45, -2.6 }, { BAY + 0.45, 1.6 }, { HW - 0.9, -1.6 } } do
 				local foot = Vector3.new(s * br[1], tieY - math.abs(br[2]), zp)
@@ -622,7 +691,9 @@ local function raise(m: Instance, frame: CFrame, level: number)
 			local wy = if era == 5 then 4 else 3.2
 			local face = b.face(s * bayX, wy, Z0, FRONT)
 			if f >= 13 then
+				shell(false) -- (a feature: the game's own window on the body's pier)
 				b.window(face, 1.8, 2.4, L.frame, L.glass, { arch = true, glow = true })
+				shell(true)
 			else
 				b.trim("Recess", 1.8, 2.4, 0.16, face * CFrame.new(0, 0, -0.02), L.stone)
 				b.disc("RecessHead", 0.9, 0.16, face * CFrame.new(0, 1.2, -0.02), L.stone)
@@ -798,7 +869,9 @@ local function raise(m: Instance, frame: CFrame, level: number)
 			b.trim("GableCollar", roofU(wallH + 3.3) * 2 - 2, 0.45, 0.3, b.at(0, wallH + 3.3, zg), L.beam)
 			local wy = wallH + L.winY
 			local ww = if era == 3 then 1.6 else 2.2
+			shell(false) -- (the gable's window is the game's own: the body's post is cut round it)
 			b.window(b.face(0, wy, Z0, FRONT), ww, ww - 0.2, L.frame, L.glass, { shutters = L.shutters, glow = true })
+			shell(true)
 			if f >= 6 then
 				flowerBox(b.face(0, wy - ww / 2 - 0.75, Z0, FRONT), ww + 0.9, true) -- 6 (under the gable window)
 			end
@@ -835,7 +908,14 @@ local function raise(m: Instance, frame: CFrame, level: number)
 		end
 		if era == 3 then
 			-- the timber gable stands out over the stone storey on a beam and corbels
-			b.box("JettyBeam", HW * 2 + 0.8, 0.8, 1.3, b.at(0, wallH - 0.4, Z0 + 0.15), L.beam)
+			b.box(
+				"JettyBeam",
+				HW * 2 + (if bodied then -0.6 else 0.8),
+				0.8,
+				1.3,
+				b.at(0, wallH - 0.4, Z0 + 0.15),
+				L.beam
+			)
 			-- (corbels on the piers only: over the opening they stood in the arch's stones)
 			for _, x in { -HW + 0.5, -11.9, -BAY, BAY, 11.9, HW - 0.5 } do
 				b.trim("Corbel", 0.6, 0.7, 0.9, b.at(x, wallH - 1.15, Z0 - 0.2), L.beam)
@@ -1006,6 +1086,7 @@ local function raise(m: Instance, frame: CFrame, level: number)
 	else
 		b.trim("ChimneyMouth", 2, 0.1, 2, b.at(CX, top + 0.05, CZ), DARK)
 	end
+	shell(false) -- (the body ends here: all that follows is the game's own)
 	if f >= 15 then
 		-- 15 the smokehouse turret on the chimney's front corner: a lantern room on a corbel under a cone roof
 		local tx, tz = CX + 1.5, CZ - 1.9

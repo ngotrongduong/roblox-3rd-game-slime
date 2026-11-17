@@ -479,6 +479,30 @@ Eras 2-5 of the Granary, one builder for four eras (`granary(era)`, 2026-11-17):
 - **Walk-in proof**: door at z 0 in the area's frame; levels 20, 30, 40, 50 stood at z 19.3, 18.0, 19.1, 19.2
   after 2.5-3.1 s; console clean.
 
+The Kitchen, the second landmark as bodies (`kitchen_set(era)`, 2026-11-18): five bodies and three switched pieces.
+
+- **A part a level switches inside one era is its own small model**, not a second body: era 1's open truss
+  (`KitchenTruss1`, levels 1-6), the plaster gable that closes it (`KitchenGable1`) and the chimney's upper stack
+  (`KitchenStack1`, from level 8). The module places them under the same `features(level)` test it used for the parts.
+- **The roof-line rule.** `b.gable` puts the slab's TOP on the line through (half width, wall height). Any timber
+  whose end reaches that x with its top near the wall height stands out of the roof: tie beams past the corner
+  posts, rafters' eave ends, a wall plate, a jetty beam, an eave band. The part module had the same flaw (its
+  `TieBeam` was `HW * 2 + 1.2`); under a body it showed as strokes and dots on the roof. Every timber's eave end
+  stays about half a stud under that line, and a ghosted SOLID beam is shortened in the module when `bodied`
+  (`HW * 2 - 0.6`): a ghost is only 0.06 a face smaller, so it pokes out exactly where the old part did.
+- **A ghosted solid stays visible**: the model must cover it everywhere. Where the model has a hole the old part
+  had not (the plank panels of era 1's side bays), the stop is a new invisible box, not the old part.
+- **An arch's ring starts inside the arch line**, or the ghosted wall behind it shows as a sliver along the curve.
+- **A changed model is uploaded again by taking its entry out of `art/models/village_ids.json`**; unchanged ones
+  are skipped, the config rows' ids are rewritten in place. Five models went up again in under a minute.
+- **Bringing the four-side sheets back**: one chat can hold several pictures; take `main img` with
+  `naturalWidth > 500` AND `alt` starting "Generated image", or an attached reference comes back as the sheet.
+- **Play proof** (plot 1, cell -1 0, front wall at z -5, K 1.45): levels 1, 10, 20, 30, 40, 50 each walked from
+  z -23 to z 7.2 in 2.6 s; the side wall stopped the character at x 19.1-19.4 (eras 1-2; a stove stood in the way
+  at eras 3-5), the back wall from outside at z 20.6; console clean. The client's own clock stood at 17.1 while the
+  server held 14.6: the day's values written in a `BindToRenderStep` at `Last + 5`, as for the Garden.
+- 12724, 7564, 13108, 13804 and 7396 triangles for the five bodies; 136, 188 and 1024 for the three pieces.
+
 ### Whole small buildings from Blender (2026-11-17, the garden's tool stores, tools/blender/granary_pieces.py)
 
 The owner, looking at a part-built yard beside ChatGPT's picture: "why is what you build not as beautiful as the
