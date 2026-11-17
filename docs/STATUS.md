@@ -12,8 +12,18 @@
   (`docs/areas/village-v2/review/toolstore-*.jpg`). TYPES OK, CHECK OK (829 passed). MapWork saved, StudioTest rebuilt.
 - The new default (skill `landmark-build` §3): Blender for every visible regular shape, parts only for hollow shells
   and floors, Meshy for sculpted ornaments.
+- **Second round, the same night** (the owner: "chưa giống lắm, hãy cải thiện thêm một lần nữa", then "chúng ta có
+  sẵn một số props cho cây đèn rồi, hãy dùng nó"): both stores rebuilt against the picture, measured off it at the
+  footprint's width: about 12 studs tall, block plinths the door cuts through, jointed blocks, big stepped roof tiles,
+  the steel store's wide lunette with its gear, a heavier riveted frame and a thick pipe; the marble store's front is
+  no longer symmetric (door and pediment left, one round window right, columns on pedestals), its hip roof stops
+  inside the gold cornice and the pediment stands at the cornice's edge. The steel store's lantern is now the kit's
+  `WallLantern_Iron` (the Blender one and the `_Glow` mesh are gone). The stores have their own colours where the
+  picture differs from the big house (`STORE` in `Garden.luau`); the roof stays the era's. 6970 and 5844 triangles.
+  Seen in the MapWork play test at 40 and 50 (`review/toolstore2-*.jpg`). TYPES OK, CHECK OK (829 passed).
 - **Not verified / open**: the phone view; no ChatGPT review of the stores (two small side works); the marble store's
-  laurel is flat diamonds (a sculpted one would be the owner's Meshy); the landmarks' own facades are still parts.
+  laurel is still scripted leaves (a sculpted one would be the owner's Meshy); the landmarks' own facades are still
+  parts; the era-5 roof material (ClayRoofTiles, the era's) draws curved tiles where the picture has flat slates.
   The play test's log shows one error that is not this job's: `SlimeFaceStage` (a test stage left in MapWork's
   player scripts by `tools/slime`) cannot find `CreatureRig`.
 

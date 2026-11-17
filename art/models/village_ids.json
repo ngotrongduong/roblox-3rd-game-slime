@@ -259,28 +259,27 @@
 		}
 	},
 	"ToolStoreRoyal": {
-		"model": 94132173572612,
+		"model": 97139786879718,
 		"texture": 0,
 		"pieces": {
-			"ToolStoreRoyal_Glass": 76189111386197,
-			"ToolStoreRoyal_Gold": 106506745379721,
-			"ToolStoreRoyal_Marble": 105409466697019,
-			"ToolStoreRoyal_Roof": 94751486777341
+			"ToolStoreRoyal_Glass": 136223009795590,
+			"ToolStoreRoyal_Gold": 102131852145448,
+			"ToolStoreRoyal_Marble": 112907389740034,
+			"ToolStoreRoyal_Roof": 94441673358978
 		}
 	},
 	"ToolStoreTech": {
-		"model": 94506642773057,
+		"model": 97808325761126,
 		"texture": 0,
 		"pieces": {
-			"ToolStoreTech_Brick": 99168994620118,
-			"ToolStoreTech_Copper": 72020444866620,
-			"ToolStoreTech_Door": 137148308593707,
-			"ToolStoreTech_Frame": 123152274016289,
-			"ToolStoreTech_Glass": 129352810078959,
-			"ToolStoreTech_Glow": 133458620645929,
-			"ToolStoreTech_Gold": 77831478432479,
-			"ToolStoreTech_Plinth": 123166904337396,
-			"ToolStoreTech_Roof": 70931248411587
+			"ToolStoreTech_Brick": 120834039442078,
+			"ToolStoreTech_Copper": 137887959400106,
+			"ToolStoreTech_Door": 107747949715685,
+			"ToolStoreTech_Frame": 99641835007724,
+			"ToolStoreTech_Glass": 97235304546928,
+			"ToolStoreTech_Gold": 134978011511880,
+			"ToolStoreTech_Plinth": 84599544983246,
+			"ToolStoreTech_Roof": 124890735574936
 		}
 	}
 }

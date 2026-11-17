@@ -600,12 +600,12 @@ def bar(m, p1, p2, w, t):
 		tuple(p + side * w / 2 + nrm * t / 2), tuple(p - side * w / 2 + nrm * t / 2)] for p in (a, b)])
 
 
-def arch_band(m, cx, cz, r0, r1, y0, y1, a0=0.0, a1=math.pi, n=12):
-	# a band r0..r1 round (cx, cz) in the XZ plane from angle a0 to a1, y0..y1 deep
+def arch_band(m, cx, cz, r0, r1, y0, y1, a0=0.0, a1=math.pi, n=12, kz=1.0):
+	# a band r0..r1 round (cx, cz) in the XZ plane from angle a0 to a1, y0..y1 deep; kz < 1 flattens it into an ellipse
 	secs = []
 	for k in range(n + 1):
 		a = a0 + (a1 - a0) * k / n
-		c, s = math.cos(a), math.sin(a)
+		c, s = math.cos(a), math.sin(a) * kz
 		secs.append([(cx + r0 * c, y0, cz + r0 * s), (cx + r1 * c, y0, cz + r1 * s), (cx + r1 * c, y1, cz + r1 * s),
 			(cx + r0 * c, y1, cz + r0 * s)])
 	sweep(m, secs)
@@ -622,8 +622,8 @@ def prism(m, outline, y0, y1):
 		m.f.append((i + j, i + j2, i + k + j2, i + k + j))
 
 
-def arc(cx, cz, r, a0=0.0, a1=math.pi, n=12):
-	return [(cx + r * math.cos(a0 + (a1 - a0) * k / n), cz + r * math.sin(a0 + (a1 - a0) * k / n)) for k in range(n + 1)]
+def arc(cx, cz, r, a0=0.0, a1=math.pi, n=12, kz=1.0):
+	return [(cx + r * math.cos(a0 + (a1 - a0) * k / n), cz + kz * r * math.sin(a0 + (a1 - a0) * k / n)) for k in range(n + 1)]
 
 
 def arch_slab(m, cx, z0, zs, r, y0, y1, n=12):
@@ -631,9 +631,9 @@ def arch_slab(m, cx, z0, zs, r, y0, y1, n=12):
 	prism(m, [(cx - r, z0), (cx + r, z0)] + arc(cx, zs, r, n=n), y0, y1)
 
 
-def stud(m, p, d, r=0.13):
+def stud(m, p, d, r=0.18):
 	# a rivet head at p, bulging along the unit axis d
-	rng = lathe(m, [(r, 0.0), (r * 0.75, r * 0.55), (0.0, r * 0.8)], 6, cap_bottom=True)
+	rng = lathe(m, [(r, 0.0), (r * 0.75, r * 0.55), (0.0, r * 0.8)], 5, cap_bottom=True)
 	p, d = Vector(p), Vector(d)
 	u = Vector((0, 0, 1)).cross(d)
 	u = u.normalized() if u.length > 1e-6 else Vector((1, 0, 0))
@@ -652,17 +652,88 @@ def ball(m, c, r, sides=10, rings=6):
 	lat(m, prof, sides, c[0], c[1])
 
 
-def hip_roof(m, hx0, hy0, z0, hx1, hy1, z1, rows, lip=0.24):
-	# a hipped roof in `rows` courses of tiles: each course's foot stands `lip` proud of the course below and hangs over it
+def pillow(m, poly, n, proud=0.07, inset=0.07):
+	# a block or a tile standing `proud` off its plane (normal n), its edges bevelled back to the plane, so every joint
+	# between neighbours is a real groove the game's light draws
+	poly, n, k = [Vector(p) for p in poly], Vector(n), len(poly)
+	top = []
+	for i, p in enumerate(poly):
+		a, b = (poly[i - 1] - p).normalized(), (poly[(i + 1) % k] - p).normalized()
+		top.append(p + (a + b) * (inset / max(a.cross(b).length, 0.35)) + n * proud)
+	i0 = m.add([tuple(p) for p in poly] + [tuple(p) for p in top])
+	m.f.append(tuple(range(i0, i0 + k)))
+	m.f.append(tuple(range(i0 + k, i0 + 2 * k)))
+	for i in range(k):
+		j = (i + 1) % k
+		m.f.append((i0 + i, i0 + j, i0 + k + j, i0 + k + i))
+
+
+def tiles(m, o, du, dv, cols, rows, proud=0.07, inset=0.07):
+	# a wall of blocks on the rectangle from o spanned by du and dv (du x dv points out), every other row half a block on
+	o, du, dv = Vector(o), Vector(du), Vector(dv)
+	n = du.cross(dv).normalized()
+	for r in range(rows):
+		cuts = [c / cols for c in range(cols + 1)]
+		if r % 2:
+			cuts = [0.0] + [(c + 0.5) / cols for c in range(cols)] + [1.0]
+		for a, b in zip(cuts, cuts[1:]):
+			p, q = o + dv * (r / rows), o + dv * ((r + 1) / rows)
+			pillow(m, [p + du * a, p + du * b, q + du * b, q + du * a], n, proud, inset)
+
+
+def block_run(m, a, b, z0, h, d, n, ch=0.1):
+	# n chamfered blocks in a row from a to b (x, y), each `d` deep and `h` high: a plinth course
+	(ax, ay), (bx, by) = a, b
+	run = math.hypot(bx - ax, by - ay) / n
+	for k in range(n):
+		t = (k + 0.5) / n
+		cbox(m, (ax + (bx - ax) * t, ay + (by - ay) * t, z0 + h / 2), (run, d, h) if abs(bx - ax) > abs(by - ay) else (d, run, h), ch)
+
+
+def clip(poly, f):
+	# the part of a 2D polygon where the linear f is not negative
+	out = []
+	for i, p in enumerate(poly):
+		q = poly[(i + 1) % len(poly)]
+		fp, fq = f(p), f(q)
+		if fp >= 0:
+			out.append(p)
+		if (fp >= 0) != (fq >= 0):
+			t = fp / (fp - fq)
+			out.append((p[0] + (q[0] - p[0]) * t, p[1] + (q[1] - p[1]) * t))
+	return [p for i, p in enumerate(out) if math.dist(p, out[i - 1]) > 1e-4]
+
+
+def tile_roof(m, hx0, hy0, z0, hx1, hy1, z1, rows, w, cy=0.0, lip=0.26, drop=0.2):
+	# a hipped roof in `rows` courses: each course's foot stands `lip` proud of the course below and hangs over it, and
+	# each slope of a course is cut into tiles `w` wide (every other course half a tile on), trimmed at the hips
 	for k in range(rows):
 		t0, t1 = k / rows, (k + 1) / rows
 		ax, ay, az = hx0 + (hx1 - hx0) * t0, hy0 + (hy1 - hy0) * t0, z0 + (z1 - z0) * t0
 		bx, by, bz = hx0 + (hx1 - hx0) * t1, hy0 + (hy1 - hy0) * t1, z0 + (z1 - z0) * t1
 		if k:
-			ax, ay, az = ax + lip, ay + lip, az - 0.18
-		i = m.add([(-ax, -ay, az), (ax, -ay, az), (ax, ay, az), (-ax, ay, az), (-bx, -by, bz), (bx, -by, bz), (bx, by, bz), (-bx, by, bz)])
+			ax, ay, az = ax + lip, ay + lip, az - drop
+		i = m.add([(-ax, cy - ay, az), (ax, cy - ay, az), (ax, cy + ay, az), (-ax, cy + ay, az), (-bx, cy - by, bz),
+			(bx, cy - by, bz), (bx, cy + by, bz), (-bx, cy + by, bz)])
 		for q in ((0, 3, 2, 1), (4, 5, 6, 7), (0, 1, 5, 4), (1, 2, 6, 5), (2, 3, 7, 6), (3, 0, 4, 7)):
 			m.f.append(tuple(i + j for j in q))
+		for sgn in (-1, 1):
+			for along_x in (True, False):
+				la, lb = (ax, bx) if along_x else (ay, by)  # half the eave's length at the course's foot and top
+				da, db = (ay, by) if along_x else (ax, bx)  # how far out the slope is there
+				rise = (0, sgn * (bz - az), da - db) if along_x else (sgn * (bz - az), 0, da - db)
+				j0 = int(la / w) + 2
+				for j in range(-j0, j0):
+					u0 = j * w + (w / 2 if k % 2 else 0.0)
+					poly = clip([(u0, 0.0), (u0 + w, 0.0), (u0 + w, 1.0), (u0, 1.0)], lambda p: la + (lb - la) * p[1] - p[0])
+					poly = clip(poly, lambda p: la + (lb - la) * p[1] + p[0])
+					if len(poly) < 3 or max(p[0] for p in poly) - min(p[0] for p in poly) < 0.35:
+						continue
+					pts = []
+					for u, s in poly:
+						d, z = sgn * (da + (db - da) * s), az + (bz - az) * s
+						pts.append((u, cy + d, z) if along_x else (d, cy + u, z))
+					pillow(m, pts, Vector(rise).normalized(), 0.06, 0.06)
 
 
 def tube(m, pts, y, r, sides=8):
@@ -705,161 +776,206 @@ def leaf(m, p, ang, length, w, t=0.09):
 
 def tool_store_tech():
 	# era 4: a steel frame on a brick foot, glass above, a slate hip roof, a glazed lunette over the arched double door
-	pl, br, gl, fr, ro, go, co, do, lo = M(), M(), M(), M(), M(), M(), M(), M(), M()
-	cbox(pl, (0, 0, 0.3), (10.4, 8.4, 0.6), 0.12)
-	box(br, (0, 0, 1.45), (9.4, 7.4, 1.7))
-	box(gl, (0, 0, 3.75), (9.2, 7.2, 3.1))
+	# The picture's proportions on the yard's footprint: the eave at 6.5, the roof's cap near 10, the door down to the
+	# ground through the plinth.
+	pl, br, gl, fr, ro, go, co, do = M(), M(), M(), M(), M(), M(), M(), M()
+	# a plinth of stone blocks round a core, open where the door stands
+	box(pl, (0, 0, 0.39), (9.8, 7.8, 0.78))
+	block_run(pl, (-5.3, -3.9), (5.3, -3.9), 0, 0.8, 0.8, 6)
+	# the brick foot, and brick up to the beam round the door
+	box(br, (0, 0, 1.85), (9.2, 7.2, 2.1))
+	box(br, (0, 3.25, 4.35), (5.5, 0.7, 2.9))
+	box(gl, (0, 0, 4.35), (9.0, 7.0, 2.9))
 	for sx in (-1, 1):
+		block_run(pl, (sx * 4.9, -3.5), (sx * 4.9, 3.5), 0, 0.8, 0.8, 4)
+		block_run(pl, (sx * 2.15, 3.9), (sx * 5.3, 3.9), 0, 0.8, 0.8, 2)
 		for sy in (-1, 1):
-			cbox(fr, (sx * 4.65, sy * 3.65, 3.1), (0.7, 0.7, 5.0), 0.08)
-			bar(fr, (sx * 5.3, sy * 4.3, 5.68), (sx * 1.9, sy * 1.0, 7.98), 0.32, 0.24)  # the hips
-			for z in (1.3, 3.3, 4.5):
-				stud(go, (sx * 4.65, sy * 4.0, z), (0, sy, 0))
-		cbox(fr, (sx * 4.78, 0, 2.3), (0.45, 7.3, 0.4), 0.06)
-		cbox(fr, (sx * 4.75, 0, 5.3), (0.7, 8.0, 0.6), 0.08)
-		box(fr, (sx * 4.66, 0, 3.8), (0.2, 6.6, 0.2))
-		for y in (-2, 0, 2):
-			box(fr, (sx * 4.66, y, 3.75), (0.2, 0.2, 2.6))
-		for y in (-3, -1.5, 0, 1.5, 3):
-			stud(go, (sx * 5.1, y, 5.3), (sx, 0, 0))
-		# the front: mullions beside the door, the door's posts, knobs on the eave's corners
-		box(fr, (sx * 3.2, 3.66, 3.75), (0.2, 0.2, 2.6))
-		box(fr, (sx * 3.35, 3.66, 3.8), (1.9, 0.2, 0.2))
-		cbox(fr, (sx * 2.08, 3.95, 2.05), (0.56, 0.6, 2.9), 0.07)
-		cbox(go, (sx * 2.08, 4.28, 3.5), (0.8, 0.16, 0.7), 0.05)
-		for z in (1.2, 2.5):
-			stud(go, (sx * 2.08, 4.25, z), (0, 1, 0))
-		for x in (3.0, 3.7, 4.4):
-			stud(go, (sx * x, 4.1, 5.3), (0, 1, 0))
-		cbox(fr, (sx * 4.9, 3.9, 5.75), (0.5, 0.5, 0.3), 0.05)
-		ball(go, (sx * 4.9, 3.9, 6.15), 0.3, 8, 4)
-		# the door: a raised panel a leaf, a pane's glazing bar, a copper pull
-		cbox(do, (sx * 0.95, 3.78, 1.5), (1.2, 0.12, 1.3), 0.05)
-		box(do, (sx * 0.8, 3.8, 3.6), (0.12, 0.1, 2.1))
-		cbox(co, (sx * 0.32, 4.0, 2.0), (0.14, 0.14, 0.9), 0.04)
-		for z in (1.7, 2.3):
-			box(co, (sx * 0.32, 3.9, z), (0.1, 0.25, 0.1))
+			cbox(fr, (sx * 4.6, sy * 3.6, 3.3), (0.9, 0.9, 5.0), 0.09)
+			bar(fr, (sx * 5.5, sy * 4.5, 6.6), (sx * 1.3, sy * 1.0, 10.0), 0.45, 0.3)  # the hips
+			cbox(fr, (sx * 5.15, sy * 4.15, 6.78), (0.6, 0.6, 0.45), 0.06)
+			ball(go, (sx * 5.15, sy * 4.15, 7.3), 0.36, 8, 5)
+			stud(go, (sx * 1.25, sy * 0.95, 10.3), (0, 0, 1))
+			for z in (1.4, 3.7, 5.0):
+				stud(go, (sx * 4.6, sy * 4.05, z), (0, sy, 0))
+				stud(go, (sx * 5.05, sy * 3.6, z), (sx, 0, 0))
+		# a long side: its sill, its eave beam, its glazing bars
+		cbox(fr, (sx * 4.7, 0, 2.9), (0.6, 6.3, 0.5), 0.07)
+		cbox(fr, (sx * 4.65, 0, 6.15), (0.9, 8.2, 0.7), 0.09)
+		for y in (-1.15, 1.15):
+			box(fr, (sx * 4.52, y, 4.35), (0.2, 0.24, 2.9))
+		for z in (3.85, 4.8):
+			box(fr, (sx * 4.52, 0, z), (0.2, 6.3, 0.2))
+		for y in (-3.0, -1.5, 0, 1.5, 3.0):
+			stud(go, (sx * 5.1, y, 6.15), (sx, 0, 0))
+		for y in (-2.0, 0, 2.0):
+			stud(go, (sx * 5.0, y, 2.9), (sx, 0, 0))
+		# the front: a window between the corner and the door's brick, its sill and post
+		cbox(fr, (sx * 3.15, 3.75, 2.9), (2.0, 0.6, 0.5), 0.07)
+		cbox(fr, (sx * 2.75, 3.7, 4.35), (0.3, 0.4, 2.9), 0.05)
+		box(fr, (sx * 3.525, 3.52, 4.35), (0.2, 0.2, 2.9))
+		for z in (3.85, 4.8):
+			box(fr, (sx * 3.525, 3.52, z), (1.25, 0.2, 0.2))
+		for x in (2.6, 3.6):
+			stud(go, (sx * x, 4.05, 2.9), (0, 1, 0))
+		for x in (0.7, 1.9, 3.7, 4.6):
+			stud(go, (sx * x, 4.1, 6.15), (0, 1, 0))
+		# the door's heavy frame, riveted, down to the ground
+		cbox(fr, (sx * 1.875, 3.98, 1.8), (0.55, 0.76, 3.6), 0.06)
+		for z in (0.7, 1.7, 2.7):
+			stud(go, (sx * 1.875, 4.36, z), (0, 1, 0))
+		box(do, (sx * 1.525, 4.04, 1.8), (0.15, 0.28, 3.6))
+		# a leaf: a raised panel below, glazing bars above, a copper pull
+		cbox(do, (sx * 0.82, 4.08, 1.12), (1.0, 0.12, 1.5), 0.05)
+		box(do, (sx * 0.68, 4.09, 3.45), (0.12, 0.1, 2.2))
+		cbox(co, (sx * 0.34, 4.32, 2.6), (0.18, 0.18, 1.0), 0.05)
+		for z in (2.25, 2.95):
+			box(co, (sx * 0.34, 4.2, z), (0.12, 0.26, 0.12))
+		# a gold plate where the lunette's arch lands on the beam
+		cbox(go, (sx * 2.75, 4.3, 6.15), (1.0, 0.4, 0.9), 0.06)
+		stud(go, (sx * 2.75, 4.5, 6.15), (0, 1, 0), 0.22)
 	for sy in (-1, 1):
-		cbox(fr, (0, sy * 3.78, 2.3), (9.3, 0.45, 0.4), 0.06)
-		cbox(fr, (0, sy * 3.75, 5.3), (10.0, 0.7, 0.6), 0.08)
-	box(fr, (0, -3.66, 3.8), (8.6, 0.2, 0.2))
-	for x in (-3, -1.5, 0, 1.5, 3):
-		box(fr, (x, -3.66, 3.75), (0.2, 0.2, 2.6))
-	# the door in its arch
-	arch_band(fr, 0, 3.5, 1.8, 2.36, 3.65, 4.25)
-	arch_slab(do, 0, 0.6, 3.5, 1.8, 3.55, 3.75)
-	cbox(do, (0, 3.8, 2.9), (0.22, 0.16, 4.6), 0.04)
-	cbox(do, (0, 3.8, 2.4), (3.6, 0.14, 0.2), 0.04)
-	box(do, (0, 3.8, 3.5), (3.0, 0.1, 0.12))
-	arch_slab(gl, 0, 2.55, 3.5, 1.5, 3.7, 3.79)
+		cbox(fr, (0, sy * 3.65, 6.15), (10.3, 0.9, 0.7), 0.09)
+	cbox(fr, (0, -3.7, 2.9), (8.3, 0.6, 0.5), 0.07)
+	for x in (-2.8, -1.4, 0, 1.4, 2.8):
+		box(fr, (x, -3.52, 4.35), (0.24, 0.2, 2.9))
+	for z in (3.85, 4.8):
+		box(fr, (0, -3.52, z), (8.3, 0.2, 0.2))
+	for x in (-4.2, -2.8, -1.4, 0, 1.4, 2.8, 4.2):
+		stud(go, (x, -4.1, 6.15), (0, -1, 0))
+	# the door in its arch: dark leaves, glass above the rail
+	arch_band(fr, 0, 3.6, 1.6, 2.15, 3.6, 4.36)
+	arch_band(do, 0, 3.6, 1.45, 1.6, 3.9, 4.18)
+	arch_slab(do, 0, 0.0, 3.6, 1.5, 3.9, 4.04)
+	arch_slab(gl, 0, 2.35, 3.6, 1.2, 4.0, 4.07)
+	cbox(do, (0, 4.1, 2.52), (0.3, 0.2, 5.04), 0.05)
+	cbox(do, (0, 4.08, 2.2), (3.0, 0.16, 0.3), 0.05)
+	for z in (3.1, 3.9):
+		box(do, (0, 4.09, z), (2.3, 0.1, 0.12))
 	for k in range(7):
 		a = math.pi * (k + 0.5) / 7
-		stud(go, (2.08 * math.cos(a), 4.25, 3.5 + 2.08 * math.sin(a)), (0, 1, 0))
-	# the lunette over the eave, its barrel roof running back into the hip roof, a gear on its crown
-	arch_band(fr, 0, 5.6, 2.1, 2.55, 3.5, 4.1, n=14)
-	prism(gl, arc(0, 5.6, 2.12, n=14), 3.6, 3.8)
-	box(fr, (0, 3.85, 6.65), (0.2, 0.2, 2.1))
-	box(fr, (0, 3.85, 6.55), (3.7, 0.2, 0.2))
+		stud(go, (1.875 * math.cos(a), 4.36, 3.6 + 1.875 * math.sin(a)), (0, 1, 0))
+	# the lunette on the beam, a low arch as wide as the door's brick, its barrel roof running back into the hip roof,
+	# a gear on its crown
+	kz = 0.75
+	# (band and glass stand at the eave's edge: anything further back has its foot hidden by the roof's slope)
+	arch_band(fr, 0, 6.5, 2.5, 3.0, 3.8, 4.5, n=14, kz=kz)
+	prism(gl, arc(0, 6.5, 2.52, n=14, kz=kz), 4.25, 4.38)
+	box(fr, (0, 4.42, 7.42), (0.24, 0.2, 1.85))
+	box(fr, (0, 4.42, 7.35), (4.4, 0.2, 0.2))
 	for sx in (-1, 1):
-		box(fr, (sx * 1.05, 3.85, 6.5), (0.2, 0.2, 1.8))
-		for a in (20, 42, 64):
-			a = math.radians(90 - sx * (90 - a))
-			stud(go, (2.33 * math.cos(a), 4.1, 5.6 + 2.33 * math.sin(a)), (0, 1, 0))
-	prism(ro, arc(0, 5.6, 2.5, n=14), 0.6, 3.6)
-	cog(go, 0, 7.9, 0.78, 4.0, 4.3)
-	hip_roof(ro, 5.3, 4.3, 5.6, 1.9, 1.0, 7.9, 4)
-	cbox(fr, (0, 0, 8.0), (4.2, 2.4, 0.3), 0.08)
-	cbox(fr, (0, 0, 8.3), (1.1, 1.1, 0.4), 0.08)
-	ball(go, (0, 0, 8.95), 0.55)
-	# a lantern on a bracket, left of the door as one faces it (+X)
-	lx = 3.3
-	box(fr, (lx, 4.2, 4.66), (0.12, 0.8, 0.12))
-	lat(fr, [(0.45, 4.25), (0.14, 4.5), (0.0, 4.62)], 4, lx, 4.55, cap_bottom=True, phase=math.pi / 4)
-	cbox(fr, (lx, 4.55, 3.6), (0.52, 0.52, 0.1), 0.03)
-	for sx in (-1, 1):
-		for sy in (-1, 1):
-			box(fr, (lx + sx * 0.24, 4.55 + sy * 0.24, 3.95), (0.07, 0.07, 0.62))
-	box(lo, (lx, 4.55, 3.95), (0.44, 0.44, 0.6))
-	# a copper pipe over the roof's right end (-X)
-	path = [(-4.1, 6.0), (-4.1, 8.1)] + arc(-3.5, 8.1, 0.6, math.pi, math.pi / 2, 5)[1:] + arc(-3.1, 8.1, 0.6, math.pi / 2, 0.0, 5) + [(-2.5, 7.2)]
-	tube(co, path, -1.4, 0.3)
-	for a, b in (((-4.1, 6.45), (-4.1, 6.65)), ((-4.1, 7.9), (-4.1, 8.1)), ((-2.5, 7.55), (-2.5, 7.75))):
-		tube(co, [a, b], -1.4, 0.42)
+		box(fr, (sx * 1.25, 4.42, 7.3), (0.2, 0.2, 1.6))
+	for k in range(8):
+		a = math.pi * (k + 0.5) / 8
+		stud(go, (2.75 * math.cos(a), 4.5, 6.5 + kz * 2.75 * math.sin(a)), (0, 1, 0))
+	prism(ro, arc(0, 6.5, 2.95, n=14, kz=kz), 1.9, 4.25)
+	cog(go, 0, 8.8, 1.0, 4.5, 4.8)
+	tile_roof(ro, 5.45, 4.45, 6.5, 1.3, 1.0, 9.9, 4, 1.8)
+	# the roof's steel cap, a gold foot and ball on it
+	cbox(fr, (0, 0, 10.1), (3.2, 2.6, 0.4), 0.1)
+	cbox(fr, (0, 0, 10.45), (1.5, 1.5, 0.3), 0.08)
+	lat(go, [(0.78, 10.6), (0.78, 10.74), (0.52, 10.86), (0.44, 11.0)], 10, 0, 0, cap_bottom=True)
+	ball(go, (0, 0, 11.55), 0.64)
+	# (no lantern here: the game hangs the kit's wall lantern left of the door, on the post at x 2.75, front face
+	# y 3.9. The owner, 2026-11-17: the lamps we have are used, not modelled again.)
+	# a thick copper pipe out of the roof's right end (-X), over and back in, a flange at every joint
+	py = -1.6
+	path = [(-4.95, 6.6), (-4.95, 9.3)] + arc(-4.25, 9.3, 0.7, math.pi, math.pi / 2, 5)[1:] + arc(-3.55, 9.3, 0.7, math.pi / 2, 0.0, 5) + [(-2.85, 8.2)]
+	tube(co, path, py, 0.45, 10)
+	for a, b in (((-4.95, 7.3), (-4.95, 7.55)), ((-4.95, 9.05), (-4.95, 9.3)), ((-4.0, 10.0), (-3.8, 10.0)),
+		((-2.85, 9.05), (-2.85, 9.3)), ((-2.85, 8.7), (-2.85, 8.9))):
+		tube(co, [a, b], py, 0.6, 10)
 	o = (0, 0, 0)
 	return [("ToolStoreTech_Plinth", pl, o, "Stone", 40), ("ToolStoreTech_Brick", br, o, "Brick", 40),
 		("ToolStoreTech_Glass", gl, o, "TechGlass", 30), ("ToolStoreTech_Frame", fr, o, "Iron", 40),
 		("ToolStoreTech_Roof", ro, o, "Slate", 30), ("ToolStoreTech_Gold", go, o, "Gold", 40),
-		("ToolStoreTech_Copper", co, o, "Copper", 50), ("ToolStoreTech_Door", do, o, "DoorIron", 30),
-		("ToolStoreTech_Glow", lo, o, "Glow", 40)]
+		("ToolStoreTech_Copper", co, o, "Copper", 50), ("ToolStoreTech_Door", do, o, "DoorIron", 30)]
 
 
 def tool_store_royal():
-	# era 5: marble courses on two steps, columns on the front corners, a pediment with a laurel over the gold-framed
-	# arched door, a round window either side, a royal blue hip roof with gold hips and a finial
+	# era 5: jointed marble blocks on a block plinth, columns on pedestals at the front corners, a pediment with a laurel
+	# over the gold-framed arched door, one round window, a royal blue tiled hip roof with gold hips and a finial
+	# As in the picture the front is not symmetric: the door and its pediment stand left of the middle (+X), the one
+	# round window right of them; the columns carry the entablature a stud in front of the wall.
 	ma, go, ro, gl = M(), M(), M(), M()
-	cbox(ma, (0, 0, 0.175), (10.4, 8.4, 0.35), 0.08)
-	cbox(ma, (0, 0, 0.525), (9.8, 7.8, 0.35), 0.08)
-	for k in range(5):
-		cbox(ma, (0, 0, 1.23 + 1.06 * k), (8.4, 6.6, 1.06), 0.07)
-	cbox(ma, (0, 0, 6.22), (9.6, 7.6, 0.45), 0.08)
-	cbox(go, (0, 0, 6.57), (10.2, 8.2, 0.26), 0.06)
+	dx, wx, fy = 1.3, -2.75, 0.375  # the door's middle, the window's, the middle of the entablature (it oversails the front)
+	# a plinth of big blocks round a core, open where the door stands
+	box(ma, (0, 0, 0.49), (9.8, 7.8, 0.98))
+	block_run(ma, (-5.3, -3.9), (5.3, -3.9), 0, 1.0, 0.8, 6)
+	block_run(ma, (-5.3, 3.9), (dx - 2.25, 3.9), 0, 1.0, 0.8, 3)
+	block_run(ma, (dx + 2.25, 3.9), (5.3, 3.9), 0, 1.0, 0.8, 1)
+	# the walls in five courses of jointed blocks, the door's bay half a stud proud
+	box(ma, (0, 0, 3.5), (8.86, 6.86, 5.0))
+	box(ma, (dx, 3.66, 3.5), (4.8, 0.52, 5.0))
+	up = (0, 0, 5.0)
+	tiles(ma, (-4.43, -3.43, 1.0), (8.86, 0, 0), up, 6, 5)
+	tiles(ma, (4.43, -3.43, 1.0), (0, 6.86, 0), up, 5, 5)
+	tiles(ma, (-4.43, 3.43, 1.0), (0, -6.86, 0), up, 5, 5)
+	tiles(ma, (dx - 2.4, 3.43, 1.0), (-4.43 - dx + 2.4, 0, 0), up, 2, 5)
+	tiles(ma, (dx + 2.4, 3.92, 1.0), (-4.8, 0, 0), up, 3, 5)
+	# the entablature: an architrave with dentils, a thick gold cornice
+	cbox(ma, (0, fy, 6.25), (9.6, 8.25, 0.6), 0.07)
+	cbox(go, (0, fy, 6.75), (10.7, 9.35, 0.4), 0.08)
 	for k in range(13):
-		for sy in (-1, 1):
-			box(ma, (-4.5 + 0.75 * k, sy * 3.9, 6.3), (0.3, 0.25, 0.25))
-	for k in range(10):
-		for sx in (-1, 1):
-			box(ma, (sx * 4.9, -3.375 + 0.75 * k, 6.3), (0.25, 0.3, 0.25))
+		box(ma, (-4.5 + 0.75 * k, fy + 4.24, 6.42), (0.3, 0.24, 0.26))
 	for sx in (-1, 1):
-		x, y = sx * 4.2, 3.3
-		lat(ma, [(0.5, 1.2), (0.45, 5.3)], 12, x, y, cap_bottom=True, cap_top=True)
-		lat(go, [(0.74, 0.7), (0.74, 0.84), (0.6, 0.94), (0.66, 1.06), (0.54, 1.2)], 12, x, y, cap_bottom=True, cap_top=True)
-		lat(go, [(0.46, 5.25), (0.5, 5.4), (0.6, 5.58), (0.74, 5.78)], 12, x, y, cap_bottom=True, cap_top=True)
-		cbox(go, (x, y, 5.89), (1.6, 1.6, 0.22), 0.05)
-		cbox(ma, (x, -3.3, 3.35), (1.0, 1.0, 5.3), 0.08)  # a square pilaster on each back corner
-		# the door's marble posts, its gold jamb and pull
-		cbox(ma, (sx * 1.87, 3.45, 2.35), (0.54, 0.5, 3.3), 0.06)
-		box(go, (sx * 1.51, 3.42, 2.35), (0.18, 0.35, 3.3))
-		cbox(go, (sx * 0.28, 3.68, 2.9), (0.12, 0.12, 0.7), 0.03)
-		for z in (2.68, 3.12):
-			box(go, (sx * 0.28, 3.6, z), (0.08, 0.2, 0.08))
-		# a round window
-		arch_band(go, sx * 2.97, 3.9, 0.6, 0.78, 3.25, 3.5, 0.0, TAU, 16)
-		prism(gl, arc(sx * 2.97, 3.9, 0.62, 0.0, TAU * 15 / 16, 15), 3.26, 3.36)
-		box(go, (sx * 2.97, 3.42, 3.9), (0.1, 0.12, 1.22))
-		box(go, (sx * 2.97, 3.42, 3.9), (1.22, 0.12, 0.1))
-		# the pediment's raking cornice, a console under its end, its laurel branch
-		bar(go, (sx * 3.5, 4.3, 6.72), (0, 4.3, 8.62), 1.0, 0.26)
-		cbox(go, (sx * 3.0, 3.75, 5.85), (0.4, 0.9, 0.4), 0.05)
-		for k in range(4):
-			a = math.radians(12 + (30 if k % 2 == 0 else -25))
-			leaf(go, (sx * (0.4 + 0.45 * k), 4.47, 7.1 + 0.04 * k), a if sx > 0 else math.pi - a, 0.5, 0.18)
-		# the roof's gold: its hips and the eave's edge
+		block_run(ma, (sx * 4.9, -3.5), (sx * 4.9, 3.5), 0, 1.0, 0.8, 4)
+		for k in range(11):
+			box(ma, (sx * 4.92, fy - 3.75 + 0.75 * k, 6.42), (0.24, 0.3, 0.26))
+		# a stout column on a square pedestal, gold foot and capital
+		x, y = sx * 4.35, 3.75
+		cbox(ma, (x, y, 0.85), (1.5, 1.5, 1.7), 0.1)
+		lat(ma, [(0.55, 2.0), (0.5, 5.3)], 12, x, y)
+		lat(go, [(0.8, 1.7), (0.8, 1.86), (0.66, 1.96), (0.72, 2.08), (0.58, 2.2)], 12, x, y, cap_bottom=True, cap_top=True)
+		lat(go, [(0.5, 5.2), (0.56, 5.34), (0.7, 5.5), (0.82, 5.7)], 12, x, y, cap_bottom=True, cap_top=True)
+		cbox(go, (x, y, 5.825), (1.7, 1.7, 0.25), 0.06)
+		cbox(ma, (sx * 4.2, -3.2, 3.48), (1.0, 1.0, 4.95), 0.08)  # a square pilaster on each back corner
+		# the door: marble posts, a gold jamb, a pull
+		cbox(ma, (dx + sx * 2.025, 4.1, 1.8), (0.45, 0.5, 3.6), 0.05)
+		cbox(go, (dx + sx * 1.65, 4.165, 1.8), (0.3, 0.43, 3.6), 0.04)
+		cbox(go, (dx + sx * 0.3, 4.36, 2.4), (0.13, 0.13, 0.8), 0.03)
+		for z in (2.15, 2.65):
+			box(go, (dx + sx * 0.3, 4.26, z), (0.09, 0.22, 0.09))
+		# the pediment's raking cornice in gold, a laurel branch on the tympanum (its leaves shorter toward the corner)
+		# (the pediment stands at the cornice's edge, in front of the roof's eave: further back the slope hides its foot)
+		bar(go, (dx + sx * 3.5, 5.1, 7.05), (dx, 5.1, 9.35), 0.8, 0.4)
+		for k in range(3):
+			p = (dx + sx * (0.55 + 0.45 * k), 5.1, 7.34)
+			for a in (40 - 10 * k, -15 + 5 * k):
+				a = math.radians(a)
+				leaf(go, p, a if sx > 0 else math.pi - a, 0.85 - 0.1 * k, 0.3, 0.16)
+		# the roof's gold hips
 		for sy in (-1, 1):
-			bar(go, (sx * 5.3, sy * 4.3, 6.78), (sx * 1.0, sy * 0.7, 8.78), 0.3, 0.22)
-		cbox(go, (sx * 5.3, 0, 6.76), (0.2, 8.8, 0.2), 0.04)
-	for sy in (-1, 1):
-		cbox(go, (0, sy * 4.3, 6.76), (10.8, 0.2, 0.2), 0.04)
-	# the door
-	arch_band(ma, 0, 4.0, 1.6, 2.14, 3.2, 3.7)
-	cbox(go, (0, 3.6, 5.85), (0.55, 0.5, 0.75), 0.06)  # the keystone
-	arch_band(go, 0, 4.0, 1.42, 1.6, 3.25, 3.6)
-	cbox(go, (0, 3.45, 3.1), (0.2, 0.3, 4.8), 0.04)
-	box(go, (0, 3.42, 2.3), (3.0, 0.2, 0.14))
-	box(go, (0, 3.42, 4.0), (3.0, 0.2, 0.16))
-	box(go, (0, 3.42, 0.77), (3.0, 0.3, 0.14))
-	arch_slab(gl, 0, 0.7, 4.0, 1.45, 3.22, 3.36)
-	# the pediment stands proud of the eave on a break in the cornice, a gable roof behind it
-	tri = [(-3.3, 6.7), (3.3, 6.7), (0, 8.5)]
-	prism(ma, tri, 3.9, 4.45)
-	prism(ro, tri, 1.0, 4.0)
-	cbox(ma, (0, 4.05, 6.22), (6.9, 0.7, 0.45), 0.08)
-	cbox(go, (0, 4.2, 6.57), (7.3, 0.9, 0.26), 0.06)
-	cbox(go, (0, 4.3, 8.66), (0.4, 1.1, 0.3), 0.05)
-	ball(go, (0, 4.5, 7.25), 0.28, 10, 4)
-	hip_roof(ro, 5.3, 4.3, 6.7, 1.0, 0.7, 8.7, 4)
-	cbox(go, (0, 0, 8.8), (2.4, 1.8, 0.28), 0.07)
-	lat(go, [(0.75, 8.94), (0.55, 9.25)], 6, 0, 0, cap_top=True)
-	lat(go, [(0.28, 9.25), (0.5, 9.45), (0.55, 9.67), (0.38, 9.9), (0.16, 10.0), (0.22, 10.1), (0.0, 10.55)], 10, 0, 0)
+			bar(go, (sx * 5.05, fy + sy * 4.35, 7.05), (sx * 1.1, fy + sy * 0.9, 10.45), 0.5, 0.3)
+	# the pilaster that closes the door's bay, on its own pedestal, a gold plate for a capital
+	cbox(ma, (dx - 2.4, 3.9, 0.5), (0.9, 0.9, 1.0), 0.08)
+	cbox(ma, (dx - 2.4, 3.8, 3.4), (0.7, 0.7, 4.8), 0.07)
+	cbox(go, (dx - 2.4, 3.84, 5.7), (0.86, 0.8, 0.5), 0.06)
+	# the door in its arch: a marble surround, a gold frame and keystone, blue glass
+	arch_band(ma, dx, 3.6, 1.8, 2.25, 3.9, 4.3)
+	arch_band(go, dx, 3.6, 1.5, 1.8, 3.95, 4.38)
+	cbox(go, (dx, 4.25, 5.75), (0.6, 0.5, 0.9), 0.07)
+	arch_slab(gl, dx, 0.0, 3.6, 1.5, 4.0, 4.1)
+	cbox(go, (dx, 4.16, 2.55), (0.26, 0.2, 5.1), 0.04)
+	box(go, (dx, 4.14, 0.12), (3.0, 0.16, 0.24))
+	for z in (1.6, 3.2):
+		box(go, (dx, 4.14, z), (3.0, 0.14, 0.14))
+	# the round window
+	arch_band(go, wx, 4.0, 0.7, 0.95, 3.45, 3.8, 0.0, TAU, 16)
+	prism(gl, arc(wx, 4.0, 0.72, 0.0, TAU * 15 / 16, 15), 3.5, 3.6)
+	box(go, (wx, 3.66, 4.0), (0.12, 0.14, 1.42))
+	box(go, (wx, 3.66, 4.0), (1.42, 0.14, 0.12))
+	# the pediment over the door's bay, a gable roof behind it with a gold ridge
+	# (the hip roof stops inside the gold cornice, which is its edge as in the picture)
+	prism(ma, [(dx - 3.0, 6.95), (dx + 3.0, 6.95), (dx, 8.95)], 4.8, 5.05)
+	prism(ro, [(dx - 3.4, 6.95), (dx + 3.4, 6.95), (dx, 9.2)], 2.3, 4.8)
+	bar(go, (dx, 2.2, 9.25), (dx, 4.9, 9.25), 0.3, 0.2)
+	cbox(go, (dx, 5.1, 9.42), (0.55, 1.0, 0.4), 0.05)
+	ball(go, (dx, 5.08, 7.42), 0.4, 10, 4)
+	tile_roof(ro, 5.0, 4.3, 6.95, 1.1, 0.9, 10.35, 4, 1.8, fy)
+	# a stepped gold foot and a tall finial
+	cbox(go, (0, fy, 10.5), (2.6, 2.2, 0.36), 0.08)
+	lat(go, [(0.95, 10.68), (0.8, 10.98)], 6, 0, fy, cap_top=True)
+	lat(go, [(0.32, 10.98), (0.5, 11.15), (0.6, 11.4), (0.5, 11.65), (0.24, 11.8), (0.3, 11.9), (0.0, 12.5)], 10, 0, fy)
 	o = (0, 0, 0)
 	return [("ToolStoreRoyal_Marble", ma, o, "Marble", 40), ("ToolStoreRoyal_Gold", go, o, "Gold", 40),
 		("ToolStoreRoyal_Roof", ro, o, "Royal", 30), ("ToolStoreRoyal_Glass", gl, o, "Sky", 30)]
@@ -875,7 +991,7 @@ ONLY = os.environ.get("PIECES_ONLY")
 if ONLY:
 	PIECES = [p for p in PIECES if p[0] in ONLY.split(",")]
 # the buildings are judged from their door's side
-FRONT = {"ToolStoreTech": (-0.75, 1.25, 0.6), "ToolStoreRoyal": (-0.75, 1.25, 0.6)}
+FRONT = {"ToolStoreTech": (-0.4, 1.25, 0.4), "ToolStoreRoyal": (-0.4, 1.25, 0.4)}
 
 
 # ---------------------------------------------------------------- Blender side

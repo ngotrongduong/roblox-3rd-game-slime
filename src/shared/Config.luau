@@ -927,36 +927,37 @@ Config.LibraryKit = {
 			{ mesh = 95038916372153, tex = "", size = { 0.114, 0.12, 0.115 }, at = { 0.42, 0.07, -0.358 } },
 		},
 		-- the garden's tool stores of eras 4 and 5: whole small buildings from Blender, one mesh a material
-		ToolStoreTech_Plinth = { { mesh = 123166904337396, tex = "", size = { 10.4, 0.6, 8.4 }, at = { 0, 0.3, 0 } } },
-		ToolStoreTech_Brick = { { mesh = 99168994620118, tex = "", size = { 9.4, 1.7, 7.4 }, at = { 0, 1.45, 0 } } },
+		ToolStoreTech_Plinth = { { mesh = 84599544983246, tex = "", size = { 10.6, 0.8, 8.6 }, at = { 0, 0.4, 0 } } },
+		ToolStoreTech_Brick = { { mesh = 120834039442078, tex = "", size = { 9.2, 5, 7.2 }, at = { 0, 3.3, 0 } } },
 		ToolStoreTech_Glass = {
-			{ mesh = 129352810078959, tex = "", size = { 9.2, 5.52, 7.4 }, at = { 0, 4.96, -0.1 } },
+			{ mesh = 97235304546928, tex = "", size = { 9, 6.04, 7.88 }, at = { 0, 5.37, -0.44 } },
 		},
 		ToolStoreTech_Frame = {
-			{ mesh = 123152274016289, tex = "", size = { 10.898, 7.9, 9.32 }, at = { 0, 4.55, -0.208 } },
+			{ mesh = 99641835007724, tex = "", size = { 11.41, 10.6, 9.447 }, at = { 0, 5.3, 0 } },
 		},
-		ToolStoreTech_Roof = { { mesh = 70931248411587, tex = "", size = { 10.6, 2.5, 8.6 }, at = { 0, 6.85, 0 } } },
+		ToolStoreTech_Roof = {
+			{ mesh = 124890735574936, tex = "", size = { 10.9, 3.409, 8.933 }, at = { 0, 8.204, 0 } },
+		},
 		ToolStoreTech_Gold = {
-			{ mesh = 77831478432479, tex = "", size = { 10.408, 8.413, 8.604 }, at = { 0, 5.294, -0.198 } },
+			{ mesh = 134978011511880, tex = "", size = { 10.985, 11.661, 9.492 }, at = { 0, 6.359, -0.254 } },
 		},
 		ToolStoreTech_Copper = {
-			{ mesh = 72020444866620, tex = "", size = { 4.91, 7.45, 5.89 }, at = { -2.065, 5.275, -1.125 } },
+			{ mesh = 137887959400106, tex = "", size = { 5.98, 8.5, 6.581 }, at = { -2.56, 6.35, -1.12 } },
 		},
 		ToolStoreTech_Door = {
-			{ mesh = 137148308593707, tex = "", size = { 3.6, 4.7, 0.33 }, at = { 0, 2.95, -3.715 } },
-		},
-		ToolStoreTech_Glow = {
-			{ mesh = 133458620645929, tex = "", size = { 0.44, 0.6, 0.44 }, at = { 3.3, 3.95, -4.55 } },
+			{ mesh = 107747949715685, tex = "", size = { 3.2, 5.2, 0.3 }, at = { 0, 2.6, -4.05 } },
 		},
 		ToolStoreRoyal_Marble = {
-			{ mesh = 105409466697019, tex = "", size = { 10.4, 8.5, 8.65 }, at = { 0, 4.25, -0.125 } },
+			{ mesh = 112907389740034, tex = "", size = { 10.6, 8.95, 9.35 }, at = { 0, 4.475, -0.375 } },
 		},
 		ToolStoreRoyal_Gold = {
-			{ mesh = 106506745379721, tex = "", size = { 10.849, 9.85, 9.289 }, at = { 0, 5.625, -0.206 } },
+			{ mesh = 102131852145448, tex = "", size = { 10.7, 12.5, 9.9 }, at = { 0, 6.25, -0.65 } },
 		},
-		ToolStoreRoyal_Roof = { { mesh = 94751486777341, tex = "", size = { 10.6, 2, 8.6 }, at = { 0, 7.7, 0 } } },
+		ToolStoreRoyal_Roof = {
+			{ mesh = 94441673358978, tex = "", size = { 10, 3.407, 8.725 }, at = { 0, 8.653, -0.438 } },
+		},
 		ToolStoreRoyal_Glass = {
-			{ mesh = 76189111386197, tex = "", size = { 7.18, 4.75, 0.14 }, at = { 0, 3.075, -3.29 } },
+			{ mesh = 136223009795590, tex = "", size = { 6.27, 5.1, 0.6 }, at = { -0.335, 2.55, -3.8 } },
 		},
 	},
 	-- how long a stage waits for the meshes before it leaves a library prop out (seconds)

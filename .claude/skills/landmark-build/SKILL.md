@@ -132,6 +132,13 @@ garden's tool stores of eras 4 and 5 are the worked example (`tool_store_tech`, 
 Blender"). When a landmark's own visible face is next reworked, its facade pieces (door surrounds, window frames,
 cornices, roofs) go the same way, over the part shell.
 
+Before modelling a Blender building: measure the picture at the footprint's width (plinth, eave, roof cap, door,
+each opening's share of the front), and look through the kit for every small fixture on it. What the kit has is
+worn, not modelled again (the owner, 2026-11-17: "chúng ta có sẵn một số props cho cây đèn rồi, hãy dùng nó để bớt
+công việc bạn phải dựng hình đi"): lamps and lanterns (`WallLantern_Iron`, `LampPost_*`, `Pillar_Lantern`), flower
+boxes, banners, finials, barrels (`src/shared/ConfigMeshyKit.luau`, `docs/kit/README.md`). The game hangs it on the
+Blender building at a point the script names.
+
 A slime statue is neither: it is the game's own slime (`ClientKit.SlimeBody` in a Model, `ScaleTo`).
 `hard-pieces.md` is the ledger: piece, era, what it replaces, reference file, model. A piece nobody has built yet
 keeps its stand-in and is named in the review brief as "not to be judged".

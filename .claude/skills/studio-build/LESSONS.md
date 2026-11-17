@@ -461,6 +461,24 @@ convenience (no upload, hollow shells, pieces a level). What the two stores show
 - Scripted Blender suits regular shapes. Sculpted ones (statues, vines, laurels with real leaves) are still the
   owner's Meshy; my laurel of flat diamonds is the weakest part of the marble store.
 
+The second round (the owner: "not much like it yet, improve once more"), what closed the gap:
+
+- MEASURE the picture before modelling: at the footprint's width read off the plinth, the brick foot, the eave, the
+  roof's cap, the finial, the door's top and each opening's share of the front. The first stores were a third too
+  low and had a symmetric front the picture does not have.
+- Joints are geometry: stone blocks and plinth blocks are bevelled pillows (`pillow`, `tiles`, `block_run`), roof
+  tiles are stepped courses of separate big tiles clipped at the hips (`tile_roof`). A flat wall with a material
+  never reads as blocks. About 6000-7000 triangles a store.
+- What stands on a roof (a lunette, a pediment) stands at the EAVE'S edge or in front of it: a stud further back
+  the slope hides its foot, and from the player's height its ornament too. Blender's render from above hid this
+  twice; it showed at once in the play test. A hip roof that stops inside its cornice leaves the edge to the gold.
+- Doors go down to the ground through a gap in the plinth.
+- Small fixtures are the kit's, not modelled again (the owner: "we already have lamp props, use them"): the steel
+  store's lantern is `WallLantern_Iron`, hung by the game at a point the Blender script names in a comment.
+- Colour is tuned LIVE in the play test, then written into code: Metal takes the sky's blue and darkens in shade
+  (a charcoal frame needs a warm mid grey, 132 124 118); Marble greys a pale colour (pink-cream needs 255 220 200);
+  Glass shifts toward cyan (emerald needs 40 205 125).
+
 ## Bringing a built map into the game
 
 - 2026-10-23. A map went into the game as files, no Studio at build time: in Studio, `CopyRegion` in 128-cell blocks

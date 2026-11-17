@@ -258,30 +258,32 @@ end
 -- The work yard's tool store of the eras 4 and 5, its foot's middle at `cf`, its door toward the frame's front.
 -- A whole small building from Blender (the owner, 2026-11-17: "Blender models better than Roblox parts, why not
 -- use it?"): one mesh a material, so the game's own materials and light finish it. Nothing when a mesh is missing.
--- (each mesh: its name's end, the look's colour it takes, its material)
-type StorePart = { part: string, colour: string, mat: Enum.Material }
-local STORE: { { name: string, parts: { StorePart } } } = {
+-- (each mesh: its name's end, its colour, its material. A colour is the look's by name, or the store's own where
+-- the reference picture's differs from the big house's: emerald panes, a mid-grey riveted frame, blue royal glass.
+-- The roof is always the era's: one roof an era.)
+type StorePart = { part: string, colour: string | Color3, mat: Enum.Material }
+local STORE: { { name: string, parts: { StorePart }, lamp: Vector3? } } = {
 	{
 		name = "ToolStoreTech",
 		parts = {
 			{ part = "Plinth", colour = "frame", mat = M.Limestone },
 			{ part = "Brick", colour = "lower", mat = M.Brick },
-			{ part = "Glass", colour = "wall", mat = M.Glass },
-			{ part = "Frame", colour = "beam", mat = M.Metal },
+			{ part = "Glass", colour = C(40, 205, 125), mat = M.Glass },
+			{ part = "Frame", colour = C(132, 124, 118), mat = M.Metal }, -- (warm: Metal takes the sky's blue)
 			{ part = "Roof", colour = "roof", mat = M.RoofShingles },
 			{ part = "Gold", colour = "gold", mat = M.Metal },
 			{ part = "Copper", colour = "accent", mat = M.Metal },
-			{ part = "Door", colour = "board", mat = M.Metal },
-			{ part = "Glow", colour = "glass", mat = M.Neon },
+			{ part = "Door", colour = C(100, 94, 92), mat = M.Metal },
 		},
+		lamp = Vector3.new(2.75, 4.5, -3.9), -- on the post left of the door, as in the picture
 	},
 	{
 		name = "ToolStoreRoyal",
 		parts = {
-			{ part = "Marble", colour = "wall", mat = M.Marble },
-			{ part = "Gold", colour = "gold", mat = M.Metal },
+			{ part = "Marble", colour = C(255, 220, 200), mat = M.Marble }, -- (Marble greys a pale colour)
+			{ part = "Gold", colour = C(232, 168, 44), mat = M.Metal },
 			{ part = "Roof", colour = "roof", mat = M.ClayRoofTiles },
-			{ part = "Glass", colour = "glaze", mat = M.Glass }, -- (not the look's: the pale panes of a cold frame)
+			{ part = "Glass", colour = C(96, 156, 220), mat = M.Glass },
 		},
 	},
 }
@@ -297,15 +299,23 @@ function Garden.toolStore(m: Instance, cf: CFrame, era: number)
 		if not src then
 			return
 		end
-		local p = b.mesh(src, cf, Vector3.one, if s.colour == "glaze" then GLAZE else (L :: any)[s.colour], s.mat)
-		if p and s.mat == M.Neon then
+		local colour = s.colour
+		b.mesh(src, cf, Vector3.one, if typeof(colour) == "string" then (L :: any)[colour] else colour, s.mat)
+	end
+	-- its lamp is the yard's own wall lantern from the kit (the owner, 2026-11-17: the lamps we have are used, not
+	-- modelled again), lit
+	local kit = set.lamp and LibraryKit.find("WallLantern_Iron")
+	if set.lamp and kit then
+		local at = set.lamp
+		local p = b.mesh(kit, b.face(at.X, at.Y, at.Z, FRONT), Vector3.one * 0.8, Color3.new(1, 1, 1), M.SmoothPlastic)
+		if p then
 			local light = Instance.new("PointLight")
-			light.Color, light.Brightness, light.Range = p.Color, 1, 10
+			light.Color, light.Brightness, light.Range = L.glass, 0.6, 14
 			light.Parent = p
 		end
 	end
 	-- (meshes do not collide: one box stands for the walls)
-	local wall = b.box("StoreWall", 9.4, 6, 7.4, cf * CFrame.new(0, 3, 0), L.wall)
+	local wall = b.box("StoreWall", 9.2, 6.5, 7.2, cf * CFrame.new(0, 3.25, 0), L.wall)
 	wall.Transparency = 1
 	wall.CastShadow = false
 end
