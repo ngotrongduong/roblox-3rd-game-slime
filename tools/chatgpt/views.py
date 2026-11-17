@@ -102,6 +102,43 @@ BUILDINGS = {
 			"the urns, the water stairs and the marble windmill",
 			"the pediment over the one wide open portal, with no door", ": the left small dome", ": the right small dome"),
 	],
+	# (the picture is the whole fenced breeding pen: only the hall across its back, with its warm room, is asked for)
+	"breeding": [
+		("the HATCHERY HALL that stands across the back of this fenced slime breeding pen, at its first era (shaggy "
+			"thatch on brown posts and beams, cream plaster, a wide open front, a pink heart plaque over it, a great "
+			"spotted egg in a straw nest on the ridge, and a low thatched warm room with a fieldstone chimney joined to "
+			"its left wall). Draw ONLY that hall with its warm room: leave out the wattle fence, the gate, the straw "
+			"nests, the glass incubators and every egg on the ground",
+			"the gable over the one wide open front, with no door", ": the warm room and its chimney", ""),
+		("the HATCHERY HALL that stands across the back of this fenced slime breeding pen, at its second era (cream "
+			"plaster on rose-pink beams, red clay tiles, a cross gable with a pink heart plaque over the wide open front, "
+			"a great spotted egg on the ridge, a lower tiled wing on its right wall, and a low tiled stove room with a red "
+			"brick chimney and a glowing oven mouth joined to its left wall). Draw ONLY that hall with its stove room: "
+			"leave out the picket fence, the gate, the straw nests, the glass incubators and every egg on the ground",
+			"the cross gable over the one wide open front, with no door", ": the stove room and its chimney",
+			": the lower wing"),
+		("the HATCHERY HALL that stands across the back of this fenced slime breeding pen, at its third era (a grey "
+			"stone hall with ONE wide stone arch in the middle under a pink heart plaque, a round stone drum with small "
+			"round windows carrying the great spotted egg on the roof, half-timbered gables under red clay tiles on both "
+			"sides, and a round stone turret with a red cone roof and a chimney at its left end). Draw ONLY that hall "
+			"with its turret: leave out the stone fence, the gate, the banners, the straw nests, the copper incubators "
+			"and every egg on the ground", "the one wide open stone arch, with no door", ": the round turret", ""),
+		("the HATCHERY HALL that stands across the back of this fenced slime breeding pen, at its fourth era (black "
+			"riveted steel and teal glass: a great glass dome with the spotted egg inside it over the middle, a lower "
+			"glazed vault on each side, one wide open arch in the front under a pink heart plaque, copper pipes over "
+			"the vaults, and at its left end a small brick room, a round glass boiler of glowing green goo and a dark "
+			"stone chimney). Draw ONLY that hall with its boiler: leave out the iron fence, the gate, the straw nests, "
+			"the glass incubators and every egg on the ground", "the one wide open arch under the dome, with no door",
+			": the boiler and the chimney", ": the right vault"),
+		("the HATCHERY HALL that stands across the back of this fenced slime breeding pen, at its fifth era (white "
+			"marble and gold: columns and a pediment with a pink heart in gold laurels over one wide open portal, a tall "
+			"arched glazed window on each side of it, a great cream dome with lavender spots, gold ribs and a gold crown "
+			"over the middle, a small blue dome with gold ribs over each end, and a round marble chimney with gold bands "
+			"at its left end). Draw ONLY that hall: leave out the balustrade, the gate, the banners, the urns, the straw "
+			"nests, the glass incubators and every egg on the ground",
+			"the pediment over the one wide open portal, with no door", ": the chimney and the left small dome",
+			": the right small dome"),
+	],
 }
 
 name = sys.argv[1]

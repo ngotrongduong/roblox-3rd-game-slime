@@ -557,5 +557,140 @@
 			"GardenBody4_Lower": 106917024323738,
 			"GardenBody4_Roof": 75460222071413
 		}
+	},
+	"BreedingBody1": {
+		"model": 118714392372038,
+		"texture": 0,
+		"pieces": {
+			"BreedingBody1_Beam": 122079320520634,
+			"BreedingBody1_Board": 80773579587113,
+			"BreedingBody1_Frame": 136485058367626,
+			"BreedingBody1_Glass": 101370855658546,
+			"BreedingBody1_Lower": 130613333933210,
+			"BreedingBody1_Roof": 98386522678120,
+			"BreedingBody1_Shutters": 105621482028490,
+			"BreedingBody1_Stone": 139002923546090,
+			"BreedingBody1_Wall": 82301667209695
+		}
+	},
+	"BreedingBody2": {
+		"model": 95907667775945,
+		"texture": 0,
+		"pieces": {
+			"BreedingBody2_Beam": 90707065249458,
+			"BreedingBody2_Board": 91311168472428,
+			"BreedingBody2_Frame": 129435002187674,
+			"BreedingBody2_Glass": 129493776889817,
+			"BreedingBody2_Lower": 135596471061953,
+			"BreedingBody2_Roof": 98406367046904,
+			"BreedingBody2_Shutters": 105621482028490,
+			"BreedingBody2_Stone": 96054382219114,
+			"BreedingBody2_Wall": 74540903208191
+		}
+	},
+	"BreedingBody3": {
+		"model": 86926147208335,
+		"texture": 0,
+		"pieces": {
+			"BreedingBody3_Beam": 80745899679467,
+			"BreedingBody3_Board": 72739831530188,
+			"BreedingBody3_Frame": 131880283036382,
+			"BreedingBody3_Glass": 83854423549986,
+			"BreedingBody3_Lower": 105733832758816,
+			"BreedingBody3_Roof": 73726849131740,
+			"BreedingBody3_Shutters": 127303669356147,
+			"BreedingBody3_Stone": 114444464157053,
+			"BreedingBody3_Wall": 130504197872617
+		}
+	},
+	"BreedingBody4": {
+		"model": 76042546549266,
+		"texture": 0,
+		"pieces": {
+			"BreedingBody4_Beam": 127368987686746,
+			"BreedingBody4_Board": 72551178320228,
+			"BreedingBody4_Frame": 126315511006363,
+			"BreedingBody4_Gold": 103844438467493,
+			"BreedingBody4_Lower": 92118266547692,
+			"BreedingBody4_Roof": 128878012127430,
+			"BreedingBody4_Stone": 132237864016650
+		}
+	},
+	"BreedingBody5": {
+		"model": 117632491910175,
+		"texture": 0,
+		"pieces": {
+			"BreedingBody5_Beam": 71790837186107,
+			"BreedingBody5_Glass": 70394029696957,
+			"BreedingBody5_Gold": 133290138772178,
+			"BreedingBody5_Roof": 95249076100108,
+			"BreedingBody5_Stone": 122335954051646,
+			"BreedingBody5_Wall": 127339976695914
+		}
+	},
+	"BreedingChimney1": {
+		"model": 120959970420141,
+		"texture": 0,
+		"pieces": {
+			"BreedingChimney1_Frame": 110154066508723,
+			"BreedingChimney1_Stone": 116953671638058
+		}
+	},
+	"BreedingGable1": {
+		"model": 94047818819820,
+		"texture": 0,
+		"pieces": {
+			"BreedingGable1_Beam": 105546422917987,
+			"BreedingGable1_Wall": 72699612627525
+		}
+	},
+	"BreedingLean1": {
+		"model": 138878550126356,
+		"texture": 0,
+		"pieces": {
+			"BreedingLean1_Beam": 121301074544412,
+			"BreedingLean1_Lower": 81134388688008,
+			"BreedingLean1_Roof": 107134252976410,
+			"BreedingLean1_Wall": 140596956852360
+		}
+	},
+	"BreedingRoof3": {
+		"model": 92323247494526,
+		"texture": 0,
+		"pieces": {
+			"BreedingRoof3_Beam": 78963534846319,
+			"BreedingRoof3_Board": 113887583957919,
+			"BreedingRoof3_Roof": 79147685127080,
+			"BreedingRoof3_Wall": 74991042416643
+		}
+	},
+	"BreedingStorey3": {
+		"model": 130505263943053,
+		"texture": 0,
+		"pieces": {
+			"BreedingStorey3_Beam": 134281042654461,
+			"BreedingStorey3_Board": 93518881558589,
+			"BreedingStorey3_Roof": 139087413268022,
+			"BreedingStorey3_Wall": 106759835972231
+		}
+	},
+	"BreedingTruss1": {
+		"model": 113446766686756,
+		"texture": 0,
+		"pieces": {
+			"BreedingTruss1_Beam": 106167394700945
+		}
+	},
+	"BreedingWing2": {
+		"model": 121554827184293,
+		"texture": 0,
+		"pieces": {
+			"BreedingWing2_Beam": 138667088701719,
+			"BreedingWing2_Board": 109649084132134,
+			"BreedingWing2_Frame": 122136916965043,
+			"BreedingWing2_Glass": 129882678896410,
+			"BreedingWing2_Roof": 127571634727638,
+			"BreedingWing2_Wall": 92226855843258
+		}
 	}
 }

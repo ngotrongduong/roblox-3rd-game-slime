@@ -223,6 +223,23 @@ worked example of one builder for several eras (`granary(era)`, `SHELL_LATER`, `
 - **Proof in Play, one call a level**: `_G.AreaShow(...)`, the character pivoted 18 studs before the door,
   `MoveTo` 20 studs inside repeated every half second, the position printed in the area's frame (door at z 0);
   "level 50: stands at x 0.0 y 8.7 z 19.2 after 3.1 s" is the proof line. Then one daylight shot of the whole house.
+- **More moulds after the Breeding House** (built almost wholly from them): `planks`, `plank_door`, `gable_roof`
+  (returns pitch, drop, ridge), `gable_wall`, `stone_stack`, `box_room`. Round towers, turrets and stacks are a
+  `G.lat` lathe 0.04 wider than the module's solid cylinder, 12-16 sides.
+- **Solid or not decides what a ghost does**: `b.trim`, `b.beam`, `b.rod`, `b.ball`, `b.disc` and `b.cyl(..., false)`
+  vanish; `b.box`, `b.wedge`, slabs and solid `b.cyl` stay as colliders 0.06 a side smaller, so the model must wrap
+  each of them. Read the helper in `Architecture.luau` before naming a part in `SHELL`.
+- **`Architecture.grow` takes a piece by its PIVOT** against the module's `SPLIT_Z`: anything the hall carries on
+  its face in front of that line keeps its drawn size under a grown hall (the Breeding House's storey windows and
+  flower boxes hung small inside the arch, its marble columns, pediment ornaments and roof pipes stood small under
+  a grown entablature, since the houses were grown). The split lies in front of the frontmost face piece's pivot
+  and behind the yard's own things; list the level's parts in front of the hall with position and size in the Edit
+  preview and look for drawn sizes (the preview IS grown, so its cameras stand about 30 out and 18 up).
+- **A plain box that reads as a prop is a kit piece** (a hay bale by the warm room was a 4-stud box once grown):
+  `painted(<kit name>, ...)` first, the box only as the stand-in.
+- **ChatGPT by script, sync steps only**: page timers are throttled and an awaited script hangs the tool 45 s, so
+  every step is its own plain call with a `wait` between (navigate, store, attach, clear, paste, check and send);
+  a chat page still loading hangs ANY script: wait 10 + 10 + 8 s after `navigate` before the first one.
 
 ## 4. Least time, least tokens
 

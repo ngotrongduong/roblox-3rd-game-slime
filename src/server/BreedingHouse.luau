@@ -46,6 +46,24 @@ local BLOOMS = { C(255, 120, 150), C(255, 214, 80), C(240, 90, 80) }
 local FLOORS = { C(178, 130, 80), C(178, 130, 80), C(170, 164, 154), C(92, 98, 110), C(232, 228, 220) }
 local FRONT, BACK = V(0, 0, -1), V(0, 0, 1)
 
+-- THE SHELL AN ERA'S BLENDER BODY STANDS FOR (see `raise`, the hall and its side rooms): these parts become ghosts
+-- under it. The floor, the glass, the fans, the columns, the windows, the lamps and every feature keep their parts.
+local SHELL: { [string]: boolean } = {}
+for name in
+	string.gmatch(
+		"SideWall PostPad Post Rail Brace BackWall TieBeam Roof Gable BargeBoard Ridge EaveRoll ThatchCourse RidgeRoll "
+			.. "Rafter KingPost Collar GableRail GableStrut LeanWall LeanRoof LeanPost Chimney ChimneyCap RoomWall "
+			.. "RoomPlinth BayPost BayRail FrontWall Quoin Plinth ArchStone Keystone StringCourse Jetty JettyBracket "
+			.. "UpperWall Turret TurretPlinth TurretCornice SidePost SideRail SideCap FrontPier FrontPierCap "
+			.. "FrontPierFoot VaultGlass VaultRib Purlin FrontArch Transom LunetteBar WingWall WingVault WingSill "
+			.. "WingPost WingRib WingTransom BoilerFoot BoilerFootCap Stack StackBand StackTop SideCornice SidePlinth "
+			.. "Entablature Frieze Cornice Wing WingPlinth WingCornice Tower TowerPlinth TowerBand",
+		"%a+"
+	)
+do
+	SHELL[name] = true
+end
+
 local OX = 4 -- the lane's middle line in the area's frame
 local FLOOR = 0.4 -- the pen floor's top
 local HX, FZ0, FZ1 = 21, -19, 30 -- the fence: x -HX..HX, z FZ0..FZ1
@@ -240,8 +258,11 @@ function BreedingHouse.features(level: number): (number, number)
 end
 
 -- The ground the place stands on, in the area's frame (x0, x1, z0, z1): scenery there goes.
--- (What Architecture.grow takes as the house: what stands at or behind SPLIT_Z; and the point it grows round.)
-local SPLIT_Z, PIVOT_X, PIVOT_Z = 19, 4, 20
+-- (What Architecture.grow takes as the house: what stands at or behind SPLIT_Z; and the point it grows round.
+-- The split lies in front of everything the hall carries on its face - the marble portico's columns at HZ - 1.2, its
+-- pediment's ornaments at HZ - 2.4, the jettied storey's windows and flower boxes at HZ - 1.1 - and behind the urns
+-- and statues beside the door, HZ - 2.9: at 19 those face pieces kept their drawn size under a grown hall.)
+local SPLIT_Z, PIVOT_X, PIVOT_Z = 17.4, 4, 20
 function BreedingHouse.footprint(_level: number): (number, number, number, number)
 	return Architecture.grownBox(
 		"BreedingHouse",
@@ -338,6 +359,31 @@ local function raise(m: Instance, area: CFrame, level: number, had: { Instance }
 	-- THE OWNER'S MESHY PIECES wear their own picture: unpainted, at `s` times their size in Config.LibraryKit
 	local function painted(name: string, cf: CFrame, s: number, deep: number?): BasePart?
 		return piece(name, cf, s, s, deep or s, Color3.new(1, 1, 1), M.SmoothPlastic)
+	end
+	-- THE ERA'S BLENDER BODY (tools/blender/landmark_bodies.py): the hall and its side rooms as one model, a mesh a
+	-- colour field, in the hall's own coordinates. Under it the shell's parts are ghosts (`shell`): its solid ones
+	-- stay as what a player walks against, the rest is not made. Without the meshes the parts stand as before.
+	local bodyName = "BreedingBody" .. era
+	local bodied = LibraryKit.find(bodyName .. "_Roof") ~= nil
+	local function shell(on: boolean)
+		b.ghost(if on and bodied then SHELL else nil)
+	end
+	local slots: { { any } } = {
+		{ "Stone", L.stone },
+		{ "Wall", L.wall },
+		{ "Lower", L.lower },
+		{ "Beam", L.beam },
+		{ "Gold", L.gold, bigGold },
+		{ "Board", L.board },
+		{ "Roof", L.roof },
+		{ "Frame", L.frame },
+		{ "Glass", L.glass, M.Neon },
+		{ "Shutters", L.shutters },
+	}
+	local function worn(model: string)
+		for _, slot in slots do
+			piece(model .. "_" .. slot[1], b.at(0, 0, 0), 1, 1, 1, slot[2], slot[3])
+		end
 	end
 	-- a tiled cone roof `r` round at the eave and `up` high, the middle of its foot at `cf`; `tip` its finial
 	local function coneRoof(cf: CFrame, r: number, up: number, colour: Color3, tip: boolean)
@@ -994,6 +1040,28 @@ local function raise(m: Instance, area: CFrame, level: number, had: { Instance }
 	local heartFace: CFrame -- where the heart hangs over the open front
 	local hallFloor = FLOORS[era]
 
+	if bodied then
+		worn(bodyName)
+		if era == 1 then
+			-- (the open truss, then 2 the closed gable; 3 the warm room; 4 its chimney)
+			worn(if f < 2 then "BreedingTruss1" else "BreedingGable1")
+			if f >= 3 then
+				worn("BreedingLean1")
+			end
+			if f >= 4 then
+				worn("BreedingChimney1")
+			end
+		elseif era == 2 then
+			if f >= 8 then
+				worn("BreedingWing2")
+			end
+		elseif era == 3 then
+			-- (the roof on the stone hall, or 14 the jettied storey under it)
+			worn(if f >= 14 then "BreedingStorey3" else "BreedingRoof3")
+		end
+	end
+	shell(true)
+
 	if era <= 2 then
 		-- A TIMBER HALL: plank (then plaster) walls framed in timber, its whole front open between two posts, its
 		-- gable to the front
@@ -1025,7 +1093,8 @@ local function raise(m: Instance, area: CFrame, level: number, had: { Instance }
 		slab("BackWall", -hw, hw, FLOOR, sill, zb - T, zb, lower)
 		slab("BackWall", -hw, hw, sill, top, zb - T, zb, L.wall)
 		b.timber(b.face(0, (FLOOR + top) / 2, zb, BACK), hw * 2, wallH, L.beam)
-		b.box("TieBeam", hw * 2 + 1, 0.7, 0.9, b.at(0, top - 0.35, HZ + 0.45), L.beam)
+		-- (under a body it ends inside the posts: the model's beam does)
+		b.box("TieBeam", if bodied then hw * 2 - 0.2 else hw * 2 + 1, 0.7, 0.9, b.at(0, top - 0.35, HZ + 0.45), L.beam)
 		-- the roof: open as a truss until 2 closes it
 		local open = f < 2
 		local over = 1
@@ -1045,7 +1114,7 @@ local function raise(m: Instance, area: CFrame, level: number, had: { Instance }
 				)
 			end
 			b.box("KingPost", 0.5, rise - 0.7, 0.5, b.at(0, top + (rise - 0.7) / 2, HZ + 0.3), L.beam)
-			b.box("Collar", hw, 0.4, 0.4, b.at(0, top + rise * 0.5, HZ + 0.3), L.beam)
+			b.box("Collar", if bodied then hw - 2.4 else hw, 0.4, 0.4, b.at(0, top + rise * 0.5, HZ + 0.3), L.beam)
 		else
 			-- 2 the gable closed with cream plaster (it carries the heart, below), lanterns on the two front posts
 			b.trim(
@@ -1248,6 +1317,8 @@ local function raise(m: Instance, area: CFrame, level: number, had: { Instance }
 		interior(hw - T, zb - T, FLOOR + 0.25, top - 2)
 	end
 
+	shell(false) -- (the heart, the dormers and the egg are parts of their own)
+
 	-- THE HEART over the open front: 2 it comes with the closed gable, and stays
 	if f >= 2 then
 		local s = ({ 1.5, 1.5, 1.5, 1.55, 1.2 })[era]
@@ -1446,6 +1517,8 @@ local function raise(m: Instance, area: CFrame, level: number, had: { Instance }
 		end
 	end
 
+	shell(true)
+
 	-- THE WARM ROOM on the left as one walks in (+x), and THE RIGHT WING (-x) -----------------------------------
 	-- a small closed room beside the hall under its own front gable: x xa..xb, z za..zb2, walls `h` high
 	local function sideRoom(xa: number, xb: number, za: number, zb2: number, h: number, lower: Color3, upper: Color3)
@@ -1510,7 +1583,9 @@ local function raise(m: Instance, area: CFrame, level: number, had: { Instance }
 				L.glass,
 				{ shutters = L.shutters, glow = true }
 			)
-			b.box("HayBale", 1.8, 1.1, 1.2, b.at(x2 + 1.1, FLOOR + 0.55, z0 + 1.4), HAY)
+			if not painted("HayBales_Stack", b.at(x2 + 1.1, FLOOR, z0 + 1.4), 0.5) then
+				b.box("HayBale", 1.8, 1.1, 1.2, b.at(x2 + 1.1, FLOOR + 0.55, z0 + 1.4), HAY)
+			end
 			if f >= 4 then
 				-- 4 a fieldstone chimney stands up through the lean-to's roof
 				chimney(x2 - 1.4, z1 - 1.5, FLOOR + 10, 1.8, L.stone)
@@ -1587,7 +1662,7 @@ local function raise(m: Instance, area: CFrame, level: number, had: { Instance }
 						L.beam
 					)
 				end
-				archRing("WingGlass", cx, half, spring, R, zm, z1 - z0, 0.18, L.roof)
+				archRing("WingVault", cx, half, spring, R, zm, z1 - z0, 0.18, L.roof)
 				for _, z in { z0 + 0.25, zm, z1 - 0.25 } do
 					archRing("WingRib", cx, half + 0.1, spring, R + 0.1, z, 0.4, 0.4, L.beam)
 				end
@@ -1728,6 +1803,8 @@ local function raise(m: Instance, area: CFrame, level: number, had: { Instance }
 			pipe({ V(tx, FLOOR + 4.6, tz - 0.9), V(tx, FLOOR + 4.6, zw) }, if era == 4 then 0.24 else 0.18, L.accent)
 		end
 	end
+
+	shell(false)
 
 	-- BESIDE THE DOOR ---------------------------------------------------------------------------------------------
 	if f >= 21 then

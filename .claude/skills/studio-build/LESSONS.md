@@ -526,6 +526,20 @@ The Garden's house, the third landmark as bodies (`garden_set(era)`, 2026-11-18)
   console clean. `GetPartBoundsInBox` did not find the scenery (it does not answer queries): walk the folder.
 - 4188, 3332, 4288, 4528 and 3960 triangles for the five bodies; 112, 120, 484, 1048 and 2404 for the pieces.
 
+**The Breeding House (2026-11-18)**, twelve models built from the shared moulds in one run with no build error:
+- What worked: reading each helper of `Architecture.luau` first (solid parts stay as colliders and must be
+  wrapped, the others vanish), lathes 0.04 wider than the module's solid cylinders, one model a switched part
+  (truss, gable, lean-to, chimney, wing, low roof, storey).
+- **What the Edit preview caught**: era 3's two storey windows with their flower boxes hung small in front of the
+  arch, and era 5's columns, pediment ornaments and roof pipes stood small under a grown entablature.
+  `Architecture.grow` takes a piece by its pivot against `SPLIT_Z` (19): those pivots stood at 17.6 to 19.0. The
+  fault was older than the bodies. A list of the level's parts in front of the hall (name, position, size, in the
+  level's frame) showed the drawn sizes at once; the split went to 17.4, behind the urns and statues at 17.1.
+- A box hay bale grown 2.3 times read as a yellow block in the play shot: the kit's `HayBales_Stack` at 0.5.
+- Play camera for a house 41 wide and up to 50 tall: `f * lookAt((56, 34, -46), (-2, 17, 28))`, field of view 50.
+- `execute_luau` puts the camera type back after each call: unbind the shot's RenderStep and stop Play; the type
+  set in the call does not stay.
+
 ### Whole small buildings from Blender (2026-11-17, the garden's tool stores, tools/blender/granary_pieces.py)
 
 The owner, looking at a part-built yard beside ChatGPT's picture: "why is what you build not as beautiful as the

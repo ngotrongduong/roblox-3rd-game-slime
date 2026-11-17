@@ -988,5 +988,197 @@ return {
 		GardenStorey3_Roof = {
 			{ mesh = 96901842143312, tex = "", size = { 17.1, 6.491, 12.777 }, at = { 0, 12.935, 23.3 } },
 		},
+		-- The Breeding House's hall as Blender bodies (tools/blender/landmark_bodies.py): a body an era with its side
+		-- rooms, and the pieces a level switches (era 1's truss, gable, lean-to and chimney; era 2's right wing; era
+		-- 3's roof or its storey).
+		BreedingBody1_Stone = {
+			{ mesh = 139002923546090, tex = "", size = { 14.96, 0.52, 1.46 }, at = { 0, 0.66, 20.45 } },
+		},
+		BreedingBody1_Wall = {
+			{ mesh = 82301667209695, tex = "", size = { 14.4, 10.87, 10.2 }, at = { 0, 5.835, 25.9 } },
+		},
+		BreedingBody1_Lower = {
+			{ mesh = 130613333933210, tex = "", size = { 14.5, 2.62, 10.25 }, at = { 0, 1.71, 25.925 } },
+		},
+		BreedingBody1_Beam = {
+			{ mesh = 122079320520634, tex = "", size = { 14.92, 10.734, 11.33 }, at = { 0, 5.767, 25.635 } },
+		},
+		BreedingBody1_Board = {
+			{ mesh = 80773579587113, tex = "", size = { 17.142, 7.88, 13.54 }, at = { 0, 8.085, 25.5 } },
+		},
+		BreedingBody1_Roof = {
+			{ mesh = 98386522678120, tex = "", size = { 18.275, 6.94, 13.5 }, at = { 0, 9.18, 25.5 } },
+		},
+		BreedingBody1_Frame = {
+			{ mesh = 136485058367626, tex = "", size = { 13.878, 2.23, 9.86 }, at = { -0.681, 4.955, 26.49 } },
+		},
+		BreedingBody1_Glass = {
+			{ mesh = 101370855658546, tex = "", size = { 13.098, 1.75, 9.08 }, at = { -0.711, 4.975, 26.52 } },
+		},
+		BreedingBody1_Shutters = {
+			{ mesh = 105621482028490, tex = "", size = { 2.4, 3.6, 0.18 }, at = { 0, 2.2, 31.07 } },
+		},
+		BreedingBody2_Stone = {
+			{ mesh = 96054382219114, tex = "", size = { 22.48, 0.62, 10.98 }, at = { 2.76, 0.71, 25.21 } },
+		},
+		BreedingBody2_Wall = {
+			{ mesh = 74540903208191, tex = "", size = { 16.4, 11.913, 11 }, at = { 0, 6.356, 25.5 } },
+		},
+		BreedingBody2_Lower = {
+			{ mesh = 135596471061953, tex = "", size = { 5.6, 12.5, 9.3 }, at = { 11, 6.65, 25.85 } },
+		},
+		BreedingBody2_Beam = {
+			{ mesh = 90707065249458, tex = "", size = { 16.92, 11.78, 11.52 }, at = { 0, 6.29, 25.5 } },
+		},
+		BreedingBody2_Board = {
+			{ mesh = 91311168472428, tex = "", size = { 24.148, 12.642, 13.54 }, at = { 2.52, 6.721, 25.5 } },
+		},
+		BreedingBody2_Roof = {
+			{ mesh = 98406367046904, tex = "", size = { 23.656, 8.415, 13.5 }, at = { 2.556, 9.192, 25.5 } },
+		},
+		BreedingBody2_Frame = {
+			{ mesh = 129435002187674, tex = "", size = { 21.02, 9.43, 3.44 }, at = { 3.11, 8.605, 29.7 } },
+		},
+		BreedingBody2_Glass = {
+			{ mesh = 129493776889817, tex = "", size = { 13.96, 1.7, 0.72 }, at = { 0, 5, 30.7 } },
+		},
+		BreedingBody2_Shutters = {
+			{ mesh = 105621482028490, tex = "", size = { 2.4, 3.6, 0.18 }, at = { 0, 2.2, 31.07 } },
+		},
+		BreedingBody3_Stone = {
+			{ mesh = 114444464157053, tex = "", size = { 29.7, 15.5, 11.58 }, at = { 0.47, 8.15, 25.39 } },
+		},
+		BreedingBody3_Wall = {
+			{ mesh = 130504197872617, tex = "", size = { 5.6, 5.252, 9.3 }, at = { -11.4, 6.226, 25.85 } },
+		},
+		BreedingBody3_Lower = {
+			{ mesh = 105733832758816, tex = "", size = { 29.24, 12, 11 }, at = { 0.42, 6.4, 25.5 } },
+		},
+		BreedingBody3_Beam = {
+			{ mesh = 80745899679467, tex = "", size = { 5.74, 5.104, 9.78 }, at = { -11.57, 6.152, 25.85 } },
+		},
+		BreedingBody3_Board = {
+			{ mesh = 72739831530188, tex = "", size = { 7.189, 3.347, 10.84 }, at = { -11.4, 7.571, 25.85 } },
+		},
+		BreedingBody3_Roof = {
+			{ mesh = 73726849131740, tex = "", size = { 6.768, 3.395, 10.8 }, at = { -11.4, 7.882, 25.85 } },
+		},
+		BreedingBody3_Frame = {
+			{ mesh = 131880283036382, tex = "", size = { 30.04, 15.92, 12.14 }, at = { 0.4, 8.36, 25.35 } },
+		},
+		BreedingBody3_Glass = {
+			{ mesh = 83854423549986, tex = "", size = { 19.61, 2.9, 5.86 }, at = { -4.455, 4.8, 28.13 } },
+		},
+		BreedingBody3_Shutters = {
+			{ mesh = 127303669356147, tex = "", size = { 2, 3.6, 0.18 }, at = { 0, 2.2, 31.07 } },
+		},
+		BreedingBody4_Stone = {
+			{ mesh = 132237864016650, tex = "", size = { 26.72, 0.7, 6.92 }, at = { 4.96, 0.75, 22.86 } },
+		},
+		BreedingBody4_Lower = {
+			{ mesh = 92118266547692, tex = "", size = { 31.6, 17.216, 11.62 }, at = { 2.4, 9.008, 25.19 } },
+		},
+		BreedingBody4_Beam = {
+			{ mesh = 127368987686746, tex = "", size = { 27, 14.954, 11.33 }, at = { 0, 9.977, 25.385 } },
+		},
+		BreedingBody4_Gold = {
+			{ mesh = 103844438467493, tex = "", size = { 26.685, 12.012, 7.166 }, at = { 4.968, 11.256, 22.727 } },
+		},
+		BreedingBody4_Board = {
+			{ mesh = 72551178320228, tex = "", size = { 2.16, 13.1, 2.16 }, at = { 17.35, 10.55, 25.35 } },
+		},
+		BreedingBody4_Roof = {
+			{ mesh = 128878012127430, tex = "", size = { 26.68, 12.31, 11 }, at = { 0, 10.955, 25.5 } },
+		},
+		BreedingBody4_Frame = {
+			{ mesh = 126315511006363, tex = "", size = { 31.95, 15.474, 11.87 }, at = { 2.425, 9.937, 25.215 } },
+		},
+		BreedingBody5_Stone = {
+			{ mesh = 122335954051646, tex = "", size = { 35.64, 7.4, 11.6 }, at = { 2.52, 4.1, 25.5 } },
+		},
+		BreedingBody5_Wall = {
+			{ mesh = 127339976695914, tex = "", size = { 35.04, 15.5, 13 }, at = { 2.52, 8.15, 24.5 } },
+		},
+		BreedingBody5_Beam = {
+			{ mesh = 71790837186107, tex = "", size = { 30.28, 8.03, 10.62 }, at = { 0, 5.135, 25.19 } },
+		},
+		BreedingBody5_Gold = {
+			{ mesh = 133290138772178, tex = "", size = { 35.66, 15.52, 14.74 }, at = { 2.41, 8.16, 24.5 } },
+		},
+		BreedingBody5_Roof = {
+			{ mesh = 95249076100108, tex = "", size = { 20.89, 4.784, 14.7 }, at = { 0, 12.508, 24.5 } },
+		},
+		BreedingBody5_Glass = {
+			{ mesh = 70394029696957, tex = "", size = { 30.12, 4.9, 6.01 }, at = { 0, 4.95, 28.055 } },
+		},
+		BreedingTruss1_Beam = {
+			{ mesh = 106167394700945, tex = "", size = { 11.401, 4.485, 0.6 }, at = { 0, 9.087, 20.3 } },
+		},
+		BreedingGable1_Wall = {
+			{ mesh = 72699612627525, tex = "", size = { 12.296, 4.27, 0.6 }, at = { 0, 9.135, 20.3 } },
+		},
+		BreedingGable1_Beam = {
+			{ mesh = 105546422917987, tex = "", size = { 12.6, 4.154, 0.31 }, at = { 0, 9.057, 19.895 } },
+		},
+		BreedingLean1_Wall = {
+			{ mesh = 140596956852360, tex = "", size = { 4.6, 1.85, 9.3 }, at = { 9.5, 4.625, 25.85 } },
+		},
+		BreedingLean1_Lower = {
+			{ mesh = 81134388688008, tex = "", size = { 4.65, 3.32, 9.4 }, at = { 9.525, 2.06, 25.85 } },
+		},
+		BreedingLean1_Beam = {
+			{ mesh = 121301074544412, tex = "", size = { 4.9, 3.52, 9.94 }, at = { 9.65, 2.16, 25.85 } },
+		},
+		BreedingLean1_Roof = {
+			{ mesh = 107134252976410, tex = "", size = { 6.398, 2.704, 10.8 }, at = { 10.247, 4.894, 25.85 } },
+		},
+		BreedingChimney1_Stone = {
+			{ mesh = 116953671638058, tex = "", size = { 1.9, 6.6, 1.9 }, at = { 10.4, 7.1, 29 } },
+		},
+		BreedingChimney1_Frame = {
+			{ mesh = 110154066508723, tex = "", size = { 2.34, 0.44, 2.34 }, at = { 10.4, 10.6, 29 } },
+		},
+		BreedingWing2_Wall = {
+			{ mesh = 92226855843258, tex = "", size = { 5.2, 6.882, 9.3 }, at = { -10.8, 3.841, 25.85 } },
+		},
+		BreedingWing2_Beam = {
+			{ mesh = 138667088701719, tex = "", size = { 5.44, 6.734, 9.82 }, at = { -10.92, 3.767, 25.83 } },
+		},
+		BreedingWing2_Board = {
+			{ mesh = 109649084132134, tex = "", size = { 6.789, 3.177, 10.84 }, at = { -10.8, 6.086, 25.85 } },
+		},
+		BreedingWing2_Roof = {
+			{ mesh = 127571634727638, tex = "", size = { 6.368, 3.225, 10.8 }, at = { -10.8, 6.397, 25.85 } },
+		},
+		BreedingWing2_Frame = {
+			{ mesh = 122136916965043, tex = "", size = { 1.22, 2.18, 2.24 }, at = { -13.21, 3.38, 25.85 } },
+		},
+		BreedingWing2_Glass = {
+			{ mesh = 129882678896410, tex = "", size = { 0.72, 1.7, 1.4 }, at = { -13.1, 3.4, 25.85 } },
+		},
+		BreedingRoof3_Wall = {
+			{ mesh = 74991042416643, tex = "", size = { 14.738, 4.113, 11 }, at = { 0, 10.456, 25.5 } },
+		},
+		BreedingRoof3_Beam = {
+			{ mesh = 78963534846319, tex = "", size = { 15.4, 4.008, 11.52 }, at = { 0, 10.384, 25.5 } },
+		},
+		BreedingRoof3_Board = {
+			{ mesh = 113887583957919, tex = "", size = { 19.663, 6.188, 13.34 }, at = { 0, 10.177, 25.5 } },
+		},
+		BreedingRoof3_Roof = {
+			{ mesh = 79147685127080, tex = "", size = { 19.127, 6.226, 13.3 }, at = { 0, 10.487, 25.5 } },
+		},
+		BreedingStorey3_Wall = {
+			{ mesh = 106759835972231, tex = "", size = { 17.8, 7.518, 11.8 }, at = { 0, 12.559, 25.3 } },
+		},
+		BreedingStorey3_Beam = {
+			{ mesh = 134281042654461, tex = "", size = { 18.28, 7.824, 12.32 }, at = { 0, 12.282, 25.3 } },
+		},
+		BreedingStorey3_Board = {
+			{ mesh = 93518881558589, tex = "", size = { 20.251, 9.893, 13.94 }, at = { 0, 12.131, 25.2 } },
+		},
+		BreedingStorey3_Roof = {
+			{ mesh = 139087413268022, tex = "", size = { 19.723, 6.213, 13.9 }, at = { 0, 14.293, 25.2 } },
+		},
 	},
 }

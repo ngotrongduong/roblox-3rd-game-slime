@@ -49,14 +49,34 @@ khung và kết cấu của căn nhà thôi, những phụ kiện kiểu như đ
   y 4.2 z 6.0 to x 0.0 y 5.2 z 37.2" and the same at the other four (yard at y 0, the house floor 1.04 higher, the
   open front at z 18.5, the back wall at z 44.5), no Garden error in the console; shots
   `review/garden-body-l01.jpg`, `-l10`, `-l20`, `-l25`, `-l30`, `-l40`, `-l50`. CHECK OK, TYPES OK.
-- **Next, in order**: Breeding House, Training Hall, Dock the same way (four-side sheets asked, body, upload,
-  ghost); an era-1 silo piece for the Granary.
+- **Breeding House done (2026-11-18)**: four-side sheets of the hall's five eras (`views/breeding_views_era1..5.webp`;
+  chats, eras 1-5: `/c/6afcd155-954c-83ec-a15c-b5949d62fb95`, `/c/6afcd204-3c44-83ec-8de2-ac272462d57e`,
+  `/c/6afcd2bf-1c20-83ec-8936-7bf86676bd91`, `/c/6afcd456-2f28-83ec-b876-dae45432b5a9`,
+  `/c/6afcd4a6-b3e8-83ec-adae-3a3914868968`); `breeding_set(era)` gives `BreedingBody1` to `BreedingBody5` (5816,
+  3288, 6640, 6916, 4712 triangles) and seven switched pieces: era 1's open truss (`BreedingTruss1`, f < 2), the
+  gable that closes it (`BreedingGable1`), the warm room (`BreedingLean1`, f 3) and its chimney
+  (`BreedingChimney1`, f 4), era 2's wing (`BreedingWing2`, f 8), era 3's low roof (`BreedingRoof3`) or its jettied
+  storey (`BreedingStorey3`, f 14); 64 rows in `ConfigMeshyKit.luau`, uploaded; `BreedingHouse.luau` wears them
+  (`SHELL`, `shell(on)`; the heart, the dormers, the egg and its drum, the goo boiler and every fixture stay the
+  game's). Built almost wholly from the shared moulds, six new ones added (`planks`, `plank_door`, `gable_roof`,
+  `gable_wall`, `stone_stack`, `box_room`). **A fault older than this job mended**: `SPLIT_Z` 19 left what the
+  hall carries on its face at its drawn size under the grown hall (era 3's storey windows and flower boxes hung
+  inside the arch; era 5's columns, pediment ornaments and roof pipes stood small under the grown entablature);
+  the split is 17.4 now. The warm room's hay bale is the kit's `HayBales_Stack`, not a box. Seen in the Edit
+  preview at 10, 20, 30, 40, 50; proved in the StudioTest play test at the same five: "4.0/10.9 4.0/19.6 4.0/28.0
+  4.0/35.5 4.0/39.2" at level 10 and the same line at 30, 40 and 50 (x/z in the area's frame, the open front at
+  z 20, the nests inside at 40), no Breeding House error in the console; shots `review/breeding-body-l10.jpg` to
+  `-l50`. CHECK OK (829 passed), TYPES OK.
+- **Next, in order**: Training Hall, Dock the same way (four-side sheets asked, body, upload, ghost); an era-1
+  silo piece for the Granary.
 - **Not verified / open**: the phone view; the houses on their real plot (the open StudioTest holds a map older
   than `Layout`: reopen it after a rebuild from MapWork; for the Garden's proof the wild rocks and trees on its
   cell were hidden and the terrain cleared in Play, with a test pad as the yard's ground); the Granary's side and
   back walls at eras 2-5 were seen in the Edit preview only; the Kitchen's side wall at eras 3-5 was not reached in
   Play (a stove stood in the way); the Garden's side and back walls were not walked against; the yellow flower
-  box under the Garden's cross gable hides most of that window at eras 2 and 3 (the game's own, as before).
+  box under the Garden's cross gable hides most of that window at eras 2 and 3 (the game's own, as before); the
+  Breeding House's side and back walls were not walked against, and the hay stack was seen in the Edit preview
+  only; whether the other five houses leave face pieces in front of their own split was not looked for.
 
 ## 2026-11-17 (night) — the garden's tool stores of eras 4 and 5, built in Blender; Blender first from now on
 
