@@ -168,7 +168,7 @@ both sides with the incubators inside the fence):
 
 | Yard | Fence (area's x, z) | What fills it |
 |---|---|---|
-| Garden | x -46.8..46.8, z -12..44.5 | soil over the whole fenced box at every level (the owner: "cho cả khu này thành màu đất"), 2 / 4 / 6 / 6 / 6 beds 12 apart by era (`Config.Village.GardenYard`), 20 / 40 / 60 crop plots |
+| Garden | x -46.8..46.8, z -12..44.5 | soil over the whole fenced box at every level (the owner: "cho cả khu này thành màu đất"), 2 beds, then 4 from era 2, 12 apart (`Config.Village.GardenYard`; his word: "khoảng 4 garden bed thôi"), 20 / 40 crop plots; from era 2 the work yard (tool shed, machines) on the tower's side and the seat (bench, lamp, two flower beds) on the other, the rest of the soil open (`garden-ladder.md`) |
 | Training | x -35.72..35.72, z -16.4..38.3 | floor and kerbs to the fence, also beside the hall; the stations along the side fences (16.92 further out), the middle open |
 | Kitchen | (no fence) terrace back to z 17.5 from level 27 | four parasol tables past the wing (`TERRACE_BACK`) |
 | Breeding | x -44.3..52.3, z -19..43 | floor to the fence both sides; four incubators in two rows inside, on the -x side; the +x wing is open play space |

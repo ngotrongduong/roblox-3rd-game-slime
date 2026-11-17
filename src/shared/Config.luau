@@ -1525,10 +1525,11 @@ Config.Village = {
 		TrainingHall = 1.9,
 		Boathouse = 2.45,
 	},
-	-- The garden's beds by era (the owner, 2026-11-17: "more garden beds ... after the upgrades"): the map's two, then
-	-- pairs outside them BedPitch studs apart, ten crop plots a bed (Work.GardenMaxPlotCount is 60). The soil is the
-	-- whole fenced garden at every level (his word the same day).
-	GardenYard = { Beds = { 2, 4, 6, 6, 6 }, BedPitch = 12 },
+	-- The garden's beds by era (the owner, 2026-11-17: "more garden beds ... after the upgrades", then "only about four
+	-- beds, the rest of the soil for side works and ornaments"): the map's two, then one pair outside them BedPitch
+	-- studs away, ten crop plots a bed (Work.GardenMaxPlotCount is only the cap). The soil is the whole fenced garden
+	-- at every level (his word the same day).
+	GardenYard = { Beds = { 2, 4, 4, 4, 4 }, BedPitch = 12 },
 	-- The fishing pond: its water is these circles (the fishing area's own x, z, radius). Lobes is the level-1 pond:
 	-- the first three are the old pond, whose front bank the pier, the shed and the fishing places stand on; the last
 	-- three are the water behind it (the owner, 2026-11-17: "three times the water's area"; measured 3.04 times).

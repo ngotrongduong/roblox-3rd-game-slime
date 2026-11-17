@@ -10,15 +10,20 @@ fence rule: `docs/VILLAGE_SCALE.md` §6.
   restyled per era at its size, the Dock locked (`docs/areas/fishing.md`). `Packs.FarStuds` 2394 (from the log).
 - The owner's notes on the level-50 top-down, all built and seen in the MapWork play test (from above and from the
   side; not on a phone):
-  - Garden: the fence round the grown house (x +-46.8, z -12..44.5), 2 / 4 / 6 beds by era (20 / 40 / 60 crop
-    plots), and, his second note ("tại sao nửa đằng sau ... lại để màu xanh? hãy cho cả khu này thành màu đất"),
-    soil over the WHOLE fenced garden at every level. Seen at 1 and 50.
+  - Garden: the fence round the grown house (x +-46.8, z -12..44.5), and, his second note ("tại sao nửa đằng sau
+    ... lại để màu xanh? hãy cho cả khu này thành màu đất"), soil over the WHOLE fenced garden at every level.
+    Seen at 1 and 50. His third and fourth notes ("khoảng 4 garden bed thôi ... đất trống để bố trí các công
+    trình phụ trợ, trang trí"; "đúng với chức năng chứ không phải cứ đặt cho đầy ... chưa có hãy đề xuất"): 2
+    beds, 4 from era 2 (20 / 40 crop plots); from era 2 a work yard on the tower's side (the kit's tool shed at
+    eras 2-3 only, the machines before it) and a seat on the other (bench, lamp, two flower beds, in the era's
+    models); the rest of the soil open. Six pieces proposed and not built (`garden-ladder.md`). Seen in the
+    MapWork play test at 20, 30, 40 and 50 from above the gate; not on a phone. Saved 4:53 PM.
   - Training: fence x +-35.72, z -16.4..38.3; floor to it, also beside the hall; stations along the side fences.
   - Kitchen: the terrace goes back past the wing with four parasol tables from level 27 (a modest step; an L round
     the back of the house was thought of and not built).
   - Breeding: fence x -44.3..52.3, z -19..43; floor to it; the four incubators inside, in two rows on the -x side;
     the pipe lands on their pad.
-- **Not verified / open**: the phone view; the food balance with up to 60 crop plots; part counts of the bigger
+- **Not verified / open**: the phone view; the food balance with up to 40 crop plots; part counts of the bigger
   fences; `VillageStages` / `VillageWalls` hand-typed offsets, `Config.Pads.Spots`, `Guide.HomeShare` against the
   390 plot (the log warns "village path failed: flowers > player - using plaza route"); village Nature is sparse
   on the bigger lawn; the breeding yard's +x wing is empty; era-5 marble floors are very bright at noon; the

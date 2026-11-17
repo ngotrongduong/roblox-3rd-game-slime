@@ -1153,6 +1153,12 @@ The village's second scale-up: houses K times, plots 390, the yards (2026-11-17,
 - **A fenced yard has one ground, edge to edge** (the owner on the garden: "tại sao nửa đằng sau ... lại để màu
   xanh?"): I laid soil only where the beds were and by era; he asked for the whole fenced box, at every level.
   The floor follows the fence, also beside and behind the house.
+- **A big yard is not there to be filled** (the owner on the garden, after I grew it to six beds: "khoảng 4 garden
+  bed thôi", "đúng với chức năng chứ không phải cứ đặt cho đầy khu đất ... chưa có hãy đề xuất"): few working
+  things, one place with a job a wing (tool shed with the machines before it; a bench with its lamp and two flower
+  beds looking over the beds), open soil left open. The kit's timber shed under red tiles sat right at eras 2-3 and
+  clashed with the glass and marble houses: it stands only at 2-3, and the missing pieces are proposed with place
+  and size (`garden-ladder.md`), not forced in. Look at a new piece beside the house of every era, not one.
 - **A piece that joins a grown part to an unscaled one** (the pipe from the grown wing to the incubators' pad) is
   laid at grown coordinates and kept out of `grow`; left in, it stuck 11 studs out through the fence.
 - **Stations move with the fence they stand against**, the middle stays open (the training ground); things that

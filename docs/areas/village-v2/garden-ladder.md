@@ -37,11 +37,38 @@ own garden sign stands outside the front fence at x -9, so the row of flower box
 **The second scale-up (2026-11-17).** The house grew 2.6 times, so the fence now stands at its own size round the
 grown lot: x -46.8..46.8, z -12..44.5 (`Garden.fence()`). Two notes of the owner on it:
 - "khoảng đất màu nâu ở khu làm vườn hơi nhỏ ... có thể tăng số lượng garden bed và diện tích sau những lần
-  upgrade": the beds grow with the era, 2 / 4 / 6 / 6 / 6, pairs 12 apart outside the first two
-  (`Config.Village.GardenYard`; `GardenStages` clones the map's beds and makes 20 / 40 / 60 crop plots).
+  upgrade", then "chỉ cần lên khoảng 4 garden bed thôi": the beds are 2 at era 1 and 4 from era 2, the new pair
+  12 studs outside the first two (`Config.Village.GardenYard`; `GardenStages` clones the map's beds and makes
+  20 / 40 crop plots).
 - "tại sao nửa đằng sau của khu làm vườn lại để màu xanh? hãy cho cả khu này thành màu đất": the soil is the WHOLE
   fenced garden at every level, beside and behind the house too (no lawn inside the fence, ever).
 The props that stood round the old fence follow the wide one.
+
+**The two wings of soil (the owner, 2026-11-17).** "còn những chỗ đất trống còn lại để bố trí các công trình phụ
+trợ, trang trí", and at once after: "chú ý về việc đặt vật phẩm tại vị trí nào và kích thước ra sao. mọi thứ cần
+phải hợp lý và đúng với chức năng chứ không phải cứ đặt cho đầy khu đất. nếu không có hoặc chưa có hãy đề xuất chứ
+không bắt buộc phải cố đặt chúng vào". So each wing holds ONE place with a job, against the side fence at the beds'
+depth, from era 2 (when the beds double); the rest of the soil stays open (`WINGS` in `GardenStages`, real
+positions; sizes as the village's own benches, lamps and flower beds):
+
+| Wing | What | Where (x, z) | Size | Eras |
+|------|------|--------------|------|------|
+| +x, the tower's side: the work yard | the kit's tool shed, door to the beds | 40.5, 3 | 10 x 8, 9 tall | 2-3 only: timber under red tiles sits right by the red-tiled houses, wrong by steel-and-glass and marble |
+| | the machines' bay (the tools slot of eras 2-5) before the shed, beside its door | 33, -4 | as before | 2-5 |
+| -x: the seat | a bench looking over the beds (park, iron, modern, marble) | -44.4, 6 | 4.4 wide | 2-5 |
+| | its lamp beside it (lantern, iron, modern, golden) | -45, 9.25 | 4 to 9.6 tall | 2-5 |
+| | a flower bed at each end (wood, brick, steel, marble) | -45, -1 and 13 | 5.4 long | 2-5 |
+
+The two log benches outside the front fence went: the garden has its own seat now. Compost, hay, the scarecrow,
+the water pieces and the harvest crates keep their places among the beds, where they work.
+
+Proposed for the open soil, NOT built (each needs its reference picture first, then Blender or the owner's Meshy):
+1. A tool store for era 4 (steel and glass) and one for era 5 (marble, the era's blue roof), at the shed's spot.
+2. A potting bench with seedling trays, against the shed's side (about 5 wide, 3.5 tall).
+3. A cold frame or small seedling glasshouse behind the shed, by the tower's basin (about 8 x 5, 3 tall).
+4. Two or three beehives in the far back corner of the seat's wing, away from the bench (each about 2 x 2, 3 tall).
+5. Two or three small fruit trees along the back fence beside the house (each about 9 tall).
+6. A vine arbour over the bench (about 8 x 5, 8 tall).
 
 ## The ladder
 

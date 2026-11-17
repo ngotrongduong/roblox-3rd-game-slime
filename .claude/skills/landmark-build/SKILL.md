@@ -203,6 +203,13 @@ keeps its stand-in and is named in the review brief as "not to be judged".
   màu đất": never lawn inside a landmark's fence); the working things spread with it (more beds by era, stations
   along the side fences with the middle open, tables on behind, machines inside the fence, not outside it). Look
   at each yard from straight above at level 1 and at level 50 before showing it.
+- **A big yard is not filled** (his notes on the garden, 2026-11-17: "đúng với chức năng chứ không phải cứ đặt cho
+  đầy khu đất. nếu không có hoặc chưa có hãy đề xuất chứ không bắt buộc phải cố đặt chúng vào"): the working
+  things stay modest (about four beds, not six) and each free wing gets ONE place with a job (a work yard, a
+  seat), against the fence, facing what it serves, at the village's own sizes; open ground is left open. Measure
+  every kit model on the viewer stand first, and look at it beside the house of EVERY era: a piece that fits two
+  eras and clashes with the others stands only where it fits (the timber shed: eras 2-3), and what is missing is
+  written as a proposal with its place and size in the ladder file and told to the owner in one list.
 
 ## 6. Do not
 

@@ -76,12 +76,12 @@ local SPOT = {
 	},
 	{
 		{ 10.36, 4, -90, 4.6, 3.6 }, -- 1.6 m tool rack beside the left bed, facing it (clear of the next bed out)
-		-- (the machines' bay: the front-left corner, handles toward the gate path, 3 studs clear to
-		-- pull them out; ChatGPT's 5th garden review)
-		{ 8.8, -5.6, -120, 2.6, 2.6 }, -- 0.9 m soil cart
-		{ 8.8, -5.6, -120, 3, 3.6 }, -- 1 m seed spreader
-		{ 8.8, -5.6, -120, 3.2, 4.4 }, -- 1.1 m tiller
-		{ 8.8, -5.6, -120, 3.6, 3.4 }, -- 1.25 m garden robot, on its charging pad
+		-- (the machines' bay: before the tool shed of the work yard (WINGS), beside its door, handles toward
+		-- the beds, clear to pull them out)
+		{ 23.6, -2.9, -120, 2.6, 2.6 }, -- 0.9 m soil cart
+		{ 23.6, -2.9, -120, 3, 3.6 }, -- 1 m seed spreader
+		{ 23.6, -2.9, -120, 3.2, 4.4 }, -- 1.1 m tiller
+		{ 23.6, -2.9, -120, 3.6, 3.4 }, -- 1.25 m garden robot, on its charging pad
 	},
 	{
 		-- (the left strip behind the beds: the tower's basin and chute took the back-left corner)
@@ -102,8 +102,8 @@ local SPOT = {
 }
 -- Farm life round the garden that grows with the eras and is never taken away (kit model, x, z,
 -- real height, the widest it may be, turn, from which era): flowers at the gate, harvest crates
--- waiting inside by the path, a wheelbarrow of produce by the gate outside, benches along the
--- path outside, shrubs along the front fence outside, out to its corners.
+-- waiting inside by the path, a wheelbarrow of produce by the gate outside, shrubs along the front
+-- fence outside, out to its corners. (The benches outside went when the garden got its own seat, WINGS.)
 -- (2026-11-17: the grown house stands where the shrubs behind the old fence were; they line the wide front instead)
 local SURROUND: { { any } } = {
 	{ "WildflowersGrass", 7.5, -11.5, 1.6, 4, 0, 1 },
@@ -115,14 +115,38 @@ local SURROUND: { { any } } = {
 	{ "Wheelbarrow", 6.8, -11.6, 2.2, 3, -30, 2 },
 	{ "FlowerShrub", 21.4, -11.1, 2.2, 3, 0, 2 },
 	{ "WildflowersGrass", -21.4, -11.1, 1.4, 3.5, 0, 2 },
-	{ "LogBench", 9.5, -14, 1.8, 4.6, 0, 3 },
 	{ "HayBale", 8.2, 9.6, 1.6, 2.8, 90, 3 }, -- straw for mulch, by the compost behind the beds
 	{ "HayBale", 8.2, 11.4, 1.6, 2.8, 90, 3 },
 	{ "Planter", 13, -11.5, 1.6, 3, 0, 4 },
 	{ "Planter", -13.5, -11.5, 1.6, 3, 0, 4 },
 	{ "FlowerShrub", 26.1, -11.1, 2.4, 3, 0, 5 },
 	{ "FlowerShrub", -26.1, -11.1, 2.4, 3, 0, 5 },
-	{ "LogBench", -9.5, -14, 1.8, 4.6, 0, 5 },
+}
+-- The two wings of soil beside the beds (the owner, 2026-11-17: about four beds, the rest of the soil for the
+-- garden's side works and ornaments, "each in its right place and at its right size for what it does, not to fill
+-- the ground; what we do not have is proposed, not forced in"). They are used from the era the beds double, in
+-- REAL positions (not the old layout), each piece against the side fence at the beds' depth:
+--   the tower's side   the work yard: a tool shed, its door to the beds (the machines park before it, SPOT)
+--   the other side     the seat: a bench looking over the beds, its lamp beside it, a flower bed at each end
+-- (sizes and models as the village's own benches, lamps and flower beds). The rest of the soil stays open; what
+-- could stand there one day is listed in docs/areas/village-v2/garden-ladder.md.
+-- { x, z, turn, the widest it may be, the models of the eras 2, 3, 4 and 5 (fewer: none later), their real heights }
+local FLOWER_BEDS = { "FlowerBedWood", "FlowerBedBrick", "FlowerBedSteel2", "FlowerBedMarble" }
+local WINGS: { { any } } = {
+	-- (the kit's shed is timber under red tiles: right beside the red-tiled houses of the eras 2 and 3, wrong beside
+	-- steel and glass or marble, so the last two eras have none until a shed of their own is made)
+	{ 40.5, 3, 90, 10, { "StorageShed", "StorageShed" }, { 9, 9 } },
+	{ -44.4, 6, -90, 4.4, { "ParkBench", "IronBench", "ModernBench", "MarbleBench" }, { 2.7, 2.7, 1.5, 2.8 } },
+	{
+		-45,
+		9.25,
+		0,
+		3,
+		{ "LanternPost", "IronStreetLamp", "ModernLampPost", "GoldenLampPost" },
+		{ 8.6, 9.2, 9.6, 9.2 },
+	},
+	{ -45, -1, -90, 5.4, FLOWER_BEDS, { 4, 4, 4, 4 } },
+	{ -45, 13, -90, 5.4, FLOWER_BEDS, { 4, 4, 4, 4 } },
 }
 -- the scenery's two sunflowers stand at the front of the soil, left of the gate (the house took their place at the
 -- back, the third bed their place beside the beds)
@@ -292,14 +316,26 @@ function GardenStages.build(area: Instance, frame: CFrame, level: number): Model
 	local function floorAt(x: number, z: number): number
 		return if math.abs(x) <= WX and z >= FZ0 and z <= ZB then 0.2 else 0
 	end
+	-- a kit model standing at a spot, turned about its own middle
+	local function stand(key: string, x: number, z: number, height: number, widest: number, yaw: number)
+		local prop = place(m, frame, key, x, z, height, widest, floorAt(x, z))
+		if prop and yaw ~= 0 then
+			local box = prop:GetBoundingBox()
+			local centre = CFrame.new(box.Position)
+			prop:PivotTo(centre * CFrame.Angles(0, math.rad(yaw), 0) * centre:ToObjectSpace(prop:GetPivot()))
+		end
+	end
 	for _, s in SURROUND do
 		if era >= s[7] then
-			local sx, sz = s[2] * K, s[3] * K
-			local prop = place(m, frame, s[1], sx, sz, s[4], s[5], floorAt(sx, sz))
-			if prop and s[6] ~= 0 then
-				local box = prop:GetBoundingBox()
-				local centre = CFrame.new(box.Position)
-				prop:PivotTo(centre * CFrame.Angles(0, math.rad(s[6]), 0) * centre:ToObjectSpace(prop:GetPivot()))
+			stand(s[1], s[2] * K, s[3] * K, s[4], s[5], s[6])
+		end
+	end
+	-- the work yard and the seat in the two wings
+	if era >= 2 then
+		for _, w in WINGS do
+			local key = w[5][era - 1]
+			if key then
+				stand(key, w[1], w[2], w[6][era - 1], w[4], w[3])
 			end
 		end
 	end
