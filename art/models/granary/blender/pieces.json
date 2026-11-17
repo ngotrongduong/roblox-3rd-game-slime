@@ -657,5 +657,86 @@
    }
   },
   "triangles": 592
+ },
+ "FishEmblem": {
+  "objects": {
+   "FishEmblem_Disc": {
+    "size_studs_xyz": [
+     1.72,
+     1.72,
+     0.4
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "triangles": 192,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 0.681
+   },
+   "FishEmblem_Rim": {
+    "size_studs_xyz": [
+     2.0,
+     2.0,
+     0.36
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "triangles": 288,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 0.311
+   },
+   "FishEmblem_Fish": {
+    "size_studs_xyz": [
+     1.32,
+     0.84,
+     0.28
+    ],
+    "centre_studs_xyz": [
+     -0.04,
+     0.02,
+     -0.24
+    ],
+    "triangles": 194,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 0.122
+   },
+   "FishEmblem_Eye": {
+    "size_studs_xyz": [
+     0.114,
+     0.12,
+     0.115
+    ],
+    "centre_studs_xyz": [
+     0.42,
+     0.07,
+     -0.358
+    ],
+    "triangles": 60,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 0.001
+   }
+  },
+  "triangles": 734
  }
 }

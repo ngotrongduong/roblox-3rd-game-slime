@@ -1,13 +1,13 @@
 --!strict
--- The fishing pond's 50 levels (the owner, 2026-10-27, second pass): the dock keeps its size and only
--- grows in parts and in the quality of its materials. Five parts, each from its own level and never
--- taken away again:
+-- The fishing pond's 50 levels: the pier keeps its size and only grows in parts and in the quality of its
+-- materials. Five parts, never taken away again:
 --   1 the deck (planks and the posts under it)   2 rails along both sides   3 lamps at both ends
---   4 a bait box   5 bollards with rope at the far end (and light strips in the modern tiers)
--- Levels 1-5 add the parts one by one in the first tier (rustic wood). From level 6 on, every five
--- levels are a new material tier, and each level of the tier moves one part up to it, in the same
--- order: level 6 the deck, 7 the rails, 8 the lamps, 9 the box, 10 the bollards; and so on to marble
--- and gold at 50. The slimes fish from four places (invisible markers WorkSpot1..4, each with a rod in a
+--   4 a bait box   5 bollards with rope at the far end (and light strips in the modern eras)
+-- Since the Dock landmark (2026-11-17, docs/areas/village-v2/dock-ladder.md) the pier follows the village's
+-- five eras of ten levels (`dockParts`): an era's first level changes the deck, its second the rails, the box
+-- and the bollards, its third the lamps. The boathouse, the lighthouse, the fence and the boat are
+-- Boathouse.luau, put on this stage by AreaUpgrade. (`PondStages.parts`, the old ten tiers of five levels, is
+-- still what the other areas' stages read.) The slimes fish from four places (invisible markers WorkSpot1..4, each with a rod in a
 -- stand): the dock's far end, the dock's middle, the side pier (from 21) and the blue rock on the bank
 -- (owner, 2026-10-29), and drop the catch into the fish bin outside the pond.
 -- Used by AreaUpgrade.server.luau (the game) and tools/map/build_pond_showcase.luau (the showcase).
@@ -258,6 +258,34 @@ function PondStages.parts(level: number): { number }
 	return out
 end
 
+-- THE PIER'S OWN ERAS (the Dock landmark): rustic wood, painted wood, timber on stone with iron, black steel with
+-- brass and green light, marble and gold.
+local STONE_PIER = table.clone(TIERS[3])
+STONE_PIER.accent = Color3.fromRGB(60, 60, 66)
+STONE_PIER.accentMat = Enum.Material.Metal
+local STEEL_PIER: Tier = {
+	name = "Slime-tech steel",
+	planks = { Color3.fromRGB(96, 102, 114), Color3.fromRGB(78, 84, 96) },
+	deck = Enum.Material.DiamondPlate,
+	frame = Color3.fromRGB(40, 44, 50),
+	frameMat = Enum.Material.Metal,
+	accent = Color3.fromRGB(224, 170, 70),
+	accentMat = Enum.Material.Metal,
+	box = Color3.fromRGB(52, 56, 64),
+	boxMat = Enum.Material.Metal,
+	light = Color3.fromRGB(140, 255, 170),
+	trim = Color3.fromRGB(120, 255, 150),
+}
+local DOCK: { Tier } = { TIERS[1], TIERS[2], STONE_PIER, STEEL_PIER, TIERS[10] }
+
+-- Which era each of the pier's five parts is at on a level (0: not built yet).
+local function dockParts(level: number): { number }
+	local era = math.clamp(math.ceil(level / 10), 1, #DOCK)
+	local step = level - (era - 1) * 10
+	local second = if step >= 2 then era else era - 1
+	return { era, second, if step >= 3 then era else era - 1, second, second }
+end
+
 -- The pond grows as well as the dock (the owner, 2026-10-28: "the fishing area is more than the dock;
 -- the lawn round the pond may be used, and the pond may grow"), never smaller again: a lobe on its
 -- left at 21 and one on its right at 41 (area-local x, z, radius, from which level), carved out of the
@@ -267,16 +295,15 @@ local GROW = { { 19.5, 1.3, 9.75, 21 }, { -18.2, -6.5, 9.1, 41 } }
 local DOCK_X = -3 -- the dock's line in the area (AreaUpgrade's DOCK_X)
 local WATER_Y = -2.3 -- the water's surface in the area's frame
 local JETTY_Y = -1 -- the small jetty's planks, down on the sand step (the owner: touching the ground)
-local LIGHTHOUSE = Vector3.new(0, 0, 39.6) -- the garden's back corner (the area sits turned: it is behind the pond)
 -- Life round the pond, growing each era and never taken away (kit model, x, z, real height, the
 -- widest it may be, turn, from which level, lift): a bench on the bank; a net rack by the bank path;
--- a cooler by the jetty on the new left lobe; a glowing buoy in the right lobe. (No boat, rods or
--- reels: the owner, 2026-10-28. The shed, the paths, the fishing spot, the back bank and the
--- lighthouse are built from parts in `build`.)
+-- a cooler by the jetty on the new left lobe (the Dock ladder's level 25); a glowing buoy in the right lobe.
+-- (No rods or reels: the owner, 2026-10-28. The shed, the paths, the fishing spot and the back bank are built
+-- from parts in `build`; the boathouse, the lighthouse and the boat are Boathouse.luau.)
 local SHORE: { { any } } = {
 	{ "LogBench", 8.5, -12, 1.8, 4.6, 180, 1 },
 	{ "NetRack", 7.6, -18.8, 3.2, 3.4, 0, 11 }, -- (by the path, its nets to the way in)
-	{ "FishCooler", 18.6, -8.6, 2, 2, 0, 21 },
+	{ "FishCooler", 18.6, -8.6, 2, 2, 0, 25 },
 	{ "CrystalBuoy", -14.5, -3.5, 3, 1.4, 0, 41, WATER_Y - 0.8 },
 }
 
@@ -287,7 +314,6 @@ local CLEAR = {
 	{ 20.2, -15.6, 2.5, 21 },
 	{ -16.4, -15.6, 2.5, 1 },
 	{ -18.2, -19, 2.5, 41 },
-	{ 0, 39.6, 6, 41 },
 	{ Config.WorkPlaces.FishRock.x, Config.WorkPlaces.FishRock.z, 4, 1 }, -- the blue rock
 	{ Config.WorkPlaces.FishBin[1], Config.WorkPlaces.FishBin[2], 3, 1 }, -- the fish bin
 }
@@ -404,7 +430,7 @@ end
 -- The dock for one level, built along +Z from the pond's shore at `cell` (y = the ground's top).
 -- showcase = true also lays a grass slab, painted water and a label (the floating showcase).
 function PondStages.build(level: number, cell: CFrame, showcase: boolean?): Model
-	local at = PondStages.parts(level)
+	local at = dockParts(level)
 	local m = Instance.new("Model")
 	m.Name = "PondStage"
 	m:SetAttribute("Level", level)
@@ -435,7 +461,7 @@ function PondStages.build(level: number, cell: CFrame, showcase: boolean?): Mode
 	end
 
 	-- 1 the deck: planks across, two beams and posts down into the water
-	local t = TIERS[at[1]]
+	local t = DOCK[at[1]]
 	local i = 0
 	local z = Z0
 	while z < Z1 do
@@ -466,7 +492,7 @@ function PondStages.build(level: number, cell: CFrame, showcase: boolean?): Mode
 
 	-- 2 rails along both sides, open over the last five studs where the slimes fish
 	if at[2] > 0 then
-		local r = TIERS[at[2]]
+		local r = DOCK[at[2]]
 		local zr0, zr1 = Z0 + 0.6, Z1 - 5
 		for _, s in { -1, 1 } do
 			local x = s * (WIDTH / 2 - 0.3)
@@ -502,7 +528,7 @@ function PondStages.build(level: number, cell: CFrame, showcase: boolean?): Mode
 
 	-- 3 lamps at both ends of the dock
 	if at[3] > 0 then
-		local l = TIERS[at[3]]
+		local l = DOCK[at[3]]
 		for _, pz in { Z0 + 0.4, Z1 - 5.2 } do
 			for _, s in { -1, 1 } do
 				local base = cell * CFrame.new(s * (WIDTH / 2 - 0.3), DECK_Y + 0.25, pz)
@@ -528,7 +554,7 @@ function PondStages.build(level: number, cell: CFrame, showcase: boolean?): Mode
 
 	-- 4 a bait box by the shore end of the deck
 	if at[4] > 0 then
-		local b = TIERS[at[4]]
+		local b = DOCK[at[4]]
 		-- (on the lawn beside the dock's shore end, not on the deck: between the rails it left too narrow a
 		-- way for the slimes' path agent, 2026-10-30)
 		local base = cell * CFrame.new(WIDTH / 2 + 1.4, 0, Z0 + 1.6)
@@ -541,7 +567,7 @@ function PondStages.build(level: number, cell: CFrame, showcase: boolean?): Mode
 
 	-- 5 bollards with rope at the far end, and light strips in the modern tiers
 	if at[5] > 0 then
-		local o = TIERS[at[5]]
+		local o = DOCK[at[5]]
 		for _, s in { -1, 1 } do
 			local base = cell * CFrame.new(s * (WIDTH / 2 - 0.5), DECK_Y + 0.25, Z1 - 0.5)
 			pole(m, "Bollard", base * CFrame.new(0, 0.5, 0), 1, 0.7, o.frame, o.frameMat)
@@ -672,7 +698,7 @@ function PondStages.build(level: number, cell: CFrame, showcase: boolean?): Mode
 	-- from 21 a small fishing jetty out into the new left lobe, in the dock's deck tier, two posts and
 	-- a bollard at its end
 	if level >= 21 then
-		local j = TIERS[at[1]]
+		local j = DOCK[at[1]]
 		local jx, jz0, jz1 = 19.5, -10.5, 0.5 -- (8 studs out: a real second fishing spot)
 		local k = 0
 		local jz = jz0
@@ -700,8 +726,7 @@ function PondStages.build(level: number, cell: CFrame, showcase: boolean?): Mode
 	-- bank to the fishing shed and, from 21, on to the jetty; an open fishing shed at the path's end; a
 	-- small fishing spot on the near-right bank from the start (a stool, a two-rod holder over the water,
 	-- a bait bucket), moved to the new right lobe's bank at 41; reeds, stones and a half-sunk log on the
-	-- back bank from 31; the rowboat tied to the dock with oars in it; a pond beacon on the back-right
-	-- bank at 41.
+	-- back bank from 31. (The boat tied to the dock and the lighthouse are Boathouse.luau's.)
 	local wood, woodMat = Color3.fromRGB(176, 128, 84), Enum.Material.Wood
 	local dark = Color3.fromRGB(110, 76, 48)
 	local rope = Color3.fromRGB(226, 196, 140)
@@ -728,6 +753,8 @@ function PondStages.build(level: number, cell: CFrame, showcase: boolean?): Mode
 	end
 	if level >= 11 then
 		plankRun("BankPath", -0.6, -15.4, 13, -15.4, 2.6)
+	end
+	if level >= 15 then -- (the Dock ladder's level 15: the bait stall)
 		-- the open fishing shed, turned toward the entrance so its open front, counter and net face the
 		-- path and the way in (ChatGPT's 2nd pond review): four posts, a roof sloping to the back, a
 		-- back wall, a bait counter at the front with fish on it, a net hung inside, a rod by a post
@@ -875,7 +902,8 @@ function PondStages.build(level: number, cell: CFrame, showcase: boolean?): Mode
 	-- the back bank, left natural: reeds, round stones at the water's edge, a log half sunk
 	if level >= 31 then
 		local reedGreen, cattail = Color3.fromRGB(96, 150, 70), Color3.fromRGB(120, 76, 46)
-		for c, r in { { 5, 21.4 }, { -6, 20.6 }, { 15.5, 19.5 } } do
+		-- (two clumps and two stones stood where the boathouse's landing is now: they moved to the bank's right end)
+		for c, r in { { -10, 16.6 }, { -8.3, 17.9 }, { 15.5, 19.5 } } do
 			for k = 0, 4 do
 				local ang = k * 1.3 + c
 				local px, pz = r[1] + math.cos(ang) * 0.6, r[2] + math.sin(ang) * 0.5
@@ -902,7 +930,7 @@ function PondStages.build(level: number, cell: CFrame, showcase: boolean?): Mode
 				end
 			end
 		end
-		for k, st in { { -3, 21.2, 0.9 }, { -1.6, 21.6, 0.6 }, { 11.5, 21.6, 0.8 } } do
+		for k, st in { { -11.2, 15.6, 0.9 }, { -9.4, 17, 0.6 }, { 11.5, 21.6, 0.8 } } do
 			local stone = part(
 				m,
 				"BankStone",
@@ -924,139 +952,8 @@ function PondStages.build(level: number, cell: CFrame, showcase: boolean?): Mode
 		) :: Part
 		sunk.Shape = Enum.PartType.Cylinder
 	end
-	-- the lighthouse in the garden's back corner, right behind the pond, from 41 (the owner, 2026-10-28: in
-	-- the corner, three times taller, more detail): a stone plinth with steps and a door, a round tower
-	-- tapering in red and white bands with small windows, a gallery with a railing, a glass lamp room
-	-- with its light, a red dome and a weather vane, a life ring and a lamp on the plinth
+	-- (the lighthouse that stood in the back corner from 41 is the Dock landmark's now: Boathouse.luau)
 	if level >= 41 then
-		local bx, bz = LIGHTHOUSE.X, LIGHTHOUSE.Z
-		-- (turned so its door and steps face the pond)
-		local lh = area * CFrame.new(bx, 0, bz) * CFrame.Angles(0, math.rad(90), 0)
-		local function lp(px: number, py: number, pz: number): CFrame
-			return lh * CFrame.new(px - bx, py, pz - bz)
-		end
-		local stone, stoneDark = Color3.fromRGB(176, 170, 160), Color3.fromRGB(128, 122, 116)
-		local white, red = Color3.fromRGB(248, 246, 240), Color3.fromRGB(214, 64, 56)
-		local function ring(name: string, y: number, h: number, d: number, col: Color3, mat: Enum.Material?)
-			pole(m, name, lp(bx, y + h / 2, bz), h, d, col, mat)
-		end
-		part(m, "Plinth", Vector3.new(6.4, 1.4, 6.4), lp(bx, 0.7, bz), stone, Enum.Material.Slate)
-		part(m, "PlinthCap", Vector3.new(6.8, 0.3, 6.8), lp(bx, 1.55, bz), stoneDark, Enum.Material.Slate)
-		for k = 1, 2 do
-			part(
-				m,
-				"Step",
-				Vector3.new(2, 0.45, 0.8),
-				lp(bx + 3.4 + k * 0.8 - 0.8, 1.45 - k * 0.45 + 0.22, bz),
-				stoneDark,
-				Enum.Material.Slate
-			)
-		end
-		-- the tower: eight bands, each a little narrower, red and white
-		local y = 1.7
-		local towerW = 4.2
-		for k = 0, 7 do
-			local d = towerW - k * 0.24
-			ring("TowerBand", y, 2.4, d, if k % 2 == 0 then white else red)
-			y += 2.4
-		end
-		local top = y
-		-- the door facing the steps, and small windows up the tower facing the pond
-		part(
-			m,
-			"Door",
-			Vector3.new(0.2, 2.4, 1.3),
-			lp(bx + towerW / 2 - 0.05, 2.9, bz),
-			Color3.fromRGB(90, 60, 40),
-			Enum.Material.Wood
-		)
-		part(
-			m,
-			"DoorArch",
-			Vector3.new(0.25, 0.3, 1.6),
-			lp(bx + towerW / 2 - 0.02, 4.2, bz),
-			stoneDark,
-			Enum.Material.Slate
-		)
-		for k = 1, 3 do
-			local wy = 1.7 + k * 4.6
-			local r = (towerW - (wy - 1.7) / 2.4 * 0.24) / 2
-			part(
-				m,
-				"Window",
-				Vector3.new(0.2, 1, 0.7),
-				lp(bx + r - 0.02, wy, bz),
-				Color3.fromRGB(255, 226, 150),
-				Enum.Material.Neon
-			).CastShadow =
-				false
-			part(
-				m,
-				"WindowSill",
-				Vector3.new(0.3, 0.15, 0.9),
-				lp(bx + r + 0.02, wy - 0.58, bz),
-				stoneDark,
-				Enum.Material.Slate
-			)
-		end
-		-- the gallery: a wide stone deck with a railing of posts and a rail ring
-		ring("Gallery", top, 0.4, 4.6, stoneDark, Enum.Material.Slate)
-		for k = 0, 11 do
-			local a = k * math.pi / 6
-			part(
-				m,
-				"GalleryPost",
-				Vector3.new(0.15, 1.1, 0.15),
-				lp(bx + math.cos(a) * 2.15, top + 0.95, bz + math.sin(a) * 2.15),
-				Color3.fromRGB(60, 60, 66),
-				Enum.Material.Metal
-			)
-		end
-		local rail =
-			pole(m, "GalleryRail", lp(bx, top + 1.5, bz), 0.15, 4.5, Color3.fromRGB(60, 60, 66), Enum.Material.Metal)
-		rail.Transparency = 0
-		-- the lamp room: a glass drum round a glowing lamp, thin frames, a red dome, a vane
-		local glass =
-			pole(m, "LampGlass", lp(bx, top + 1.9, bz), 2.6, 2.6, Color3.fromRGB(200, 232, 245), Enum.Material.Glass)
-		glass.Transparency = 0.5
-		local lamp = pole(m, "Lamp", lp(bx, top + 1.9, bz), 1.4, 1.4, Color3.fromRGB(255, 226, 150), Enum.Material.Neon)
-		lamp.CastShadow = false
-		local light = Instance.new("PointLight")
-		light.Color = Color3.fromRGB(255, 220, 150)
-		light.Range = 18
-		light.Brightness = 1
-		light.Parent = lamp
-		for k = 0, 5 do
-			local a = k * math.pi / 3
-			part(
-				m,
-				"LampFrame",
-				Vector3.new(0.15, 2.6, 0.15),
-				lp(bx + math.cos(a) * 1.3, top + 1.9, bz + math.sin(a) * 1.3),
-				red
-			)
-		end
-		ring("LampRoofBase", top + 3.2, 0.3, 3.2, red)
-		local dome = part(m, "Dome", Vector3.one * 2.8, lp(bx, top + 3.6, bz), red) :: Part
-		dome.Shape = Enum.PartType.Ball
-		ring("VaneRod", top + 4.8, 1.4, 0.15, Color3.fromRGB(60, 60, 66), Enum.Material.Metal)
-		part(
-			m,
-			"VaneArrow",
-			Vector3.new(1.2, 0.1, 0.35),
-			lp(bx, top + 5.9, bz),
-			Color3.fromRGB(60, 60, 66),
-			Enum.Material.Metal
-		)
-		-- a life ring on the plinth's side
-		local lr = part(
-			m,
-			"LifeRing",
-			Vector3.new(0.25, 1.2, 1.2),
-			lp(bx + 2.2, 2.4, bz + 2.15) * CFrame.Angles(0, math.pi / 2, 0),
-			Color3.fromRGB(240, 90, 60)
-		) :: Part
-		lr.Shape = Enum.PartType.Cylinder
 		-- the buoy floats on a dark ring so it reads against the bright water
 		local float = part(
 			m,

@@ -509,10 +509,41 @@ def shield_emblem():
 		("ShieldEmblem_Blades", bl, (0, 0, 0), "Steel", 30), ("ShieldEmblem_Hilts", hl, (0, 0, 0), "Gold", 30)]
 
 
+def fish_emblem():
+	# the Dock's emblem (ladder step 6): a round sign 2 wide with a raised rim and a fish in relief on its face, its head
+	# to the viewer's left; held at its middle, its face to the front, its back plain (it hangs on a gable). The eye is
+	# its own object so every era can colour it.
+	sides = 24
+	d = M()
+	lathe(d, [(0.0, -0.2), (0.5, -0.17), (0.86, -0.1), (0.86, 0.1), (0.5, 0.17), (0.0, 0.2)], sides)
+	r = M()
+	lathe(r, [(0.82, -0.12), (0.9, -0.18), (1.0, -0.13), (1.0, 0.13), (0.9, 0.18), (0.82, 0.12)], sides, loop=True)
+	f = M()
+	# (outlines run clockwise seen from the front; each is star-shaped round its own centre, so `stack` can puff it)
+	# (drawn with the head at -x, then mirrored: on a wall in the game the model's +x is the viewer's left)
+	flip = lambda ring: [(-x, y) for x, y in reversed(ring)]
+	top = [(-0.62, 0.0), (-0.56, 0.13), (-0.43, 0.23), (-0.22, 0.3), (0.0, 0.27), (0.18, 0.17), (0.32, 0.08)]
+	body = top + [(x, -y * 0.92) for x, y in reversed(top[1:])]
+	stack(f, flip(body), (0.15, 0.0), [(0.0, 0.1), (1.0, 0.12), (1.0, 0.25), (0.85, 0.32), (0.5, 0.365), (0.0, 0.38)])
+	tail = [(0.2, 0.08), (0.62, 0.3), (0.7, 0.27), (0.56, 0.0), (0.7, -0.27), (0.62, -0.3), (0.2, -0.08)]
+	stack(f, flip(tail), (-0.45, 0.0), [(0.0, 0.1), (1.0, 0.12), (1.0, 0.22), (0.8, 0.28), (0.0, 0.3)])
+	dorsal = [(-0.3, 0.26), (-0.12, 0.44), (0.1, 0.36), (0.12, 0.2)]
+	stack(f, flip(dorsal), (0.05, 0.3), [(0.0, 0.12), (1.0, 0.14), (1.0, 0.21), (0.7, 0.25), (0.0, 0.26)])
+	belly = [(-0.22, -0.22), (0.02, -0.2), (0.0, -0.4), (-0.12, -0.36)]
+	stack(f, flip(belly), (0.08, -0.29), [(0.0, 0.12), (1.0, 0.14), (1.0, 0.21), (0.7, 0.25), (0.0, 0.26)])
+	e = M()
+	eye = [(0.42 + 0.06 * math.sin(TAU * i / 10), 0.07 + 0.06 * math.cos(TAU * i / 10)) for i in range(10)]
+	stack(e, eye, (0.42, 0.07), [(0.0, 0.3), (1.0, 0.31), (1.0, 0.39), (0.6, 0.41), (0.0, 0.415)])
+	for m in (d, r, f, e):
+		xform(m, (0, len(m.v)), lambda p: (p[0], p[2], p[1]))  # stand it up: face towards the front, thickness along Y
+	return [("FishEmblem_Disc", d, (0, 0, 0), "Disc", 40), ("FishEmblem_Rim", r, (0, 0, 0), "Gold", 50),
+		("FishEmblem_Fish", f, (0, 0, 0), "Steel", 60), ("FishEmblem_Eye", e, (0, 0, 0), "Ribs", 60)]
+
+
 PIECES = [("ConeRoof", cone_roof), ("GlassDome", glass_dome), ("RoyalDome", royal_dome), ("Column", column),
 	("Balustrade", balustrade), ("Pipe", pipe), ("Gear", gear), ("ChimneyCrown", chimney_crown), ("VentHood", vent_hood),
 	("WindWheel", wind_wheel), ("IrrigationArch", irrigation_arch), ("EggDome", egg_dome), ("HeartEmblem", heart_emblem),
-	("ShieldEmblem", shield_emblem)]
+	("ShieldEmblem", shield_emblem), ("FishEmblem", fish_emblem)]
 
 
 # ---------------------------------------------------------------- Blender side

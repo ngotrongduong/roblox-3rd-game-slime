@@ -28,7 +28,9 @@ local GardenStages = require(script.Parent.GardenStages)
 local BreedingStages = require(script.Parent.BreedingStages)
 local KitchenStages = require(script.Parent.KitchenStages)
 local TrainingStages = require(script.Parent.TrainingStages)
+local DockStages = require(script.Parent.DockStages)
 local OWN_STAGES: { [string]: any } = {
+	FishingPondL1 = DockStages,
 	PantryL1 = PantryStages,
 	GardenL1 = GardenStages,
 	BreedingL1 = BreedingStages,
@@ -140,7 +142,6 @@ local function attach(plotNumber: number, plot: Model, levels: { [string]: numbe
 			local own = OWN_STAGES[name]
 			local stage = if own
 				then own.build(area, frame, newLevel)
-				elseif isPond then PondStages.build(newLevel, frame * CFrame.new(DOCK_X, 0, 0))
 				else AreaStages.build(name, area, frame, newLevel)
 			if effects and old then
 				-- The change marker rides on the new layer so late-joining clients never replay it.

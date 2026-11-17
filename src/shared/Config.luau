@@ -917,6 +917,15 @@ Config.LibraryKit = {
 		ShieldEmblem_Hilts = {
 			{ mesh = 94017421951329, tex = "", size = { 1.739, 0.732, 0.16 }, at = { 0, -0.504, -0.28 } },
 		},
+		-- the Dock's fish (Boathouse.luau)
+		FishEmblem_Disc = { { mesh = 107244292759568, tex = "", size = { 1.72, 1.72, 0.4 }, at = { 0, 0, 0 } } },
+		FishEmblem_Rim = { { mesh = 121852647378034, tex = "", size = { 2, 2, 0.36 }, at = { 0, 0, 0 } } },
+		FishEmblem_Fish = {
+			{ mesh = 104108967528532, tex = "", size = { 1.32, 0.84, 0.28 }, at = { -0.04, 0.02, -0.24 } },
+		},
+		FishEmblem_Eye = {
+			{ mesh = 95038916372153, tex = "", size = { 0.114, 0.12, 0.115 }, at = { 0.42, 0.07, -0.358 } },
+		},
 	},
 	-- how long a stage waits for the meshes before it leaves a library prop out (seconds)
 	WaitSeconds = 15,

@@ -2,8 +2,11 @@
 
 Skill `landmark-build`, steps 2 and 3. Reference: `dock-ref-sheet.jpg` and `dock-ref-era1.jpg` ... `era5.jpg` in this
 folder (ChatGPT chat `/c/6afb9646-8c94-83ec-883d-ece4941c74f5`, 2026-11-17, its first sheet, drawn with the Training
-Hall's and the Garden's sheets and the village's three concept paintings as references). **Nothing is built yet: the
-sheet waits for the owner's word.**
+Hall's and the Garden's sheets and the village's three concept paintings as references). **Built and locked
+2026-11-17** after the owner's "Duyệt, dựng đi": `src/server/Boathouse.luau` (the boathouse, the lighthouse, the
+fence, the boat, the landing), `src/server/DockStages.luau` (where the pond's stage and the landmark meet; the area's
+entry in `AreaUpgrade.OWN_STAGES`), the pier's five eras in `PondStages.luau` (`DOCK`, `dockParts`). As built, see
+"As built" at the end.
 
 ## The owner's note on the sheet (2026-11-17)
 
@@ -45,9 +48,10 @@ from 11, the side jetty from 21, the blue rock from 31) with their rod stands, t
 plank path along the bank, the bench, the pond's two new lobes (21, 41) and the jetty in the left one. What the
 landmark takes over: the pier's look (its deck, rails, lamps), the lighthouse (today a level-41 tower in the back
 corner: it becomes the landmark's, from level 10), the back bank (today's reeds, stones and sunk log from 31 move to
-the bank's free ends), the small bait shed (it stays as the bait stall of level 15). If the back bank is too shallow
-for the boathouse, the ground grows once at the back for every level, as the other landmarks' did (an area may grow,
-never shrink); the water is not made smaller for it.
+the bank's free ends), the small bait shed (it stays as the bait stall of level 15). The back bank cannot grow: it
+is a corner wedge between the village's two walls (measured before building: its lawn is about `50 - z` wide each
+side), so the boathouse was sized to it (16 wide, 8 deep, its landing on stilts over the water's edge) and the
+lighthouse stands in the corner behind its left end; the water is not made smaller for it.
 
 ## The ladder
 

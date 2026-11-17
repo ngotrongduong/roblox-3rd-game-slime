@@ -247,5 +247,15 @@
 			"ShieldEmblem_Hilts": 94017421951329,
 			"ShieldEmblem_Rim": 121852647378034
 		}
+	},
+	"FishEmblem": {
+		"model": 72617761768846,
+		"texture": 0,
+		"pieces": {
+			"FishEmblem_Disc": 107244292759568,
+			"FishEmblem_Eye": 95038916372153,
+			"FishEmblem_Fish": 104108967528532,
+			"FishEmblem_Rim": 121852647378034
+		}
 	}
 }

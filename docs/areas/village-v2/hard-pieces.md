@@ -165,7 +165,7 @@ sheets he already sent.
 Reused: B1 (the tower's cone caps at eras 2 and 3), B2 (the goo tower's cap), B3 (the tower's dome at 50), B4 and
 B5 (columns, the balustrade fence and roof), B6 (pipes).
 
-## The Dock (sheet drawn 2026-11-17; waits for the owner's yes, nothing built)
+## The Dock (built 2026-11-17; B15 built in Blender, uploaded and worn)
 
 The sorting and the 50 steps are in `dock-ladder.md`. No new Meshy piece: the lighthouse's thatch cap, the fish
 rack, barrels, crates, the rope coil, lanterns, flower boxes, pillars, the goo tank and its valve, banners, urns,
@@ -173,7 +173,7 @@ the laurel and the finials all come from the sheets he already sent.
 
 | # | Piece (Blender, new) | Era | Replaces | Shown from |
 |---|----------------------|-----|----------|------------|
-| B15 | `FishEmblem`: a round disc (`_Disc`), its raised rim (`_Rim`), a plump fish in relief with tail, fin and eye (`_Fish`) | 1-5 (wood; blue in a gold rim; iron; steel with a green rim; gold) | a flat disc with a ball and a wedge | the boathouse's emblem (1) |
+| B15 | `FishEmblem`: a round disc (`_Disc`), its raised rim (`_Rim`), a plump fish in relief with tail and fins (`_Fish`), its eye apart (`_Eye`); 734 triangles; the head to the viewer's left, as the sheet | 1-5 (wood; blue in a gold rim; iron; steel with a green rim; gold) | a flat disc with a ball and a wedge | the boathouse's emblem (1) |
 
 Reused: B1 (the lighthouse's cone caps at eras 2 and 3), B2 (the goo lamp's cap), B3 (the dome at 50), B4 and B5
 (columns, the balustrade fence and pier rails), B6 (pipes).
