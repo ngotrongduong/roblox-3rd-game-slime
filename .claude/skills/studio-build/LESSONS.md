@@ -630,6 +630,41 @@ The Garden's house, the third landmark as bodies (`garden_set(era)`, 2026-11-18)
   saved). The yard's ground then shows as grass, not the old shots' stud floor. Camera
   `f * lookAt((-34, 40, -46), (2, 17, 32))`, field of view 50, frames era 5's dome.
 
+**Refining the Breeding House against its four-side sheets (2026-11-18)**, the fourth building of section 3c:
+- Colour again first (`BreedingHouse.luau` `LOOKS`, mirrored in `B_PAINT`): era 1 orange-brown timber, a pink-cream
+  plaster, a mauve fieldstone; era 2 coral beams and boards on pink-cream (the rose-pink read pale); era 3 a pink-grey
+  stone storey and warm brown timber; era 4 mint glass and the Garden's warm grey iron (128, 124, 120) and (104, 101,
+  98); era 5 a warm, faintly pink marble.
+- **The thatched `gable_roof` is a mould** (`landmark_bodies.py`): its thatch is now 0.9 thick with each course 0.7
+  proud, a fat ridge roll, the barge boards UNDER the straw's ends, as the Garden's round found. Three builders call
+  it with `thatched=era == 1` (Breeding, and two more further down: the Training Hall's and the Dock's): those two
+  take the new straw at their own next rebuild, which their rounds do anyway.
+- The lean-to's straw: thicker and shaggier (0.6, 0.55 proud, roll 0.32), as the sheet draws it.
+
+**The owner's fences and gates round the yards (2026-11-18, `src/server/YardKit.luau`)**:
+- **Where a section's posts stand**: a fence GLB with the half turn has its +x end at the section's START in the
+  game. A section with its start post cut (`tools/blender/fence_open.py`, `<key>_open.glb`) keeps one post at its
+  end, so a run of open sections has no post at its start and every corner gets one from the run that ENDS there.
+- **A gate carries its own end posts**: the gate models have short wings with a post at about +-(half - 0.45); the
+  run that ends at a gate ends with the section without posts (`<key>_bare.glb`, both cut), and the run that starts
+  there needs nothing. Meeting the fence at the pier's middle (`YardKit.pier`) gave a double post: undone.
+- **Looking +z, screen right is world -x**: I put the bare section FIRST once because I read the shot as world +x.
+  Before "fixing a side" from a picture, print which end of the run is where.
+- **A cut GLB's bounds shrink**: a bare section has no posts, so its box is shorter and LOWER than the full one; its
+  config size and `at` come from its own GLB bounds times the full section's (size Y / mesh Y), or it is stretched
+  to post height.
+- A mottled, patchy texture on a fresh piece in the Edit preview is a texture still loading: shoot again.
+- **The test place's old map buries a yard's fence**: its terrain stands at y about 4.1 over the yard floors (top
+  2.4). In Play only: `Terrain:FillBlock(CFrame.new(x, 6, z), (88, 12, 88), Air)` and a temporary 96 x 1 x 96 Grass
+  part "ShotLawn" with its top at 2.0. FillBlock from 2.1 and `WriteVoxels` at occupancy 0.55 did NOT lower it.
+- Banners hung on a gate's piers stand ABOVE the gate model's flower boxes (Breeding 4.2 over the floor, Garden 3.3
+  for the Meshy banner, Training 4.3).
+- `upload_village_pieces.js` now walks `art/models/village_props/<sheet>/<piece>.glb` too: one prop a file, named
+  `Prop<Piece>` (fence_rail_bare -> `PropFenceRailBare`), its picture `MeshyProp<Piece>`; a key already in
+  `village_ids.json` is skipped, so a changed file is taken out of it first.
+- The Kitchen's `GateArch` asks `tiers[5]` = era + 1 at an era's last level, so level 30 already wears the
+  slime-tech gate: the ladder's rule (the era's last level shows the next step), kept.
+
 ### Whole small buildings from Blender (2026-11-17, the garden's tool stores, tools/blender/granary_pieces.py)
 
 The owner, looking at a part-built yard beside ChatGPT's picture: "why is what you build not as beautiful as the

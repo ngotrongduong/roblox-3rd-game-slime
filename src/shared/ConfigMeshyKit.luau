@@ -17,6 +17,58 @@ return {
 		MeshyFlowerPots = "rbxassetid://120822580306566",
 		MeshyEnvironment = "rbxassetid://74604300726824",
 		MeshyRestaurant = "rbxassetid://101810638561973",
+		-- art/models/village_props/<sheet>/<piece>.glb: one picture a prop
+		MeshyPropLampWood = "rbxassetid://123812703228454",
+		MeshyPropLampPainted = "rbxassetid://129372418162700",
+		MeshyPropLampStone = "rbxassetid://84444561402260",
+		MeshyPropLampTech = "rbxassetid://118097962402456",
+		MeshyPropLampRoyal = "rbxassetid://108359710889598",
+		MeshyPropPotClay = "rbxassetid://83809603832059",
+		MeshyPropPotBarrel = "rbxassetid://123701254280687",
+		MeshyPropPotStone = "rbxassetid://94099673257689",
+		MeshyPropPotCrown = "rbxassetid://72816322621237",
+		MeshyPropPotUrn = "rbxassetid://136788428450221",
+		MeshyPropPlanterWood = "rbxassetid://116784483657625",
+		MeshyPropPlanterRiveted = "rbxassetid://117060904170959",
+		MeshyPropPlanterStone = "rbxassetid://102431903289458",
+		MeshyPropPlanterCrown = "rbxassetid://72912910076491",
+		MeshyPropPlanterRoyal = "rbxassetid://73426180046828",
+		MeshyPropCartBarrow = "rbxassetid://98408492690079",
+		MeshyPropCartAwning = "rbxassetid://103641125781183",
+		MeshyPropCartRoofed = "rbxassetid://74793766166397",
+		MeshyPropCartGlass = "rbxassetid://115560233800884",
+		MeshyPropCartRoyal = "rbxassetid://84665065164381",
+		MeshyPropSignHat = "rbxassetid://129073653603360",
+		MeshyPropSignSpoon = "rbxassetid://84183069136022",
+		MeshyPropBannerRedHat = "rbxassetid://115434684184598",
+		MeshyPropBannerBlueSpoon = "rbxassetid://110380571533052",
+		MeshyPropEmblemChefSlime = "rbxassetid://83385287911274",
+		MeshyPropEmblemSpoonRibbon = "rbxassetid://118589716494582",
+		MeshyPropFinialBell = "rbxassetid://83993940987629",
+		MeshyPropWindowRoofed = "rbxassetid://113763291436780",
+		MeshyPropWindowArch = "rbxassetid://76426483395830",
+		MeshyPropWindowShutters = "rbxassetid://91696285742925",
+		MeshyPropWindowPlain = "rbxassetid://78364851291282",
+		MeshyPropFenceRail = "rbxassetid://81531526273655",
+		MeshyPropFencePicket = "rbxassetid://81531526273655",
+		MeshyPropFenceStone = "rbxassetid://86229229368446",
+		MeshyPropFenceIron = "rbxassetid://86229229368446",
+		MeshyPropFenceRoyal = "rbxassetid://137066427762089",
+		MeshyPropFenceRailOpen = "rbxassetid://81531526273655",
+		MeshyPropFencePicketOpen = "rbxassetid://81531526273655",
+		MeshyPropFenceStoneOpen = "rbxassetid://86229229368446",
+		MeshyPropFenceIronOpen = "rbxassetid://86229229368446",
+		MeshyPropFenceRoyalOpen = "rbxassetid://137066427762089",
+		MeshyPropFenceRailBare = "rbxassetid://81531526273655",
+		MeshyPropFencePicketBare = "rbxassetid://81531526273655",
+		MeshyPropFenceStoneBare = "rbxassetid://86229229368446",
+		MeshyPropFenceIronBare = "rbxassetid://86229229368446",
+		MeshyPropFenceRoyalBare = "rbxassetid://137066427762089",
+		MeshyPropGateThatch = "rbxassetid://109784444770973",
+		MeshyPropGateTiled = "rbxassetid://114179421534367",
+		MeshyPropGateVine = "rbxassetid://93018034311934",
+		MeshyPropGateTech = "rbxassetid://119407664355559",
+		MeshyPropGateRoyal = "rbxassetid://102434174046420",
 	},
 	Props = {
 		-- granary (2026-11-16)
@@ -1004,19 +1056,19 @@ return {
 			{ mesh = 139002923546090, tex = "", size = { 14.96, 0.52, 1.46 }, at = { 0, 0.66, 20.45 } },
 		},
 		BreedingBody1_Wall = {
-			{ mesh = 82301667209695, tex = "", size = { 14.4, 10.87, 10.2 }, at = { 0, 5.835, 25.9 } },
+			{ mesh = 103745687404540, tex = "", size = { 14.4, 10.504, 10.2 }, at = { 0, 5.652, 25.9 } },
 		},
 		BreedingBody1_Lower = {
 			{ mesh = 130613333933210, tex = "", size = { 14.5, 2.62, 10.25 }, at = { 0, 1.71, 25.925 } },
 		},
 		BreedingBody1_Beam = {
-			{ mesh = 122079320520634, tex = "", size = { 14.92, 10.734, 11.33 }, at = { 0, 5.767, 25.635 } },
+			{ mesh = 102727202715417, tex = "", size = { 14.92, 10.369, 11.33 }, at = { 0, 5.584, 25.635 } },
 		},
 		BreedingBody1_Board = {
-			{ mesh = 80773579587113, tex = "", size = { 17.142, 7.88, 13.54 }, at = { 0, 8.085, 25.5 } },
+			{ mesh = 72497886259405, tex = "", size = { 15.257, 6.744, 12.9 }, at = { 0, 7.517, 25.5 } },
 		},
 		BreedingBody1_Roof = {
-			{ mesh = 98386522678120, tex = "", size = { 18.275, 6.94, 13.5 }, at = { 0, 9.18, 25.5 } },
+			{ mesh = 133567829286756, tex = "", size = { 18.71, 7.436, 13.5 }, at = { 0, 9.182, 25.5 } },
 		},
 		BreedingBody1_Frame = {
 			{ mesh = 136485058367626, tex = "", size = { 13.878, 2.23, 9.86 }, at = { -0.681, 4.955, 26.49 } },
@@ -1121,13 +1173,13 @@ return {
 			{ mesh = 70394029696957, tex = "", size = { 30.12, 4.9, 6.01 }, at = { 0, 4.95, 28.055 } },
 		},
 		BreedingTruss1_Beam = {
-			{ mesh = 106167394700945, tex = "", size = { 11.401, 4.485, 0.6 }, at = { 0, 9.087, 20.3 } },
+			{ mesh = 121570635213073, tex = "", size = { 10.349, 4.485, 0.6 }, at = { 0, 9.087, 20.3 } },
 		},
 		BreedingGable1_Wall = {
-			{ mesh = 72699612627525, tex = "", size = { 12.296, 4.27, 0.6 }, at = { 0, 9.135, 20.3 } },
+			{ mesh = 71963239787511, tex = "", size = { 11.244, 3.904, 0.6 }, at = { 0, 8.952, 20.3 } },
 		},
 		BreedingGable1_Beam = {
-			{ mesh = 105546422917987, tex = "", size = { 12.6, 4.154, 0.31 }, at = { 0, 9.057, 19.895 } },
+			{ mesh = 112469256007805, tex = "", size = { 12.6, 3.789, 0.31 }, at = { 0, 8.874, 19.895 } },
 		},
 		BreedingLean1_Wall = {
 			{ mesh = 140596956852360, tex = "", size = { 4.6, 1.85, 9.3 }, at = { 9.5, 4.625, 25.85 } },
@@ -1139,7 +1191,7 @@ return {
 			{ mesh = 121301074544412, tex = "", size = { 4.9, 3.52, 9.94 }, at = { 9.65, 2.16, 25.85 } },
 		},
 		BreedingLean1_Roof = {
-			{ mesh = 107134252976410, tex = "", size = { 6.398, 2.704, 10.8 }, at = { 10.247, 4.894, 25.85 } },
+			{ mesh = 139348704501565, tex = "", size = { 6.514, 2.75, 10.8 }, at = { 10.286, 4.871, 25.85 } },
 		},
 		BreedingChimney1_Stone = {
 			{ mesh = 116953671638058, tex = "", size = { 1.9, 6.6, 1.9 }, at = { 10.4, 7.1, 29 } },
@@ -1619,6 +1671,256 @@ return {
 		DockTall5_Wall = { { mesh = 98770249181489, tex = "", size = { 5, 21.5, 5 }, at = { 12, 11.85, 32.5 } } },
 		DockTall5_Gold = {
 			{ mesh = 134345513952006, tex = "", size = { 6.68, 19.531, 6.68 }, at = { 12, 10.566, 32.5 } },
+		},
+		-- the era props from the owner's five sheets (docs/areas/village-v2/hard-pieces.md, "Era props"), one
+		-- Meshy model a file, each at its real size: lamp posts, flower pots, planters and carts by era (1 to 5),
+		-- and the kitchen's signs, banners, emblems, bell finial and windows
+		PropLampWood = {
+			{ mesh = 86856130184595, tex = "MeshyPropLampWood", size = { 4.44, 9.0, 1.685 }, at = { 0, 4.5, 0 } },
+		},
+		PropLampPainted = {
+			{ mesh = 129933474005649, tex = "MeshyPropLampPainted", size = { 3.962, 9.0, 2.212 }, at = { 0, 4.5, 0 } },
+		},
+		PropLampStone = {
+			{ mesh = 91416504807928, tex = "MeshyPropLampStone", size = { 3.982, 9.0, 2.032 }, at = { 0, 4.5, 0 } },
+		},
+		PropLampTech = {
+			{ mesh = 120234992764654, tex = "MeshyPropLampTech", size = { 4.343, 9.0, 2.386 }, at = { 0, 4.5, 0 } },
+		},
+		PropLampRoyal = {
+			{ mesh = 103322719264901, tex = "MeshyPropLampRoyal", size = { 4.283, 9.0, 2.61 }, at = { 0, 4.5, 0 } },
+		},
+		PropPotClay = {
+			{ mesh = 126944011120991, tex = "MeshyPropPotClay", size = { 2.643, 3.0, 2.22 }, at = { 0, 1.5, 0 } },
+		},
+		PropPotBarrel = {
+			{ mesh = 76737300177826, tex = "MeshyPropPotBarrel", size = { 2.835, 3.0, 2.543 }, at = { 0, 1.5, 0 } },
+		},
+		PropPotStone = {
+			{ mesh = 79145882811783, tex = "MeshyPropPotStone", size = { 2.754, 3.0, 2.8 }, at = { 0, 1.5, 0 } },
+		},
+		PropPotCrown = {
+			{ mesh = 107813774379671, tex = "MeshyPropPotCrown", size = { 2.325, 3.0, 2.731 }, at = { 0, 1.5, 0 } },
+		},
+		PropPotUrn = {
+			{ mesh = 85798288086836, tex = "MeshyPropPotUrn", size = { 2.76, 3.0, 2.12 }, at = { 0, 1.5, 0 } },
+		},
+		PropPlanterWood = {
+			{ mesh = 72226167645727, tex = "MeshyPropPlanterWood", size = { 5.0, 3.13, 2.634 }, at = { 0, 1.565, 0 } },
+		},
+		PropPlanterRiveted = {
+			{
+				mesh = 135685617766862,
+				tex = "MeshyPropPlanterRiveted",
+				size = { 5.0, 2.963, 3.261 },
+				at = { 0, 1.482, 0 },
+			},
+		},
+		PropPlanterStone = {
+			{
+				mesh = 119062814579270,
+				tex = "MeshyPropPlanterStone",
+				size = { 5.0, 3.328, 2.707 },
+				at = { 0, 1.664, 0 },
+			},
+		},
+		PropPlanterCrown = {
+			{
+				mesh = 111417537399714,
+				tex = "MeshyPropPlanterCrown",
+				size = { 5.0, 3.351, 3.163 },
+				at = { 0, 1.675, 0 },
+			},
+		},
+		PropPlanterRoyal = {
+			{
+				mesh = 100506656246233,
+				tex = "MeshyPropPlanterRoyal",
+				size = { 5.0, 3.305, 3.061 },
+				at = { 0, 1.653, 0 },
+			},
+		},
+		PropCartBarrow = {
+			{ mesh = 82481212504853, tex = "MeshyPropCartBarrow", size = { 6.0, 4.473, 3.546 }, at = { 0, 2.236, 0 } },
+		},
+		PropCartAwning = {
+			{ mesh = 128306496449589, tex = "MeshyPropCartAwning", size = { 5.268, 6.0, 3.534 }, at = { 0, 3.0, 0 } },
+		},
+		PropCartRoofed = {
+			{ mesh = 88383033923066, tex = "MeshyPropCartRoofed", size = { 5.484, 6.0, 3.725 }, at = { 0, 3.0, 0 } },
+		},
+		PropCartGlass = {
+			{ mesh = 73336596501639, tex = "MeshyPropCartGlass", size = { 4.079, 6.0, 5.859 }, at = { 0, 3.0, 0 } },
+		},
+		PropCartRoyal = {
+			{ mesh = 113739557168465, tex = "MeshyPropCartRoyal", size = { 5.003, 6.0, 3.56 }, at = { 0, 3.0, 0 } },
+		},
+		PropSignHat = {
+			{ mesh = 136072162354152, tex = "MeshyPropSignHat", size = { 3.887, 4.0, 1.358 }, at = { 0, 0, -0.679 } },
+		},
+		PropSignSpoon = {
+			{ mesh = 75333210131497, tex = "MeshyPropSignSpoon", size = { 3.659, 4.0, 0.798 }, at = { 0, 0, -0.399 } },
+		},
+		PropBannerRedHat = {
+			{
+				mesh = 135504829590961,
+				tex = "MeshyPropBannerRedHat",
+				size = { 3.396, 5.0, 0.695 },
+				at = { 0, 0, -0.347 },
+			},
+		},
+		PropBannerBlueSpoon = {
+			{
+				mesh = 74786764831888,
+				tex = "MeshyPropBannerBlueSpoon",
+				size = { 3.16, 5.0, 0.757 },
+				at = { 0, 0, -0.379 },
+			},
+		},
+		PropEmblemChefSlime = {
+			{
+				mesh = 120274170450449,
+				tex = "MeshyPropEmblemChefSlime",
+				size = { 3.5, 3.391, 0.505 },
+				at = { 0, 0, -0.253 },
+			},
+		},
+		PropEmblemSpoonRibbon = {
+			{
+				mesh = 83056940708171,
+				tex = "MeshyPropEmblemSpoonRibbon",
+				size = { 3.5, 2.386, 0.764 },
+				at = { 0, 0, -0.382 },
+			},
+		},
+		PropFinialBell = {
+			{ mesh = 114469589951104, tex = "MeshyPropFinialBell", size = { 1.889, 3.0, 1.921 }, at = { 0, 1.5, 0 } },
+		},
+		PropWindowRoofed = {
+			{
+				mesh = 139615518756868,
+				tex = "MeshyPropWindowRoofed",
+				size = { 4.299, 5.0, 3.89 },
+				at = { 0, 0, -1.945 },
+			},
+		},
+		PropWindowArch = {
+			{ mesh = 106064499305476, tex = "MeshyPropWindowArch", size = { 4.167, 5.0, 2.159 }, at = { 0, 0, -1.079 } },
+		},
+		PropWindowShutters = {
+			{
+				mesh = 100868589512475,
+				tex = "MeshyPropWindowShutters",
+				size = { 5.285, 5.0, 2.225 },
+				at = { 0, 0, -1.113 },
+			},
+		},
+		PropWindowPlain = {
+			{ mesh = 70469122829091, tex = "MeshyPropWindowPlain", size = { 4.397, 5.0, 1.263 }, at = { 0, 0, -0.631 } },
+		},
+		-- the yards' fences and gates from the owner's two sheets (hard-pieces.md, "Fences and gates"), one an era, worn
+		-- by server/YardKit: a fence section, the same with its start post cut off (Open) and with both cut off (Bare, the
+		-- last of a run to a gate; tools/blender/fence_open.py), a gate stretched a little wider than drawn so its way
+		-- through is about 4.5 studs
+		PropFenceRail = {
+			{ mesh = 136381935525941, tex = "MeshyPropFenceRail", size = { 5.224, 3.2, 1.292 }, at = { 0, 1.6, 0 } },
+		},
+		PropFencePicket = {
+			{ mesh = 137024691643626, tex = "MeshyPropFencePicket", size = { 5.408, 3.4, 0.863 }, at = { 0, 1.7, 0 } },
+		},
+		PropFenceStone = {
+			{ mesh = 133983414737798, tex = "MeshyPropFenceStone", size = { 5.605, 3.4, 1.423 }, at = { 0, 1.7, 0 } },
+		},
+		PropFenceIron = {
+			{ mesh = 92407756032764, tex = "MeshyPropFenceIron", size = { 6.12, 3.8, 1.2 }, at = { 0, 1.9, 0 } },
+		},
+		PropFenceRoyal = {
+			{ mesh = 75832644197057, tex = "MeshyPropFenceRoyal", size = { 6.6, 4.2, 1.876 }, at = { 0, 2.1, 0 } },
+		},
+		PropFenceRailOpen = {
+			{ mesh = 129714806064580, tex = "MeshyPropFenceRailOpen", size = { 4.181, 3.2, 1.292 }, at = { 0, 1.6, 0 } },
+		},
+		PropFencePicketOpen = {
+			{
+				mesh = 117288034475546,
+				tex = "MeshyPropFencePicketOpen",
+				size = { 4.439, 3.4, 0.863 },
+				at = { 0, 1.7, 0 },
+			},
+		},
+		PropFenceStoneOpen = {
+			{
+				mesh = 120638210987801,
+				tex = "MeshyPropFenceStoneOpen",
+				size = { 4.261, 3.4, 1.423 },
+				at = { 0, 1.7, 0 },
+			},
+		},
+		PropFenceIronOpen = {
+			{ mesh = 130638048128656, tex = "MeshyPropFenceIronOpen", size = { 4.901, 3.8, 1.2 }, at = { 0, 1.9, 0 } },
+		},
+		PropFenceRoyalOpen = {
+			{
+				mesh = 129324322220483,
+				tex = "MeshyPropFenceRoyalOpen",
+				size = { 5.145, 4.2, 1.876 },
+				at = { 0, 2.1, 0 },
+			},
+		},
+		PropFenceRailBare = {
+			{
+				mesh = 125303463942161,
+				tex = "MeshyPropFenceRailBare",
+				size = { 3.138, 2.616, 1.222 },
+				at = { 0, 1.308, 0 },
+			},
+		},
+		PropFencePicketBare = {
+			{
+				mesh = 116545450601429,
+				tex = "MeshyPropFencePicketBare",
+				size = { 3.462, 2.757, 0.467 },
+				at = { 0, 1.383, 0 },
+			},
+		},
+		PropFenceStoneBare = {
+			{
+				mesh = 112715886436414,
+				tex = "MeshyPropFenceStoneBare",
+				size = { 2.917, 2.276, 1.054 },
+				at = { 0, 1.138, 0 },
+			},
+		},
+		PropFenceIronBare = {
+			{
+				mesh = 83978408655740,
+				tex = "MeshyPropFenceIronBare",
+				size = { 3.674, 2.699, 0.876 },
+				at = { 0, 1.349, 0 },
+			},
+		},
+		PropFenceRoyalBare = {
+			{
+				mesh = 118727669765170,
+				tex = "MeshyPropFenceRoyalBare",
+				size = { 3.697, 2.793, 1.876 },
+				at = { 0, 1.39, 0 },
+			},
+		},
+		PropGateThatch = {
+			{ mesh = 89726036521127, tex = "MeshyPropGateThatch", size = { 11.5, 10, 3.6 }, at = { 0, 5, 0 } },
+		},
+		PropGateTiled = {
+			{ mesh = 117325158667770, tex = "MeshyPropGateTiled", size = { 11.5, 10, 4.1 }, at = { 0, 5, 0 } },
+		},
+		PropGateVine = {
+			{ mesh = 82386161015183, tex = "MeshyPropGateVine", size = { 12.5, 10.5, 4.15 }, at = { 0, 5.25, 0 } },
+		},
+		PropGateTech = {
+			{ mesh = 98183174911096, tex = "MeshyPropGateTech", size = { 12, 11, 4.09 }, at = { 0, 5.5, 0 } },
+		},
+		PropGateRoyal = {
+			{ mesh = 109512480535906, tex = "MeshyPropGateRoyal", size = { 15, 12, 4.26 }, at = { 0, 6, 0 } },
 		},
 	},
 }

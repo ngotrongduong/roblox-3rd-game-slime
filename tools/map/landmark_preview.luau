@@ -3,7 +3,7 @@
 --   1. the pieces' preview scripts, one Luau script a piece (tools/blender/granary_pieces.py with `-- <folder>` after
 --      Blender's arguments; tools/blender/meshy_sheet_split.py writes <out>/preview/): run each in Edit
 --      (node tools/studio_mcp.js run <folder>/<Piece>.luau <studio_id> Edit): ServerStorage.GranaryPreview
---   2. node tools/studio_mcp.js run tools/map/landmark_preview.luau <studio_id> Edit Landmark=src/server/Kitchen.luau Architecture=src/server/Architecture.luau Config=src/shared/Config.luau ConfigMeshyKit=src/shared/ConfigMeshyKit.luau
+--   2. node tools/studio_mcp.js run tools/map/landmark_preview.luau <studio_id> Edit Landmark=src/server/Kitchen.luau Architecture=src/server/Architecture.luau Config=src/shared/Config.luau ConfigMeshyKit=src/shared/ConfigMeshyKit.luau YardKit=src/server/YardKit.luau
 -- It builds workspace.<Name>Preview (the name the module returns: KitchenPreview): the landmark at the last level of each
 -- era, 100 studs apart at y 500, front to -z, taking each piece from the preview meshes at the size and place
 -- Config.LibraryKit gives it. Fresh copies of the modules every run (the Edit VM keeps a module's first run). Delete the
@@ -48,8 +48,13 @@ _G.GranaryPreviewKit = {
 	end,
 }
 module(server, "ArchitecturePreview", Architecture)
+-- (the yards' fences and gates, when `YardKit=src/server/YardKit.luau` is passed: the same kit)
+if YardKit then
+	module(server, "YardKitPreview", YardKit:gsub("require%(script%.Parent%.LibraryKit%)", "(_G.GranaryPreviewKit :: any)"))
+end
 local source = Landmark:gsub("require%(script%.Parent%.LibraryKit%)", "(_G.GranaryPreviewKit :: any)")
 	:gsub("script%.Parent%.Architecture", "script.Parent.ArchitecturePreview" .. stamp)
+	:gsub("script%.Parent%.YardKit", if YardKit then "script.Parent.YardKitPreview" .. stamp else "script.Parent.YardKit")
 local build = (require :: any)(module(server, name, source)).build
 
 local old = workspace:FindFirstChild(name)

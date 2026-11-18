@@ -18,6 +18,7 @@
 -- added stays in every later era in that era's materials (25 in all, numbered in `build` as in the ladder).
 local Architecture = require(script.Parent.Architecture)
 local LibraryKit = require(script.Parent.LibraryKit)
+local YardKit = require(script.Parent.YardKit)
 
 local BreedingHouse = {}
 
@@ -42,6 +43,8 @@ local WHITE = C(252, 250, 244)
 local FIRE = C(255, 150, 60)
 local EGGS = { C(250, 240, 214), C(176, 214, 240), C(255, 198, 214), C(192, 236, 200) }
 local BLOOMS = { C(255, 120, 150), C(255, 214, 80), C(240, 90, 80) }
+-- the era's planter, from the owner's prop sheet (art/models/village_props/planter)
+local PLANTERS = { "PropPlanterWood", "PropPlanterRiveted", "PropPlanterStone", "PropPlanterCrown", "PropPlanterRoyal" }
 -- the hall's floor an era: colours with no material of their own, so they keep the stud look (the owner's choice)
 local FLOORS = { C(178, 130, 80), C(178, 130, 80), C(170, 164, 154), C(92, 98, 110), C(232, 228, 220) }
 local FRONT, BACK = V(0, 0, -1), V(0, 0, 1)
@@ -104,13 +107,15 @@ local LOOKS: { Look } = {
 		depth = 11, -- (the owner, 2026-11-17: the houses lacked depth; as deep as the pier is long once grown)
 		wallH = 6.6,
 		rise = 5,
-		wall = C(236, 220, 180),
-		lower = C(170, 120, 72),
-		stone = C(150, 146, 138),
-		beam = C(110, 72, 42),
-		board = C(92, 60, 36),
+		-- (measured on the four-side sheet with tools/map/sheet_colours.py, the lit tones: an orange-brown timber, a
+		-- warm pinkish cream plaster, a grey-mauve fieldstone)
+		wall = C(246, 226, 212),
+		lower = C(182, 104, 50),
+		stone = C(168, 136, 134),
+		beam = C(170, 94, 40),
+		board = C(140, 72, 28),
 		roof = C(232, 190, 84),
-		frame = C(126, 84, 50),
+		frame = C(160, 86, 36),
 		glass = C(250, 204, 110),
 		shutters = C(150, 110, 150),
 		cloth = C(176, 146, 228),
@@ -136,11 +141,12 @@ local LOOKS: { Look } = {
 		depth = 11,
 		wallH = 7.2,
 		rise = 5.4,
-		wall = C(244, 238, 224),
+		-- (the sheet's timber a warm coral, its plaster cream; under Wood in daylight a cooler pink turns purple)
+		wall = C(250, 228, 214),
 		lower = C(190, 92, 66),
 		stone = C(232, 222, 200),
-		beam = C(246, 160, 158), -- (a light warm rose: under Wood in daylight a cooler pink turns purple)
-		board = C(224, 122, 126),
+		beam = C(246, 126, 114),
+		board = C(214, 92, 82),
 		roof = C(198, 70, 58),
 		frame = C(250, 246, 236),
 		glass = C(250, 198, 100), -- (deep: lit Neon panes wash out to white in daylight)
@@ -167,19 +173,21 @@ local LOOKS: { Look } = {
 		depth = 11,
 		wallH = 8,
 		rise = 4.8,
-		wall = C(240, 230, 206),
-		lower = C(198, 190, 174),
-		stone = C(128, 124, 118),
-		beam = C(112, 72, 44),
-		board = C(92, 60, 38),
+		-- (the sheet's stone towers and plinth a grey mauve with a pink cast, its timber a warm mid-brown, its
+		-- plaster cream)
+		wall = C(250, 228, 214),
+		lower = C(208, 180, 192),
+		stone = C(176, 148, 160),
+		beam = C(164, 96, 52),
+		board = C(124, 70, 44),
 		roof = C(190, 62, 50), -- (the owner, 2026-11-17: one roof an era for every landmark, the Granary's)
 		frame = C(222, 216, 202),
 		glass = C(250, 198, 100),
 		shutters = C(150, 110, 150),
 		cloth = C(176, 146, 228),
 		gold = C(236, 190, 70),
-		accent = C(112, 72, 44),
-		fence = C(112, 72, 44),
+		accent = C(164, 96, 52),
+		fence = C(164, 96, 52),
 		mats = {
 			wall = M.Plaster,
 			lower = M.Cobblestone,
@@ -197,19 +205,20 @@ local LOOKS: { Look } = {
 		depth = 11,
 		wallH = 10,
 		rise = 6.6,
-		wall = C(150, 225, 215),
+		wall = C(104, 230, 206), -- (the sheet's glass is a saturated mint)
 		lower = C(198, 112, 74),
-		stone = C(74, 80, 92),
-		beam = C(52, 56, 64),
-		board = C(40, 44, 50),
+		stone = C(92, 94, 100),
+		-- (iron in Metal: a darker or bluer grey reads navy under the sky; the Garden's, tuned in Play)
+		beam = C(128, 124, 120),
+		board = C(104, 101, 98),
 		roof = C(66, 108, 186),
 		frame = C(214, 208, 196),
 		glass = C(250, 202, 108),
-		shutters = C(40, 44, 50),
+		shutters = C(104, 101, 98),
 		cloth = C(176, 146, 228),
 		gold = C(224, 170, 70),
 		accent = C(226, 132, 78), -- (bright: Metal darkens it, and a duller copper read as brown wood)
-		fence = C(40, 44, 50),
+		fence = C(104, 101, 98),
 		mats = {
 			wall = M.Glass,
 			lower = M.Brick,
@@ -227,10 +236,11 @@ local LOOKS: { Look } = {
 		depth = 11,
 		wallH = 10.5,
 		rise = 3.6,
-		wall = C(242, 239, 232), -- (not whiter: the facade's mouldings washed out in daylight)
-		lower = C(214, 208, 196),
-		stone = C(214, 208, 196),
-		beam = C(228, 222, 210),
+		-- (the sheet's marble is warm, a faint pink in it; not whiter: the facade's mouldings washed out in daylight)
+		wall = C(248, 236, 232),
+		lower = C(226, 210, 206),
+		stone = C(226, 210, 206),
+		beam = C(240, 226, 222),
 		board = C(236, 192, 76),
 		roof = C(44, 84, 170),
 		frame = C(236, 192, 76),
@@ -745,7 +755,20 @@ local function raise(m: Instance, area: CFrame, level: number, had: { Instance }
 	-- THE FENCE ------------------------------------------------------------------------------------------------
 	-- One run from (xa, za) to (xb, zb2); the runs go round the pen so its inside is on a run's own +Z. `first`
 	-- and `last` say whether its two ends get a post (a corner has one from the run before, the gate its own).
+	-- The owner's fence of the era (YardKit) when it is in the kit; these parts while it loads.
+	-- The owner's gate of the era (YardKit): era 1's thatched one is feature 1 (plain posts before it), the slime tech
+	-- one is feature 16 (the steel arch with the heart before it: the gate swapped is that step)
+	local gateEra = if (era == 1 and f < 1) or (era == 4 and f < 16) then nil else era
+	local gateHalf = if gateEra then YardKit.gateHalf(gateEra) else nil
+	-- where the fence meets the gate
+	local gx = gateHalf or (if era >= 3 then PX + 1.2 else PX + 0.45)
+	local posts: number? = nil -- his posts' height
 	local function fence(xa: number, za: number, xb: number, zb2: number, first: boolean, last: boolean, urns: boolean)
+		local tall = YardKit.fence(b, era, V(xa, FLOOR, za), V(xb, FLOOR, zb2), xb == -gx and zb2 == FZ0)
+		if tall then
+			posts = tall
+			return
+		end
 		local run = V(xb - xa, 0, zb2 - za)
 		local len = run.Magnitude
 		local dir = run.Unit
@@ -827,7 +850,6 @@ local function raise(m: Instance, area: CFrame, level: number, had: { Instance }
 			end
 		end
 	end
-	local gx = if era >= 3 then PX + 1.2 else PX + 0.45 -- where the fence meets the gate
 	-- (no side gate: the incubators stand inside the wide yard)
 	local fenceFrom = #m:GetChildren()
 	fence(gx, FZ0, WX, FZ0, false, true, true)
@@ -836,10 +858,10 @@ local function raise(m: Instance, area: CFrame, level: number, had: { Instance }
 	fence(-WX, ZB, -WX, FZ0, false, true, false)
 	fence(-WX, FZ0, -gx, FZ0, false, false, true)
 	-- the four corners: a pier at the capital (the balustrade is low), and what the features stand on
-	local cornerTop = FLOOR + ({ 2.9, 3.5, 3, 3.95, 3 })[era]
+	local cornerTop = FLOOR + (posts or ({ 2.9, 3.5, 3, 3.95, 3 })[era])
 	for _, c in { { -1, FZ0 }, { 1, FZ0 }, { -1, ZB }, { 1, ZB } } do
 		local x, z = c[1] * WX, c[2]
-		if era == 5 then
+		if era == 5 and not posts then
 			b.box("CornerPier", 1.2, 2.8, 1.2, b.at(x, FLOOR + 1.4, z), L.wall)
 			b.trim("CornerPierCap", 1.5, 0.2, 1.5, b.at(x, FLOOR + 2.9, z), L.gold)
 		end
@@ -854,9 +876,11 @@ local function raise(m: Instance, area: CFrame, level: number, had: { Instance }
 	end
 	Architecture.keep(m, fenceFrom, had)
 	if f >= 6 then
-		-- 6 flower boxes along the front fence on both sides of the gate (the owner's Meshy trough)
+		-- 6 flower boxes along the front fence on both sides of the gate: the era's planter from the owner's prop sheet
+		-- (riveted iron, brick, crowned stone, a marble balustrade), his older trough while it loads
 		for _, x in { -15.5, -9.6, 9.6, 15.5 } do
-			if not painted("FlowerBox_Trough", b.at(x, 0, FZ0 - 1.4), 0.9) then
+			local at = b.at(x, 0, FZ0 - 1.4)
+			if not painted(PLANTERS[era], at, 0.72) and not painted("FlowerBox_Trough", at, 0.9) then
 				flowerBox(b.face(x, 1.2, FZ0 - 0.5, FRONT), 3.4)
 			end
 		end
@@ -873,7 +897,19 @@ local function raise(m: Instance, area: CFrame, level: number, had: { Instance }
 	end
 
 	-- THE GATE -------------------------------------------------------------------------------------------------
-	if era <= 2 then
+	if gateEra and YardKit.gate(b, gateEra, b.at(0, FLOOR, FZ0)) then
+		-- what hangs on the owner's gate: 11 banners with a gold egg on its posts (the royal one has its own), 18 the
+		-- glowing goo tubes beside it
+		local px, out = YardKit.pier(gateEra)
+		for _, s in { -1, 1 } do
+			if f >= 11 and era < 5 then
+				banner(b.face(s * px, FLOOR + 4.2, FZ0 - out, FRONT), 1.2, 1.7)
+			end
+			if f >= 18 then
+				gooTube(s * (gx + 0.7), FLOOR, FZ0 - 1, 3.2)
+			end
+		end
+	elseif era <= 2 then
 		local h = 6
 		for _, s in { -1, 1 } do
 			b.box("GatePad", 1.3, 0.5, 1.3, b.at(s * PX, FLOOR + 0.25, FZ0), L.stone)
@@ -1383,7 +1419,8 @@ local function raise(m: Instance, area: CFrame, level: number, had: { Instance }
 			eggFoot = roofAt(r + out) + 1.5 * out + (if era == 1 then 0.4 else 0)
 			skirt(r + out, r, eggFoot, if era == 1 then STRAW else L.roof)
 			if era == 1 then
-				for course = 0, 1 do
+				-- (three courses flaring out and down: the sheet's nest is shaggy, two flat rings read as a tyre)
+				for course = 0, 2 do
 					local rr, y = rw + 0.15 + course * 0.5, eggFoot + 0.3 - course * 0.6
 					for k = 0, 11 do
 						local a0 = (k + course * 0.5) * math.pi / 6
@@ -1805,6 +1842,16 @@ local function raise(m: Instance, area: CFrame, level: number, had: { Instance }
 	end
 
 	shell(false)
+
+	-- (the glasshouse's glass less see-through than the game's 0.4: over the dark hall it read navy, the sheet's is
+	-- mint; the goo tanks keep 0.4 so their goo shows)
+	if era == 4 then
+		for _, p in m:GetDescendants() do
+			if p:IsA("BasePart") and p.Material == M.Glass and p.Color == L.wall then
+				p.Transparency = 0.15
+			end
+		end
+	end
 
 	-- BESIDE THE DOOR ---------------------------------------------------------------------------------------------
 	if f >= 21 then

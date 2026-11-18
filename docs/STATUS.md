@@ -1,5 +1,32 @@
 # Status
 
+## 2026-11-18 — the owner's fences and gates round the yards, his era props in the village, the Breeding House refined
+
+- **Fences and gates** (the owner: "nhập chúng vào kho asset và dùng chúng cho các khu đất"): his five fence sections
+  and five gates (Meshy, `art/models/village_props/fence`, `gate`) uploaded and worn by `src/server/YardKit.luau`
+  round the Breeding House's, the Garden's and the Training Hall's yards at every era; the Kitchen's `GateArch` wears
+  the gate of its tier. Each fence was cut in Blender (`tools/blender/fence_open.py`) into an open section (one post)
+  and a bare one (none, the last of a run to a gate), so every joint shows ONE post. The ladder rows the gates take
+  are in each ladder file and `hard-pieces.md` ("Fences and gates", "Worn"). Banners on the gate piers moved above
+  the gates' flower boxes.
+- **Era props**: the lamp posts, flower pots, avenue planters and the market's cart of `VillageStages` are his era
+  sheets' pieces (`Prop*`, the old kit models stand in while a mesh loads); the Kitchen wears his blue spoon banner
+  and gold bell finial. The uploader (`tools/kit/upload_village_pieces.js`) takes `village_props/<sheet>/*.glb`.
+- **The Breeding House refined** (`landmark-build` §3c, the fourth building): colours measured on its four-side
+  sheets (`LOOKS`, `B_PAINT`): orange-brown timber and pink-cream plaster at era 1, coral at era 2, pink-grey stone at
+  era 3, mint glass and warm grey iron at era 4, a warm marble at era 5; era 1's thatch thick with each course
+  proud (the shared thatched `gable_roof` mould) and a shaggier lean-to; rebuilt and uploaded.
+- **Proof**: Edit preview of the yards at levels 10-50 (Breeding, Garden), 10/30/40/50 (Training); Play in StudioTest:
+  Breeding 40, Garden 20, Training 30, Kitchen 30 (`review/yards-fences-gates.jpg`), the Breeding House at 10-50
+  (`review/breeding-body-l10.jpg` to `-l50`, before and after in `review/breeding-refine-before-after.jpg`), the
+  props earlier the same day. No new console error. CHECK OK (829 passed), TYPES OK.
+- **Not verified**: the phone view; the yards at every level in Play (only one level each). The test place's map is
+  older than `Layout`: its terrain stands over the yard floors and buried the fences, so the yard shots stand on a
+  temporary lawn (Play only, never saved), and the Breeding shots on wild grass, not the stud yard.
+- Not worn yet: the Dock's bank fence and the village's outer wall keep their own; the kitchen's signs, emblems
+  and windows are uploaded but not placed.
+- **Next**: the Training Hall refined (its era-1 thatch takes the new `gable_roof` straw at its rebuild), then the Dock.
+
 ## 2026-11-18 — village props reviewed (the owner: the old generated props are not pretty enough)
 
 - `docs/areas/village-v2/props-review.md`: the 141 `generate_mesh` props the live modules place were shot one by one in

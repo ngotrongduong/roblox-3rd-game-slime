@@ -78,9 +78,15 @@ end
 
 local CENTRE_FOOT = { 0, 9, 11, 12.5, 13.5 }
 
--- the era's models and their real heights
-local LAMPS = { "VillageLamp", "LanternPost", "IronStreetLamp", "ModernLampPost", "GoldenLampPost" }
-local LAMP_HEIGHT = { 8.4, 8.6, 9.2, 9.6, 9.2 }
+-- the era's models and their real heights. The lamp posts, flower pots, planters and the market's cart are the
+-- owner's era sheets (2026-11-18, art/models/village_props, one Meshy model a piece); the older kit models stand in
+-- while their meshes have not loaded
+local LAMPS = { "PropLampWood", "PropLampPainted", "PropLampStone", "PropLampTech", "PropLampRoyal" }
+local OLD_LAMPS = { "VillageLamp", "PaintedLampPost", "IronStreetLamp", "SteelStreetLamp", "GoldenLampPost" }
+local LAMP_HEIGHT = { 8.6, 9, 9.2, 9.6, 10 }
+local POTS = { "PropPotClay", "PropPotBarrel", "PropPotStone", "PropPotCrown", "PropPotUrn" }
+local CARTS = { "PropCartBarrow", "PropCartAwning", "PropCartRoofed", "PropCartGlass", "PropCartRoyal" }
+local CART_HEIGHT = { 3.4, 5, 5.2, 5.2, 5.4 }
 local BENCHES = { "LogBench", "ParkBench", "IronBench", "ModernBench", "MarbleBench" }
 local BENCH_HEIGHT = { 1.8, 2.7, 2.7, 1.5, 2.8 } -- (the modern bench has no back)
 local STALLS = { "FlowerCart", "FruitStall", "IceCreamCart", "BakeryKiosk", "GooVending" }
@@ -91,7 +97,8 @@ local GARDENS = { "Birdbath", "ClippedTopiary", "Sundial", "LightTree", "SlimeCr
 local GARDEN_HEIGHT = { 3, 4.4, 3, 6.5, 4.6 }
 -- the planters lining the gate avenue, each era's own (generated models, the owner, 2026-10-28:
 -- props as fine as the greenhouse vegetables); their length along the path
-local BEDS = { "FlowerBedWood", "FlowerBedWood", "FlowerBedBrick", "FlowerBedSteel2", "FlowerBedMarble" }
+local BEDS = { "PropPlanterWood", "PropPlanterRiveted", "PropPlanterStone", "PropPlanterCrown", "PropPlanterRoyal" }
+local OLD_BEDS = { "FlowerBedWood", "FlowerBedWood", "FlowerBedBrick", "FlowerBedSteel2", "FlowerBedMarble" }
 local BED_LENGTH = 5.4
 -- the shelter over the picnic table: a timber gazebo, then a marble one
 local PAVILIONS = { "", "PavilionWood", "PavilionWood", "PavilionMarble", "PavilionMarble" }
@@ -548,18 +555,11 @@ function VillageStages.build(village: Instance, frame: CFrame, level: number): M
 		end
 	end
 	for k, spot in lampSpots do
-		local lamp: Instance? = nil
-		if era == 2 then
-			-- (a generated Victorian lamp: the kit LanternPost was a 4-stud wall lantern and the one built
-			-- from parts too plain; the owner, 2026-10-28)
-			lamp = put("PaintedLampPost", spot[1], spot[2], 9, 3)
-		elseif era == 4 then
-			lamp = put("SteelStreetLamp", spot[1], spot[2], 9.6, 3)
-		else
-			lamp = put(LAMPS[era], spot[1], spot[2], LAMP_HEIGHT[era], 3)
-		end
-		if lamp and k <= 12 and era >= 2 then
-			-- the generated lamps carry no light of their own: one at the head
+		-- (5 studs of foot: the era lamps' lanterns hang on an arm, a narrower slot shrank them)
+		local lamp = put(LAMPS[era], spot[1], spot[2], LAMP_HEIGHT[era], 5)
+			or put(OLD_LAMPS[era], spot[1], spot[2], LAMP_HEIGHT[era], 3)
+		if lamp and k <= 12 then
+			-- the lamps carry no light of their own: one at the head
 			local model = lamp :: Model
 			local box, size = model:GetBoundingBox()
 			local head = Instance.new("Attachment")
@@ -633,9 +633,11 @@ function VillageStages.build(village: Instance, frame: CFrame, level: number): M
 			if bench and k ~= 2 then
 				local q = frame:PointToObjectSpace(bench:GetPivot().Position)
 				local at0 = Vector3.new(q.X, 0, q.Z)
-				put("FlowerPot", at0 - side * 4.3, -d, 2.6, 2.2, nil, d)
+				local _ = put(POTS[era], at0 - side * 4.3, -d, 2.6, 2.4, nil, d)
+					or put("FlowerPot", at0 - side * 4.3, -d, 2.6, 2.2, nil, d)
 				if k == 4 then
-					put("FlowerPot", at0 + side * 7.4, -d, 2.2, 1.9, nil, d)
+					local _ = put(POTS[era], at0 + side * 7.4, -d, 2.2, 2, nil, d)
+						or put("FlowerPot", at0 + side * 7.4, -d, 2.2, 1.9, nil, d)
 				end
 			end
 		end
@@ -740,7 +742,8 @@ function VillageStages.build(village: Instance, frame: CFrame, level: number): M
 		place(m, frame * CFrame.new(m2(0, 0)) * mFace, "MarketArch", 0, 0, 8.2, 8)
 		put("CrateStack", m2(17.5, -7.5), MARKET_ACROSS, 2.6, 2.4)
 		put("WoodBarrel", m2(17.5, 7.5), -MARKET_ACROSS, 2.4, 1.8)
-		put("HandCart", m2(10.5, -8.5), MARKET_ACROSS, 3, 3)
+		local _ = put(CARTS[era], m2(10.5, -8.5), MARKET_ACROSS, CART_HEIGHT[era], 4.4)
+			or put("HandCart", m2(10.5, -8.5), MARKET_ACROSS, 3, 3)
 		-- (the stalls' stock behind them: crates of apples and carrots, a barrel of apples; the free library, 2026-11-08)
 		put("FarmCrate_Apple", m2(6, -8.5), MARKET_ACROSS, 1.3, 2.6)
 		put("FarmCrate_Carrot", m2(7.5, 8.5), -MARKET_ACROSS, 1.6, 2.6)
@@ -765,19 +768,23 @@ function VillageStages.build(village: Instance, frame: CFrame, level: number): M
 				put(GARDENS[e], d * (plazaR + 9), -d, GARDEN_HEIGHT[e], 4.5)
 			end
 		end
+		local function bed(p: Vector3, look: Vector3, along: Vector3): Model?
+			return put(BEDS[era], p, look, 4, BED_LENGTH, nil, along)
+				or put(OLD_BEDS[era], p, look, 4, BED_LENGTH, nil, along)
+		end
 		for _, t in { 0.3, 0.62 } do
 			for _, side in { -1, 1 } do
 				local p, look = besidePath(5, t, side, 6.4)
-				put(BEDS[era], p, look, 4, BED_LENGTH, nil, dirOf(PATHS[5][1]))
+				bed(p, look, dirOf(PATHS[5][1]))
 			end
 		end
 		for i = 1, #PATHS do
 			if i ~= 5 then
 				local side = if i % 2 == 0 then -1 else 1
 				local p, look = besidePath(i, 0.3, side, 6.4)
-				if not put(BEDS[era], p, look, 4, BED_LENGTH, nil, dirOf(PATHS[i][1])) then
+				if not bed(p, look, dirOf(PATHS[i][1])) then
 					p, look = besidePath(i, 0.3, -side, 6.4)
-					put(BEDS[era], p, look, 4, BED_LENGTH, nil, dirOf(PATHS[i][1]))
+					bed(p, look, dirOf(PATHS[i][1]))
 				end
 			end
 		end

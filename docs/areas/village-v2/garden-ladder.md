@@ -139,6 +139,11 @@ enough at the build: 2 (a watering can is 1.2 studs: it stands on a 2-stud stand
 studs wide with real light), 28 (ivy over a whole pier, top to bottom). The five era pictures show each era's LAST
 level. Not yet seen in the game: this is the plan.
 
+The owner's fences and gates (2026-11-18, `YardKit`, `hard-pieces.md` "Fences and gates"): every era's fence is his
+section of that era; his thatched gate is row 6 (plain posts before it), his tiled, vine and royal gates come with
+rows 11, 21 and 41, and his slime-tech gate is row 37 (the steel arch before it: the gate swapped is that step). The
+blue banners of row 39 hang on the gate's piers above its flower boxes.
+
 ## Which shapes go where
 
 Looked in the owner's sheet kit first (`src/shared/ConfigMeshyKit.luau`): the Garden needs no new Meshy piece.

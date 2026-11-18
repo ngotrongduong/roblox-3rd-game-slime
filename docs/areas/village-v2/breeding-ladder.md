@@ -120,6 +120,11 @@ Against today's `BreedingStages`: its levels 6-10 moved the fence, the floor, th
 and the gate arch up one material tier, one a level; those five now change together at an era's first level, and
 levels 6-10 are the features above.
 
+The owner's fences and gates (2026-11-18, `YardKit`, `hard-pieces.md` "Fences and gates"): every era's fence is his
+section of that era; his thatched gate is row 6 (plain posts before it), his tiled, vine and royal gates come with
+rows 11, 21 and 41, and his slime-tech gate is row 36 (the steel arch before it: the gate swapped is that step). The
+lavender banners of row 26 hang on the gate's piers above its flower boxes.
+
 ## Which shapes go where
 
 Looked in the owner's sheet kit first (`src/shared/ConfigMeshyKit.luau`): the Breeding House needs no new Meshy piece.

@@ -272,6 +272,20 @@ backs are plainer than their fronts (one picture each): face the front to the ro
 their fronts now look along -Z like the lamps' (rendered again from both sides). The pairs in `fence/pairs/` are left
 as Meshy gave them and are not uploaded.
 
+**Worn (2026-11-18, the owner: "nhập chúng vào kho asset và dùng chúng cho các khu đất").** `src/server/YardKit.luau`
+puts them round the yards of the Breeding House, the Garden and the Training Hall at every era, and the Kitchen's
+`GateArch` wears the gate of its tier. In the game a section's +x end stands at its start, so each fence is cut in
+Blender (`tools/blender/fence_open.py`) into `<key>_open.glb` (start post cut off) and `<key>_bare.glb` (both cut
+off): a run is open sections, a post at each section's end and none at its start, each corner takes its post from
+the run that ends there, and the run that ends at a gate ends with the bare one, because the gate model's own short
+wings carry its end posts. Config rows `PropFence<Era>Open` and `PropFence<Era>Bare` (the bare one's size and `at`
+from its own GLB bounds, scaled like the full section: a bare box is shorter and lower than the full one). The era-1
+thatched gate is the ladders' first gate step (plain posts before it); the slime-tech gate swaps in at the step that
+put the steel arch on: Breeding 16, Garden 17, Training 18. Training's era 1 has no fence until its step 3 (the rail
+fence; the owner's rail section stands in for the palisade). Banners on the gate piers stand above the gates' flower
+boxes. Not worn yet: the Dock's bank fence and the village's outer wall keep their own, and the kitchen's signs,
+emblems and windows are uploaded but not placed.
+
 ## Other districts
 
 Listed when each district is rebuilt.

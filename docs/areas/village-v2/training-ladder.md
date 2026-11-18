@@ -119,6 +119,12 @@ Against today's `TrainingStages`: its levels 6-10 moved the floor, the border, t
 masts and the gate arch up one material tier, one a level; those now change together at an era's first level, and
 levels 6-10 are the features above. The floodlight masts move from level 21 to the sheet's place, level 37.
 
+The owner's fences and gates (2026-11-18, `YardKit`, `hard-pieces.md` "Fences and gates"): levels 1-7 keep the
+part-built rail fence, row 8 is his log rail section (it stands in for the palisade), and every later era's fence is
+his section of that era; his thatched gate is row 6, his tiled, vine and royal gates come with rows 11, 21 and 41, and
+his slime-tech gate is row 38 (the steel arch before it). The blue banners of row 27 hang on the gate's piers above
+its flower boxes.
+
 ## Which shapes go where
 
 Looked in the owner's sheet kit first (`src/shared/ConfigMeshyKit.luau`): the Training Hall needs no new Meshy piece.

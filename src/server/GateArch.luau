@@ -7,6 +7,8 @@
 -- emblem (a generated model) at the top. The way through stays 6.5+ studs clear. Glowing trim (slime
 -- tech) lights only the lanterns and finials, never the long beams.
 local PantryStages = require(script.Parent.PantryStages)
+local Architecture = require(script.Parent.Architecture)
+local YardKit = require(script.Parent.YardKit)
 
 local GateArch = {}
 
@@ -36,6 +38,10 @@ function GateArch.build(
 	accent: Color3,
 	emblem: string
 )
+	-- the owner's gate of the tier's era (YardKit, his gate sheet) when it is in the kit; these parts while it loads
+	if YardKit.gate(Architecture.new(m, frame), math.min(tier, 5), frame * CFrame.new(mid, 0, z)) then
+		return
+	end
 	local t = TIERS[tier]
 	local function at(x: number, y: number, dz: number?): CFrame
 		return frame * CFrame.new(mid + x, y, z + (dz or 0))

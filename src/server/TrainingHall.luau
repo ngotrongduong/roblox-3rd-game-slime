@@ -17,6 +17,7 @@
 -- added stays in every later era in that era's materials (25 in all, numbered in `build` as in the ladder).
 local Architecture = require(script.Parent.Architecture)
 local LibraryKit = require(script.Parent.LibraryKit)
+local YardKit = require(script.Parent.YardKit)
 
 local TrainingHall = {}
 
@@ -36,6 +37,8 @@ local PANEL = C(224, 212, 186) -- the warmer stone in the capital's wall panels
 local STEEL = C(208, 212, 220) -- sword blades and spear heads
 local ROPE = C(214, 186, 128)
 local BLOOMS = { C(255, 120, 150), C(255, 214, 80), C(240, 90, 80) }
+-- the era's planter, from the owner's prop sheet (art/models/village_props/planter)
+local PLANTERS = { "PropPlanterWood", "PropPlanterRiveted", "PropPlanterStone", "PropPlanterCrown", "PropPlanterRoyal" }
 -- the hall's floor an era: colours with no material of their own, so they keep the stud look (the owner's choice)
 local FLOORS = { C(178, 130, 80), C(178, 130, 80), C(170, 164, 154), C(92, 98, 110), C(232, 228, 220) }
 local FRONT, BACK, SIDE = V(0, 0, -1), V(0, 0, 1), V(1, 0, 0)
@@ -730,8 +733,25 @@ local function raise(m: Instance, area: CFrame, level: number, had: { Instance }
 	-- THE FENCE ------------------------------------------------------------------------------------------------
 	-- One straight run from (xa, za) to (xb, zb2), going round so the yard is on its +Z side in its own frame; `first`
 	-- and `last` say whether its two ends get a post (a corner has one from the run before, the gate its own).
+	-- The owner's fence of the era (YardKit) when it is in the kit, at era 1 from feature 3 (his rope-bound rails take
+	-- the palisade's place; the plain fence before it); these parts while it loads.
 	local palisade = era == 1 and f >= 3
+	-- The owner's gate of the era (YardKit): era 1's thatched one is feature 1 (plain posts before it), the slime tech
+	-- one is feature 18 (the steel and glass arch before it: the gate swapped is that step)
+	local gateEra = if (era == 1 and f < 1) or (era == 4 and f < 18) then nil else era
+	local gateHalf = if gateEra then YardKit.gateHalf(gateEra) else nil
+	-- where the fence meets the gate
+	local gx = gateHalf or (if era >= 3 then PX + 1.2 else PX + 0.45)
+	local posts: number? = nil -- his posts' height
 	local function fence(xa: number, za: number, xb: number, zb2: number, first: boolean, last: boolean, urns: boolean)
+		local toGate = xb == -gx and zb2 == -ZF
+		local tall = if era > 1 or palisade
+			then YardKit.fence(b, era, V(xa, FLOOR, za), V(xb, FLOOR, zb2), toGate)
+			else nil
+		if tall then
+			posts = tall
+			return
+		end
 		local run = V(xb - xa, 0, zb2 - za)
 		local len = run.Magnitude
 		local dir = run.Unit
@@ -828,7 +848,6 @@ local function raise(m: Instance, area: CFrame, level: number, had: { Instance }
 			end
 		end
 	end
-	local gx = if era >= 3 then PX + 1.2 else PX + 0.45 -- where the fence meets the gate
 	local fenceFrom = #m:GetChildren()
 	fence(gx, -ZF, WX, -ZF, false, true, true)
 	fence(WX, -ZF, WX, ZB, false, true, false)
@@ -840,13 +859,16 @@ local function raise(m: Instance, area: CFrame, level: number, had: { Instance }
 	local cornerHalf = ({ 0.3, 0.3, 0.75, 0.28, 0.6 })[era]
 	for _, c in { { -1, -ZF }, { 1, -ZF }, { -1, ZB }, { 1, ZB } } do
 		local x, z = c[1] * WX, c[2]
-		if era == 5 then
+		if era == 5 and not posts then
 			b.box("CornerPier", 1.2, 2.8, 1.2, b.at(x, FLOOR + 1.4, z), L.wall)
 			b.trim("CornerPierCap", 1.5, 0.2, 1.5, b.at(x, FLOOR + 2.9, z), L.gold)
 		end
 		if f >= 8 then
-			-- 8 gold ball caps on the corner posts (and the gate's, below), a lit lantern under each front one
-			b.ball("CornerCap", 0.55, b.at(x, cornerTop + (if era == 4 then -0.1 else 0.45), z), L.gold, bigGold)
+			-- 8 gold ball caps on the corner posts (and the gate's, below), a lit lantern under each front one (the
+			-- owner's fence posts wear their own caps)
+			if not posts then
+				b.ball("CornerCap", 0.55, b.at(x, cornerTop + (if era == 4 then -0.1 else 0.45), z), L.gold, bigGold)
+			end
 			if z < 0 then
 				lamp(b.face(x, FLOOR + 2.2, z - cornerHalf, FRONT), 0.6, true)
 			end
@@ -854,9 +876,11 @@ local function raise(m: Instance, area: CFrame, level: number, had: { Instance }
 	end
 	Architecture.keep(m, fenceFrom, had)
 	if f >= 7 then
-		-- 7 flower boxes along the front fence on both sides of the gate (the owner's Meshy trough)
+		-- 7 flower boxes along the front fence on both sides of the gate: the era's planter from the owner's prop sheet
+		-- (riveted iron, brick, crowned stone, a marble balustrade), his older trough while it loads
 		for _, x in { -14.6, -8.6, 8.6, 14.6 } do
-			if not painted("FlowerBox_Trough", b.at(x, 0, -ZF - 1.4), 0.9) then
+			local at = b.at(x, 0, -ZF - 1.4)
+			if not painted(PLANTERS[era], at, 0.72) and not painted("FlowerBox_Trough", at, 0.9) then
 				flowerBox(b.face(x, 1.2, -ZF - 0.5, FRONT), 3.4)
 			end
 		end
@@ -881,7 +905,33 @@ local function raise(m: Instance, area: CFrame, level: number, had: { Instance }
 	end
 
 	-- THE GATE -------------------------------------------------------------------------------------------------
-	if era <= 2 then
+	if gateEra and YardKit.gate(b, gateEra, b.at(0, FLOOR, -ZF)) then
+		-- what hangs on the owner's gate: 12 blue banners with a gold sword on its piers (the royal one has its own),
+		-- 18 glowing goo beside it, 13 a raised portcullis under its arch with its spikes showing
+		local px, out = YardKit.pier(gateEra)
+		for _, s in { -1, 1 } do
+			if f >= 12 and era < 5 then
+				banner(b.face(s * px, FLOOR + 4.3, -ZF - out, FRONT), 1.25, 1.7, true)
+			end
+			if era == 4 then
+				gooTube(s * (gx + 0.7), FLOOR, -ZF - 1, 3.2)
+			end
+		end
+		if f >= 13 then
+			local grille = if era == 3 then IRON elseif era == 4 then DARK else L.gold
+			local low = YardKit.underArch(gateEra, 1.6) - 1.5
+			for k = -2, 2 do
+				local x = k * 0.8
+				local high = YardKit.underArch(gateEra, x) - 0.1
+				b.trim("Portcullis", 0.4, high - low, 0.4, b.at(x, FLOOR + (high + low) / 2, -ZF), grille, M.Metal)
+				local spike = b.at(x, FLOOR + low - 0.1, -ZF) * CFrame.Angles(0, 0, math.pi / 4)
+				b.trim("PortcullisSpike", 0.42, 0.42, 0.4, spike, grille, M.Metal)
+			end
+			for _, dy in { 0.35, 1.1 } do
+				b.trim("PortcullisBar", 3.6, 0.3, 0.3, b.at(0, FLOOR + low + dy, -ZF), grille, M.Metal)
+			end
+		end
+	elseif era <= 2 then
 		local h = 5.6
 		for _, s in { -1, 1 } do
 			b.box("GatePad", 1.3, 0.5, 1.3, b.at(s * PX, FLOOR + 0.25, -ZF), L.stone)

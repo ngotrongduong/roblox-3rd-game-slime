@@ -1,5 +1,6 @@
 // Uploads the village landmarks' models (the owner's Meshy sheets cut into pieces, art/models/**/meshy/**/<key>_pieces.glb,
-// and Claude's Blender pieces, art/models/granary/blender/<Piece>.fbx) to the owner's Roblox account and writes their ids
+// Claude's Blender pieces, art/models/granary/blender/<Piece>.fbx, and the era props, art/models/village_props/<sheet>/
+// <piece>.glb) to the owner's Roblox account and writes their ids
 // into the game: every object of a file is a kit prop of the same name (`mesh = 0` in src/shared/ConfigMeshyKit.luau or
 // Config.luau), a sheet's one picture is `Meshy<Key>` in ConfigMeshyKit's Textures. Each file goes up as ONE Model by
 // Open Cloud (only from art/models, the folder the owner approved; only through a Studio whose place is saved to Roblox:
@@ -28,6 +29,16 @@ const TEXTURE = {
 	restaurant: "MeshyRestaurant",
 };
 
+// the era props (art/models/village_props/<sheet>/<piece>.glb): one mesh and one picture a file, each a prop of its own,
+// named Prop<Piece> (lamp_wood -> PropLampWood), its picture MeshyProp<Piece>
+const VILLAGE_PROPS = path.join(MODELS, "village_props");
+const propName = (key) =>
+	"Prop" +
+	key
+		.split("_")
+		.map((w) => w[0].toUpperCase() + w.slice(1))
+		.join("");
+
 const studio = process.argv[2];
 if (!studio) {
 	console.error("usage: node tools/kit/upload_village_pieces.js <studio_id>");
@@ -46,6 +57,11 @@ function files() {
 	for (const dir of ["granary/meshy", "kitchen/meshy", "props/meshy"]) walk(path.join(MODELS, dir));
 	const blender = path.join(MODELS, "granary", "blender");
 	for (const name of fs.readdirSync(blender)) if (name.endsWith(".fbx")) out.push(path.join(blender, name));
+	for (const sheet of fs.readdirSync(VILLAGE_PROPS, { withFileTypes: true })) {
+		if (!sheet.isDirectory()) continue;
+		const dir = path.join(VILLAGE_PROPS, sheet.name);
+		for (const name of fs.readdirSync(dir)) if (name.endsWith(".glb")) out.push(path.join(dir, name));
+	}
 	return out;
 }
 
@@ -129,8 +145,9 @@ function writeConfig(ids) {
 			if (at < 0) lost.push(`${key}: ${name}`);
 			else sources[at] = sources[at].replace(row, `$1${mesh}`);
 		}
-		if (TEXTURE[key] && entry.texture) {
-			const row = new RegExp(`(\\b${TEXTURE[key]} = )"[^"]*"`);
+		const tex = TEXTURE[key] || entry.tex;
+		if (tex && entry.texture) {
+			const row = new RegExp(`(\\b${tex} = )"[^"]*"`);
 			sources[0] = sources[0].replace(row, `$1"rbxassetid://${entry.texture}"`);
 		}
 	}
@@ -149,6 +166,10 @@ async function main(client) {
 		const model = await uploadModel(client, key, file);
 		const { pieces, texture } = await piecesOf(client, model);
 		ids[key] = { model: Number(model), texture, pieces };
+		if (path.dirname(path.dirname(file)) === VILLAGE_PROPS) {
+			const name = propName(key);
+			ids[key] = { model: Number(model), texture, pieces: { [name]: Object.values(pieces)[0] }, tex: `Meshy${name}` };
+		}
 		fs.writeFileSync(IDS, JSON.stringify(ids, null, "\t") + "\n");
 		console.log(`DONE ${key} model ${model}: ${Object.keys(pieces).length} pieces, texture ${texture}`);
 	}

@@ -19,6 +19,7 @@ local CollectionService = game:GetService("CollectionService")
 
 local Architecture = require(script.Parent.Architecture)
 local LibraryKit = require(script.Parent.LibraryKit)
+local YardKit = require(script.Parent.YardKit)
 
 local Garden = {}
 
@@ -38,6 +39,8 @@ local GRAPE = C(126, 78, 160)
 local GLAZE = C(190, 232, 226) -- a cold frame's panes
 local GOO = C(96, 232, 70)
 local BLOOMS = { C(255, 120, 150), C(255, 214, 80), C(240, 90, 80) }
+-- the era's planter, from the owner's prop sheet (art/models/village_props/planter)
+local PLANTERS = { "PropPlanterWood", "PropPlanterRiveted", "PropPlanterStone", "PropPlanterCrown", "PropPlanterRoyal" }
 local FRONT, BACK = Vector3.new(0, 0, -1), Vector3.new(0, 0, 1)
 local LEFT, RIGHT = Vector3.new(1, 0, 0), Vector3.new(-1, 0, 0) -- (+x is the garden's left as one walks in)
 
@@ -645,7 +648,18 @@ local function raise(m: Instance, frame: CFrame, level: number, had: { Instance 
 	-- THE FENCE ------------------------------------------------------------------------------------------------
 	-- One run from (xa, za) to (xb, zb2); the runs go round the garden so its inside is on a run's own +Z. `first`
 	-- and `last` say whether its two ends get a post (a corner has one from the run before, the gate its own).
+	-- The owner's fence of the era (YardKit) when it is in the kit; these parts while it loads.
+	-- The owner's gate of the era (YardKit): era 1's thatched one is feature 1 (plain posts before it), the slime tech
+	-- one is feature 17 (the steel and glass arch before it: the gate swapped is that step)
+	local gateEra = if (era == 1 and f < 1) or (era == 4 and f < 17) then nil else era
+	local gateHalf = if gateEra then YardKit.gateHalf(gateEra) else nil
+	-- where the fence meets the gate
+	local gx = gateHalf or (if era >= 3 then PX + 1.2 else PX + 0.45)
 	local function fence(xa: number, za: number, xb: number, zb2: number, first: boolean, last: boolean, urns: boolean)
+		local toGate = xb == -gx and zb2 == FZ0
+		if YardKit.fence(b, era, Vector3.new(xa, FLOOR, za), Vector3.new(xb, FLOOR, zb2), toGate) then
+			return
+		end
 		local run = Vector3.new(xb - xa, 0, zb2 - za)
 		local len = run.Magnitude
 		local dir = run.Unit
@@ -727,7 +741,6 @@ local function raise(m: Instance, frame: CFrame, level: number, had: { Instance 
 			end
 		end
 	end
-	local gx = if era >= 3 then PX + 1.2 else PX + 0.45 -- where the fence meets the gate
 	local fenceFrom = #m:GetChildren()
 	fence(gx, FZ0, WX, FZ0, false, true, true)
 	fence(WX, FZ0, WX, ZB, false, true, false)
@@ -744,14 +757,28 @@ local function raise(m: Instance, frame: CFrame, level: number, had: { Instance 
 					b.cyl("FlowerUrn", 0.9, 1.6, b.at(x, 0.8, FZ0 - 1.5), L.gold, bigGold, false)
 					b.ball("Flower", 1, b.at(x, 2.2, FZ0 - 1.5), BLOOMS[1])
 				end
-			elseif not painted("FlowerBox_Trough", b.at(x, 0, FZ0 - 1.3), 1) then
+			elseif
+				-- (the era's planter from the owner's prop sheet, his older trough while it loads)
+				not painted(PLANTERS[era], b.at(x, 0, FZ0 - 1.3), 0.8)
+				and not painted("FlowerBox_Trough", b.at(x, 0, FZ0 - 1.3), 1)
+			then
 				flowerBox(b.face(x, 1, FZ0 - 0.5, FRONT), 3.6)
 			end
 		end
 	end
 
 	-- THE GATE -------------------------------------------------------------------------------------------------
-	if era <= 2 then
+	if gateEra and YardKit.gate(b, gateEra, b.at(0, FLOOR, FZ0)) then
+		if f >= 19 and era < 5 then
+			-- 19 blue banners on the owner's gate's piers (the royal one has its own)
+			local px, out = YardKit.pier(gateEra)
+			for _, s in { -1, 1 } do
+				if not painted("Banner_SlimeBlue", b.face(s * px, FLOOR + 3.3, FZ0 - out, FRONT), 0.48) then
+					b.banner(b.face(s * px, FLOOR + 4.4, FZ0 - out, FRONT), 1.3, 2, L.cloth, L.gold)
+				end
+			end
+		end
+	elseif era <= 2 then
 		-- two posts; 1 a little roof over them (thatch, then tiles) and a lantern on each
 		local h = 6.2
 		for _, s in { -1, 1 } do

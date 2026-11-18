@@ -704,7 +704,12 @@ local function raise(m: Instance, frame: CFrame, level: number)
 				b.trim("RecessSill", 2.7, 0.25, 0.6, face * CFrame.new(0, -1.5, -0.3), L.frame)
 			end
 			flowerBox(face * CFrame.new(0, -2, 0), 2.6)
-			if f >= 16 and not painted("Banner_SlimeBlue", b.face(s * bayX, top - 2.15, Z0, FRONT), 0.7) then
+			local pier = b.face(s * bayX, top - 2.15, Z0, FRONT)
+			if
+				f >= 16
+				and not painted("PropBannerBlueSpoon", pier, 0.7) -- (the kitchen's own: a fork and spoon on it)
+				and not painted("Banner_SlimeBlue", pier, 0.7)
+			then
 				-- 16 blue banners on the front piers
 				b.banner(b.face(s * bayX, top - 0.4, Z0, FRONT), 1.5, 2.6, L.cloth, L.gold)
 			end
@@ -1466,7 +1471,9 @@ local function raise(m: Instance, frame: CFrame, level: number)
 		local h = 3.4
 		b.rod("FlagPole", 0.14, flagAt, flagAt + Vector3.new(0, h, 0), L.gold)
 		-- (the dome carries its own gold lantern: the Meshy finial is the ridge's)
-		if f >= 25 or not painted("Finial_GoldStone", b.at(flagAt.X, flagAt.Y - 0.1, flagAt.Z), 0.6) then
+		-- (the kitchen's own gold bell from the owner's prop sheet; his stone finial while it loads)
+		local foot = b.at(flagAt.X, flagAt.Y - 0.1, flagAt.Z)
+		if f >= 25 or not (painted("PropFinialBell", foot, 0.6) or painted("Finial_GoldStone", foot, 0.6)) then
 			b.ball("Finial", 0.42, b.at(flagAt.X, flagAt.Y + 0.3, flagAt.Z), L.gold, bigGold)
 		end
 		b.ball("FlagKnob", 0.26, b.at(flagAt.X, flagAt.Y + h + 0.2, flagAt.Z), L.gold, bigGold)

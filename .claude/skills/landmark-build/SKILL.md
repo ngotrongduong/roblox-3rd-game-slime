@@ -308,6 +308,12 @@ hơn." All six landmarks wear Blender bodies; now ONE building a session, in the
    fields share a colour needs no rebuild or upload; iron in Metal reads navy under the sky, so it is tuned LIVE in
    Play (recolour the stage's parts of the old colour, one call a try) and lands lighter and a little warm; barge
    boards go under a thatch's end, never in front of its tiers.
+10. **What the Breeding House's round taught** (2026-11-18, LESSONS "Refining the Breeding House"): the thatched
+    `gable_roof` is a mould three houses share (Breeding, Training, Dock); its new straw reaches the other two at
+    their own rebuild. The yards wear the owner's fences and gates (`YardKit`, LESSONS "The owner's fences and
+    gates"): a run of post-cut sections ends with the bare one at a gate, whose model carries its own end posts; a
+    banner on a gate pier hangs above the gate's flower boxes. A round that touches a yard keeps `YardKit.fence`
+    and `YardKit.gate` and moves only the run's ends.
 
 Left open for this step (STATUS, "Not verified"): side and back walls not walked against; face pieces in front
 of the grow split at the Granary, Kitchen and Garden; the Garden's flower box over its cross-gable window.

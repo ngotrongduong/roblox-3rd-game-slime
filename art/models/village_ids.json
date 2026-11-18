@@ -405,21 +405,6 @@
 			"GardenBody4_Roof": 75460222071413
 		}
 	},
-	"BreedingBody1": {
-		"model": 118714392372038,
-		"texture": 0,
-		"pieces": {
-			"BreedingBody1_Beam": 122079320520634,
-			"BreedingBody1_Board": 80773579587113,
-			"BreedingBody1_Frame": 136485058367626,
-			"BreedingBody1_Glass": 101370855658546,
-			"BreedingBody1_Lower": 130613333933210,
-			"BreedingBody1_Roof": 98386522678120,
-			"BreedingBody1_Shutters": 105621482028490,
-			"BreedingBody1_Stone": 139002923546090,
-			"BreedingBody1_Wall": 82301667209695
-		}
-	},
 	"BreedingBody2": {
 		"model": 95907667775945,
 		"texture": 0,
@@ -483,24 +468,6 @@
 			"BreedingChimney1_Stone": 116953671638058
 		}
 	},
-	"BreedingGable1": {
-		"model": 94047818819820,
-		"texture": 0,
-		"pieces": {
-			"BreedingGable1_Beam": 105546422917987,
-			"BreedingGable1_Wall": 72699612627525
-		}
-	},
-	"BreedingLean1": {
-		"model": 138878550126356,
-		"texture": 0,
-		"pieces": {
-			"BreedingLean1_Beam": 121301074544412,
-			"BreedingLean1_Lower": 81134388688008,
-			"BreedingLean1_Roof": 107134252976410,
-			"BreedingLean1_Wall": 140596956852360
-		}
-	},
 	"BreedingRoof3": {
 		"model": 92323247494526,
 		"texture": 0,
@@ -519,13 +486,6 @@
 			"BreedingStorey3_Board": 93518881558589,
 			"BreedingStorey3_Roof": 139087413268022,
 			"BreedingStorey3_Wall": 106759835972231
-		}
-	},
-	"BreedingTruss1": {
-		"model": 113446766686756,
-		"texture": 0,
-		"pieces": {
-			"BreedingTruss1_Beam": 106167394700945
 		}
 	},
 	"BreedingWing2": {
@@ -1103,5 +1063,453 @@
 			"GardenLean1_Beam": 72762501398499,
 			"GardenLean1_Roof": 119820006750961
 		}
+	},
+	"cart_awning": {
+		"model": 94178168454583,
+		"texture": 103641125781183,
+		"pieces": {
+			"PropCartAwning": 128306496449589
+		},
+		"tex": "MeshyPropCartAwning"
+	},
+	"cart_barrow": {
+		"model": 132985531306432,
+		"texture": 98408492690079,
+		"pieces": {
+			"PropCartBarrow": 82481212504853
+		},
+		"tex": "MeshyPropCartBarrow"
+	},
+	"cart_glass": {
+		"model": 133104490117111,
+		"texture": 115560233800884,
+		"pieces": {
+			"PropCartGlass": 73336596501639
+		},
+		"tex": "MeshyPropCartGlass"
+	},
+	"cart_roofed": {
+		"model": 94107169770597,
+		"texture": 74793766166397,
+		"pieces": {
+			"PropCartRoofed": 88383033923066
+		},
+		"tex": "MeshyPropCartRoofed"
+	},
+	"cart_royal": {
+		"model": 89386670304594,
+		"texture": 84665065164381,
+		"pieces": {
+			"PropCartRoyal": 113739557168465
+		},
+		"tex": "MeshyPropCartRoyal"
+	},
+	"pot_barrel": {
+		"model": 107603892000354,
+		"texture": 123701254280687,
+		"pieces": {
+			"PropPotBarrel": 76737300177826
+		},
+		"tex": "MeshyPropPotBarrel"
+	},
+	"pot_clay": {
+		"model": 82549448994947,
+		"texture": 83809603832059,
+		"pieces": {
+			"PropPotClay": 126944011120991
+		},
+		"tex": "MeshyPropPotClay"
+	},
+	"pot_crown": {
+		"model": 105817142594883,
+		"texture": 72816322621237,
+		"pieces": {
+			"PropPotCrown": 107813774379671
+		},
+		"tex": "MeshyPropPotCrown"
+	},
+	"pot_stone": {
+		"model": 73842789673159,
+		"texture": 94099673257689,
+		"pieces": {
+			"PropPotStone": 79145882811783
+		},
+		"tex": "MeshyPropPotStone"
+	},
+	"pot_urn": {
+		"model": 75590157604187,
+		"texture": 136788428450221,
+		"pieces": {
+			"PropPotUrn": 85798288086836
+		},
+		"tex": "MeshyPropPotUrn"
+	},
+	"finial_bell": {
+		"model": 111320005233825,
+		"texture": 83993940987629,
+		"pieces": {
+			"PropFinialBell": 114469589951104
+		},
+		"tex": "MeshyPropFinialBell"
+	},
+	"lamp_painted": {
+		"model": 135921171805698,
+		"texture": 129372418162700,
+		"pieces": {
+			"PropLampPainted": 129933474005649
+		},
+		"tex": "MeshyPropLampPainted"
+	},
+	"lamp_royal": {
+		"model": 118008090555301,
+		"texture": 108359710889598,
+		"pieces": {
+			"PropLampRoyal": 103322719264901
+		},
+		"tex": "MeshyPropLampRoyal"
+	},
+	"lamp_stone": {
+		"model": 106535804203897,
+		"texture": 84444561402260,
+		"pieces": {
+			"PropLampStone": 91416504807928
+		},
+		"tex": "MeshyPropLampStone"
+	},
+	"lamp_tech": {
+		"model": 137996274802854,
+		"texture": 118097962402456,
+		"pieces": {
+			"PropLampTech": 120234992764654
+		},
+		"tex": "MeshyPropLampTech"
+	},
+	"lamp_wood": {
+		"model": 74824942682801,
+		"texture": 123812703228454,
+		"pieces": {
+			"PropLampWood": 86856130184595
+		},
+		"tex": "MeshyPropLampWood"
+	},
+	"planter_crown": {
+		"model": 97205755471073,
+		"texture": 72912910076491,
+		"pieces": {
+			"PropPlanterCrown": 111417537399714
+		},
+		"tex": "MeshyPropPlanterCrown"
+	},
+	"planter_riveted": {
+		"model": 118387002963236,
+		"texture": 117060904170959,
+		"pieces": {
+			"PropPlanterRiveted": 135685617766862
+		},
+		"tex": "MeshyPropPlanterRiveted"
+	},
+	"planter_royal": {
+		"model": 132611532198427,
+		"texture": 73426180046828,
+		"pieces": {
+			"PropPlanterRoyal": 100506656246233
+		},
+		"tex": "MeshyPropPlanterRoyal"
+	},
+	"planter_stone": {
+		"model": 103046016709502,
+		"texture": 102431903289458,
+		"pieces": {
+			"PropPlanterStone": 119062814579270
+		},
+		"tex": "MeshyPropPlanterStone"
+	},
+	"planter_wood": {
+		"model": 90317993816738,
+		"texture": 116784483657625,
+		"pieces": {
+			"PropPlanterWood": 72226167645727
+		},
+		"tex": "MeshyPropPlanterWood"
+	},
+	"BreedingBody1": {
+		"model": 127234368411578,
+		"texture": 0,
+		"pieces": {
+			"BreedingBody1_Beam": 102727202715417,
+			"BreedingBody1_Board": 72497886259405,
+			"BreedingBody1_Frame": 136485058367626,
+			"BreedingBody1_Glass": 101370855658546,
+			"BreedingBody1_Lower": 130613333933210,
+			"BreedingBody1_Roof": 133567829286756,
+			"BreedingBody1_Shutters": 105621482028490,
+			"BreedingBody1_Stone": 139002923546090,
+			"BreedingBody1_Wall": 103745687404540
+		}
+	},
+	"BreedingGable1": {
+		"model": 94833904071953,
+		"texture": 0,
+		"pieces": {
+			"BreedingGable1_Beam": 112469256007805,
+			"BreedingGable1_Wall": 71963239787511
+		}
+	},
+	"BreedingLean1": {
+		"model": 122676605780534,
+		"texture": 0,
+		"pieces": {
+			"BreedingLean1_Beam": 121301074544412,
+			"BreedingLean1_Lower": 81134388688008,
+			"BreedingLean1_Roof": 139348704501565,
+			"BreedingLean1_Wall": 140596956852360
+		}
+	},
+	"BreedingTruss1": {
+		"model": 130715545897337,
+		"texture": 0,
+		"pieces": {
+			"BreedingTruss1_Beam": 121570635213073
+		}
+	},
+	"banner_blue_spoon": {
+		"model": 98882964176254,
+		"texture": 110380571533052,
+		"pieces": {
+			"PropBannerBlueSpoon": 74786764831888
+		},
+		"tex": "MeshyPropBannerBlueSpoon"
+	},
+	"banner_red_hat": {
+		"model": 84297376194549,
+		"texture": 115434684184598,
+		"pieces": {
+			"PropBannerRedHat": 135504829590961
+		},
+		"tex": "MeshyPropBannerRedHat"
+	},
+	"emblem_chef_slime": {
+		"model": 98286145588312,
+		"texture": 83385287911274,
+		"pieces": {
+			"PropEmblemChefSlime": 120274170450449
+		},
+		"tex": "MeshyPropEmblemChefSlime"
+	},
+	"emblem_spoon_ribbon": {
+		"model": 101355731315173,
+		"texture": 118589716494582,
+		"pieces": {
+			"PropEmblemSpoonRibbon": 83056940708171
+		},
+		"tex": "MeshyPropEmblemSpoonRibbon"
+	},
+	"sign_hat": {
+		"model": 125521645517505,
+		"texture": 129073653603360,
+		"pieces": {
+			"PropSignHat": 136072162354152
+		},
+		"tex": "MeshyPropSignHat"
+	},
+	"sign_spoon": {
+		"model": 119957565798772,
+		"texture": 84183069136022,
+		"pieces": {
+			"PropSignSpoon": 75333210131497
+		},
+		"tex": "MeshyPropSignSpoon"
+	},
+	"window_arch": {
+		"model": 138091815845089,
+		"texture": 76426483395830,
+		"pieces": {
+			"PropWindowArch": 106064499305476
+		},
+		"tex": "MeshyPropWindowArch"
+	},
+	"window_plain": {
+		"model": 91612649909881,
+		"texture": 78364851291282,
+		"pieces": {
+			"PropWindowPlain": 70469122829091
+		},
+		"tex": "MeshyPropWindowPlain"
+	},
+	"window_roofed": {
+		"model": 105194589201041,
+		"texture": 113763291436780,
+		"pieces": {
+			"PropWindowRoofed": 139615518756868
+		},
+		"tex": "MeshyPropWindowRoofed"
+	},
+	"window_shutters": {
+		"model": 101866393522996,
+		"texture": 91696285742925,
+		"pieces": {
+			"PropWindowShutters": 100868589512475
+		},
+		"tex": "MeshyPropWindowShutters"
+	},
+	"fence_iron": {
+		"model": 78670233360815,
+		"texture": 86229229368446,
+		"pieces": {
+			"PropFenceIron": 92407756032764
+		},
+		"tex": "MeshyPropFenceIron"
+	},
+	"fence_iron_open": {
+		"model": 82181209839616,
+		"texture": 86229229368446,
+		"pieces": {
+			"PropFenceIronOpen": 130638048128656
+		},
+		"tex": "MeshyPropFenceIronOpen"
+	},
+	"fence_picket": {
+		"model": 90405482469456,
+		"texture": 81531526273655,
+		"pieces": {
+			"PropFencePicket": 137024691643626
+		},
+		"tex": "MeshyPropFencePicket"
+	},
+	"fence_picket_open": {
+		"model": 137246322759183,
+		"texture": 81531526273655,
+		"pieces": {
+			"PropFencePicketOpen": 117288034475546
+		},
+		"tex": "MeshyPropFencePicketOpen"
+	},
+	"fence_rail": {
+		"model": 116630688351876,
+		"texture": 81531526273655,
+		"pieces": {
+			"PropFenceRail": 136381935525941
+		},
+		"tex": "MeshyPropFenceRail"
+	},
+	"fence_rail_open": {
+		"model": 129395455753206,
+		"texture": 81531526273655,
+		"pieces": {
+			"PropFenceRailOpen": 129714806064580
+		},
+		"tex": "MeshyPropFenceRailOpen"
+	},
+	"fence_royal": {
+		"model": 121862470012132,
+		"texture": 137066427762089,
+		"pieces": {
+			"PropFenceRoyal": 75832644197057
+		},
+		"tex": "MeshyPropFenceRoyal"
+	},
+	"fence_royal_open": {
+		"model": 82782147941516,
+		"texture": 137066427762089,
+		"pieces": {
+			"PropFenceRoyalOpen": 129324322220483
+		},
+		"tex": "MeshyPropFenceRoyalOpen"
+	},
+	"fence_stone": {
+		"model": 102001404474450,
+		"texture": 86229229368446,
+		"pieces": {
+			"PropFenceStone": 133983414737798
+		},
+		"tex": "MeshyPropFenceStone"
+	},
+	"fence_stone_open": {
+		"model": 105001755972767,
+		"texture": 86229229368446,
+		"pieces": {
+			"PropFenceStoneOpen": 120638210987801
+		},
+		"tex": "MeshyPropFenceStoneOpen"
+	},
+	"gate_royal": {
+		"model": 87386178656677,
+		"texture": 102434174046420,
+		"pieces": {
+			"PropGateRoyal": 109512480535906
+		},
+		"tex": "MeshyPropGateRoyal"
+	},
+	"gate_tech": {
+		"model": 101312527549330,
+		"texture": 119407664355559,
+		"pieces": {
+			"PropGateTech": 98183174911096
+		},
+		"tex": "MeshyPropGateTech"
+	},
+	"gate_thatch": {
+		"model": 82984651205020,
+		"texture": 109784444770973,
+		"pieces": {
+			"PropGateThatch": 89726036521127
+		},
+		"tex": "MeshyPropGateThatch"
+	},
+	"gate_tiled": {
+		"model": 86502390172583,
+		"texture": 114179421534367,
+		"pieces": {
+			"PropGateTiled": 117325158667770
+		},
+		"tex": "MeshyPropGateTiled"
+	},
+	"gate_vine": {
+		"model": 112604423789082,
+		"texture": 93018034311934,
+		"pieces": {
+			"PropGateVine": 82386161015183
+		},
+		"tex": "MeshyPropGateVine"
+	},
+	"fence_iron_bare": {
+		"model": 81203399556475,
+		"texture": 86229229368446,
+		"pieces": {
+			"PropFenceIronBare": 83978408655740
+		},
+		"tex": "MeshyPropFenceIronBare"
+	},
+	"fence_picket_bare": {
+		"model": 112004212001829,
+		"texture": 81531526273655,
+		"pieces": {
+			"PropFencePicketBare": 116545450601429
+		},
+		"tex": "MeshyPropFencePicketBare"
+	},
+	"fence_rail_bare": {
+		"model": 121941812982589,
+		"texture": 81531526273655,
+		"pieces": {
+			"PropFenceRailBare": 125303463942161
+		},
+		"tex": "MeshyPropFenceRailBare"
+	},
+	"fence_royal_bare": {
+		"model": 132341041804423,
+		"texture": 137066427762089,
+		"pieces": {
+			"PropFenceRoyalBare": 118727669765170
+		},
+		"tex": "MeshyPropFenceRoyalBare"
+	},
+	"fence_stone_bare": {
+		"model": 112449296540042,
+		"texture": 86229229368446,
+		"pieces": {
+			"PropFenceStoneBare": 112715886436414
+		},
+		"tex": "MeshyPropFenceStoneBare"
 	}
 }
