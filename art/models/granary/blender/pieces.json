@@ -2789,5 +2789,3934 @@
    }
   },
   "triangles": 1024
+ },
+ "GardenBody1": {
+  "objects": {
+   "GardenBody1_Stone": {
+    "size_studs_xyz": [
+     11.36,
+     0.52,
+     1.36
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     0.46,
+     18.9
+    ],
+    "triangles": 88,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 1.805
+   },
+   "GardenBody1_Wall": {
+    "size_studs_xyz": [
+     10.8,
+     9.64,
+     9.2
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     5.02,
+     23.9
+    ],
+    "triangles": 56,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 80.024
+   },
+   "GardenBody1_Lower": {
+    "size_studs_xyz": [
+     10.9,
+     2.42,
+     9.25
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     1.41,
+     23.925
+    ],
+    "triangles": 504,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 71.313
+   },
+   "GardenBody1_Beam": {
+    "size_studs_xyz": [
+     11.32,
+     9.498,
+     10.35
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     4.949,
+     23.625
+    ],
+    "triangles": 1256,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 31.614
+   },
+   "GardenBody1_Board": {
+    "size_studs_xyz": [
+     13.583,
+     7.816,
+     12.54
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     6.687,
+     23.5
+    ],
+    "triangles": 144,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 11.55
+   },
+   "GardenBody1_Roof": {
+    "size_studs_xyz": [
+     14.649,
+     6.212,
+     12.5
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     8.144,
+     23.5
+    ],
+    "triangles": 1684,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 204.629
+   },
+   "GardenBody1_Frame": {
+    "size_studs_xyz": [
+     1.22,
+     1.96,
+     2.14
+    ],
+    "centre_studs_xyz": [
+     5.21,
+     4.57,
+     23.9
+    ],
+    "triangles": 228,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 1.756
+   },
+   "GardenBody1_Glass": {
+    "size_studs_xyz": [
+     0.72,
+     1.5,
+     1.3
+    ],
+    "centre_studs_xyz": [
+     5.1,
+     4.6,
+     23.9
+    ],
+    "triangles": 80,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 0.219
+   },
+   "GardenBody1_Shutters": {
+    "size_studs_xyz": [
+     2.4,
+     3.4,
+     0.18
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     1.9,
+     28.57
+    ],
+    "triangles": 148,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 1.407
+   }
+  },
+  "triangles": 4188
+ },
+ "GardenBody2": {
+  "objects": {
+   "GardenBody2_Wall": {
+    "size_studs_xyz": [
+     13.0,
+     11.115,
+     10.0
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     5.757,
+     23.5
+    ],
+    "triangles": 180,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 193.429
+   },
+   "GardenBody2_Beam": {
+    "size_studs_xyz": [
+     13.48,
+     10.959,
+     10.6
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     5.68,
+     23.5
+    ],
+    "triangles": 1768,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 37.111
+   },
+   "GardenBody2_Board": {
+    "size_studs_xyz": [
+     15.3,
+     6.265,
+     12.485
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     8.677,
+     23.5
+    ],
+    "triangles": 72,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 8.861
+   },
+   "GardenBody2_Roof": {
+    "size_studs_xyz": [
+     15.1,
+     6.296,
+     11.98
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     9.032,
+     23.5
+    ],
+    "triangles": 548,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 117.563
+   },
+   "GardenBody2_Frame": {
+    "size_studs_xyz": [
+     10.54,
+     2.38,
+     1.22
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     3.88,
+     28.31
+    ],
+    "triangles": 456,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 4.327
+   },
+   "GardenBody2_Glass": {
+    "size_studs_xyz": [
+     9.7,
+     1.9,
+     0.72
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     3.9,
+     28.2
+    ],
+    "triangles": 160,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 0.649
+   },
+   "GardenBody2_Shutters": {
+    "size_studs_xyz": [
+     1.8,
+     3.4,
+     0.18
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     1.9,
+     28.57
+    ],
+    "triangles": 148,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 1.033
+   }
+  },
+  "triangles": 3332
+ },
+ "GardenBody3": {
+  "objects": {
+   "GardenBody3_Stone": {
+    "size_studs_xyz": [
+     18.14,
+     6.677,
+     10.36
+    ],
+    "centre_studs_xyz": [
+     -1.69,
+     3.539,
+     23.5
+    ],
+    "triangles": 1416,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 18.118
+   },
+   "GardenBody3_Lower": {
+    "size_studs_xyz": [
+     17.8,
+     6.8,
+     10.0
+    ],
+    "centre_studs_xyz": [
+     -1.7,
+     3.6,
+     23.5
+    ],
+    "triangles": 208,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 216.92
+   },
+   "GardenBody3_Roof": {
+    "size_studs_xyz": [
+     4.323,
+     2.289,
+     8.7
+    ],
+    "centre_studs_xyz": [
+     -9.193,
+     5.002,
+     23.9
+    ],
+    "triangles": 48,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 21.526
+   },
+   "GardenBody3_Frame": {
+    "size_studs_xyz": [
+     15.0,
+     6.715,
+     10.84
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     3.557,
+     23.5
+    ],
+    "triangles": 2308,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 30.893
+   },
+   "GardenBody3_Glass": {
+    "size_studs_xyz": [
+     10.1,
+     2.9,
+     0.72
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     4.0,
+     28.2
+    ],
+    "triangles": 160,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 0.981
+   },
+   "GardenBody3_Shutters": {
+    "size_studs_xyz": [
+     2.0,
+     3.6,
+     0.18
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     2.0,
+     28.57
+    ],
+    "triangles": 148,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 1.221
+   }
+  },
+  "triangles": 4288
+ },
+ "GardenBody4": {
+  "objects": {
+   "GardenBody4_Lower": {
+    "size_studs_xyz": [
+     18.0,
+     1.3,
+     9.1
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     0.85,
+     23.95
+    ],
+    "triangles": 60,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 31.98
+   },
+   "GardenBody4_Beam": {
+    "size_studs_xyz": [
+     18.73,
+     16.53,
+     10.74
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     8.465,
+     23.46
+    ],
+    "triangles": 3544,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 97.697
+   },
+   "GardenBody4_Gold": {
+    "size_studs_xyz": [
+     0.892,
+     7.452,
+     9.3
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     13.18,
+     22.45
+    ],
+    "triangles": 224,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 0.53
+   },
+   "GardenBody4_Roof": {
+    "size_studs_xyz": [
+     18.674,
+     11.774,
+     10.05
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     10.678,
+     23.525
+    ],
+    "triangles": 480,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 83.924
+   },
+   "GardenBody4_Frame": {
+    "size_studs_xyz": [
+     18.2,
+     0.2,
+     9.3
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     1.6,
+     23.95
+    ],
+    "triangles": 220,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 6.572
+   }
+  },
+  "triangles": 4528
+ },
+ "GardenBody5": {
+  "objects": {
+   "GardenBody5_Stone": {
+    "size_studs_xyz": [
+     20.6,
+     6.8,
+     12.8
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     3.6,
+     22.0
+    ],
+    "triangles": 396,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 55.265
+   },
+   "GardenBody5_Wall": {
+    "size_studs_xyz": [
+     20.0,
+     12.318,
+     12.55
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     6.359,
+     22.375
+    ],
+    "triangles": 464,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 420.54
+   },
+   "GardenBody5_Beam": {
+    "size_studs_xyz": [
+     20.2,
+     7.75,
+     10.6
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     4.075,
+     23.5
+    ],
+    "triangles": 592,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 24.793
+   },
+   "GardenBody5_Gold": {
+    "size_studs_xyz": [
+     20.84,
+     12.881,
+     13.44
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     6.64,
+     22.55
+    ],
+    "triangles": 2020,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 28.31
+   },
+   "GardenBody5_Roof": {
+    "size_studs_xyz": [
+     13.321,
+     3.868,
+     13.0
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     11.093,
+     22.55
+    ],
+    "triangles": 168,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 105.541
+   },
+   "GardenBody5_Glass": {
+    "size_studs_xyz": [
+     20.12,
+     3.2,
+     5.21
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     3.9,
+     25.555
+    ],
+    "triangles": 320,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 2.313
+   }
+  },
+  "triangles": 3960
+ },
+ "GardenTruss1": {
+  "objects": {
+   "GardenTruss1_Beam": {
+    "size_studs_xyz": [
+     8.098,
+     3.677,
+     0.6
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     8.091,
+     18.8
+    ],
+    "triangles": 112,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 4.596
+   }
+  },
+  "triangles": 112
+ },
+ "GardenGable1": {
+  "objects": {
+   "GardenGable1_Wall": {
+    "size_studs_xyz": [
+     8.845,
+     3.44,
+     0.6
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     8.12,
+     18.8
+    ],
+    "triangles": 8,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 9.128
+   },
+   "GardenGable1_Beam": {
+    "size_studs_xyz": [
+     9.0,
+     3.318,
+     0.31
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     8.039,
+     18.395
+    ],
+    "triangles": 112,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 2.018
+   }
+  },
+  "triangles": 120
+ },
+ "GardenLean1": {
+  "objects": {
+   "GardenLean1_Beam": {
+    "size_studs_xyz": [
+     0.58,
+     3.75,
+     9.2
+    ],
+    "centre_studs_xyz": [
+     -9.0,
+     2.075,
+     23.8
+    ],
+    "triangles": 132,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 4.519
+   },
+   "GardenLean1_Roof": {
+    "size_studs_xyz": [
+     5.403,
+     2.026,
+     9.7
+    ],
+    "centre_studs_xyz": [
+     -7.892,
+     4.362,
+     23.8
+    ],
+    "triangles": 352,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 40.686
+   }
+  },
+  "triangles": 484
+ },
+ "GardenRoof3": {
+  "objects": {
+   "GardenRoof3_Wall": {
+    "size_studs_xyz": [
+     14.4,
+     4.124,
+     9.483
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     9.062,
+     23.242
+    ],
+    "triangles": 24,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 27.338
+   },
+   "GardenRoof3_Beam": {
+    "size_studs_xyz": [
+     14.92,
+     4.142,
+     9.64
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     8.901,
+     23.08
+    ],
+    "triangles": 380,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 6.553
+   },
+   "GardenRoof3_Board": {
+    "size_studs_xyz": [
+     16.7,
+     6.035,
+     12.474
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     8.602,
+     23.5
+    ],
+    "triangles": 72,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 8.839
+   },
+   "GardenRoof3_Roof": {
+    "size_studs_xyz": [
+     16.5,
+     6.066,
+     11.976
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     8.947,
+     23.5
+    ],
+    "triangles": 572,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 127.134
+   }
+  },
+  "triangles": 1048
+ },
+ "GardenStorey3": {
+  "objects": {
+   "GardenStorey3_Wall": {
+    "size_studs_xyz": [
+     15.0,
+     7.785,
+     10.8
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     11.392,
+     23.3
+    ],
+    "triangles": 72,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 133.386
+   },
+   "GardenStorey3_Beam": {
+    "size_studs_xyz": [
+     15.48,
+     8.162,
+     11.28
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     11.051,
+     23.3
+    ],
+    "triangles": 1640,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 31.668
+   },
+   "GardenStorey3_Board": {
+    "size_studs_xyz": [
+     17.3,
+     9.968,
+     13.295
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     10.826,
+     23.3
+    ],
+    "triangles": 120,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 10.381
+   },
+   "GardenStorey3_Roof": {
+    "size_studs_xyz": [
+     17.1,
+     6.491,
+     12.777
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     12.935,
+     23.3
+    ],
+    "triangles": 572,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 148.589
+   }
+  },
+  "triangles": 2404
+ },
+ "BreedingBody1": {
+  "objects": {
+   "BreedingBody1_Stone": {
+    "size_studs_xyz": [
+     14.96,
+     0.52,
+     1.46
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     0.66,
+     20.45
+    ],
+    "triangles": 88,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 2.09
+   },
+   "BreedingBody1_Wall": {
+    "size_studs_xyz": [
+     14.4,
+     10.87,
+     10.2
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     5.835,
+     25.9
+    ],
+    "triangles": 56,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 103.95
+   },
+   "BreedingBody1_Lower": {
+    "size_studs_xyz": [
+     14.5,
+     2.62,
+     10.25
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     1.71,
+     25.925
+    ],
+    "triangles": 600,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 93.773
+   },
+   "BreedingBody1_Beam": {
+    "size_studs_xyz": [
+     14.92,
+     10.734,
+     11.33
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     5.767,
+     25.635
+    ],
+    "triangles": 1368,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 42.01
+   },
+   "BreedingBody1_Board": {
+    "size_studs_xyz": [
+     17.142,
+     7.88,
+     13.54
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     8.085,
+     25.5
+    ],
+    "triangles": 72,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 12.58
+   },
+   "BreedingBody1_Roof": {
+    "size_studs_xyz": [
+     18.275,
+     6.94,
+     13.5
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     9.18,
+     25.5
+    ],
+    "triangles": 2252,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 266.034
+   },
+   "BreedingBody1_Frame": {
+    "size_studs_xyz": [
+     13.878,
+     2.23,
+     9.86
+    ],
+    "centre_studs_xyz": [
+     -0.681,
+     4.955,
+     26.49
+    ],
+    "triangles": 912,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 7.679
+   },
+   "BreedingBody1_Glass": {
+    "size_studs_xyz": [
+     13.098,
+     1.75,
+     9.08
+    ],
+    "centre_studs_xyz": [
+     -0.711,
+     4.975,
+     26.52
+    ],
+    "triangles": 320,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 1.0
+   },
+   "BreedingBody1_Shutters": {
+    "size_studs_xyz": [
+     2.4,
+     3.6,
+     0.18
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     2.2,
+     31.07
+    ],
+    "triangles": 148,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 1.484
+   }
+  },
+  "triangles": 5816
+ },
+ "BreedingBody2": {
+  "objects": {
+   "BreedingBody2_Stone": {
+    "size_studs_xyz": [
+     22.48,
+     0.62,
+     10.98
+    ],
+    "centre_studs_xyz": [
+     2.76,
+     0.71,
+     25.21
+    ],
+    "triangles": 220,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 4.974
+   },
+   "BreedingBody2_Wall": {
+    "size_studs_xyz": [
+     16.4,
+     11.913,
+     11.0
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     6.356,
+     25.5
+    ],
+    "triangles": 52,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 199.447
+   },
+   "BreedingBody2_Lower": {
+    "size_studs_xyz": [
+     5.6,
+     12.5,
+     9.3
+    ],
+    "centre_studs_xyz": [
+     11.0,
+     6.65,
+     25.85
+    ],
+    "triangles": 140,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 94.409
+   },
+   "BreedingBody2_Beam": {
+    "size_studs_xyz": [
+     16.92,
+     11.78,
+     11.52
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     6.29,
+     25.5
+    ],
+    "triangles": 1376,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 50.858
+   },
+   "BreedingBody2_Board": {
+    "size_studs_xyz": [
+     24.148,
+     12.642,
+     13.54
+    ],
+    "centre_studs_xyz": [
+     2.52,
+     6.721,
+     25.5
+    ],
+    "triangles": 252,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 17.655
+   },
+   "BreedingBody2_Roof": {
+    "size_studs_xyz": [
+     23.656,
+     8.415,
+     13.5
+    ],
+    "centre_studs_xyz": [
+     2.556,
+     9.192,
+     25.5
+    ],
+    "triangles": 440,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 236.388
+   },
+   "BreedingBody2_Frame": {
+    "size_studs_xyz": [
+     21.02,
+     9.43,
+     3.44
+    ],
+    "centre_studs_xyz": [
+     3.11,
+     8.605,
+     29.7
+    ],
+    "triangles": 500,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 6.2
+   },
+   "BreedingBody2_Glass": {
+    "size_studs_xyz": [
+     13.96,
+     1.7,
+     0.72
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     5.0,
+     30.7
+    ],
+    "triangles": 160,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 0.534
+   },
+   "BreedingBody2_Shutters": {
+    "size_studs_xyz": [
+     2.4,
+     3.6,
+     0.18
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     2.2,
+     31.07
+    ],
+    "triangles": 148,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 1.484
+   }
+  },
+  "triangles": 3288
+ },
+ "BreedingBody3": {
+  "objects": {
+   "BreedingBody3_Stone": {
+    "size_studs_xyz": [
+     29.7,
+     15.5,
+     11.58
+    ],
+    "centre_studs_xyz": [
+     0.47,
+     8.15,
+     25.39
+    ],
+    "triangles": 2124,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 74.536
+   },
+   "BreedingBody3_Wall": {
+    "size_studs_xyz": [
+     5.6,
+     5.252,
+     9.3
+    ],
+    "centre_studs_xyz": [
+     -11.4,
+     6.226,
+     25.85
+    ],
+    "triangles": 52,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 45.304
+   },
+   "BreedingBody3_Lower": {
+    "size_studs_xyz": [
+     29.24,
+     12.0,
+     11.0
+    ],
+    "centre_studs_xyz": [
+     0.42,
+     6.4,
+     25.5
+    ],
+    "triangles": 240,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 624.04
+   },
+   "BreedingBody3_Beam": {
+    "size_studs_xyz": [
+     5.74,
+     5.104,
+     9.78
+    ],
+    "centre_studs_xyz": [
+     -11.57,
+     6.152,
+     25.85
+    ],
+    "triangles": 664,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 7.26
+   },
+   "BreedingBody3_Board": {
+    "size_studs_xyz": [
+     7.189,
+     3.347,
+     10.84
+    ],
+    "centre_studs_xyz": [
+     -11.4,
+     7.571,
+     25.85
+    ],
+    "triangles": 48,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 3.213
+   },
+   "BreedingBody3_Roof": {
+    "size_studs_xyz": [
+     6.768,
+     3.395,
+     10.8
+    ],
+    "centre_studs_xyz": [
+     -11.4,
+     7.882,
+     25.85
+    ],
+    "triangles": 148,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 35.585
+   },
+   "BreedingBody3_Frame": {
+    "size_studs_xyz": [
+     30.04,
+     15.92,
+     12.14
+    ],
+    "centre_studs_xyz": [
+     0.4,
+     8.36,
+     25.35
+    ],
+    "triangles": 2976,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 75.937
+   },
+   "BreedingBody3_Glass": {
+    "size_studs_xyz": [
+     19.61,
+     2.9,
+     5.86
+    ],
+    "centre_studs_xyz": [
+     -4.455,
+     4.8,
+     28.13
+    ],
+    "triangles": 240,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 1.213
+   },
+   "BreedingBody3_Shutters": {
+    "size_studs_xyz": [
+     2.0,
+     3.6,
+     0.18
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     2.2,
+     31.07
+    ],
+    "triangles": 148,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 1.221
+   }
+  },
+  "triangles": 6640
+ },
+ "BreedingBody4": {
+  "objects": {
+   "BreedingBody4_Stone": {
+    "size_studs_xyz": [
+     26.72,
+     0.7,
+     6.92
+    ],
+    "centre_studs_xyz": [
+     4.96,
+     0.75,
+     22.86
+    ],
+    "triangles": 132,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 15.805
+   },
+   "BreedingBody4_Lower": {
+    "size_studs_xyz": [
+     31.6,
+     17.216,
+     11.62
+    ],
+    "centre_studs_xyz": [
+     2.4,
+     9.008,
+     25.19
+    ],
+    "triangles": 436,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 216.875
+   },
+   "BreedingBody4_Beam": {
+    "size_studs_xyz": [
+     27.0,
+     14.954,
+     11.33
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     9.977,
+     25.385
+    ],
+    "triangles": 4352,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 90.716
+   },
+   "BreedingBody4_Gold": {
+    "size_studs_xyz": [
+     26.685,
+     12.012,
+     7.166
+    ],
+    "centre_studs_xyz": [
+     4.968,
+     11.256,
+     22.727
+    ],
+    "triangles": 448,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 2.474
+   },
+   "BreedingBody4_Board": {
+    "size_studs_xyz": [
+     2.16,
+     13.1,
+     2.16
+    ],
+    "centre_studs_xyz": [
+     17.35,
+     10.55,
+     25.35
+    ],
+    "triangles": 132,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 30.469
+   },
+   "BreedingBody4_Roof": {
+    "size_studs_xyz": [
+     26.68,
+     12.31,
+     11.0
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     10.955,
+     25.5
+    ],
+    "triangles": 576,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 113.553
+   },
+   "BreedingBody4_Frame": {
+    "size_studs_xyz": [
+     31.95,
+     15.474,
+     11.87
+    ],
+    "centre_studs_xyz": [
+     2.425,
+     9.937,
+     25.215
+    ],
+    "triangles": 840,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 46.475
+   }
+  },
+  "triangles": 6916
+ },
+ "BreedingBody5": {
+  "objects": {
+   "BreedingBody5_Stone": {
+    "size_studs_xyz": [
+     35.64,
+     7.4,
+     11.6
+    ],
+    "centre_studs_xyz": [
+     2.52,
+     4.1,
+     25.5
+    ],
+    "triangles": 616,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 82.129
+   },
+   "BreedingBody5_Wall": {
+    "size_studs_xyz": [
+     35.04,
+     15.5,
+     13.0
+    ],
+    "centre_studs_xyz": [
+     2.52,
+     8.15,
+     24.5
+    ],
+    "triangles": 240,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 826.881
+   },
+   "BreedingBody5_Beam": {
+    "size_studs_xyz": [
+     30.28,
+     8.03,
+     10.62
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     5.135,
+     25.19
+    ],
+    "triangles": 264,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 4.747
+   },
+   "BreedingBody5_Gold": {
+    "size_studs_xyz": [
+     35.66,
+     15.52,
+     14.74
+    ],
+    "centre_studs_xyz": [
+     2.41,
+     8.16,
+     24.5
+    ],
+    "triangles": 2820,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 80.328
+   },
+   "BreedingBody5_Roof": {
+    "size_studs_xyz": [
+     20.89,
+     4.784,
+     14.7
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     12.508,
+     24.5
+    ],
+    "triangles": 292,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 229.151
+   },
+   "BreedingBody5_Glass": {
+    "size_studs_xyz": [
+     30.12,
+     4.9,
+     6.01
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     4.95,
+     28.055
+    ],
+    "triangles": 480,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 3.701
+   }
+  },
+  "triangles": 4712
+ },
+ "BreedingTruss1": {
+  "objects": {
+   "BreedingTruss1_Beam": {
+    "size_studs_xyz": [
+     11.401,
+     4.485,
+     0.6
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     9.087,
+     20.3
+    ],
+    "triangles": 112,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 6.065
+   }
+  },
+  "triangles": 112
+ },
+ "BreedingGable1": {
+  "objects": {
+   "BreedingGable1_Wall": {
+    "size_studs_xyz": [
+     12.296,
+     4.27,
+     0.6
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     9.135,
+     20.3
+    ],
+    "triangles": 8,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 15.75
+   },
+   "BreedingGable1_Beam": {
+    "size_studs_xyz": [
+     12.6,
+     4.154,
+     0.31
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     9.057,
+     19.895
+    ],
+    "triangles": 92,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 3.183
+   }
+  },
+  "triangles": 100
+ },
+ "BreedingLean1": {
+  "objects": {
+   "BreedingLean1_Wall": {
+    "size_studs_xyz": [
+     4.6,
+     1.85,
+     9.3
+    ],
+    "centre_studs_xyz": [
+     9.5,
+     4.625,
+     25.85
+    ],
+    "triangles": 24,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 5.382
+   },
+   "BreedingLean1_Lower": {
+    "size_studs_xyz": [
+     4.65,
+     3.32,
+     9.4
+    ],
+    "centre_studs_xyz": [
+     9.525,
+     2.06,
+     25.85
+    ],
+    "triangles": 360,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 69.06
+   },
+   "BreedingLean1_Beam": {
+    "size_studs_xyz": [
+     4.9,
+     3.52,
+     9.94
+    ],
+    "centre_studs_xyz": [
+     9.65,
+     2.16,
+     25.85
+    ],
+    "triangles": 220,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 4.073
+   },
+   "BreedingLean1_Roof": {
+    "size_studs_xyz": [
+     6.398,
+     2.704,
+     10.8
+    ],
+    "centre_studs_xyz": [
+     10.247,
+     4.894,
+     25.85
+    ],
+    "triangles": 400,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 58.746
+   }
+  },
+  "triangles": 1004
+ },
+ "BreedingChimney1": {
+  "objects": {
+   "BreedingChimney1_Stone": {
+    "size_studs_xyz": [
+     1.9,
+     6.6,
+     1.9
+    ],
+    "centre_studs_xyz": [
+     10.4,
+     7.1,
+     29.0
+    ],
+    "triangles": 1772,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 24.091
+   },
+   "BreedingChimney1_Frame": {
+    "size_studs_xyz": [
+     2.34,
+     0.44,
+     2.34
+    ],
+    "centre_studs_xyz": [
+     10.4,
+     10.6,
+     29.0
+    ],
+    "triangles": 44,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 2.346
+   }
+  },
+  "triangles": 1816
+ },
+ "BreedingWing2": {
+  "objects": {
+   "BreedingWing2_Wall": {
+    "size_studs_xyz": [
+     5.2,
+     6.882,
+     9.3
+    ],
+    "centre_studs_xyz": [
+     -10.8,
+     3.841,
+     25.85
+    ],
+    "triangles": 52,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 64.1
+   },
+   "BreedingWing2_Beam": {
+    "size_studs_xyz": [
+     5.44,
+     6.734,
+     9.82
+    ],
+    "centre_studs_xyz": [
+     -10.92,
+     3.767,
+     25.83
+    ],
+    "triangles": 688,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 9.605
+   },
+   "BreedingWing2_Board": {
+    "size_studs_xyz": [
+     6.789,
+     3.177,
+     10.84
+    ],
+    "centre_studs_xyz": [
+     -10.8,
+     6.086,
+     25.85
+    ],
+    "triangles": 48,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 3.024
+   },
+   "BreedingWing2_Roof": {
+    "size_studs_xyz": [
+     6.368,
+     3.225,
+     10.8
+    ],
+    "centre_studs_xyz": [
+     -10.8,
+     6.397,
+     25.85
+    ],
+    "triangles": 148,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 33.613
+   },
+   "BreedingWing2_Frame": {
+    "size_studs_xyz": [
+     1.22,
+     2.18,
+     2.24
+    ],
+    "centre_studs_xyz": [
+     -13.21,
+     3.38,
+     25.85
+    ],
+    "triangles": 228,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 2.026
+   },
+   "BreedingWing2_Glass": {
+    "size_studs_xyz": [
+     0.72,
+     1.7,
+     1.4
+    ],
+    "centre_studs_xyz": [
+     -13.1,
+     3.4,
+     25.85
+    ],
+    "triangles": 80,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 0.267
+   }
+  },
+  "triangles": 1244
+ },
+ "BreedingRoof3": {
+  "objects": {
+   "BreedingRoof3_Wall": {
+    "size_studs_xyz": [
+     14.738,
+     4.113,
+     11.0
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     10.456,
+     25.5
+    ],
+    "triangles": 16,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 36.369
+   },
+   "BreedingRoof3_Beam": {
+    "size_studs_xyz": [
+     15.4,
+     4.008,
+     11.52
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     10.384,
+     25.5
+    ],
+    "triangles": 184,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 7.413
+   },
+   "BreedingRoof3_Board": {
+    "size_studs_xyz": [
+     19.663,
+     6.188,
+     13.34
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     10.177,
+     25.5
+    ],
+    "triangles": 48,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 12.533
+   },
+   "BreedingRoof3_Roof": {
+    "size_studs_xyz": [
+     19.127,
+     6.226,
+     13.3
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     10.487,
+     25.5
+    ],
+    "triangles": 268,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 203.816
+   }
+  },
+  "triangles": 516
+ },
+ "BreedingStorey3": {
+  "objects": {
+   "BreedingStorey3_Wall": {
+    "size_studs_xyz": [
+     17.8,
+     7.518,
+     11.8
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     12.559,
+     25.3
+    ],
+    "triangles": 64,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 138.377
+   },
+   "BreedingStorey3_Beam": {
+    "size_studs_xyz": [
+     18.28,
+     7.824,
+     12.32
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     12.282,
+     25.3
+    ],
+    "triangles": 1708,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 135.484
+   },
+   "BreedingStorey3_Board": {
+    "size_studs_xyz": [
+     20.251,
+     9.893,
+     13.94
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     12.131,
+     25.2
+    ],
+    "triangles": 120,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 13.992
+   },
+   "BreedingStorey3_Roof": {
+    "size_studs_xyz": [
+     19.723,
+     6.213,
+     13.9
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     14.293,
+     25.2
+    ],
+    "triangles": 292,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 217.312
+   }
+  },
+  "triangles": 2184
+ },
+ "TrainingBody1": {
+  "objects": {
+   "TrainingBody1_Stone": {
+    "size_studs_xyz": [
+     20.56,
+     0.52,
+     1.46
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     0.66,
+     17.85
+    ],
+    "triangles": 88,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 2.09
+   },
+   "TrainingBody1_Wall": {
+    "size_studs_xyz": [
+     20.1,
+     11.5,
+     12.45
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     6.15,
+     24.425
+    ],
+    "triangles": 836,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 215.569
+   },
+   "TrainingBody1_Lower": {
+    "size_studs_xyz": [
+     20.1,
+     2.62,
+     12.45
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     1.71,
+     24.425
+    ],
+    "triangles": 768,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 123.413
+   },
+   "TrainingBody1_Beam": {
+    "size_studs_xyz": [
+     20.52,
+     11.372,
+     13.53
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     6.086,
+     24.135
+    ],
+    "triangles": 1592,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 53.291
+   },
+   "TrainingBody1_Board": {
+    "size_studs_xyz": [
+     22.689,
+     9.223,
+     15.74
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     8.046,
+     24.0
+    ],
+    "triangles": 72,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 16.076
+   },
+   "TrainingBody1_Roof": {
+    "size_studs_xyz": [
+     23.899,
+     7.857,
+     15.7
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     9.321,
+     24.0
+    ],
+    "triangles": 3076,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 388.883
+   },
+   "TrainingBody1_Frame": {
+    "size_studs_xyz": [
+     20.84,
+     2.06,
+     9.19
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     4.87,
+     26.425
+    ],
+    "triangles": 1140,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 8.762
+   },
+   "TrainingBody1_Glass": {
+    "size_studs_xyz": [
+     20.12,
+     1.6,
+     8.41
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     4.9,
+     26.455
+    ],
+    "triangles": 400,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 1.254
+   },
+   "TrainingBody1_Shutters": {
+    "size_studs_xyz": [
+     2.4,
+     3.6,
+     0.18
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     2.2,
+     30.67
+    ],
+    "triangles": 148,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 1.484
+   }
+  },
+  "triangles": 8120
+ },
+ "TrainingBody2": {
+  "objects": {
+   "TrainingBody2_Stone": {
+    "size_studs_xyz": [
+     21.76,
+     0.52,
+     1.46
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     0.66,
+     17.85
+    ],
+    "triangles": 88,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 2.09
+   },
+   "TrainingBody2_Wall": {
+    "size_studs_xyz": [
+     21.2,
+     12.499,
+     13.2
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     6.65,
+     24.0
+    ],
+    "triangles": 52,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 252.234
+   },
+   "TrainingBody2_Beam": {
+    "size_studs_xyz": [
+     21.72,
+     12.37,
+     13.72
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     6.585,
+     24.0
+    ],
+    "triangles": 1504,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 59.389
+   },
+   "TrainingBody2_Board": {
+    "size_studs_xyz": [
+     23.891,
+     13.256,
+     15.74
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     7.028,
+     24.0
+    ],
+    "triangles": 204,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 17.934
+   },
+   "TrainingBody2_Roof": {
+    "size_studs_xyz": [
+     23.334,
+     7.917,
+     15.7
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     10.041,
+     24.0
+    ],
+    "triangles": 340,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 296.914
+   },
+   "TrainingBody2_Frame": {
+    "size_studs_xyz": [
+     22.04,
+     2.48,
+     12.19
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     4.28,
+     24.925
+    ],
+    "triangles": 1824,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 17.312
+   },
+   "TrainingBody2_Glass": {
+    "size_studs_xyz": [
+     21.32,
+     2.0,
+     11.41
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     4.3,
+     24.955
+    ],
+    "triangles": 640,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 2.351
+   },
+   "TrainingBody2_Shutters": {
+    "size_studs_xyz": [
+     2.4,
+     3.6,
+     0.18
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     2.2,
+     30.67
+    ],
+    "triangles": 148,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 1.484
+   }
+  },
+  "triangles": 4800
+ },
+ "TrainingBody3": {
+  "objects": {
+   "TrainingBody3_Stone": {
+    "size_studs_xyz": [
+     22.36,
+     7.366,
+     13.78
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     4.083,
+     23.89
+    ],
+    "triangles": 1488,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 18.578
+   },
+   "TrainingBody3_Lower": {
+    "size_studs_xyz": [
+     22.0,
+     7.4,
+     13.2
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     4.1,
+     24.0
+    ],
+    "triangles": 156,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 269.331
+   },
+   "TrainingBody3_Frame": {
+    "size_studs_xyz": [
+     22.84,
+     7.497,
+     14.34
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     4.149,
+     23.85
+    ],
+    "triangles": 2816,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 49.721
+   },
+   "TrainingBody3_Glass": {
+    "size_studs_xyz": [
+     22.12,
+     2.4,
+     10.66
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     4.1,
+     25.33
+    ],
+    "triangles": 560,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 2.629
+   },
+   "TrainingBody3_Shutters": {
+    "size_studs_xyz": [
+     2.0,
+     3.6,
+     0.18
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     2.2,
+     30.67
+    ],
+    "triangles": 148,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 1.221
+   }
+  },
+  "triangles": 5168
+ },
+ "TrainingBody4": {
+  "objects": {
+   "TrainingBody4_Stone": {
+    "size_studs_xyz": [
+     23.84,
+     0.72,
+     1.74
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     0.76,
+     17.55
+    ],
+    "triangles": 88,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 6.544
+   },
+   "TrainingBody4_Lower": {
+    "size_studs_xyz": [
+     23.474,
+     15.015,
+     13.82
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     7.908,
+     23.69
+    ],
+    "triangles": 320,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 124.282
+   },
+   "TrainingBody4_Beam": {
+    "size_studs_xyz": [
+     23.7,
+     12.154,
+     13.85
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     9.177,
+     23.725
+    ],
+    "triangles": 2540,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 78.366
+   },
+   "TrainingBody4_Gold": {
+    "size_studs_xyz": [
+     23.48,
+     13.546,
+     14.17
+    ],
+    "centre_studs_xyz": [
+     -0.016,
+     8.25,
+     23.629
+    ],
+    "triangles": 700,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 0.136
+   },
+   "TrainingBody4_Roof": {
+    "size_studs_xyz": [
+     23.2,
+     8.51,
+     13.2
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     10.655,
+     24.0
+    ],
+    "triangles": 192,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 124.227
+   },
+   "TrainingBody4_Frame": {
+    "size_studs_xyz": [
+     24.239,
+     12.662,
+     14.07
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     9.131,
+     23.715
+    ],
+    "triangles": 444,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 34.953
+   }
+  },
+  "triangles": 4284
+ },
+ "TrainingBody5": {
+  "objects": {
+   "TrainingBody5_Stone": {
+    "size_studs_xyz": [
+     31.3,
+     6.72,
+     13.83
+    ],
+    "centre_studs_xyz": [
+     -2.99,
+     3.76,
+     23.985
+    ],
+    "triangles": 840,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 79.908
+   },
+   "TrainingBody5_Wall": {
+    "size_studs_xyz": [
+     30.72,
+     17.0,
+     15.2
+    ],
+    "centre_studs_xyz": [
+     -2.96,
+     8.9,
+     23.0
+    ],
+    "triangles": 440,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 862.315
+   },
+   "TrainingBody5_Beam": {
+    "size_studs_xyz": [
+     25.12,
+     6.9,
+     11.22
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     4.7,
+     22.89
+    ],
+    "triangles": 440,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 5.891
+   },
+   "TrainingBody5_Gold": {
+    "size_studs_xyz": [
+     31.15,
+     16.7,
+     15.97
+    ],
+    "centre_studs_xyz": [
+     -2.875,
+     8.75,
+     23.035
+    ],
+    "triangles": 3008,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 59.122
+   },
+   "TrainingBody5_Glass": {
+    "size_studs_xyz": [
+     14.9,
+     3.2,
+     0.72
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     5.3,
+     30.3
+    ],
+    "triangles": 320,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 2.177
+   },
+   "TrainingBody5_Shutters": {
+    "size_studs_xyz": [
+     2.2,
+     4.2,
+     0.18
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     2.5,
+     30.67
+    ],
+    "triangles": 148,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 1.563
+   }
+  },
+  "triangles": 5196
+ },
+ "TrainingTruss1": {
+  "objects": {
+   "TrainingTruss1_Beam": {
+    "size_studs_xyz": [
+     16.558,
+     5.494,
+     0.6
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     9.183,
+     17.7
+    ],
+    "triangles": 112,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 8.368
+   }
+  },
+  "triangles": 112
+ },
+ "TrainingGable1": {
+  "objects": {
+   "TrainingGable1_Wall": {
+    "size_studs_xyz": [
+     17.668,
+     5.3,
+     0.6
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     9.25,
+     17.7
+    ],
+    "triangles": 8,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 28.093
+   },
+   "TrainingGable1_Beam": {
+    "size_studs_xyz": [
+     18.2,
+     5.192,
+     0.31
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     9.176,
+     17.295
+    ],
+    "triangles": 92,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 4.566
+   }
+  },
+  "triangles": 100
+ },
+ "TrainingLookout1": {
+  "objects": {
+   "TrainingLookout1_Beam": {
+    "size_studs_xyz": [
+     5.02,
+     7.925,
+     5.02
+    ],
+    "centre_studs_xyz": [
+     -13.3,
+     4.362,
+     20.7
+    ],
+    "triangles": 400,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 7.183
+   },
+   "TrainingLookout1_Board": {
+    "size_studs_xyz": [
+     4.9,
+     7.216,
+     6.428
+    ],
+    "centre_studs_xyz": [
+     -13.3,
+     3.992,
+     19.936
+    ],
+    "triangles": 240,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 4.604
+   },
+   "TrainingLookout1_Shutters": {
+    "size_studs_xyz": [
+     5.16,
+     0.44,
+     5.16
+    ],
+    "centre_studs_xyz": [
+     -13.3,
+     6.6,
+     20.7
+    ],
+    "triangles": 44,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 11.639
+   }
+  },
+  "triangles": 684
+ },
+ "TrainingCabin1": {
+  "objects": {
+   "TrainingCabin1_Wall": {
+    "size_studs_xyz": [
+     3.6,
+     3.02,
+     3.6
+    ],
+    "centre_studs_xyz": [
+     -13.3,
+     11.71,
+     20.7
+    ],
+    "triangles": 12,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 39.139
+   },
+   "TrainingCabin1_Beam": {
+    "size_studs_xyz": [
+     4.28,
+     6.42,
+     4.28
+    ],
+    "centre_studs_xyz": [
+     -13.3,
+     10.01,
+     20.7
+    ],
+    "triangles": 448,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 7.185
+   },
+   "TrainingCabin1_Board": {
+    "size_studs_xyz": [
+     4.06,
+     1.448,
+     4.06
+    ],
+    "centre_studs_xyz": [
+     -13.3,
+     9.1,
+     20.7
+    ],
+    "triangles": 48,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 1.078
+   },
+   "TrainingCabin1_Shutters": {
+    "size_studs_xyz": [
+     4.86,
+     0.44,
+     4.86
+    ],
+    "centre_studs_xyz": [
+     -13.3,
+     10.0,
+     20.7
+    ],
+    "triangles": 44,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 10.321
+   }
+  },
+  "triangles": 552
+ },
+ "TrainingTower2": {
+  "objects": {
+   "TrainingTower2_Stone": {
+    "size_studs_xyz": [
+     5.16,
+     0.93,
+     5.16
+    ],
+    "centre_studs_xyz": [
+     -14.1,
+     0.865,
+     20.7
+    ],
+    "triangles": 44,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 24.621
+   },
+   "TrainingTower2_Wall": {
+    "size_studs_xyz": [
+     4.64,
+     10.35,
+     4.64
+    ],
+    "centre_studs_xyz": [
+     -14.1,
+     6.425,
+     20.7
+    ],
+    "triangles": 12,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 222.831
+   },
+   "TrainingTower2_Beam": {
+    "size_studs_xyz": [
+     5.14,
+     10.0,
+     5.14
+    ],
+    "centre_studs_xyz": [
+     -14.1,
+     6.3,
+     20.7
+    ],
+    "triangles": 312,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 34.119
+   },
+   "TrainingTower2_Board": {
+    "size_studs_xyz": [
+     5.54,
+     0.44,
+     5.54
+    ],
+    "centre_studs_xyz": [
+     -14.1,
+     11.4,
+     20.7
+    ],
+    "triangles": 44,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 13.422
+   }
+  },
+  "triangles": 412
+ },
+ "TrainingTall2": {
+  "objects": {
+   "TrainingTall2_Stone": {
+    "size_studs_xyz": [
+     5.16,
+     0.93,
+     5.16
+    ],
+    "centre_studs_xyz": [
+     -14.1,
+     0.865,
+     20.7
+    ],
+    "triangles": 44,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 24.621
+   },
+   "TrainingTall2_Wall": {
+    "size_studs_xyz": [
+     4.64,
+     13.35,
+     4.64
+    ],
+    "centre_studs_xyz": [
+     -14.1,
+     7.925,
+     20.7
+    ],
+    "triangles": 12,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 287.42
+   },
+   "TrainingTall2_Beam": {
+    "size_studs_xyz": [
+     5.14,
+     13.0,
+     5.14
+    ],
+    "centre_studs_xyz": [
+     -14.1,
+     7.8,
+     20.7
+    ],
+    "triangles": 312,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 37.558
+   },
+   "TrainingTall2_Board": {
+    "size_studs_xyz": [
+     5.54,
+     0.44,
+     5.54
+    ],
+    "centre_studs_xyz": [
+     -14.1,
+     14.4,
+     20.7
+    ],
+    "triangles": 44,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 13.422
+   }
+  },
+  "triangles": 412
+ },
+ "TrainingTower3": {
+  "objects": {
+   "TrainingTower3_Stone": {
+    "size_studs_xyz": [
+     6.08,
+     1.12,
+     6.08
+    ],
+    "centre_studs_xyz": [
+     -14.3,
+     0.96,
+     20.7
+    ],
+    "triangles": 64,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 23.383
+   },
+   "TrainingTower3_Lower": {
+    "size_studs_xyz": [
+     5.44,
+     13.42,
+     5.44
+    ],
+    "centre_studs_xyz": [
+     -14.3,
+     8.01,
+     20.7
+    ],
+    "triangles": 96,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 368.83
+   },
+   "TrainingTower3_Frame": {
+    "size_studs_xyz": [
+     5.68,
+     4.36,
+     5.68
+    ],
+    "centre_studs_xyz": [
+     -14.3,
+     7.4,
+     20.7
+    ],
+    "triangles": 192,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 12.135
+   }
+  },
+  "triangles": 352
+ },
+ "TrainingTall3": {
+  "objects": {
+   "TrainingTall3_Stone": {
+    "size_studs_xyz": [
+     6.08,
+     1.12,
+     6.08
+    ],
+    "centre_studs_xyz": [
+     -14.3,
+     0.96,
+     20.7
+    ],
+    "triangles": 64,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 23.383
+   },
+   "TrainingTall3_Lower": {
+    "size_studs_xyz": [
+     7.08,
+     17.02,
+     7.08
+    ],
+    "centre_studs_xyz": [
+     -14.3,
+     9.81,
+     20.7
+    ],
+    "triangles": 632,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 543.04
+   },
+   "TrainingTall3_Frame": {
+    "size_studs_xyz": [
+     6.7,
+     10.63,
+     6.7
+    ],
+    "centre_studs_xyz": [
+     -14.3,
+     10.535,
+     20.7
+    ],
+    "triangles": 816,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 21.036
+   }
+  },
+  "triangles": 1512
+ },
+ "TrainingTower4": {
+  "objects": {
+   "TrainingTower4_Stone": {
+    "size_studs_xyz": [
+     6.08,
+     1.12,
+     6.08
+    ],
+    "centre_studs_xyz": [
+     -14.6,
+     0.96,
+     20.7
+    ],
+    "triangles": 64,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 23.383
+   },
+   "TrainingTower4_Lower": {
+    "size_studs_xyz": [
+     5.44,
+     15.3,
+     5.44
+    ],
+    "centre_studs_xyz": [
+     -14.6,
+     8.95,
+     20.7
+    ],
+    "triangles": 48,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 356.359
+   },
+   "TrainingTower4_Beam": {
+    "size_studs_xyz": [
+     5.72,
+     13.2,
+     5.72
+    ],
+    "centre_studs_xyz": [
+     -14.6,
+     10.0,
+     20.7
+    ],
+    "triangles": 480,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 34.379
+   },
+   "TrainingTower4_Gold": {
+    "size_studs_xyz": [
+     5.625,
+     13.047,
+     5.625
+    ],
+    "centre_studs_xyz": [
+     -14.6,
+     10.0,
+     20.7
+    ],
+    "triangles": 800,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 0.098
+   }
+  },
+  "triangles": 1392
+ },
+ "TrainingTall4": {
+  "objects": {
+   "TrainingTall4_Stone": {
+    "size_studs_xyz": [
+     6.08,
+     1.12,
+     6.08
+    ],
+    "centre_studs_xyz": [
+     -14.6,
+     0.96,
+     20.7
+    ],
+    "triangles": 64,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 23.383
+   },
+   "TrainingTall4_Lower": {
+    "size_studs_xyz": [
+     5.72,
+     15.33,
+     5.72
+    ],
+    "centre_studs_xyz": [
+     -14.6,
+     8.965,
+     20.7
+    ],
+    "triangles": 112,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 233.414
+   },
+   "TrainingTall4_Beam": {
+    "size_studs_xyz": [
+     5.72,
+     12.22,
+     5.72
+    ],
+    "centre_studs_xyz": [
+     -14.6,
+     9.51,
+     20.7
+    ],
+    "triangles": 648,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 35.346
+   },
+   "TrainingTall4_Gold": {
+    "size_studs_xyz": [
+     5.625,
+     6.647,
+     5.625
+    ],
+    "centre_studs_xyz": [
+     -14.6,
+     6.8,
+     20.7
+    ],
+    "triangles": 480,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 0.059
+   }
+  },
+  "triangles": 1304
+ },
+ "TrainingRoof3": {
+  "objects": {
+   "TrainingRoof3_Stone": {
+    "size_studs_xyz": [
+     23.44,
+     0.82,
+     1.64
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     0.81,
+     16.5
+    ],
+    "triangles": 88,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 6.443
+   },
+   "TrainingRoof3_Wall": {
+    "size_studs_xyz": [
+     19.355,
+     4.927,
+     13.0
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     10.263,
+     24.1
+    ],
+    "triangles": 16,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 57.214
+   },
+   "TrainingRoof3_Lower": {
+    "size_studs_xyz": [
+     23.06,
+     7.9,
+     1.54
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     4.35,
+     16.65
+    ],
+    "triangles": 88,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 49.961
+   },
+   "TrainingRoof3_Beam": {
+    "size_studs_xyz": [
+     20.2,
+     4.825,
+     13.52
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     10.192,
+     24.1
+    ],
+    "triangles": 184,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 9.779
+   },
+   "TrainingRoof3_Board": {
+    "size_studs_xyz": [
+     23.631,
+     6.752,
+     14.54
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     10.111,
+     24.1
+    ],
+    "triangles": 48,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 14.839
+   },
+   "TrainingRoof3_Roof": {
+    "size_studs_xyz": [
+     23.118,
+     6.789,
+     14.5
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     10.405,
+     24.1
+    ],
+    "triangles": 316,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 261.455
+   },
+   "TrainingRoof3_Frame": {
+    "size_studs_xyz": [
+     23.44,
+     1.24,
+     1.64
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     8.0,
+     16.5
+    ],
+    "triangles": 176,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 5.343
+   }
+  },
+  "triangles": 916
+ },
+ "TrainingStorey3": {
+  "objects": {
+   "TrainingStorey3_Stone": {
+    "size_studs_xyz": [
+     23.44,
+     0.82,
+     1.64
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     0.81,
+     16.5
+    ],
+    "triangles": 88,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 6.443
+   },
+   "TrainingStorey3_Wall": {
+    "size_studs_xyz": [
+     22.0,
+     7.927,
+     13.0
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     12.163,
+     24.1
+    ],
+    "triangles": 64,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 162.214
+   },
+   "TrainingStorey3_Lower": {
+    "size_studs_xyz": [
+     23.06,
+     11.3,
+     1.54
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     6.05,
+     16.65
+    ],
+    "triangles": 88,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 71.484
+   },
+   "TrainingStorey3_Beam": {
+    "size_studs_xyz": [
+     22.48,
+     8.235,
+     13.52
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     11.887,
+     24.1
+    ],
+    "triangles": 1748,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 171.095
+   },
+   "TrainingStorey3_Board": {
+    "size_studs_xyz": [
+     23.631,
+     6.752,
+     14.54
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     13.511,
+     24.1
+    ],
+    "triangles": 48,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 14.839
+   },
+   "TrainingStorey3_Roof": {
+    "size_studs_xyz": [
+     23.118,
+     6.789,
+     14.5
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     13.805,
+     24.1
+    ],
+    "triangles": 316,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 261.455
+   },
+   "TrainingStorey3_Frame": {
+    "size_studs_xyz": [
+     23.44,
+     4.64,
+     1.64
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     9.7,
+     16.5
+    ],
+    "triangles": 176,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 5.343
+   }
+  },
+  "triangles": 2528
+ },
+ "TrainingRoof5": {
+  "objects": {
+   "TrainingRoof5_Wall": {
+    "size_studs_xyz": [
+     15.669,
+     3.25,
+     15.2
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     11.525,
+     23.0
+    ],
+    "triangles": 16,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 30.558
+   },
+   "TrainingRoof5_Gold": {
+    "size_studs_xyz": [
+     20.564,
+     5.068,
+     16.94
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     11.38,
+     23.0
+    ],
+    "triangles": 48,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 12.466
+   },
+   "TrainingRoof5_Roof": {
+    "size_studs_xyz": [
+     20.1,
+     5.103,
+     16.9
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     11.648,
+     23.0
+    ],
+    "triangles": 268,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 259.784
+   }
+  },
+  "triangles": 332
+ },
+ "TrainingVault5": {
+  "objects": {
+   "TrainingVault5_Stone": {
+    "size_studs_xyz": [
+     18.46,
+     0.31,
+     11.86
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     10.025,
+     24.7
+    ],
+    "triangles": 44,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 67.772
+   },
+   "TrainingVault5_Wall": {
+    "size_studs_xyz": [
+     15.669,
+     3.25,
+     3.4
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     11.525,
+     17.1
+    ],
+    "triangles": 16,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 30.558
+   },
+   "TrainingVault5_Gold": {
+    "size_studs_xyz": [
+     20.564,
+     7.308,
+     16.02
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     12.5,
+     22.54
+    ],
+    "triangles": 676,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 31.56
+   },
+   "TrainingVault5_Roof": {
+    "size_studs_xyz": [
+     20.1,
+     6.763,
+     15.95
+    ],
+    "centre_studs_xyz": [
+     0.0,
+     12.478,
+     22.525
+    ],
+    "triangles": 460,
+    "origin_location_blender": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "signed_volume": 143.938
+   }
+  },
+  "triangles": 1196
  }
 }

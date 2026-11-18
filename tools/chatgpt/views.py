@@ -139,6 +139,81 @@ BUILDINGS = {
 			"the pediment over the one wide open portal, with no door", ": the chimney and the left small dome",
 			": the right small dome"),
 	],
+	# (the picture is the whole fenced training yard: only the hall across its back, with its tower, is asked for)
+	"training": [
+		("the TRAINING HALL that stands across the back of this fenced training yard, at its first era (shaggy thatch "
+			"on brown posts and beams, plank walls, a wide open front, a round wooden shield with two crossed swords in "
+			"its gable, and a wooden lookout tower on four braced log legs with a small thatched cabin on top at its "
+			"right end). Draw ONLY that hall with its lookout tower: leave out the stake fence, the gate, the straw "
+			"training dummy, the weapon racks, the benches and the flag",
+			"the gable over the one wide open front, with no door", "", ": the lookout tower"),
+		("the TRAINING HALL that stands across the back of this fenced training yard, at its second era (cream "
+			"plaster on royal-blue beams, red clay tiles, a wide open front on posts, a round blue shield with two "
+			"crossed swords in its gable, and a square watchtower boarded in cream between blue beams with a railed "
+			"gallery under a tall red tiled cone at its right end). Draw ONLY that hall with its watchtower: leave out "
+			"the fence, the gate, the training dummies, the weapon racks, the benches, the banners and the flag",
+			"the gable over the one wide open front, with no door", "", ": the watchtower"),
+		("the TRAINING HALL that stands across the back of this fenced training yard, at its third era (a grey stone "
+			"hall with ONE wide stone arch in the front between two square stone shoulders with battlements, a "
+			"half-timbered upper storey and gable under red clay tiles, a round steel shield with two crossed swords in "
+			"the gable, and a round stone keep with battlements on corbels under a red cone roof at its right end). "
+			"Draw ONLY that hall with its keep: leave out the stone fence, the gate, the training dummies, the weapon "
+			"racks, the benches, the banners and the flag",
+			"the timber gable over the one wide open stone arch, with no door", "", ": the round keep"),
+		("the TRAINING HALL that stands across the back of this fenced training yard, at its fourth era (black "
+			"riveted steel and teal glass: a wide barrel vault roof over one wide open arch between two riveted steel "
+			"piers, a round steel shield with two crossed swords in a riveted ring over the arch, copper pipes over the "
+			"vault, and a round riveted steel tower with a glass tank of glowing green goo under a glass dome at its "
+			"right end). Draw ONLY that hall with its tower: leave out the iron fence, the gate, the floodlight masts, "
+			"the training dummy, the weapon racks, the benches and the flag",
+			"the glazed end of the vault over the one wide open arch, with no door", "", ": the goo tower"),
+		("the TRAINING HALL that stands across the back of this fenced training yard, at its fifth era (white marble "
+			"and gold: a portico of four columns under an entablature and a pediment with a blue shield and two crossed "
+			"swords in gold laurels, blue tiled roofs, a lower arcade wing with a balustrade on each side, and a round "
+			"marble tower with gold bands, a ring of small columns and a blue dome with gold ribs at its right end). "
+			"Draw ONLY that hall with its wings and tower: leave out the balustrade round the yard, the gate, the lamp "
+			"standards, the training dummies, the weapon racks, the benches, the banners and the flag",
+			"the pediment over the open portico, with no door", ": the left arcade wing",
+			": the right arcade wing and the tower"),
+	],
+	# (the picture is the whole fishing pond: only the boathouse across its back, with its lighthouse, is asked for)
+	"dock": [
+		("the BOATHOUSE that stands across the back of this fishing pond, at its first era (a timber fishing shack "
+			"on log stilts under shaggy thatch, plank walls in a brown post frame, its whole water side open, a round "
+			"wooden sign with a fish in its gable, and a round whitewashed lighthouse with one red band, a wooden railed "
+			"gallery and a small thatched lantern room at its left end). Draw ONLY that boathouse with its lighthouse: "
+			"leave out the water, the pier, the boats, the log fence, the nets, the fish rack, the barrels, the lamps "
+			"and the water lilies",
+			"the gable over the one wide open front, with no door", ": the lighthouse", ""),
+		("the BOATHOUSE that stands across the back of this fishing pond, at its second era (cream plaster on "
+			"royal-blue beams under red clay tiles, its whole water side open on blue posts, a round blue sign with a "
+			"white fish in a gold ring in its gable, and a round whitewashed lighthouse with two red bands, a blue "
+			"railed gallery and a lantern room under a red tiled cone at its left end). Draw ONLY that boathouse with "
+			"its lighthouse: leave out the water, the pier, the boats, the picket fence, the striped awning, the nets, "
+			"the fish rack, the barrels, the lamps and the flower boxes",
+			"the gable over the one wide open front, with no door", ": the lighthouse", ""),
+		("the BOATHOUSE that stands across the back of this fishing pond, at its third era (a grey stone boathouse "
+			"with ONE wide stone boat arch in the front between two square stone corner piers with battlements, a "
+			"half-timbered gable under blue slate tiles, a round steel sign with a fish in the gable, and a round stone "
+			"lighthouse with an iron railed gallery and a lantern room under a blue slate cone at its left end). Draw "
+			"ONLY that boathouse with its lighthouse: leave out the water, the pier, the boats, the stone quay wall "
+			"with its iron rails, the nets, the fish rack, the barrels, the crates and the lamps",
+			"the timber gable over the one wide open stone arch, with no door", ": the lighthouse", ""),
+		("the BOATHOUSE that stands across the back of this fishing pond, at its fourth era (black riveted steel and "
+			"teal glass: a wide glazed barrel vault roof on riveted steel piers over one wide open front, a round steel "
+			"sign with a fish in a glowing green ring over it, copper pipes over the vault, and a round riveted steel "
+			"lighthouse with tanks of glowing green goo behind glass and a glass dome at its left end). Draw ONLY that "
+			"boathouse with its lighthouse: leave out the water, the pier, the boats, the steel quay wall with its green "
+			"lights, the crane, the nets, the fish rack, the barrels and the lamps",
+			"the glazed end of the vault over the one wide open front, with no door", ": the lighthouse", ""),
+		("the BOATHOUSE that stands across the back of this fishing pond, at its fifth era (white marble and gold: a "
+			"portico of two columns each side of one wide open arch under an entablature and a pediment with a gold "
+			"fish sign in gold laurels, a blue tiled vault roof with gold ribs behind it, and a round marble lighthouse "
+			"with a gold railed gallery, a ring of small columns and a blue dome with gold ribs at its left end). Draw "
+			"ONLY that boathouse with its lighthouse: leave out the water, the pier, the boats, the marble balustrade, "
+			"the banners, the urns, the nets, the fish rack, the barrels and the lamps",
+			"the pediment over the one wide open arch, with no door", ": the lighthouse", ""),
+	],
 }
 
 name = sys.argv[1]

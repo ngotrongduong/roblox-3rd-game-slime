@@ -48,6 +48,26 @@ local PX = 4 -- the gate's posts stand at x -PX and PX
 local HZ = 17.4 -- the hall's front wall
 local T = 0.6 -- a wall's thickness
 
+-- THE SHELL: the hall's and the tower's parts the Blender bodies replace (tools/blender/landmark_bodies.py). Where
+-- its body is there, a shell part that is only seen is not built, and a solid one stays as the wall a player
+-- walks against, a hair inside the mesh.
+local SHELL: { [string]: boolean } = {}
+for name in
+	string.gmatch(
+		"SideWall PostPad Post Rail Brace BackWall TieBeam Roof Gable BargeBoard Ridge EaveRoll ThatchCourse VergeRoll "
+			.. "EaveCourse RidgeRoll Rafter KingPost Collar GableRail GableStrut GablePost FrontWall Plinth ArchStone Keystone "
+			.. "StringCourse StoreyBeam UpperWall Shoulder ShoulderFoot ShoulderCap SidePost SideRail SideCap FrontPier "
+			.. "FrontPierCap FrontPierFoot Rivet VaultGlass VaultRib Purlin FrontArch Transom LunetteBar LunetteRing "
+			.. "SideCornice WingBack WingEnd WingPlinth WingEndCornice WingPilaster WingPanel WingPanelCap WingFront WingArch "
+			.. "WingRoof WingCornice Entablature Frieze Cornice RoofDeck TowerLeg TowerBrace PlatformPost PlatformRail "
+			.. "Platform Ladder LadderRung CabinPost CabinFloor Cabin TowerFoot Tower TowerPost TowerBand TowerEave "
+			.. "TowerCourse TowerNeck Corbel TowerCrown TowerMerlon TowerRib TowerHoop TowerRing",
+		"%a+"
+	)
+do
+	SHELL[name] = true
+end
+
 type Look = {
 	hw: number, -- half the hall's width
 	depth: number,
@@ -220,8 +240,12 @@ function TrainingHall.features(level: number): (number, number)
 end
 
 -- The ground the place stands on, in the area's frame (x0, x1, z0, z1): scenery there goes.
--- (What Architecture.grow takes as the house: what stands at or behind SPLIT_Z; and the point it grows round.)
-local SPLIT_Z, PIVOT_X, PIVOT_Z = 16.5, 0, 17.4
+-- (What Architecture.grow takes as the house: what stands at or behind SPLIT_Z; and the point it grows round.
+-- The hall's face reaches 3 in front of its wall: the capital's portico, its lamp standards and urns, the steel
+-- era's masts, the stone era's shoulder lamps, and the shield's blades stand another 1 proud of the pediment. At
+-- 16.5 they kept their drawn size before a hall 1.9 times bigger. The fence is kept out by Architecture.keep, and
+-- nothing else of the yard stands behind 13.5.)
+local SPLIT_Z, PIVOT_X, PIVOT_Z = 13.5, 0, 17.4
 function TrainingHall.footprint(_level: number): (number, number, number, number)
 	return Architecture.grownBox(
 		"TrainingHall",
@@ -320,6 +344,29 @@ local function raise(m: Instance, area: CFrame, level: number, had: { Instance }
 	-- THE OWNER'S MESHY PIECES wear their own picture: unpainted, at `s` times their size in Config.LibraryKit
 	local function painted(name: string, cf: CFrame, s: number, deep: number?): BasePart?
 		return piece(name, cf, s, s, deep or s, Color3.new(1, 1, 1), M.SmoothPlastic)
+	end
+	-- THE BODY: the era's hall as Blender meshes, a mesh a colour field, worn over the shell (see SHELL)
+	local bodyName = "TrainingBody" .. era
+	local bodied = LibraryKit.find(bodyName .. "_Stone") ~= nil -- the one field every era's body has
+	local function shell(on: boolean)
+		b.ghost(if on and bodied then SHELL else nil)
+	end
+	local slots: { { any } } = {
+		{ "Stone", L.stone },
+		{ "Wall", L.wall },
+		{ "Lower", L.lower },
+		{ "Beam", L.beam },
+		{ "Gold", L.gold, bigGold },
+		{ "Board", L.board },
+		{ "Roof", L.roof },
+		{ "Frame", L.frame },
+		{ "Glass", L.glass, M.Neon },
+		{ "Shutters", PLANK },
+	}
+	local function worn(model: string)
+		for _, slot in slots do
+			piece(model .. "_" .. slot[1], b.at(0, 0, 0), 1, 1, 1, slot[2], slot[3])
+		end
 	end
 	-- a tiled cone roof `r` round at the eave and `up` high, the middle of its foot at `cf`; `tip` its finial
 	local function coneRoof(cf: CFrame, r: number, up: number, colour: Color3, tip: boolean)
@@ -978,6 +1025,28 @@ local function raise(m: Instance, area: CFrame, level: number, had: { Instance }
 	local shieldFace: CFrame -- where the shield hangs over the open front
 	local hallFloor = FLOORS[era]
 
+	if bodied then
+		worn(bodyName)
+		if era == 1 then
+			worn(if f < 2 then "TrainingTruss1" else "TrainingGable1")
+			if f >= 4 then
+				worn("TrainingLookout1")
+			end
+			if f >= 5 then
+				worn("TrainingCabin1")
+			end
+		elseif era == 2 then
+			worn(if f >= 10 then "TrainingTall2" else "TrainingTower2")
+		elseif era == 3 then
+			worn(if f >= 14 then "TrainingStorey3" else "TrainingRoof3")
+			worn(if f >= 15 then "TrainingTall3" else "TrainingTower3")
+		elseif era == 4 then
+			worn(if f >= 20 then "TrainingTall4" else "TrainingTower4")
+		else
+			worn(if vault then "TrainingVault5" else "TrainingRoof5")
+		end
+	end
+	shell(true)
 	if era <= 2 then
 		-- A TIMBER HALL: plank (then plaster) walls framed in timber, its whole front open between two posts, its
 		-- gable to the front
@@ -1009,7 +1078,8 @@ local function raise(m: Instance, area: CFrame, level: number, had: { Instance }
 		slab("BackWall", -hw, hw, FLOOR, sill, zb - T, zb, lower)
 		slab("BackWall", -hw, hw, sill, top, zb - T, zb, L.wall)
 		b.timber(b.face(0, (FLOOR + top) / 2, zb, BACK), hw * 2, wallH, L.beam)
-		b.box("TieBeam", hw * 2 + 1, 0.7, 0.9, b.at(0, top - 0.35, HZ + 0.45), L.beam)
+		-- (under a body it ends inside the posts: a longer one stands out of the roof)
+		b.box("TieBeam", if bodied then hw * 2 - 0.2 else hw * 2 + 1, 0.7, 0.9, b.at(0, top - 0.35, HZ + 0.45), L.beam)
 		-- the roof: open as a truss until 2 closes it
 		local open = f < 2
 		local over = 1
@@ -1029,7 +1099,7 @@ local function raise(m: Instance, area: CFrame, level: number, had: { Instance }
 				)
 			end
 			b.box("KingPost", 0.5, rise - 0.7, 0.5, b.at(0, top + (rise - 0.7) / 2, HZ + 0.3), L.beam)
-			b.box("Collar", hw, 0.4, 0.4, b.at(0, top + rise * 0.5, HZ + 0.3), L.beam)
+			b.box("Collar", if bodied then hw * 0.6 else hw, 0.4, 0.4, b.at(0, top + rise * 0.5, HZ + 0.3), L.beam)
 		else
 			-- 2 the gable closed with boards (it carries the shield, below), lanterns on the two front posts
 			b.trim(
@@ -1073,7 +1143,9 @@ local function raise(m: Instance, area: CFrame, level: number, had: { Instance }
 			slab("FrontWall", s * ow, s * hw, FLOOR, top, HZ, HZ + 0.8, L.lower)
 		end
 		slab("BackWall", -hw, hw, FLOOR, top, zb - T, zb, L.lower)
-		slab("Plinth", -hw - 0.2, hw + 0.2, FLOOR, FLOOR + 0.7, zb - 0.1, zb + 0.2, L.stone)
+		if not bodied then -- (the body's plinth stops at its back door)
+			slab("Plinth", -hw - 0.2, hw + 0.2, FLOOR, FLOOR + 0.7, zb - 0.1, zb + 0.2, L.stone)
+		end
 		archWall("FrontWall", 0, ow, spring, R, top, HZ + 0.4, 0.8, L.lower)
 		-- (proud voussoirs in two stones, a keystone)
 		archRing("ArchStone", 0, ow + 0.45, spring, R + 0.45, HZ + 0.15, 1.3, 0.9, L.frame, nil, L.stone)
@@ -1287,6 +1359,7 @@ local function raise(m: Instance, area: CFrame, level: number, had: { Instance }
 		shieldFace = b.face(0, top + 1.5, ez - 0.3, FRONT)
 		interior(hw - T, zb - T, FLOOR + 0.25, top - 2)
 	end
+	shell(false)
 
 	-- THE SHIELD over the open front: 2 it comes with the closed gable, and stays
 	if f >= 2 then
@@ -1364,6 +1437,7 @@ local function raise(m: Instance, area: CFrame, level: number, had: { Instance }
 	end
 	local bannerTop: number? -- 6 where the long banner hangs from on the tower's front
 
+	shell(true)
 	if era == 1 then
 		if f >= 4 then
 			-- 4 a lookout stand: four braced log legs, a railed platform as high as the eaves, a ladder
@@ -1474,7 +1548,7 @@ local function raise(m: Instance, area: CFrame, level: number, had: { Instance }
 			b.cyl("TowerCrown", tr + 0.8, 1.1, b.at(tx, H - 0.2, tz), L.lower)
 			for k = 0, 9 do
 				local out = b.at(tx, H + 0.8, tz) * CFrame.Angles(0, k * math.pi / 5, 0)
-				b.trim("Merlon", 0.95, 0.9, 0.6, out * CFrame.new(0, 0, -(tr + 0.48)), L.lower)
+				b.trim("TowerMerlon", 0.95, 0.9, 0.6, out * CFrame.new(0, 0, -(tr + 0.48)), L.lower)
 			end
 			coneRoof(b.at(tx, H + 1.7, tz), tr + 0.1, 4.8, L.roof, true)
 			capTop = H + 1.7 + 4.8
@@ -1567,6 +1641,7 @@ local function raise(m: Instance, area: CFrame, level: number, had: { Instance }
 		end
 		bannerTop = FLOOR + 12.6
 	end
+	shell(false)
 	if f >= 6 and bannerTop then
 		-- 6 a long blue banner with the gold stripe down the tower's front
 		banner(b.face(tx, bannerTop, tz - tr - 0.05, FRONT), 1.7, 4.6, false)

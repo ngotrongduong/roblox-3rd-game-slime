@@ -235,6 +235,18 @@ worked example of one builder for several eras (`granary(era)`, `SHELL_LATER`, `
   a grown entablature, since the houses were grown). The split lies in front of the frontmost face piece's pivot
   and behind the yard's own things; list the level's parts in front of the hall with position and size in the Edit
   preview and look for drawn sizes (the preview IS grown, so its cameras stand about 30 out and 18 up).
+  The Training Hall had it too (16.5, now 13.5): an emblem's raised parts stand 1 proud of its disc and are the
+  frontmost pivots, so list by NAME and compare one model's pieces with each other (the shield's swords hung in the
+  doorway while its disc sat on the pediment).
+- **`bodied` asks for a field EVERY era's body has** (`<body>_Stone`): asked for `_Roof`, two eras whose roof is
+  its own switched model silently kept the old part build. The preview's mesh count per level names it: a level
+  whose count did not rise by the body's fields is not wearing its body.
+- **A helper name the module already uses is not reused in `SHELL`** (the tower crown's "Merlon" also named the
+  yard wall's): rename the shell's own (`TowerMerlon`). A solid plinth under a back door is made only when not
+  bodied.
+- **Walk proof from the server, one call a level**: a `_G.Walk(x, level)` that pivots the player's character 9
+  before the door, `MoveTo` 14 inside ten times half a second apart, logs x/y/z in the area's frame and parks the
+  character; then `_G.AreaShow` at the next level in the same call, and one shot.
 - **A plain box that reads as a prop is a kit piece** (a hay bale by the warm room was a 4-stud box once grown):
   `painted(<kit name>, ...)` first, the box only as the stand-in.
 - **ChatGPT by script, sync steps only**: page timers are throttled and an awaited script hangs the tool 45 s, so

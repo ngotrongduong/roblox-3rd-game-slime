@@ -1180,5 +1180,264 @@ return {
 		BreedingStorey3_Roof = {
 			{ mesh = 139087413268022, tex = "", size = { 19.723, 6.213, 13.9 }, at = { 0, 14.293, 25.2 } },
 		},
+		-- the Training Hall's Blender bodies (tools/blender/landmark_bodies.py): the hall of each era, the tower at its
+		-- two heights, and the pieces a level switches
+		TrainingBody1_Stone = {
+			{ mesh = 116871946801379, tex = "", size = { 20.56, 0.52, 1.46 }, at = { 0, 0.66, 17.85 } },
+		},
+		TrainingBody1_Wall = {
+			{ mesh = 99834094867260, tex = "", size = { 20.1, 11.5, 12.45 }, at = { 0, 6.15, 24.425 } },
+		},
+		TrainingBody1_Lower = {
+			{ mesh = 90736079478376, tex = "", size = { 20.1, 2.62, 12.45 }, at = { 0, 1.71, 24.425 } },
+		},
+		TrainingBody1_Beam = {
+			{ mesh = 83684988317603, tex = "", size = { 20.52, 11.372, 13.53 }, at = { 0, 6.086, 24.135 } },
+		},
+		TrainingBody1_Board = {
+			{ mesh = 100399577543441, tex = "", size = { 22.689, 9.223, 15.74 }, at = { 0, 8.046, 24 } },
+		},
+		TrainingBody1_Roof = {
+			{ mesh = 133988579948641, tex = "", size = { 23.899, 7.857, 15.7 }, at = { 0, 9.321, 24 } },
+		},
+		TrainingBody1_Frame = {
+			{ mesh = 112136950299489, tex = "", size = { 20.84, 2.06, 9.19 }, at = { 0, 4.87, 26.425 } },
+		},
+		TrainingBody1_Glass = {
+			{ mesh = 92664883119129, tex = "", size = { 20.12, 1.6, 8.41 }, at = { 0, 4.9, 26.455 } },
+		},
+		TrainingBody1_Shutters = {
+			{ mesh = 115101683513326, tex = "", size = { 2.4, 3.6, 0.18 }, at = { 0, 2.2, 30.67 } },
+		},
+		TrainingBody2_Stone = {
+			{ mesh = 91063657740464, tex = "", size = { 21.76, 0.52, 1.46 }, at = { 0, 0.66, 17.85 } },
+		},
+		TrainingBody2_Wall = {
+			{ mesh = 75357246278726, tex = "", size = { 21.2, 12.499, 13.2 }, at = { 0, 6.65, 24 } },
+		},
+		TrainingBody2_Beam = {
+			{ mesh = 131481405579382, tex = "", size = { 21.72, 12.37, 13.72 }, at = { 0, 6.585, 24 } },
+		},
+		TrainingBody2_Board = {
+			{ mesh = 109727748799860, tex = "", size = { 23.891, 13.256, 15.74 }, at = { 0, 7.028, 24 } },
+		},
+		TrainingBody2_Roof = {
+			{ mesh = 90580683309450, tex = "", size = { 23.334, 7.917, 15.7 }, at = { 0, 10.041, 24 } },
+		},
+		TrainingBody2_Frame = {
+			{ mesh = 125037196312989, tex = "", size = { 22.04, 2.48, 12.19 }, at = { 0, 4.28, 24.925 } },
+		},
+		TrainingBody2_Glass = {
+			{ mesh = 132971251501808, tex = "", size = { 21.32, 2, 11.41 }, at = { 0, 4.3, 24.955 } },
+		},
+		TrainingBody2_Shutters = {
+			{ mesh = 115101683513326, tex = "", size = { 2.4, 3.6, 0.18 }, at = { 0, 2.2, 30.67 } },
+		},
+		TrainingBody3_Stone = {
+			{ mesh = 97507536286480, tex = "", size = { 22.36, 7.366, 13.78 }, at = { 0, 4.083, 23.89 } },
+		},
+		TrainingBody3_Lower = { { mesh = 96969834392903, tex = "", size = { 22, 7.4, 13.2 }, at = { 0, 4.1, 24 } } },
+		TrainingBody3_Frame = {
+			{ mesh = 76173795716451, tex = "", size = { 22.84, 7.497, 14.34 }, at = { 0, 4.149, 23.85 } },
+		},
+		TrainingBody3_Glass = {
+			{ mesh = 93589270316258, tex = "", size = { 22.12, 2.4, 10.66 }, at = { 0, 4.1, 25.33 } },
+		},
+		TrainingBody3_Shutters = {
+			{ mesh = 90788353142637, tex = "", size = { 2, 3.6, 0.18 }, at = { 0, 2.2, 30.67 } },
+		},
+		TrainingBody4_Stone = {
+			{ mesh = 78240380818300, tex = "", size = { 23.84, 0.72, 1.74 }, at = { 0, 0.76, 17.55 } },
+		},
+		TrainingBody4_Lower = {
+			{ mesh = 140090268065769, tex = "", size = { 23.474, 15.015, 13.82 }, at = { 0, 7.908, 23.69 } },
+		},
+		TrainingBody4_Beam = {
+			{ mesh = 84425974097687, tex = "", size = { 23.7, 12.154, 13.85 }, at = { 0, 9.177, 23.725 } },
+		},
+		TrainingBody4_Gold = {
+			{ mesh = 133594385195893, tex = "", size = { 23.48, 13.546, 14.17 }, at = { -0.016, 8.25, 23.629 } },
+		},
+		TrainingBody4_Roof = {
+			{ mesh = 128684037553814, tex = "", size = { 23.2, 8.51, 13.2 }, at = { 0, 10.655, 24 } },
+		},
+		TrainingBody4_Frame = {
+			{ mesh = 117422003825057, tex = "", size = { 24.239, 12.662, 14.07 }, at = { 0, 9.131, 23.715 } },
+		},
+		TrainingBody5_Stone = {
+			{ mesh = 73185451459027, tex = "", size = { 31.3, 6.72, 13.83 }, at = { -2.99, 3.76, 23.985 } },
+		},
+		TrainingBody5_Wall = {
+			{ mesh = 83111030341305, tex = "", size = { 30.72, 17, 15.2 }, at = { -2.96, 8.9, 23 } },
+		},
+		TrainingBody5_Beam = {
+			{ mesh = 80562515597746, tex = "", size = { 25.12, 6.9, 11.22 }, at = { 0, 4.7, 22.89 } },
+		},
+		TrainingBody5_Gold = {
+			{ mesh = 80403530263838, tex = "", size = { 31.15, 16.7, 15.97 }, at = { -2.875, 8.75, 23.035 } },
+		},
+		TrainingBody5_Glass = { { mesh = 81909712033192, tex = "", size = { 14.9, 3.2, 0.72 }, at = { 0, 5.3, 30.3 } } },
+		TrainingBody5_Shutters = {
+			{ mesh = 103639335518654, tex = "", size = { 2.2, 4.2, 0.18 }, at = { 0, 2.5, 30.67 } },
+		},
+		TrainingTruss1_Beam = {
+			{ mesh = 122023136878241, tex = "", size = { 16.558, 5.494, 0.6 }, at = { 0, 9.183, 17.7 } },
+		},
+		TrainingGable1_Wall = {
+			{ mesh = 83048315896508, tex = "", size = { 17.668, 5.3, 0.6 }, at = { 0, 9.25, 17.7 } },
+		},
+		TrainingGable1_Beam = {
+			{ mesh = 114140466824752, tex = "", size = { 18.2, 5.192, 0.31 }, at = { 0, 9.176, 17.295 } },
+		},
+		TrainingLookout1_Beam = {
+			{ mesh = 94321099778341, tex = "", size = { 5.02, 7.925, 5.02 }, at = { -13.3, 4.362, 20.7 } },
+		},
+		TrainingLookout1_Board = {
+			{ mesh = 72428267095197, tex = "", size = { 4.9, 7.216, 6.428 }, at = { -13.3, 3.992, 19.936 } },
+		},
+		TrainingLookout1_Shutters = {
+			{ mesh = 94115702695656, tex = "", size = { 5.16, 0.44, 5.16 }, at = { -13.3, 6.6, 20.7 } },
+		},
+		TrainingCabin1_Wall = {
+			{ mesh = 92325209403093, tex = "", size = { 3.6, 3.02, 3.6 }, at = { -13.3, 11.71, 20.7 } },
+		},
+		TrainingCabin1_Beam = {
+			{ mesh = 105546132492387, tex = "", size = { 4.28, 6.42, 4.28 }, at = { -13.3, 10.01, 20.7 } },
+		},
+		TrainingCabin1_Board = {
+			{ mesh = 116555740884517, tex = "", size = { 4.06, 1.448, 4.06 }, at = { -13.3, 9.1, 20.7 } },
+		},
+		TrainingCabin1_Shutters = {
+			{ mesh = 135782061999876, tex = "", size = { 4.86, 0.44, 4.86 }, at = { -13.3, 10, 20.7 } },
+		},
+		TrainingTower2_Stone = {
+			{ mesh = 85103607610119, tex = "", size = { 5.16, 0.93, 5.16 }, at = { -14.1, 0.865, 20.7 } },
+		},
+		TrainingTower2_Wall = {
+			{ mesh = 83845840240441, tex = "", size = { 4.64, 10.35, 4.64 }, at = { -14.1, 6.425, 20.7 } },
+		},
+		TrainingTower2_Beam = {
+			{ mesh = 104824906775427, tex = "", size = { 5.14, 10, 5.14 }, at = { -14.1, 6.3, 20.7 } },
+		},
+		TrainingTower2_Board = {
+			{ mesh = 94956330478221, tex = "", size = { 5.54, 0.44, 5.54 }, at = { -14.1, 11.4, 20.7 } },
+		},
+		TrainingTall2_Stone = {
+			{ mesh = 85103607610119, tex = "", size = { 5.16, 0.93, 5.16 }, at = { -14.1, 0.865, 20.7 } },
+		},
+		TrainingTall2_Wall = {
+			{ mesh = 115946865423951, tex = "", size = { 4.64, 13.35, 4.64 }, at = { -14.1, 7.925, 20.7 } },
+		},
+		TrainingTall2_Beam = {
+			{ mesh = 140395789857965, tex = "", size = { 5.14, 13, 5.14 }, at = { -14.1, 7.8, 20.7 } },
+		},
+		TrainingTall2_Board = {
+			{ mesh = 94956330478221, tex = "", size = { 5.54, 0.44, 5.54 }, at = { -14.1, 14.4, 20.7 } },
+		},
+		TrainingTower3_Stone = {
+			{ mesh = 83209612760320, tex = "", size = { 6.08, 1.12, 6.08 }, at = { -14.3, 0.96, 20.7 } },
+		},
+		TrainingTower3_Lower = {
+			{ mesh = 122036641288399, tex = "", size = { 5.44, 13.42, 5.44 }, at = { -14.3, 8.01, 20.7 } },
+		},
+		TrainingTower3_Frame = {
+			{ mesh = 70418966044280, tex = "", size = { 5.68, 4.36, 5.68 }, at = { -14.3, 7.4, 20.7 } },
+		},
+		TrainingTall3_Stone = {
+			{ mesh = 83209612760320, tex = "", size = { 6.08, 1.12, 6.08 }, at = { -14.3, 0.96, 20.7 } },
+		},
+		TrainingTall3_Lower = {
+			{ mesh = 126843206893301, tex = "", size = { 7.08, 17.02, 7.08 }, at = { -14.3, 9.81, 20.7 } },
+		},
+		TrainingTall3_Frame = {
+			{ mesh = 110095325855893, tex = "", size = { 6.7, 10.63, 6.7 }, at = { -14.3, 10.535, 20.7 } },
+		},
+		TrainingTower4_Stone = {
+			{ mesh = 103525950219326, tex = "", size = { 6.08, 1.12, 6.08 }, at = { -14.6, 0.96, 20.7 } },
+		},
+		TrainingTower4_Lower = {
+			{ mesh = 115631462570347, tex = "", size = { 5.44, 15.3, 5.44 }, at = { -14.6, 8.95, 20.7 } },
+		},
+		TrainingTower4_Beam = {
+			{ mesh = 131232025211306, tex = "", size = { 5.72, 13.2, 5.72 }, at = { -14.6, 10, 20.7 } },
+		},
+		TrainingTower4_Gold = {
+			{ mesh = 97622250431934, tex = "", size = { 5.625, 13.047, 5.625 }, at = { -14.6, 10, 20.7 } },
+		},
+		TrainingTall4_Stone = {
+			{ mesh = 103525950219326, tex = "", size = { 6.08, 1.12, 6.08 }, at = { -14.6, 0.96, 20.7 } },
+		},
+		TrainingTall4_Lower = {
+			{ mesh = 90072828685909, tex = "", size = { 5.72, 15.33, 5.72 }, at = { -14.6, 8.965, 20.7 } },
+		},
+		TrainingTall4_Beam = {
+			{ mesh = 138038601527567, tex = "", size = { 5.72, 12.22, 5.72 }, at = { -14.6, 9.51, 20.7 } },
+		},
+		TrainingTall4_Gold = {
+			{ mesh = 128760072309758, tex = "", size = { 5.625, 6.647, 5.625 }, at = { -14.6, 6.8, 20.7 } },
+		},
+		TrainingRoof3_Stone = {
+			{ mesh = 97586312782333, tex = "", size = { 23.44, 0.82, 1.64 }, at = { 0, 0.81, 16.5 } },
+		},
+		TrainingRoof3_Wall = {
+			{ mesh = 126252867623244, tex = "", size = { 19.355, 4.927, 13 }, at = { 0, 10.263, 24.1 } },
+		},
+		TrainingRoof3_Lower = {
+			{ mesh = 138406635204090, tex = "", size = { 23.06, 7.9, 1.54 }, at = { 0, 4.35, 16.65 } },
+		},
+		TrainingRoof3_Beam = {
+			{ mesh = 103585244163691, tex = "", size = { 20.2, 4.825, 13.52 }, at = { 0, 10.192, 24.1 } },
+		},
+		TrainingRoof3_Board = {
+			{ mesh = 87000167915391, tex = "", size = { 23.631, 6.752, 14.54 }, at = { 0, 10.111, 24.1 } },
+		},
+		TrainingRoof3_Roof = {
+			{ mesh = 88378826666298, tex = "", size = { 23.118, 6.789, 14.5 }, at = { 0, 10.405, 24.1 } },
+		},
+		TrainingRoof3_Frame = {
+			{ mesh = 101143769003167, tex = "", size = { 23.44, 1.24, 1.64 }, at = { 0, 8, 16.5 } },
+		},
+		TrainingStorey3_Stone = {
+			{ mesh = 97586312782333, tex = "", size = { 23.44, 0.82, 1.64 }, at = { 0, 0.81, 16.5 } },
+		},
+		TrainingStorey3_Wall = {
+			{ mesh = 98283419208301, tex = "", size = { 22, 7.927, 13 }, at = { 0, 12.163, 24.1 } },
+		},
+		TrainingStorey3_Lower = {
+			{ mesh = 99494976129853, tex = "", size = { 23.06, 11.3, 1.54 }, at = { 0, 6.05, 16.65 } },
+		},
+		TrainingStorey3_Beam = {
+			{ mesh = 85521614873553, tex = "", size = { 22.48, 8.235, 13.52 }, at = { 0, 11.887, 24.1 } },
+		},
+		TrainingStorey3_Board = {
+			{ mesh = 132733024710713, tex = "", size = { 23.631, 6.752, 14.54 }, at = { 0, 13.511, 24.1 } },
+		},
+		TrainingStorey3_Roof = {
+			{ mesh = 81332638468369, tex = "", size = { 23.118, 6.789, 14.5 }, at = { 0, 13.805, 24.1 } },
+		},
+		TrainingStorey3_Frame = {
+			{ mesh = 96968738013460, tex = "", size = { 23.44, 4.64, 1.64 }, at = { 0, 9.7, 16.5 } },
+		},
+		TrainingRoof5_Wall = {
+			{ mesh = 92410567546789, tex = "", size = { 15.669, 3.25, 15.2 }, at = { 0, 11.525, 23 } },
+		},
+		TrainingRoof5_Gold = {
+			{ mesh = 117817968473605, tex = "", size = { 20.564, 5.068, 16.94 }, at = { 0, 11.38, 23 } },
+		},
+		TrainingRoof5_Roof = {
+			{ mesh = 128353454688045, tex = "", size = { 20.1, 5.103, 16.9 }, at = { 0, 11.648, 23 } },
+		},
+		TrainingVault5_Stone = {
+			{ mesh = 112008455491527, tex = "", size = { 18.46, 0.31, 11.86 }, at = { 0, 10.025, 24.7 } },
+		},
+		TrainingVault5_Wall = {
+			{ mesh = 115752264773303, tex = "", size = { 15.669, 3.25, 3.4 }, at = { 0, 11.525, 17.1 } },
+		},
+		TrainingVault5_Gold = {
+			{ mesh = 100517943520985, tex = "", size = { 20.564, 7.308, 16.02 }, at = { 0, 12.5, 22.54 } },
+		},
+		TrainingVault5_Roof = {
+			{ mesh = 140406741628225, tex = "", size = { 20.1, 6.763, 15.95 }, at = { 0, 12.478, 22.525 } },
+		},
 	},
 }

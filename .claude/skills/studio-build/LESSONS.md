@@ -540,6 +540,19 @@ The Garden's house, the third landmark as bodies (`garden_set(era)`, 2026-11-18)
 - `execute_luau` puts the camera type back after each call: unbind the shot's RenderStep and stop Play; the type
   set in the call does not stay.
 
+**The Training Hall (2026-11-18)**, nineteen models (five bodies, fourteen switched pieces) from the shared moulds:
+- **Two eras wore no body and nothing said so**: `bodied` asked the kit for `<body>_Roof`; bodies 3 and 5 have no
+  roof field (their roof is its own switched model), so the module quietly built the old parts. Seen only because
+  the preview's mesh count for those levels (16, 221) had not risen. Ask for a field every body has (`_Stone`).
+- **The grow split again** (16.5, the hall's front at 17.4): the capital's whole portico, the lamp standards, urns,
+  steel masts and shoulder lamps kept their drawn size. At 14 everything read right but the shield's swords, whose
+  pivots stand at 13.9, 1 proud of the disc: they hung in the doorway at era 5 in the play shot. 13.5. A listing by
+  name of one model's pieces (disc 21.7 up, blades 11.8 up) shows such a split at once.
+- A tower at two heights is two models an era (`TrainingTower2`, `TrainingTall2`), the module picks by `f`.
+- Play cameras for a hall 36 wide grown 1.9 times: eras 1-2 `f * lookAt((50, 32, -40), (-4, 16, 26))`, eras 3-5
+  `f * lookAt((58, 38, -54), (-4, 19, 26))`, field of view 50.
+- The walk proof ran on the server in the same call as the level switch (`_G.Walk`): five levels, five calls.
+
 ### Whole small buildings from Blender (2026-11-17, the garden's tool stores, tools/blender/granary_pieces.py)
 
 The owner, looking at a part-built yard beside ChatGPT's picture: "why is what you build not as beautiful as the

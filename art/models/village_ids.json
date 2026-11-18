@@ -692,5 +692,206 @@
 			"BreedingWing2_Roof": 127571634727638,
 			"BreedingWing2_Wall": 92226855843258
 		}
+	},
+	"TrainingBody1": {
+		"model": 94633269523099,
+		"texture": 0,
+		"pieces": {
+			"TrainingBody1_Beam": 83684988317603,
+			"TrainingBody1_Board": 100399577543441,
+			"TrainingBody1_Frame": 112136950299489,
+			"TrainingBody1_Glass": 92664883119129,
+			"TrainingBody1_Lower": 90736079478376,
+			"TrainingBody1_Roof": 133988579948641,
+			"TrainingBody1_Shutters": 115101683513326,
+			"TrainingBody1_Stone": 116871946801379,
+			"TrainingBody1_Wall": 99834094867260
+		}
+	},
+	"TrainingBody2": {
+		"model": 94258980464646,
+		"texture": 0,
+		"pieces": {
+			"TrainingBody2_Beam": 131481405579382,
+			"TrainingBody2_Board": 109727748799860,
+			"TrainingBody2_Frame": 125037196312989,
+			"TrainingBody2_Glass": 132971251501808,
+			"TrainingBody2_Roof": 90580683309450,
+			"TrainingBody2_Shutters": 115101683513326,
+			"TrainingBody2_Stone": 91063657740464,
+			"TrainingBody2_Wall": 75357246278726
+		}
+	},
+	"TrainingBody3": {
+		"model": 107423406699100,
+		"texture": 0,
+		"pieces": {
+			"TrainingBody3_Frame": 76173795716451,
+			"TrainingBody3_Glass": 93589270316258,
+			"TrainingBody3_Lower": 96969834392903,
+			"TrainingBody3_Shutters": 90788353142637,
+			"TrainingBody3_Stone": 97507536286480
+		}
+	},
+	"TrainingBody4": {
+		"model": 89843676993995,
+		"texture": 0,
+		"pieces": {
+			"TrainingBody4_Beam": 84425974097687,
+			"TrainingBody4_Frame": 117422003825057,
+			"TrainingBody4_Gold": 133594385195893,
+			"TrainingBody4_Lower": 140090268065769,
+			"TrainingBody4_Roof": 128684037553814,
+			"TrainingBody4_Stone": 78240380818300
+		}
+	},
+	"TrainingBody5": {
+		"model": 134412457398899,
+		"texture": 0,
+		"pieces": {
+			"TrainingBody5_Beam": 80562515597746,
+			"TrainingBody5_Glass": 81909712033192,
+			"TrainingBody5_Gold": 80403530263838,
+			"TrainingBody5_Shutters": 103639335518654,
+			"TrainingBody5_Stone": 73185451459027,
+			"TrainingBody5_Wall": 83111030341305
+		}
+	},
+	"TrainingCabin1": {
+		"model": 124474666388752,
+		"texture": 0,
+		"pieces": {
+			"TrainingCabin1_Beam": 105546132492387,
+			"TrainingCabin1_Board": 116555740884517,
+			"TrainingCabin1_Shutters": 135782061999876,
+			"TrainingCabin1_Wall": 92325209403093
+		}
+	},
+	"TrainingGable1": {
+		"model": 116800544348803,
+		"texture": 0,
+		"pieces": {
+			"TrainingGable1_Beam": 114140466824752,
+			"TrainingGable1_Wall": 83048315896508
+		}
+	},
+	"TrainingLookout1": {
+		"model": 139852697121468,
+		"texture": 0,
+		"pieces": {
+			"TrainingLookout1_Beam": 94321099778341,
+			"TrainingLookout1_Board": 72428267095197,
+			"TrainingLookout1_Shutters": 94115702695656
+		}
+	},
+	"TrainingRoof3": {
+		"model": 137084205921167,
+		"texture": 0,
+		"pieces": {
+			"TrainingRoof3_Beam": 103585244163691,
+			"TrainingRoof3_Board": 87000167915391,
+			"TrainingRoof3_Frame": 101143769003167,
+			"TrainingRoof3_Lower": 138406635204090,
+			"TrainingRoof3_Roof": 88378826666298,
+			"TrainingRoof3_Stone": 97586312782333,
+			"TrainingRoof3_Wall": 126252867623244
+		}
+	},
+	"TrainingRoof5": {
+		"model": 112843960630926,
+		"texture": 0,
+		"pieces": {
+			"TrainingRoof5_Gold": 117817968473605,
+			"TrainingRoof5_Roof": 128353454688045,
+			"TrainingRoof5_Wall": 92410567546789
+		}
+	},
+	"TrainingStorey3": {
+		"model": 139141872610489,
+		"texture": 0,
+		"pieces": {
+			"TrainingStorey3_Beam": 85521614873553,
+			"TrainingStorey3_Board": 132733024710713,
+			"TrainingStorey3_Frame": 96968738013460,
+			"TrainingStorey3_Lower": 99494976129853,
+			"TrainingStorey3_Roof": 81332638468369,
+			"TrainingStorey3_Stone": 97586312782333,
+			"TrainingStorey3_Wall": 98283419208301
+		}
+	},
+	"TrainingTall2": {
+		"model": 90667607085197,
+		"texture": 0,
+		"pieces": {
+			"TrainingTall2_Beam": 140395789857965,
+			"TrainingTall2_Board": 94956330478221,
+			"TrainingTall2_Stone": 85103607610119,
+			"TrainingTall2_Wall": 115946865423951
+		}
+	},
+	"TrainingTall3": {
+		"model": 105456852336746,
+		"texture": 0,
+		"pieces": {
+			"TrainingTall3_Frame": 110095325855893,
+			"TrainingTall3_Lower": 126843206893301,
+			"TrainingTall3_Stone": 83209612760320
+		}
+	},
+	"TrainingTall4": {
+		"model": 131599874292524,
+		"texture": 0,
+		"pieces": {
+			"TrainingTall4_Beam": 138038601527567,
+			"TrainingTall4_Gold": 128760072309758,
+			"TrainingTall4_Lower": 90072828685909,
+			"TrainingTall4_Stone": 103525950219326
+		}
+	},
+	"TrainingTower2": {
+		"model": 84997371906573,
+		"texture": 0,
+		"pieces": {
+			"TrainingTower2_Beam": 104824906775427,
+			"TrainingTower2_Board": 94956330478221,
+			"TrainingTower2_Stone": 85103607610119,
+			"TrainingTower2_Wall": 83845840240441
+		}
+	},
+	"TrainingTower3": {
+		"model": 94422427016561,
+		"texture": 0,
+		"pieces": {
+			"TrainingTower3_Frame": 70418966044280,
+			"TrainingTower3_Lower": 122036641288399,
+			"TrainingTower3_Stone": 83209612760320
+		}
+	},
+	"TrainingTower4": {
+		"model": 122831843569288,
+		"texture": 0,
+		"pieces": {
+			"TrainingTower4_Beam": 131232025211306,
+			"TrainingTower4_Gold": 97622250431934,
+			"TrainingTower4_Lower": 115631462570347,
+			"TrainingTower4_Stone": 103525950219326
+		}
+	},
+	"TrainingTruss1": {
+		"model": 115326941700431,
+		"texture": 0,
+		"pieces": {
+			"TrainingTruss1_Beam": 122023136878241
+		}
+	},
+	"TrainingVault5": {
+		"model": 78982579191779,
+		"texture": 0,
+		"pieces": {
+			"TrainingVault5_Gold": 100517943520985,
+			"TrainingVault5_Roof": 140406741628225,
+			"TrainingVault5_Stone": 112008455491527,
+			"TrainingVault5_Wall": 115752264773303
+		}
 	}
 }

@@ -2442,6 +2442,502 @@ def breeding(era, part="body"):
 	return breeding_set(era)[part]
 
 
+# ---------------------------------------------------------------- the Training Hall
+# (the hall across the back of the yard and the tower at its right end. The yard, the shield, the glass, the columns,
+# the galleries, the caps and the kit's pieces stay the module's)
+T_FIELDS = ("Stone", "Wall", "Lower", "Beam", "Gold", "Board", "Roof", "Frame", "Glass", "Shutters")
+TF, T_Z0, T_Z1 = 0.4, 17.4, 30.6  # the module's FLOOR, HZ and zb
+T_LOOK = {1: (10.0, 6.2, 6.0), 2: (10.6, 6.8, 6.4), 3: (11.0, 7.4, 5.6), 4: (11.4, 6.0, 8.4), 5: (9.2, 9.5, 3.9)}  # hw, wallH, rise
+T_TOWER = {1: (1.9, 1.4), 2: (2.3, 1.2), 3: (2.7, 0.6), 4: (2.7, 0.5), 5: (2.8, 0.3)}  # half its width, its gap to the hall
+T_PAINT = {
+	1: dict(Stone=rgb(150, 146, 138), Wall=rgb(196, 150, 98), Lower=rgb(164, 114, 68), Beam=rgb(110, 72, 42),
+		Gold=rgb(236, 190, 70), Board=rgb(92, 60, 36), Roof=rgb(232, 190, 84), Frame=rgb(126, 84, 50),
+		Glass=rgb(238, 158, 60), Shutters=rgb(176, 128, 78)),
+	2: dict(Stone=rgb(214, 206, 188), Wall=rgb(244, 238, 224), Lower=rgb(226, 214, 190), Beam=rgb(70, 118, 224),
+		Gold=rgb(236, 190, 70), Board=rgb(48, 86, 184), Roof=rgb(198, 70, 58), Frame=rgb(250, 246, 236),
+		Glass=rgb(238, 158, 60), Shutters=rgb(176, 128, 78)),
+	3: dict(Stone=rgb(132, 128, 122), Wall=rgb(240, 230, 206), Lower=rgb(192, 188, 178), Beam=rgb(112, 72, 44),
+		Gold=rgb(236, 190, 70), Board=rgb(92, 60, 38), Roof=rgb(190, 62, 50), Frame=rgb(224, 218, 204),
+		Glass=rgb(238, 158, 60), Shutters=rgb(176, 128, 78)),
+	4: dict(Stone=rgb(86, 90, 100), Wall=rgb(84, 190, 180), Lower=rgb(72, 76, 88), Beam=rgb(52, 56, 64),
+		Gold=rgb(224, 170, 70), Board=rgb(40, 44, 50), Roof=rgb(62, 96, 160), Frame=rgb(104, 110, 122),
+		Glass=rgb(238, 158, 60), Shutters=rgb(176, 128, 78)),
+	5: dict(Stone=rgb(214, 208, 196), Wall=rgb(242, 239, 232), Lower=rgb(214, 208, 196), Beam=rgb(228, 222, 210),
+		Gold=rgb(236, 192, 76), Board=rgb(236, 192, 76), Roof=rgb(44, 84, 170), Frame=rgb(236, 192, 76),
+		Glass=rgb(238, 158, 60), Shutters=rgb(176, 128, 78)),
+}
+T_NAMES = dict(body="TrainingBody{}", truss="TrainingTruss1", gable="TrainingGable1", lookout="TrainingLookout1",
+	cabin="TrainingCabin1", tower="TrainingTower{}", tall="TrainingTall{}", roof="TrainingRoof{}",
+	storey="TrainingStorey3", vault="TrainingVault5")
+TRAINING = {}
+
+
+def training_set(era):
+	# every model of one era: the body, and the pieces a level switches (era 1's open truss, closed gable, lookout stand
+	# and cabin; the tower of eras 2 to 4 at its two heights; era 3's roof on the stone hall, or its timber storey under
+	# that roof; era 5's tiled roof, or its vault behind the pediment)
+	if era in TRAINING:
+		return TRAINING[era]
+	hw, wall_h, rise = T_LOOK[era]
+	Z0, Z1 = T_Z0, T_Z1
+	ZC, top, e = (Z0 + Z1) / 2, TF + wall_h, (Z1 - Z0) / 2
+	tr, gap = T_TOWER[era]
+	tx, tz = -((hw + 3.2 if era == 5 else hw) + tr + gap), Z0 + 3.3
+
+	paint = T_PAINT[era]
+	alias, first = {}, {}
+	for k in T_FIELDS:
+		if paint[k] in first:
+			alias[k] = first[paint[k]]
+		else:
+			first[paint[k]] = k
+
+	def mk():
+		own = {k: M() for k in T_FIELDS if k not in alias}
+		return {k: own[alias.get(k, k)] for k in T_FIELDS}
+
+	parts = {k: mk() for k in T_NAMES}
+	body = parts["body"]
+	beam, board = body["Beam"], body["Board"]
+	front, back = Face(0, 0, -Z0), Face(math.pi, 0, -Z1)
+	sides = ((1, Face(-math.pi / 2, hw, -ZC)), (-1, Face(math.pi / 2, -hw, -ZC)))  # (a side's u is s * (z - ZC))
+	corners = ((-1, -1), (1, -1), (1, 1), (-1, 1))
+
+	def round_tower(dst, slot, y1):
+		# the round tower's shaft on its stone foot (inside the game's windows, which stand 0.03 off its wall)
+		G.lat(dst[slot], [(tr + 0.02, TF + 0.9), (tr + 0.02, y1)], 16, tx, -tz, cap_top=True)
+		G.lat(dst["Stone"], [(tr + 0.34, TF), (tr + 0.34, TF + 0.96), (tr + 0.04, TF + 1.12)], 16, tx, -tz)
+
+	def hoop(m, y, h, r0, r1):
+		G.lat(m, [(r0, y - h), (r1, y - h + 0.06), (r1, y + h - 0.06), (r0, y + h)], 16, tx, -tz)
+
+	def spoke(dst, slot, a, w, v0, v1, r0, r1, ch=0.05):
+		# a block on the round tower's wall, `a` round it
+		t = mk()
+		lbox(t[slot], -w, w, v0, v1, r0, r1, ch)
+		Face(a, tx, -tz).put(dst, t)
+
+	if era <= 2:
+		# A TIMBER HALL: two posts on stone pads under a tie beam, its whole front open, its gable to the front; plank
+		# walls under thatch at the hamlet, plaster on blue beams under tiles at the village
+		sill = TF + 2.6
+		rail = sill if era == 1 else TF + 5.75  # (the village's rail runs over its arched windows)
+		for s in (-1, 1):
+			x = s * (hw - 0.45)
+			mbox(body["Stone"], x - 0.73, x + 0.73, TF, TF + 0.52, Z0 - 0.28, Z0 + 1.18, 0.1)
+			mbox(beam, x - 0.47, x + 0.47, TF + 0.5, top - 0.76, Z0 - 0.02, Z0 + 0.92, 0.06)
+			mbar(board, (s * (hw - 0.7), top - 3.0, Z0 + 0.45), (s * (hw - 3.1), top - 0.8, Z0 + 0.45), 0.45, 0.45)
+		# (it ends inside the posts' outer faces and a hair under the eaves: a longer one stands out of the roof)
+		mbox(beam, -hw + 0.05, hw - 0.05, top - 0.78, top - 0.02, Z0 - 0.03, Z0 + 0.93, 0.07)
+		pitch, drop, ridge = gable_roof(body, mk, 0, hw, top, Z0, Z1, rise, 1, thatched=era == 1)
+		for s, F in sides:
+			t = mk()
+			ua, ub = sorted((s * (Z0 + 0.8 - ZC), s * (Z1 - ZC)))
+			if era == 1:
+				planks(t["Lower"], ua, ub, TF, sill)
+				planks(t["Wall"], ua, ub, sill, top)
+			else:
+				wall(t["Wall"], ua, ub, TF, top)
+			lbox(t["Beam"], ua, ub, rail - 0.18, rail + 0.18, -0.06, 0.26, 0.05)
+			timbers(t["Beam"], ua, ub, TF, top - 0.3, braces=era == 1)
+			for u in bay_centres(ub - ua):
+				u += (ua + ub) / 2
+				if s == -1 and ZC - u < tz + tr + 1:
+					continue  # (the tower stands in front of that bay)
+				if era == 1 and abs(u - (ua + ub) / 2) < 3:
+					window(t, u, TF + 4.5, 1.3, 1.6, 0.12, 0.2, "Frame", "Glass")
+				elif era == 2:
+					window(t, u, TF + 3.9, 1.3, 2.0, 0.6, 0.22, "Frame", "Glass")
+			F.put(body, t)
+		t = mk()
+		if era == 1:
+			for u0, u1 in ((-hw, -1.5), (1.5, hw)):
+				planks(t["Lower"], u0, u1, TF, sill)
+			lbox(t["Wall"], -1.5, 1.5, TF, sill, -T, 0)
+			planks(t["Wall"], -hw, hw, sill, top)
+		else:
+			wall(t["Wall"], -hw, hw, TF, top)
+		for u0, u1 in ((-hw, -1.5), (1.5, hw)):
+			lbox(t["Beam"], u0, u1, rail - 0.18, rail + 0.18, -0.06, 0.26, 0.05)
+		timbers(t["Beam"], -hw + 0.15, hw - 0.15, TF, top - 0.1, braces=False, gap=(-1.5, 1.5))
+		plank_door(t, 1.2, 3.6, TF, "Beam" if era == 1 else "Board")
+		for u in bay_centres(hw * 2 - 0.3):
+			if 3 < abs(u) < 6.6:
+				if era == 1:
+					window(t, u, TF + 4.5, 1.4, 1.6, 0.12, 0.2, "Frame", "Glass")
+				else:
+					window(t, u, TF + 3.9, 1.4, 2.0, 0.6, 0.22, "Frame", "Glass")
+		gable_wall(t, hw, top, pitch, drop, ridge)
+		back.put(body, t)
+		if era == 1:
+			# the open truss of the first level
+			t = mk()
+			rafter_pair(t["Beam"], pitch, top - 0.45, ridge, drop, -0.3, 0.5, 0.5, 0.36)
+			lbox(t["Beam"], -0.3, 0.3, top - 0.02, ridge - 0.67, -0.6, 0.0, 0.05)
+			hc = hw - (rise * 0.5 + drop) / pitch
+			lbox(t["Beam"], -hc, hc, top + rise * 0.5 - 0.23, top + rise * 0.5 + 0.23, -0.55, -0.05, 0.05)
+			front.put(parts["truss"], t)
+			# the plank gable that closes it (the shield hangs on it)
+			t = mk()
+			gable_wall(t, hw, top, pitch, drop, ridge)
+			front.put(parts["gable"], t)
+			# the lookout stand: four braced legs, a railed platform as high as the eaves, a ladder
+			lk, P = parts["lookout"], top
+			lk_plank = lk["Shutters"]
+			for i, a in enumerate(corners):
+				c = corners[(i + 1) % 4]
+				ax, az, cx, cz = tx + a[0] * tr, tz + a[1] * tr, tx + c[0] * tr, tz + c[1] * tr
+				mbox(lk["Beam"], ax - 0.24, ax + 0.24, TF, P - 0.18, az - 0.24, az + 0.24, 0.05)
+				mbar(lk["Board"], (ax, TF + 0.5, az), (cx, P - 0.6, cz), 0.26, 0.26)
+				mbar(lk["Board"], (cx, TF + 0.5, cz), (ax, P - 0.6, az), 0.26, 0.26)
+				g = tr + 0.45
+				p, q = (tx + a[0] * g, tz + a[1] * g), (tx + c[0] * g, tz + c[1] * g)
+				mbox(lk["Beam"], p[0] - 0.16, p[0] + 0.16, P + 0.2, P + 1.72, p[1] - 0.16, p[1] + 0.16, 0.04)
+				mbar(lk["Beam"], (p[0], P + 1.6, p[1]), (q[0], P + 1.6, q[1]), 0.25, 0.25)
+				mbar(lk["Board"], (p[0], P + 0.9, p[1]), (q[0], P + 0.9, q[1]), 0.2, 0.2)
+			mbox(lk_plank, tx - tr - 0.68, tx + tr + 0.68, P - 0.22, P + 0.22, tz - tr - 0.68, tz + tr + 0.68, 0.06)
+			for k in (-0.45, 0.45):
+				mbar(lk["Board"], (tx + k, TF, tz - tr - 2), (tx + k, P + 0.2, tz - tr - 0.7), 0.16, 0.16)
+			for i in range(1, 7):
+				f = i / 7
+				y, z = TF + f * (P + 0.2 - TF), tz - tr - 2 + f * 1.3
+				mbox(lk["Board"], tx - 0.45, tx + 0.45, y - 0.06, y + 0.06, z - 0.06, z + 0.06)
+			# the cabin that makes it a tower: the legs carried on, a plank cabin on its own floor (its cap is the kit's)
+			cb, P2 = parts["cabin"], P + 3.4
+			for i, a in enumerate(corners):
+				c = corners[(i + 1) % 4]
+				ax, az, cx, cz = tx + a[0] * tr, tz + a[1] * tr, tx + c[0] * tr, tz + c[1] * tr
+				mbox(cb["Beam"], ax - 0.24, ax + 0.24, P + 0.2, P2 - 0.18, az - 0.24, az + 0.24, 0.05)
+				mbar(cb["Board"], (ax, P + 1.9, az), (cx, P2 - 0.3, cz), 0.26, 0.26)
+				mbox(cb["Beam"], ax - 0.22, ax + 0.22, P2 + 0.2, P2 + 3.22, az - 0.22, az + 0.22, 0.04)
+				for y in (P2 + 0.42, P2 + 3.0):
+					mbar(cb["Beam"], (ax, y, az), (cx, y, cz), 0.24, 0.3)
+			mbox(cb["Shutters"], tx - tr - 0.53, tx + tr + 0.53, P2 - 0.22, P2 + 0.22, tz - tr - 0.53, tz + tr + 0.53, 0.06)
+			mbox(cb["Wall"], tx - tr + 0.1, tx + tr - 0.1, P2 + 0.2, P2 + 3.22, tz - tr + 0.1, tz + tr - 0.1)
+		else:
+			t = mk()
+			gable_wall(t, hw, top, pitch, drop, ridge)
+			front.put(body, t)
+			# the watchtower at its two heights: cream boards between blue posts on a stone foot, bands, a board eave,
+			# a cross brace in the foot bay of the two faces the yard sees
+			for key, H in (("tower", TF + 11.2), ("tall", TF + 14.2)):
+				tw, yG = parts[key], H - 3.2
+				mbox(tw["Stone"], tx - tr - 0.28, tx + tr + 0.28, TF, TF + 0.93, tz - tr - 0.28, tz + tr + 0.28, 0.08)
+				mbox(tw["Wall"], tx - tr - 0.02, tx + tr + 0.02, TF + 0.85, H, tz - tr - 0.02, tz + tr + 0.02)
+				for a in corners:
+					x, z = tx + a[0] * tr, tz + a[1] * tr
+					mbox(tw["Beam"], x - 0.27, x + 0.27, TF + 0.9, H - 0.3, z - 0.27, z + 0.27, 0.05)
+				y = TF + 3.6
+				while y <= yG - 1 + 1e-6:
+					mbox(tw["Beam"], tx - tr - 0.27, tx + tr + 0.27, y - 0.2, y + 0.2, tz - tr - 0.27, tz + tr + 0.27, 0.05)
+					y += 3.3
+				mbox(tw["Board"], tx - tr - 0.47, tx + tr + 0.47, H - 0.42, H + 0.02, tz - tr - 0.47, tz + tr + 0.47, 0.06)
+				g, ya, yb = tr - 0.3, TF + 1.1, TF + 3.3
+				for s in (-1, 1):
+					zf, xs = tz - tr - 0.05, tx + tr + 0.05
+					mbar(tw["Beam"], (tx - s * g, ya, zf), (tx + s * g, yb, zf), 0.3, 0.3)
+					mbar(tw["Beam"], (xs, ya, tz - s * g), (xs, yb, tz + s * g), 0.3, 0.3)
+	elif era == 3:
+		# A STONE HALL: ONE great arch of two-tone voussoirs under a keystone between two square shoulders, a string
+		# course; the round keep at its right end. Its roof is a model of its own (with the shoulders, which stand as
+		# high as it does): at the era's last levels a half-timbered storey lifts it.
+		ow, spring, R = hw - 2.9, TF + 3.4, 3.2
+		stone, frame = body["Stone"], body["Frame"]
+		cy0, cy1 = top - 0.85, top - 0.4  # the side walls' cornice, under the eaves' line
+		zf = Z0 + 0.2  # the gable's face, and the storey's
+		t = mk()
+		arch_wall(t["Lower"], ow, hw, spring, R, TF, top, -0.8, 0.0)
+		for i in range(13):
+			big = i % 2 == 0
+			ring_band(t["Frame" if big else "Stone"], ow, spring, R, -0.05, 0.9 if big else 0.8, -0.85,
+				0.5 if big else 0.4, math.pi * i / 13 + 0.01, math.pi * (i + 1) / 13 - 0.01, 3)
+		G.prism(t["Frame"], [(-0.45, spring + R - 0.35), (0.45, spring + R - 0.35), (0.65, top - 0.4), (-0.65, top - 0.4)],
+			-0.85, 0.72)
+		for s in (-1, 1):
+			lbox(t["Frame"], s * (ow - 0.12), s * (ow + 1.05), spring - 0.3, spring + 0.1, -0.86, 0.56, 0.05)
+			u0, u1 = sorted((s * (ow + 0.02), s * (hw - 1.4)))
+			courses(t["Stone"], u0, u1, TF, TF + 0.8, -0.82, 0.18, 1, 1.4)
+		lbox(t["Frame"], -hw + 1.4, hw - 1.4, top - 0.42, top - 0.02, 0, 0.35, 0.05)
+		front.put(body, t)
+		for s in (-1, 1):
+			for i in range(7):
+				long, y = i % 2 == 0, TF + 0.86 + i * 0.78
+				mbox(frame, s * (hw - (1.0 if long else 0.65)), s * (hw + 0.12), y, y + 0.64, Z1 - (0.65 if long else 1.0),
+					Z1 + 0.12, 0.06)
+		for s, F in sides:
+			t = mk()
+			wall(t["Lower"], -e, e, TF, top)
+			courses(t["Stone"], -e - 0.18, e + 0.18, TF, TF + 0.8, -0.05, 0.18, 1, 1.7)
+			lbox(t["Frame"], -e - 0.3, e + 0.3, cy0, cy1, 0, 0.3, 0.05)
+			for d in (-1, 1):
+				if not (s == -1 and d == 1):  # (the keep stands in front of that one)
+					window(t, d * 3.3, TF + 3.7, 1.4, 2.4, 0.7, 0.24, "Frame", "Glass")
+			F.put(body, t)
+		t = mk()
+		wall(t["Lower"], -hw, hw, TF, top)
+		for s in (-1, 1):
+			u0, u1 = sorted((s * 1.3, s * (hw + 0.18)))
+			courses(t["Stone"], u0, u1, TF, TF + 0.8, -0.05, 0.18, 1, 1.6)
+			for u in (4.2, 7.8):
+				window(t, s * u, TF + 3.7, 1.4, 2.4, 0.7, 0.24, "Frame", "Glass")
+		lbox(t["Frame"], -hw - 0.3, hw + 0.3, cy0, cy1, 0, 0.3, 0.05)
+		plank_door(t, 1.0, 3.6, TF, "Frame")
+		back.put(body, t)
+
+		def shoulders(dst, ph):
+			# the two square shoulders of the arch: stone on a foot under a cap, the string course carried round
+			for s in (-1, 1):
+				x = s * (hw - 0.5)
+				mbox(dst["Lower"], x - 1.03, x + 1.03, TF, ph, Z0 - 1.52, Z0 + 0.02, 0.06)
+				mbox(dst["Stone"], x - 1.22, x + 1.22, TF, TF + 0.82, Z0 - 1.72, Z0 - 0.08, 0.08)
+				mbox(dst["Frame"], x - 1.22, x + 1.22, ph - 0.02, ph + 0.32, Z0 - 1.72, Z0 - 0.08, 0.06)
+				mbox(dst["Frame"], x - 1.12, x + 1.12, top - 0.42, top - 0.02, Z0 - 1.62, Z0 - 0.1, 0.05)
+
+		# the roof on the stone hall (levels 21 to 28)
+		rf = parts["roof"]
+		p, d, r = gable_roof(rf, mk, 0, hw, top, zf, Z1, rise, 0.5)
+		for F in (Face(0, 0, -zf), back):
+			t = mk()
+			gable_wall(t, hw, top, p, d, r)
+			F.put(rf, t)
+		shoulders(rf, top + 0.5)
+		# the half-timbered upper storey of levels 29 and 30, under the same roof
+		st = parts["storey"]
+		y2, zc2, e2 = top + 3.4, (zf + Z1) / 2, (Z1 - zf) / 2
+		mbox(st["Beam"], -hw - 0.14, hw + 0.14, top - 0.03, top + 0.44, zf - 0.14, Z1 + 0.14, 0.06)
+		t = mk()
+		bm = t["Beam"]
+		wall(t["Wall"], -hw, hw, top + 0.4, y2, n0=-0.5)
+		lbox(bm, -hw + 1.4, hw - 1.4, top + 0.4, top + 0.8, -0.06, 0.22, 0.05)
+		lbox(bm, -hw + 1.4, hw - 1.4, y2 - 0.42, y2 - 0.02, -0.06, 0.24, 0.05)
+		for u in (-hw + 1.7, -5.4, -1.9, 1.9, 5.4, hw - 1.7):  # (between the game's two windows and the shoulders)
+			lbox(bm, u - 0.2, u + 0.2, top + 0.8, y2 - 0.42, -0.06, 0.22, 0.05)
+		for s in (-1, 1):
+			G.bar(bm, (s * 5.7, 0.06, top + 0.8), (s * (hw - 2.0), 0.06, y2 - 0.42), 0.2, 0.32)
+		Face(0, 0, -zf).put(st, t)
+		t = mk()
+		wall(t["Wall"], -hw, hw, top + 0.4, y2, n0=-0.5)
+		timbers(t["Beam"], -hw + 0.3, hw - 0.3, top + 0.4, y2 - 0.02)
+		back.put(st, t)
+		for s in (-1, 1):
+			t = mk()
+			wall(t["Wall"], -e2, e2, top + 0.4, y2, n0=-0.5)
+			timbers(t["Beam"], -e2 + 0.3, e2 - 0.3, top + 0.4, y2 - 0.3)
+			Face(-s * math.pi / 2, s * hw, -zc2).put(st, t)
+			mbox(st["Beam"], s * (hw - 0.5), s * (hw + 0.1), top + 0.4, y2 - 0.3, Z1 - 0.5, Z1 + 0.1, 0.05)
+		p, d, r = gable_roof(st, mk, 0, hw, y2, zf, Z1, rise, 0.5)
+		for F in (Face(0, 0, -zf), back):
+			t = mk()
+			gable_wall(t, hw, y2, p, d, r)
+			F.put(st, t)
+		shoulders(st, y2 + 0.5)
+		# the round keep at its two heights: courses of pale stone, a neck under its cone (the kit's); the taller one
+		# wears a crown of battlements on corbels
+		for key, H in (("tower", TF + 12.6), ("tall", TF + 16.2)):
+			tw = parts[key]
+			round_tower(tw, "Lower", H)
+			y = TF + 5
+			while y <= H - 2 + 1e-6:
+				hoop(tw["Frame"], y, 0.18, tr, tr + 0.14)
+				y += 4
+			G.lat(tw["Lower"], [(tr - 0.46, H - 0.1), (tr - 0.46, H + 1.72)], 16, tx, -tz, cap_top=True)
+			if key == "tall":
+				G.lat(tw["Lower"], [(tr - 0.2, H - 0.78), (tr + 0.84, H - 0.78), (tr + 0.84, H + 0.38), (tr - 0.6, H + 0.38)],
+					16, tx, -tz)
+				for k in range(12):
+					spoke(tw, "Frame", k * math.pi / 6, 0.25, H - 1.45, H - 0.75, tr - 0.05, tr + 0.65)
+				for k in range(10):
+					spoke(tw, "Lower", k * math.pi / 5, 0.48, H + 0.34, H + 1.25, tr + 0.18, tr + 0.8, 0.06)
+	elif era == 4:
+		# A STEEL AND GLASS VAULT (the glass is the game's): steel foot walls under a cap, riveted posts and rails, a
+		# shingled barrel vault under ribs, a heavy two-tone ring between two riveted piers round the open front; the
+		# riveted steel tower at its right end, whole or with its goo core open between ribs
+		low, cap, stone, roof, gold = body["Lower"], body["Frame"], body["Stone"], body["Roof"], body["Gold"]
+		wy = TF + 2.4  # the foot walls' top
+		mid = (wy + top) / 2
+		for s in (-1, 1):
+			x = s * (hw - 0.3)
+			mbox(low, s * (hw - T), s * hw, TF, wy, Z0, Z1)
+			mbox(cap, x - 0.47, x + 0.47, wy, wy + 0.3, Z0, Z1 + 0.1, 0.04)
+			for k in range(4):
+				z = Z0 + 0.3 + k * (Z1 - Z0 - 0.6) / 3
+				mbox(beam, x - 0.26, x + 0.26, wy + 0.3, top - 0.5, z - 0.26, z + 0.26, 0.04)
+				for j in range(2):
+					G.stud(beam, (s * (hw - 0.04), -z, wy + 1.1 + j * 1.5), (s, 0, 0), 0.1)
+				G.stud(gold, (s * (hw + 0.01), -z, TF + 1.2), (s, 0, 0), 0.13)
+			for k in range(3):
+				z = Z0 + 0.3 + (k + 0.5) * (Z1 - Z0 - 0.6) / 3
+				mbox(beam, x - 0.14, x + 0.14, wy + 0.3, top - 0.5, z - 0.09, z + 0.09)
+			mbox(beam, x - 0.28, x + 0.28, top - 0.52, top + 0.02, Z0, Z1, 0.04)
+			mbox(beam, x - 0.14, x + 0.14, mid - 0.13, mid + 0.13, Z0, Z1)
+			# the front pier: riveted steel on a slate foot under a cap, a steel band
+			px = s * (hw - 0.8)
+			mbox(low, px - 1.13, px + 1.13, TF, top + 0.62, Z0 - 0.53, Z0 + 0.83, 0.05)
+			mbox(cap, px - 1.32, px + 1.32, top + 0.58, top + 1.0, Z0 - 0.72, Z0 + 1.02, 0.06)
+			mbox(stone, px - 1.32, px + 1.32, TF, TF + 0.72, Z0 - 0.72, Z0 + 1.02, 0.06)
+			mbox(beam, px - 1.2, px + 1.2, TF + 2.75, TF + 3.05, Z0 - 0.6, Z0 + 0.9, 0.04)
+			for dx in (-0.8, 0.8):
+				for k in range(3):
+					G.stud(gold, (px + dx, -(Z0 - 0.53), TF + 1.6 + k * 2.2), (0, 1, 0), 0.16)
+		# the back wall: steel under a cap, glazing bars and the lunette's fan
+		mbox(low, -hw, hw, TF, wy, Z1 - T, Z1)
+		mbox(cap, -hw - 0.1, hw + 0.1, wy, wy + 0.3, Z1 - 0.75, Z1 + 0.15, 0.04)
+		zg = Z1 - 0.2
+		for k in range(1, 8):
+			x = -hw + k * hw / 4
+			mbox(beam, x - 0.13, x + 0.13, wy + 0.3, top - 0.25, zg - 0.18, zg + 0.18)
+			G.stud(gold, (x, -(Z1 + 0.01), TF + 1.2), (0, -1, 0), 0.13)
+		mbox(beam, -hw, hw, mid - 0.13, mid + 0.13, zg - 0.16, zg + 0.16)
+		mbox(beam, -hw, hw, top - 0.3, top + 0.2, zg - 0.22, zg + 0.22, 0.04)
+		for k in range(1, 8):
+			x, y = arch_at(hw - 0.3, top, rise - 0.3, math.radians(k * 22.5))
+			mbar(beam, (0, top + 0.2, zg), (x, y, zg), 0.14, 0.14)
+		barrel(roof, beam, hw, top, rise, Z0, Z1, [(Z0 + 0.2 + k * (Z1 - Z0 - 0.4) / 3, 0.22) for k in range(4)], 0.2,
+			(-0.25, 0.45), 7)
+		# the front: the ring (steel and pale steel, a brass stud on every pale one), the riveted transom, the
+		# lunette's bars and its inner ring
+		t = mk()
+		for i in range(15):
+			big = i % 2 == 0
+			ring_band(t["Frame" if big else "Lower"], hw, top, rise, -0.25, 0.72 if big else 0.62, -0.45,
+				0.72 if big else 0.62, math.pi * i / 15 + 0.008, math.pi * (i + 1) / 15 - 0.008, 3)
+			if big:
+				u, v = arch_at(hw, top, rise, math.pi * (i + 0.5) / 15, 0.25)
+				G.stud(t["Gold"], (u, 0.72, v), (0, 1, 0), 0.17)
+		lbox(t["Beam"], -(hw - 1.9), hw - 1.9, top - 0.15, top + 0.35, -0.4, 0.2, 0.04)
+		for k in range(-9, 10):
+			G.stud(t["Beam"], (k * 0.95, 0.2, top + 0.1), (0, 1, 0), 0.1)
+		for k in range(1, 8):
+			u, v = arch_at(hw - 0.5, top + 0.3, rise - 0.5, math.radians(k * 22.5))
+			G.bar(t["Beam"], (0, 0, top + 0.3), (u, 0, v), 0.14, 0.14)
+		ring_band(t["Beam"], (hw - 0.5) * 0.64, top + 0.3, (rise - 0.5) * 0.64, -0.09, 0.09, -0.09, 0.09)
+		front.put(body, t)
+		H, y0 = TF + 16.2, TF + 9.6
+		for key, solid in (("tower", H), ("tall", y0)):
+			tw = parts[key]
+			round_tower(tw, "Lower", solid)
+			y = TF + 3.2
+			while y <= solid + 1e-6:
+				hoop(tw["Beam"], y, 0.2, tr, tr + 0.16)
+				for k in range(8):
+					a = k * math.pi / 4 + 0.3
+					G.stud(tw["Gold"], (tx - (tr + 0.14) * math.sin(a), -tz + (tr + 0.14) * math.cos(a), y),
+						(-math.sin(a), math.cos(a), 0), 0.13)
+				y += 3.2
+			if key == "tall":
+				ym = (y0 + H - 1) / 2
+				for k in range(6):
+					spoke(tw, "Beam", k * math.pi / 3 + 0.5, 0.25, y0 - 0.1, H - 0.98, tr - 0.4, tr + 0.1, 0.04)
+				hoop(tw["Beam"], ym, 0.23, tr - 0.5, tr - 0.2)
+				G.lat(tw["Lower"], [(tr + 0.16, H - 1.03), (tr + 0.16, H + 0.03)], 16, tx, -tz, cap_bottom=True, cap_top=True)
+	else:
+		# A MARBLE HALL: piers with pilasters, an entablature with a gold frieze and cornice over the portico, a
+		# pediment with gold raking boards, an arcade wing each side under a flat roof inside a gold cornice, the round
+		# tower with gold bands. Its roof is a model of its own: blue tiles, or at the last levels a blue vault with
+		# gold ribs behind the pediment (the columns, the balustrades, the glass and the domes are the game's)
+		ez = Z0 - 2
+		half = hw + 0.2
+		white, stone, gold = body["Wall"], body["Stone"], body["Gold"]
+		cy0, cy1 = top - 0.4, top - 0.03  # the side walls' cornice, under the eaves' line
+		for s, F in sides:
+			t = mk()
+			wall(t["Wall"], -e, e, TF, top)
+			lbox(t["Stone"], -e - 0.1, e + 0.1, TF, TF + 0.95, 0, 0.3, 0.05)
+			lbox(t["Gold"], -e - 0.2, e + 0.2, cy0, cy1, 0, 0.36, 0.04)
+			F.put(body, t)
+		t = mk()
+		for s in (-1, 1):
+			lbox(t["Wall"], s * (hw - 1.7), s * hw, TF, top - 1.3, -T, 0)
+			lbox(t["Stone"], s * (hw - 1.8), s * hw, TF, TF + 0.95, -T - 0.1, 0.3, 0.05)
+			lbox(t["Beam"], s * (hw - 1.5), s * (hw - 0.2), TF + 0.95, top - 1.75, 0, 0.12, 0.04)
+			lbox(t["Gold"], s * (hw - 1.6), s * (hw - 0.1), top - 1.75, top - 1.3, 0, 0.22, 0.04)
+			lbox(t["Gold"], s * (hw - 1.6), s * (hw - 0.1), TF + 0.95, TF + 1.25, 0, 0.22, 0.04)
+		front.put(body, t)
+		t = mk()
+		wall(t["Wall"], -hw, hw, TF, top)
+		for s in (-1, 1):
+			lbox(t["Stone"], s * 1.5, s * (hw + 0.3), TF, TF + 0.95, 0, 0.3, 0.05)
+			for u in (3.4, 6.7):
+				window(t, s * u, TF + 4.9, 1.5, 3.2, 0.75, 0.24, "Frame", "Glass")
+		lbox(t["Gold"], -hw - 0.35, hw + 0.35, cy0, cy1, 0, 0.36, 0.04)
+		plank_door(t, 1.1, 4.2, TF, "Frame")
+		back.put(body, t)
+		# the entablature over the portico: a gold frieze and a gold cornice round its three open sides
+		mbox(white, -half, half, top - 1.3, top, ez, Z0 + T, 0.05)
+		for y0, y1, g in ((top - 1.28, top - 0.93, 0.12), (top - 0.5, top - 0.2, 0.35)):
+			mbox(gold, -half - g, half + g, y0, y1, ez - g, ez + 0.1, 0.03)
+			for s in (-1, 1):
+				mbox(gold, s * (half - 0.1), s * (half + g), y0, y1, ez + 0.1, Z0 + 0.1, 0.03)
+		# an arcade wing each side: an arch in a gold ring on its front, pilasters and panels on its end wall
+		ww, wt = 3.2, TF + 6.4
+		wzb = Z1 - 1.5  # the wing's back
+		zm, hs = (Z0 + wzb - 0.6) / 2, (wzb - 0.6 - Z0) / 2  # its end wall, from the front to its back wall
+		bay = (hs * 2 - 0.6) / 3
+		for s in (-1, 1):
+			cx, xe = s * (hw + ww / 2), s * (hw + ww)
+			t = mk()
+			arch_wall(t["Wall"], 1.0, ww / 2, TF + 3.3, 1.2, TF, wt)
+			ring_band(t["Gold"], 1.0, TF + 3.3, 1.2, 0.0, 0.3, -0.16, 0.26)
+			for d in (-1, 1):
+				lbox(t["Stone"], d * 1.0, d * (ww / 2 + 0.1), TF, TF + 0.85, -T, 0.22, 0.04)
+				lbox(t["Gold"], d * 0.94, d * (ww / 2), TF + 3.0, TF + 3.3, -T - 0.02, 0.2, 0.03)
+			Face(0, cx, -Z0).put(body, t)
+			t = mk()
+			wall(t["Wall"], -hs, hs, TF, wt)
+			lbox(t["Stone"], -hs - 0.1, hs + 0.1, TF, TF + 0.85, 0, 0.26, 0.04)
+			lbox(t["Gold"], -hs - 0.2, hs + 0.2, wt - 0.38, wt - 0.02, 0, 0.3, 0.04)
+			for k in range(4):
+				u = -hs + 0.3 + k * bay
+				lbox(t["Beam"], u - 0.3, u + 0.3, TF + 0.85, wt - 0.38, 0, 0.16, 0.04)
+			for k in range(3):
+				u = -hs + 0.3 + (k + 0.5) * bay
+				lbox(t["Stone"], u - bay / 2 + 0.6, u + bay / 2 - 0.6, TF + 1.5, wt - 1.5, 0, 0.07)
+				lbox(t["Gold"], u - bay / 2 + 0.5, u + bay / 2 - 0.5, wt - 1.5, wt - 1.3, 0, 0.14, 0.03)
+			Face(-s * math.pi / 2, xe, -zm).put(body, t)
+			t = mk()
+			wall(t["Wall"], -ww / 2, ww / 2, TF, wt)
+			lbox(t["Stone"], -ww / 2, ww / 2, TF, TF + 0.85, 0, 0.26, 0.04)
+			Face(math.pi, cx, -wzb).put(body, t)
+			lo, hi = sorted((s * hw, s * (hw + ww + 0.22)))
+			mbox(stone, lo, hi, wt - 0.02, wt + 0.32, Z0 - 0.33, wzb + 0.13, 0.04)
+			mbox(gold, cx - ww / 2 - 0.25, cx + ww / 2 + 0.25, wt, wt + 0.3, Z0 - 0.57, Z0 - 0.13, 0.03)
+		# the round tower (its gallery, columns and dome are the game's): a stone foot, four gold bands
+		H = TF + 17
+		round_tower(body, "Wall", H)
+		for y in (TF + 1.3, TF + 6.4, TF + 12, H - 0.5):
+			hoop(gold, y, 0.2, tr, tr + 0.15)
+		# the tiled roof behind the pediment (levels 41 to 47)
+		rf = parts["roof"]
+		p, d, r = gable_roof(rf, mk, 0, half, top, ez, Z1, rise, 0.6, barge="Gold")
+		for F in (Face(0, 0, -ez), back):
+			t = mk()
+			gable_wall(t, half, top, p, d, r, rail=False, struts=False)
+			F.put(rf, t)
+		# the vault of levels 48 to 50: the pediment keeps a short tiled roof, a stone deck carries a blue vault with
+		# gold ribs behind it (its glass ends are the game's)
+		vt = parts["vault"]
+		hv, R, za = hw - 1.5, rise + 1.7, Z0 + 1.4
+		p, d, r = gable_roof(vt, mk, 0, half, top, ez, za, rise, 0.6, barge="Gold")
+		for F in (Face(0, 0, -ez), Face(math.pi, 0, -za)):
+			t = mk()
+			gable_wall(t, half, top, p, d, r, rail=False, struts=False)
+			F.put(vt, t)
+		mbox(vt["Stone"], -hw - 0.03, hw + 0.03, top - 0.03, top + 0.28, za - 0.03, Z1 + 0.03, 0.04)
+		barrel(vt["Roof"], vt["Gold"], hv, top + 0.25, R, za + 0.5, Z1 - 0.1,
+			[(za + 0.7 + k * (Z1 - za - 1.0) / 3, 0.2) for k in range(4)], 0.2, (-0.1, 0.4), 5)
+
+	def rows(name, d):
+		return [(f"{name}_{k}", d[k], (0, 0, 0), k, 35) for k in T_FIELDS if k not in alias and d[k].v]
+
+	TRAINING[era] = {k: rows(T_NAMES[k].format(era), d) for k, d in parts.items()}
+	return TRAINING[era]
+
+
+def training(era, part="body"):
+	G.COL.update(T_PAINT[era])
+	return training_set(era)[part]
+
+
 ELEVATIONS = {"front": (0, 1, 0.02), "left": (1, 0, 0.02), "back": (0, -1, 0.02), "right": (-1, 0, 0.02)}
 BODIES = [("GranaryBody1", granary1)] + [(f"GranaryBody{e}", lambda e=e: granary(e)) for e in (2, 3, 4, 5)]
 BODIES += [(f"KitchenBody{e}", lambda e=e: kitchen(e)) for e in (1, 2, 3, 4, 5)]
@@ -2453,6 +2949,11 @@ BODIES += [(f"BreedingBody{e}", lambda e=e: breeding(e)) for e in (1, 2, 3, 4, 5
 BODIES += [(f"Breeding{p.capitalize()}1", lambda p=p: breeding(1, p)) for p in ("truss", "gable", "lean", "chimney")]
 BODIES += [("BreedingWing2", lambda: breeding(2, "wing"))]
 BODIES += [(f"Breeding{p.capitalize()}3", lambda p=p: breeding(3, p)) for p in ("roof", "storey")]
+BODIES += [(f"TrainingBody{e}", lambda e=e: training(e)) for e in (1, 2, 3, 4, 5)]
+BODIES += [(f"Training{p.capitalize()}1", lambda p=p: training(1, p)) for p in ("truss", "gable", "lookout", "cabin")]
+BODIES += [(f"Training{p.capitalize()}{e}", lambda p=p, e=e: training(e, p)) for e in (2, 3, 4) for p in ("tower", "tall")]
+BODIES += [(f"Training{p.capitalize()}3", lambda p=p: training(3, p)) for p in ("roof", "storey")]
+BODIES += [(f"Training{p.capitalize()}5", lambda p=p: training(5, p)) for p in ("roof", "vault")]
 # (LANDMARK_BODIES=GranaryBody2,GranaryBody3 in the environment builds only those)
 if os.environ.get("LANDMARK_BODIES"):
 	BODIES = [b for b in BODIES if b[0] in os.environ["LANDMARK_BODIES"].split(",")]
