@@ -64,6 +64,23 @@ local PIER_X = -3 -- the pier's line (AreaUpgrade's DOCK_X)
 local BOAT_X, BOAT_Z = -8.7, -6.5 -- the boat, alongside the pier on its right (as the owner's sheet has it)
 local T = 0.6 -- a wall's thickness
 
+-- THE SHELL: what the Blender bodies (tools/blender/landmark_bodies.py, "the Dock") draw of the house and of the
+-- lighthouse. With a body worn these parts are ghosts: the thin ones are not built, the solid ones stand inside the
+-- mesh and keep the walls a player cannot walk through.
+local SHELL: { [string]: boolean } = {}
+for name in
+	string.gmatch(
+		"HouseBack HouseSide WallBand FrontPost FrontHeader Roof Gable BargeBoard Ridge EaveRoll ThatchCourse VergeRoll "
+			.. "EaveCourse RidgeRoll GableBatten KingPost Rafter Strut GablePost GableTie GableBrace Rail Post Brace "
+			.. "FrontPier Impost Shoulder FrontWall ArchStone Keystone StringCourse StoreyFront HouseFoot HousePost "
+			.. "HouseRail Pylon PylonBand FrontTie VaultPane VaultRib VaultPurlin VaultRidge CornerPier PierFoot PierCap "
+			.. "Architrave Frieze Cornice LightFoot LightFootCap LightDrum LightHoop LightCourse LightRib LightRivet",
+		"%a+"
+	)
+do
+	SHELL[name] = true
+end
+
 type Look = {
 	hw: number, -- half the house's width
 	depth: number,
@@ -334,6 +351,31 @@ local function raise(m: Instance, area: CFrame, level: number)
 	): BasePart?
 		local src = LibraryKit.find(name)
 		return if src then b.mesh(src, cf, V(sx, sy, sz), colour, material) else nil
+	end
+	-- THE BLENDER BODY of the era: one mesh a colour field, drawn in this frame's own coordinates
+	local bodyName = "DockBody" .. era
+	local bodied = LibraryKit.find(bodyName .. "_Stone") ~= nil -- the one field every era's body has
+	local function shell(on: boolean)
+		b.ghost(if on and bodied then SHELL else nil)
+	end
+	local slots: { { any } } = {
+		{ "Stone", L.stone },
+		{ "Wall", L.wall },
+		{ "Lower", L.lower },
+		{ "Beam", L.beam },
+		{ "Gold", L.gold, bigGold },
+		{ "Board", L.board },
+		{ "Roof", L.roof },
+		{ "Frame", L.frame },
+		{ "Glass", AMBER, M.Neon },
+		{ "Shutters", PLANK },
+		{ "White", WHITE },
+		{ "Red", RED },
+	}
+	local function worn(model: string)
+		for _, slot in slots do
+			piece(model .. "_" .. slot[1], b.at(0, 0, 0), 1, 1, 1, slot[2], slot[3])
+		end
 	end
 	-- THE OWNER'S MESHY PIECES wear their own picture: unpainted, at `sx` times their size in Config.LibraryKit
 	local function painted(name: string, cf: CFrame, sx: number, sy: number?, sz: number?): BasePart?
@@ -865,7 +907,10 @@ local function raise(m: Instance, area: CFrame, level: number)
 	end
 	local lampX, frontZ = hw - 0.35, HZ - 0.16 -- where the two front lanterns hang (f1) and the front's outer face
 	local fishY, fishZ, fishR = top + 2.3, HZ - 0.06, 2 -- the fish's middle and half its width
+	-- (a header as long as the part build's stands out of the body's roof)
+	local header = if bodied then hw * 2 - 0.2 else hw * 2 + 0.6
 
+	shell(true)
 	if era == 1 then
 		walls(FLOOR, top, L.wall)
 		for _, s in { -1, 1 } do
@@ -875,7 +920,7 @@ local function raise(m: Instance, area: CFrame, level: number)
 		for _, x in { x0 + 0.35, BX - hw / 3, BX + hw / 3, x1 - 0.35 } do
 			b.cyl("FrontPost", 0.36, top + 3, b.at(x, (top - 3) / 2, HZ + 0.2), L.beam)
 		end
-		b.box("FrontHeader", hw * 2 + 0.6, 0.55, 0.55, b.at(BX, top - 0.28, HZ + 0.2), L.board)
+		b.box("FrontHeader", header, 0.55, 0.55, b.at(BX, top - 0.28, HZ + 0.2), L.board)
 		frontGable(BX, hw, top, HZ, zb, rise, 1, L.wall, if f >= 1 then nil else -1)
 		if f >= 1 then
 			-- f1: the truss is closed with boards (battens over their joints); the fish comes below
@@ -914,7 +959,7 @@ local function raise(m: Instance, area: CFrame, level: number)
 		for _, x in { x0 + 0.35, BX - hw / 3, BX + hw / 3, x1 - 0.35 } do
 			b.box("FrontPost", 0.7, top + 3, 0.7, b.at(x, (top - 3) / 2, HZ + 0.25), L.beam)
 		end
-		b.box("FrontHeader", hw * 2 + 0.6, 0.6, 0.6, b.at(BX, top - 0.3, HZ + 0.25), L.board)
+		b.box("FrontHeader", header, 0.6, 0.6, b.at(BX, top - 0.3, HZ + 0.25), L.board)
 		frontGable(BX, hw, top, HZ, zb, rise, 0.8, L.wall)
 		gableTimber(top, HZ - 0.1)
 		frontZ = HZ - 0.1
@@ -1057,6 +1102,17 @@ local function raise(m: Instance, area: CFrame, level: number)
 		lampX, frontZ = hw - 0.85, HZ
 		fishY, fishZ, fishR = top + 2.3, HZ - 0.36, 1.5
 	end
+	shell(false)
+	if bodied then
+		worn(bodyName)
+		if era == 1 then
+			worn(if f >= 1 then "DockGable1" else "DockTruss1")
+		elseif era == 3 then
+			worn(if storey > 0 then "DockStorey3" else "DockRoof3")
+		elseif era == 5 then
+			worn(if f >= 23 then "DockVault5" else "DockRoof5")
+		end
+	end
 
 	-- THE FISH over the open front, from f1 (the hamlet's open truss has none before)
 	if f >= 1 then
@@ -1194,6 +1250,9 @@ local function raise(m: Instance, area: CFrame, level: number)
 	local grown = math.floor(f / 5)
 	if f >= 4 then
 		local y0 = 1.1 -- the foot's top
+		-- (the tower's foot and shaft are a Blender body from its first real height; the beacon stays parts)
+		local lit = bodied and grown >= 1
+		shell(lit)
 		b.cyl("LightFoot", 3.1, 3.9, b.at(LX, -1.05, LZ), if era == 4 then L.lower else L.stone)
 		b.cyl("LightFootCap", 3.3, 0.3, b.at(LX, 0.95, LZ), if era >= 4 then L.gold else L.frame, bigGold, false)
 		if grown == 0 then
@@ -1223,7 +1282,9 @@ local function raise(m: Instance, area: CFrame, level: number)
 				elseif era <= 4 then
 					colour = L.stone -- (at era 4 lighter than its hoops and ribs, or the tower is one dark pole)
 				end
-				b.cyl("LightDrum", radius((k - 0.5) * hd), hd, b.at(LX, y0 + (k - 0.5) * hd, LZ), colour)
+				-- (inside the body's taper, which is narrower than a drum at the drum's top)
+				local r = radius((k - 0.5) * hd) - (if lit then 0.12 else 0)
+				b.cyl("LightDrum", r, hd, b.at(LX, y0 + (k - 0.5) * hd, LZ), colour)
 				if era == 4 and k < n then
 					b.cyl("LightHoop", radius(k * hd) + 0.16, 0.5, b.at(LX, y0 + k * hd, LZ), L.board, M.Metal, false)
 				elseif era >= 3 and k < n then
@@ -1243,6 +1304,10 @@ local function raise(m: Instance, area: CFrame, level: number)
 						end
 					end
 				end
+			end
+			shell(false)
+			if lit then
+				worn((if grown == era and era > 1 then "DockTall" else "DockLight") .. era)
 			end
 			-- the door, and one lit window over it
 			local door = if era >= 4 then L.gold elseif era == 3 then L.board else L.beam

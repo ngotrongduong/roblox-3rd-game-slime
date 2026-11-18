@@ -553,6 +553,21 @@ The Garden's house, the third landmark as bodies (`garden_set(era)`, 2026-11-18)
   `f * lookAt((58, 38, -54), (-4, 19, 26))`, field of view 50.
 - The walk proof ran on the server in the same call as the level switch (`_G.Walk`): five levels, five calls.
 
+**The Dock (2026-11-18)**, twenty models (five bodies, six switched pieces, the lighthouse at its nine heights):
+- **Three houses stood in one another in Play**: the Dock's stage folder is `PondStage`, and `_G.AreaShow` clears
+  only `AreaStage`. A `_G.DockShow(level)` that destroys every `PondStage` child first; one `HouseFloor` counted.
+- **The first walk went over grass at y -3.8**: I had worked the grown house's place out (z 34.7 to 60.2); listed
+  in the area's frame its floor lies at z 68.7 to 94.2, the landing at 58.4 to 68.7, the front posts at x -19.8,
+  -8.2, 4.2, 15.8. Read the floor part's position before walking or aiming; it costs one call.
+- The client had anchored the character's root (the shot helper parks it): the server unanchors before `MoveTo`.
+- The lighthouse is its own model at each height (`DockLight<era>`, `DockTall<era>` once grown), worn only when
+  `grown >= 1`; its drum's ghost is 0.12 thinner in radius so the collider stays inside the mesh.
+- A solid header longer than the body's roof is shortened when bodied (`hw * 2 - 0.2`), as on the other halls.
+- The upload stopped once with `HttpError: Unknown` after six models; the same command again did the other fourteen.
+- Play camera for the Dock with its lighthouse: `f * lookAt((-52, 30, -20), (8, 26, 82))`, field of view 50.
+- ChatGPT pages: about 50 s of waits after `navigate` before any script; `browser_batch` holds 25 actions at
+  most; a script call that times out at 45 s is tried again after 20 s.
+
 ### Whole small buildings from Blender (2026-11-17, the garden's tool stores, tools/blender/granary_pieces.py)
 
 The owner, looking at a part-built yard beside ChatGPT's picture: "why is what you build not as beautiful as the

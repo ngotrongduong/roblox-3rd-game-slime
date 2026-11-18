@@ -247,6 +247,13 @@ worked example of one builder for several eras (`granary(era)`, `SHELL_LATER`, `
 - **Walk proof from the server, one call a level**: a `_G.Walk(x, level)` that pivots the player's character 9
   before the door, `MoveTo` 14 inside ten times half a second apart, logs x/y/z in the area's frame and parks the
   character; then `_G.AreaShow` at the next level in the same call, and one shot.
+- **The Dock is not an "AreaStage"** (its folder is `FishingPondL1.PondStage`): `_G.AreaShow` leaves the builds
+  before it standing, three houses in one another. Destroy every "PondStage" child first (`_G.DockShow(level)`),
+  and count one part by name (`HouseFloor`) to see there is ONE copy.
+- **Where a grown house really stands is read, not worked out**: list its floor, landing and front posts in the
+  area's frame (the Dock: floor z 68.7 to 94.2, not the drawn 34.7 to 60.2) before a walk or a camera is aimed.
+  A character the client anchored does not walk: the server's walk helper unanchors the root first.
+- An upload that stops with `HttpError: Unknown` is run again as it is: it skips what `village_ids.json` has.
 - **A plain box that reads as a prop is a kit piece** (a hay bale by the warm room was a 4-stud box once grown):
   `painted(<kit name>, ...)` first, the box only as the stand-in.
 - **ChatGPT by script, sync steps only**: page timers are throttled and an awaited script hangs the tool 45 s, so

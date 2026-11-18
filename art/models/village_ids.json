@@ -893,5 +893,207 @@
 			"TrainingVault5_Stone": 112008455491527,
 			"TrainingVault5_Wall": 115752264773303
 		}
+	},
+	"DockBody1": {
+		"model": 135427521687346,
+		"texture": 0,
+		"pieces": {
+			"DockBody1_Beam": 102500048906745,
+			"DockBody1_Board": 80529029706238,
+			"DockBody1_Frame": 84988286542364,
+			"DockBody1_Glass": 108151202795190,
+			"DockBody1_Lower": 121760441279827,
+			"DockBody1_Roof": 103664422809610,
+			"DockBody1_Shutters": 116827104770758,
+			"DockBody1_Stone": 139056677369801,
+			"DockBody1_Wall": 86581389982832
+		}
+	},
+	"DockBody2": {
+		"model": 78036360746769,
+		"texture": 0,
+		"pieces": {
+			"DockBody2_Beam": 118674349098260,
+			"DockBody2_Board": 81357870842951,
+			"DockBody2_Frame": 134463878326611,
+			"DockBody2_Glass": 83451425143235,
+			"DockBody2_Gold": 116340084795846,
+			"DockBody2_Roof": 71281774975643,
+			"DockBody2_Shutters": 116827104770758,
+			"DockBody2_Stone": 78766630181472,
+			"DockBody2_Wall": 113997247544217
+		}
+	},
+	"DockBody3": {
+		"model": 75150896272652,
+		"texture": 0,
+		"pieces": {
+			"DockBody3_Frame": 127814262513812,
+			"DockBody3_Glass": 74317405103951,
+			"DockBody3_Lower": 138530098024533,
+			"DockBody3_Shutters": 124661210707328,
+			"DockBody3_Stone": 73349144716625
+		}
+	},
+	"DockBody4": {
+		"model": 98440498931867,
+		"texture": 0,
+		"pieces": {
+			"DockBody4_Board": 97726520538443,
+			"DockBody4_Frame": 124229111162800,
+			"DockBody4_Gold": 124596175075827,
+			"DockBody4_Lower": 85119558231657,
+			"DockBody4_Roof": 86717094914554,
+			"DockBody4_Stone": 74532824492941
+		}
+	},
+	"DockBody5": {
+		"model": 132505888759249,
+		"texture": 0,
+		"pieces": {
+			"DockBody5_Beam": 81674476818471,
+			"DockBody5_Glass": 71586637881977,
+			"DockBody5_Gold": 113494114820213,
+			"DockBody5_Shutters": 109782581904315,
+			"DockBody5_Stone": 107466676719141,
+			"DockBody5_Wall": 112900456241832
+		}
+	},
+	"DockGable1": {
+		"model": 137197494690359,
+		"texture": 0,
+		"pieces": {
+			"DockGable1_Beam": 134999700603361,
+			"DockGable1_Wall": 129162315870957
+		}
+	},
+	"DockLight1": {
+		"model": 116614959401711,
+		"texture": 0,
+		"pieces": {
+			"DockLight1_Frame": 94270040683109,
+			"DockLight1_Red": 101396714478634,
+			"DockLight1_Stone": 101383843333748,
+			"DockLight1_White": 116611253694933
+		}
+	},
+	"DockLight2": {
+		"model": 111982387056160,
+		"texture": 0,
+		"pieces": {
+			"DockLight2_Frame": 94270040683109,
+			"DockLight2_Red": 101396714478634,
+			"DockLight2_Stone": 101383843333748,
+			"DockLight2_White": 116611253694933
+		}
+	},
+	"DockLight3": {
+		"model": 135160724151012,
+		"texture": 0,
+		"pieces": {
+			"DockLight3_Frame": 89109328311625,
+			"DockLight3_Stone": 133885142229466
+		}
+	},
+	"DockLight4": {
+		"model": 93002150505440,
+		"texture": 0,
+		"pieces": {
+			"DockLight4_Board": 116179569578434,
+			"DockLight4_Gold": 126730375881863,
+			"DockLight4_Lower": 101383843333748,
+			"DockLight4_Stone": 138494918188003
+		}
+	},
+	"DockLight5": {
+		"model": 114680955285459,
+		"texture": 0,
+		"pieces": {
+			"DockLight5_Gold": 96937875110711,
+			"DockLight5_Stone": 101383843333748,
+			"DockLight5_Wall": 117915644230163
+		}
+	},
+	"DockRoof3": {
+		"model": 135469565556567,
+		"texture": 0,
+		"pieces": {
+			"DockRoof3_Beam": 74775099986428,
+			"DockRoof3_Board": 89727279549389,
+			"DockRoof3_Roof": 97298109450488,
+			"DockRoof3_Wall": 97558648535741
+		}
+	},
+	"DockRoof5": {
+		"model": 139531390441993,
+		"texture": 0,
+		"pieces": {
+			"DockRoof5_Gold": 100911560045500,
+			"DockRoof5_Roof": 139334617074336,
+			"DockRoof5_Wall": 96303292779701
+		}
+	},
+	"DockStorey3": {
+		"model": 136365698930063,
+		"texture": 0,
+		"pieces": {
+			"DockStorey3_Beam": 118846574590090,
+			"DockStorey3_Board": 121275647000318,
+			"DockStorey3_Roof": 98070737751230,
+			"DockStorey3_Wall": 70906384354269
+		}
+	},
+	"DockTall2": {
+		"model": 137643380669741,
+		"texture": 0,
+		"pieces": {
+			"DockTall2_Frame": 94270040683109,
+			"DockTall2_Red": 76628018186178,
+			"DockTall2_Stone": 101383843333748,
+			"DockTall2_White": 101558919991893
+		}
+	},
+	"DockTall3": {
+		"model": 130800722026268,
+		"texture": 0,
+		"pieces": {
+			"DockTall3_Frame": 116175260898607,
+			"DockTall3_Stone": 117852549282518
+		}
+	},
+	"DockTall4": {
+		"model": 125189629699879,
+		"texture": 0,
+		"pieces": {
+			"DockTall4_Board": 137966110430542,
+			"DockTall4_Gold": 109164046362275,
+			"DockTall4_Lower": 101383843333748,
+			"DockTall4_Stone": 117915644230163
+		}
+	},
+	"DockTall5": {
+		"model": 140443976698165,
+		"texture": 0,
+		"pieces": {
+			"DockTall5_Gold": 134345513952006,
+			"DockTall5_Stone": 101383843333748,
+			"DockTall5_Wall": 98770249181489
+		}
+	},
+	"DockTruss1": {
+		"model": 131667947215226,
+		"texture": 0,
+		"pieces": {
+			"DockTruss1_Board": 83999974512289
+		}
+	},
+	"DockVault5": {
+		"model": 138007514516300,
+		"texture": 0,
+		"pieces": {
+			"DockVault5_Gold": 116696464332672,
+			"DockVault5_Roof": 136951782889707,
+			"DockVault5_Wall": 129326257689039
+		}
 	}
 }

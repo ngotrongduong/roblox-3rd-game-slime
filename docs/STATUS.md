@@ -84,12 +84,21 @@ khung và kết cấu của căn nhà thôi, những phụ kiện kiểu như đ
   at the same five, walked from the yard into the hall (x/y/z in the area's frame, the grown hall's front at 17.4,
   its back at 42.5): the character stood at z 31.1, 31.2, 31.2, 31.3, 31.1 at a level y of 5.3 to 5.4; no Training
   Hall error in the console; shots `review/training-body-l10.jpg` to `-l50`. CHECK OK (829 passed), TYPES OK.
-- **Dock: asked, not built**: its five four-side requests are sent (rows in `views.py`; chats, eras 1-5:
-  `/c/6afcec63-dc28-83ec-9adb-fb58bba4f658`, `/c/6afced5b-c5b0-83ec-9725-61acc68b3747`,
-  `/c/6afceda3-dd78-83ec-a9f7-4d571f7681fa`, `/c/6afcede4-1620-83ec-b02b-0964652fe051`,
-  `/c/6afcee2a-67f4-83ec-8051-b1cb6aefc60f`).
-- **Next, in order**: the Dock the same way (sheets back, body, upload, ghost; its `bodied` on a field every body
-  has, its face pieces listed against its split 21); an era-1 silo piece for the Granary.
+- **Dock done (2026-11-18)**: four-side sheets of its five eras (`views/dock_views_era1..5.webp`, rows in
+  `views.py`); `dock_set(era)` gives `DockBody1` to `DockBody5` and fifteen more models: era 1's open truss
+  (`DockTruss1`) or the gable that closes it (`DockGable1`, f 1); era 3's low roof (`DockRoof3`) or its timbered
+  storey (`DockStorey3`); era 5's roof (`DockRoof5`) or its vault (`DockVault5`, f 23); the lighthouse as its own
+  model at each height (`DockLight1` to `DockLight5`, `DockTall2` to `DockTall5` once grown); 85 rows in
+  `ConfigMeshyKit.luau`, uploaded; `Boathouse.luau` wears them (`SHELL`, `shell(on)`, `bodied` on `_Stone`; the
+  floor, the end fans, the fish sign, columns, lanterns, banners, the gallery, lantern room and beacon stay the
+  game's). Its mesh pieces all stand at z 28 or behind, so nothing of the body is left in front of the split 21.
+  Seen in the Edit preview at 10, 20, 30, 40, 50 (29, 30, 28, 30, 54 mesh pieces); proved in the StudioTest play
+  test at the same five, walked from the landing through the open front (x/y/z in the area's frame, the grown
+  house's floor at z 68.7 to 94.2): the character went from z 61 to 65 on the landing to z 88.2 to 88.4 inside at
+  a level y of 5.1 at every level; no Dock error in the console; shots `review/dock-body-l10.jpg` to `-l50`.
+  CHECK OK (829 passed), TYPES OK.
+- **All six landmarks are Blender bodies now.** Next (the owner picks): the village layout; an era-1 silo piece
+  for the Granary.
 - **Not verified / open**: the phone view; the houses on their real plot (the open StudioTest holds a map older
   than `Layout`: reopen it after a rebuild from MapWork; for the Garden's proof the wild rocks and trees on its
   cell were hidden and the terrain cleared in Play, with a test pad as the yard's ground); the Granary's side and
@@ -97,9 +106,10 @@ khung và kết cấu của căn nhà thôi, những phụ kiện kiểu như đ
   Play (a stove stood in the way); the Garden's side and back walls were not walked against; the yellow flower
   box under the Garden's cross gable hides most of that window at eras 2 and 3 (the game's own, as before); the
   Breeding House's side and back walls were not walked against, and the hay stack was seen in the Edit preview
-  only; the Training Hall's side and back walls and its tower were not walked against; whether the Granary, the
-  Kitchen, the Garden and the Boathouse leave face pieces in front of their own split was not looked for (the
-  Breeding House and the Training Hall did).
+  only; the Training Hall's side and back walls and its tower were not walked against; the Dock's side and back
+  walls and its lighthouse were not walked against, and its proof stood on stilts over grass (that test map has no
+  pond under it); whether the Granary, the Kitchen and the Garden leave face pieces in front of their own split
+  was not looked for (the Breeding House and the Training Hall did).
 
 ## 2026-11-17 (night) — the garden's tool stores of eras 4 and 5, built in Blender; Blender first from now on
 
