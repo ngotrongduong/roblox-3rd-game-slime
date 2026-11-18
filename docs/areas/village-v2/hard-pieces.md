@@ -267,7 +267,10 @@ and back, 720 px): none of the three queued together shows a fault. 8 x 15 credi
 
 The pair builds came out at 2462 and 3510 triangles; their halves keep the pair's shared texture and are centred on
 their own box. A split fence is about 0.65 units long and every other piece about 0.95: rescale on placing. The gates'
-backs are plainer than their fronts (one picture each): face the front to the road.
+backs are plainer than their fronts (one picture each): face the front to the road. Meshy gave every front along glTF
++Z, which shows backwards in the game, so all ten carry the kitchen pieces' half turn (node rotation [0, 1, 0, 0]):
+their fronts now look along -Z like the lamps' (rendered again from both sides). The pairs in `fence/pairs/` are left
+as Meshy gave them and are not uploaded.
 
 ## Other districts
 
