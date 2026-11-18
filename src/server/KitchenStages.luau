@@ -41,7 +41,7 @@ local SPOTS = { { 0, -1.6, 1 }, { 7.3, 1.8, 21 }, { -7.8, 1.2, 31 } }
 local PROPS = {
 	{ "VeggieCrates", "PickleBarrels", "SpiceCabinet", "IceBox", "GooFridge" },
 	{ "CampGrill", "StoneGrill", "BrickBBQ", "SteelGrill", "PlasmaGrill" },
-	{ "WoodBarrel", "HandPump", "StoneSink", "SteelSink", "GooTap" },
+	{ "Barrel_Oak", "HandPump", "StoneSink", "SteelSink", "GooTap" },
 	{ "DishRack", "PlateShelf", "ServingCart", "BuffetWarmer", "FoodDispenser" },
 }
 -- real heights (studs, the player is 5)
@@ -473,7 +473,10 @@ function KitchenStages.build(area: Instance, frame: CFrame, level: number): Mode
 		local e = props[j]
 		if e > 0 then
 			local slot = SLOT_AT[j]
-			local prop = place(m, frame, PROPS[j][e], slot[1], slot[2], HEIGHT[j][e], FOOT[j], FLOOR)
+			local key = PROPS[j][e]
+			local old = PantryStages.StandIn[key]
+			local prop = place(m, frame, key, slot[1], slot[2], HEIGHT[j][e], FOOT[j], FLOOR)
+				or (old and place(m, frame, old, slot[1], slot[2], HEIGHT[j][e], FOOT[j], FLOOR))
 			local yaw = slot[3] + (FRONT_TURN[PROPS[j][e]] or 0)
 			if prop and yaw ~= 0 then
 				-- turned on the spot, about its own middle

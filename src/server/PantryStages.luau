@@ -217,12 +217,10 @@ local SPOT: { { { any } } } = {
 -- widest it may be, turn, from which era, lift): barrels and crates waiting by the dock, a hay
 -- store behind the house, shrubs on the yard's front corners, planters by the gate.
 local SURROUND: { { any } } = {
-	{ "WoodBarrel", -5.4, -1.3, 2.6, 2, 0, 1 },
-	{ "WoodBarrel", -7.2, -1.2, 2.6, 2, 0, 1 },
-	{ "CrateStack", 5.8, -1.4, 2.9, 2.6, 0, 1 },
-	{ "HayBale", 8.3, 12.6, 1.6, 2.8, 0, 1 },
-	{ "HayBale", 11.1, 12.6, 1.6, 2.8, 0, 1 },
-	{ "HayBale", 9.7, 12.6, 1.6, 2.8, 90, 1, 1.6 },
+	{ "Barrel_Oak", -5.4, -1.3, 2.6, 2, 0, 1 },
+	{ "Barrel_Oak", -7.2, -1.2, 2.6, 2, 0, 1 },
+	{ "CrateStack_Wood", 5.8, -1.4, 2.9, 2.6, 0, 1 },
+	{ "HayBales_Stack", 9.7, 12.6, 3.2, 4.2, 0, 1 },
 	{ "FlowerShrub", 19, -16, 2.2, 3, 0, 1 },
 	{ "FlowerShrub", -19, -16, 2.2, 3, 0, 1 },
 	{ "Wheelbarrow", 14.5, 13, 2.2, 3, 60, 2 },
@@ -232,9 +230,23 @@ local SURROUND: { { any } } = {
 	{ "Planter", -4.5, -12, 1.6, 2.8, 0, 5 },
 	-- the front of the service yard is not left bare (the owner, 2026-10-28): goods waiting to ship
 	-- beside the container's apron from the steel era (a small store hut joins them on slime tech)
-	{ "CrateStack", -13.3, -8.3, 2.9, 2.6, 0, 4 },
+	{ "CrateStack_Wood", -13.3, -8.3, 2.9, 2.6, 0, 4 },
 	{ "SackPallet", -13.3, -5.4, 3, 3, 0, 4 },
 	{ "PlasticCrates", -24.8, -1, 3.2, 3, 0, 4 },
+}
+-- the old kit models that stand in while an owned Meshy piece's meshes have not loaded (the village props review,
+-- 2026-11-18: these generated props swapped for the Meshy pieces of the same job)
+local STAND_IN: { [string]: string } = {
+	Barrel_Oak = "WoodBarrel",
+	CrateStack_Wood = "CrateStack",
+	HayBales_Stack = "HayBale",
+	PropPlanterRiveted = "FlowerBedWood",
+	PropPlanterStone = "FlowerBedBrick",
+	PropPlanterCrown = "FlowerBedSteel2",
+	PropPlanterRoyal = "FlowerBedMarble",
+	PropLampStone = "IronStreetLamp",
+	PropLampTech = "ModernLampPost",
+	PropLampRoyal = "GoldenLampPost",
 }
 -- The village scale (2026-10-30): the yard in front of the house grows from x +-12, z -10 to x +-16.8, z -14,
 -- and what stands in the front yard spreads with it (the house, the props against its walls and the service
@@ -500,7 +512,10 @@ function PantryStages.build(area: Instance, frame: CFrame, level: number): Model
 	for _, s in SURROUND do
 		if nowEra >= s[7] then
 			local sx, sz = spread(s[2], s[3], grow)
-			turn(place(m, frame, s[1], sx, sz, s[4], s[5], (s[8] or 0) + floorAt(sx, sz)), s[6])
+			local lift = (s[8] or 0) + floorAt(sx, sz)
+			local model = place(m, frame, s[1], sx, sz, s[4], s[5], lift)
+				or (STAND_IN[s[1]] and place(m, frame, STAND_IN[s[1]], sx, sz, s[4], s[5], lift))
+			turn(model, s[6])
 		end
 	end
 	-- from slime tech a small store hut fills the front of the service yard, built like the house in
@@ -753,6 +768,7 @@ end
 PantryStages.part = part
 PantryStages.wedge = wedge
 PantryStages.place = place
+PantryStages.StandIn = STAND_IN
 PondStages.kitPlace = place
 
 return PantryStages

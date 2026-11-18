@@ -427,7 +427,8 @@ function VillageFountain.build(m: Model, frame: CFrame, era: number, tier: numbe
 		local statue = Instance.new("Model")
 		statue.Name = "FountainStatue"
 		statue.Parent = m
-		place(statue, at(0, 0, 0), "SlimeStatue", 0, 0, 2.2, 1.8, top + 0.05)
+		local _ = place(statue, at(0, 0, 0), "SlimeStatue_Gold", 0, 0, 2.2, 1.8, top + 0.05)
+			or place(statue, at(0, 0, 0), "SlimeStatue", 0, 0, 2.2, 1.8, top + 0.05)
 		-- jets arching out from the middle tier, and shell spouts on the basin rim
 		for k = 0, 5 do
 			local a = k * math.pi / 3

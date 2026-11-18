@@ -36,6 +36,19 @@ cooler, forklift, drones, holo screens, pastel toys), which the village's era la
 | HayBale | `HayBales_Stack` | breeding, garden, pantry |
 | MarketArch | the era's `PropGate*` | market street |
 
+**Done 2026-11-18, all 14**: in `VillageStages`, `VillageWalls`, `VillageFountain`, `PantryStages`, `GardenStages`,
+`BreedingStages` and `KitchenStages`, each with the old model as its stand-in while the meshes load
+(`PantryStages.StandIn`). Seen in MapWork's play test at levels 20, 30, 40 and 50 (and the kitchen at 10): every new
+piece stands, no stand-in left (`props/review/swaps_in_play.jpg`).
+
+### Tripo's free gallery (2026-11-18, nothing exported yet)
+
+The owner asked to look there first and to see the pictures before any download. The eight closest fits are on
+`props/review/tripo_candidates.jpg` with their triangles now and after a Blender reduction: A stone-and-ivy bench (era
+3), B cream-and-gold bench (era 5), C rustic timber stall (era 1), D tiled stall with columns (era 3), E striped-awning
+stall (era 2), F stone gazebo with a blue dome (era 3 or 5), G pink-and-gold gazebo (era 5), H sundial (too dirty).
+Recommended: A, B, C, F, G. An export costs 5 Tripo credits (the account has 1650).
+
 ### Redo, grouped as era sets (one ChatGPT picture an object, Meshy Smart Topology)
 
 **Phase 1, the village common (seen by everyone): 23 pieces**
@@ -74,6 +87,4 @@ teal glass and gears, era 5 marble and gold.
 ### Cost
 
 Meshy has 18 credits (one generation at 15). Phase 1 is 23 x 15 = 345 credits, phase 2 855, phase 3 315; topping up
-is the owner's call. ChatGPT pictures cost nothing. The 14 swaps cost nothing and wait only for the landmark session to
-finish with the yard modules (it asked on 2026-11-18 that `BreedingHouse`, `Garden`, `TrainingHall`, `Boathouse`,
-`KitchenStages`, `ConfigMeshyKit` and `village_ids.json` stay untouched until it is done).
+is the owner's call. ChatGPT pictures cost nothing. The 14 swaps cost nothing (done, above).

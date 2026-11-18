@@ -1,5 +1,21 @@
 # Status
 
+## 2026-11-18 — the 14 free prop swaps in the village (`docs/areas/village-v2/props-review.md`)
+
+- **Swapped** to the owner's Meshy pieces, each with the old kit model as its stand-in while the meshes load: the
+  market street's arch is the era's `PropGate*`, its crates and barrel `CrateStack_Wood` and `Barrel_Oak`, the garden
+  piece's topiary `ConePot_Topiary`; the walls' planters the era's `PropPlanter*`, their era 5 lamp `PropLampRoyal`
+  and urns `PropPotUrn`; the fountain's statue `SlimeStatue_Gold`; the Granary's, Garden's and Breeding House's
+  barrels, crates and hay `Barrel_Oak`, `CrateStack_Wood`, `HayBales_Stack`; the Garden wing's planters and lamps the
+  era's `PropPlanter*` and `PropLamp*`; the Kitchen's water barrel `Barrel_Oak`.
+- **Proof**: MapWork's play test (code synced, never saved) at levels 20, 30, 40, 50 and the kitchen at 10: every new
+  piece stands at its size, no stand-in left, one crate of the market skipped for room
+  (`props/review/swaps_in_play.jpg`). CHECK OK (829 passed), TYPES OK.
+- **Not verified**: the phone view. StudioTest's map is older than `Layout` and leaves the whole plaza dressing out
+  (LESSONS): rebuild it from MapWork before the next village test there.
+- **Tripo**: the free gallery searched, eight candidates on `props/review/tripo_candidates.jpg`; nothing exported
+  until the owner picks. **Next**: his pick, then the benches the gallery lacks drawn by ChatGPT.
+
 ## 2026-11-18 — the Dock refined against its four-side sheets (`landmark-build` §3c, the sixth and last building)
 
 - **Colour** (`Boathouse.luau` `LOOKS`, mirrored in `D_PAINT`), the same measured palette as the Training Hall's: era 1

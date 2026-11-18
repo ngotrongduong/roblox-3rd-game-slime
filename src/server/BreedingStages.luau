@@ -504,9 +504,20 @@ function BreedingStages.build(area: Instance, frame: CFrame, level: number): Mod
 	-- the feed and rest corner on straw, the water and egg corner on stone (both stop short of the hall's front)
 	flat("FeedMat", 14.5, X1 - 0.4, 7, Z1 - 1, Color3.fromRGB(226, 192, 120), Enum.Material.SmoothPlastic)
 	flat("WaterMat", X0 + 0.4, -3.6, 6.5, Z1 - 1, tfl.base, tfl.baseMat)
-	-- a second bale on the hay store, a water barrel by the trough
-	place(m, frame, "HayBale", HAY.X, HAY.Z, 1.7, 2.4, 2.45)
-	place(m, frame, "WoodBarrel", -15, 16.5, 2.4, 1.8, FLOOR)
+	-- the hay store: the stacked bales of the village's kit on the floor, where the area's own bale stood (the village
+	-- props review, 2026-11-18; the old bale with a second on it while the stack's meshes have not loaded); a water
+	-- barrel by the trough
+	if place(m, frame, "HayBales_Stack", HAY.X, HAY.Z, 3, 3.3, FLOOR) then
+		for _, d in area:GetChildren() do
+			if d.Name == "HayBale" and d:IsA("Model") then
+				d.Parent = nil
+			end
+		end
+	else
+		place(m, frame, "HayBale", HAY.X, HAY.Z, 1.7, 2.4, 2.45)
+	end
+	local _ = place(m, frame, "Barrel_Oak", -15, 16.5, 2.4, 2.1, FLOOR)
+		or place(m, frame, "WoodBarrel", -15, 16.5, 2.4, 1.8, FLOOR)
 	-- a flower box between the left-hand nests, planters inside the gate
 	place(m, frame, "Planter", 22.5, -5.5, 1.5, 2.2, FLOOR)
 	for _, x in { -2, 10 } do

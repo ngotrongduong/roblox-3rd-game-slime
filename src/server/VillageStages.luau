@@ -93,8 +93,11 @@ local STALLS = { "FlowerCart", "FruitStall", "IceCreamCart", "BakeryKiosk", "Goo
 local STALL_HEIGHT = { 3.6, 5.4, 5, 5.6, 5.6 }
 local NOTICES = { "Signpost", "NoticeBoard", "ClockPost", "InfoKiosk", "HoloBoard" }
 local NOTICE_HEIGHT = { 5.2, 4.6, 8, 5.2, 5.4 }
-local GARDENS = { "Birdbath", "ClippedTopiary", "Sundial", "LightTree", "SlimeCrystal" }
+local GARDENS = { "Birdbath", "ConePot_Topiary", "Sundial", "LightTree", "SlimeCrystal" }
+local OLD_GARDENS = { "Birdbath", "ClippedTopiary", "Sundial", "LightTree", "SlimeCrystal" }
 local GARDEN_HEIGHT = { 3, 4.4, 3, 6.5, 4.6 }
+-- the market street's arch: the era's gate (the village props review, 2026-11-18: one look an era, the owner's sheet)
+local MARKET_GATES = { "PropGateThatch", "PropGateTiled", "PropGateVine", "PropGateTech", "PropGateRoyal" }
 -- the planters lining the gate avenue, each era's own (generated models, the owner, 2026-10-28:
 -- props as fine as the greenhouse vegetables); their length along the path
 local BEDS = { "PropPlanterWood", "PropPlanterRiveted", "PropPlanterStone", "PropPlanterCrown", "PropPlanterRoyal" }
@@ -739,9 +742,12 @@ function VillageStages.build(village: Instance, frame: CFrame, level: number): M
 			put(STALLS[e], m2(sp[1], sp[2]), look, STALL_HEIGHT[e], 5, nil, MARKET)
 		end
 		-- (the arch spans the way in: placed as planned, only its two posts keep their ground)
-		place(m, frame * CFrame.new(m2(0, 0)) * mFace, "MarketArch", 0, 0, 8.2, 8)
-		put("CrateStack", m2(17.5, -7.5), MARKET_ACROSS, 2.6, 2.4)
-		put("WoodBarrel", m2(17.5, 7.5), -MARKET_ACROSS, 2.4, 1.8)
+		local archAt = frame * CFrame.new(m2(0, 0)) * mFace
+		local _ = place(m, archAt, MARKET_GATES[era], 0, 0, 8.2, 8) or place(m, archAt, "MarketArch", 0, 0, 8.2, 8)
+		local _ = put("CrateStack_Wood", m2(17.5, -7.5), MARKET_ACROSS, 2.8, 3)
+			or put("CrateStack", m2(17.5, -7.5), MARKET_ACROSS, 2.6, 2.4)
+		local _ = put("Barrel_Oak", m2(17.5, 7.5), -MARKET_ACROSS, 2.4, 2.3)
+			or put("WoodBarrel", m2(17.5, 7.5), -MARKET_ACROSS, 2.4, 1.8)
 		local _ = put(CARTS[era], m2(10.5, -8.5), MARKET_ACROSS, CART_HEIGHT[era], 4.4)
 			or put("HandCart", m2(10.5, -8.5), MARKET_ACROSS, 3, 3)
 		-- (the stalls' stock behind them: crates of apples and carrots, a barrel of apples; the free library, 2026-11-08)
@@ -765,7 +771,8 @@ function VillageStages.build(village: Instance, frame: CFrame, level: number): M
 			local e = era - (j - 1)
 			if e >= 1 then
 				local d = dirOf(GAPS[gg])
-				put(GARDENS[e], d * (plazaR + 9), -d, GARDEN_HEIGHT[e], 4.5)
+				local _ = put(GARDENS[e], d * (plazaR + 9), -d, GARDEN_HEIGHT[e], 4.5)
+					or put(OLD_GARDENS[e], d * (plazaR + 9), -d, GARDEN_HEIGHT[e], 4.5)
 			end
 		end
 		local function bed(p: Vector3, look: Vector3, along: Vector3): Model?

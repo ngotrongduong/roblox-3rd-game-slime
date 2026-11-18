@@ -191,9 +191,10 @@ function VillageWalls.build(m: Model, frame: CFrame, era: number, tiers: { numbe
 			light.Parent = flame
 		end
 	end
-	-- a generated decoration from the kit, its foot on `cf` (front to cf's -Z), `h` tall
-	local function deco(key: string, cf: CFrame, h: number, foot: number)
-		place(m, cf, key, 0, 0, h, foot)
+	-- a generated decoration from the kit, its foot on `cf` (front to cf's -Z), `h` tall; `old`, the kit model that
+	-- stands in while a Meshy piece has not loaded
+	local function deco(key: string, cf: CFrame, h: number, foot: number, old: string?)
+		local _ = place(m, cf, key, 0, 0, h, foot) or (old and place(m, cf, old, 0, 0, h, foot))
 	end
 
 	-- ===== the fence =====
@@ -288,14 +289,12 @@ function VillageWalls.build(m: Model, frame: CFrame, era: number, tiers: { numbe
 						part(m, "TopRail", Vector3.new(1, 0.5, w), seg * CFrame.new(0, 10.1, 0), tw.frame, tw.frameMat)
 						bit("RailCap", Vector3.new(1.3, 0.25, w), seg * CFrame.new(0, 10.45, 0), soft, softMat)
 						if k % 2 == 0 then
-							place(
-								m,
+							deco(
+								"PropPlanterRiveted",
 								seg * CFrame.new(sgn * 1.6, 0, 0) * CFrame.Angles(0, math.rad(90), 0),
-								"FlowerBedWood",
-								0,
-								0,
-								1.7,
-								math.min(6, w * 0.4)
+								2.4,
+								math.min(6, w * 0.4),
+								"FlowerBedWood"
 							)
 						end
 					elseif era == 3 then
@@ -585,7 +584,7 @@ function VillageWalls.build(m: Model, frame: CFrame, era: number, tiers: { numbe
 				part(m, "ColumnCap", Vector3.new(3.1, 0.6, 3.1), c * CFrame.new(0, 11.1, 0), tp.walls, tp.wallMat)
 				bit("CapTrim", Vector3.new(3.3, 0.15, 3.3), c * CFrame.new(0, 11.45, 0), psoft, psoftMat)
 				if k % 2 == 0 then
-					deco("MarbleUrn", c * CFrame.new(0, 11.5, 0), 3, 2.6)
+					deco("PropPotUrn", c * CFrame.new(0, 11.5, 0), 3, 2.6, "MarbleUrn")
 				else
 					ball("ColumnBall", 1.4, c * CFrame.new(0, 12.2, 0), psoft, psoftMat)
 				end
@@ -632,7 +631,7 @@ function VillageWalls.build(m: Model, frame: CFrame, era: number, tiers: { numbe
 					gsoftMat
 				)
 			end
-			place(m, win * CFrame.new(0, -1.7, -0.5), "FlowerBedWood", 0, 0, 1.2, 2.4)
+			deco("PropPlanterRiveted", win * CFrame.new(0, -1.7, -0.5), 1.2, 2.4, "FlowerBedWood")
 			-- the gable roof with eaves, a ridge and a finial
 			for _, sz in { -1, 1 } do
 				wedge(
@@ -650,7 +649,7 @@ function VillageWalls.build(m: Model, frame: CFrame, era: number, tiers: { numbe
 			-- outer foot
 			wallLantern(tower * CFrame.new(0, 6.6, -2.2), true)
 			wallLantern(tower * CFrame.new(0, 6.6, 2.2) * CFrame.Angles(0, math.pi, 0), false)
-			place(m, tower * CFrame.new(sx * 4.6, 0, -2.6), "FlowerBedWood", 0, 0, 1.8, 3.2)
+			deco("PropPlanterRiveted", tower * CFrame.new(sx * 4.6, 0, -2.6), 1.8, 3.2, "FlowerBedWood")
 		end
 		-- the beam across, its knee braces, the little shingled roof over it
 		part(m, "GateBeam", Vector3.new(GATE_X * 2, 1.2, 1.2), at(0, 13.6, -HALF), tg.frame, tg.frameMat)
@@ -770,7 +769,7 @@ function VillageWalls.build(m: Model, frame: CFrame, era: number, tiers: { numbe
 			-- the outer foot
 			wallTorch(tower * CFrame.new(0, 7.2, -3), true)
 			wallTorch(tower * CFrame.new(0, 7.2, 3) * CFrame.Angles(0, math.pi, 0), false)
-			place(m, tower * CFrame.new(sx * 5.4, 0, -2.4), "FlowerBedBrick", 0, 0, 2, 3.4)
+			deco("PropPlanterStone", tower * CFrame.new(sx * 5.4, 0, -2.4), 2, 3.4, "FlowerBedBrick")
 		end
 		-- the arch under the bridge: voussoirs in the trim, the spandrels filled
 		local half, spring, rise = 9, 11.6, 2.8
@@ -854,7 +853,7 @@ function VillageWalls.build(m: Model, frame: CFrame, era: number, tiers: { numbe
 			end
 			glow("GateLight", Vector3.new(0.3, 14.4, 0.3), tower * CFrame.new(-sx * 1.65, 8.7, -1.65), tg.trim, 12)
 			part(m, "TowerCap", Vector3.new(3.9, 0.6, 3.9), tower * CFrame.new(0, 16.7, 0), tg.frame, tg.frameMat)
-			place(m, tower * CFrame.new(sx * 4.2, 0, -2.2), "FlowerBedSteel2", 0, 0, 1.8, 3.6)
+			deco("PropPlanterCrown", tower * CFrame.new(sx * 4.2, 0, -2.2), 1.8, 3.6, "FlowerBedSteel2")
 		end
 		local canopy = part(
 			m,
@@ -914,8 +913,10 @@ function VillageWalls.build(m: Model, frame: CFrame, era: number, tiers: { numbe
 				end
 			end
 			-- a golden lamp on the landing beside each base
-			place(m, at(sx * (GATE_X + 3.6), 0, -HALF - 5), "GoldenLampPost", 0, 0, 9.2, 2.6)
-			place(m, at(sx * (GATE_X + 4.4), 0, -HALF - 1.6), "FlowerBedMarble", 0, 0, 2, 3.6)
+			local lampAt = at(sx * (GATE_X + 3.6), 0, -HALF - 5)
+			local _ = place(m, lampAt, "PropLampRoyal", 0, 0, 9.2, 5)
+				or place(m, lampAt, "GoldenLampPost", 0, 0, 9.2, 2.6)
+			deco("PropPlanterRoyal", at(sx * (GATE_X + 4.4), 0, -HALF - 1.6), 2, 3.6, "FlowerBedMarble")
 		end
 		local span = GATE_X * 2 + 5
 		part(m, "Architrave", Vector3.new(span, 1.2, 6.6), at(0, 16.9, -HALF), tg.walls, tg.wallMat)
@@ -941,7 +942,7 @@ function VillageWalls.build(m: Model, frame: CFrame, era: number, tiers: { numbe
 				gsoft,
 				gsoftMat
 			)
-			deco("MarbleUrn", at(sx * (span / 2 - 1.2), 19.45, -HALF), 3.2, 2.6)
+			deco("PropPotUrn", at(sx * (span / 2 - 1.2), 19.45, -HALF), 3.2, 2.6, "MarbleUrn")
 		end
 		-- the golden slime crest in the pediment, and marble steps on the landing
 		local crest = Instance.new("Model")

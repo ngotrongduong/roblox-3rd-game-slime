@@ -1177,6 +1177,25 @@ list is the standard for every Blender building), what closed the gap:
 - **A pane tab can hang** (every javascript call times out) while the owner's Chrome window is in front: `navigate`
   it to its own chat address; once it loaded it answered again a few minutes later.
 
+### Tripo's gallery and the 14 free swaps (2026-11-18, the village props review, `props-review.md`)
+
+- **Looking through Tripo's free gallery** (the owner: "tìm thử trên tripo ... chú ý thêm về số tam giác"): the site's
+  private search API is off limits (a page fetch of it was refused as unauthorised access). What works, on
+  `studio.tripo3d.ai/robots.txt` in the owner's Chrome: fetch the public tag pages `/3d-model-gallery/<tag>` and read
+  `a[href^="/3d-model/"]` with their pictures; a model page's `__NUXT_DATA__` gives its face count and whether it is
+  quads (about twice the triangles). The viewer pages freeze the tab often: wait 15-25 s, or close and open a new tab.
+  Thumbnails come back to `art/inbox/` through `receive.html`. Nothing is exported before the owner has seen the
+  candidates sheet ("bạn cho tôi xem ảnh trước khi download nhé"); an export is 5 credits at any resolution (1k).
+- **What the gallery holds**: single pieces in the hand-painted style, no era set; most are 0.2-2 million triangles,
+  so every one needs a Blender reduction to 4-10 thousand before Roblox.
+- **A test place older than `Layout` skips the village's dressing**: in StudioTest the areas' `L1` models held parts
+  300 studs from their stages, their bounding boxes grew to 400 studs, and `VillageStages`' free-ground check left
+  every plaza bench, lamp, stall and crate out ("Skipped"). The village common is judged in MapWork's play test
+  (`village-playtest`: `sync_all.ps1`, Play, never saved); there only one crate was skipped.
+- **Swapping a kit model for an owned Meshy piece**: keep the old key as the stand-in while the meshes load
+  (`place(...) or place(old ...)`, the map `PantryStages.StandIn`), and size the new piece by its own box (a stack of
+  bales replaces three loose bales; the area's own loose bale goes when the stack stands).
+
 ## The Heart, redesigned (2026-11-14, tools/world/build_heart.luau, docs/references/heart/rounds.md)
 
 The owner: "the central area is too poorly designed". Three reference pictures, six Meshy models, four rounds.

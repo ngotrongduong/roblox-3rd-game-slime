@@ -111,12 +111,11 @@ local SURROUND: { { any } } = {
 	{ "FlowerShrub", 14.5, -10.5, 2.2, 3, 0, 1 },
 	{ "PineBerryBush", 30.7, -11.1, 2.4, 3, 0, 1 },
 	{ "FernCluster", -30.7, -11.1, 2.2, 3, 0, 1 },
-	{ "CrateStack", -5.6, -7.4, 2, 2.2, 20, 2 }, -- harvest waiting beside the gate, low, off the path
+	{ "CrateStack_Wood", -5.6, -7.4, 2, 2.2, 20, 2 }, -- harvest waiting beside the gate, low, off the path
 	{ "Wheelbarrow", 6.8, -11.6, 2.2, 3, -30, 2 },
 	{ "FlowerShrub", 21.4, -11.1, 2.2, 3, 0, 2 },
 	{ "WildflowersGrass", -21.4, -11.1, 1.4, 3.5, 0, 2 },
-	{ "HayBale", 8.2, 9.6, 1.6, 2.8, 90, 3 }, -- straw for mulch, by the compost behind the beds
-	{ "HayBale", 8.2, 11.4, 1.6, 2.8, 90, 3 },
+	{ "HayBales_Stack", 8.2, 10.5, 2.6, 2.9, 90, 3 }, -- straw for mulch, by the compost behind the beds
 	{ "Planter", 13, -11.5, 1.6, 3, 0, 4 },
 	{ "Planter", -13.5, -11.5, 1.6, 3, 0, 4 },
 	{ "FlowerShrub", 26.1, -11.1, 2.4, 3, 0, 5 },
@@ -131,7 +130,7 @@ local SURROUND: { { any } } = {
 -- (sizes and models as the village's own benches, lamps and flower beds). The rest of the soil stays open; what
 -- could stand there one day is listed in docs/areas/village-v2/garden-ladder.md.
 -- { x, z, turn, the widest it may be, the models of the eras 2, 3, 4 and 5 (fewer: none later), their real heights }
-local FLOWER_BEDS = { "FlowerBedWood", "FlowerBedBrick", "FlowerBedSteel2", "FlowerBedMarble" }
+local FLOWER_BEDS = { "PropPlanterRiveted", "PropPlanterStone", "PropPlanterCrown", "PropPlanterRoyal" }
 local WINGS: { { any } } = {
 	-- (the kit's shed is timber under red tiles: right beside the red-tiled houses of the eras 2 and 3, wrong beside
 	-- steel and glass or marble, so the last two eras have a tool store of their own: Garden.toolStore)
@@ -141,8 +140,8 @@ local WINGS: { { any } } = {
 		-45,
 		9.25,
 		0,
-		3,
-		{ "LanternPost", "IronStreetLamp", "ModernLampPost", "GoldenLampPost" },
+		4.4,
+		{ "LanternPost", "PropLampStone", "PropLampTech", "PropLampRoyal" },
 		{ 8.6, 9.2, 9.6, 9.2 },
 	},
 	{ -45, -1, -90, 5.4, FLOWER_BEDS, { 4, 4, 4, 4 } },
@@ -318,7 +317,9 @@ function GardenStages.build(area: Instance, frame: CFrame, level: number): Model
 	end
 	-- a kit model standing at a spot, turned about its own middle
 	local function stand(key: string, x: number, z: number, height: number, widest: number, yaw: number)
+		local old = PantryStages.StandIn[key]
 		local prop = place(m, frame, key, x, z, height, widest, floorAt(x, z))
+			or (old and place(m, frame, old, x, z, height, widest, floorAt(x, z)))
 		if prop and yaw ~= 0 then
 			local box = prop:GetBoundingBox()
 			local centre = CFrame.new(box.Position)
