@@ -240,6 +240,35 @@ along glTF +Z; the five lamp posts show their decorated side along -Z, so check 
 
 Next: upload with `upload_village_pieces.js`, and the ladders of the buildings and the village layout point at them.
 
+### Fences and gates (same day, same way)
+
+The owner added two more sheets, "thêm bộ hàng rào và cổng này nữa": five fence sections and five entrance gates, one
+an era (`props/fence-sheet.jpg`, `props/gate-sheet.jpg`; ChatGPT chats fence `/c/6afd382d-0aa8-83ec-9602-74d45008a3e7`,
+gate `/c/6afd385c-39fc-83ec-8d39-1eb1f364c7ec`). Credits were 138, and ten builds cost 150, so the four lighter fences
+went two to a picture (`fence/refs/pair_*.png`: each fence cut to its outline, the two stacked as rows on the same grey
+with a 12 percent gap) and were split again in Blender by loose parts above and below the empty band; the pair files
+are kept in `fence/pairs/`. Midway the owner asked for the gates one at a time ("dựng cổng chính từng cái một vì cổng
+nhiều chi tiết, làm nhiều cái cùng 1 lúc chất lượng không cao"): thatch, tiled and vine had already been queued
+together, tech and royal waited each for the one before. All five gates were then looked at closely (straight front
+and back, 720 px): none of the three queued together shows a fault. 8 x 15 credits, 138 -> 18.
+
+| Sheet | Piece | Era | Triangles asked | Got | GLB MB |
+|-------|-------|-----|-----------------|-----|--------|
+| fence | `fence_rail` log posts on stones, branch rails, rope | 1 | 1200 (pair 2400) | 1996 | 2.7 |
+| fence | `fence_picket` cream pickets, teal posts, gold caps | 2 | 1200 (pair) | 466 | 2.6 |
+| fence | `fence_stone` brick pillars, wooden X brace | 3 | 1500 (pair 3500) | 1200 | 2.2 |
+| fence | `fence_iron` riveted iron pillars, arched railing | 4 | 2000 (pair) | 2310 | 2.2 |
+| fence | `fence_royal` marble balustrade, crown banners | 5 | 2500 | 2418 | 2.7 |
+| gate | `gate_thatch` timber frame, straw roof, log fences | 1 | 3000 | 3002 | 3.1 |
+| gate | `gate_tiled` teal arch, tiled gable, lanterns | 2 | 3500 | 3238 | 3.1 |
+| gate | `gate_vine` brick arch, vine pergola, grapes | 3 | 4500 | 4256 | 3.2 |
+| gate | `gate_tech` riveted iron arch, glass dome, gear | 4 | 4500 | 4467 | 3.5 |
+| gate | `gate_royal` marble arch, blue dome, crown banners | 5 | 5000 | 4945 | 3.1 |
+
+The pair builds came out at 2462 and 3510 triangles; their halves keep the pair's shared texture and are centred on
+their own box. A split fence is about 0.65 units long and every other piece about 0.95: rescale on placing. The gates'
+backs are plainer than their fronts (one picture each): face the front to the road.
+
 ## Other districts
 
 Listed when each district is rebuilt.

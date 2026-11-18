@@ -1111,6 +1111,13 @@ list is the standard for every Blender building), what closed the gap:
   does not want Meshy regenerations from me ("không sửa ở meshy nữa tốn token").
 - **The owner works in the same Meshy tab**: he regenerated the spoon sign while I was downloading (a new entry
   jumped the list to page 1 and took 10 credits). A credit drop or a new tile may be his click.
+- **Detailed pieces one at a time** (owner, the gates: "làm nhiều cái cùng 1 lúc chất lượng không cao"): a piece full
+  of detail (a gate, an arch) is generated alone, the next only once the last one finished; light pieces may queue.
+- **Two light pieces in one generation when credits are short** (fences, 2026-11-18): cut each picture to its outline
+  (background read from a corner, pixels near it repainted the canvas grey so no box edge shows), stack the two as
+  rows on one square of flat grey with a 12 percent gap, ask for the sum of their triangles. Meshy built both, each
+  as clean as a single build; split them in Blender by loose parts above and below the widest empty height band, each
+  half centred on its own box, the shared texture kept (`split_pairs.py` in that session's scratchpad).
 - **A pane tab can hang** (every javascript call times out) while the owner's Chrome window is in front: `navigate`
   it to its own chat address; once it loaded it answered again a few minutes later.
 

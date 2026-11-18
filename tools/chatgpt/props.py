@@ -112,6 +112,35 @@ SHEETS = {
 			"frame and a flower box of pink flowers under it", 2000),
 		("window_plain", "the bottom row's fourth, a plain brown wooden window frame with four panes", 1000),
 	]]),
+	"fence": ("five fence sections, one per era of the village, from left to right", [[
+		("fence_rail", "the first, a rustic fence: two thick round log posts standing on grey stones, a thinner log "
+			"stake in the middle, long bent branch rails between them, lashed to the posts with rope", 1200),
+		("fence_picket", "the second, a cream picket fence of pointed boards on two rails between two teal-green square "
+			"posts with gold block caps", 1200),
+		("fence_stone", "the third, two pale stone-brick pillars with pyramid caps on a stone footing, a wooden rail "
+			"frame with an X brace between them", 1500),
+		("fence_iron", "the fourth, a slime-tech fence: two dark riveted iron pillars with tall teal glass slots and gold "
+			"ball tops, a dark iron railing of three arches between them with brass rivets", 2000),
+		("fence_royal", "the fifth, a royal cream marble balustrade: two square marble pillars with blue banners bearing "
+			"gold crowns and gold crown finials on top, a row of turned balusters under a marble rail, on a marble base",
+			2500),
+	]]),
+	"gate": ("five entrance gates, one per era of the village, from left to right", [[
+		("gate_thatch", "the first, a wooden gate frame: two square timber posts and a cross-braced beam under a thick "
+			"straw thatch roof, short rustic log fences lashed with rope on grey stones at both feet", 3000),
+		("gate_tiled", "the second, a teal-green painted timber arch with cream panels under a red clay-tiled gable roof, "
+			"a flower box of pink flowers in its gable, two lanterns hanging inside, short cream picket fences and wooden "
+			"flower boxes of white flowers at both feet", 3500),
+		("gate_vine", "the third, a pale stone-brick arch with a wooden arched beam under a wooden pergola covered in "
+			"leaves, pink flowers and purple grape bunches with ivy hanging down, two lanterns on brackets, short wooden "
+			"X-brace fences and stone flower boxes of pink flowers at both feet", 4500),
+		("gate_tech", "the fourth, a slime-tech gate: a dark riveted iron arch with teal glass panels and a wooden inner "
+			"arch, a teal glass half-dome on iron ribs with a gold gear wheel and a gold finial on top, two lanterns, "
+			"short dark iron railings and red brick planters of white flowers at both feet", 4500),
+		("gate_royal", "the fifth, a royal cream marble arch with gold trim and a gold crown medallion, a blue glass dome "
+			"with gold ribs and gold finials on top, gold-capped columns with blue banners bearing gold crowns, gold urns "
+			"of pink flowers on marble plinths at both sides", 5000),
+	]]),
 }
 
 if __name__ == "__main__":
