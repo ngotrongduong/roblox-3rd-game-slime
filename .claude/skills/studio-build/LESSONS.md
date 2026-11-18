@@ -1077,6 +1077,20 @@ list is the standard for every Blender building), what closed the gap:
 - **Signed download links cannot be read back through Claude in Chrome** (its output filter blocks query strings),
   and the task API answers 401 to a page fetch. A Chrome download lands in the owner's Downloads folder: ask him
   once before downloading (file names, source, size).
+- **The download loop, one `browser_batch` for 3-4 models** (31 in about 20 minutes): `Escape` (closes the last
+  Download panel; with it open, the first click on a tile only closes it) -> click the textured tile -> wait 2 s ->
+  javascript reads `Faces` -> click the toolbar's green download button -> a javascript check that THROWS unless the
+  page says "Download Settings" and a `button[role=combobox]` reads `glb` (pick glb once from that list; it is kept)
+  -> click the panel's Download -> wait 4 s -> a 0.2 screenshot to see which model it was. The file is
+  `Meshy_AI_<Meshy's own title>_<download time>_texture.glb`: map files to pieces by download time in click order and
+  check each file's triangles against the Faces read (`move_props.py` in that session's scratchpad: all 32 equal).
+  Zoom the list again on every page: new entries shift the tiles.
+- **Look at every build before using it** (owner: Meshy is not always right): render each GLB from front-left and
+  back-right in Blender beside its ChatGPT picture. One of 31 was wrong (the plain window's front glass dark blue,
+  yellow only at the back), only seen from the front. A simple fault like that is fixed in Blender, free; the owner
+  does not want Meshy regenerations from me ("không sửa ở meshy nữa tốn token").
+- **The owner works in the same Meshy tab**: he regenerated the spoon sign while I was downloading (a new entry
+  jumped the list to page 1 and took 10 credits). A credit drop or a new tile may be his click.
 - **A pane tab can hang** (every javascript call times out) while the owner's Chrome window is in front: `navigate`
   it to its own chat address; once it loaded it answered again a few minutes later.
 

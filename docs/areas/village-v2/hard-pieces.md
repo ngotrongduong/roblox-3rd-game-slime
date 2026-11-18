@@ -190,47 +190,55 @@ lượng mesh cho phù hợp với từng vật phẩm". One ChatGPT chat a shee
 Meshy N1 at 2K, Private, 15 credits) at the triangle count below: more for pieces seen big or full of leaves and
 flowers, less for flat signs and banners that hang many times. Credits: 628 before, 31 x 15 spent.
 
-| Sheet | Piece | Era | Triangles asked |
-|-------|-------|-----|-----------------|
-| lamppost | `lamp_wood` gallows post, hanging lantern | 1 | 2000 |
-| lamppost | `lamp_painted` teal post, tiled cap | 2 | 2500 |
-| lamppost | `lamp_stone` brick pillar, ivy | 3 | 3000 |
-| lamppost | `lamp_tech` riveted iron, glass dome, gear | 4 | 3500 |
-| lamppost | `lamp_royal` marble column, crown dome, banner | 5 | 4000 |
-| flowerpot | `pot_clay` terracotta, daisies | 1 | 1500 |
-| flowerpot | `pot_barrel` barrel tub, pink flowers | 2 | 2000 |
-| flowerpot | `pot_stone` brick cube, purple flowers | 3 | 2000 |
-| flowerpot | `pot_crown` cream stone, blue crown panels | 4 | 2500 |
-| flowerpot | `pot_urn` marble urn, roses | 5 | 3000 |
-| planter | `planter_wood` plank trough, yellow | 1 | 1500 |
-| planter | `planter_riveted` riveted trough, pink | 2 | 2000 |
-| planter | `planter_stone` brick trough, blue | 3 | 2000 |
-| planter | `planter_crown` cream stone, crown panel | 4 | 3000 |
-| planter | `planter_royal` marble balustrade, banner, roses | 5 | 4000 |
-| cart | `cart_barrow` hand cart | 1 | 3000 |
-| cart | `cart_awning` striped awning stall cart | 2 | 4000 |
-| cart | `cart_roofed` tiled roof, lanterns | 3 | 5000 |
-| cart | `cart_glass` glass vault, iron arches, gear | 4 | 6000 |
-| cart | `cart_royal` marble and gold, blue dome | 5 | 6000 |
-| kitchen | `sign_hat` hanging sign, chef's hat | - | 1500 |
-| kitchen | `sign_spoon` hanging sign, fork and spoon | - | 1500 |
-| kitchen | `banner_red_hat` red pennant, chef's hat | - | 1000 |
-| kitchen | `banner_blue_spoon` blue pennant, fork and spoon | - | 1000 |
-| kitchen | `emblem_chef_slime` gold laurel, slime in a chef's hat | - | 2500 |
-| kitchen | `emblem_spoon_ribbon` red, fork and spoon, ribbons | - | 2000 |
-| kitchen | `finial_bell` gold bell finial on bricks | - | 1000 |
-| kitchen | `window_roofed` window, tiled hood, flower box | - | 2500 |
-| kitchen | `window_arch` arched stone window, flower box | - | 2000 |
-| kitchen | `window_shutters` green shutters, flower box | - | 2000 |
-| kitchen | `window_plain` plain wooden window | - | 1000 |
+| Sheet | Piece | Era | Triangles asked | Got | GLB MB |
+|-------|-------|-----|-----------------|-----|--------|
+| lamppost | `lamp_wood` gallows post, hanging lantern | 1 | 2000 | 1902 | 2.3 |
+| lamppost | `lamp_painted` teal post, tiled cap | 2 | 2500 | 2482 | 2.9 |
+| lamppost | `lamp_stone` brick pillar, ivy | 3 | 3000 | 3080 | 3.1 |
+| lamppost | `lamp_tech` riveted iron, glass dome, gear | 4 | 3500 | 3548 | 3.2 |
+| lamppost | `lamp_royal` marble column, crown dome, banner | 5 | 4000 | 3957 | 3.5 |
+| flowerpot | `pot_clay` terracotta, daisies | 1 | 1500 | 1516 | 2.1 |
+| flowerpot | `pot_barrel` barrel tub, pink flowers | 2 | 2000 | 2002 | 2.6 |
+| flowerpot | `pot_stone` brick cube, purple flowers | 3 | 2000 | 2007 | 2.6 |
+| flowerpot | `pot_crown` cream stone, blue crown panels | 4 | 2500 | 2490 | 2.3 |
+| flowerpot | `pot_urn` marble urn, roses | 5 | 3000 | 2839 | 3.4 |
+| planter | `planter_wood` plank trough, yellow | 1 | 1500 | 1438 | 2.9 |
+| planter | `planter_riveted` riveted trough, pink | 2 | 2000 | 1885 | 2.9 |
+| planter | `planter_stone` brick trough, blue | 3 | 2000 | 2017 | 3.5 |
+| planter | `planter_crown` cream stone, crown panel | 4 | 3000 | 2800 | 3.0 |
+| planter | `planter_royal` marble balustrade, banner, roses | 5 | 4000 | 3828 | 3.2 |
+| cart | `cart_barrow` hand cart | 1 | 3000 | 3100 | 2.8 |
+| cart | `cart_awning` striped awning stall cart | 2 | 4000 | 3920 | 3.2 |
+| cart | `cart_roofed` tiled roof, lanterns | 3 | 5000 | 4871 | 3.9 |
+| cart | `cart_glass` glass vault, iron arches, gear | 4 | 6000 | 5579 | 3.6 |
+| cart | `cart_royal` marble and gold, blue dome | 5 | 6000 | 5932 | 4.3 |
+| kitchen | `sign_hat` hanging sign, chef's hat | - | 1500 | 1515 | 2.8 |
+| kitchen | `sign_spoon` hanging sign, fork and spoon (the owner's second build) | - | 1500 | 1502 | 2.5 |
+| kitchen | `banner_red_hat` red pennant, chef's hat | - | 1000 | 1003 | 1.6 |
+| kitchen | `banner_blue_spoon` blue pennant, fork and spoon | - | 1000 | 1029 | 2.2 |
+| kitchen | `emblem_chef_slime` gold laurel, slime in a chef's hat | - | 2500 | 2484 | 2.1 |
+| kitchen | `emblem_spoon_ribbon` red, fork and spoon, ribbons | - | 2000 | 1991 | 2.6 |
+| kitchen | `finial_bell` gold bell finial on bricks | - | 1000 | 973 | 2.9 |
+| kitchen | `window_roofed` window, tiled hood, flower box | - | 2500 | 2398 | 2.7 |
+| kitchen | `window_arch` arched stone window, flower box | - | 2000 | 2039 | 2.6 |
+| kitchen | `window_shutters` green shutters, flower box | - | 2000 | 1920 | 2.6 |
+| kitchen | `window_plain` plain wooden window (second build) | - | 1000 | 1048 | 2.4 |
 
 ChatGPT chats: lamppost `/c/6afd2678-b94c-83ec-9204-a2136078aa06`, flowerpot `/c/6afd26ac-3ec4-83ec-a4b2-7adf6dac3ccb`,
 planter `/c/6afd26e4-a4a0-83ec-a138-3d1d76ad1bee`, cart `/c/6afd2703-9a4c-83ec-8eaf-7195c09d260a`, kitchen
 `/c/6afd272f-90c8-83ec-9474-186a75056b89`. `cart_glass` is cut from a picture that also showed the royal cart's dome
 at its foot; `cart_royal` was asked for again on its own.
 
-Next: the GLB files from Meshy into `art/models/village_props/<sheet>/`, read (size, triangles, facing), uploaded with
-`upload_village_pieces.js`, and the ladders of the buildings and the village layout point at them.
+Downloaded the same day: `art/models/village_props/<sheet>/<piece>.glb`, beside `refs/`. Every file is one mesh, one
+material and one 2048 px texture; its triangles equal the Faces Meshy showed; it is about 0.95 units on its longest
+side (rescale on placing). Each was rendered from the front-left and the back-right (`review/`, not committed) and
+put beside its picture. Two builds were redone: `sign_spoon` by the owner, who regenerated it in Meshy, and
+`window_plain`, whose first build had dark blue glass in front (yellow only at the back): regenerated once (15
+credits, 153 -> 138), after which the owner said not to fix in Meshy any more ("không sửa ở meshy nữa tốn token")
+and that a simple fault like that is fixed in Blender, free. The rest showed no fault. Facing: most fronts look
+along glTF +Z; the five lamp posts show their decorated side along -Z, so check each one when it is placed.
+
+Next: upload with `upload_village_pieces.js`, and the ladders of the buildings and the village layout point at them.
 
 ## Other districts
 
