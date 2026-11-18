@@ -1,6 +1,6 @@
 ---
 name: landmark-build
-description: Use when a village building of Goo Lineage V2 that upgrades through its 50 levels is built or rebuilt as a landmark (the Granary, the Kitchen, the Garden, the Breeding House and the Training Hall are done; dock and the village's own pieces follow), when the owner sends a note on a finished landmark, when its upgrade ladder is planned or judged, when a shape is too hard for Roblox parts and must go to Blender or the owner's Meshy, or before changing src/server/Architecture.luau or a landmark module such as Granary.luau.
+description: Use when a village building of Goo Lineage V2 that upgrades through its 50 levels is built or rebuilt as a landmark (Granary, Kitchen, Garden, Breeding House, Training Hall and Dock all wear Blender bodies), when one of them is refined (proportions, small details: section 3c, one building a session), when the owner sends a note on a finished landmark, when its upgrade ladder is planned or judged, when a shape is too hard for Roblox parts and must go to Blender or the owner's Meshy, or before changing src/server/Architecture.luau or a landmark module such as Granary.luau.
 ---
 
 # Landmark build: one village building, from reference to locked
@@ -259,6 +259,43 @@ worked example of one builder for several eras (`granary(era)`, `SHELL_LATER`, `
 - **ChatGPT by script, sync steps only**: page timers are throttled and an awaited script hangs the tool 45 s, so
   every step is its own plain call with a `wait` between (navigate, store, attach, clear, paste, check and send);
   a chat page still loading hangs ANY script: wait 10 + 10 + 8 s after `navigate` before the first one.
+
+## 3c. Refining a locked building (the owner's next step, 2026-11-18)
+
+"Bước tiếp theo là tinh chỉnh từng tòa nhà một, điều chỉnh tỉ lệ và các chi tiết nhỏ cho đẹp mắt và hoàn thiện
+hơn." All six landmarks wear Blender bodies; now ONE building a session, in the order he names, is made finer.
+
+1. **Look before touching**, one era at a time: the era's four-side sheet (`docs/areas/village-v2/views/
+   <name>_views_era<N>.webp`), its concept cut (`<name>-ref-era<N>.jpg`), the body's four elevations
+   (`art/models/granary/blender/<Model>_front.png`, `_left`, `_back`, `_right`) and the last play shot
+   (`review/<name>-body-l<level>.jpg`). Measure the sheet at the footprint's width (plinth, eave, ridge, door,
+   each opening's share) against the model's `*_LOOK` numbers, and write the list of what differs: proportion
+   first, then joints and depth, then small detail. His notes, when he sends any, go first and exactly as said.
+2. **Where a fix lives**:
+   - shape, depth, joints, mouldings, tile courses: the builder in `tools/blender/landmark_bodies.py`
+     (`granary1`, `granary`, `kitchen_set`, `garden_set`, `breeding_set`, `training_set`, `dock_set`); a cluster
+     two houses share is fixed in its mould, and then every model that calls it is rebuilt and looked at;
+   - a size the ladder stands on (half width, wall height, rise): the module's `LOOKS[era]` AND the script's
+     `*_LOOK`, together, then the Edit preview at every level of that era's ladder rows that hang on it;
+   - a stretch only: `piece(..., sx, sy, sz)` in the module, no new upload;
+   - colour and material: the module's palette, tuned live in Play and then written into code;
+   - a fixture (lamp, flower box, banner, finial): a kit piece moved, swapped or added, never modelled again.
+3. **Rebuild only what changed**: `& "C:\Roblox 3rd game\tools\blender\landmark_bodies.ps1" <Model> <Model>`,
+   look at the four elevations, take those models' rows OUT of `art/models/village_ids.json`, replace their `ROW`
+   lines in `ConfigMeshyKit.luau` (size and `at` change with the shape), then `upload_village_pieces.js` with the
+   cloud place open (never saved). A model's fields may not change name without the module's `slots`.
+4. **Proof as before**: `types.ps1`, `sync_all.ps1`, the Edit preview at the era's last level, ONE play test for
+   the building (walk in through the open door at each changed era, one daylight shot each, the console), the new
+   shots over the old `review/<name>-body-l*.jpg`, `check.ps1`. The play recipe of each house is in
+   `studio-build/LESSONS.md` (cameras, the Dock's `PondStage`, where the grown floor lies).
+5. **What must not move**: the open great door and a clear floor; the ghost shell as collider (a body wall made
+   thinner or moved leaves the old part showing: change the module's part with it); one roof an era; the
+   upgrade ladder (a refined piece still arrives at its own level); the grown size (`HouseScale`, the split).
+6. Close as section 1 step 9: lessons into this skill and LESSONS, STATUS, commit the job's own paths, the
+   before and after shots to the owner, and say what was not seen (phone, the real plot).
+
+Left open for this step (STATUS, "Not verified"): side and back walls not walked against; face pieces in front
+of the grow split at the Granary, Kitchen and Garden; the Garden's flower box over its cross-gable window.
 
 ## 4. Least time, least tokens
 

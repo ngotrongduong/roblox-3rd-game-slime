@@ -97,8 +97,15 @@ khung và kết cấu của căn nhà thôi, những phụ kiện kiểu như đ
   house's floor at z 68.7 to 94.2): the character went from z 61 to 65 on the landing to z 88.2 to 88.4 inside at
   a level y of 5.1 at every level; no Dock error in the console; shots `review/dock-body-l10.jpg` to `-l50`.
   CHECK OK (829 passed), TYPES OK.
-- **All six landmarks are Blender bodies now.** Next (the owner picks): the village layout; an era-1 silo piece
-  for the Granary.
+- **All six landmarks are Blender bodies now.**
+- **NEXT (the owner, 2026-11-18): refine the buildings one by one**, proportions and small details, "cho đẹp mắt
+  và hoàn thiện hơn". Hand-over for a new session: read skill `landmark-build` section 3c (the loop, where each
+  kind of fix lives, what must not move), then the one building the owner names. Build command:
+  `tools\blender\landmark_bodies.ps1 <Model> ...` (written 2026-11-18 from the session's scratchpad scripts, NOT
+  yet run from this path). Not made yet, wanted for this step: a play-test helper file (the session's `_G.Walk`,
+  `_G.DockShow`, the daylight camera lived only in Studio; their recipe is in `studio-build/LESSONS.md`) and a
+  sheet that lays a four-side reference beside the model's four elevations. Later: the village layout; an era-1
+  silo piece for the Granary.
 - **Not verified / open**: the phone view; the houses on their real plot (the open StudioTest holds a map older
   than `Layout`: reopen it after a rebuild from MapWork; for the Garden's proof the wild rocks and trees on its
   cell were hidden and the terrain cleared in Play, with a test pad as the yard's ground); the Granary's side and
