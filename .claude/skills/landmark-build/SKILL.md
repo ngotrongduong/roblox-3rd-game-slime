@@ -304,6 +304,10 @@ hơn." All six landmarks wear Blender bodies; now ONE building a session, in the
    look sculpted (a straw lean-to) becomes its own small model over its slab, the slab invisible and kept as the
    collider; glass over a dark hall reads navy at 0.4 see-through, 0.15 on the facade glass only; copy every `ROW`
    the rebuild prints, the uploader fills only the ids.
+9. **What the Garden's round taught** (2026-11-18, LESSONS "Refining the Garden"): a colour change that keeps which
+   fields share a colour needs no rebuild or upload; iron in Metal reads navy under the sky, so it is tuned LIVE in
+   Play (recolour the stage's parts of the old colour, one call a try) and lands lighter and a little warm; barge
+   boards go under a thatch's end, never in front of its tiers.
 
 Left open for this step (STATUS, "Not verified"): side and back walls not walked against; face pieces in front
 of the grow split at the Granary, Kitchen and Garden; the Garden's flower box over its cross-gable window.

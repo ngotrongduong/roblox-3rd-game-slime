@@ -610,6 +610,26 @@ The Garden's house, the third landmark as bodies (`garden_set(era)`, 2026-11-18)
   Camera `f * lookAt((-22, 35, -72), (-4, 14, 10))` with `f = plotAreaFacing(plot, -1, 0) * (0, 2, 0)`, field of
   view 50, the day's Lighting at `Last + 5`.
 
+**Refining the Garden against its four-side sheets (2026-11-18)**, the third building of section 3c:
+- Mostly colour again, and a colour change that keeps which fields share a colour needs NO rebuild and no upload
+  (eras 2 to 5 here): only `LOOKS` and the mirrored `G_PAINT` move. Only era 1's thatch was a shape.
+- **Iron in Metal under the sky**: (78, 78, 84) still read navy black in Play, (122, 122, 128) slate blue; a warm
+  grey (128, 124, 120) with (104, 101, 98) for the darker pieces reads as the sheet's grey iron. Tuned LIVE in Play
+  by recolouring the stage's parts that carry the old colour (one server call a try), then written into code. The
+  Granary's (66, 72, 80) and the Kitchen's (72, 74, 78) era 4 iron are darker than this.
+- **Barge boards in front of a thatch's end hide its tiers**: they went UNDER the straw (inside its end, below the
+  slab), short enough not to poke out at the eaves. `thatch()`'s `thick` grows the slab DOWN from the roof line, so
+  a thicker slab swallows whatever sits just under it (the lean-to kept 0.5, only its lip and roll grew).
+- Glass walls and fans of era 4 at 0.15 see-through as the Kitchen's front glass (`GlassWall`, `Fan`), the goo
+  tank kept at 0.4.
+- **Edit preview of the Garden**: x = 100 * i, z about 308 (the area box 94 by 90), camera (x - 10, 532, 262) to
+  (x + 18, 512, 326).
+- **Play shots of the Garden**: stage `GardenStages`, area `GardenL1`, cell (1, 1). In the test place the cell is
+  wild forest: on the server `Terrain:FillBlock(f * (0, 42, 0), (134, 80, 134), Air)`, on the client every part of
+  `workspace.World.Scenery` and the area's `Nature` within 72 studs of the cell's centre hidden (Play only, never
+  saved). The yard's ground then shows as grass, not the old shots' stud floor. Camera
+  `f * lookAt((-34, 40, -46), (2, 17, 32))`, field of view 50, frames era 5's dome.
+
 ### Whole small buildings from Blender (2026-11-17, the garden's tool stores, tools/blender/granary_pieces.py)
 
 The owner, looking at a part-built yard beside ChatGPT's picture: "why is what you build not as beautiful as the

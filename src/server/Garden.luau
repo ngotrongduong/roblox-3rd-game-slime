@@ -94,13 +94,15 @@ local LOOKS: { Look } = {
 		depth = 10, -- (the owner, 2026-11-17: the houses lacked depth; as deep as the pier is long once grown)
 		wallH = 6.2,
 		rise = 4.2,
-		wall = C(236, 220, 180),
-		lower = C(170, 120, 72),
+		-- (measured on the four-side sheet with tools/map/sheet_colours.py, the lit tones: an orange-brown timber,
+		-- warm cream plaster, plank half walls in the timber's colour)
+		wall = C(240, 212, 178),
+		lower = C(182, 106, 50),
 		stone = C(150, 146, 138),
-		beam = C(110, 72, 42),
-		board = C(92, 60, 36),
+		beam = C(172, 98, 42),
+		board = C(148, 82, 34),
 		roof = C(232, 190, 84),
-		frame = C(126, 84, 50),
+		frame = C(158, 90, 38),
 		glass = C(255, 214, 120),
 		shutters = C(120, 150, 96),
 		cloth = C(52, 96, 190),
@@ -128,15 +130,16 @@ local LOOKS: { Look } = {
 		depth = 10,
 		wallH = 6.8,
 		rise = 4.8,
-		wall = C(244, 238, 224),
+		-- (the sheet's timber is a green teal, not a blue one, its window frames the same; the plaster cream)
+		wall = C(244, 224, 194),
 		lower = C(190, 92, 66),
 		stone = C(232, 222, 200),
-		beam = C(40, 128, 130),
-		board = C(32, 104, 108),
+		beam = C(62, 132, 116),
+		board = C(50, 110, 96),
 		roof = C(198, 70, 58),
-		frame = C(250, 246, 236),
+		frame = C(68, 140, 124),
 		glass = C(250, 198, 100), -- (deeper than the Kitchen's: lit Neon panes washed out to white in daylight)
-		shutters = C(56, 146, 146),
+		shutters = C(60, 138, 120),
 		cloth = C(52, 96, 190),
 		gold = C(236, 190, 70),
 		accent = C(110, 72, 42),
@@ -161,13 +164,14 @@ local LOOKS: { Look } = {
 		depth = 10,
 		wallH = 6.8,
 		rise = 4.6,
-		wall = C(240, 230, 206),
-		lower = C(198, 190, 174),
-		stone = C(128, 124, 118),
-		beam = C(112, 72, 44),
-		board = C(92, 60, 38),
+		-- (the sheet's stone storey a pale warm grey with a pink cast, its timber a warm mid-brown)
+		wall = C(246, 232, 214),
+		lower = C(206, 188, 180),
+		stone = C(176, 156, 148),
+		beam = C(150, 88, 40),
+		board = C(128, 70, 32),
 		roof = C(190, 62, 50), -- (the owner, 2026-11-17: one roof an era for every landmark, the Granary's)
-		frame = C(222, 216, 202),
+		frame = C(216, 200, 192),
 		glass = C(250, 198, 100),
 		shutters = C(120, 150, 96),
 		cloth = C(52, 96, 190),
@@ -192,15 +196,17 @@ local LOOKS: { Look } = {
 		depth = 10,
 		wallH = 9.4,
 		rise = 5.4,
-		wall = C(150, 225, 215),
+		wall = C(100, 230, 200), -- (the sheet's glass is a saturated mint)
 		lower = C(198, 112, 74),
-		stone = C(74, 80, 92),
-		beam = C(52, 56, 64),
-		board = C(40, 44, 50),
+		stone = C(92, 94, 100),
+		-- (its iron a neutral grey: Metal under the sky turns a darker grey navy, so it is set lighter and a little
+		-- warm, tuned in Play against the sheet; at 78, 78, 84 it still read navy black)
+		beam = C(128, 124, 120),
+		board = C(104, 101, 98),
 		roof = C(66, 108, 186),
 		frame = C(214, 208, 196),
 		glass = C(250, 202, 108),
-		shutters = C(40, 44, 50),
+		shutters = C(104, 101, 98),
 		cloth = C(40, 80, 160),
 		gold = C(224, 170, 70),
 		accent = C(226, 132, 78), -- (bright: Metal darkens it, and a duller copper read as brown wood)
@@ -224,10 +230,11 @@ local LOOKS: { Look } = {
 		depth = 10,
 		wallH = 9,
 		rise = 3.2,
-		wall = C(250, 249, 245),
-		lower = C(214, 208, 196),
-		stone = C(214, 208, 196),
-		beam = C(228, 222, 210),
+		-- (the sheet's marble is warm, a faint pink in it)
+		wall = C(248, 236, 232),
+		lower = C(226, 210, 206),
+		stone = C(226, 210, 206),
+		beam = C(240, 226, 222),
 		board = C(236, 192, 76),
 		roof = C(44, 84, 170),
 		frame = C(236, 192, 76),
@@ -1578,6 +1585,13 @@ local function raise(m: Instance, frame: CFrame, level: number, had: { Instance 
 			painted("PipeValve_Copper", b.face(TX - 2.6, FLOOR + 4.2, TZ + 1.2, RIGHT), 0.55)
 		end
 		interior(hw - 0.4, zb - T, FLOOR + 0.2, spring - 1.4)
+		-- (the glass walls and fans less see-through than the game's 0.4: over the dark hall they read navy, the
+		-- sheet's are mint; the goo tank keeps 0.4 so its goo shows)
+		for _, p in m:GetDescendants() do
+			if p:IsA("BasePart") and (p.Name == "GlassWall" or p.Name == "Fan") and p.Material == M.Glass then
+				p.Transparency = 0.15
+			end
+		end
 	else
 		-- A PALM HOUSE: a marble hall behind four columns and a pediment, a wing each side under a balustrade
 		local aw, spring, R = 2.6, FLOOR + 5, 2.4

@@ -1,5 +1,25 @@
 # Status
 
+## 2026-11-18 — the Garden refined against its four-side sheets (`landmark-build` §3c, the third building)
+
+- **Shape** (Blender, rebuilt and uploaded: `GardenBody1`, `GardenLean1`): era 1's thatch thick with each course
+  standing proud (tiers, as the sheet), a fat ridge roll, the barge boards moved under the straw's ends; the
+  lean-to's straw shaggier.
+- **Colour** (`Garden.luau` `LOOKS`, mirrored in `G_PAINT`; no rebuild, the shared fields did not change), measured
+  with `sheet_colours.py`: era 1 orange-brown timber and plank walls, warm cream plaster; era 2 green teal timber and
+  window frames (it was a blue teal), cream plaster; era 3 warm mid-brown timber, a pale pink-grey stone storey and
+  window surrounds; era 4 mint glass (walls and fans 0.15 see-through), a warm grey iron tuned in Play (navy black
+  before); era 5 a warm marble.
+- **Proof**: the Edit preview at levels 10-50 with the uploaded meshes; one play test in StudioTest, the five levels
+  in daylight (`review/garden-body-l10.jpg` to `-l50`, before and after in `review/garden-refine-before-after.jpg`),
+  no Garden error in the console. CHECK OK (829 passed), TYPES OK. The preview folder was destroyed.
+- **Not verified**: the phone view; walking in (shell and door unchanged). The test place's garden cell is wild
+  forest: its terrain and trees were cleared in Play only, so the new shots stand on grass, not the stud yard.
+- Left open: the Granary's and the Kitchen's era 4 iron are darker than the Garden's (one look at the three side by
+  side); era 1's shared thatch (232, 190, 84) is paler than the sheets' gold; era 4's vault stays the village's blue
+  slate (one roof an era) where the sheet draws glass.
+- **Next**: the Breeding House by the same loop, then the Training Hall and the Dock.
+
 ## 2026-11-18 — the Kitchen refined against its four-side sheets (`landmark-build` §3c, the second building)
 
 - **Shape** (Blender, `landmark_bodies.py`, rebuilt and uploaded): every era's chimney a broad stack 1.2 times wider

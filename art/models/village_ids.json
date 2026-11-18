@@ -322,21 +322,6 @@
 			"KitchenTruss1_Beam": 74053122388694
 		}
 	},
-	"GardenBody1": {
-		"model": 139724531231609,
-		"texture": 0,
-		"pieces": {
-			"GardenBody1_Beam": 75205063542886,
-			"GardenBody1_Board": 85411929124796,
-			"GardenBody1_Frame": 75222172643391,
-			"GardenBody1_Glass": 120713753230689,
-			"GardenBody1_Lower": 83836526818951,
-			"GardenBody1_Roof": 107055616725051,
-			"GardenBody1_Shutters": 115239808209648,
-			"GardenBody1_Stone": 74389604545504,
-			"GardenBody1_Wall": 100736655495207
-		}
-	},
 	"GardenBody2": {
 		"model": 132048575886611,
 		"texture": 0,
@@ -380,14 +365,6 @@
 		"pieces": {
 			"GardenGable1_Beam": 97887906597706,
 			"GardenGable1_Wall": 72471070398859
-		}
-	},
-	"GardenLean1": {
-		"model": 84840146663798,
-		"texture": 0,
-		"pieces": {
-			"GardenLean1_Beam": 72762501398499,
-			"GardenLean1_Roof": 133640407438048
 		}
 	},
 	"GardenRoof3": {
@@ -1102,6 +1079,29 @@
 		"pieces": {
 			"KitchenStack1_Cap": 104750229277854,
 			"KitchenStack1_Chimney": 80651626840429
+		}
+	},
+	"GardenBody1": {
+		"model": 86524540046740,
+		"texture": 0,
+		"pieces": {
+			"GardenBody1_Beam": 75205063542886,
+			"GardenBody1_Board": 128252862660511,
+			"GardenBody1_Frame": 75222172643391,
+			"GardenBody1_Glass": 120713753230689,
+			"GardenBody1_Lower": 83836526818951,
+			"GardenBody1_Roof": 120937685415004,
+			"GardenBody1_Shutters": 115239808209648,
+			"GardenBody1_Stone": 74389604545504,
+			"GardenBody1_Wall": 100736655495207
+		}
+	},
+	"GardenLean1": {
+		"model": 73575796561844,
+		"texture": 0,
+		"pieces": {
+			"GardenLean1_Beam": 72762501398499,
+			"GardenLean1_Roof": 119820006750961
 		}
 	}
 }

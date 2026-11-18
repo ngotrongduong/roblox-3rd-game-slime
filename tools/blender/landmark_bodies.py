@@ -1587,19 +1587,19 @@ G_FIELDS = ("Stone", "Wall", "Lower", "Beam", "Gold", "Board", "Roof", "Frame", 
 GF, G_Z0, G_Z1 = 0.2, 18.5, 28.5  # the module's FLOOR, HZ and zb: its floor, its front wall and its back wall
 G_LOOK = {1: (5.4, 6.2, 4.2), 2: (6.5, 6.8, 4.8), 3: (7.2, 6.8, 4.6), 4: (5.4, 9.4, 5.4), 5: (5.5, 9.0, 3.2)}  # hw, wallH, rise
 G_PAINT = {
-	1: dict(Stone=rgb(150, 146, 138), Wall=rgb(236, 220, 180), Lower=rgb(170, 120, 72), Beam=rgb(110, 72, 42),
-		Gold=rgb(236, 190, 70), Board=rgb(92, 60, 36), Roof=rgb(232, 190, 84), Frame=rgb(126, 84, 50),
+	1: dict(Stone=rgb(150, 146, 138), Wall=rgb(240, 212, 178), Lower=rgb(182, 106, 50), Beam=rgb(172, 98, 42),
+		Gold=rgb(236, 190, 70), Board=rgb(148, 82, 34), Roof=rgb(232, 190, 84), Frame=rgb(158, 90, 38),
 		Glass=rgb(255, 214, 120), Shutters=rgb(120, 150, 96)),
-	2: dict(Stone=rgb(232, 222, 200), Wall=rgb(244, 238, 224), Lower=rgb(190, 92, 66), Beam=rgb(40, 128, 130),
-		Gold=rgb(236, 190, 70), Board=rgb(32, 104, 108), Roof=rgb(198, 70, 58), Frame=rgb(250, 246, 236),
-		Glass=rgb(250, 198, 100), Shutters=rgb(56, 146, 146)),
-	3: dict(Stone=rgb(128, 124, 118), Wall=rgb(240, 230, 206), Lower=rgb(198, 190, 174), Beam=rgb(112, 72, 44),
-		Gold=rgb(236, 190, 70), Board=rgb(92, 60, 38), Roof=rgb(190, 62, 50), Frame=rgb(222, 216, 202),
+	2: dict(Stone=rgb(232, 222, 200), Wall=rgb(244, 224, 194), Lower=rgb(190, 92, 66), Beam=rgb(62, 132, 116),
+		Gold=rgb(236, 190, 70), Board=rgb(50, 110, 96), Roof=rgb(198, 70, 58), Frame=rgb(68, 140, 124),
+		Glass=rgb(250, 198, 100), Shutters=rgb(60, 138, 120)),
+	3: dict(Stone=rgb(176, 156, 148), Wall=rgb(246, 232, 214), Lower=rgb(206, 188, 180), Beam=rgb(150, 88, 40),
+		Gold=rgb(236, 190, 70), Board=rgb(128, 70, 32), Roof=rgb(190, 62, 50), Frame=rgb(216, 200, 192),
 		Glass=rgb(250, 198, 100), Shutters=rgb(120, 150, 96)),
-	4: dict(Stone=rgb(74, 80, 92), Wall=rgb(150, 225, 215), Lower=rgb(198, 112, 74), Beam=rgb(52, 56, 64),
-		Gold=rgb(224, 170, 70), Board=rgb(40, 44, 50), Roof=rgb(66, 108, 186), Frame=rgb(214, 208, 196),
-		Glass=rgb(250, 202, 108), Shutters=rgb(40, 44, 50)),
-	5: dict(Stone=rgb(214, 208, 196), Wall=rgb(250, 249, 245), Lower=rgb(214, 208, 196), Beam=rgb(228, 222, 210),
+	4: dict(Stone=rgb(92, 94, 100), Wall=rgb(100, 230, 200), Lower=rgb(198, 112, 74), Beam=rgb(128, 124, 120),
+		Gold=rgb(224, 170, 70), Board=rgb(104, 101, 98), Roof=rgb(66, 108, 186), Frame=rgb(214, 208, 196),
+		Glass=rgb(250, 202, 108), Shutters=rgb(104, 101, 98)),
+	5: dict(Stone=rgb(226, 210, 206), Wall=rgb(248, 236, 232), Lower=rgb(226, 210, 206), Beam=rgb(240, 226, 222),
 		Gold=rgb(236, 192, 76), Board=rgb(236, 192, 76), Roof=rgb(44, 84, 170), Frame=rgb(236, 192, 76),
 		Glass=rgb(250, 204, 112), Shutters=rgb(236, 192, 76)),
 }
@@ -1679,10 +1679,13 @@ def garden_set(era):
 		lbox(t["Beam"], -0.2, 0.2, top - 0.1, ridge - drop - 0.2, -0.02, 0.22, 0.04)
 		back.put(body, t)
 		for s in (-1, 1):
-			thatch(body["Roof"], (s * (hw + 1), top - pitch), (0, ridge), Z0 - 1, Z1 + 1, 4, th, 0.34)
-			for z in (Z0 - 1.12, Z1 + 1.12):
-				mbar(board, (s * (hw + 1.1), top - pitch * 1.1 - drop / 2, z), (0, ridge - drop / 2, z), 0.3, th + 0.35)
-		roll(body["Roof"], (0, -Z0 + 1.25, ridge + 0.1), (0, -Z1 - 1.25, ridge + 0.1), 0.55)
+			# (thicker, each course standing well proud, as the sheet's tiers: at 0.6 and 0.34 it read as flat shingles)
+			thatch(body["Roof"], (s * (hw + 1), top - pitch), (0, ridge), Z0 - 1, Z1 + 1, 4, th + 0.3, 0.7)
+			# the barge boards UNDER the straw's ends, as the sheet draws them (in front, they hid its tiers)
+			dv = (th + 0.3) * math.sqrt(1 + pitch * pitch) + 0.2
+			for z in (Z0 - 0.8, Z1 + 0.8):
+				mbar(board, (s * (hw + 0.3), top - pitch * 0.3 - dv, z), (0, ridge - dv, z), 0.3, 0.45)
+		roll(body["Roof"], (0, -Z0 + 1.25, ridge + 0.15), (0, -Z1 - 1.25, ridge + 0.15), 0.8)
 		# the open truss of the first levels
 		t = mk()
 		rafter_pair(t["Beam"], pitch, top - 0.45, ridge, drop, -0.3, 0.5, 0.5, 0.36)
@@ -1698,8 +1701,9 @@ def garden_set(era):
 		front.put(parts["gable"], t)
 		# the lean-to along the left wall
 		ln = parts["lean"]
-		thatch(ln["Roof"], (-hw - 4.25, GF + 3.68), (-hw + 0.05, GF + 5.13), Z0 + 0.6, Z1, 2, 0.5, 0.3)
-		roll(ln["Roof"], (-hw - 4.2, -Z0 - 0.5, GF + 3.4), (-hw - 4.2, -Z1 - 0.1, GF + 3.4), 0.24)
+		# (shaggier as the main roof; not thicker, or its slab swallows the lean-to's plate)
+		thatch(ln["Roof"], (-hw - 4.25, GF + 3.68), (-hw + 0.05, GF + 5.13), Z0 + 0.6, Z1, 2, 0.5, 0.55)
+		roll(ln["Roof"], (-hw - 4.2, -Z0 - 0.5, GF + 3.4), (-hw - 4.2, -Z1 - 0.1, GF + 3.4), 0.34)
 		for z in (Z0 + 1, Z1 - 0.4):
 			mbox(ln["Beam"], -hw - 3.89, -hw - 3.31, GF, GF + 3.3, z - 0.29, z + 0.29, 0.05)
 		mbox(ln["Beam"], -hw - 3.86, -hw - 3.34, GF + 3.25, GF + 3.75, Z0 + 0.7, Z1 - 0.1, 0.05)
