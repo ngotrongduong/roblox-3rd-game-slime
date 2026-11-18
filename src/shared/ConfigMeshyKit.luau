@@ -1247,19 +1247,19 @@ return {
 			{ mesh = 116871946801379, tex = "", size = { 20.56, 0.52, 1.46 }, at = { 0, 0.66, 17.85 } },
 		},
 		TrainingBody1_Wall = {
-			{ mesh = 99834094867260, tex = "", size = { 20.1, 11.5, 12.45 }, at = { 0, 6.15, 24.425 } },
+			{ mesh = 91623126318986, tex = "", size = { 20.1, 11.15, 12.45 }, at = { 0, 5.975, 24.425 } },
 		},
 		TrainingBody1_Lower = {
 			{ mesh = 90736079478376, tex = "", size = { 20.1, 2.62, 12.45 }, at = { 0, 1.71, 24.425 } },
 		},
 		TrainingBody1_Beam = {
-			{ mesh = 83684988317603, tex = "", size = { 20.52, 11.372, 13.53 }, at = { 0, 6.086, 24.135 } },
+			{ mesh = 120191514253531, tex = "", size = { 20.52, 11.022, 13.53 }, at = { 0, 5.911, 24.135 } },
 		},
 		TrainingBody1_Board = {
-			{ mesh = 100399577543441, tex = "", size = { 22.689, 9.223, 15.74 }, at = { 0, 8.046, 24 } },
+			{ mesh = 134170897019924, tex = "", size = { 20.832, 8.109, 15.1 }, at = { 0, 7.489, 24 } },
 		},
 		TrainingBody1_Roof = {
-			{ mesh = 133988579948641, tex = "", size = { 23.899, 7.857, 15.7 }, at = { 0, 9.321, 24 } },
+			{ mesh = 125555593414139, tex = "", size = { 24.292, 8.364, 15.7 }, at = { 0, 9.318, 24 } },
 		},
 		TrainingBody1_Frame = {
 			{ mesh = 112136950299489, tex = "", size = { 20.84, 2.06, 9.19 }, at = { 0, 4.87, 26.425 } },
@@ -1805,7 +1805,12 @@ return {
 			},
 		},
 		PropWindowArch = {
-			{ mesh = 106064499305476, tex = "MeshyPropWindowArch", size = { 4.167, 5.0, 2.159 }, at = { 0, 0, -1.079 } },
+			{
+				mesh = 106064499305476,
+				tex = "MeshyPropWindowArch",
+				size = { 4.167, 5.0, 2.159 },
+				at = { 0, 0, -1.079 },
+			},
 		},
 		PropWindowShutters = {
 			{
@@ -1816,7 +1821,12 @@ return {
 			},
 		},
 		PropWindowPlain = {
-			{ mesh = 70469122829091, tex = "MeshyPropWindowPlain", size = { 4.397, 5.0, 1.263 }, at = { 0, 0, -0.631 } },
+			{
+				mesh = 70469122829091,
+				tex = "MeshyPropWindowPlain",
+				size = { 4.397, 5.0, 1.263 },
+				at = { 0, 0, -0.631 },
+			},
 		},
 		-- the yards' fences and gates from the owner's two sheets (hard-pieces.md, "Fences and gates"), one an era, worn
 		-- by server/YardKit: a fence section, the same with its start post cut off (Open) and with both cut off (Bare, the
@@ -1838,7 +1848,12 @@ return {
 			{ mesh = 75832644197057, tex = "MeshyPropFenceRoyal", size = { 6.6, 4.2, 1.876 }, at = { 0, 2.1, 0 } },
 		},
 		PropFenceRailOpen = {
-			{ mesh = 129714806064580, tex = "MeshyPropFenceRailOpen", size = { 4.181, 3.2, 1.292 }, at = { 0, 1.6, 0 } },
+			{
+				mesh = 129714806064580,
+				tex = "MeshyPropFenceRailOpen",
+				size = { 4.181, 3.2, 1.292 },
+				at = { 0, 1.6, 0 },
+			},
 		},
 		PropFencePicketOpen = {
 			{

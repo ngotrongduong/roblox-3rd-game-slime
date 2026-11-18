@@ -2480,19 +2480,19 @@ TF, T_Z0, T_Z1 = 0.4, 17.4, 30.6  # the module's FLOOR, HZ and zb
 T_LOOK = {1: (10.0, 6.2, 6.0), 2: (10.6, 6.8, 6.4), 3: (11.0, 7.4, 5.6), 4: (11.4, 6.0, 8.4), 5: (9.2, 9.5, 3.9)}  # hw, wallH, rise
 T_TOWER = {1: (1.9, 1.4), 2: (2.3, 1.2), 3: (2.7, 0.6), 4: (2.7, 0.5), 5: (2.8, 0.3)}  # half its width, its gap to the hall
 T_PAINT = {
-	1: dict(Stone=rgb(150, 146, 138), Wall=rgb(196, 150, 98), Lower=rgb(164, 114, 68), Beam=rgb(110, 72, 42),
-		Gold=rgb(236, 190, 70), Board=rgb(92, 60, 36), Roof=rgb(232, 190, 84), Frame=rgb(126, 84, 50),
+	1: dict(Stone=rgb(150, 146, 138), Wall=rgb(204, 120, 62), Lower=rgb(176, 96, 46), Beam=rgb(150, 78, 34),
+		Gold=rgb(236, 190, 70), Board=rgb(118, 60, 26), Roof=rgb(232, 190, 84), Frame=rgb(160, 86, 36),
 		Glass=rgb(238, 158, 60), Shutters=rgb(176, 128, 78)),
-	2: dict(Stone=rgb(214, 206, 188), Wall=rgb(244, 238, 224), Lower=rgb(226, 214, 190), Beam=rgb(70, 118, 224),
-		Gold=rgb(236, 190, 70), Board=rgb(48, 86, 184), Roof=rgb(198, 70, 58), Frame=rgb(250, 246, 236),
+	2: dict(Stone=rgb(214, 206, 188), Wall=rgb(248, 226, 208), Lower=rgb(226, 214, 190), Beam=rgb(66, 88, 206),
+		Gold=rgb(236, 190, 70), Board=rgb(46, 60, 150), Roof=rgb(198, 70, 58), Frame=rgb(250, 246, 236),
 		Glass=rgb(238, 158, 60), Shutters=rgb(176, 128, 78)),
-	3: dict(Stone=rgb(132, 128, 122), Wall=rgb(240, 230, 206), Lower=rgb(192, 188, 178), Beam=rgb(112, 72, 44),
-		Gold=rgb(236, 190, 70), Board=rgb(92, 60, 38), Roof=rgb(190, 62, 50), Frame=rgb(224, 218, 204),
+	3: dict(Stone=rgb(170, 152, 158), Wall=rgb(248, 228, 220), Lower=rgb(206, 186, 190), Beam=rgb(160, 88, 48),
+		Gold=rgb(236, 190, 70), Board=rgb(120, 62, 36), Roof=rgb(190, 62, 50), Frame=rgb(228, 216, 212),
 		Glass=rgb(238, 158, 60), Shutters=rgb(176, 128, 78)),
-	4: dict(Stone=rgb(86, 90, 100), Wall=rgb(84, 190, 180), Lower=rgb(72, 76, 88), Beam=rgb(52, 56, 64),
-		Gold=rgb(224, 170, 70), Board=rgb(40, 44, 50), Roof=rgb(66, 108, 186), Frame=rgb(104, 110, 122),
+	4: dict(Stone=rgb(92, 94, 100), Wall=rgb(104, 230, 206), Lower=rgb(112, 108, 106), Beam=rgb(128, 124, 120),
+		Gold=rgb(224, 170, 70), Board=rgb(104, 101, 98), Roof=rgb(66, 108, 186), Frame=rgb(140, 136, 132),
 		Glass=rgb(238, 158, 60), Shutters=rgb(176, 128, 78)),
-	5: dict(Stone=rgb(214, 208, 196), Wall=rgb(242, 239, 232), Lower=rgb(214, 208, 196), Beam=rgb(228, 222, 210),
+	5: dict(Stone=rgb(226, 210, 206), Wall=rgb(248, 236, 232), Lower=rgb(226, 210, 206), Beam=rgb(240, 226, 222),
 		Gold=rgb(236, 192, 76), Board=rgb(236, 192, 76), Roof=rgb(44, 84, 170), Frame=rgb(236, 192, 76),
 		Glass=rgb(238, 158, 60), Shutters=rgb(176, 128, 78)),
 }

@@ -641,6 +641,16 @@ The Garden's house, the third landmark as bodies (`garden_set(era)`, 2026-11-18)
   take the new straw at their own next rebuild, which their rounds do anyway.
 - The lean-to's straw: thicker and shaggier (0.6, 0.55 proud, roll 0.32), as the sheet draws it.
 
+**Refining the Training Hall against its four-side sheets (2026-11-18)**, the fifth building of section 3c:
+- Colour, and era 1's straw from the shared mould (only `TrainingBody1` rebuilt). Era 1 orange-brown planks (204,
+  120, 62) and beams (150, 78, 34); era 2 a deep royal blue (66, 88, 206) under Wood reads as the sheet's (69, 79,
+  175) (the old (70, 118, 224) read sky blue); era 3 the pink-grey stone (206, 186, 190) in Cobblestone; era 4 the
+  Garden's warm grey iron reads dark slate there too, as the sheet's iron; era 5 the Breeding's warm marble.
+- **Play shots of the Training Hall**: stage `TrainingStages`, area `TrainingL1`, cell (-1, -1); the test place's
+  cell holds the stud yard (no terrain to clear for the house); camera `f * lookAt((52, 36, -44), (-6, 15, 34))`,
+  field of view 50, frames the tower's flag at era 5.
+- The uploader's "NOT IN CONFIG" list also names rows that stylua split over several lines: their ids are in place.
+
 **The owner's fences and gates round the yards (2026-11-18, `src/server/YardKit.luau`)**:
 - **Where a section's posts stand**: a fence GLB with the half turn has its +x end at the section's START in the
   game. A section with its start post cut (`tools/blender/fence_open.py`, `<key>_open.glb`) keeps one post at its

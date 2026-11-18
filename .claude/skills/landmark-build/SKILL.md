@@ -314,6 +314,12 @@ hơn." All six landmarks wear Blender bodies; now ONE building a session, in the
     gates"): a run of post-cut sections ends with the bare one at a gate, whose model carries its own end posts; a
     banner on a gate pier hangs above the gate's flower boxes. A round that touches a yard keeps `YardKit.fence`
     and `YardKit.gate` and moves only the run's ends.
+11. **What the Training Hall's round taught** (2026-11-18): with the shared moulds already fixed, a round is colour
+    plus one rebuild (era 1's body for the straw): measure, set `LOOKS` and `*_PAINT` together, rebuild, take the
+    model out of `village_ids.json`, paste its new `ROW` sizes with `mesh = 0`, upload, one play test with the
+    house's camera (`f * lookAt((52, 36, -44), (-6, 15, 34))` on cell (-1, -1)), five shots. The uploader's "NOT IN
+    CONFIG" list names rows stylua split over several lines; their ids are already in place: check by Grep, not
+    by that list.
 
 Left open for this step (STATUS, "Not verified"): side and back walls not walked against; face pieces in front
 of the grow split at the Granary, Kitchen and Garden; the Garden's flower box over its cross-gable window.

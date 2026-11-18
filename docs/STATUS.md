@@ -1,5 +1,22 @@
 # Status
 
+## 2026-11-18 — the Training Hall refined against its four-side sheets (`landmark-build` §3c, the fifth building)
+
+- **Colour** (`TrainingHall.luau` `LOOKS`, mirrored in `T_PAINT`), measured on the sheets: era 1 orange-brown timber
+  and planks (it was a dark grey-brown); era 2 a deep royal blue (it was a light sky blue) on pink-cream plaster;
+  era 3 a pink-grey stone storey and warm brown timber; era 4 mint glass and the Garden's warm grey iron; era 5 a
+  warm marble.
+- **Shape**: era 1's thatch thick with each course proud (the shared thatched `gable_roof` mould, from the Breeding
+  round): `TrainingBody1` rebuilt and uploaded. The other eras kept their shape (no fields merged, no rebuild).
+- **Proof**: one play test in StudioTest, the five levels in daylight (`review/training-body-l10.jpg` to `-l50`,
+  before and after in `review/training-refine-before-after.jpg`), no Training error in the console. CHECK OK (829
+  passed), TYPES OK.
+- **Not verified**: the phone view; walking in (shell and door unchanged); the Edit preview was skipped (colour and
+  one roof only, seen in Play).
+- Left as is: era 4's vault stays the village's blue slate (one roof an era) where the sheet draws teal glass; the
+  sheet's era 3 battlements on the hall's side walls are not built (the tower has them).
+- **Next**: the Dock, the last building of the round (its era-1 thatch takes the same `gable_roof` straw).
+
 ## 2026-11-18 — the owner's fences and gates round the yards, his era props in the village, the Breeding House refined
 
 - **Fences and gates** (the owner: "nhập chúng vào kho asset và dùng chúng cho các khu đất"): his five fence sections
