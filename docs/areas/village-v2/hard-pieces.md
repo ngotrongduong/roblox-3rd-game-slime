@@ -286,6 +286,17 @@ fence; the owner's rail section stands in for the palisade). Banners on the gate
 boxes. Not worn yet: the Dock's bank fence and the village's outer wall keep their own, and the kitchen's signs,
 emblems and windows are uploaded but not placed.
 
+### Windows, one an era (2026-11-18, drawn by ChatGPT at the owner's request)
+
+The owner: "yêu cầu chat gpt vẽ cho tôi lại bộ cửa sổ cho 5 thời kỳ". The kitchen sheet's four windows were not an era
+ladder, so ChatGPT redrew them as five, one an era, with the gate, kitchen and lamp-post sheets attached as the style
+lock (chat `/c/6afd6537-2600-83ec-9f45-e5a5aa60c4b2`). The owner wants the frames alone ("tôi chỉ muốn khung cửa sổ
+thôi, không có hoa, không có mái che gì cả"): no flower box, plant, roof, hood or banner; each era told by its frame:
+1 log and plank lashed with rope; 2 teal painted timber with cream panels and gold caps; 3 an arched pale stone-brick
+surround with a gold diamond keystone; 4 a round-topped riveted iron frame with teal glass and a brass gear; 5 an
+arched cream marble frame with gold trim and a gold crown keystone. The sheet is `props/window-sheet.jpg`. Next, once the owner approves it: one picture a window (`tools/chatgpt/props.py`), then
+Meshy Smart Topology (about 2000 triangles each).
+
 ## Other districts
 
 Listed when each district is rebuilt.
