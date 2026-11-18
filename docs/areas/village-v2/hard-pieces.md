@@ -180,6 +180,58 @@ the laurel and the finials all come from the sheets he already sent.
 Reused: B1 (the lighthouse's cone caps at eras 2 and 3), B2 (the goo lamp's cap), B3 (the dome at 50), B4 and B5
 (columns, the balustrade fence and pier rails), B6 (pipes).
 
+## Era props from the owner's five sheets (2026-11-18, Meshy Smart Topology by Claude)
+
+The owner sent five sheets of props, each a ladder through the eras (`props/<sheet>-sheet.jpg`): "với mỗi một hình
+hãy yêu cầu chatgpt dựng 1 hình cho 1 vật phẩm. rồi sau đó liên kết với meshy dựng hình smart topology. nhớ chọn số
+lượng mesh cho phù hợp với từng vật phẩm". One ChatGPT chat a sheet drew one picture an object
+(`tools/chatgpt/props.py` holds the requests, names and triangle counts); the pictures are
+`art/models/village_props/<sheet>/refs/<piece>.png`; each went to Meshy Smart Topology (Meshy T2.5, Texture on with
+Meshy N1 at 2K, Private, 15 credits) at the triangle count below: more for pieces seen big or full of leaves and
+flowers, less for flat signs and banners that hang many times. Credits: 628 before, 31 x 15 spent.
+
+| Sheet | Piece | Era | Triangles asked |
+|-------|-------|-----|-----------------|
+| lamppost | `lamp_wood` gallows post, hanging lantern | 1 | 2000 |
+| lamppost | `lamp_painted` teal post, tiled cap | 2 | 2500 |
+| lamppost | `lamp_stone` brick pillar, ivy | 3 | 3000 |
+| lamppost | `lamp_tech` riveted iron, glass dome, gear | 4 | 3500 |
+| lamppost | `lamp_royal` marble column, crown dome, banner | 5 | 4000 |
+| flowerpot | `pot_clay` terracotta, daisies | 1 | 1500 |
+| flowerpot | `pot_barrel` barrel tub, pink flowers | 2 | 2000 |
+| flowerpot | `pot_stone` brick cube, purple flowers | 3 | 2000 |
+| flowerpot | `pot_crown` cream stone, blue crown panels | 4 | 2500 |
+| flowerpot | `pot_urn` marble urn, roses | 5 | 3000 |
+| planter | `planter_wood` plank trough, yellow | 1 | 1500 |
+| planter | `planter_riveted` riveted trough, pink | 2 | 2000 |
+| planter | `planter_stone` brick trough, blue | 3 | 2000 |
+| planter | `planter_crown` cream stone, crown panel | 4 | 3000 |
+| planter | `planter_royal` marble balustrade, banner, roses | 5 | 4000 |
+| cart | `cart_barrow` hand cart | 1 | 3000 |
+| cart | `cart_awning` striped awning stall cart | 2 | 4000 |
+| cart | `cart_roofed` tiled roof, lanterns | 3 | 5000 |
+| cart | `cart_glass` glass vault, iron arches, gear | 4 | 6000 |
+| cart | `cart_royal` marble and gold, blue dome | 5 | 6000 |
+| kitchen | `sign_hat` hanging sign, chef's hat | - | 1500 |
+| kitchen | `sign_spoon` hanging sign, fork and spoon | - | 1500 |
+| kitchen | `banner_red_hat` red pennant, chef's hat | - | 1000 |
+| kitchen | `banner_blue_spoon` blue pennant, fork and spoon | - | 1000 |
+| kitchen | `emblem_chef_slime` gold laurel, slime in a chef's hat | - | 2500 |
+| kitchen | `emblem_spoon_ribbon` red, fork and spoon, ribbons | - | 2000 |
+| kitchen | `finial_bell` gold bell finial on bricks | - | 1000 |
+| kitchen | `window_roofed` window, tiled hood, flower box | - | 2500 |
+| kitchen | `window_arch` arched stone window, flower box | - | 2000 |
+| kitchen | `window_shutters` green shutters, flower box | - | 2000 |
+| kitchen | `window_plain` plain wooden window | - | 1000 |
+
+ChatGPT chats: lamppost `/c/6afd2678-b94c-83ec-9204-a2136078aa06`, flowerpot `/c/6afd26ac-3ec4-83ec-a4b2-7adf6dac3ccb`,
+planter `/c/6afd26e4-a4a0-83ec-a138-3d1d76ad1bee`, cart `/c/6afd2703-9a4c-83ec-8eaf-7195c09d260a`, kitchen
+`/c/6afd272f-90c8-83ec-9474-186a75056b89`. `cart_glass` is cut from a picture that also showed the royal cart's dome
+at its foot; `cart_royal` was asked for again on its own.
+
+Next: the GLB files from Meshy into `art/models/village_props/<sheet>/`, read (size, triangles, facing), uploaded with
+`upload_village_pieces.js`, and the ladders of the buildings and the village layout point at them.
+
 ## Other districts
 
 Listed when each district is rebuilt.

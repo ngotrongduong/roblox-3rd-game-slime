@@ -1028,6 +1028,35 @@ list is the standard for every Blender building), what closed the gap:
 - The owner may press Play while a job runs ("Edit datamodel is not available in Play mode", captures fail "Target is
   not reachable"): read `get_studio_state` first; do the work that needs no Studio, then take Edit for the rest.
 
+### 31 era props in one sitting (2026-11-18, the owner's five prop sheets; ledger `hard-pieces.md`)
+
+- **ChatGPT, one chat a sheet**, the sheet attached once (`tools/chatgpt/props.py <sheet>` writes the request and
+  prints the carry address): "make N separate images, one object in each, in this order: (1) ... Keep each object
+  exactly as in my sheet ... square, the sheet's three-quarter view, matte under soft even light, nothing glows,
+  flat light grey #D9D9D9". Five objects came back as five separate 1254 px pictures in one reply, in order, all
+  usable; the 11-object sheet went in batches of 4, 3 and 4 in the same chat. Five chats ran at once, one tab each.
+- **The reply shows one big picture and a row of thumbnails**; the thumbnails' `img`s read 0 x 0 until loaded:
+  collect every `main img` src (not `data:`, not alt "User attachment"), load each with `new Image()` (a 6 s race so
+  a stuck one cannot hang the call), canvas, `receive.html`. A later batch in the same chat: take only the last N
+  sources, or bring all back under a new prefix and pick by eye.
+- **A two-object batch can come back as a stack**: the glass cart's square picture had the royal cart's dome at its
+  foot, and the second picture was both carts side by side. Crop the good one (pad back to a square of its own grey)
+  and ask in the same chat for "ONE new square image of ONLY the fifth ... not code, no cropping": it came right.
+- **Meshy was signed out in the browser pane but signed in in the owner's Chrome** (Claude in Chrome). There no
+  carry is needed: `file_upload` puts the local picture straight on the hidden `file-input` (find it again after the
+  first upload: the ref changes once a picture is loaded, then stays).
+- **Smart Topology today**: Meshy T2.5; Texture on reveals Model (Meshy N1 chosen) and Texture Resolution (2K); the
+  price under Generate reads 15 (5 for the mesh, 10 for the texture, taken as each step starts).
+- **The queue loop, one `browser_batch` for several pieces**: `file_upload` -> `triple_click` the poly-count textbox
+  -> `type` the count -> `Tab` -> a javascript check that THROWS unless the count reads right, the first
+  `button[role=switch]` is `aria-checked=true` and the price reads 15 (a throw stops the batch before money is
+  spent) -> click Generate by ref -> wait 3 s. 31 pieces queued without waiting; each took 1-3 minutes.
+- **Signed download links cannot be read back through Claude in Chrome** (its output filter blocks query strings),
+  and the task API answers 401 to a page fetch. A Chrome download lands in the owner's Downloads folder: ask him
+  once before downloading (file names, source, size).
+- **A pane tab can hang** (every javascript call times out) while the owner's Chrome window is in front: `navigate`
+  it to its own chat address; once it loaded it answered again a few minutes later.
+
 ## The Heart, redesigned (2026-11-14, tools/world/build_heart.luau, docs/references/heart/rounds.md)
 
 The owner: "the central area is too poorly designed". Three reference pictures, six Meshy models, four rounds.
