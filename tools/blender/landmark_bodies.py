@@ -247,7 +247,7 @@ def granary1():
 		lbox(fr, s * 6.64, s * 7.06, door_top + 0.45, wall_h - 0.25, -0.1, 0.18, 0.05)
 		lbox(fr, s * dw / 2, s * (dw / 2 + 0.55), BASE, door_top, -T - 0.1, 0.4, 0.06)
 	lbox(fr, -4.65, 4.65, door_top, door_top + 0.6, -T - 0.1, 0.42, 0.07)
-	arch_rise, arch_spring = 0.75, door_top - 1.2
+	arch_rise, arch_spring = 1.5, door_top - 1.95  # (the sheet's door head is a round arch, a fifth of its width high)
 	G.prism(fr, [(-dw / 2, door_top)] + seg(dw, arch_spring, arch_rise, 10)[::-1] + [(dw / 2, door_top)], -0.28, 0.3)
 	gable_frame(t, hw, wall_h, rise, wall_h + rise * 0.36)
 	front.put(out, t)
@@ -315,17 +315,19 @@ def granary1():
 		mbox(timber, sx * (hw - 0.3), sx * (hw + 0.18), BASE, wall_h - 0.3, d - 0.3, d + 0.18, 0.06)
 
 	# THE ROOF: five courses of thatch a slope, a roll along the ridge and down each verge, barge boards under them
+	# (2026-11-18, against the four-side sheet: its thatch is about twice as thick, each course a heavy fringe, the
+	# verge a fat roll; the barge boards drop with the thatch's underside so they still show)
 	th = out["Thatch"]
 	eave_x = hw + over
 	eave_y = ridge - pitch * eave_x
 	for s in (-1, 1):
-		thatch(th, (s * eave_x, eave_y), (0, ridge), -over, d + over, 5)
+		thatch(th, (s * eave_x, eave_y), (0, ridge), -over, d + over, 5, 1.15, 0.62)
 		for z in (-over, d + over):
-			roll(th, (s * (eave_x + 0.15), -z, eave_y - 0.1), (0, -z, ridge - 0.1), 0.5)
-		for z in (-over + 0.4, d + over - 0.4):
-			mbar(timber, (s * (eave_x - 0.4), ridge - 1.32 - pitch * (eave_x - 0.4), z), (0, ridge - 1.32, z), 0.24, 0.5)
-	roll(th, (0, over + 0.25, ridge + 0.12), (0, -d - over - 0.25, ridge + 0.12), 0.55)
-	G.ball(th, (0, over + 0.3, ridge + 0.25), 0.66, 8, 5)
+			roll(th, (s * (eave_x + 0.2), -z, eave_y - 0.2), (0, -z, ridge - 0.1), 0.8)
+		for z in (-over + 0.45, d + over - 0.45):
+			mbar(timber, (s * (eave_x - 0.4), ridge - 1.8 - pitch * (eave_x - 0.4), z), (0, ridge - 1.8, z), 0.24, 0.5)
+	roll(th, (0, over + 0.35, ridge + 0.2), (0, -d - over - 0.35, ridge + 0.2), 0.8)
+	G.ball(th, (0, over + 0.4, ridge + 0.35), 0.95, 8, 5)
 
 	# THE CLOCK TOWER: on tie beams across the hall, its legs through the roof; the cap, the clock and the flag are
 	# the game's
@@ -354,8 +356,8 @@ def granary1():
 	tuck = over - 0.4
 	lean_hi = ridge - pitch * (hw + tuck) - 0.1 + slope * tuck
 	run = lean_out + 0.6
-	thatch(th, (-hw - run, lean_hi - slope * run + 0.3), (-hw - 0.9, lean_hi - slope * 0.9 + 0.3), z0 - 0.5, z1 + 0.5, 2, 0.6,
-		0.36)
+	thatch(th, (-hw - run, lean_hi - slope * run + 0.3), (-hw - 0.9, lean_hi - slope * 0.9 + 0.3), z0 - 0.5, z1 + 0.5, 2, 0.85,
+		0.55)
 	px, beam_y = -(hw + lean_out - 0.3), lean_hi - slope * (lean_out - 0.3) - 0.4
 	mbox(timber, -hw - 0.3, -hw, lean_hi - 0.5, lean_hi - 0.1, z0 - 0.3, z1 + 0.3, 0.05)
 	mbox(timber, px - 0.2, px + 0.2, beam_y - 0.2, beam_y + 0.2, z0 - 0.3, z1 + 0.3, 0.05)
@@ -403,21 +405,21 @@ LOOK = {
 		rows=((4.6, 1.6, 2.4, 1), (11.15, 1.5, 1.5, 0)), timber=False, wing=(9, 10, 7.6, 2.6), tower=8.5, spire=0, cap="dome"),
 }
 PAINT = {
-	2: dict(Stone=rgb(156, 152, 146), Wall=rgb(244, 238, 224), Lower=rgb(244, 238, 224), Beam=rgb(40, 128, 130),
-		Board=rgb(32, 104, 108), Surround=rgb(40, 128, 130), Frame=rgb(255, 255, 255), Roof=rgb(198, 70, 58),
-		Door=rgb(146, 96, 56), Band=IRON, Glass=rgb(255, 222, 140), TowerWall=rgb(244, 238, 224), TowerCap=rgb(52, 150, 150),
+	2: dict(Stone=rgb(170, 160, 150), Wall=rgb(242, 226, 196), Lower=rgb(242, 226, 196), Beam=rgb(70, 140, 104),
+		Board=rgb(52, 112, 84), Surround=rgb(184, 72, 56), Frame=rgb(62, 128, 94), Roof=rgb(198, 70, 58),
+		Door=rgb(146, 96, 56), Band=IRON, Glass=rgb(255, 222, 140), TowerWall=rgb(242, 226, 196), TowerCap=rgb(52, 150, 150),
 		Gold=rgb(236, 190, 70)),
-	3: dict(Stone=rgb(128, 124, 118), Wall=rgb(240, 230, 206), Lower=rgb(170, 166, 158), Beam=rgb(112, 72, 44),
-		Board=rgb(112, 72, 44), Surround=rgb(206, 200, 188), Frame=rgb(112, 72, 44), Roof=rgb(190, 62, 50),
-		Door=rgb(104, 66, 44), Band=IRON, Glass=rgb(255, 222, 140), TowerWall=rgb(176, 172, 166), TowerCap=rgb(190, 62, 50),
+	3: dict(Stone=rgb(150, 134, 124), Wall=rgb(236, 216, 198), Lower=rgb(190, 172, 160), Beam=rgb(140, 82, 42),
+		Board=rgb(140, 82, 42), Surround=rgb(222, 208, 196), Frame=rgb(140, 82, 42), Roof=rgb(190, 62, 50),
+		Door=rgb(104, 66, 44), Band=IRON, Glass=rgb(255, 222, 140), TowerWall=rgb(198, 180, 166), TowerCap=rgb(190, 62, 50),
 		Gold=rgb(236, 190, 70)),
-	4: dict(Stone=rgb(74, 80, 92), Wall=rgb(150, 225, 235), Lower=rgb(198, 112, 74), Beam=rgb(58, 72, 96),
-		Board=rgb(58, 72, 96), Surround=rgb(58, 72, 96), Frame=rgb(58, 72, 96), Roof=rgb(62, 96, 160), Door=rgb(150, 94, 54),
-		Band=rgb(58, 72, 96), Glass=rgb(120, 230, 235), TowerWall=rgb(90, 200, 220), TowerCap=rgb(90, 200, 220),
+	4: dict(Stone=rgb(150, 146, 140), Wall=rgb(126, 226, 208), Lower=rgb(198, 112, 74), Beam=rgb(66, 72, 80),
+		Board=rgb(66, 72, 80), Surround=rgb(66, 72, 80), Frame=rgb(66, 72, 80), Roof=rgb(66, 108, 186), Door=rgb(150, 94, 54),
+		Band=rgb(66, 72, 80), Glass=rgb(255, 212, 120), TowerWall=rgb(100, 210, 192), TowerCap=rgb(100, 210, 192),
 		Gold=rgb(224, 170, 70)),
 	5: dict(Stone=rgb(214, 208, 196), Wall=rgb(250, 249, 245), Lower=rgb(250, 249, 245), Beam=rgb(228, 222, 210),
 		Board=rgb(236, 192, 76), Surround=rgb(236, 192, 76), Frame=rgb(236, 192, 76), Roof=rgb(44, 84, 170),
-		Door=rgb(52, 90, 166), Band=rgb(236, 192, 76), Glass=rgb(130, 220, 240), TowerWall=rgb(250, 249, 245),
+		Door=rgb(52, 90, 166), Band=rgb(236, 192, 76), Glass=rgb(255, 214, 120), TowerWall=rgb(250, 249, 245),
 		TowerCap=rgb(44, 84, 170), Gold=rgb(236, 192, 76)),
 }
 
@@ -626,16 +628,25 @@ def granary(era):
 		if not glass:
 			G.prism(t["Wall"], [(-half + drop / pitch, wall_h), (half - drop / pitch, wall_h), (0, ridge - drop)], -T, 0)
 		lbox(t["Board"], -half + 0.4, half - 0.4, wall_h - 0.25, wall_h + 0.25, -0.05, 0.3, 0.06)
+		# (eras 2 and 3: an arched window in the gable, as both sheets draw it, 2026-11-18; it was a round one. The king
+		# post stops under its sill and goes on over its head, the struts end beside its frame; the module's
+		# b.window(gf(0, gableY - 0.3), w, 1.4, ..., { arch = true }) is the same window)
+		gw, gy = 2.6 + 0.2 * era, wall_h + rise * 0.36 - 0.3
+		arched = era in (2, 3)
 		if timber:
-			lbox(t["Beam"], -0.2, 0.2, wall_h + 0.25, ridge - drop - 0.2, -0.05, 0.25, 0.05)
+			posts = [(wall_h + 0.25, ridge - drop - 0.2)]
+			if arched:
+				posts = [(wall_h + 0.25, gy - 0.7 - 0.26), (gy + 0.7 + gw / 2 + 0.24, ridge - drop - 0.2)]
+			for v0, v1 in posts:
+				lbox(t["Beam"], -0.2, 0.2, v0, v1, -0.05, 0.25, 0.05)
 			for s in (-1, 1):
-				G.bar(t["Beam"], (s * half * 0.62, 0.1, wall_h + 0.2), (0, 0.1, wall_h + rise * 0.55), 0.3, 0.36)
-		if era in (2, 3):
-			r, gy = 1 + 0.15 * era, wall_h + rise * 0.36
-			G.arch_band(t["Frame"], 0, gy, r, r + 0.3, 0.0, 0.42, 0, G.TAU, 20)
-			G.prism(t["Glass"], G.arc(0, gy, r, 0, G.TAU, 20)[:-1], 0.0, 0.34)
-			lbox(t["Frame"], -0.07, 0.07, gy - r, gy + r, 0.3, 0.44)
-			lbox(t["Frame"], -r, r, gy - 0.07, gy + 0.07, 0.3, 0.44)
+				foot, head = (s * half * 0.62, 0.1, wall_h + 0.2), (0, 0.1, wall_h + rise * 0.55)
+				if arched:
+					k = 1 - (gw / 2 + 0.4) / (half * 0.62)
+					head = (s * (gw / 2 + 0.4), 0.1, foot[2] + k * (head[2] - foot[2]))
+				G.bar(t["Beam"], foot, head, 0.3, 0.36)
+		if arched:
+			win(t, 0, gy, gw, 1.4, True)
 		face.put(out, t)
 
 	# THE FRAME: bands of timber (steel on the glasshouse) at the module's floors, their posts where b.timber's stand

@@ -568,6 +568,25 @@ The Garden's house, the third landmark as bodies (`garden_set(era)`, 2026-11-18)
 - ChatGPT pages: about 50 s of waits after `navigate` before any script; `browser_batch` holds 25 actions at
   most; a script call that times out at 45 s is tried again after 20 s.
 
+**Refining the Granary against its four-side sheets (2026-11-18)**, the first building of section 3c:
+- **Colours are measured, not guessed**: `python tools/map/sheet_colours.py <sheet> 16` lists the front view's
+  colours. Each surface comes twice, lit and shaded; era 3's timber taken at its shaded tone (104, 58, 30) read
+  almost black in the game, the middle of the two (140, 82, 42) reads as the sheet's.
+- What the sheets drew and the bodies had not: era 1 thatch about twice as thick with a fat verge roll and a round
+  door head; era 2 cream plaster, sage timber, GREEN window frames, a red brick door arch, pale plank silos with
+  iron hoops; eras 2-3 an arched gable window, not a round one; era 4 grey iron (not navy), mint glass, a light
+  stone foot; eras 4-5 windows lit warm (cold blue panes read as holes in marble and brick).
+- **A field that stops sharing a colour splits its mesh** (era 2's surround left the beam's green): rebuild, add
+  the new `<Body>_<Field>` row by hand with `mesh = 0` (the uploader only fills rows that exist), then upload. The
+  uploader keeps the old ids of meshes whose content did not change.
+- When a gable opening grows, look at what hangs in front of it from the play camera: the hoist's sack hung across
+  the new arched window; the jib went up under the ridge with a short rope.
+- **Play shots of the Granary**: stage module `PantryStages`, area `PantryL1`, cell (0, 1). The game's own level-1
+  house is built loose in the area and `_G.AreaShow` does not clear it (two houses stood in one another at L20):
+  destroy every child but `Floor`, `FloorEdge`, `Nature`, `SignPantry`, `UpgradePoint`, `AreaStage` once, in Play
+  only. Camera `f * lookAt((-22, 40, -100), (0, 21, 12))`, field of view 50, frames every era; the day's Lighting
+  values read in Edit and written on the client at `Last + 5`.
+
 ### Whole small buildings from Blender (2026-11-17, the garden's tool stores, tools/blender/granary_pieces.py)
 
 The owner, looking at a part-built yard beside ChatGPT's picture: "why is what you build not as beautiful as the

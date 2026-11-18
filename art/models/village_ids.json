@@ -282,51 +282,6 @@
 			"ToolStoreTech_Roof": 124890735574936
 		}
 	},
-	"GranaryBody1": {
-		"model": 91492267021486,
-		"texture": 0,
-		"pieces": {
-			"GranaryBody1_Iron": 88620871192380,
-			"GranaryBody1_Pane": 76295309709634,
-			"GranaryBody1_Planks": 109960499207116,
-			"GranaryBody1_Plaster": 105235623739664,
-			"GranaryBody1_Stone": 112948646468915,
-			"GranaryBody1_Thatch": 75296677600544,
-			"GranaryBody1_Timber": 134692605030446
-		}
-	},
-	"GranaryBody2": {
-		"model": 129545169747648,
-		"texture": 0,
-		"pieces": {
-			"GranaryBody2_Band": 117205355448029,
-			"GranaryBody2_Beam": 81570287878251,
-			"GranaryBody2_Board": 135005136304354,
-			"GranaryBody2_Door": 131372337031862,
-			"GranaryBody2_Frame": 78847741330620,
-			"GranaryBody2_Glass": 81821379143746,
-			"GranaryBody2_Roof": 80887973137061,
-			"GranaryBody2_Stone": 101712107919374,
-			"GranaryBody2_TowerCap": 115788684950585,
-			"GranaryBody2_Wall": 100916398130861
-		}
-	},
-	"GranaryBody3": {
-		"model": 127250724994439,
-		"texture": 0,
-		"pieces": {
-			"GranaryBody3_Band": 96759337569961,
-			"GranaryBody3_Beam": 103893432097760,
-			"GranaryBody3_Door": 101782892513598,
-			"GranaryBody3_Glass": 86324408503560,
-			"GranaryBody3_Lower": 89452095793826,
-			"GranaryBody3_Roof": 81543849695245,
-			"GranaryBody3_Stone": 112322058758276,
-			"GranaryBody3_Surround": 73565798473251,
-			"GranaryBody3_TowerWall": 95320896779159,
-			"GranaryBody3_Wall": 90736667379072
-		}
-	},
 	"GranaryBody4": {
 		"model": 88020229437450,
 		"texture": 0,
@@ -1094,6 +1049,52 @@
 			"DockVault5_Gold": 116696464332672,
 			"DockVault5_Roof": 136951782889707,
 			"DockVault5_Wall": 129326257689039
+		}
+	},
+	"GranaryBody3": {
+		"model": 137056227366611,
+		"texture": 0,
+		"pieces": {
+			"GranaryBody3_Band": 96759337569961,
+			"GranaryBody3_Beam": 99626889723262,
+			"GranaryBody3_Door": 101782892513598,
+			"GranaryBody3_Glass": 87892760315824,
+			"GranaryBody3_Lower": 89452095793826,
+			"GranaryBody3_Roof": 98751631545450,
+			"GranaryBody3_Stone": 112322058758276,
+			"GranaryBody3_Surround": 73565798473251,
+			"GranaryBody3_TowerWall": 95320896779159,
+			"GranaryBody3_Wall": 90736667379072
+		}
+	},
+	"GranaryBody2": {
+		"model": 107919597375090,
+		"texture": 0,
+		"pieces": {
+			"GranaryBody2_Band": 117205355448029,
+			"GranaryBody2_Beam": 135297094283093,
+			"GranaryBody2_Board": 135005136304354,
+			"GranaryBody2_Door": 131372337031862,
+			"GranaryBody2_Frame": 82197461002090,
+			"GranaryBody2_Glass": 129000521532392,
+			"GranaryBody2_Roof": 89917776903642,
+			"GranaryBody2_Stone": 101712107919374,
+			"GranaryBody2_Surround": 94490188885280,
+			"GranaryBody2_TowerCap": 115788684950585,
+			"GranaryBody2_Wall": 100916398130861
+		}
+	},
+	"GranaryBody1": {
+		"model": 131594264576487,
+		"texture": 0,
+		"pieces": {
+			"GranaryBody1_Iron": 76483465505886,
+			"GranaryBody1_Pane": 76295309709634,
+			"GranaryBody1_Planks": 125093183040623,
+			"GranaryBody1_Plaster": 105235623739664,
+			"GranaryBody1_Stone": 112948646468915,
+			"GranaryBody1_Thatch": 115920299932016,
+			"GranaryBody1_Timber": 122570262040748
 		}
 	}
 }

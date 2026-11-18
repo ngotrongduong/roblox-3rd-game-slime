@@ -125,17 +125,18 @@ local LOOKS: { Look } = {
 		floors = { BASE, 9 },
 		rows = { { 4.6, 1.5, 1.9, 0 } },
 		timber = true,
-		wall = C(236, 220, 180),
-		lower = C(236, 220, 180),
-		stone = C(150, 146, 138),
-		beam = C(110, 72, 42),
-		board = C(110, 72, 42),
-		surround = C(110, 72, 42),
+		-- (the colours measured on the four-side sheet, 2026-11-18: warm plaster, orange-brown timber, warm grey stone)
+		wall = C(242, 224, 190),
+		lower = C(242, 224, 190),
+		stone = C(170, 158, 146),
+		beam = C(134, 78, 40),
+		board = C(134, 78, 40),
+		surround = C(134, 78, 40),
 		roof = C(232, 190, 84),
 		roof2 = C(232, 190, 84),
 		door = C(150, 98, 54),
 		band = IRON,
-		frame = C(110, 72, 42),
+		frame = C(134, 78, 40),
 		glass = C(255, 214, 120),
 		glow = false,
 		shutters = C(120, 150, 96),
@@ -143,13 +144,13 @@ local LOOKS: { Look } = {
 		cloth = C(52, 96, 190),
 		gold = C(236, 190, 70),
 		tower = 5.5,
-		towerWall = C(236, 220, 180),
+		towerWall = C(242, 224, 190),
 		towerRoof = "pyramid",
 		towerCap = C(232, 190, 84),
 		spire = 4.6,
 		siloR = 2.3,
 		siloH = 8.5,
-		siloDrum = C(170, 116, 66),
+		siloDrum = C(196, 116, 56),
 		siloHoop = C(96, 70, 50),
 		siloCap = "cone",
 		siloCapColour = C(214, 172, 74),
@@ -179,17 +180,18 @@ local LOOKS: { Look } = {
 		rows = { { 4, 1.5, 1.9, 0 }, { 7.6, 1.3, 1.5, 0 } },
 		timber = true,
 		wing = { out = 8, len = 9, wallH = 6, rise = 3.6 },
-		wall = C(244, 238, 224),
-		lower = C(244, 238, 224),
-		stone = C(156, 152, 146),
-		beam = C(40, 128, 130),
-		board = C(32, 104, 108),
-		surround = C(40, 128, 130),
+		-- (the sheet's cream plaster and sage-green timber, 2026-11-18; the caps stay teal, as it draws them)
+		wall = C(242, 226, 196),
+		lower = C(242, 226, 196),
+		stone = C(170, 160, 150),
+		beam = C(70, 140, 104),
+		board = C(52, 112, 84),
+		surround = C(184, 72, 56), -- (the sheet's red brick round the door: jambs, arch, keystone)
 		roof = C(198, 70, 58),
 		roof2 = C(198, 70, 58),
 		door = C(146, 96, 56),
 		band = IRON,
-		frame = WHITE,
+		frame = C(62, 128, 94), -- (green window frames, as the sheet draws them)
 		glass = C(255, 222, 140),
 		glow = false,
 		shutters = C(56, 146, 146),
@@ -197,14 +199,14 @@ local LOOKS: { Look } = {
 		cloth = C(52, 96, 190),
 		gold = C(236, 190, 70),
 		tower = 6.5,
-		towerWall = C(244, 238, 224),
+		towerWall = C(242, 226, 196),
 		towerRoof = "pyramid",
 		towerCap = C(52, 150, 150),
 		spire = 6.5,
 		siloR = 2.5,
 		siloH = 10.5,
-		siloDrum = C(236, 228, 208),
-		siloHoop = C(32, 104, 108),
+		siloDrum = C(238, 204, 142), -- (pale planks, as the sheet's silos)
+		siloHoop = IRON,
 		siloCap = "cone",
 		siloCapColour = C(52, 150, 150),
 		mats = {
@@ -234,31 +236,33 @@ local LOOKS: { Look } = {
 		rows = { { 4.4, 1.5, 2, 1 }, { 10.75, 1.3, 1.4, 0 } },
 		timber = true,
 		wing = { out = 8.5, len = 9.6, wallH = 7, rise = 4 },
-		wall = C(240, 230, 206),
-		lower = C(170, 166, 158),
-		stone = C(128, 124, 118),
-		beam = C(112, 72, 44),
-		board = C(112, 72, 44),
-		surround = C(206, 200, 188),
+		-- (the sheet's warm grey stone and pink-cream plaster under mid-brown timber, 2026-11-18: its lit timber
+		-- measures 155, 90, 45 and its shaded 113, 62, 27; the shaded tone read almost black in the game's light)
+		wall = C(236, 216, 198),
+		lower = C(190, 172, 160),
+		stone = C(150, 134, 124),
+		beam = C(140, 82, 42),
+		board = C(140, 82, 42),
+		surround = C(222, 208, 196),
 		roof = C(190, 62, 50),
 		roof2 = C(190, 62, 50),
 		door = C(104, 66, 44),
 		band = IRON,
-		frame = C(112, 72, 44),
+		frame = C(140, 82, 42),
 		glass = C(255, 222, 140),
 		glow = false,
 		accent = C(190, 62, 50),
 		cloth = C(52, 96, 190),
 		gold = C(236, 190, 70),
 		tower = 7.5,
-		towerWall = C(176, 172, 166),
+		towerWall = C(198, 180, 166),
 		towerRoof = "pyramid",
 		towerCap = C(190, 62, 50),
 		spire = 7.5,
 		siloR = 2.8,
 		siloH = 12.5,
-		siloDrum = C(176, 172, 166),
-		siloHoop = C(128, 124, 118),
+		siloDrum = C(198, 180, 166),
+		siloHoop = C(150, 134, 124),
 		siloCap = "cone",
 		siloCapColour = C(190, 62, 50),
 		mats = {
@@ -289,32 +293,34 @@ local LOOKS: { Look } = {
 		timber = true,
 		wing = { out = 8.5, len = 10, wallH = 7, rise = 3.4 },
 		-- (the owner, 2026-11-16: "the fourth era is a steel-framed glasshouse": glass in a dark steel frame on a
-		-- brick foot, brick piers at the door and the corners, as the reference has it)
-		wall = C(150, 225, 235),
+		-- brick foot, brick piers at the door and the corners, as the reference has it. Measured on the four-side
+		-- sheet, 2026-11-18: grey iron, not navy; mint-teal glass; a light stone foot; the brick storey's windows lit
+		-- warm, the slate a brighter blue)
+		wall = C(126, 226, 208),
 		lower = C(198, 112, 74),
-		stone = C(74, 80, 92),
-		beam = C(58, 72, 96),
-		board = C(58, 72, 96),
-		surround = C(58, 72, 96),
-		roof = C(62, 96, 160), -- (blue slate over the glass, as the reference has it)
-		roof2 = C(62, 96, 160),
+		stone = C(150, 146, 140),
+		beam = C(66, 72, 80),
+		board = C(66, 72, 80),
+		surround = C(66, 72, 80),
+		roof = C(66, 108, 186), -- (blue slate over the glass, as the reference has it)
+		roof2 = C(66, 108, 186),
 		door = C(150, 94, 54),
-		band = C(58, 72, 96),
-		frame = C(58, 72, 96),
-		glass = C(120, 230, 235),
+		band = C(66, 72, 80),
+		frame = C(66, 72, 80),
+		glass = C(255, 212, 120),
 		glow = true,
 		accent = C(196, 112, 66),
 		cloth = C(40, 80, 160),
 		gold = C(224, 170, 70),
 		tower = 8,
-		towerWall = C(90, 200, 220),
+		towerWall = C(100, 210, 192),
 		towerRoof = "glass",
-		towerCap = C(90, 200, 220),
+		towerCap = C(100, 210, 192),
 		spire = 0,
 		siloR = 3,
 		siloH = 13.5,
 		siloDrum = C(190, 240, 200),
-		siloHoop = C(58, 72, 96),
+		siloHoop = C(66, 72, 80),
 		siloCap = "dome",
 		siloCapColour = C(48, 84, 140),
 		goo = C(96, 232, 70),
@@ -356,8 +362,8 @@ local LOOKS: { Look } = {
 		door = C(52, 90, 166),
 		band = C(236, 192, 76),
 		frame = C(236, 192, 76),
-		glass = C(130, 220, 240),
-		glow = false,
+		glass = C(255, 214, 120), -- (lit warm, as the sheet's windows: cold blue panes read as holes in the marble)
+		glow = true,
 		accent = C(40, 80, 164),
 		cloth = C(40, 70, 160),
 		gold = C(236, 192, 76),
@@ -829,11 +835,15 @@ local function raise(m: Instance, frame: CFrame, level: number)
 		-- the loft hatch
 		b.window(gf(0, gableY), 1.6, 1.8, L.frame, L.glass, { shutters = L.shutters, flowers = f >= 4 } :: WindowOpts)
 	else
-		local r = 1 + 0.15 * era
-		b.disc("OculusRim", r + 0.3, 0.3, gf(0, gableY) * CFrame.new(0, 0, -0.2), L.frame)
-		b.disc("OculusGlass", r, 0.36, gf(0, gableY) * CFrame.new(0, 0, -0.21), L.glass, glowMat)
-		b.trim("OculusBar", 0.14, r * 2, 0.42, gf(0, gableY) * CFrame.new(0, 0, -0.21), L.frame)
-		b.trim("OculusBar", r * 2, 0.14, 0.42, gf(0, gableY) * CFrame.new(0, 0, -0.21), L.frame)
+		-- an arched window in the gable, as the sheets draw it (2026-11-18; it was a round one; the body's own is the same)
+		b.window(
+			gf(0, gableY - 0.3),
+			2.6 + 0.2 * era,
+			1.4,
+			L.frame,
+			L.glass,
+			{ arch = true, glow = L.glow } :: WindowOpts
+		)
 	end
 	if f >= 8 then
 		-- a finial on the gable's peak
@@ -848,10 +858,11 @@ local function raise(m: Instance, frame: CFrame, level: number)
 	end
 	if f >= 10 and (era == 2 or era == 3) then
 		-- the loft hoist: a jib out of the gable's peak, a sack on its rope
-		local y, z1 = ridge - 1.4, -jet - L.over - 1.5
+		-- (high under the ridge, the sack hoisted short: it hung across the arched gable window)
+		local y, z1 = ridge - 1, -jet - L.over - 1.2
 		b.beam("Jib", 0.4, 0.4, Vector3.new(0, y, -jet + 0.6), Vector3.new(0, y, z1), L.beam)
 		b.disc("JibPulley", 0.4, 0.25, b.face(0.2, y - 0.45, z1 + 0.4, LEFT), IRON)
-		local ropeEnd = y - 1.1 -- (a long rope swung the sack across the round window)
+		local ropeEnd = y - 0.7
 		b.rod("JibRope", 0.06, Vector3.new(0, y - 0.5, z1 + 0.4), Vector3.new(0, ropeEnd, z1 + 0.4), SACK)
 		b.ball("JibSack", 0.75, b.at(0, ropeEnd - 0.6, z1 + 0.4), SACK)
 		b.cyl("JibSackNeck", 0.25, 0.4, b.at(0, ropeEnd + 0.1, z1 + 0.4), C(190, 160, 110), nil, false)
@@ -951,7 +962,8 @@ local function raise(m: Instance, frame: CFrame, level: number)
 	-- (the gear sits over the arch in the keystone's place: the gold block hid its lower half)
 	local geared = f >= 16 and era == 4
 	if arched and not geared then
-		b.trim("Keystone", 1, 1.3, T + 0.7, b.at(0, doorTop + 0.3, T / 2 - 0.15), if era == 3 then L.stone else L.gold)
+		local key = if era == 3 then L.stone elseif era == 2 then L.surround else L.gold -- (era 2: a brick, not a gold block)
+		b.trim("Keystone", 1, 1.3, T + 0.7, b.at(0, doorTop + 0.3, T / 2 - 0.15), key)
 	elseif not arched then
 		b.trim("DoorLintel", dw + 1.7, 0.6, T + 0.5, b.at(0, doorTop + 0.3, T / 2 - 0.15), L.surround)
 	end

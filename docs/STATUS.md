@@ -1,5 +1,30 @@
 # Status
 
+## 2026-11-18 — the Granary refined against its four-side sheets (the first building of `landmark-build` §3c)
+
+The owner: "xem những hình tham chiếu cho từng tòa nhà, so sánh rồi chỉnh sửa theo hình mẫu cho đến khi đạt chất
+lượng tốt nhất" (one building at a time; he dropped the decor GLBs he sent earlier as too poor, "tập trung sửa những
+công trình nhà thôi"). The Granary is done; the Kitchen is next, then the Garden, Breeding House, Training Hall, Dock.
+
+- **Shape** (Blender, `landmark_bodies.py`, rebuilt and uploaded): era 1 thatch about twice as thick with a fat
+  verge roll, ridge and knob, the barge boards dropped under it, and a round door head (rise 1.5, it was 0.75);
+  eras 2-3 an arched gable window in place of the round one, the king post split round it and the struts ending
+  beside it (the module's part fallback the same); era 2's red brick door surround its own mesh
+  (`GranaryBody2_Surround`, a new row).
+- **Colour** (`Granary.luau` `LOOKS`, mirrored in the script's `PAINT`), measured on the sheets with the new
+  `tools/map/sheet_colours.py`: era 1 warm plaster, orange-brown timber; era 2 cream plaster, sage timber, green
+  window frames, red brick arch and keystone (it was a gold block), pale plank silos with iron hoops; era 3 warm
+  stone and mid-brown timber (the shaded tone read black); era 4 grey iron (not navy), mint glass and tower, light
+  stone foot, brighter slate, windows lit warm; era 5 windows lit warm.
+- The loft hoist's sack hung across the new gable window: the jib went up under the ridge, the rope shorter.
+- **Proof**: the Edit preview at levels 10-50 with the real uploaded meshes (StudioTest); one play test in
+  StudioTest, the five levels shot in daylight (`review/granary-body-l10.jpg` to `-l50`, before and after side by
+  side in `review/granary-refine-before-after.jpg`); no Granary error in the console. CHECK OK (829 passed),
+  TYPES OK. The preview folders were destroyed.
+- **Not verified**: the phone view; the house on its real plot at its real level (the shots rebuild the stage on
+  the test place's plot); walking in was not repeated (the shell and the door did not move).
+- **Next**: the Kitchen by the same loop (skill `landmark-build` §3c step 7 has what this round taught).
+
 ## 2026-11-17 (late night) — all six landmarks rebuilt in Blender: the method proved on the Granary's era 1
 
 The owner: "dựng lại tất cả các công trình bằng blender ... với mỗi tòa nhà bạn hãy yêu cầu chatgpt cho xem hình

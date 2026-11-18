@@ -293,6 +293,11 @@ hơn." All six landmarks wear Blender bodies; now ONE building a session, in the
    upgrade ladder (a refined piece still arrives at its own level); the grown size (`HouseScale`, the split).
 6. Close as section 1 step 9: lessons into this skill and LESSONS, STATUS, commit the job's own paths, the
    before and after shots to the owner, and say what was not seen (phone, the real plot).
+7. **What the Granary's round taught** (2026-11-18, details in LESSONS "Refining the Granary"): measure the sheet's
+   colours with `tools/map/sheet_colours.py` and take the LIT tone of each surface; most gaps were colour (frames,
+   arch, hoops, glass, lit windows) and only three were shape (thatch thickness, door head, gable window); a field
+   whose colour stops matching another gets its own mesh and a new config row by hand; in Play, clear the game's
+   own level stage before `_G.AreaShow` (Granary: `PantryStages`, `PantryL1`).
 
 Left open for this step (STATUS, "Not verified"): side and back walls not walked against; face pieces in front
 of the grow split at the Granary, Kitchen and Garden; the Garden's flower box over its cross-gable window.
