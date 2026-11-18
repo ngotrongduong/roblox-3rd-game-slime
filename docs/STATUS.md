@@ -1,5 +1,19 @@
 # Status
 
+## 2026-11-18 — the six landmarks beside their ChatGPT four-side sheets, for the owner to mark
+
+- **The owner**: the refine round stopped at colour and material; small details in the wrong place and structure out
+  of proportion were not looked at. He asked for every building shot beside its ChatGPT reference, and he marks the
+  fixes himself. His rule is in `landmark-build` §3c point 13: proportion, then position, then missing pieces,
+  colour last.
+- **Done**: `tools/map/landmark_sides.luau` sets each era's last level (10 to 50) out as the sheet draws it (front,
+  left / back, right), fences and gates out, flat light, a grey wall behind. Six sheets, five rows each:
+  `docs/areas/village-v2/review/sides-granary.jpg`, `-kitchen`, `-garden`, `-breeding`, `-training`, `-dock`.
+  Studio cleaned after (Lighting back, FOV 70, the preview folders gone, nothing saved).
+- **Not verified**: these are Edit-mode shots with the uploaded meshes; the game's light and the phone are not in
+  them. Some yard pots and lamp glows stay in frame; the Garden's shots include its irrigation tower and windmill.
+- **Next**: the owner's marks on the sheets, then one building at a time against them (shape and place first).
+
 ## 2026-11-18 — the 14 free prop swaps in the village (`docs/areas/village-v2/props-review.md`)
 
 - **Swapped** to the owner's Meshy pieces, each with the old kit model as its stand-in while the meshes load: the

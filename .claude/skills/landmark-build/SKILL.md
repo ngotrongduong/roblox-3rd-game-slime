@@ -325,6 +325,18 @@ hơn." All six landmarks wear Blender bodies; now ONE building a session, in the
     clear: a small server `_G.DockShow(level)` destroys it and builds again. That shot skips `PondStages.grow`, so
     the ground under the pier is flat lawn; grow the pond first when the ground is judged. With the Dock, all six
     landmarks have had their §3c round.
+13. **Not colour alone (the owner, 2026-11-18, after the six rounds)**: "công việc chủ yếu của bạn là mới chỉ dừng ở
+    mức độ thay đổi màu sắc chất liệu, còn chưa có chú ý gì khác đến các chi tiết nhỏ khác, các chi tiết đặt sai vị
+    trí, cấu trúc sai tỷ lệ." A round's list (point 1) is written in this order and every line names a place on
+    the sheet: proportion (how high the walls are to the roof, the tower to the hall, the door to the wall), then
+    what stands in the wrong place (a window, a chimney, a lean-to, a lamp on the wrong side), then the small
+    pieces the sheet has and the house has not, and colour LAST. A round that changed only colours is not done.
+    To see it, set the house out as the sheet does: `tools/map/landmark_sides.luau` (header has the command; run
+    `real_kit_preview.luau` first) builds each era's last level four times, turned front / left / back / right in
+    the sheet's 2 x 2, fences and gates out, a grey wall behind, the light flat; one `screen_capture` an era from
+    the camera it prints. Then one PIL sheet a building, each era's ChatGPT four-side sheet beside the game's
+    (`docs/areas/village-v2/review/sides-<name>.jpg`), sent to the owner; he marks what to fix and his marks are
+    the next round's list. Clean up as its header says (Lighting back, FOV 70).
 
 Left open for this step (STATUS, "Not verified"): side and back walls not walked against; face pieces in front
 of the grow split at the Granary, Kitchen and Garden; the Garden's flower box over its cross-gable window.

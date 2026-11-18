@@ -662,6 +662,20 @@ The Garden's house, the third landmark as bodies (`garden_set(era)`, 2026-11-18)
   lawn round the pier and fills the water; without it the stilts and the plinth stand buried in flat lawn. For a
   shot that judges the ground, call `PondStages.grow` at the highest level first (its lobes stay once grown).
 
+**Each landmark beside its four-side sheets (2026-11-18, `tools/map/landmark_sides.luau`)**, for the owner to mark
+what is wrong in shape and place, not only colour (skill `landmark-build` §3c point 13):
+- **A kit clone keeps the mesh's own name** ("MeshPart"), so a cut by name missed the Garden's fences: the preview
+  kit's `find` tags the part with a `Piece` attribute and the cut reads `GetAttribute("Piece") or Name`.
+- **The Dock spills past its house** (bank, boat, mooring posts, stilts under the lawn): a module that gives
+  `footprint(level)` has every part outside it (+2 studs) cut, and the house's foot is the lowest corner of what is
+  seen, wide flat floors left out, or the rows overlap.
+- **One camera an era**: the four copies pivoted at their bottom centre, a slot as wide as the widest side + 8, the
+  distance from the field of view 20 and the viewport's aspect; the grey wall behind must be big (1200 x 800) or
+  the sky shows round it.
+- **The crop of the shot** keeps the columns that are MOSTLY the wall's flat grey (within 14 of the top-centre
+  pixel on more than 30% of the column) and hold something else; a lighter rule kept strips of sky. The sheet
+  script fits the reference and the crop to one row height, five rows a building.
+
 **The owner's fences and gates round the yards (2026-11-18, `src/server/YardKit.luau`)**:
 - **Where a section's posts stand**: a fence GLB with the half turn has its +x end at the section's START in the
   game. A section with its start post cut (`tools/blender/fence_open.py`, `<key>_open.glb`) keeps one post at its
