@@ -1,5 +1,21 @@
 # Status
 
+## 2026-11-18 — the Dock refined against its four-side sheets (`landmark-build` §3c, the sixth and last building)
+
+- **Colour** (`Boathouse.luau` `LOOKS`, mirrored in `D_PAINT`), the same measured palette as the Training Hall's: era 1
+  orange-brown timber; era 2 a deep royal blue on pink-cream plaster; era 3 pink-grey stone and warm brown timber; era
+  4 mint glass and warm grey iron (the bank fence too); era 5 a warm marble. The lighthouse's white and red stay.
+- **Shape**: era 1's thatch thick with each course proud (the shared thatched `gable_roof` mould): `DockBody1` rebuilt
+  and uploaded. The other eras kept their shape.
+- **Proof**: one play test in StudioTest, the five levels in daylight (`review/dock-body-l10.jpg` to `-l50`, before
+  and after in `review/dock-refine-before-after.jpg`), no Dock error in the console. CHECK OK (829 passed), TYPES OK.
+- **Not verified**: the phone view; walking in (shell and door unchanged). The new shots stand on flat lawn: the test
+  built only `DockStages`, not the pond's growth (`PondStages.grow`) that lowers the ground round the pier, so the
+  stilts and plinth are hidden there; the game's upgrade path is unchanged.
+- Left as is: the sheet's era 3 roof is drawn blue; it stays the village's red tiles (one roof an era).
+- **The round is done**: all six landmarks (Granary, Kitchen, Garden, Breeding House, Training Hall, Dock) refined
+  against their four-side sheets. **Next** (the owner, 2026-11-18): the village layout.
+
 ## 2026-11-18 — the Training Hall refined against its four-side sheets (`landmark-build` §3c, the fifth building)
 
 - **Colour** (`TrainingHall.luau` `LOOKS`, mirrored in `T_PAINT`), measured on the sheets: era 1 orange-brown timber

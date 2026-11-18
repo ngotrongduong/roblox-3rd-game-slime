@@ -651,6 +651,17 @@ The Garden's house, the third landmark as bodies (`garden_set(era)`, 2026-11-18)
   field of view 50, frames the tower's flag at era 5.
 - The uploader's "NOT IN CONFIG" list also names rows that stylua split over several lines: their ids are in place.
 
+**Refining the Dock against its four-side sheets (2026-11-18)**, the sixth and last building of section 3c:
+- The Training Hall's palette, field for field (`D_PAINT` beside `T_PAINT`), and era 1's straw from the shared mould
+  (only `DockBody1` rebuilt). The lighthouse's white and red (`D_SAME`) are its own and did not move.
+- **Play shots of the Dock**: area `FishingPondL1`, cell (-1, 1), stage module `DockStages` (its model is named
+  `PondStage`, which `_G.AreaShow` does not clear): a server `_G.DockShow(level)` destroys `PondStage` and
+  `AreaStage`, then `DockStages.build(area, L.plotAreaFacing(plot, -1, 1) * CFrame.new(0, 2, 0), level)`; camera
+  `f * lookAt((-52, 30, -20), (8, 26, 82))`, field of view 50, frames the era-5 lighthouse's finial.
+- **That shot skips the pond's growth**: `PondStages.grow(area, frame, level)` (run by the upgrade path) lowers the
+  lawn round the pier and fills the water; without it the stilts and the plinth stand buried in flat lawn. For a
+  shot that judges the ground, call `PondStages.grow` at the highest level first (its lobes stay once grown).
+
 **The owner's fences and gates round the yards (2026-11-18, `src/server/YardKit.luau`)**:
 - **Where a section's posts stand**: a fence GLB with the half turn has its +x end at the section's START in the
   game. A section with its start post cut (`tools/blender/fence_open.py`, `<key>_open.glb`) keeps one post at its

@@ -320,6 +320,11 @@ hơn." All six landmarks wear Blender bodies; now ONE building a session, in the
     house's camera (`f * lookAt((52, 36, -44), (-6, 15, 34))` on cell (-1, -1)), five shots. The uploader's "NOT IN
     CONFIG" list names rows stylua split over several lines; their ids are already in place: check by Grep, not
     by that list.
+12. **What the Dock's round taught** (2026-11-18, LESSONS "Refining the Dock"): the same round as the Training
+    Hall's. The Dock's stage is `DockStages` on cell (-1, 1), its model `PondStage`, which `_G.AreaShow` does not
+    clear: a small server `_G.DockShow(level)` destroys it and builds again. That shot skips `PondStages.grow`, so
+    the ground under the pier is flat lawn; grow the pond first when the ground is judged. With the Dock, all six
+    landmarks have had their §3c round.
 
 Left open for this step (STATUS, "Not verified"): side and back walls not walked against; face pieces in front
 of the grow split at the Granary, Kitchen and Garden; the Garden's flower box over its cross-gable window.

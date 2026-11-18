@@ -686,21 +686,6 @@
 			"TrainingVault5_Wall": 115752264773303
 		}
 	},
-	"DockBody1": {
-		"model": 135427521687346,
-		"texture": 0,
-		"pieces": {
-			"DockBody1_Beam": 102500048906745,
-			"DockBody1_Board": 80529029706238,
-			"DockBody1_Frame": 84988286542364,
-			"DockBody1_Glass": 108151202795190,
-			"DockBody1_Lower": 121760441279827,
-			"DockBody1_Roof": 103664422809610,
-			"DockBody1_Shutters": 116827104770758,
-			"DockBody1_Stone": 139056677369801,
-			"DockBody1_Wall": 86581389982832
-		}
-	},
 	"DockBody2": {
 		"model": 78036360746769,
 		"texture": 0,
@@ -1510,6 +1495,21 @@
 			"TrainingBody1_Shutters": 115101683513326,
 			"TrainingBody1_Stone": 116871946801379,
 			"TrainingBody1_Wall": 91623126318986
+		}
+	},
+	"DockBody1": {
+		"model": 100905511668669,
+		"texture": 0,
+		"pieces": {
+			"DockBody1_Beam": 86779469559011,
+			"DockBody1_Board": 110932515642556,
+			"DockBody1_Frame": 84988286542364,
+			"DockBody1_Glass": 108151202795190,
+			"DockBody1_Lower": 121760441279827,
+			"DockBody1_Roof": 119123720128190,
+			"DockBody1_Shutters": 116827104770758,
+			"DockBody1_Stone": 139056677369801,
+			"DockBody1_Wall": 106706056620948
 		}
 	}
 }
