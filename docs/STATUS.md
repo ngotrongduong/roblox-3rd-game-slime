@@ -1,5 +1,15 @@
 # Status
 
+## 2026-11-18 — village props reviewed (the owner: the old generated props are not pretty enough)
+
+- `docs/areas/village-v2/props-review.md`: the 141 `generate_mesh` props the live modules place were shot one by one in
+  MapWork and judged against the owner's era sheets: 50 keep, 14 swap to Meshy pieces we already own, 77 redo (mostly
+  eras 4-5, which came out modern or sci-fi plastic). Marked sheets in `props/review/`.
+- Proposed: phase 1 the village common (benches, market stalls, notice boards, garden centrepieces, gazebos, fountain
+  pieces: 23), phase 2 the areas' work props (57), phase 3 new pieces (wall lanterns, hanging baskets, banner poles,
+  picnic tables, bird house and beehive: 21). Meshy has 18 credits; topping up is the owner's call.
+- **Next**: the 14 free swaps, once the landmark session is done with the yard modules; then the owner's choice of sets.
+
 ## 2026-11-18 — the Garden refined against its four-side sheets (`landmark-build` §3c, the third building)
 
 - **Shape** (Blender, rebuilt and uploaded: `GardenBody1`, `GardenLean1`): era 1's thatch thick with each course
