@@ -957,25 +957,26 @@ def granary(era):
 
 K_FIELDS = ("Stone", "Wall", "Lower", "Beam", "Board", "Roof", "Frame", "Glass", "Shutters", "Chimney", "Cap", "Gold")
 K_HW, K_Z0, K_Z1, K_BAY, K_AISLE, K_CX, K_CZ = 14.3, -5.0, 12.3, 9.5, 10.7, 16.5, 6.2
+K_TX, K_TZ0, K_TZ1 = -22.9, -4.6, 5.6  # the module's terrace: its posts' reach and its cover, front to back
 K_LOOK = {
-	1: dict(wall_h=8.2, rise=9.6, over=1.8, thick=0.9, stack=6.5, win=(5, 2.0)),
-	2: dict(wall_h=8.6, rise=9.6, over=1.5, thick=0.6, stack=6.5, win=(5, 2.0)),
-	3: dict(wall_h=9.6, rise=10.4, over=1.4, thick=0.6, stack=6.5, spring=4.4, arch_r=3.8, win=(7, 1.4)),
-	4: dict(wall_h=9.6, rise=9.4, over=0.8, thick=0.2, stack=6.0, spring=5.0, arch_r=3.4),
+	1: dict(wall_h=8.2, rise=9.6, over=1.8, thick=0.9, stack=4.0, win=(5, 2.0)),
+	2: dict(wall_h=8.6, rise=9.6, over=1.5, thick=0.6, stack=4.0, win=(5, 2.0)),
+	3: dict(wall_h=9.6, rise=10.4, over=1.4, thick=0.6, stack=4.0, spring=4.4, arch_r=3.8, win=(7, 1.4)),
+	4: dict(wall_h=9.6, rise=9.4, over=0.8, thick=0.2, stack=4.0, spring=5.0, arch_r=3.4),
 	5: dict(wall_h=12.0, rise=6.5, over=0.5, thick=0.5, stack=11.0, spring=6.2, arch_r=4.0),
 }
 K_PAINT = {
-	1: dict(Stone=rgb(150, 146, 138), Wall=rgb(236, 220, 180), Lower=rgb(170, 120, 72), Beam=rgb(110, 72, 42),
-		Board=rgb(92, 60, 36), Roof=rgb(232, 190, 84), Frame=rgb(126, 84, 50), Glass=rgb(255, 214, 120),
-		Shutters=rgb(120, 150, 96), Chimney=rgb(140, 138, 134), Cap=rgb(112, 110, 108), Gold=rgb(236, 190, 70)),
-	2: dict(Stone=rgb(156, 152, 146), Wall=rgb(244, 238, 224), Lower=rgb(244, 238, 224), Beam=rgb(40, 128, 130),
-		Board=rgb(32, 104, 108), Roof=rgb(198, 70, 58), Frame=rgb(250, 246, 236), Glass=rgb(255, 222, 140),
-		Shutters=rgb(56, 146, 146), Chimney=rgb(190, 92, 66), Cap=rgb(232, 222, 200), Gold=rgb(236, 190, 70)),
-	3: dict(Stone=rgb(128, 124, 118), Wall=rgb(240, 230, 206), Lower=rgb(198, 190, 174), Beam=rgb(112, 72, 44),
-		Board=rgb(92, 60, 38), Roof=rgb(190, 62, 50), Frame=rgb(222, 216, 202), Glass=rgb(255, 222, 140),
-		Shutters=rgb(222, 216, 202), Chimney=rgb(150, 146, 140), Cap=rgb(120, 116, 112), Gold=rgb(236, 190, 70)),
-	4: dict(Stone=rgb(74, 80, 92), Wall=rgb(150, 225, 215), Lower=rgb(198, 112, 74), Beam=rgb(52, 56, 64),
-		Board=rgb(40, 44, 50), Roof=rgb(62, 96, 160), Frame=rgb(214, 208, 196), Glass=rgb(255, 226, 150),
+	1: dict(Stone=rgb(150, 146, 138), Wall=rgb(242, 226, 206), Lower=rgb(186, 122, 72), Beam=rgb(164, 94, 42),
+		Board=rgb(140, 78, 32), Roof=rgb(232, 190, 84), Frame=rgb(150, 86, 38), Glass=rgb(255, 214, 120),
+		Shutters=rgb(120, 150, 96), Chimney=rgb(176, 152, 146), Cap=rgb(140, 124, 120), Gold=rgb(236, 190, 70)),
+	2: dict(Stone=rgb(156, 152, 146), Wall=rgb(246, 230, 210), Lower=rgb(246, 230, 210), Beam=rgb(74, 136, 128),
+		Board=rgb(60, 114, 106), Roof=rgb(198, 70, 58), Frame=rgb(70, 132, 124), Glass=rgb(255, 222, 140),
+		Shutters=rgb(66, 128, 120), Chimney=rgb(190, 92, 66), Cap=rgb(232, 222, 200), Gold=rgb(236, 190, 70)),
+	3: dict(Stone=rgb(176, 160, 152), Wall=rgb(246, 232, 220), Lower=rgb(222, 204, 192), Beam=rgb(150, 84, 40),
+		Board=rgb(128, 70, 32), Roof=rgb(190, 62, 50), Frame=rgb(222, 216, 202), Glass=rgb(255, 222, 140),
+		Shutters=rgb(222, 216, 202), Chimney=rgb(204, 196, 192), Cap=rgb(164, 156, 152), Gold=rgb(236, 190, 70)),
+	4: dict(Stone=rgb(74, 80, 92), Wall=rgb(120, 232, 204), Lower=rgb(198, 112, 74), Beam=rgb(72, 74, 78),
+		Board=rgb(58, 60, 64), Roof=rgb(66, 108, 186), Frame=rgb(214, 208, 196), Glass=rgb(255, 226, 150),
 		Shutters=rgb(214, 208, 196), Chimney=rgb(124, 122, 120), Cap=rgb(84, 86, 92), Gold=rgb(224, 170, 70)),
 	5: dict(Stone=rgb(214, 208, 196), Wall=rgb(250, 249, 245), Lower=rgb(250, 249, 245), Beam=rgb(228, 222, 210),
 		Board=rgb(236, 192, 76), Roof=rgb(44, 84, 170), Frame=rgb(236, 192, 76), Glass=rgb(255, 230, 160),
@@ -1229,13 +1230,14 @@ def kitchen_set(era):
 		run = math.hypot(eave_x, ridge - eave_y)
 		for s in (-1, 1):
 			if era == 1:
-				thatch(body["Roof"], (s * eave_x, eave_y), (0, ridge), rz0, rz1, 5, thick)
+				# (thicker, each course standing well proud, as the sheet's: at 0.9 and 0.42 it read as flat shingles)
+				thatch(body["Roof"], (s * eave_x, eave_y), (0, ridge), rz0, rz1, 5, thick + 0.25, 0.62)
 			else:
 				tiled(body["Roof"], "z", (s * eave_x, eave_y), (0, ridge), rz0, rz1, max(4, rnd(run / 1.15)), thick)
 			for z in (rz0 - 0.12, rz1 + 0.12):
 				mbar(body["Board"], (s * (eave_x + 0.1), eave_y - pitch * 0.1 - drop / 2, z), (0, ridge - drop / 2, z), 0.3,
 					thick + 0.35)
-		roll(body["Roof"], (0, -rz0 + 0.25, ridge + 0.1), (0, -rz1 - 0.25, ridge + 0.1), 0.7 if era == 1 else 0.4)
+		roll(body["Roof"], (0, -rz0 + 0.25, ridge + 0.15), (0, -rz1 - 0.25, ridge + 0.15), 0.85 if era == 1 else 0.4)
 
 		def gable_end(t, tie):
 			# the wall's triangle under the roof; the timber eras frame it: rafters, struts, a post, a collar
@@ -1341,27 +1343,35 @@ def kitchen_set(era):
 		else:
 			mbox(dst[slot], CX - h - 0.05, CX + h + 0.05, y0, y1, CZ - h - 0.05, CZ + h + 0.05, 0.08)
 
-	tier(body, "Chimney", 4.4, 0, 5)
-	tier(body, "Cap", 4.0, 5, 5.6)
-	tier(body, "Chimney", 3.4, 5.6, mid_top)
-	tier(body, "Cap", 3.2, mid_top, mid_top + 0.5)
-	tier(body, "Chimney", 2.8, mid_top + 0.5, low_top if era == 1 else tall_top)
+	# (a broad stack, as every era's sheet draws it: at 4.4 to 2.8 it read as a thin pipe behind the roof)
+	tier(body, "Chimney", 5.3, 0, 5)
+	tier(body, "Cap", 4.8, 5, 5.6)
+	tier(body, "Chimney", 4.1, 5.6, mid_top)
+	tier(body, "Cap", 3.85, mid_top, mid_top + 0.5)
+	tier(body, "Chimney", 3.4, mid_top + 0.5, low_top if era == 1 else tall_top)
 	if era == 1:
-		tier(stack, "Chimney", 2.8, low_top, tall_top)
-	tier(stack if era == 1 else body, "Cap", 3.6, tall_top, tall_top + 0.7)
+		tier(stack, "Chimney", 3.4, low_top, tall_top)
+	tier(stack if era == 1 else body, "Cap", 4.3, tall_top, tall_top + 0.7)
 	if era == 3:
-		tier(body, "Frame", 3.05, mid_top + 4, mid_top + 4.4)
+		tier(body, "Frame", 3.65, mid_top + 4, mid_top + 4.4)
 	elif era >= 4:
 		for fr in (0.2, 0.55, 0.9):
 			y = mid_top + (tall_top - mid_top) * fr
-			tier(body, "Gold", 3.1, y - 0.22, y + 0.22)
-		tier(body, "Gold", 3.7, 8.2, 8.7)
+			tier(body, "Gold", 3.7, y - 0.22, y + 0.22)
+		tier(body, "Gold", 4.4, 8.2, 8.7)
+
+	# THE HAMLET'S STRAW LEAN-TO over the table (the module's LeanRoof at feature 5, a slab of 0.9 from the wall at
+	# 6.6 to the posts at 5.35): two shaggy courses on its top face, the slab kept as the collision
+	lean = mk()
+	if era == 1:
+		y0 = min(wall_h - 1.6, 8)
+		thatch(lean["Roof"], (K_TX - 0.5, y0 - 1.25 + 0.45), (-HW, y0 + 0.45), K_TZ0 - 0.4, K_TZ1 + 0.4, 2, 0.9, 0.55)
 
 	def rows(name, d):
 		return [(f"{name}_{k}", d[k], (0, 0, 0), k, 35) for k in K_FIELDS if k not in alias and d[k].v]
 
 	KITCHEN[era] = dict(body=rows(f"KitchenBody{era}", body), truss=rows("KitchenTruss1", truss),
-		gable=rows("KitchenGable1", gable), stack=rows("KitchenStack1", stack))
+		gable=rows("KitchenGable1", gable), stack=rows("KitchenStack1", stack), lean=rows("KitchenLean1", lean))
 	return KITCHEN[era]
 
 
@@ -1587,7 +1597,7 @@ G_PAINT = {
 		Gold=rgb(236, 190, 70), Board=rgb(92, 60, 38), Roof=rgb(190, 62, 50), Frame=rgb(222, 216, 202),
 		Glass=rgb(250, 198, 100), Shutters=rgb(120, 150, 96)),
 	4: dict(Stone=rgb(74, 80, 92), Wall=rgb(150, 225, 215), Lower=rgb(198, 112, 74), Beam=rgb(52, 56, 64),
-		Gold=rgb(224, 170, 70), Board=rgb(40, 44, 50), Roof=rgb(62, 96, 160), Frame=rgb(214, 208, 196),
+		Gold=rgb(224, 170, 70), Board=rgb(40, 44, 50), Roof=rgb(66, 108, 186), Frame=rgb(214, 208, 196),
 		Glass=rgb(250, 202, 108), Shutters=rgb(40, 44, 50)),
 	5: dict(Stone=rgb(214, 208, 196), Wall=rgb(250, 249, 245), Lower=rgb(214, 208, 196), Beam=rgb(228, 222, 210),
 		Gold=rgb(236, 192, 76), Board=rgb(236, 192, 76), Roof=rgb(44, 84, 170), Frame=rgb(236, 192, 76),
@@ -1991,7 +2001,7 @@ B_PAINT = {
 		Gold=rgb(236, 190, 70), Board=rgb(92, 60, 38), Roof=rgb(190, 62, 50), Frame=rgb(222, 216, 202),
 		Glass=rgb(250, 198, 100), Shutters=rgb(150, 110, 150)),
 	4: dict(Stone=rgb(74, 80, 92), Wall=rgb(150, 225, 215), Lower=rgb(198, 112, 74), Beam=rgb(52, 56, 64),
-		Gold=rgb(224, 170, 70), Board=rgb(40, 44, 50), Roof=rgb(62, 96, 160), Frame=rgb(214, 208, 196),
+		Gold=rgb(224, 170, 70), Board=rgb(40, 44, 50), Roof=rgb(66, 108, 186), Frame=rgb(214, 208, 196),
 		Glass=rgb(250, 202, 108), Shutters=rgb(40, 44, 50)),
 	5: dict(Stone=rgb(214, 208, 196), Wall=rgb(242, 239, 232), Lower=rgb(214, 208, 196), Beam=rgb(228, 222, 210),
 		Gold=rgb(236, 192, 76), Board=rgb(236, 192, 76), Roof=rgb(44, 84, 170), Frame=rgb(236, 192, 76),
@@ -2471,7 +2481,7 @@ T_PAINT = {
 		Gold=rgb(236, 190, 70), Board=rgb(92, 60, 38), Roof=rgb(190, 62, 50), Frame=rgb(224, 218, 204),
 		Glass=rgb(238, 158, 60), Shutters=rgb(176, 128, 78)),
 	4: dict(Stone=rgb(86, 90, 100), Wall=rgb(84, 190, 180), Lower=rgb(72, 76, 88), Beam=rgb(52, 56, 64),
-		Gold=rgb(224, 170, 70), Board=rgb(40, 44, 50), Roof=rgb(62, 96, 160), Frame=rgb(104, 110, 122),
+		Gold=rgb(224, 170, 70), Board=rgb(40, 44, 50), Roof=rgb(66, 108, 186), Frame=rgb(104, 110, 122),
 		Glass=rgb(238, 158, 60), Shutters=rgb(176, 128, 78)),
 	5: dict(Stone=rgb(214, 208, 196), Wall=rgb(242, 239, 232), Lower=rgb(214, 208, 196), Beam=rgb(228, 222, 210),
 		Gold=rgb(236, 192, 76), Board=rgb(236, 192, 76), Roof=rgb(44, 84, 170), Frame=rgb(236, 192, 76),
@@ -2967,7 +2977,7 @@ D_PAINT = {
 	3: dict(Stone=rgb(132, 128, 122), Wall=rgb(240, 230, 206), Lower=rgb(192, 188, 178), Beam=rgb(112, 72, 44),
 		Gold=rgb(236, 190, 70), Board=rgb(92, 60, 38), Roof=rgb(190, 62, 50), Frame=rgb(224, 218, 204), **D_SAME),
 	4: dict(Stone=rgb(86, 90, 100), Wall=rgb(84, 190, 180), Lower=rgb(72, 76, 88), Beam=rgb(52, 56, 64),
-		Gold=rgb(224, 170, 70), Board=rgb(40, 44, 50), Roof=rgb(62, 96, 160), Frame=rgb(104, 110, 122), **D_SAME),
+		Gold=rgb(224, 170, 70), Board=rgb(40, 44, 50), Roof=rgb(66, 108, 186), Frame=rgb(104, 110, 122), **D_SAME),
 	5: dict(Stone=rgb(214, 208, 196), Wall=rgb(242, 239, 232), Lower=rgb(214, 208, 196), Beam=rgb(228, 222, 210),
 		Gold=rgb(236, 192, 76), Board=rgb(236, 192, 76), Roof=rgb(44, 84, 170), Frame=rgb(236, 192, 76), **D_SAME),
 }
@@ -3349,7 +3359,7 @@ def dock(era, part="body"):
 ELEVATIONS = {"front": (0, 1, 0.02), "left": (1, 0, 0.02), "back": (0, -1, 0.02), "right": (-1, 0, 0.02)}
 BODIES = [("GranaryBody1", granary1)] + [(f"GranaryBody{e}", lambda e=e: granary(e)) for e in (2, 3, 4, 5)]
 BODIES += [(f"KitchenBody{e}", lambda e=e: kitchen(e)) for e in (1, 2, 3, 4, 5)]
-BODIES += [(f"Kitchen{p.capitalize()}1", lambda p=p: kitchen(1, p)) for p in ("truss", "gable", "stack")]
+BODIES += [(f"Kitchen{p.capitalize()}1", lambda p=p: kitchen(1, p)) for p in ("truss", "gable", "stack", "lean")]
 BODIES += [(f"GardenBody{e}", lambda e=e: garden(e)) for e in (1, 2, 3, 4, 5)]
 BODIES += [(f"Garden{p.capitalize()}1", lambda p=p: garden(1, p)) for p in ("truss", "gable", "lean")]
 BODIES += [(f"Garden{p.capitalize()}3", lambda p=p: garden(3, p)) for p in ("roof", "storey")]

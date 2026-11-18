@@ -298,6 +298,12 @@ hơn." All six landmarks wear Blender bodies; now ONE building a session, in the
    arch, hoops, glass, lit windows) and only three were shape (thatch thickness, door head, gable window); a field
    whose colour stops matching another gets its own mesh and a new config row by hand; in Play, clear the game's
    own level stage before `_G.AreaShow` (Granary: `PantryStages`, `PantryL1`).
+8. **What the Kitchen's round taught** (2026-11-18, details in LESSONS "Refining the Kitchen"): a palette field
+   the six landmarks share (each era's roof, the thatch) moves in all six modules and every `*_PAINT` together, or
+   the one-roof-an-era rule breaks; chimneys are broad stacks 3 to 4 over the ridge, not pipes; a part that must
+   look sculpted (a straw lean-to) becomes its own small model over its slab, the slab invisible and kept as the
+   collider; glass over a dark hall reads navy at 0.4 see-through, 0.15 on the facade glass only; copy every `ROW`
+   the rebuild prints, the uploader fills only the ids.
 
 Left open for this step (STATUS, "Not verified"): side and back walls not walked against; face pieces in front
 of the grow split at the Granary, Kitchen and Garden; the Garden's flower box over its cross-gable window.

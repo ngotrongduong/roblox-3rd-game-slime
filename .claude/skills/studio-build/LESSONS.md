@@ -587,6 +587,29 @@ The Garden's house, the third landmark as bodies (`garden_set(era)`, 2026-11-18)
   only. Camera `f * lookAt((-22, 40, -100), (0, 21, 12))`, field of view 50, frames every era; the day's Lighting
   values read in Edit and written on the client at `Last + 5`.
 
+**Refining the Kitchen against its four-side sheets (2026-11-18)**, the second building of section 3c:
+- Colours measured the same way (`sheet_colours.py`, the lit tone): eras 1 and 3 warm mid-brown timber, era 1 a
+  pinkish cream plaster and a mauve-grey fieldstone chimney, era 2 a grey-green TEAL timber and frames (not sage),
+  era 3 a pale warm grey stone storey, era 4 mint glass and a neutral grey iron lighter than black.
+- **One roof an era is the whole village's**: the Granary's round had moved era 4's slate to (66, 108, 186) in its
+  own module only, so the Granary stood alone. Every landmark module's era 4 `roof` and every `*_PAINT` in
+  `landmark_bodies.py` changed together. A palette field the six share is grepped across all six before it moves.
+- Shapes the sheets drew: a BROAD chimney stack standing 3 to 4 over the ridge (it stood 6.5 as a thin pipe: tiers
+  1.2 times wider, `stack = 4`), the hamlet's thatch thick and shaggy (`thick + 0.25`, lip 0.62, a fat verge roll),
+  and the lean-to over the table in the same straw: its own model `KitchenLean1` over the module's `LeanRoof` slab,
+  which turns invisible and stays the collider (`piece(...)` returns nil before the upload, so the old rolls stay).
+- **Glass over a dark hall**: Architecture's seeThrough 0.4 read NAVY in Play against the sheet's mint; 0.15 on the
+  front glass only (`Tympanum` and `CanopyGlass` in Glass) reads mint. Changed for the whole model it hid the goo
+  kettles' green, which keep 0.4.
+- The uploader fills mesh ids but not sizes: every `ROW` the rebuild printed (roofs, chimneys and caps whose shape
+  did not change too, their `at` moves with the stack) is copied by hand BEFORE the upload; a new row
+  (`KitchenLean1_Roof`) is added with `mesh = 0`.
+- **Edit preview of the Kitchen**: the tool builds it at x = 100 * i, z about 300 (front about 295), grown 1.45, not
+  at the origin; found with a bounding-box query. Camera (120, 536, 236) to (96, 513, 305), 100 more in x a level.
+- **Play shots of the Kitchen**: stage `KitchenStages`, area `KitchenL1`, cell (-1, 0); no loose house to clear.
+  Camera `f * lookAt((-22, 35, -72), (-4, 14, 10))` with `f = plotAreaFacing(plot, -1, 0) * (0, 2, 0)`, field of
+  view 50, the day's Lighting at `Last + 5`.
+
 ### Whole small buildings from Blender (2026-11-17, the garden's tool stores, tools/blender/granary_pieces.py)
 
 The owner, looking at a part-built yard beside ChatGPT's picture: "why is what you build not as beautiful as the

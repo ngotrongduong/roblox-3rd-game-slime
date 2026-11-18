@@ -1,5 +1,26 @@
 # Status
 
+## 2026-11-18 — the Kitchen refined against its four-side sheets (`landmark-build` §3c, the second building)
+
+- **Shape** (Blender, `landmark_bodies.py`, rebuilt and uploaded): every era's chimney a broad stack 1.2 times wider
+  and standing 4 over the ridge (it was 6.5, a thin pipe); era 1 thatch thick and shaggy with a fat verge roll; era
+  1's lean-to over the table in the same straw, its own model `KitchenLean1` (a new row) over the module's slab,
+  which stays the collider.
+- **Colour** (`Kitchen.luau` `LOOKS`, mirrored in `K_PAINT`), measured with `sheet_colours.py`: era 1 warm
+  mid-brown timber, pinkish cream plaster, mauve-grey fieldstone chimney; era 2 teal timber and frames on cream;
+  era 3 a pale warm stone storey, mid-brown timber; era 4 mint glass (the front glass and canopy 0.15 see-through,
+  at 0.4 they read navy over the dark hall), a lighter grey iron.
+- **One roof an era**: era 4's slate (66, 108, 186), set by the Granary's round in the Granary only, now on all six
+  landmarks (`Boathouse`, `Garden`, `BreedingHouse`, `TrainingHall` and every `*_PAINT`).
+- **Proof**: the Edit preview at levels 10-50 with the uploaded meshes; one play test in StudioTest, the five
+  levels in daylight (`review/kitchen-body-l10.jpg` to `-l50`, before and after in
+  `review/kitchen-refine-before-after.jpg`), no Kitchen error in the console. CHECK OK (829 passed), TYPES OK.
+- **Not verified**: the phone view; walking in (the shell and door did not move); the other four landmarks' new era
+  4 roof colour was not looked at in Studio (a colour only).
+- Left as is: era 1 thatch (232, 190, 84) is shared by all six and a little paler than the Kitchen's sheet; era 4
+  keeps the village's blue slate vault where the Kitchen's sheet draws glass (one roof an era).
+- **Next**: the Garden by the same loop, then the Breeding House, Training Hall, Dock.
+
 ## 2026-11-18 — the Granary refined against its four-side sheets (the first building of `landmark-build` §3c)
 
 The owner: "xem những hình tham chiếu cho từng tòa nhà, so sánh rồi chỉnh sửa theo hình mẫu cho đến khi đạt chất

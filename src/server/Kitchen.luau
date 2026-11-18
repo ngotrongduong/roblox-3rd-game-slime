@@ -70,7 +70,7 @@ type Look = {
 	rise: number, -- the roof over them
 	over: number, -- its overhang
 	thick: number, -- how deep a roof slab is
-	stack: number, -- how far the grown chimney stands over the ridge
+	stack: number, -- how far the grown chimney stands over the ridge (the sheets: 3 to 4, a broad stack, not a pipe)
 	spring: number, -- the front arch (eras 3-5): where it springs,
 	archR: number, -- and how high it rises
 	emblemY: number, -- the gable's emblem over the eaves
@@ -100,22 +100,24 @@ local LOOKS: { Look } = {
 		rise = 9.6,
 		over = 1.8,
 		thick = 0.9,
-		stack = 6.5,
+		stack = 4,
 		spring = 0,
 		archR = 0,
 		emblemY = 3,
 		winY = 5,
-		wall = C(236, 220, 180),
-		lower = C(170, 120, 72),
+		-- (measured on the four-side sheet with tools/map/sheet_colours.py, the lit tones: warm mid-brown timber,
+		-- pinkish cream plaster, a mauve-grey fieldstone chimney)
+		wall = C(242, 226, 206),
+		lower = C(186, 122, 72),
 		stone = C(150, 146, 138),
-		beam = C(110, 72, 42),
-		board = C(92, 60, 36),
+		beam = C(164, 94, 42),
+		board = C(140, 78, 32),
 		roof = C(232, 190, 84),
-		frame = C(126, 84, 50),
+		frame = C(150, 86, 38),
 		glass = C(255, 214, 120),
 		shutters = C(120, 150, 96),
-		chimney = C(140, 138, 134),
-		cap = C(112, 110, 108),
+		chimney = C(176, 152, 146),
+		cap = C(140, 124, 120),
 		oven = C(190, 100, 70),
 		cloth = C(52, 96, 190),
 		gold = C(236, 190, 70),
@@ -141,20 +143,21 @@ local LOOKS: { Look } = {
 		rise = 9.6,
 		over = 1.5,
 		thick = 0.6,
-		stack = 6.5,
+		stack = 4,
 		spring = 0,
 		archR = 0,
 		emblemY = 3,
 		winY = 5,
-		wall = C(244, 238, 224),
-		lower = C(244, 238, 224),
+		-- (the sheet's timber is a grey-green teal, its window frames the same; the plaster cream)
+		wall = C(246, 230, 210),
+		lower = C(246, 230, 210),
 		stone = C(156, 152, 146),
-		beam = C(40, 128, 130),
-		board = C(32, 104, 108),
+		beam = C(74, 136, 128),
+		board = C(60, 114, 106),
 		roof = C(198, 70, 58),
-		frame = C(250, 246, 236),
+		frame = C(70, 132, 124),
 		glass = C(255, 222, 140),
-		shutters = C(56, 146, 146),
+		shutters = C(66, 128, 120),
 		chimney = C(190, 92, 66),
 		cap = C(232, 222, 200),
 		oven = C(204, 110, 76),
@@ -181,21 +184,22 @@ local LOOKS: { Look } = {
 		rise = 10.4,
 		over = 1.4,
 		thick = 0.6,
-		stack = 6.5,
+		stack = 4,
 		spring = 4.4, -- (a low spring and a high crown: at 5.2 and 3.2 the arch read as a square opening)
 		archR = 3.8,
 		emblemY = 2.8,
 		winY = 7,
-		wall = C(240, 230, 206),
-		lower = C(198, 190, 174),
-		stone = C(128, 124, 118),
-		beam = C(112, 72, 44),
-		board = C(92, 60, 38),
+		-- (the sheet's stone storey is a pale warm grey, its timber a warm mid-brown)
+		wall = C(246, 232, 220),
+		lower = C(222, 204, 192),
+		stone = C(176, 160, 152),
+		beam = C(150, 84, 40),
+		board = C(128, 70, 32),
 		roof = C(190, 62, 50),
 		frame = C(222, 216, 202),
 		glass = C(255, 222, 140),
-		chimney = C(150, 146, 140),
-		cap = C(120, 116, 112),
+		chimney = C(204, 196, 192),
+		cap = C(164, 156, 152),
 		oven = C(198, 104, 72),
 		cloth = C(52, 96, 190),
 		gold = C(236, 190, 70),
@@ -220,17 +224,17 @@ local LOOKS: { Look } = {
 		rise = 9.4,
 		over = 0.8,
 		thick = 0.2,
-		stack = 6,
+		stack = 4,
 		spring = 5,
 		archR = 3.4,
 		emblemY = 4.4,
 		winY = 0,
-		wall = C(150, 225, 215),
+		wall = C(120, 232, 204), -- (the sheet's glass is mint)
 		lower = C(198, 112, 74),
 		stone = C(74, 80, 92),
-		beam = C(52, 56, 64),
-		board = C(40, 44, 50),
-		roof = C(62, 96, 160), -- (the owner, 2026-11-17: one roof an era for every landmark, the Granary's)
+		beam = C(72, 74, 78), -- (its iron a neutral grey, lighter than black)
+		board = C(58, 60, 64),
+		roof = C(66, 108, 186), -- (the owner, 2026-11-17: one roof an era for every landmark, the Granary's)
 		frame = C(214, 208, 196),
 		glass = C(255, 226, 150),
 		chimney = C(124, 122, 120),
@@ -984,6 +988,13 @@ local function raise(m: Instance, frame: CFrame, level: number)
 		-- (the front glass stands 0.9 behind the steel fan, on a deep tie beam: flush with it the vault's face read
 		-- as a flat drawn window)
 		tympanum(Z0 + 0.9, 0.3, L.wall)
+		-- (the front glass shows less of the hall than the game's 0.4: over the dark hall it read as navy in the game's
+		-- light, the sheet's is mint; the goo kettles keep 0.4 so their green shows)
+		for _, p in m:GetDescendants() do
+			if p:IsA("BasePart") and p.Name == "Tympanum" and p.Material == M.Glass then
+				p.Transparency = 0.15
+			end
+		end
 		tympanum(Z1 - T, T, L.lower)
 		b.box("TieBeam", HW * 2 + 0.6, 0.5, 1.5, b.at(0, wallH, Z0 + 0.5), L.beam)
 		local hub = Vector3.new(0, wallH + 0.2, Z0 + 0.2)
@@ -1038,22 +1049,23 @@ local function raise(m: Instance, frame: CFrame, level: number)
 			b.box(name, w, y1 - y0, w, b.at(CX, (y0 + y1) / 2, CZ), colour, material)
 		end
 	end
-	tier("ChimneyFoot", 4.4, 0, 5, L.chimney)
-	tier("ChimneyShoulder", 4, 5, 5.6, L.cap)
-	tier("Chimney", 3.4, 5.6, midTop, L.chimney)
-	tier("ChimneyShoulder", 3.2, midTop, midTop + 0.5, L.cap)
-	tier("Chimney", 2.8, midTop + 0.5, top, L.chimney)
+	-- (a broad stack, as every era's sheet draws it: at 4.4 to 2.8 it read as a thin pipe behind the roof)
+	tier("ChimneyFoot", 5.3, 0, 5, L.chimney)
+	tier("ChimneyShoulder", 4.8, 5, 5.6, L.cap)
+	tier("Chimney", 4.1, 5.6, midTop, L.chimney)
+	tier("ChimneyShoulder", 3.85, midTop, midTop + 0.5, L.cap)
+	tier("Chimney", 3.4, midTop + 0.5, top, L.chimney)
 	if era >= 4 then
 		for _, t in { 0.2, 0.55, 0.9 } do
 			local y = midTop + (top - midTop) * t
-			tier("ChimneyBand", 3.1, y - 0.22, y + 0.22, L.gold, M.Metal)
+			tier("ChimneyBand", 3.7, y - 0.22, y + 0.22, L.gold, M.Metal)
 		end
-		tier("ChimneyBand", 3.7, 8.2, 8.7, L.gold, M.Metal)
+		tier("ChimneyBand", 4.4, 8.2, 8.7, L.gold, M.Metal)
 	elseif era == 3 then
-		tier("ChimneyBand", 3.05, midTop + 4, midTop + 4.4, L.frame)
+		tier("ChimneyBand", 3.65, midTop + 4, midTop + 4.4, L.frame)
 	end
 	if tall then
-		tier("ChimneyCap", 3.6, top, top + 0.7, L.cap)
+		tier("ChimneyCap", 4.3, top, top + 0.7, L.cap)
 		local flue = b.cyl("Flue", 0.85, 0.9, b.at(CX, top + 1.15, CZ), DARK, nil, false)
 		-- 3 smoke: one soft emitter (the client's EffectsLod stops it far from the camera)
 		local mouth = Instance.new("Attachment")
@@ -1089,7 +1101,7 @@ local function raise(m: Instance, frame: CFrame, level: number)
 	shell(false) -- (the body ends here: all that follows is the game's own)
 	if f >= 15 then
 		-- 15 the smokehouse turret on the chimney's front corner: a lantern room on a corbel under a cone roof
-		local tx, tz = CX + 1.5, CZ - 1.9
+		local tx, tz = CX + 1.8, CZ - 2.3
 		local y0 = ridge - 4.5
 		local drum = if vault then L.lower else L.wall
 		b.cyl("TurretCorbel", 1.1, 0.6, b.at(tx, y0 - 0.9, tz), L.cap, nil, false)
@@ -1108,7 +1120,7 @@ local function raise(m: Instance, frame: CFrame, level: number)
 	end
 	if f >= 22 then
 		-- 22 a gold crown on the chimney's top
-		local cf, r = b.at(CX, top + 0.7, CZ), 2.1
+		local cf, r = b.at(CX, top + 0.7, CZ), 2.5
 		if not piece("ChimneyCrown_Gold", cf, r, r, r, L.gold, M.Metal) then
 			b.cyl("Crown", r, r * 0.5, cf * CFrame.new(0, r * 0.25, 0), L.gold, M.Metal, false)
 			for k = 0, 5 do
@@ -1237,8 +1249,9 @@ local function raise(m: Instance, frame: CFrame, level: number)
 			local rise2 = Vector3.new(0, 0.2, 0)
 			local knee = Vector3.new(-20.2, y0 - 0.25, mid)
 			local canopy = if L.goo then L.wall else L.glass
-			b.beam("CanopyGlass", deep + 0.4, 0.15, a + rise2, knee, canopy, M.Glass)
-			b.beam("CanopyGlass", deep + 0.4, 0.15, knee, c, canopy, M.Glass)
+			-- (mint, as the front glass: 0.15 see-through)
+			b.beam("CanopyGlass", deep + 0.4, 0.15, a + rise2, knee, canopy, M.Glass).Transparency = 0.15
+			b.beam("CanopyGlass", deep + 0.4, 0.15, knee, c, canopy, M.Glass).Transparency = 0.15
 			for _, z in { TZ0 + 0.1, mid, TZ1 - 0.1 } do
 				local dz = Vector3.new(0, 0, z - mid)
 				b.beam("CanopyRafter", 0.3, 0.35, a + rise2 + dz, knee + dz, iron)
@@ -1268,8 +1281,14 @@ local function raise(m: Instance, frame: CFrame, level: number)
 			end
 		else
 			local thick = if era == 1 then 0.9 else math.max(0.4, L.thick * 0.7)
-			b.beam("LeanRoof", deep + 0.8, thick, a, c, L.roof).CastShadow = true
-			if era == 1 then
+			local lean = b.beam("LeanRoof", deep + 0.8, thick, a, c, L.roof)
+			lean.CastShadow = true
+			-- (the hamlet's straw is a model of shaggy courses, KitchenLean1, over this slab, which stays its collision)
+			if era == 1 and piece("KitchenLean1_Roof", b.at(0, 0, 0), 1, 1, 1, L.roof) then
+				lean.Transparency = 1
+				lean.CastShadow = false
+				b.trim("Fascia", 0.35, 0.45, deep + 0.6, b.at(c.X + 0.25, c.Y - 0.6, mid), L.beam)
+			elseif era == 1 then
 				-- (straw is thick, not a sheet: a fat roll along the eave, one down each edge, a timber fascia under it)
 				local side = Vector3.new(0, -0.1, deep / 2 + 0.4)
 				b.rod("EaveRoll", 0.65, c - Vector3.new(0, 0.2, 0) - side, c + side, L.roof)
